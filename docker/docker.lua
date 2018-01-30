@@ -32,7 +32,8 @@ local function config()
 		    Image = "base",
 		    Volumes = {},
 		    VolumesFrom = json.util.null,
-		    WorkingDir = ""
+		    WorkingDir = "",
+            HostConfig = {}
 		 }
    config.Volumes['/dev/log'] = {}
    return config
@@ -41,134 +42,136 @@ end
 M.config = config
 
 local client = Spore.new_from_string [[{ "name" : "docker remote api",
-					  "base_url" : 'http://127.0.0.1:65000',
-					  "version" : '0.1.0',
-					  "expected_status" : [
-					     200,
-					     201,
-					     204
-					  ],
-					  "formats" : ["json"],
-					  "methods" : {
-					     "containers" : { 
-						"path" : "/containers/json",
-						"method" : "GET",
-						"optional_params" : [
-						   'all',
-						   'limit',
-						   'since',
-						   'before',
-						   'size'
-						]
-					     },
-					     "create_container" : { 
-						"path" : "/containers/create",
-						"method" : "POST",
-						"optional_params" : [
-						   'name'],
-						"required_payload" : true,
-					     },
-					     "inspect_container" : { 
-						"path" : "/containers/:id/json",
-						"method" : "GET",
-						"required_params" : [
-						   "id"
-						],
-					     },
-					     "fs_changes_container" : { 
-						"path" : "/containers/:id/changes",
-						"method" : "GET",
-						"required_params" : [
-						   "id"
-						],
-					     },
-					     "start_container" : { 
-						"path" : "/containers/:id/start",
-						"method" : "POST",
-						"required_params" : [
-						   "id"
-						],
-						"optional_payload" : true,
-					     },
-					     "stop_container" : { 
-						"path" : "/containers/:id/stop",
-						"method" : "POST",
-						"required_params" : [
-						   "id"
-						],
-					     },
-					     "restart_container" : { 
-						"path" : "/containers/:id/restart",
-						"method" : "POST",
-						"required_params" : [
-						   "id"
-						],
-					     },
-					     "kill" : { 
-						"path" : "/containers/:id/kill",
-						"method" : "POST",
-						"required_params" : [
-						   "id"
-						],
-					     },
-					     "remove_container" : { 
-						"path" : "/containers/:id",
-						"method" : "DELETE",
-						"required_params" : [
-						   "id"
-						],
-					     },
-					     "top" : { 
-						"path" : "/containers/:id/top",
-						"method" : "GET",
-						"required_params" : [
-						   "id"
-						],
-						"optional_params" : [
-						   'ps_args',
-						   ]
-					     },
-					     "images" : { 
-						"path" : "/images/json",
-						"method" : "GET",
-						"optional_params" : [
-						   'all',
-						   'limit',
-						   'since',
-						   'before',
-						   'size']
-					     },
-					     "inspect_image" : { 
-						"path" : "/images/:name/json",
-						"method" : "GET",
-						"required_params" : [
-						   "name"
-						],
-					     },
-					     "history_image" : { 
-						"path" : "/images/:name/history",
-						"method" : "GET",
-						"required_params" : [
-						   "name"
-						],
-					     },
-					     "info" : { 
-						"path" : "/info",
-						"method" : "GET",
-					     },
-					     "version" : { 
-						"path" : "/info",
-						"method" : "GET",
-					     },
-					     "search_images" : { 
-						"path" : "/images/search",
-						"method" : "GET",
-						"required_params" : [
-						   "term"
-						],
-					     },
-					  }
-				       }]]
+	"base_url" : 'http://127.0.0.1:65000',
+	"version" : '0.1.0',
+	"expected_status" : [
+		200,
+		201,
+		204
+	],
+	"formats" : ["json"],
+	"methods" : {
+		"containers" : {
+			"path" : "/containers/json",
+			"method" : "GET",
+			"optional_params" : [
+				'all',
+				'limit',
+				'since',
+				'before',
+				'size'
+			]
+		},
+		"create_container" : {
+			"path" : "/containers/create",
+			"method" : "POST",
+			"optional_params" : [
+				'name'
+			],
+			"required_payload" : true,
+		},
+		"inspect_container" : {
+			"path" : "/containers/:id/json",
+			"method" : "GET",
+			"required_params" : [
+				"id"
+			],
+		},
+		"fs_changes_container" : {
+			"path" : "/containers/:id/changes",
+			"method" : "GET",
+			"required_params" : [
+				"id"
+			],
+		},
+		"start_container" : {
+			"path" : "/containers/:id/start",
+			"method" : "POST",
+			"required_params" : [
+				"id"
+			],
+			"optional_payload" : true,
+		},
+		"stop_container" : {
+			"path" : "/containers/:id/stop",
+			"method" : "POST",
+			"required_params" : [
+				"id"
+			],
+		},
+		"restart_container" : {
+			"path" : "/containers/:id/restart",
+			"method" : "POST",
+			"required_params" : [
+				"id"
+			],
+		},
+		"kill" : {
+			"path" : "/containers/:id/kill",
+			"method" : "POST",
+			"required_params" : [
+				"id"
+			],
+		},
+		"remove_container" : {
+			"path" : "/containers/:id",
+			"method" : "DELETE",
+			"required_params" : [
+				"id"
+			],
+		},
+		"top" : {
+			"path" : "/containers/:id/top",
+			"method" : "GET",
+			"required_params" : [
+				"id"
+			],
+			"optional_params" : [
+				'ps_args',
+			]
+		},
+		"images" : {
+			"path" : "/images/json",
+			"method" : "GET",
+			"optional_params" : [
+				'all',
+				'limit',
+				'since',
+				'before',
+				'size'
+			]
+		},
+		"inspect_image" : {
+			"path" : "/images/:name/json",
+			"method" : "GET",
+			"required_params" : [
+				"name"
+			],
+		},
+		"history_image" : {
+			"path" : "/images/:name/history",
+			"method" : "GET",
+			"required_params" : [
+				"name"
+			],
+		},
+		"info" : {
+			"path" : "/info",
+			"method" : "GET",
+		},
+		"version" : {
+			"path" : "/info",
+			"method" : "GET",
+		},
+		"search_images" : {
+			"path" : "/images/search",
+			"method" : "GET",
+			"required_params" : [
+				"term"
+			],
+		},
+	}
+}]]
 client:enable('Format.JSON')
 M.client = client
 --[[

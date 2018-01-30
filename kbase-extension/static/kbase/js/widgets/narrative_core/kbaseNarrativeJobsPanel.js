@@ -15,9 +15,12 @@ define([
     'util/string',
     'base/js/namespace',
     'common/runtime',
+    'kb_service/client/workspace',
     'services/kernels/comm',
+    'common/semaphore',
     'text!kbase/templates/job_panel/job_info.html',
-    'text!kbase/templates/job_panel/job_error.html'
+    'text!kbase/templates/job_panel/job_error.html',
+    'text!kbase/templates/job_panel/job_init_error.html'
 ], function (
     KBWidget,
     bootstrap,
@@ -33,10 +36,13 @@ define([
     StringUtil,
     Jupyter,
     Runtime,
+    Workspace,
     JupyterComm,
+    Semaphore,
     JobInfoTemplate,
-    JobErrorTemplate
-    ) {
+    JobErrorTemplate,
+    JobInitErrorTemplate
+) {
     'use strict';
     return KBWidget({
         COMM_NAME: 'KBaseJobs',
@@ -50,6 +56,8 @@ define([
         CANCEL_JOB: 'cancel_job',
         JOB_LOGS: 'job_logs',
         JOB_LOGS_LATEST: 'job_logs_latest',
+        JOB_INFO: 'job_info',
+
         name: 'kbaseNarrativeJobsPanel',
         parent: kbaseNarrativeControlPanel,
         version: '0.0.1',
@@ -63,24 +71,22 @@ define([
         // these are the elements that contain running apps and methods
         $appsList: null,
         $methodsList: null,
-
         // has 'spec' and 'state' keys - populated from server.
         jobStates: {},
         comm: null,
-
         init: function (options) {
             this._super(options);
             this.$jobCountBadge = $('<span>').addClass('label label-danger');
             this.title.append(this.$jobCountBadge);
-            Handlebars.registerHelper('colorStatus', function(status) {
+            Handlebars.registerHelper('colorStatus', function (status) {
                 var s = status.string.toLowerCase();
-                switch(s) {
-                    case "in-progress":
-                        return "<b>" + status + "</b>";
-                    case "queued":
-                        return "<b>" + status + "</b>";
-                    default:
-                        return status;
+                switch (s) {
+                case 'in-progress':
+                    return '<b>' + status + '</b>';
+                case 'queued':
+                    return '<b>' + status + '</b>';
+                default:
+                    return status;
                 }
             });
             this.jobInfoTmpl = Handlebars.compile(JobInfoTemplate);
@@ -131,23 +137,23 @@ define([
 
             var modalButtons = [
                 $('<a type="button" class="btn btn-default">')
-                    .append('Cancel')
-                    .click(function () {
-                        this.jobsModal.hide();
-                        this.removeId = null;
-                    }.bind(this)),
+                .append('Cancel')
+                .click(function () {
+                    this.jobsModal.hide();
+                    this.removeId = null;
+                }.bind(this)),
                 $('<a type="button" class="btn btn-danger">')
-                    .append('Delete Job')
-                    .click(function () {
-                        if (this.removeId) {
-                            this.deleteJob(this.removeId);
-                        }
-                        if (this.deleteCallback) {
-                            this.deleteCallback(true);
-                        }
-                        this.deleteCallback = null;
-                        this.jobsModal.hide();
-                    }.bind(this))
+                .append('Delete Job')
+                .click(function () {
+                    if (this.removeId) {
+                        this.deleteJob(this.removeId);
+                    }
+                    if (this.deleteCallback) {
+                        this.deleteCallback(true);
+                    }
+                    this.deleteCallback = null;
+                    this.jobsModal.hide();
+                }.bind(this))
             ];
 
             this.jobsModal = new BootstrapDialog({
@@ -158,9 +164,9 @@ define([
 
             this.addButton($refreshBtn);
 
-            this.body().append(this.$jobsPanel)
-                .append(this.$loadingPanel)
-                .append(this.$errorPanel);
+            // this.body().append(this.$jobsPanel)
+            //     .append(this.$loadingPanel)
+            //     .append(this.$errorPanel);
 
             this.showMessage('Initializing...', true);
             this.handleBusMessages();
@@ -170,11 +176,10 @@ define([
             return this;
         },
         sendJobMessage: function (msgType, jobId, message) {
-            var jobChannelId = JSON.stringify({
-                    jobId: jobId
-                });
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
-                channel: jobChannelId,
+                channel: {
+                    jobId: jobId
+                },
                 key: {
                     type: msgType
                 }
@@ -184,11 +189,10 @@ define([
          * Messages sent directly to cells.
          */
         sendCellMessage: function (messageType, cellId, message) {
-            var channelId = JSON.stringify({
-                    cell: cellId
-                });
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
-                channel: channelId,
+                channel: {
+                    cell: cellId
+                },
                 key: {
                     type: messageType
                 }
@@ -197,28 +201,52 @@ define([
         handleBusMessages: function () {
             var bus = this.runtime.bus();
 
-            bus.on('request-job-deletion', function (message) {
-                this.deleteJob(message.jobId);
-            }.bind(this));
+            bus.on('ping-comm-channel', function (message) {
+                this.sendCommMessage('ping', null, {
+                    ping_id: message.pingId
+                });
+            });
 
+            // Cancels the job.
             bus.on('request-job-cancellation', function (message) {
-                this.deleteJob(message.jobId);
-                // this.sendCommMessage(this.CANCEL_JOB, message.jobId);
+                this.sendCommMessage(this.CANCEL_JOB, message.jobId);
             }.bind(this));
 
+            // Fetches job status from kernel.
             bus.on('request-job-status', function (message) {
+                // console.log('requesting job status for ' + message.jobId);
                 this.sendCommMessage(this.JOB_STATUS, message.jobId);
             }.bind(this));
 
+            // Requests job status updates for this job via the job channel, and also
+            // ensures that job polling is running.
+            bus.on('request-job-update', function (message) {
+                // console.log('requesting job updates for ' + message.jobId);
+                this.sendCommMessage(this.START_JOB_UPDATE, message.jobId);
+            }.bind(this));
+
+            // Tells kernel to stop including a job in the lookup loop.
+            bus.on('request-job-completion', function (message) {
+                // console.log('cancelling job updates for ' + message.jobId);
+                this.sendCommMessage(this.STOP_JOB_UPDATE, message.jobId);
+            }.bind(this));
+
+            // Fetches job logs from kernel.
             bus.on('request-job-log', function (message) {
                 this.sendCommMessage(this.JOB_LOGS, message.jobId, message.options);
             }.bind(this));
 
+            // Fetches most recent job logs from kernel.
             bus.on('request-latest-job-log', function (message) {
                 this.sendCommMessage(this.JOB_LOGS_LATEST, message.jobId, message.options);
             }.bind(this));
-        },
 
+            // Fetches info (not state) about a job. Like the app id, name, and inputs.
+            bus.on('request-job-info', function (message) {
+                this.sendCommMessage(this.JOB_INFO, message.jobId);
+            }.bind(this));
+
+        },
         /**
          * Sends a comm message to the JobManager in the kernel.
          * If there's no comm channel ready, tries to set one up first.
@@ -234,70 +262,72 @@ define([
          * message, where appropriate.
          */
         sendCommMessage: function (msgType, jobId, options) {
-            if (!this.comm) {
-                this.initCommChannel(function () {
-                    this.sendCommMessage(msgType, jobId, options);
-                }.bind(this));
-                return;
-            }
-            var msg = {
-                target_name: this.COMM_NAME,
-                request_type: msgType
-            };
-            if (jobId) {
-                msg.job_id = jobId;
-            }
-            if (options) {
-                msg = $.extend({}, msg, options);
-            }
-            this.comm.send(msg);
+            return Promise.try(function () {
+                // TODO: send specific error so that client can retry.
+                if (!this.comm) {
+                    console.error('Comm channel not initialized, not sending message.');
+                    throw new Error('Comm channel not initialized, not sending message.');
+                }
+
+                var msg = {
+                    target_name: this.COMM_NAME,
+                    request_type: msgType
+                };
+                if (jobId) {
+                    msg.job_id = jobId;
+                }
+                if (options) {
+                    msg = $.extend({}, msg, options);
+                }
+                this.comm.send(msg);
+            }.bind(this))
+            .catch(function (err) {
+                console.error('ERROR sending comm message', err, msgType, jobId, options);
+                // alert('Error sending comm message! ' + err.message);
+            });
         },
         handleCommMessages: function (msg) {
-            var msgType = msg.content.data.msg_type,
-                bus = this.runtime.bus();
-
+            var msgType = msg.content.data.msg_type;
+            var msgData = msg.content.data.content;
+            // console.log('COMM', msgType, msg);
             switch (msgType) {
-                case 'new_job':
-                    // this.registerKernelJob(msg.content.data.content);
-                    Jupyter.notebook.save_checkpoint();
-                    break;
+            case 'start':
+                // console.log('START', msgData.time);
+                break;
+            case 'new_job':
+                // this.registerKernelJob(msg.content.data.content);
+                Jupyter.notebook.save_checkpoint();
+                break;
                 /*
                  * The job status for one or more jobs. See job_status_all
                  * for a message which covers all active jobs.
                  * Note that these messages are additive to the job panel
                  * cache, but the reverse logic does not apply.
                  */
-                case 'job_status':
-                    var incomingJobs = msg.content.data.content;
-                    
-                    /*
-                     * Ensure there is a locally cached copy of each job.
-                     *
-                     */
-                    for (var jobId in incomingJobs) {
-                        var jobStateMessage = incomingJobs[jobId];
-                        // We could just copy the entire message into the job
-                        // states cache, but referencing each individual property
-                        // is more explicit about the structure.
-                        this.jobStates[jobId] = {
-                            state: jobStateMessage.state,
-                            spec: jobStateMessage.spec,
-                            widgetParameters: jobStateMessage.widget_info
-                        };
+            case 'job_status':
+                var jobStateMessage = msg.content.data.content,
+                    jobId = jobStateMessage.state.job_id;
+                // We could just copy the entire message into the job
+                // states cache, but referencing each individual property
+                // is more explicit about the structure.
+                this.jobStates[jobId] = {
+                    state: jobStateMessage.state,
+                    spec: jobStateMessage.spec,
+                    widgetParameters: jobStateMessage.widget_info
+                };
 
-                        /*
-                         * Notify the front end about the changed or new job
-                         * states.
-                         */
-                        
-                        this.sendJobMessage('job-status', jobId, {
-                            jobId: jobId,
-                            jobState: jobStateMessage.state,
-                            outputWidgetInfo: jobStateMessage.widget_info
-                        });
-                    }
-                    this.populateJobsPanel(); //status, info, content);
-                    break;
+                /*
+                 * Notify the front end about the changed or new job
+                 * states.
+                 */
+                // console.log('sending job status', jobStateMessage);
+                this.sendJobMessage('job-status', jobId, {
+                    jobId: jobId,
+                    jobState: jobStateMessage.state,
+                    outputWidgetInfo: jobStateMessage.widget_info
+                });
+                this.populateJobsPanel(); //status, info, content);
+                break;
                 /*
                  * This message must carry all jobs linked to this narrative.
                  * The "job-deleted" logic, specifically, requires that the job
@@ -310,209 +340,307 @@ define([
                  * would need to move to the back end, since that is the only
                  * place that would truly know about all jobs for this narrative.
                  */
-                case 'job_status_all':
-                    var incomingJobs = msg.content.data.content;
+            case 'job_status_all':
+                var incomingJobs = msg.content.data.content;
 
-                    /*
-                     * Ensure there is a locally cached copy of each job.
-                     *
-                     */
-                    for (var jobId in incomingJobs) {
-                        var jobStateMessage = incomingJobs[jobId];
-                        // We could just copy the entire message into the job
-                        // states cache, but referencing each individual property
-                        // is more explicit about the structure.
-                        this.jobStates[jobId] = {
-                            state: jobStateMessage.state,
-                            spec: jobStateMessage.spec,
-                            widgetParameters: jobStateMessage.widget_info,
-                            owner: jobStateMessage.owner
-                        };
+                /*
+                 * Ensure there is a locally cached copy of each job.
+                 *
+                 */
+                for (var jobId in incomingJobs) {
+                    var jobStateMessage = incomingJobs[jobId];
+                    // We could just copy the entire message into the job
+                    // states cache, but referencing each individual property
+                    // is more explicit about the structure.
+                    this.jobStates[jobId] = {
+                        state: jobStateMessage.state,
+                        spec: jobStateMessage.spec,
+                        widgetParameters: jobStateMessage.widget_info,
+                        owner: jobStateMessage.owner
+                    };
+
+                    this.sendJobMessage('job-status', jobId, {
+                        jobId: jobId,
+                        jobState: jobStateMessage.state,
+                        outputWidgetInfo: jobStateMessage.widget_info
+                    });
+                }
+
+                // Remove jobs which are in the local cache but not in the
+                // job_status message.
+                /*
+                 * This is for maintenance of the local job state cache.
+                 * This loop used to take care of the case in which a
+                 * cached job is not found in the incoming notifications.
+                 * This would signal a "job-deleted" message.
+                 * Although it could be the case that a+++
+                 */
+                Object.keys(this.jobStates).forEach(function (jobId) {
+                    if (!incomingJobs[jobId]) {
+                        // If ths job is not found in the incoming list of all
+                        // jobs, then we must both delete it locally, and
+                        // notify any interested parties.
+                        this.sendJobMessage('job-deleted', jobId, {
+                            jobId: jobId,
+                            via: 'no_longer_exists'
+                        });
+                        // it is safe to delete properties here
+                        delete this.jobStates[jobId];
+                    }
+                }.bind(this));
+                this.populateJobsPanel(); //status, info, content);
+                break;
+            case 'job_info':
+                var jobInfoMessage = msg.content.data.content,
+                    jobId = jobInfoMessage.job_id;
+
+                this.sendJobMessage('job-info', jobId, {
+                    jobId: jobId,
+                    jobInfo: jobInfoMessage
+                });
+                break;
+            case 'run_status':
+                // Send job status notifications on the default channel,
+                // with a key on the message type and the job id, sending
+                // a copy of the original message.
+                // This allows widgets which are interested in the job
+                // to subscribe to just that job, and nothing else.
+                // If there is a need for a generic broadcast message, we
+                // can either send a second message or implement key
+                // filtering.
+
+                // TODO: make sure we are catching these ... perhaps they need to be run-status...
+                // this.sendJobMessage('job-status', msg.content.data.content.job_id, msg.content.data.content);
 
 
+                this.sendCellMessage('run-status', msg.content.data.content.cell_id, msg.content.data.content);
+                break;
+            case 'job_err':
+                this.sendJobMessage('job-error', msg.content.job_id, {
+                    jobId: msg.content.job_id,
+                    message: msg.content.message
+                });
+                console.error('Job Error', msg);
+                break;
+
+            case 'job_canceled':
+                var canceledId = msg.content.data.content.job_id;
+                this.sendJobMessage('job-canceled', canceledId, { jobId: canceledId, via: 'job_canceled' });
+                break;
+
+            case 'job_does_not_exist':
+                this.sendJobMessage('job-does-not-exist', msg.content.data.content.job_id, { jobId: msg.content.data.content.job_id, source: msg.content.data.content.source });
+                break;
+
+            case 'job_logs':
+                var jobId = msg.content.data.content.job_id;
+                this.sendJobMessage('job-logs', jobId, {
+                    jobId: jobId,
+                    logs: msg.content.data.content,
+                    latest: msg.content.data.content.latest
+                });
+                break;
+
+            case 'job_comm_error':
+                var content = msg.content.data.content;
+                if (content) {
+                    switch (content.request_type) {
+                    case 'delete_job':
+                        var modal = new BootstrapDialog({
+                            title: 'Job Deletion Error',
+                            body: $('<div>').append('<b>An error occurred while deleting your job:</b><br>' + content.message),
+                            buttons: [
+                                $('<a type="button" class="btn btn-default">')
+                                .append('OK')
+                                .click(function () {
+                                    modal.hide();
+                                })
+                            ]
+                        });
+                        modal.getElement().on('hidden.bs.modal', function () {
+                            modal.destroy();
+                        });
+                        modal.show();
+                        break;
+                    case 'cancel_job':
+                        this.sendJobMessage('job-cancel-error', content.job_id, {
+                            jobId: content.job_id,
+                            message: content.message
+                        });
+                        break;
+                    case 'job_logs':
+                        this.sendJobMessage('job-log-deleted', content.job_id, {
+                            jobId: content.job_id,
+                            message: content.message
+                        });
+                        break;
+                    case 'job_logs_latest':
+                        this.sendJobMessage('job-log-deleted', content.job_id, {
+                            jobId: content.job_id,
+                            message: content.message
+                        });
+                        break;
+                    case 'job_status':
+                        this.sendJobMessage('job-status-error', content.job_id, {
+                            jobId: content.job_id,
+                            message: content.message
+                        });
+                        break;
+                    default:
+                        this.sendJobMessage('job-error', content.job_id, {
+                            jobId: content.job_id,
+                            message: content.message,
+                            request: content.requestType
+                        });
+                        break;
+                    }
+                }
+                console.error('Error from job comm:', msg);
+                break;
+
+            case 'job_init_partial_err':
+                var content = msg.content.data.content;
+                var jobErrors = content.job_errors;
+                for (var jobId in jobErrors) {
+                    if (jobErrors.hasOwnProperty(jobId)) {
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
-                            jobState: jobStateMessage.state,
-                            outputWidgetInfo: jobStateMessage.widget_info
+                            jobState: jobErrors[jobId],
+                            outputWidgetInfo: {}
                         });
                     }
+                }
+                console.warn('Job initialization in kernel resulted in errors!');
+                console.warn(msg);
+                break;
 
-                    // Remove jobs which are in the local cache but not in the
-                    // job_status message.
-                    /*
-                     * This is for maintenance of the local job state cache.
-                     * This loop used to take care of the case in which a
-                     * cached job is not found in the incoming notifications.
-                     * This would signal a "job-deleted" message.
-                     * Although it could be the case that a+++
-                     */
-                    // NB: this implies that t
-                    Object.keys(this.jobStates).forEach(function (jobId) {
-                        if (!incomingJobs[jobId]) {
-                            // If ths job is not found in the incoming list of all
-                            // jobs, then we must both delete it locally, and
-                            // notify any interested parties.
-                            this.sendJobMessage('job-deleted', jobId, {
-                                jobId: jobId,
-                                via: 'no_longer_exists'
-                            });
-                            // it is safe to delete properties here
-                            delete this.jobStates[jobId];
-                        }
-                    }.bind(this));
-                    this.populateJobsPanel(); //status, info, content);
-                    break;
-                case 'run_status':
-                    // Send job status notifications on the default channel,
-                    // with a key on the message type and the job id, sending
-                    // a copy of the original message.
-                    // This allows widgets which are interested in the job
-                    // to subscribe to just that job, and nothing else.
-                    // If there is a need for a generic broadcast message, we
-                    // can either send a second message or implement key
-                    // filtering.
-
-                    // TODO: make sure we are catching these ... perhaps they need to be run-status...
-                    // this.sendJobMessage('job-status', msg.content.data.content.job_id, msg.content.data.content);
+            case 'job_init_err':
+            case 'job_init_lookup_err':
+                var content = msg.content.data.content;
+                /*
+                 code, error, job_id (opt), message, name, source
+                 */
+                var $modalBody = $(Handlebars.compile(JobInitErrorTemplate)(content));
+                var modal = new BootstrapDialog({
+                    title: 'Job Initialization Error',
+                    body: $modalBody,
+                    buttons: [
+                        $('<a type="button" class="btn btn-default">')
+                        .append('OK')
+                        .click(function (event) {
+                            modal.hide();
+                        })
+                    ]
+                });
+                new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
+                    elements: [{
+                        title: 'Detailed Error Information',
+                        body: $('<table class="table table-bordered"><tr><th>code:</th><td>' + content.code + '</td></tr>' +
+                            '<tr><th>error:</th><td>' + content.message + '</td></tr>' +
+                            (function () {
+                                if (content.service) {
+                                    return '<tr><th>service:</th><td>' + content.service + '</td></tr>';
+                                }
+                                return '';
+                            }()) +
+                            '<tr><th>type:</th><td>' + content.name + '</td></tr>' +
+                            '<tr><th>source:</th><td>' + content.source + '</td></tr></table>')
+                    }]
+                });
 
 
-                    this.sendCellMessage('run-status', msg.content.data.content.cell_id, msg.content.data.content);
-                    break;
-                case 'job_err':
-                    this.sendJobMessage('job-error', msg.content.job_id, {
-                        jobId: msg.content.job_id,
-                        message: msg.content.message
-                    });
-                    console.error('Job Error', msg);
-                    break;
+                $modalBody.find('button#kb-job-err-report').click(function (e) {
 
-                case 'job_deleted':
-                    var deletedId = msg.content.data.content.job_id;
-                    this.sendJobMessage('job-deleted', deletedId, {jobId: deletedId, via: 'job_deleted'});
-                    // console.info('Deleted job ' + deletedId);
-                    this.removeDeletedJob(deletedId);
-                    break;
-
-                case 'job_canceled':
-                    var canceledId = msg.content.data.content.job_id;
-                    this.sendJobMessage('job-deleted', canceledId, {jobId: canceledId, via: 'job_canceled'});
-                    break;
-
-                case 'job_does_not_exist':
-                    this.sendJobMessage('job-does-not-exist', msg.content.data.content.job_id, {jobId: msg.content.data.content.job_id, source: msg.content.data.content.source});
-                    break;
-
-                case 'job_logs':
-                    var jobId = msg.content.data.content.job_id;
-
-                    this.sendJobMessage('job-logs', jobId, {
-                        jobId: jobId,
-                        logs: msg.content.data.content,
-                        latest: msg.content.data.content.latest
-                    });
-                    break;
-
-                case 'job_comm_error':
-                    var content = msg.content.data.content;
-                    if (content) {
-                        switch (content.request_type) {
-                            case 'delete_job':
-                                var modal = new BootstrapDialog({
-                                    title: 'Job Deletion Error',
-                                    body: $('<div>').append('<b>An error occurred while deleting your job:</b><br>' + content.message),
-                                    buttons: [
-                                        $('<a type="button" class="btn btn-default">')
-                                        .append("OK")
-                                        .click(function (event) {
-                                            modal.hide();
-                                        })
-                                    ]
-                                });
-                                modal.getElement().on('hidden.bs.modal', function() {
-                                    modal.destroy();
-                                });
-                                modal.show();
-                                break;
-                            case 'job_logs':
-                                this.sendJobMessage('job-log-deleted', content.job_id, {jobId: content.job_id});
-                                break;
-                            case 'job_logs_latest':
-                                this.sendJobMessage('job-log-deleted', content.job_id, {jobId: content.job_id});
-                                break;
-                            case 'job_status':
-                                this.sendJobMessage('job-status-error', content.job_id, {
-                                    jobId: content.job_id,
-                                    message: content.message
-                                });
-                                break;
-                            default:
-                                this.sendJobMessage('job-error', content.job_id, {
-                                    jobId: content.job_id,
-                                    message: content.message,
-                                    request: content.requestType
-                                });
-                                break;
-                        }
-                    }
-                    console.error('Error from job comm:', msg);
-                    break;
-                default:
-                    console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "'):");
-                    console.warn(msg);
+                });
+                modal.getElement().on('hidden.bs.modal', function () {
+                    modal.destroy();
+                });
+                modal.show();
+                break;
+            case 'result':
+                var message = msg.content.data.content;
+                this.sendCellMessage('result', message.address.cell_id, message);
+                break;
+            default:
+                console.warn('Unhandled KBaseJobs message from kernel (type=\'' + msgType + '\'):');
+                console.warn(msg);
             }
         },
         /**
          * Initializes the comm channel to the back end.
-         * Takes a callback to be executed once the channel's up, since the Jupyter
-         * async kernel methods don't seem to play well with Promises.
-         * (At least, I couldn't get them to work - Bill 5/27/2016)
          */
-        initCommChannel: function (callback) {
+        initCommChannel: function () {
+            console.log('INITIALIZING COMM CHANNEL NOW');
+            var _this = this;
             this.comm = null;
-            // init the backend with existing jobs.
-            // if (this.jobStates === null)
-            //     this.initJobStates();
-
-            // console.info('Jobs Panel: looking up comm info');
-            Jupyter.notebook.kernel.comm_info(this.COMM_NAME, function (msg) {
-                // console.info('Jobs Panel: got info');
-                // console.info(msg);
-                if (msg.content && msg.content.comms) {
-                    // skim the reply for the right id
-                    for (var id in msg.content.comms) {
-                        if (msg.content.comms[id].target_name === this.COMM_NAME) {
-                            //console.info('Jobs Panel: Found an existing channel!');
-                            //console.info(msg);
-                            this.comm = new JupyterComm.Comm(this.COMM_NAME, id);
-                            Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
-                            this.comm.on_msg(this.handleCommMessages.bind(this));
+            var commSemaphore = Semaphore.make();
+            commSemaphore.add('comm', false);
+            return new Promise(function (resolve, reject) {
+                // First we check to see if our comm channel already
+                // exists. If so, we do some funny business to create a
+                // new client side for it, register it, and set up our
+                // handler on it.
+                Jupyter.notebook.kernel.comm_info(_this.COMM_NAME, function (msg) {
+                    if (msg.content && msg.content.comms) {
+                        // skim the reply for the right id
+                        for (var id in msg.content.comms) {
+                            if (msg.content.comms[id].target_name === _this.COMM_NAME) {
+                                _this.comm = new JupyterComm.Comm(_this.COMM_NAME, id);
+                                Jupyter.notebook.kernel.comm_manager.register_comm(_this.comm);
+                                _this.comm.on_msg(_this.handleCommMessages.bind(_this));
+                            }
                         }
                     }
+                    resolve();
+                });
+            })
+            .then(function () {
+                // If no existing comm channel could be hooked up to, we have an alternative
+                // strategy, apparently. We register our channel endpoint, even though there is
+                // no back end yet, and our next call to utilize it below will create it??
+                if (_this.comm) {
+                    commSemaphore.set('comm', 'ready');
+                    return;
                 }
-                if (this.comm === null) {
-                    // console.info('Jobs Panel: setting up a new channel - ' + this.COMM_NAME);
-                    Jupyter.notebook.kernel.comm_manager.register_target(this.COMM_NAME, function (comm, msg) {
-                        // console.info('Jobs Panel: new channel set up - ', comm);
-                        this.comm = comm;
-                        comm.on_msg(this.handleCommMessages.bind(this));
-                    }.bind(this));
+                return new Promise(function (resolve, reject) {
+                    Jupyter.notebook.kernel.comm_manager.register_target(_this.COMM_NAME, function (comm, msg) {
+                        _this.comm = comm;
+                        comm.on_msg(_this.handleCommMessages.bind(_this));
+                        commSemaphore.set('comm', 'ready');
+                    });
+                    var callbacks = {
+                        shell: {
+                            reply: function (reply) {
+                                if (reply.content.error) {
+                                    console.error('ERROR executing jobInit', reply);
+                                    commSemaphore.set('comm', 'error');
+                                    reject(new Error(reply.content.name + ':' + reply.content.evalue));
+                                } else {
+                                    resolve();
+                                }
+                            }
+                        }
+                    };
+                    Jupyter.notebook.kernel.execute(_this.getJobInitCode(), callbacks);
+                });
+            })
+            .then(function () {
+                if (!_this.comm) {
+                    commSemaphore.set('comm', 'error');
+                    throw new Error('Could not initialize job comm channel');
                 }
-                Jupyter.notebook.kernel.execute(this.getJobInitCode());
-                if (callback) {
-                    callback();
-                }
-            }.bind(this));
+            });
         },
 
         getJobInitCode: function () {
-            return ["from biokbase.narrative.jobs.jobmanager import JobManager",
-                    "JobManager().initialize_jobs()"].join('\n');
+            return ['from biokbase.narrative.jobs.jobmanager import JobManager',
+                'JobManager().initialize_jobs()'
+            ].join('\n');
         },
 
         setJobCounter: function (numJobs) {
             this.$jobCountBadge.html(numJobs > 0 ? numJobs : '');
         },
-
         /**
          * @method
          * Opens a delete prompt for this job, with a 'Delete' and 'Cancel' button.
@@ -535,32 +663,31 @@ define([
             }
             var curUser = Jupyter.narrative.userId;
 
-            Promise.try(function() {
+            Promise.try(function () {
                 if (curUser !== owner) {
-                    var wsClient = new Workspace(Config.url('workspace'), {token: Jupyter.narrative.authToken});
+                    var wsClient = new Workspace(Config.url('workspace'), { token: Jupyter.narrative.authToken });
                     return Promise.resolve(wsClient.get_permissions({
-                        id: Jupyter.narrative.workspaceId
-                    }))
-                    .then(function(perms) {
-                        return (perms[curUser] && perms[curUser] === 'a');
-                    });
+                            id: Jupyter.narrative.workspaceId
+                        }))
+                        .then(function (perms) {
+                            return (perms[curUser] && perms[curUser] === 'a');
+                        });
                 } else {
                     return true;
                 }
-            }).then(function(canDelete) {
+            }).then(function (canDelete) {
                 if (!canDelete) {
                     this.openCannotDeletePrompt(owner);
-                }
-                else {
-                    var removeText = "Deleting this job will remove it from your Narrative. Any already generated data will be retained. Continue?";
-                    var warningText = "";
+                } else {
+                    var removeText = 'Deleting this job will remove it from your Narrative. Any already generated data will be retained. Continue?';
+                    var warningText = '';
 
                     if (jobState) {
                         jobState = jobState.toLowerCase();
                         if (jobState === 'queued' || jobState === 'running' || jobState === 'in-progress') {
-                            warningText = "This job is currently running on KBase servers! Removing it will attempt to stop the running job.";
+                            warningText = 'This job is currently running on KBase servers! Removing it will attempt to stop the running job.';
                         } else if (jobState === 'completed') {
-                            warningText = "This job has completed running. You may safely remove it without affecting your Narrative.";
+                            warningText = 'This job has completed running. You may safely remove it without affecting your Narrative.';
                         }
                     }
                     this.jobsModal.setBody($('<div>').append(warningText + '<br><br>' + removeText));
@@ -571,19 +698,17 @@ define([
                 }
             }.bind(this));
         },
-
-        openCannotDeletePrompt: function(owner) {
-            var text = "Sorry, only the user who created this job, " + owner + ", can delete it.";
+        openCannotDeletePrompt: function (owner) {
+            var text = 'Sorry, only the user who created this job, ' + owner + ', can delete it.';
 
             this.jobsModal.setBody($('<div>').append(text));
             this.jobsModal.setTitle('Cannot Delete Job');
             this.jobsModal.getButtons().last().hide();
             this.jobsModal.show();
-            this.jobsModal.getElement().one('hidden.bs.modal', function() {
+            this.jobsModal.getElement().one('hidden.bs.modal', function () {
                 this.jobsModal.getButtons().last().show();
             }.bind(this));
         },
-
         /**
          * Deletes a job with two steps.
          * 1. Sends a comm message to the job manager to delete the job.
@@ -598,7 +723,6 @@ define([
             // send the comm message.
             this.sendCommMessage(this.DELETE_JOB, jobId);
         },
-
         removeDeletedJob: function (jobId) {
             // remove the view widget
             if (this.jobWidgets[jobId]) {
@@ -652,7 +776,6 @@ define([
             this.$loadingPanel.hide();
             this.$jobsPanel.show();
         },
-
         /**
          * There are a few different status options that show a job is complete vs.
          * incomplete. We mark ones as "running" for our purpose if they do not
@@ -664,11 +787,9 @@ define([
             if (status) {
                 status = status.toLowerCase();
                 return (status === 'in-progress' || status === 'queued');
-            }
-            else
+            } else
                 return true;
         },
-
         /**
          * @method
          * Here we go, the first part of the rendering routine.
@@ -752,20 +873,20 @@ define([
              */
 
             // get the job's name from its spec
-            var jobName = "Unknown App";
+            var jobName = 'Unknown App';
             if (job.spec && job.spec.info && job.spec.info.name) {
-            // if (jobInfo && jobInfo.spec && jobInfo.spec.methodSpec && jobInfo.spec.methodSpec.info) {
+                // if (jobInfo && jobInfo.spec && jobInfo.spec.methodSpec && jobInfo.spec.methodSpec.info) {
                 jobName = job.spec.info.name;
             }
 
-            var status = "Unknown";
+            var status = 'Unknown';
             // if (jobState && jobState.status) {
             if (job.state.job_state) {
                 status = job.state.job_state;
                 status = status.charAt(0).toUpperCase() +
-                         status.substring(1);
+                    status.substring(1);
             }
-            var started = "Unknown";
+            var started = 'Unknown';
             var position = null;
             var task = null;
 
@@ -797,8 +918,7 @@ define([
                 completedTime = TimeFormat.prettyTimestamp(job.finish_time);
                 if (job.exec_start_time) {
                     runTime = TimeFormat.calcTimeDifference(new Date(job.exec_start_time), new Date(job.finish_time));
-                }
-                else if (job.creation_time) {
+                } else if (job.creation_time) {
                     runTime = TimeFormat.calcTimeDifference(new Date(job.creation_time), new Date(job.finish_time));
                 }
             }
@@ -815,32 +935,32 @@ define([
             var errorType = null;
             var netError = false;
             switch (status) {
-                case 'Suspend':
-                    errorType = 'Error';
-                    break;
-                case 'Error':
-                    errorType = 'Error';
-                    break;
-                case 'Unknown':
-                    errorType = 'Error';
-                    break;
-                case 'Awe_error':
-                    errorType = 'Error';
-                    break;
-                case 'Deleted':
-                    errorType = 'Deleted';
-                    break;
-                case 'Not_found_error':
-                    errorType = 'Job Not Found';
-                    break;
-                case 'Unauthorized_error':
-                    errorType = 'Unauthorized';
-                    break;
-                case 'Network_error':
-                    errorType = 'Network Error';
-                    break;
-                default:
-                    break;
+            case 'Suspend':
+                errorType = 'Error';
+                break;
+            case 'Error':
+                errorType = 'Error';
+                break;
+            case 'Unknown':
+                errorType = 'Error';
+                break;
+            case 'Awe_error':
+                errorType = 'Error';
+                break;
+            case 'Deleted':
+                errorType = 'Deleted';
+                break;
+            case 'Not_found_error':
+                errorType = 'Job Not Found';
+                break;
+            case 'Unauthorized_error':
+                errorType = 'Unauthorized';
+                break;
+            case 'Network_error':
+                errorType = 'Network Error';
+                break;
+            default:
+                break;
             }
             if (job.state.position !== undefined &&
                 job.state.position !== null &&
@@ -895,7 +1015,6 @@ define([
             }.bind(this));
             return $jobDiv;
         },
-
         /**
          * @method
          * @private
@@ -909,22 +1028,22 @@ define([
             var jobState = this.jobStates[jobId];
             var error = jobState.state.error;
 
-            var removeText = "Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?";
-            var headText = "An error has been detected in this job!";
-            var errorText = "The KBase servers are reporting an error for this job:";
-            var errorType = "Unknown";
+            var removeText = 'Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?';
+            var headText = 'An error has been detected in this job!';
+            var errorText = 'The KBase servers are reporting an error for this job:';
+            var errorType = 'Unknown';
 
             this.removeId = jobId;
             if (errorType === 'Deleted') {
-                errorText = "This job has already been deleted from KBase Servers.";
-                errorType = "Invalid Job";
+                errorText = 'This job has already been deleted from KBase Servers.';
+                errorType = 'Invalid Job';
             } else if (errorType === 'Job Not Found') {
-                errorText = "This job was not found to be running on KBase Servers. It may have been deleted, or may not be started yet.";
-                errorType = "Invalid Job";
+                errorText = 'This job was not found to be running on KBase Servers. It may have been deleted, or may not be started yet.';
+                errorType = 'Invalid Job';
             } else if (errorType === 'Unauthorized') {
-                errorText = "You do not have permission to view information about this job.";
+                errorText = 'You do not have permission to view information about this job.';
             } else if (errorType === 'Network Error') {
-                errorText = "An error occurred while looking up job information. Please refresh the jobs panel to try again.";
+                errorText = 'An error occurred while looking up job information. Please refresh the jobs panel to try again.';
             } else if (error) {
                 errorText = new Handlebars.SafeString('<div class="kb-jobs-error-modal">' + error.message + '</div>');
                 errorType = error.name;

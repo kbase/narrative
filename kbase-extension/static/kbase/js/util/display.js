@@ -5,27 +5,33 @@
  *
  * @author Bill Riehl wjriehl@lbl.gov
  */
-define(
-    [
-        'kbwidget',
-        'bootstrap',
-        'jquery',
-        'bluebird',
-        'narrativeConfig',
-        'util/timeFormat',
-        'kbase-client-api'
-    ], function (
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'underscore',
+    'bluebird',
+    'narrativeConfig',
+    'util/timeFormat',
+    'kbase-client-api',
+    'kbaseAccordion',
+    'api/auth'
+], function (
     KBWidget,
     bootstrap,
     $,
+    _,
     Promise,
     Config,
     TimeFormat,
-    kbase_client_api
-    ) {
+    kbase_client_api,
+    KBaseAccordion,
+    Auth
+) {
     'use strict';
 
     var profileClient = new UserProfile(Config.url('user_profile'));
+    var authClient = Auth.make({url: Config.url('auth')});
     var profilePageUrl = Config.url('profile_page');
     var cachedUserIds = {};
 
@@ -41,19 +47,17 @@ define(
      * displayRealName
      */
     function displayRealName(username, $target) {
-        lookupUserProfile(username).then(function (profile) {
+        authClient.getUserNames(null, [username])
+        .then(function(user) {
             var usernameLink = '<a href="' + profilePageUrl + username + '" target="_blank">' + username + '</a>';
-
-            if (profile && profile[0] && profile[0].user) {
-                var name = profile[0].user.realname;
-                if (name !== undefined)
-                    usernameLink = name + ' (' + usernameLink + ')';
+            if (user[username]) {
+                usernameLink = user[username] + ' (' + usernameLink + ')';
             }
             $target.html(usernameLink);
         })
-            .catch(function (err) {
-                console.log(err);
-            });
+        .catch(function (err) {
+            console.error(err);
+        });
     }
 
     /**
@@ -75,7 +79,7 @@ define(
     function loadingDiv(caption) {
         var $caption = $('<span>');
         var $loader = $('<div>').addClass('kb-data-loading')
-            .append('<img src="' + Config.get('loading_gif') + '">')
+            .append('<img src="' + Config.get('loading_gif') + '" style="margin:auto">')
             .append('<br>')
             .append($caption);
         if (caption)
@@ -95,14 +99,14 @@ define(
     /**
      * @method
      * getMethodIcon
-     * 
-     * Provides a JQuery object containing an Icon for narrative apps (in the 
+     *
+     * Provides a JQuery object containing an Icon for narrative apps (in the
      * legacy style) or methods (soon to be called apps).
      *
      * params = {
      *    isApp: true | false  // set to true to use the default app icon
      *    url:  string         // url to the icon image, if missing this will provide a default
-     *    size: string         // set the max-width and max-height property for url icons 
+     *    size: string         // set the max-width and max-height property for url icons
      *                         // (icons are square), default is 50px
      *    cursor: string       // if set, set the cursor css of the icon, default is 'default'
      *    setColor: true | false  // this param should probably go away, but if true will set the color of the default icon
@@ -152,11 +156,87 @@ define(
         return $icon;
     }
 
+    /**
+     * title - a string for the title of the error panel
+     * error - either a string or a simple object (key-value pairs) representing the error
+     *         if it has the following structure, then it's treated as a KBase JSON-RPC error:
+     * {
+     *     status: (number),
+     *     error: {
+     *         code: (number),
+     *         message: (string),
+     *         name: (string),
+     *         error: (long traceback string)
+     *     }
+     * }
+     * stackTrace (optional) - a (usually large) string with a stacktrace error. This gets
+     *                         hidden behind an accordion.
+     */
+    function createError(title, error, stackTrace) {
+        var $errorPanel = $('<div>')
+                          .addClass('alert alert-danger')
+                          .append('<b>' + title + '</b><br>Please contact the KBase team at <a href="http://kbase.us/contact-us/">http://kbase.us/contact-us/</a> with the information below.');
+
+        $errorPanel.append('<br><br>');
+
+        // If it's a string, just dump the string.
+        if (typeof error === 'string') {
+            $errorPanel.append(error);
+        }
+
+        // If it's an object, expect an error object
+        else if (typeof error === 'object') {
+            var errObj = error;
+            if (error.status && error.error && error.error.error) {
+                errObj = {
+                    status: error.status,
+                    code: error.error.code,
+                    message: error.error.message,
+                    name: error.error.name
+                };
+                if (!stackTrace) {
+                    stackTrace = error.error.error;
+                }
+            }
+            Object.keys(errObj).forEach(function(key) {
+                $errorPanel.append($('<div>').append('<b>' + key + ':</b> ' + errObj[key]));
+            });
+        }
+        else if (error) {
+            $errorPanel.append('No other information available. Sorry!');
+        }
+        if (stackTrace) {
+            var $traceAccordion = $('<div>');
+            $errorPanel.append($traceAccordion);
+            new KBaseAccordion($traceAccordion, {
+                elements: [
+                    {
+                        title: 'Error Details',
+                        body: $('<pre>').addClass('kb-function-error-traceback').append(stackTrace)
+                    }
+                ]}
+            );
+        }
+        return $errorPanel;
+    }
+
+    /**
+     * A helper function that makes a simple button with an icon in it.
+     * sizeClass is expected to be a bootstrap btn size (btn-xs, btn-md, etc)
+     * iconClass is expected to be a space-delimited string ('fa fa-spinner fa-spin fa-2x', etc.)
+     */
+    function simpleButton(sizeClass, iconClass) {
+        return $('<button>')
+               .addClass('btn btn-default ' + sizeClass)
+               .append($('<span>').addClass(iconClass));
+    }
 
     return {
         lookupUserProfile: lookupUserProfile,
         displayRealName: displayRealName,
         loadingDiv: loadingDiv,
-        getAppIcon: getAppIcon
+        getAppIcon: getAppIcon,
+        createError: createError,
+        simpleButton: simpleButton
     };
 });

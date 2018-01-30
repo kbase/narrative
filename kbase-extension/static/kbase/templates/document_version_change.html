@@ -1,0 +1,33 @@
+<div>
+    <h3>The currently loaded Narrative document is out of date.</h3>
+    <div>
+        <b>Currently loaded version:</b>
+        <div style="margin-left: 30px">
+            {{currentVer.[10].name}} (v<b>{{currentVer.[4]}}</b>)<br>
+            Saved by <b>{{currentVer.[5]}}</b>
+            at {{currentDate}}
+        </div>
+    </div>
+    <div>
+        <b>Updated version:</b>
+        <div style="margin-left: 30px">
+            {{newVer.[10].name}} (v<b>{{newVer.[4]}}</b>)<br>
+            Saved by <b>{{newVer.[5]}}</b>
+            at {{newDate}}
+        </div>
+    </div>
+    <br>
+    <p>
+        You can update to the latest version by simply refreshing this page. {{#unless readOnly}}However, any changes will be lost.{{/unless}}
+    </p>
+    {{#unless readOnly}}
+        <p>
+            If you save here, you might delete any changes made in the newer version.
+        </p>
+        {{#unless sameUser}}
+        <p>
+            You might consider getting in contact with <b>{{newVer.[5]}}</b> before saving over their work.
+        </p>
+        {{/unless}}
+    {{/unless}}
+</div>

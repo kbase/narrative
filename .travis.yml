@@ -2,21 +2,43 @@ sudo: false
 language: python
 python:
   - "2.7"
+addons:
+  firefox: "latest"
+  apt:
+    packages:
+      - oracle-java8-installer
+env:
+  - TRAVIS_NODE_VERSION="6.6.0"
 cache:
   directories:
-  - kbase-extension/static/components
-  - node_modules
+    - kbase-extension/static/ext_components
+    - node_modules
+    - $HOME/.cache/pip
+
 branches:
   only:
     - develop
-    - staging
     - master
-    - jupyter
+    - travis-firefox
+
 before_install:
-  - pip install virtualenv
+  - pip install virtualenv coveralls
+  - gem install coveralls-lcov
+  - nvm install $TRAVIS_NODE_VERSION
   - npm install -g bower
   - npm install -g grunt-cli
   - npm install -g karma-cli
+
 install:
   - pip install -r src/requirements.txt
+
+before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3 # give xvfb some time to start
+
 script: make build-travis-narrative && make test
+
+after_script:
+  - coveralls-lcov -v -n js-coverage/lcov/lcov.info > js-coverage.json
+  - coveralls --merge js-coverage.json

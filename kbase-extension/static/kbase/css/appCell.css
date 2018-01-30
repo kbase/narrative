@@ -1,74 +1,136 @@
-/* Wrapper class 
+/* Wrapper class
   All classes below may be wrapped in this class to avoid polluting
   the Narrative styles.
 */
-.kb-app-cell {
 
+.kb-app-cell {
+    font-family: 'Oxygen', sans-serif;
 }
+
+.kb-app-cell .kb-app-warning {
+    font-family: 'Oxygen', sans-serif;
+    text-align: center;
+}
+
 
 /** new app parameter styling **/
-.kb-app-cell  .kb-app-parameter-panel {
+
+.kb-app-cell .kb-app-parameter-panel {
     border-left: 3px solid #fff;
 }
-.kb-app-cell  .kb-app-parameter-panel-hover {
+
+.kb-app-cell .kb-app-parameter-panel-hover {
     border-left: 3px solid #428bca;
 }
+
 .kb-app-cell .kb-app-parameter-row {
-    margin:0px;
-    padding:5px;
-    border-radius:5px;
-}
-/* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
-.kb-app-cell .kb-app-parameter-row-hover {
-    background:#F9F9F9;
+    margin: 0px;
+    padding: 5px;
+    border-radius: 5px;
 }
 
-.kb-app-cell  .kb-app-parameter-row .message.-error {
+.kb-app-cell .kb-app-parameter-row:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.kb-app-row-close-btn-addon {
+    background: transparent;
+    border: 0;
+}
+
+.cell.selected .btn-default.kb-app-row-close-btn {
+    color: gray;
+}
+
+
+/* .cell.selected .btn-default.kb-app-row-close-btn:hover {
+    color: red;
+} */
+
+.kb-app-row-close-btn {
+    height: 100%;
+    margin-left: 1px;
+    /* border-left: 3px solid transparent; */
+    border-right: 0;
+    border-top: 0;
+    border-bottom: 0;
+    border: none;
+    background-color: transparent;
+    color: gray;
+}
+
+
+/* let's just do this as a normal button hover effect */
+
+.kb-app-row-close-btn:hover {
+    /* border-left: 3px solid #337ab7;  this is the bootstrap link color to match to close icon  */
+    /* color: red; */
+    /* background-color: rgba(234, 126, 126, 1); */
+}
+
+.kb-app-parameter-right-error-bar {
+    /* height: 100%; */
+    height: 28px;
+    /* firefox wants it explicitly wired */
+    background: red;
+}
+
+
+/* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
+
+.kb-app-cell .kb-app-parameter-row-hover {
+    background: #F9F9F9;
+}
+
+.kb-app-cell .kb-app-parameter-row .message.-error {
     background: #f2dede;
 }
-.kb-app-cell  .kb-app-parameter-row .message.-warning {
-    xbackground: yellow;
-}
+
+.kb-app-cell .kb-app-parameter-row .message.-warning {}
+
 .kb-app-cell .kb-app-parameter-row .message {
-    xpadding: 5px;
     text-align: center;
     font-family: 'Oxygen', sans-serif;
-    xfont-weight: bold;
-    /* font-size: 9pt; */
 }
 
 .kb-app-cell .kb-app-parameter-row .message.-error {
     color: #F44336;
 }
-.kb-app-cell .kb-app-parameter-row .message.-warning {
-    xcolor: orange;
-}
+
+.kb-app-cell .kb-app-parameter-row .message.-warning {}
+
 
 /* not sure how to get text in these divs to valign middle... */
+
 .kb-app-cell .kb-app-parameter-name {
     font-family: 'Oxygen', sans-serif;
     color: #777;
     text-align: left;
     vertical-align: bottom;
-    xmargin-top: 3px;
     padding-right: 4px;
     padding-left: 0px;
     white-space: normal;
-    xborder-bottom: 1px #ddd dotted;
 }
+
 .kb-app-cell .kb-app-parameter-input {
-    vertical-align:middle;
-    xwhite-space: nowrap;
-    xpadding-left:10px;
-    border-bottom: 1px #ccc dotted;
-}
-.kb-app-cell .kb-app-parameter-input input {
-    xfont-weight: bold;
+    vertical-align: middle;
 }
 
 .kb-app-cell .kb-app-parameter-input select.form-control {
     margin: 0;
 }
+
+.kb-app-field-feedback {
+    background: transparent;
+    border: 0;
+}
+
+.kb-input-group-addon {
+    background: transparent;
+    border: 0;
+    padding: 0px 4px 0px 4px;
+}
+
 
 /*
 This set of styles is a to accomodate the required/satisfied icon which appears
@@ -81,20 +143,25 @@ to accomodate the the icon intruding into its space. This technique makes space
 in the column in which the icon lives, and does this by shrinking the select
 control with padding, and then scooting the icon back into its column.
 */
+
+
 /* .kb-app-cell .kb-app-parameter-input > div {
-     allow space for the required (red arrow), satisfied (green checkbox) icon 
+     allow space for the required (red arrow), satisfied (green checkbox) icon
     padding-right: 20px;
 }
 */
+
 .kb-app-cell .kb-app-parameter-input .kb-app-parameter-accepted-glyph,
 .kb-app-cell .kb-app-parameter-input .kb-app-parameter-required-glyph {
     /* This scoots the icon inside */
     font-size: 15px;
     margin-left: 0;
 }
+
 .kb-app-cell .kb-app-parameter-required-glyph {
     color: #F44336;
 }
+
 .kb-app-cell .kb-app-parameter-hint {
     padding-left: 7px;
 }
@@ -105,8 +172,8 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-app-cell .kb-app-parameter-hint {
     color: #777;
-    text-align:left;
-    margin-top:3px;
+    text-align: left;
+    margin-top: 3px;
 }
 
 .kb-app-cell .kb-app-parameter-accepted-glyph {
@@ -120,10 +187,10 @@ control with padding, and then scooting the icon back into its column.
 .kb-app-cell .kb-parameter-data-row-remove {
     color: #777;
 }
+
 .kb-app-cell .kb-parameter-data-row-add {
     color: #777;
 }
-
 
 .kb-app-cell .kb-app-advanced-options-controller-inactive {
     font-family: 'Oxygen', sans-serif;
@@ -134,16 +201,18 @@ control with padding, and then scooting the icon back into its column.
     color: #777;
     text-align: center;
 }
+
 .kb-app-cell .kb-app-advanced-options-controller {
     font-family: 'Oxygen', sans-serif;
     font-weight: bold;
-    cursor:pointer;
+    cursor: pointer;
     font-style: italic;
     font-size: 10pt;
     line-height: 14px;
     color: #0088cc;
     text-align: center;
 }
+
 .kb-app-cell .kb-app-advanced-options-controller:hover {
     color: #2a6496;
 }
@@ -165,10 +234,7 @@ control with padding, and then scooting the icon back into its column.
     padding: 3px 5px;
 }
 
-
-
-
-.kb-app-cell .panel-title > [data-toggle="collapse"]::before {
+.report-widget .panel-title>[data-toggle="collapse"]::before {
     display: inline-block;
     margin-left: 0px;
     margin-right: 4px;
@@ -182,10 +248,34 @@ control with padding, and then scooting the icon back into its column.
     vertical-align: baseline;
     content: "\f078 ";
 }
-.kb-app-cell .panel-title > [data-toggle="collapse"].collapsed::before {
-    margin-left: 2px; margin-right: 2px;
+
+.report-widget .panel-title>[data-toggle="collapse"].collapsed::before {
+    margin-left: 2px;
+    margin-right: 2px;
     content: "\f054 ";
 }
+
+.kb-app-cell .panel-title>[data-toggle="collapse"]::before {
+    display: inline-block;
+    margin-left: 0px;
+    margin-right: 4px;
+    font-family: "FontAwesome";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 90%;
+    width: 12px;
+    color: silver;
+    line-height: 1;
+    vertical-align: baseline;
+    content: "\f078 ";
+}
+
+.kb-app-cell .panel-title>[data-toggle="collapse"].collapsed::before {
+    margin-left: 2px;
+    margin-right: 2px;
+    content: "\f054 ";
+}
+
 
 /* tweaks to elemnts that should be dimmed when the cell is not selected */
 
@@ -196,6 +286,7 @@ control with padding, and then scooting the icon back into its column.
 .kb-app-cell .advanced-parameter-showing {
     display: block;
 }
+
 .kb-app-cell .advanced-parameter-hidden {
     display: none;
 }
@@ -203,6 +294,261 @@ control with padding, and then scooting the icon back into its column.
 .kb-elapsed-time {
     font-family: monospace;
 }
+
 .kb-elapsed-time.-active {
     color: lime;
+}
+
+.kb-app-cell-info-desc {
+    border: 1px solid #777;
+    padding: 10px;
+    margin-right: 10px;
+    min-height: 100px;
+}
+
+.kb-app-cell-info {
+    color: #777;
+    font-family: 'Oxygen', sans-serif;
+    font-size: 12pt;
+}
+
+.kb-app-cell-info .header {
+    border-bottom: 1px solid #777;
+    padding: 5px 0;
+    margin-bottom: 8px;
+}
+
+.kb-app-cell-info .value {
+    color: #000;
+}
+
+
+/*
+New button color scheme
+
+blue for border, backgrounds, text: rgb(0, 147, 255))
+
+official kbase color: rgb(33,150,243)
+
+disabled color for border, text
+
+enabled run color - (green) -  rgb(2,140,10)
+official kbase green:
+
+rgb(75,184,86)
+
+or
+
+ rgb(42,190,159) which is the lighter variant. both used in mocks (but depends where you sample).
+
+disabled run color - (green) -
+
+error color - red - rgb(209,82,65)
+
+disabled (gray) - 205,205,205
+
+warning: orange
+
+*/
+
+.btn.kb-app-cell-btn {
+    color: rgb(33, 150, 243);
+    background-color: #FFF;
+    border: 2px rgb(33, 150, 243) solid;
+    margin-bottom: 4px
+}
+
+
+/* Primary Button Style */
+
+.btn.kb-app-cell-btn.btn-primary {
+    color: rgb(33, 150, 243);
+    border: 2px rgb(33, 150, 243) solid;
+}
+
+.btn.kb-app-cell-btn.btn-primary:hover {
+    color: #FFF;
+    background-color: rgb(33, 150, 243);
+    border-bottom: 6px rgb(33, 150, 243) solid;
+    margin-bottom: 0;
+}
+
+.btn.kb-app-cell-btn.btn-primary:active {
+    color: #FFF;
+    background-color: rgb(33, 150, 243);
+}
+
+
+/* Hovering over an active cell is different, it tries to make the tab look
+   disassociated but using a gray background so it doesnt look like an inactive
+   tab */
+
+.btn.kb-app-cell-btn.btn-primary.active {
+    color: white;
+    background-color: rgb(33, 150, 243);
+    border: 2px rgb(33, 150, 243) solid;
+    border-bottom: 6px rgb(33, 150, 243) solid;
+    margin-bottom: 0;
+}
+
+.btn.kb-app-cell-btn.btn-primary.active:hover {
+    color: rgb(33, 150, 243);
+    background-color: #DDD;
+    border-bottom: 2px rgb(33, 150, 243) solid;
+    margin-bottom: 4px;
+}
+
+
+/* DANGER - for error */
+
+.btn.kb-app-cell-btn.btn-danger {
+    color: rgb(209, 82, 65);
+    border: 2px rgb(209, 82, 65) solid;
+}
+
+.btn.kb-app-cell-btn.btn-danger:hover {
+    color: #FFF;
+    background-color: rgb(209, 82, 65);
+    border-bottom: 6px rgb(209, 82, 65) solid;
+    margin-bottom: 0;
+}
+
+.btn.kb-app-cell-btn.btn-danger.active:hover {
+    color: rgb(209, 82, 65);
+    background-color: #DDD;
+    border-bottom: 2px rgb(209, 82, 65) solid;
+    margin-bottom: 4px;
+}
+
+.btn.kb-app-cell-btn.btn-danger.active {
+    color: white;
+    background-color: rgb(209, 82, 65);
+    border: 2px rgb(209, 82, 65) solid;
+    border-bottom: 6px rgb(209, 82, 65) solid;
+    margin-bottom: 0;
+}
+
+.btn.kb-app-cell-btn.btn-danger.active:hover {
+    color: rgb(209, 82, 65);
+    background-color: #DDD;
+    border-bottom: 2px rgb(209, 82, 65) solid;
+    margin-bottom: 4px;
+}
+
+
+/* DISABLED is gray border and text */
+
+
+/*
+.btn.kb-app-cell-btn.btn-primary.disabled:hover {
+    color: #888;
+    background-color: #FFF;
+    border-bottom: 2px #888 solid;
+    margin-bottom: 4px;
+}
+*/
+
+.btn.kb-app-cell-btn.disabled,
+.btn.kb-app-cell-btn.disabled:hover,
+.btn.kb-app-cell-btn.disabled:active {
+    color: #888;
+    background-color: #FFF;
+    border: 2px #888 solid;
+    margin-bottom: 4px;
+}
+
+.kb-app-cell [data-element="run-control-panel"] {
+    width: 100%;
+}
+
+.kb-app-cell [data-element="tab-pane"] {
+    border-top: 2px rgb(33, 150, 243) solid;
+}
+
+.kb-app-cell [data-element="tab-pane"]>div:empty {
+    padding: 0px;
+}
+
+.kb-app-cell [data-element="tab-pane"]>div {
+    padding: 4px;
+}
+
+.kb-app-status-ok {
+    color: rgb(75, 184, 86);
+}
+
+.kb-app-status-warning {
+    color: orange;
+}
+
+.kb-app-status-danger,
+.kb-app-status-error {
+    color: rgb(209, 82, 65);
+}
+
+.kb-app-status-default {
+    color: rgb(33, 150, 243);
+}
+
+
+/* app cell panels */
+
+
+/* TODO: higher level selector */
+
+.parameter-panel .info-panel {
+    padding-top: 4px;
+    background: transparent;
+}
+
+.tt-input,
+.tt-query {
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    width: 100%
+}
+
+.tt-hint {
+    color: #999
+}
+
+.tt-menu {
+    /* used to be tt-dropdown-menu in older versions */
+    margin-top: 4px;
+    padding: 4px 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
+    -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
+    width: 100%
+}
+
+.tt-suggestion {
+    padding: 3px 20px;
+    line-height: 24px;
+}
+
+.tt-suggestion.tt-cursor,
+.tt-suggestion:hover {
+    color: #fff;
+    background-color: #0097cf;
+}
+
+.tt-suggestion p {
+    margin: 0;
+}
+
+.tt-header {
+    font-size: 75%;
+    /* this doesn't work, don't want to just turn it on, though:
+  font-color : gray;
+  */
+    font-style: italic;
+    padding-left: 5px;
 }

@@ -1,0 +1,37 @@
+<div id="kb-loading-blocker">
+    <!-- <img src="{{ static_url("kbase/images/kbase_logo_rect.png") }}"
+            class="kb-logo"> -->
+    <div id="" style="text-align:center; padding-top:10%">
+        <!-- <i class="fa fa-4x fa-spinner fa-spin"></i> -->
+        <img src="{{ static_url("kbase/images/kbase_animated_logo.gif") }}"></img>
+    </div>
+    <p>Connecting to KBase services...</p>
+    <div class="progress-container">
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped active" role="progressbar"
+                 aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div>
+        </div>
+        <div id="kb-loading-progress">
+            <div data-element="narrative">
+                <span>Loading your Narrative document...</span>
+                <span class="kb-progress-stage pull-right"></span>
+            </div>
+            <div data-element="data">
+                <span>Loading your Narrative's data...</span>
+                <span class="kb-progress-stage pull-right"></span>
+            </div>
+            <div data-element="apps">
+                <span>Loading available Apps...</span>
+                <span class="kb-progress-stage pull-right"></span>
+            </div>
+            <div data-element="kernel">
+                <span>Connecting to Jupyter backend...</span>
+                <span class="kb-progress-stage pull-right"></span>
+            </div>
+            <div data-element="jobs">
+                <span>Fetching current job information...</span>
+                <span class="kb-progress-stage pull-right"></span>
+            </div>
+        </div>
+    </div>
+</div>

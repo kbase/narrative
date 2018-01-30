@@ -8,9 +8,6 @@ You can also do free-form logs, but these will be ignored by
 most upstream consumers.
 
 """
-__author__ = 'Dan Gunter <dkgunter@lbl.gov>'
-__date__ = '2014-07-31'
-
 import collections
 import logging
 from logging import handlers
@@ -21,6 +18,10 @@ import time
 from .util import kbase_env
 from . import log_proxy
 from .log_common import format_event
+from .narrative_logger import NarrativeLogger
+
+__author__ = 'Dan Gunter <dkgunter@lbl.gov>'
+__date__ = '2014-07-31'
 
 ## Constants
 
@@ -33,12 +34,26 @@ KBASE_PROXY_ENV = 'KBASE_PROXY_CONFIG'
 ## Internal logging
 
 _log = logging.getLogger("tornado.application")
+_narr_log = NarrativeLogger()
 
 # WTF is going on logging
 #def _logdbg(m):
 #    open("/tmp/wtf", "a").write(m + "\n")
 
 ## External functions
+
+
+def get_narrative_logger():
+    """Get a Narrative logger that talks to the Logstash store.
+
+    This doesn't do the usual write-to-syslog thing, but opens a socket to
+    Logstash, and writes a hunk of JSON to it. It probably doesn't make sense to use
+    the typical Python logging library, I don't think.
+
+    It's really intended for specific events that should be collated and used for metrics.
+    """
+    return _narr_log
+
 
 def get_logger(name="", init=False):
     """Get a given KBase log obj.
@@ -130,6 +145,8 @@ class BufferedSocketHandler(handlers.SocketHandler):
         # stuff 'extra' from environment into record
         #_logdbg("@@ stuffing into record: {}".format(kbase_env))
         record.__dict__.update(kbase_env)
+        if 'auth_token' in record.__dict__:
+            del record.__dict__['auth_token']
         self.buf_lock.acquire()
         try:
             self.buf.append(record)
@@ -216,6 +233,7 @@ class NarrativeUIError(object):
     """Created by Narrative UI javascript on an error.
     """
     ui_log = get_logger("narrative_ui")
+
     def __init__(self, is_fatal, where="unknown location", what="unknown condition"):
         info = {"function": where, "msg": what}
         msg = format_event("ui.error", info)

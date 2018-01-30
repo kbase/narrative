@@ -15,20 +15,15 @@ Distributed unspecified open source license as of 9/27/2013
 
 """
 # System
-import datetime
-import dateutil.parser
 import os
 import json
 import re
-import importlib
 # Third-party
-from unicodedata import normalize
 from tornado.web import HTTPError
 # IPython
 # from IPython import nbformat
 import nbformat
 from nbformat import (
-    sign,
     validate,
     ValidationError
 )
@@ -36,11 +31,8 @@ from notebook.services.contents.manager import ContentsManager
 from traitlets.traitlets import (
     Unicode,
     Dict,
-    Bool,
-    List,
-    TraitError
+    List
 )
-from IPython.utils import tz
 
 # Local
 from .manager_util import base_model
@@ -50,14 +42,14 @@ from .narrativeio import (
 )
 from .kbasecheckpoints import KBaseCheckpoints
 import biokbase.narrative.ws_util as ws_util
-from biokbase.workspace.client import Workspace
-import biokbase.narrative.common.service as service
+from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import util
-import biokbase.auth
+from biokbase.narrative.common.kblogging import get_narrative_logger
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Classes
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     """
@@ -97,7 +89,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     }
 
     """
-    kbasews_uri = Unicode(service.URLS.workspace, config=True, help='Workspace service endpoint URI')
+    kbasews_uri = Unicode(URLS.workspace, config=True, help='Workspace service endpoint URI')
 
     ipynb_type = Unicode('ipynb')
     allowed_formats = List([u'json'])
@@ -136,6 +128,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         # Setup empty hash for session object
         self.kbase_session = {}
         # Init the session info we need.
+        self.narrative_logger = get_narrative_logger()
 
     def _checkpoints_class_default(self):
         return KBaseCheckpoints
@@ -143,11 +136,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     def get_userid(self):
         """Return the current user id (if logged in), or None
         """
-        t = biokbase.auth.Token()
-        if (t is not None):
-            return self.kbase_session.get(u'user_id', t.user_id)
-        else:
-            return self.kbase_session.get(u'user_id', None)
+        return util.kbase_env.user
 
     def _clean_id(self, id):
         """Clean any whitespace out of the given id"""
@@ -251,6 +240,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                     model['name'] = nar_obj['data']['metadata'].get('name', 'Untitled')
                     util.kbase_env.narrative = 'ws.{}.obj.{}'.format(obj_ref['wsid'], obj_ref['objid'])
                     util.kbase_env.workspace = model['content'].metadata.ws_name
+                    self.narrative_logger.narrative_open(u'{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), nar_obj['info'][4])
                 if user is not None:
                     model['writable'] = self.narrative_writable(u'{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), user)
                 self.log.info(u'Got narrative {}'.format(model['name']))
@@ -263,11 +253,13 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
         if not path or type == 'directory':
             #if it's the empty string, look up all narratives, treat them as a dir
+            self.log.info(u'Getting narrative list')
             model['type'] = type
             model['format'] = u'json'
             if content:
                 contents = []
                 nar_list = self.list_narratives()
+                self.log.info('Found {} narratives'.format(len(nar_list)))
                 for nar in nar_list:
                     contents.append(self._wsobj_to_model(nar, content=False))
                 model['content'] = contents
@@ -281,7 +273,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         prior to writing any data.
         """
         path = path.strip('/')
-        match = self.ws_regex.match(path)
 
         if 'type' not in model:
             raise HTTPError(400, u'No IPython model type provided')
@@ -307,6 +298,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             model = self.get(path, content=False)
             if validation_message:
                 model[u'message'] = validation_message
+            self.narrative_logger.narrative_save(u'{}/{}'.format(result[1], result[2]), result[3])
             return model
 
         except PermissionsError as err:

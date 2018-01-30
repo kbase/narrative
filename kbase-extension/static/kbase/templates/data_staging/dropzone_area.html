@@ -1,0 +1,18 @@
+<form class="kb-dropzone dropzone" style="min-height:200px">
+    <div id="global-info" style="display:none; border-bottom 1px solid #EEE; margin-bottom: 5px">
+        <div id="total-progress" class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="progress-bar progress-bar-success" style="width:0%;"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id='upload-message'></div>
+                <div>Uploads in progress will be canceled if this Narrative is closed!</div>
+            </div>
+        </div>
+    </div>
+    <input type="hidden" name="destPath" value="/{{username}}"/>
+    <div class="dz-message">
+        <p>Drag and drop data files (or click) in this box to upload them to your staging area.<br><br>
+        <p>Click the <i class="fa fa-question-circle"></i> below for help.
+    </div>
+</form>

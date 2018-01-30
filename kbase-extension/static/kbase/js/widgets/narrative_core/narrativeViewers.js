@@ -1,24 +1,21 @@
 /*global define*/
 /*jslint white: true*/
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'underscore',
-		'narrativeConfig',
-		'bluebird',
-		'kbase-client-api'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		_,
-		Config,
-		Promise,
-		Clients
-	) {
+define([
+    'jquery',
+    'underscore',
+    'narrativeConfig',
+    'bluebird',
+
+    'kbwidget',
+    'bootstrap',
+    'kbase-client-api'
+], function(
+    $,
+    _,
+    Config,
+    Promise
+) {
     'use strict';
 
     /**
@@ -43,13 +40,13 @@ define (
      *
      * would dump out the object with the five keys outlined above.
      */
-    function loadViewerInfo () {
+    function loadViewerInfo() {
         var viewers = {};
         var landingPageUrls = {};
         var typeNames = {};
-        var specs = {};
         var methodIds = [];
 
+        // TODO: FIX: global reference to NarrativeMethodStore
         var methodStoreClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
 
         return Promise.resolve(methodStoreClient.list_categories({
@@ -60,18 +57,18 @@ define (
             var methodInfo = data[1];
             var allTypes = data[3];
 
-            _.each(allTypes, function (val, key) {
+            _.each(allTypes, function(val, key) {
                 // If there's an error, whine.
                 if (val.loading_error) {
-                    console.error("Error loading method [" + key + "]: " + val.loading_error);
+                    console.error('Error loading method [' + key + ']: ' + val.loading_error);
                 }
                 // If it has at least one method id, make sure its there.
                 else if (val.view_method_ids && val.view_method_ids.length > 0) {
                     var methodId = val.view_method_ids[0];
                     if (!methodInfo[methodId]) {
-                        console.log('Can\'t find method info for id: ' + methodId);
+                        console.warn('Can\'t find method info for id: ' + methodId);
                     } else if (methodInfo[methodId].loading_error) {
-                        console.log('There is an error for method info with id [' + methodId + ']: ' + methodInfo[methodId].loading_error);
+                        console.warn('There is an error for method info with id [' + methodId + ']: ' + methodInfo[methodId].loading_error);
                     } else {
                         viewers[key] = methodId;
                         landingPageUrls[key] = val.landing_page_url_prefix;
@@ -82,16 +79,18 @@ define (
             });
 
             methodIds = _.uniq(methodIds);
-            return Promise.resolve(methodStoreClient.get_method_spec({ids: methodIds}));
-        }).then(function (specs) {
-            _.each(specs, function (val, key) {
+            return Promise.resolve(methodStoreClient.get_method_spec({ ids: methodIds }));
+        }).then(function(specs) {
+            _.each(specs, function(val, key) {
                 specs[val.info.id] = val;
             });
-            return { viewers: viewers,
-                     landingPageUrls: landingPageUrls,
-                     typeNames: typeNames,
-                     specs: specs,
-                     methodIds: methodIds };
+            return {
+                viewers: viewers,
+                landingPageUrls: landingPageUrls,
+                typeNames: typeNames,
+                specs: specs,
+                methodIds: methodIds
+            };
         });
     }
 
@@ -105,17 +104,15 @@ define (
      * })
      *
      */
-    function createViewer (dataCell) {
-        var getParamValue = function (o, mapping) {
+    function createViewer(dataCell) {
+        var getParamValue = function(o, mapping) {
             var param = null;
 
             if (mapping.input_parameter) {
                 param = o.name;
-            }
-            else if (mapping.constant_value) {
+            } else if (mapping.constant_value) {
                 param = mapping.constant_value;
-            }
-            else if (mapping.narrative_system_variable) {
+            } else if (mapping.narrative_system_variable) {
                 switch (mapping.narrative_system_variable) {
                     case 'workspace':
                         param = o.ws_name;
@@ -123,14 +120,13 @@ define (
                     default:
                         console.error('An error occurred');
                 }
-            }
-            else {
+            } else {
                 console.error('an error occurred');
             }
             return param;
-        }
+        };
 
-        var transformParam = function (o, mapping, param) {
+        var transformParam = function(o, mapping, param) {
             if (mapping.target_type_transform) {
                 switch (mapping.target_type_transform) {
                     case 'list':
@@ -144,20 +140,19 @@ define (
                 }
             }
             return param;
-        }
+        };
 
         return loadViewerInfo().then(function(viewerInfo) {
 
             var o = dataCell.obj_info;
             var methodId = viewerInfo.viewers[o.bare_type];
             if (!methodId) {
-                console.debug("No viewer found for type=" + o.bare_type);
+                console.debug('No viewer found for type=' + o.bare_type);
                 return { widget: defaultViewer(dataCell), title: 'Unknown Data Type' };
             }
             var spec = viewerInfo.specs[methodId];
-            var inputParamId = spec['parameters'][0]['id'];
-            var output = {};
-            _.each(spec.behavior.output_mapping, function (mapping) {
+            var output = { '_obj_info': o };
+            _.each(spec.behavior.output_mapping, function(mapping) {
                 // Get parameter value
                 var param = getParamValue(o, mapping);
                 if (param === null) {
@@ -167,7 +162,7 @@ define (
                 // Get transformed parameter value
                 param = transformParam(o, mapping, param);
                 if (param === null) {
-                    console.error('Method (' + methodId + ') spec: bad transformation type=', method.target_type_transform);
+                    console.error('Method (' + methodId + ') spec: bad transformation type (obj_info, mapping, param) = ', o, mapping, param);
                     return null;
                 }
                 // Get target property
@@ -193,11 +188,11 @@ define (
             // If that fails, try to load with require.
             // If THAT fails, fail with an error (though the error should be improved)
             catch (err) {
-                require([outputWidget], function (W) {
+                require([outputWidget], function(W) {
                     w = new W($elem, output);
                     return w;
-                }, function (reqErr) {
-                    console.error("errors occurred while making widget: " + outputWidget, {'firstTry': err, 'requireErr': reqErr});
+                }, function(reqErr) {
+                    console.error('errors occurred while making widget: ' + outputWidget, { 'firstTry': err, 'requireErr': reqErr });
                     $elem = defaultViewer(dataCell);
                     output.widgetTitle = 'Unknown Data Type';
                 });
@@ -214,15 +209,15 @@ define (
      * Tries to add any object metadata (if available) to that viewer.
      * This returns a jquery node with a <pre> containing that info.
      */
-    function defaultViewer (dataCell) {
+    function defaultViewer(dataCell) {
         var o = dataCell.obj_info;
         var mdDesc = '';
 
         if (_.isEmpty(o.meta)) {
-            mdDesc += "No metadata";
+            mdDesc += 'No metadata';
         } else {
-            mdDesc += "Metadata";
-            _.each(_.pairs(o.meta), function (p) {
+            mdDesc += 'Metadata';
+            _.each(_.pairs(o.meta), function(p) {
                 mdDesc += '\n' + p[0] + ': ' + p[1];
             });
         }

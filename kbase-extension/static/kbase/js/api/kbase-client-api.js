@@ -1,4 +1,4 @@
-/*! kbase-client-api 2015-01-30 */
+/*! kbase-client-api 2016-10-07 */
 
 
 function AbstractHandle(url, auth, auth_cb) {
@@ -184,7 +184,7 @@ function AbstractHandle(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("AbstractHandle.ids_to_handles", [ids], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -1111,7 +1111,7 @@ function CDMI_API(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("CDMI_API.get_relationship", [relationship_names], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -6686,7 +6686,7 @@ function CDMI_EntityAPI(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("CDMI_EntityAPI.get_relationship_AreCodonsFor", [ids, from_fields, rel_fields, to_fields], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -6810,7 +6810,7 @@ function CoExpression(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("CoExpression.const_coex_net_clust", [args], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -6924,7 +6924,7 @@ function CompressionBasedDistance(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("CompressionBasedDistance.build_matrix", [input], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -7051,7 +7051,7 @@ function ERDB_Service(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("ERDB_Service.runSQL", [SQLstring, parameters], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -7233,13 +7233,13 @@ function ExpressionServices(url,auth) {
                     'version': "1.1",
                     'id': String(Math.random()).slice(2),
         };
-        
+
         var body = JSON.stringify(rpc);
-        
+
         var http = new XMLHttpRequest();
-        
+
         http.open("POST", url, async_flag);
-        
+
         //Send the proper header information along with the request
         http.setRequestHeader("Content-type", "application/json");
         //http.setRequestHeader("Content-length", body.length);
@@ -7258,16 +7258,16 @@ function ExpressionServices(url,auth) {
                     'version': "1.1",
                     'id': String(Math.random()).slice(2),
         };
-        
+
         var body = JSON.stringify(rpc);
         var resp_txt;
         var code;
-        
+
         var x = jQuery.ajax({       "async": false,
                                     dataType: "text",
                                     url: _url,
-                                    beforeSend: function (xhr){ 
-                                        xhr.setRequestHeader('Authorization', _auth.token); 
+                                    beforeSend: function (xhr){
+                                        xhr.setRequestHeader('Authorization', _auth.token);
                                     },
                                     success: function (data, status, xhr) { resp_txt = data; code = xhr.status },
                                     error: function(xhr, textStatus, errorThrown) { resp_txt = xhr.responseText, code = xhr.status },
@@ -7281,7 +7281,7 @@ function ExpressionServices(url,auth) {
         if (resp_txt)
         {
             var resp = JSON.parse(resp_txt);
-            
+
             if (code >= 500)
             {
                 throw resp.error;
@@ -7304,16 +7304,16 @@ function ExpressionServices(url,auth) {
                     'version': "1.1",
                     'id': String(Math.random()).slice(2),
         };
-        
+
         var body = JSON.stringify(rpc);
         var resp_txt;
         var code;
-        
+
         var x = jQuery.ajax({       "async": true,
                                     dataType: "text",
                                     url: _url,
-                                    beforeSend: function (xhr){ 
-                                        xhr.setRequestHeader('Authorization', _auth.token); 
+                                    beforeSend: function (xhr){
+                                        xhr.setRequestHeader('Authorization', _auth.token);
                                     },
                                     success: function (data, status, xhr)
                                 {
@@ -7327,7 +7327,7 @@ function ExpressionServices(url,auth) {
                                     {
                                         callback(result);
                                     }
-                                    
+
                                 },
                                     error: function(xhr, textStatus, errorThrown)
                                 {
@@ -7356,7 +7356,7 @@ function ExpressionServices(url,auth) {
         var tup = _json_call_prepare(_url, method, params, true);
         var http = tup[0];
         var body = tup[1];
-        
+
         http.onreadystatechange = function() {
             if (http.readyState == 4 && http.status == 200) {
                 var resp_txt = http.responseText;
@@ -7372,24 +7372,24 @@ function ExpressionServices(url,auth) {
                 }
             }
         }
-        
+
         http.send(body);
-        
+
     }
-    
+
     function json_call_sync(method, params)
     {
         var tup = _json_call_prepare(url, method, params, false);
         var http = tup[0];
         var body = tup[1];
-        
+
         http.send(body);
-        
+
         var resp_txt = http.responseText;
-        
+
         var resp = JSON.parse(resp_txt);
         var result = resp["result"];
-            
+
         return result;
     }
 }
@@ -7478,7 +7478,7 @@ function GWAS(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("GWAS.gwas_genelist_to_networks", [args], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -8175,7 +8175,7 @@ function GenomeAnnotation(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("GenomeAnnotation.pipeline_batch_enumerate_batches", [], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -8319,7 +8319,7 @@ function GenomeComparison(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("GenomeComparison.import_ncbi_genome", [input], 0, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -8443,7 +8443,7 @@ function HandleMngr(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("HandleMngr.add_read_acl", [hids, username], 0, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -8610,7 +8610,7 @@ function IDServerAPI(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("IDServerAPI.get_identifier_prefix", [], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -8747,7 +8747,7 @@ function KBaseDataImport(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KBaseDataImport.import_ncbi_genome", [input], 0, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -9211,7 +9211,7 @@ function KBaseExpression(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KBaseExpression.get_expression_float_data_table_by_genome", [genome_id, numerical_interpretation], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -9338,7 +9338,7 @@ function KBaseGeneFamilies(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KBaseGeneFamilies.version", [], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -9552,7 +9552,7 @@ function KBaseNetworks(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KBaseNetworks.build_internal_network_limited_by_strength", [dataset_ids, gene_ids, edge_types, cutOff], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -9676,7 +9676,7 @@ function KBaseProteinStructure(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KBaseProteinStructure.lookup_pdb_by_fid", [feature_ids], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -10063,7 +10063,7 @@ function KBaseTrees(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KBaseTrees.build_genome_set_from_tree", [params], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -10230,7 +10230,7 @@ function KmerAnnotationByFigfam(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KmerAnnotationByFigfam.estimate_closest_genomes", [proteins, dataset_name], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -10407,7 +10407,7 @@ function NarrativeJobService(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("NarrativeJobService.list_config", [], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -10585,14 +10585,14 @@ function NarrativeMethodStore(url, auth, auth_cb) {
         return json_call_ajax("NarrativeMethodStore.list_methods_spec", [params], 1, _callback, _error_callback);
     };
 
-    this.list_method_ids_and_names = function (_callback, _errorCallback) {
+    this.list_method_ids_and_names = function (params, _callback, _errorCallback) {
     return json_call_ajax("NarrativeMethodStore.list_method_ids_and_names",
-        [], 1, _callback, _errorCallback);
+        [params], 1, _callback, _errorCallback);
 };
 
     this.list_method_ids_and_names_async = function (_callback, _error_callback) {
         deprecationWarning();
-        return json_call_ajax("NarrativeMethodStore.list_method_ids_and_names", [], 1, _callback, _error_callback);
+        return json_call_ajax("NarrativeMethodStore.list_method_ids_and_names", [params], 1, _callback, _error_callback);
     };
 
     this.list_apps = function (params, _callback, _errorCallback) {
@@ -10714,7 +10714,7 @@ function NarrativeMethodStore(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("NarrativeMethodStore.get_type_info", [params], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -10763,6 +10763,255 @@ function NarrativeMethodStore(url, auth, auth_cb) {
                         status: 503,
                         error: err,
                         url: _url,
+                        resp: data
+                    });
+                    return;
+                }
+                deferred.resolve(result);
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                var error;
+                if (xhr.responseText) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        error = resp.error;
+                    } catch (err) { // Not JSON
+                        error = "Unknown error - " + xhr.responseText;
+                    }
+                } else {
+                    error = "Unknown Error";
+                }
+                deferred.reject({
+                    status: 500,
+                    error: error
+                });
+            }
+        });
+
+        var promise = deferred.promise();
+        promise.xhr = xhr;
+        return promise;
+    }
+}
+
+
+
+
+
+function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_version) {
+    var self = this;
+
+    this.url = url;
+    var _url = url;
+
+    this.timeout = timeout;
+    var _timeout = timeout;
+
+    this.async_job_check_time_ms = async_job_check_time_ms;
+    if (!this.async_job_check_time_ms)
+        this.async_job_check_time_ms = 100;
+    this.async_job_check_time_scale_percent = 150;
+    this.async_job_check_max_time_ms = 300000;  // 5 minutes
+    this.service_version = service_version;
+    if (!this.service_version)
+        this.service_version = 'dev';
+
+    if (typeof(_url) != "string" || _url.length == 0) {
+        _url = "https://kbase.us/services/service_wizard";
+    }
+    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    var _auth_cb = auth_cb;
+
+     this.get_reads_set_v1 = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        var deferred = $.Deferred();
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
+                'version' : self.service_version}], 1, function(service_status_ret) {
+            srv_url = service_status_ret['url'];
+            json_call_ajax(srv_url, "SetAPI.get_reads_set_v1",
+                [params], 1, _callback, _errorCallback, null, deferred);
+        }, function(err) {
+            if (_errorCallback) {
+                _errorCallback(err);
+            } else {
+                deferred.reject({
+                    status: 500,
+                    error: err
+                });
+            }
+        });
+        return deferred;
+    };
+
+     this.save_reads_set_v1 = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        var deferred = $.Deferred();
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
+                'version' : self.service_version}], 1, function(service_status_ret) {
+            srv_url = service_status_ret['url'];
+            json_call_ajax(srv_url, "SetAPI.save_reads_set_v1",
+                [params], 1, _callback, _errorCallback, null, deferred);
+        }, function(err) {
+            if (_errorCallback) {
+                _errorCallback(err);
+            } else {
+                deferred.reject({
+                    status: 500,
+                    error: err
+                });
+            }
+        });
+        return deferred;
+    };
+
+     this.list_sets = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        var deferred = $.Deferred();
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
+                'version' : self.service_version}], 1, function(service_status_ret) {
+            srv_url = service_status_ret['url'];
+            json_call_ajax(srv_url, "SetAPI.list_sets",
+                [params], 1, _callback, _errorCallback, null, deferred);
+        }, function(err) {
+            if (_errorCallback) {
+                _errorCallback(err);
+            } else {
+                deferred.reject({
+                    status: 500,
+                    error: err
+                });
+            }
+        });
+        return deferred;
+    };
+
+     this.get_set_items = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        var deferred = $.Deferred();
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
+                'version' : self.service_version}], 1, function(service_status_ret) {
+            srv_url = service_status_ret['url'];
+            json_call_ajax(srv_url, "SetAPI.get_set_items",
+                [params], 1, _callback, _errorCallback, null, deferred);
+        }, function(err) {
+            if (_errorCallback) {
+                _errorCallback(err);
+            } else {
+                deferred.reject({
+                    status: 500,
+                    error: err
+                });
+            }
+        });
+        return deferred;
+    };
+
+    this.status = function (_callback, _errorCallback) {
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 2)
+            throw 'Too many arguments ('+arguments.length+' instead of 2)';
+        var deferred = $.Deferred();
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
+                'version' : self.service_version}], 1, function(service_status_ret) {
+            srv_url = service_status_ret['url'];
+            json_call_ajax(srv_url, "SetAPI.status",
+                [], 1, _callback, _errorCallback, null, deferred);
+        }, function(err) {
+            if (_errorCallback) {
+                _errorCallback(err);
+            } else {
+                deferred.reject({
+                    status: 500,
+                    error: err
+                });
+            }
+        });
+        return deferred;
+    };
+
+
+    /*
+     * JSON call using jQuery method.
+     */
+    function json_call_ajax(srv_url, method, params, numRets, callback, errorCallback, json_rpc_context, deferred) {
+        if (!deferred)
+            deferred = $.Deferred();
+
+        if (typeof callback === 'function') {
+           deferred.done(callback);
+        }
+
+        if (typeof errorCallback === 'function') {
+           deferred.fail(errorCallback);
+        }
+
+        var rpc = {
+            params : params,
+            method : method,
+            version: "1.1",
+            id: String(Math.random()).slice(2),
+        };
+        if (json_rpc_context)
+            rpc['context'] = json_rpc_context;
+
+        var beforeSend = null;
+        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+            : (_auth.token ? _auth.token : null);
+        if (token != null) {
+            beforeSend = function (xhr) {
+                xhr.setRequestHeader("Authorization", token);
+            }
+        }
+
+        var xhr = jQuery.ajax({
+            url: srv_url,
+            dataType: "text",
+            type: 'POST',
+            processData: false,
+            data: JSON.stringify(rpc),
+            beforeSend: beforeSend,
+            timeout: _timeout,
+            success: function (data, status, xhr) {
+                var result;
+                try {
+                    var resp = JSON.parse(data);
+                    result = (numRets === 1 ? resp.result[0] : resp.result);
+                } catch (err) {
+                    deferred.reject({
+                        status: 503,
+                        error: err,
+                        url: srv_url,
                         resp: data
                     });
                     return;
@@ -10868,7 +11117,7 @@ function Transform(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("Transform.convert", [args], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -11035,7 +11284,7 @@ function UserProfile(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("UserProfile.lookup_globus_user", [usernames], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -11122,7 +11371,7 @@ function UserProfile(url, auth, auth_cb) {
   Authors: Roman Sutormin <rsutormin@lbl.gov>, ...
 */
 function AweClient(params) {
-    
+
     var self = this;
 
     self.url = "https://kbase.us/services/awe-api/";
@@ -11164,7 +11413,7 @@ function AweClient(params) {
     	});
     	return promise;
     };
-   
+
 }
 
 
@@ -12138,7 +12387,7 @@ function fbaModelServices(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("fbaModelServices.build_tissue_model", [params], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -12382,7 +12631,7 @@ function MEME(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("MEME.get_pspm_collection_from_meme_result_job_from_ws", [ws_name, input_id], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -12536,7 +12785,7 @@ function ProbabilisticAnnotation(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("ProbabilisticAnnotation.get_probanno", [input], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -12652,13 +12901,13 @@ function ProbabilisticAnnotation(url, auth, auth_cb) {
   Authors: Tobias Paczian <paczian@mcs.anl.gov>, Roman Sutormin <rsutormin@lbl.gov> .
 */
 function ShockClient(params) {
-    
+
     var self = this;
 
     self.url = "https://kbase.us/services/shock-api/";
     self.auth_header = {};
     self.chunkSize = 2097152;
-    
+
 	if (params.url)
 	    self.url = params.url;
 
@@ -12667,11 +12916,11 @@ function ShockClient(params) {
 
 	if (params.chunkSize)
 		self.chunkSize = params.chunkSize;
-	
+
     self.get_node = function (node, ret, errorCallback) {
     	var url = self.url+'/node/'+node
     	var promise = jQuery.Deferred();
-    	
+
     	jQuery.ajax(url, {
     		success: function (data) {
     			var retval = null;
@@ -12696,7 +12945,7 @@ function ShockClient(params) {
     		headers: self.auth_header,
     		type: "GET"
     	});
-    	
+
     	return promise;
     };
 
@@ -12804,11 +13053,21 @@ function ShockClient(params) {
 	    });
 		return promise;
     };
-    
+
+    self.getFileLastModificationTime = function (file) {
+        if (file.lastModifiedDate) {
+            return file.lastModifiedDate.getTime();
+        } else if (file.lastModified) {
+            return file.lastModified;
+        } else {
+            return 0;
+        }
+    };
+
     self.check_file = function(file, ret, errorCallback) {
     	var promise = jQuery.Deferred();
 	    var fsize = file.size;
-	    var ftime = file.lastModifiedDate.getTime();
+	    var ftime = self.getFileLastModificationTime(file);
 	    var filters = {'file_size': fsize, 'file_time': ftime, 'file_name': file.name, 'limit': 1};
 	    self.get_nodes(filters, function (data) {
 	    	ret(data.length == 0 ? null : data[0]);
@@ -12820,7 +13079,7 @@ function ShockClient(params) {
 	    });
 	    return promise;
     };
-    
+
     self.loadNext = function (file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback) {
     	if (cancelCallback && cancelCallback())
 	{
@@ -12828,7 +13087,7 @@ function ShockClient(params) {
 		errorCallback("cancelled");
     	    return;
 	}
-	
+
 	var start = currentChunk * chunkSize;
 	var blob;
 	if (start < file.size) {
@@ -12842,11 +13101,11 @@ function ShockClient(params) {
 	var fd = new FormData();
 	fd.append(currentChunk+1, blob);
 	var lastChunk = (currentChunk + 1) * chunkSize >= file.size;
-	var incomplete_attr = { 
-	    "incomplete": (lastChunk ? "0" : "1"), 
-	    "file_size": "" + file.size, 
+	var incomplete_attr = {
+	    "incomplete": (lastChunk ? "0" : "1"),
+	    "file_size": "" + file.size,
 	    "file_name": file.name,
-	    "file_time": "" + file.lastModifiedDate.getTime(), 
+	    "file_time": String(self.getFileLastModificationTime(file)),
 	    "chunks": "" + (currentChunk+1),
 	    "chunk_size": "" + chunkSize};
 	var aFileParts = [ JSON.stringify(incomplete_attr) ];
@@ -12893,17 +13152,16 @@ function ShockClient(params) {
 		    var oMyBlob = new Blob([e.target.result], { "type" : file.type });
 		    fd.append(currentChunk+1, oMyBlob);
 		    var lastChunk = (currentChunk + 1) * chunkSize >= file.size;
-		    var incomplete_attr = { 
-		    		"incomplete": (lastChunk ? "0" : "1"), 
-		    		"file_size": "" + file.size, 
+		    var incomplete_attr = {
+		    		"incomplete": (lastChunk ? "0" : "1"),
+		    		"file_size": "" + file.size,
 		    		"file_name": file.name,
-		    		"file_time": "" + file.lastModifiedDate.getTime(), 
+		    		"file_time": String(self.getFileLastModificationTime(file)),
 		    		"chunks": "" + (currentChunk+1),
 		    		"chunk_size": "" + chunkSize};
 		    var aFileParts = [ JSON.stringify(incomplete_attr) ];
 		    var oMyBlob2 = new Blob(aFileParts, { "type" : "text\/json" });
 		    fd.append('attributes', oMyBlob2);
-console.log(Date.now() + " chunk " + currentChunk);
 		    jQuery.ajax(url, {
 		    	contentType: false,
 		    	processData: false,
@@ -12943,7 +13201,7 @@ console.log(Date.now() + " chunk " + currentChunk);
 		    ret({file_size: file.size, uploaded_size: file.size, node_id: incompleteId});
 	    }
     };
-    
+
     /**
      * Sends to ret function callback objects like {file_size: ..., uploaded_size: ..., node_id: ...}
      * for showing progress info in UI. Parameter "shockNodeId" is optional but if you know it
@@ -12955,25 +13213,21 @@ console.log(Date.now() + " chunk " + currentChunk);
 	    // if this is a chunked upload, check if it needs to be resumed
 
     	function searchForIncomplete() {
-    	    if (searchToResume) {
-    		self.check_file(file, function (incomplete) {
-    		    if (cancelCallback && cancelCallback())
-		    {
-			if (errorCallback)
-			    errorCallback("cancelled");
-    		    	return;
-		    }
-    		    processNode(incomplete);
-    		}, function(error){
-    		    if (errorCallback)
-    			errorCallback(error);
-    		    promise.resolve();
-    		});
-    	    } else {
-    		processNode(null);
-    	    }
+    		if (searchToResume) {
+    			self.check_file(file, function (incomplete) {
+    				if (cancelCallback && cancelCallback())
+    					return;
+    				processNode(incomplete);
+    			}, function(error){
+    				if (errorCallback)
+    					errorCallback(error);
+    				promise.resolve();
+    			});
+    		} else {
+    			processNode(null);
+    		}
     	}
-    	
+
     	function processNode(incomplete) {
     	    if (incomplete != null) {
     		var incompleteId = incomplete["id"];
@@ -12994,7 +13248,7 @@ console.log(Date.now() + " chunk " + currentChunk);
     		var chunkSize = self.chunkSize;
     		var chunks = Math.ceil(file.size / chunkSize);
     		var incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
-    					"file_time": "" + file.lastModifiedDate.getTime(), "chunk_size": "" + chunkSize};
+    					"file_time": String(self.getFileLastModificationTime(file)), "chunk_size": "" + chunkSize};
     		var aFileParts = [ JSON.stringify(incomplete_attr) ];
     		var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
     		var fd = new FormData();
@@ -13027,7 +13281,7 @@ console.log(Date.now() + " chunk " + currentChunk);
     		});
     	    }
     	}
-    	
+
     	if (shockNodeId) {
     	    self.get_node(shockNodeId, function(data) {
     		if (cancelCallback && cancelCallback())
@@ -13037,10 +13291,10 @@ console.log(Date.now() + " chunk " + currentChunk);
     		    return;
 		}
 		console.log(data);
-		if (data &&  data["attributes"] && 
-		    data["attributes"]["file_size"] === ("" + file.size) && 
+		if (data &&  data["attributes"] &&
+		    data["attributes"]["file_size"] === ("" + file.size) &&
 		    data["attributes"]["file_name"] === file.name &&
-    		    data["attributes"]["file_time"] === ("" + file.lastModifiedDate.getTime())) {
+    		    data["attributes"]["file_time"] === String(self.getFileLastModificationTime(file))) {
 		    processNode(data);
 		} else {
 		    searchForIncomplete();
@@ -13049,12 +13303,12 @@ console.log(Date.now() + " chunk " + currentChunk);
 		searchForIncomplete();
     	    });
     	} else {
-    	    searchForIncomplete();
+    		searchForIncomplete();
     	}
-    	
-	return promise;
+
+	    return promise;
     };
-    
+
     /**
      * Changes file.name prop indide shock node. Use this func at the end of chunk upload.
      */
@@ -13397,7 +13651,7 @@ function UserAndJobState(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("UserAndJobState.force_delete_job", [token, job], 0, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -13483,7 +13737,7 @@ function UserAndJobState(url, auth, auth_cb) {
 
 
 
-function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_version) {
+function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, service_version) {
     var self = this;
 
     this.url = url;
@@ -13491,18 +13745,19 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
 
     this.timeout = timeout;
     var _timeout = timeout;
-    
+
     this.async_job_check_time_ms = async_job_check_time_ms;
     if (!this.async_job_check_time_ms)
-        this.async_job_check_time_ms = 5000;
-    this.async_version = async_version;
+        this.async_job_check_time_ms = 100;
+    this.async_job_check_time_scale_percent = 150;
+    this.async_job_check_max_time_ms = 300000;  // 5 minutes
+    this.service_version = service_version;
 
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/ws/";
     }
     var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
     var _auth_cb = auth_cb;
-
 
      this.ver = function (_callback, _errorCallback) {
         if (_callback && typeof _callback !== 'function')
@@ -13511,10 +13766,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 0+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(0+2)+')';
-        return json_call_ajax("Workspace.ver",
+        return json_call_ajax(_url, "Workspace.ver",
             [], 1, _callback, _errorCallback);
     };
- 
+
      this.create_workspace = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13524,10 +13779,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.create_workspace",
+        return json_call_ajax(_url, "Workspace.create_workspace",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.alter_workspace_metadata = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13537,10 +13792,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.alter_workspace_metadata",
+        return json_call_ajax(_url, "Workspace.alter_workspace_metadata",
             [params], 0, _callback, _errorCallback);
     };
- 
+
      this.clone_workspace = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13550,10 +13805,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.clone_workspace",
+        return json_call_ajax(_url, "Workspace.clone_workspace",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.lock_workspace = function (wsi, _callback, _errorCallback) {
         if (typeof wsi === 'function')
             throw 'Argument wsi can not be a function';
@@ -13563,10 +13818,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.lock_workspace",
+        return json_call_ajax(_url, "Workspace.lock_workspace",
             [wsi], 1, _callback, _errorCallback);
     };
- 
+
      this.get_workspacemeta = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13576,10 +13831,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_workspacemeta",
+        return json_call_ajax(_url, "Workspace.get_workspacemeta",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.get_workspace_info = function (wsi, _callback, _errorCallback) {
         if (typeof wsi === 'function')
             throw 'Argument wsi can not be a function';
@@ -13589,10 +13844,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_workspace_info",
+        return json_call_ajax(_url, "Workspace.get_workspace_info",
             [wsi], 1, _callback, _errorCallback);
     };
- 
+
      this.get_workspace_description = function (wsi, _callback, _errorCallback) {
         if (typeof wsi === 'function')
             throw 'Argument wsi can not be a function';
@@ -13602,10 +13857,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_workspace_description",
+        return json_call_ajax(_url, "Workspace.get_workspace_description",
             [wsi], 1, _callback, _errorCallback);
     };
- 
+
      this.set_permissions = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13615,10 +13870,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.set_permissions",
+        return json_call_ajax(_url, "Workspace.set_permissions",
             [params], 0, _callback, _errorCallback);
     };
- 
+
      this.set_global_permission = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13628,10 +13883,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.set_global_permission",
+        return json_call_ajax(_url, "Workspace.set_global_permission",
             [params], 0, _callback, _errorCallback);
     };
- 
+
      this.set_workspace_description = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13641,10 +13896,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.set_workspace_description",
+        return json_call_ajax(_url, "Workspace.set_workspace_description",
             [params], 0, _callback, _errorCallback);
     };
- 
+
      this.get_permissions_mass = function (mass, _callback, _errorCallback) {
         if (typeof mass === 'function')
             throw 'Argument mass can not be a function';
@@ -13654,10 +13909,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_permissions_mass",
+        return json_call_ajax(_url, "Workspace.get_permissions_mass",
             [mass], 1, _callback, _errorCallback);
     };
- 
+
      this.get_permissions = function (wsi, _callback, _errorCallback) {
         if (typeof wsi === 'function')
             throw 'Argument wsi can not be a function';
@@ -13667,10 +13922,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_permissions",
+        return json_call_ajax(_url, "Workspace.get_permissions",
             [wsi], 1, _callback, _errorCallback);
     };
- 
+
      this.save_object = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13680,10 +13935,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.save_object",
+        return json_call_ajax(_url, "Workspace.save_object",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.save_objects = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13693,10 +13948,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.save_objects",
+        return json_call_ajax(_url, "Workspace.save_objects",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.get_object = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13706,10 +13961,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_object",
+        return json_call_ajax(_url, "Workspace.get_object",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.get_object_provenance = function (object_ids, _callback, _errorCallback) {
         if (typeof object_ids === 'function')
             throw 'Argument object_ids can not be a function';
@@ -13719,10 +13974,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_object_provenance",
+        return json_call_ajax(_url, "Workspace.get_object_provenance",
             [object_ids], 1, _callback, _errorCallback);
     };
- 
+
      this.get_objects = function (object_ids, _callback, _errorCallback) {
         if (typeof object_ids === 'function')
             throw 'Argument object_ids can not be a function';
@@ -13732,10 +13987,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_objects",
+        return json_call_ajax(_url, "Workspace.get_objects",
             [object_ids], 1, _callback, _errorCallback);
     };
- 
+
      this.get_objects2 = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13745,10 +14000,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_objects2",
+        return json_call_ajax(_url, "Workspace.get_objects2",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.get_object_subset = function (sub_object_ids, _callback, _errorCallback) {
         if (typeof sub_object_ids === 'function')
             throw 'Argument sub_object_ids can not be a function';
@@ -13758,10 +14013,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_object_subset",
+        return json_call_ajax(_url, "Workspace.get_object_subset",
             [sub_object_ids], 1, _callback, _errorCallback);
     };
- 
+
      this.get_object_history = function (object, _callback, _errorCallback) {
         if (typeof object === 'function')
             throw 'Argument object can not be a function';
@@ -13771,10 +14026,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_object_history",
+        return json_call_ajax(_url, "Workspace.get_object_history",
             [object], 1, _callback, _errorCallback);
     };
- 
+
      this.list_referencing_objects = function (object_ids, _callback, _errorCallback) {
         if (typeof object_ids === 'function')
             throw 'Argument object_ids can not be a function';
@@ -13784,10 +14039,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.list_referencing_objects",
+        return json_call_ajax(_url, "Workspace.list_referencing_objects",
             [object_ids], 1, _callback, _errorCallback);
     };
- 
+
      this.list_referencing_object_counts = function (object_ids, _callback, _errorCallback) {
         if (typeof object_ids === 'function')
             throw 'Argument object_ids can not be a function';
@@ -13797,10 +14052,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.list_referencing_object_counts",
+        return json_call_ajax(_url, "Workspace.list_referencing_object_counts",
             [object_ids], 1, _callback, _errorCallback);
     };
- 
+
      this.get_referenced_objects = function (ref_chains, _callback, _errorCallback) {
         if (typeof ref_chains === 'function')
             throw 'Argument ref_chains can not be a function';
@@ -13810,10 +14065,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_referenced_objects",
+        return json_call_ajax(_url, "Workspace.get_referenced_objects",
             [ref_chains], 1, _callback, _errorCallback);
     };
- 
+
      this.list_workspaces = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13823,10 +14078,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.list_workspaces",
+        return json_call_ajax(_url, "Workspace.list_workspaces",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.list_workspace_info = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13836,10 +14091,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.list_workspace_info",
+        return json_call_ajax(_url, "Workspace.list_workspace_info",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.list_workspace_objects = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13849,10 +14104,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.list_workspace_objects",
+        return json_call_ajax(_url, "Workspace.list_workspace_objects",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.list_objects = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13862,10 +14117,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.list_objects",
+        return json_call_ajax(_url, "Workspace.list_objects",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.get_objectmeta = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13875,10 +14130,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_objectmeta",
+        return json_call_ajax(_url, "Workspace.get_objectmeta",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.get_object_info = function (object_ids, includeMetadata, _callback, _errorCallback) {
         if (typeof object_ids === 'function')
             throw 'Argument object_ids can not be a function';
@@ -13890,10 +14145,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 2+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
-        return json_call_ajax("Workspace.get_object_info",
+        return json_call_ajax(_url, "Workspace.get_object_info",
             [object_ids, includeMetadata], 1, _callback, _errorCallback);
     };
- 
+
      this.get_object_info_new = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13903,10 +14158,23 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_object_info_new",
+        return json_call_ajax(_url, "Workspace.get_object_info_new",
             [params], 1, _callback, _errorCallback);
     };
- 
+
+     this.get_object_info3 = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Workspace.get_object_info3",
+            [params], 1, _callback, _errorCallback);
+    };
+
      this.rename_workspace = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13916,10 +14184,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.rename_workspace",
+        return json_call_ajax(_url, "Workspace.rename_workspace",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.rename_object = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13929,10 +14197,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.rename_object",
+        return json_call_ajax(_url, "Workspace.rename_object",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.copy_object = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13942,10 +14210,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.copy_object",
+        return json_call_ajax(_url, "Workspace.copy_object",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.revert_object = function (object, _callback, _errorCallback) {
         if (typeof object === 'function')
             throw 'Argument object can not be a function';
@@ -13955,10 +14223,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.revert_object",
+        return json_call_ajax(_url, "Workspace.revert_object",
             [object], 1, _callback, _errorCallback);
     };
- 
+
      this.get_names_by_prefix = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -13968,10 +14236,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_names_by_prefix",
+        return json_call_ajax(_url, "Workspace.get_names_by_prefix",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.hide_objects = function (object_ids, _callback, _errorCallback) {
         if (typeof object_ids === 'function')
             throw 'Argument object_ids can not be a function';
@@ -13981,10 +14249,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.hide_objects",
+        return json_call_ajax(_url, "Workspace.hide_objects",
             [object_ids], 0, _callback, _errorCallback);
     };
- 
+
      this.unhide_objects = function (object_ids, _callback, _errorCallback) {
         if (typeof object_ids === 'function')
             throw 'Argument object_ids can not be a function';
@@ -13994,10 +14262,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.unhide_objects",
+        return json_call_ajax(_url, "Workspace.unhide_objects",
             [object_ids], 0, _callback, _errorCallback);
     };
- 
+
      this.delete_objects = function (object_ids, _callback, _errorCallback) {
         if (typeof object_ids === 'function')
             throw 'Argument object_ids can not be a function';
@@ -14007,10 +14275,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.delete_objects",
+        return json_call_ajax(_url, "Workspace.delete_objects",
             [object_ids], 0, _callback, _errorCallback);
     };
- 
+
      this.undelete_objects = function (object_ids, _callback, _errorCallback) {
         if (typeof object_ids === 'function')
             throw 'Argument object_ids can not be a function';
@@ -14020,10 +14288,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.undelete_objects",
+        return json_call_ajax(_url, "Workspace.undelete_objects",
             [object_ids], 0, _callback, _errorCallback);
     };
- 
+
      this.delete_workspace = function (wsi, _callback, _errorCallback) {
         if (typeof wsi === 'function')
             throw 'Argument wsi can not be a function';
@@ -14033,10 +14301,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.delete_workspace",
+        return json_call_ajax(_url, "Workspace.delete_workspace",
             [wsi], 0, _callback, _errorCallback);
     };
- 
+
      this.undelete_workspace = function (wsi, _callback, _errorCallback) {
         if (typeof wsi === 'function')
             throw 'Argument wsi can not be a function';
@@ -14046,10 +14314,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.undelete_workspace",
+        return json_call_ajax(_url, "Workspace.undelete_workspace",
             [wsi], 0, _callback, _errorCallback);
     };
- 
+
      this.request_module_ownership = function (mod, _callback, _errorCallback) {
         if (typeof mod === 'function')
             throw 'Argument mod can not be a function';
@@ -14059,10 +14327,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.request_module_ownership",
+        return json_call_ajax(_url, "Workspace.request_module_ownership",
             [mod], 0, _callback, _errorCallback);
     };
- 
+
      this.register_typespec = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -14072,10 +14340,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.register_typespec",
+        return json_call_ajax(_url, "Workspace.register_typespec",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.register_typespec_copy = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -14085,10 +14353,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.register_typespec_copy",
+        return json_call_ajax(_url, "Workspace.register_typespec_copy",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.release_module = function (mod, _callback, _errorCallback) {
         if (typeof mod === 'function')
             throw 'Argument mod can not be a function';
@@ -14098,10 +14366,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.release_module",
+        return json_call_ajax(_url, "Workspace.release_module",
             [mod], 1, _callback, _errorCallback);
     };
- 
+
      this.list_modules = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -14111,10 +14379,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.list_modules",
+        return json_call_ajax(_url, "Workspace.list_modules",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.list_module_versions = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -14124,10 +14392,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.list_module_versions",
+        return json_call_ajax(_url, "Workspace.list_module_versions",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.get_module_info = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -14137,10 +14405,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_module_info",
+        return json_call_ajax(_url, "Workspace.get_module_info",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.get_jsonschema = function (type, _callback, _errorCallback) {
         if (typeof type === 'function')
             throw 'Argument type can not be a function';
@@ -14150,10 +14418,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_jsonschema",
+        return json_call_ajax(_url, "Workspace.get_jsonschema",
             [type], 1, _callback, _errorCallback);
     };
- 
+
      this.translate_from_MD5_types = function (md5_types, _callback, _errorCallback) {
         if (typeof md5_types === 'function')
             throw 'Argument md5_types can not be a function';
@@ -14163,10 +14431,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.translate_from_MD5_types",
+        return json_call_ajax(_url, "Workspace.translate_from_MD5_types",
             [md5_types], 1, _callback, _errorCallback);
     };
- 
+
      this.translate_to_MD5_types = function (sem_types, _callback, _errorCallback) {
         if (typeof sem_types === 'function')
             throw 'Argument sem_types can not be a function';
@@ -14176,10 +14444,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.translate_to_MD5_types",
+        return json_call_ajax(_url, "Workspace.translate_to_MD5_types",
             [sem_types], 1, _callback, _errorCallback);
     };
- 
+
      this.get_type_info = function (type, _callback, _errorCallback) {
         if (typeof type === 'function')
             throw 'Argument type can not be a function';
@@ -14189,10 +14457,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_type_info",
+        return json_call_ajax(_url, "Workspace.get_type_info",
             [type], 1, _callback, _errorCallback);
     };
- 
+
      this.get_all_type_info = function (mod, _callback, _errorCallback) {
         if (typeof mod === 'function')
             throw 'Argument mod can not be a function';
@@ -14202,10 +14470,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_all_type_info",
+        return json_call_ajax(_url, "Workspace.get_all_type_info",
             [mod], 1, _callback, _errorCallback);
     };
- 
+
      this.get_func_info = function (func, _callback, _errorCallback) {
         if (typeof func === 'function')
             throw 'Argument func can not be a function';
@@ -14215,10 +14483,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_func_info",
+        return json_call_ajax(_url, "Workspace.get_func_info",
             [func], 1, _callback, _errorCallback);
     };
- 
+
      this.get_all_func_info = function (mod, _callback, _errorCallback) {
         if (typeof mod === 'function')
             throw 'Argument mod can not be a function';
@@ -14228,10 +14496,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.get_all_func_info",
+        return json_call_ajax(_url, "Workspace.get_all_func_info",
             [mod], 1, _callback, _errorCallback);
     };
- 
+
      this.grant_module_ownership = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -14241,10 +14509,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.grant_module_ownership",
+        return json_call_ajax(_url, "Workspace.grant_module_ownership",
             [params], 0, _callback, _errorCallback);
     };
- 
+
      this.remove_module_ownership = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -14254,10 +14522,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.remove_module_ownership",
+        return json_call_ajax(_url, "Workspace.remove_module_ownership",
             [params], 0, _callback, _errorCallback);
     };
- 
+
      this.list_all_types = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -14267,10 +14535,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.list_all_types",
+        return json_call_ajax(_url, "Workspace.list_all_types",
             [params], 1, _callback, _errorCallback);
     };
- 
+
      this.administer = function (command, _callback, _errorCallback) {
         if (typeof command === 'function')
             throw 'Argument command can not be a function';
@@ -14280,16 +14548,28 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Workspace.administer",
+        return json_call_ajax(_url, "Workspace.administer",
             [command], 1, _callback, _errorCallback);
     };
-  
+
+    this.status = function (_callback, _errorCallback) {
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 2)
+            throw 'Too many arguments ('+arguments.length+' instead of 2)';
+        return json_call_ajax(_url, "Workspace.status",
+            [], 1, _callback, _errorCallback);
+    };
+
 
     /*
      * JSON call using jQuery method.
      */
-    function json_call_ajax(method, params, numRets, callback, errorCallback, json_rpc_context) {
-        var deferred = $.Deferred();
+    function json_call_ajax(srv_url, method, params, numRets, callback, errorCallback, json_rpc_context, deferred) {
+        if (!deferred)
+            deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -14318,7 +14598,7 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
         }
 
         var xhr = jQuery.ajax({
-            url: _url,
+            url: srv_url,
             dataType: "text",
             type: 'POST',
             processData: false,
@@ -14334,7 +14614,7 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_v
                     deferred.reject({
                         status: 503,
                         error: err,
-                        url: _url,
+                        url: srv_url,
                         resp: data
                     });
                     return;

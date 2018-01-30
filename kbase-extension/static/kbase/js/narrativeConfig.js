@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,window,console,require*/
 /*jslint white:true,browser:true*/
 /**
  * Loads the required narrative configuration files.
@@ -18,16 +18,20 @@ define([
     'json!kbase/config/config.json',
     'json!kbase/config/icons.json',
     'json!kbase/config/cdn-service-config.json',
+    'json!kbase/config/feature-config.json',
+    'json!kbase/config/staging_upload.json',
     'require'
 ], function (
     paths,
     $,
     Promise,
-    configSet,
-    iconsSet,
-    serviceSet,
+    ConfigSet,
+    IconsSet,
+    ServiceSet,
+    FeatureSet,
+    StagingUpload,
     localRequire
-    ) {
+) {
     'use strict';
 
     var config, debug;
@@ -41,27 +45,30 @@ define([
 
     // Build the config up from the configSet (from config.json)
     config = {
-        environment: configSet.config,
-        urls: configSet[configSet.config],
-        version: configSet.version,
-        name: configSet.name,
-        git_commit_hash: configSet.git_commit_hash,
-        git_commit_time: configSet.git_commit_time,
-        release_notes: configSet.release_notes,
-        mode: configSet.mode,
-        dev_mode: configSet.dev_mode,
-        tooltip: configSet.tooltip,
-        icons: iconsSet,
+        environment: ConfigSet.config,
+        urls: ConfigSet[ConfigSet.config],
+        version: ConfigSet.version,
+        name: ConfigSet.name,
+        git_commit_hash: ConfigSet.git_commit_hash,
+        git_commit_time: ConfigSet.git_commit_time,
+        release_notes: ConfigSet.release_notes,
+        mode: ConfigSet.mode,
+        dev_mode: ConfigSet.dev_mode,
+        tooltip: ConfigSet.tooltip,
+        icons: IconsSet,
         workspaceId: workspaceId,
-        loading_gif: configSet.loading_gif,
-        use_local_widgets: configSet.use_local_widgets,
-        features: configSet.features
+        loading_gif: ConfigSet.loading_gif,
+        use_local_widgets: ConfigSet.use_local_widgets,
+        features: FeatureSet,
+        uploaders: StagingUpload,
+        data_panel: ConfigSet.data_panel,
+        comm_wait_timeout: ConfigSet.comm_wait_timeout,
+        auth_cookie: ConfigSet.auth_cookie,
+        auth_sleep_recheck_ms: ConfigSet.auth_sleep_recheck_ms
     };
 
-    debug = config.mode === "debug";
+    debug = config.mode === 'debug';
     config.debug = debug;
-
-    addCdnModules(config.urls['cdn']);
 
     // Add a remote UI-common to the Require.js config
     require.config({
@@ -71,15 +78,14 @@ define([
     });
 
     window.kbconfig = config;
-    Object.keys(serviceSet).forEach(function (key) {
-        config[key] = serviceSet[key];
+    Object.keys(ServiceSet).forEach(function (key) {
+        config[key] = ServiceSet[key];
     });
 
     config['services'] = {};
     Object.keys(config.urls).forEach(function (key) {
-        config.services[key] = {'url': config.urls[key], 'name': key};
+        config.services[key] = { 'url': config.urls[key], 'name': key };
     });
-
 
     function assertConfig() {
         if (config === undefined) {
@@ -98,9 +104,9 @@ define([
      * and just run the callback.
      */
     function updateConfig() {
-        return new Promise.try(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
             if (window.kbconfig) {
-                return window.kbconfig;
+                resolve(window.kbconfig);
             }
             console.log('Config: checking remote widgets');
             assertConfig();
@@ -120,20 +126,23 @@ define([
             } else {
                 resolve(config);
             }
-        })
-        .then(function (config) {
+        }).then(function (config) {
             console.log('Config: fetching remote data configuration.');
             return Promise.resolve($.getJSON(config.urls.data_panel_sources));
-        })
-        .then(function (dataCategories) {
+        }).then(function (dataCategories) {
             console.log('Config: processing remote data configuration.');
-            config.publicCategories = dataCategories[config.environment].publicData;
-            config.exampleData = dataCategories[config.environment].exampleData;
+            var env = config.environment;
+            // little bit of a hack, but dev should => ci for all things data.
+            // it doesn't seem worth making a new dev block for the example data.
+            if (env === 'dev') {
+                env = 'ci';
+            }
+            config.publicCategories = dataCategories[env].publicData;
+            config.exampleData = dataCategories[env].exampleData;
             return Promise.try(function () {
                 return config;
             });
-        })
-        .catch(function (error) {
+        }).catch(function (error) {
             console.error('Config: unable to process remote data configuration options. Searching locally.');
             // hate embedding this stuff, but it seems the only good way.
             // the filename is the last step of that url path (after the last /)
@@ -142,17 +151,17 @@ define([
             return Promise.resolve($.getJSON('static/kbase/config/' + path[path.length - 1]))
                 .then(function (dataCategories) {
                     console.log('Config: processing local data configuration.');
-                    config.publicCategories = dataCategories[config.environment].publicData;
-                    config.exampleData = dataCategories[config.environment].exampleData;
-                    return Promise.try(function () {
-                        return config;
-                    });
+                    var env = config.environment;
+                    if (env === 'dev') {
+                        env = 'ci';
+                    }
+                    config.publicCategories = dataCategories[env].publicData;
+                    config.exampleData = dataCategories[env].exampleData;
+                    return config;
                 })
                 .catch(function (error) {
                     console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
-                    return Promise.try(function () {
-                        return config;
-                    });
+                    return config;
                 });
         });
     }
@@ -189,5 +198,5 @@ define([
         url: url,
         get: get,
         debug: debug
-    }
+    };
 });

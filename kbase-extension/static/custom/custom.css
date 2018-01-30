@@ -5,28 +5,36 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 (or the specific css file if available)
 */
 
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #337ab7;
+    color: #FFF;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] span {
+    color: #FFF !important;
+}
+
 #site {
     overflow: visible;
 }
 
+
 /* disable the standard notebook, bottom spacer */
-#notebook > .end_space {
+
+#notebook>.end_space {
     min-height: 0;
     height: 0;
 }
 
-@media (min-width: 1200px)
-#notebook-container {
+@media (min-width: 1200px) #notebook-container {
     width: auto;
 }
 
-@media (min-width: 992px)
-#notebook-container {
+@media (min-width: 992px) #notebook-container {
     width: auto;
 }
 
-@media (min-width: 768px)
-#notebook-container {
+@media (min-width: 768px) #notebook-container {
     width: auto;
 }
 
@@ -35,6 +43,7 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
     background-color: #FFFFFF;
 }
 
+
 /* .btn * { color: black; } */
 
 .celltoolbar {
@@ -42,7 +51,8 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
     background: none;
     border: none;
     border-left: 1px solid transparent;
-    padding-top: 7px;
+    padding-top: 0;
+    padding-bottom: 2px;
 }
 
 div.input_area {
@@ -52,10 +62,15 @@ div.input_area {
     padding-top: 4px;
 }
 
+div.output_subarea {
+    max-width: inherit;
+}
+
 div.text_cell_input {
     border: 1px solid #CECECE;
     border-radius: 0px;
 }
+
 
 /*div.text_cell_render {
     margin-bottom: -10px;
@@ -63,12 +78,15 @@ div.text_cell_input {
 
 div.cell {
     margin: 8px 0 8px 0px;
-    padding: 0 10px 6px 4px;
+    xpadding: 0 10px 6px 4px;
+    padding: 0;
     border: 1px solid #CCC;
+    border-left: 5px solid #CCC;
     border-radius: 0;
 }
 
 div.cell.selected {
+    margin-left: 0;
     border: 1px solid #4BB856;
     border-left: 5px solid #4BB856;
     padding-left: 0px;
@@ -96,6 +114,7 @@ div.cell.selected.kb-error {
     border: 1px solid #d9534f;
     border-left: 5px solid #d9534f;
 }
+
 input.raw_input {
     /*height:auto;*/
 }
@@ -122,7 +141,6 @@ span#notebook_name:hover {
     padding-top: 10px;
 }
 
-
 #notebook-container {
     box-shadow: none;
     -moz-box-shadow: none;
@@ -135,10 +153,16 @@ span#notebook_name:hover {
     right: 0;
     bottom: 0;
     overflow: auto;
-    padding-bottom: 100px;
+}
+#notebook-container:after{
+    content: "";
+    height: 100px;
+    display:block;
 }
 
+
 /* margin left doesn't really seeem to play well */
+
 .btn-toolbar {
     margin-left: 0;
     padding-left: -5px;
@@ -153,9 +177,11 @@ span#notebook_name:hover {
     color: #888;
     margin: 0px
 }
+
 .btn-subtle .fa {
     color: #888;
 }
+
 .btn-subtle .fa::before {
     color: #888;
 }
@@ -164,23 +190,26 @@ span#notebook_name:hover {
     box-shadow: none;
 }
 
+
 /* Fooling around with the narrative cells */
 
 .notebook_app .inner_cell {
     overflow: visible;
     /*margin-right: 4px;*/
 }
+
+
 /*.notebook_app .cell.selected .inner_cell > div:nth-child(2),
 .notebook_app .cell.selected .inner_cell > div:nth-child(3) {
     background-color: #FFF;
 }
 */
 
-.notebook_app .celltoolbar > .button_container {
+.notebook_app .celltoolbar>.button_container {
     flex: 0 auto;
 }
 
-.notebook_app .celltoolbar > .button_container:nth-child(1) {
+.notebook_app .celltoolbar>.button_container:nth-child(1) {
     flex: auto;
 }
 
@@ -196,13 +225,16 @@ span#notebook_name:hover {
     width: 75px;
 }
 
+
 /*.notebook_app .code_cell {
     background-color: #FFF;
 }
 */
+
 .notebook_app .cell.unselected div.text_cell_render {
     border: 1px solid transparent;
 }
+
 .notebook_app .cell.selected div.text_cell_render {
     border: 1px solid transparent;
 }
@@ -210,15 +242,10 @@ span#notebook_name:hover {
 .notebook_app .buttons .dropdown-menu {
     height: auto !important;
     overflow: visible !important;
-
 }
 
 .notebook_app .btn.disabled .fa {
     color: silver;
-}
-
-.notebook_app .cell .celltoolbar .btn {
-    background-color: transparent;
 }
 
 .text_cell.kb-cell .rendered_html table {
@@ -237,20 +264,26 @@ span#notebook_name:hover {
 .text_cell.opened.rendered.selected.kb-cell .rendered_html {
     border-left: 1px solid #4BB856;
 }
+
 .text_cell.opened.rendered.selected.kb-cell.kb-error .rendered_html {
     border-left: 1px solid #d9534f;
 }
+
 .text_cell.opened.rendered.kb-cell {
     padding-bottom: 0;
 }
+
+
 /* narrative cell icons */
 
 .cell.selected .prompt .method-icon {
     color: rgb(103, 58, 183);
 }
+
 .cell.selected .prompt .app-icon {
     color: rgb(0, 150, 136);
 }
+
 .cell.selected .prompt .markdown-icon {
     color: #000;
 }
@@ -279,7 +312,7 @@ span#notebook_name:hover {
     color: #D84315;
 }
 
-.cell > .inner_cell > .ctb_hideshow {
+.cell>.inner_cell>.ctb_hideshow {
     display: block;
 }
 
@@ -291,10 +324,11 @@ span#notebook_name:hover {
     color: #CCC;
 }
 
-.cell.unselected  .kb-cell-toolbar .title-container {
+.cell.unselected .kb-cell-toolbar .title-container {
     opacity: 0.5;
 }
-.cell.unselected  .kb-cell-toolbar .buttons-container {
+
+.cell.unselected .kb-cell-toolbar .buttons-container {
     opacity: 0.2;
 }
 
@@ -302,6 +336,7 @@ span#notebook_name:hover {
     display: inline-block;
     padding: 4px;
 }
+
 .kb-btn-icon .fa {
     opacity: 0.5
 }
@@ -315,6 +350,11 @@ span#notebook_name:hover {
   For some reason Jupyter removes the bottom margin. This causes problems with
    bootstrap, since bootstrap removes the top margin!
 */
+
 p {
     margin-bottom: 9px;
+}
+
+.prompt {
+    display: none !important;
 }

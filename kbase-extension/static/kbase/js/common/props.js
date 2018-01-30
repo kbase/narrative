@@ -1,8 +1,7 @@
 /*global define*/
 /*jslint white:true,browser:true */
 
-define([
-], function () {
+define([], function() {
     'use strict';
 
     // Static methods
@@ -40,6 +39,38 @@ define([
         return value;
     }
 
+    function pushDataItem(data, path, value) {
+        if (typeof path === 'string') {
+            path = path.split('.');
+        } else if (!isArray(path)) {
+            throw new TypeError('Invalid type for key: ' + (typeof path));
+        }
+        if (path.length === 0) {
+            return;
+        }
+        // pop off the last property for setting at the end.
+        var propKey = path.pop(),
+            key, temp = data;
+        // Walk the path, creating empty objects if need be.
+        while (path.length > 0) {
+            key = path.shift();
+            if (temp[key] === undefined) {
+                temp[key] = {};
+            }
+            temp = temp[key];
+        }
+        if (temp[propKey] === undefined) {
+            temp[propKey] = [];
+        }
+        temp = temp[propKey];
+        // Finally set the property.        
+
+        if (typeof temp === 'object' && temp.push) {
+            temp.push(value);
+        }
+        return temp.length - 1;
+    }
+
     function getDataItem(data, path, defaultValue) {
         if (typeof path === 'string') {
             path = path.split('.');
@@ -61,6 +92,31 @@ define([
         return temp;
     }
 
+    function popDataItem(data, path, defaultValue) {
+        if (typeof path === 'string') {
+            path = path.split('.');
+        } else if (!isArray(path)) {
+            throw new TypeError('Invalid type for key: ' + (typeof path));
+        }
+        var i, temp = data;
+        for (i = 0; i < path.length; i += 1) {
+            if ((temp === undefined) ||
+                (typeof temp !== 'object') ||
+                (temp === null)) {
+                return defaultValue;
+            }
+            temp = temp[path[i]];
+        }
+        if (temp === undefined) {
+            return defaultValue;
+        }
+        if (typeof temp === 'object' && temp.pop) {
+            return temp.pop();
+        } else {
+            throw new Error('Attempting to pop a non-array item');
+        }
+    }
+
     function factory(config) {
         if (!config) {
             config = {};
@@ -70,7 +126,8 @@ define([
             historyCount = 0,
             updateHandler = config.onUpdate,
             historyEnabled = updateHandler ? true : false,
-            lastValueSaved = false, timer, api;
+            lastValueSaved = false,
+            timer, api;
 
         /*
          * In enabled by setting an update handler via the onUpdate factory 
@@ -87,7 +144,7 @@ define([
                 return;
             }
 
-            timer = window.setTimeout(function () {
+            timer = window.setTimeout(function() {
                 try {
                     timer = null;
                     if (historyEnabled) {
@@ -106,6 +163,7 @@ define([
             }
             return historyCount;
         }
+
         function ensureHistory() {
             if (!historyEnabled) {
                 return;
@@ -117,6 +175,7 @@ define([
             lastObj = JSON.parse(JSON.stringify(obj));
             lastValueSaved = true;
         }
+
         function resetHistory() {
             if (!historyEnabled) {
                 return;
@@ -161,7 +220,20 @@ define([
             setDataItem(obj, path, value);
             run();
         }
-        
+
+        function pushItem(path, value) {
+            ensureHistory();
+            var len = pushDataItem(obj, path, value);
+            run();
+            return len;
+        }
+
+        function popItem(path, defaultValue) {
+            ensureHistory();
+            run();
+            return popDataItem(obj, path, defaultValue);
+        }
+
         function reset() {
             resetHistory();
             obj = {};
@@ -199,36 +271,36 @@ define([
             return temp[propKey];
         }
 
-        function pushItem(path, value) {
-            if (typeof path === 'string') {
-                path = path.split('.');
-            }
-            if (path.length === 0) {
-                return;
-            }
-            var propKey = path.pop(),
-                key, temp = obj;
-            while (path.length > 0) {
-                key = path.shift();
-                if (temp[key] === undefined) {
-                    temp[key] = {};
-                }
-                temp = temp[key];
-            }
-            ensureHistory();
-            if (temp[propKey] === undefined) {
-                temp[propKey] = [value];
-            } else {
-                if (temp[propKey])
-                    if (isArray(temp[propKey])) {
-                        temp[propKey].push(value);
-                    } else {
-                        throw new Error('Can only push onto an Array');
-                    }
-            }
-            run();
-            return temp[propKey];
-        }
+        //        function pushItem(path, value) {
+        //            if (typeof path === 'string') {
+        //                path = path.split('.');
+        //            }
+        //            if (path.length === 0) {
+        //                return;
+        //            }
+        //            var propKey = path.pop(),
+        //                key, temp = obj;
+        //            while (path.length > 0) {
+        //                key = path.shift();
+        //                if (temp[key] === undefined) {
+        //                    temp[key] = {};
+        //                }
+        //                temp = temp[key];
+        //            }
+        //            ensureHistory();
+        //            if (temp[propKey] === undefined) {
+        //                temp[propKey] = [value];
+        //            } else {
+        //                if (temp[propKey])
+        //                    if (isArray(temp[propKey])) {
+        //                        temp[propKey].push(value);
+        //                    } else {
+        //                        throw new Error('Can only push onto an Array');
+        //                    }
+        //            }
+        //            run();
+        //            return temp[propKey];
+        //        }
 
         function deleteItem(path) {
             if (typeof path === 'string') {
@@ -260,11 +332,12 @@ define([
             incrItem: incrItem,
             deleteItem: deleteItem,
             pushItem: pushItem,
+            popItem: popItem,
             reset: reset,
-            getRawObject: function () {
+            getRawObject: function() {
                 return obj;
             },
-            getLastRawObject: function () {
+            getLastRawObject: function() {
                 return lastObj;
             },
             getHistoryCount: getHistoryCount
@@ -273,10 +346,12 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         },
         getDataItem: getDataItem,
-        setDataItem: setDataItem
+        setDataItem: setDataItem,
+        pushDataItem: pushDataItem,
+        popDataItem: popDataItem
     };
 });

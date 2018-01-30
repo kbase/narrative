@@ -12,11 +12,10 @@ kbase-extension/static/components/
 kbase-extension/static/ext_components/
 node_modules/
 install.log
-/nbproject/private/
 /src/build/
 /venvs/
 .projectKnowledge
-/nbproject/
+nbproject
 static/dist
 my_narrative_env/
 
@@ -82,3 +81,7 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# IDE / Editor
+.vscode
+/tags

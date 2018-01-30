@@ -16,7 +16,12 @@ define (
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap',
 		'kbaseTreechart',
+		'kbaseExpressionSparkline',
+		'kbaseExpressionHeatmap',
+		'kbaseExpressionPairwiseCorrelation',
 		'knhx',
+		'base/js/namespace',
+		'kbaseGenericSetViewer'
 		// 'jquery-dataScroller'
 	], function(
 		KBWidget,
@@ -29,7 +34,12 @@ define (
 		jquery_dataTables,
 		jquery_dataTables_bootstrap,
 		kbaseTreechart,
-		knhx
+		kbaseExpressionSparkline,
+		kbaseExpressionHeatmap,
+		kbaseExpressionPairwiseCorrelation,
+		knhx,
+		Jupyter,
+		kbaseGenericSetViewer
 		// jquery_dataScroller
 	) {
 	return KBWidget({
@@ -123,6 +133,7 @@ define (
 							                self.genomeName = data[0].data.scientific_name;
 							                self.features = data[0].data.features;
 							                // Now we are ready to visualize it
+							                //self.genomeKey = data[0].info[7] + '/' + self.genomeName;
 							                self.render();
 							            },
 							            function(error){
@@ -223,7 +234,7 @@ define (
 			} );
 
             function events() {
-				self.registerActionButtonClick();
+				self.registerActionButtonClick(tabWidget);
 				updateClusterLinks("clusters");
             }
 
@@ -287,7 +298,7 @@ define (
 		    return ret;
 		},
 
-		registerActionButtonClick : function(){
+		registerActionButtonClick : function( tabWidget ){
 			var self = this;
 			var pref = self.pref;
 			$('.' + pref + 'action_button').on('click', function(e){
@@ -295,9 +306,8 @@ define (
 				var $actionButton = $(e.target);
 				if ($actionButton.prop("tagName") !== "BUTTON")
 				    $actionButton = $actionButton.parent();
-				var x = $actionButton.position().left + $('#notebook-container').scrollLeft();
-				var y = $actionButton.position().top + $('#notebook-container').scrollTop() + $actionButton[0].offsetHeight;
-
+				var x = $actionButton.position().left;
+				var y = $actionButton.position().top + $actionButton[0].offsetHeight;
 				self.$menu
                     .data("invokedOn", $actionButton)
                     .css({
@@ -315,27 +325,57 @@ define (
                         var rowIndex = $invokedOn[0].getAttribute('rowIndex');
                         var methodInput = $selectedMenu[0].getAttribute('methodInput');
 
-                        var geneIds = self.getClusterGeneIds(rowIndex);
 
-                        if(methodInput==='build_feature_set') {
-							IPython.narrative.createAndRunMethod(methodInput,
-								{
-									'input_genome':self.genomeID,
-									'input_feature_ids': geneIds.join(","),
-									'output_feature_set': self.options.clusterSetID + "_Cluster"+rowIndex+"_Features",
-									'description': 'Features were selected from Cluster ' + rowIndex + ' of a FeatureClusters data object '+
-													'named ' + self.options.clusterSetID + '.'
-								}
-							);
-						} else {
-							IPython.narrative.createAndRunMethod(methodInput,
-								{
-									'input_expression_matrix':self.expMatrixName,
-									'input_gene_ids': geneIds.join(",")
-								}
-							);
-						}
+			                  if (methodInput === 'build_feature_set') {
+			                    /* exercise left for the reader */
+                          /* IPython.narrative.createAndRunMethod(methodInput,
+                            {
+                              'input_genome':self.genomeID,
+                              'input_feature_ids': geneIds.join(","),
+                              'output_feature_set': self.options.clusterSetID + "_Cluster"+rowIndex+"_Features",
+                              'description': 'Features were selected from Cluster ' + rowIndex + ' of a FeatureClusters data object '+
+                                      'named ' + self.options.clusterSetID + '.'
+                            }
+                          ); */
+                          Jupyter.narrative.addAndPopulateApp('KBaseFeatureValues/build_feature_set', 'release', {
+                              'input_genome':self.genomeRef,
+                              'input_feature_ids': self.getClusterGeneIds(rowIndex),
+                              'output_feature_set': self.options.clusterSetID + "_Cluster"+rowIndex+"_Features",
+                              'description': 'Features were selected from Cluster ' + rowIndex + ' of a FeatureClusters data object '+
+                                      'named ' + self.options.clusterSetID + '.'
+                            });
+			                  }
+			                  else {
+
+                          var nameMap = {
+                            view_expression_profile : 'Expression profile',
+                            view_expression_pairwise_correlation : 'Pairwise correlation',
+                            view_expression_heatmap : 'Heatmap'
+                          };
+
+                          var tabName = nameMap[methodInput] + ' for cluster_' + rowIndex;
+
+                          var geneIds = self.getClusterGeneIds(rowIndex);
+
+                          var $contentDiv = $('<div></div>');
+
+                          tabWidget.addTab({tab: tabName, content: $contentDiv, canDelete : true, show: true});
+
+                          var methodMap = {
+                              view_expression_profile : kbaseExpressionSparkline,
+                              view_expression_pairwise_correlation : kbaseExpressionPairwiseCorrelation,
+                              view_expression_heatmap : kbaseExpressionHeatmap
+                            };
+
+                          new methodMap[methodInput]($contentDiv, {
+                            geneIds : geneIds.join(','),
+                            expressionMatrixID : self.expMatrixName,
+                            workspaceID : self.options.workspaceID
+                          });
+                        }
+
                     });
+
 			});
 		},
 
@@ -372,14 +412,26 @@ define (
 
 		buildActionMenu: function($container){
 			var $menu = $(' \
-				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none; list-style:none" > \
+				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none; list-style:none; margin:0" > \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \
 				    <li class="divider"></li> \
-				    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Save as a FeatureSet</a></li> \
+				    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Create a FeatureSet</a></li> \
 				</ul> \
 			');
+
+
+        /* XXX
+
+          This doesn't work yet. It'll need to go up into the string above, inside the ul.
+
+          The known issue is that it's trying to pass in an object reference (or name or whatever) into the create feature set app, but that
+          was designed on the explicit assumption that it'd only be given names of objects within the current narrative. But this would hand in
+          a full ref to an object in another workspace, which the app can't handle.
+
+          Once the code is updated to allow something like that, we can re-enable it. The rest of the wiring should be ready to go.
+        */
 
 				    // <li class="divider"></li> \
 				    // <li><a tabindex="-1" href="#" methodInput="build_feature_set">Create a FeatureSet</a></li> \

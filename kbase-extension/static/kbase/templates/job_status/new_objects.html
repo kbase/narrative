@@ -1,0 +1,16 @@
+<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">
+    <tr>
+        <th style="width:30%;color:#555">
+            <b>Created Object Name</b>
+        </th>
+        <th style="width:20%;color:#555">
+            <b>Type</b>
+        </th>
+    </tr>
+    {{#each this}}
+    <tr>
+        <td><a data-object-name="{{name}}" style="cursor:pointer;">{{name}}</a></td>
+        <td>{{type}}</td>
+    </tr>
+    {{/each}}
+</table>

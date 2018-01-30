@@ -12,6 +12,8 @@ define([
     'kbaseNarrativeParameterInput',
     'common/runtime',
     'base/js/namespace',
+    'util/timeFormat',
+    'util/string',
     'select2',
     'bootstrap'
 ], function (
@@ -20,7 +22,9 @@ define([
     Config,
     kbaseNarrativeParameterInput,
     Runtime,
-    Jupyter
+    Jupyter,
+    TimeFormat,
+    StringUtil
     ) {
     'use strict';
     return KBWidget({
@@ -62,7 +66,7 @@ define([
                     },
                     handle: function (message) {
                         if (!$.contains(document, self.$elem[0])) {
-                            console.warn('widget no longer in dom, detaching event');
+                            // console.warn('widget no longer in dom, detaching event');
                             runtime.bus().removeListener(ev);
                         } else {
                             self.updateDataList(message.data);
@@ -103,9 +107,6 @@ define([
                     self.isOutputName = true;
                 }
             }
-
-            //self.$mainPanel.addClass("kb-method-parameter-panel")
-            //        .hover(function(){$(this).toggleClass('kb-method-parameter-panel-hover');});;
 
             self.rowInfo = [];
             self.$rowsContainer = $("<div>");
@@ -199,27 +200,19 @@ define([
             var $input = $('<input id="' + form_id + '" placeholder="' + placeholder + '"' +
                 ' value="' + defaultValue + '" type="text" style="width:100%"/>').addClass("form-control")
                 .on("input", function () {
-                    self.isValid()
-                })
+                    self.isValid();
+                });
 
-            if (spec.text_options) {
-                if (spec.text_options.valid_ws_types) {
-                    if (spec.text_options.valid_ws_types.length > 0) {
-                        self.isUsingSelect2 = true;
-                        $input = $('<input id="' + form_id + '" type="text" style="width:100%" />')
-                            .on("change", function () {
-                                self.isValid()
-                            });
-                        //this.validDataObjectList = []; - why was this here? ...
-                    }
-                }
+            if (spec.text_options &&
+                spec.text_options.valid_ws_types &&
+                spec.text_options.valid_ws_types.length > 0) {
+                self.isUsingSelect2 = true;
+                $input = $('<select id="' + form_id + '" type="text" style="width:100%" />')
+                    .on("change", function () {
+                        self.isValid()
+                    });
+                    //this.validDataObjectList = []; - why was this here? ...
             }
-            $input.on('focus', function(e) {
-                Jupyter.narrative.disableKeyboardManager();
-            })
-            .on('blur', function(e) {
-                Jupyter.narrative.enableKeyboardManager();
-            });
 
             var $feedbackTip = $("<span>").removeClass();
             if (self.required && showHint) {  // it must be required, and it must be the first element (showHint is only added on first row)
@@ -246,7 +239,7 @@ define([
                 .append($('<div>').css({"width": "100%", "display": "inline-block"}).append($input))
                 .append($('<div>').css({"display": "inline-block"}).append($feedbackTip));
             var $hintCol = $('<div>').addClass(self.hintColClass).addClass("kb-method-parameter-hint");
-            var uuidForRemoval = self.genUUID();
+            var uuidForRemoval = StringUtil.uuid();
             var $removalButton = null;
             if (showHint) {
                 $hintCol.append(spec.short_hint);
@@ -348,134 +341,88 @@ define([
 
             // update the validDataObjectList
             this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
-                    function (objects) {
-                        // we know from each parameter what each input type is.
-                        // we also know how many of each type there is.
-                        // so, iterate over all parameters and fulfill cases as below.
-                        // extract the object infos
-                        var allObjInfo = [];
-                        for (var typeName in objects) {
-                            if (objects.hasOwnProperty(typeName)) {
-                                for (var i = 0; i < objects[typeName].length; i++) {
-                                    allObjInfo.push(objects[typeName][i]);
-                                }
+                function (objects) {
+                    // we know from each parameter what each input type is.
+                    // we also know how many of each type there is.
+                    // so, iterate over all parameters and fulfill cases as below.
+                    // extract the object infos
+                    var allObjInfo = [];
+                    for (var typeName in objects) {
+                        if (objects.hasOwnProperty(typeName)) {
+                            for (var i = 0; i < objects[typeName].length; i++) {
+                                allObjInfo.push(objects[typeName][i]);
                             }
                         }
-                        // sort them by date, then by name
-                        allObjInfo.sort(function (a, b) {
-                            if (a[3] > b[3])
-                                return -1; // sort by date
-                            if (a[3] < b[3])
-                                return 1;  // sort by date
-                            if (a[1] < b[1])
-                                return -1; // sort by name
-                            if (a[1] > b[1])
-                                return 1;  // sort by name
-                            return 0;
+                    }
+                    // sort them by date, then by name
+                    allObjInfo.sort(function (a, b) {
+                        if (a[3] > b[3])
+                            return -1; // sort by date
+                        if (a[3] < b[3])
+                            return 1;  // sort by date
+                        if (a[1] < b[1])
+                            return -1; // sort by name
+                        if (a[1] > b[1])
+                            return 1;  // sort by name
+                        return 0;
+                    });
+                    /* object info
+                     0: id
+                     1: name
+                     2: type
+                     3: timestamp
+                     4: version
+                     5: owner
+                     6: ws id
+                     7: ws name
+                     8: checksum
+                     9: size
+                     10: metadata*/
+
+                    // populate the valid data object list
+                    self.validDataObjectList = [];
+                    for (var i = 0; i < allObjInfo.length; i++) {
+                        self.validDataObjectList.push({
+                            id: allObjInfo[i][1],
+                            text: allObjInfo[i][1],
+                            name: allObjInfo[i][1],
+                            info: allObjInfo[i]
                         });
-                        /* object info
-                         0: id
-                         1: name
-                         2: type
-                         3: timestamp
-                         4: version
-                         5: owner
-                         6: ws id
-                         7: ws name
-                         8: checksum
-                         9: size
-                         10: metadata*/
+                    }
 
-                        // populate the valid data object list
-                        self.validDataObjectList = [];
-                        for (var i = 0; i < allObjInfo.length; i++) {
-                            self.validDataObjectList.push({name: allObjInfo[i][1], info: allObjInfo[i]});
-                        }
-
-                        // refresh the input options
-                        if (self.isUsingSelect2) {
-                            self.$elem.find("#" + this.spec.id).trigger("change");
-                        }
-                    },
-                    this
-                    )]);
+                    // refresh the input options
+                    if (self.isUsingSelect2) {
+                        self.setupSelect2(self.$elem.find("#" + this.spec.id), " ", null, self.validDataObjectList);
+                    }
+                },
+                this
+                )]);
         },
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
-        setupSelect2: function ($input, placeholder, defaultValue) {
+        setupSelect2: function ($input, placeholder, defaultValue, data) {
             var self = this;
             var noMatchesFoundStr = "No matching data found.";
+            var tags = false;
             if (self.isOutputName) {
                 noMatchesFoundStr = "Enter a name for the output data object.";
+                tags = true;
             }
             $input.select2({
-                matcher: self.select2Matcher,
-                formatNoMatches: noMatchesFoundStr,
+                data: data,
+                language: {
+                    noResults: function() {
+                        return noMatchesFoundStr;
+                    }
+                },
+                tags: tags,
                 placeholder: placeholder,
                 allowClear: true,
                 selectOnBlur: true,
-                query: function (query) {
-                    var data = {results: []};
-
-                    // if there is a current selection (this is a bit of a hack) we
-                    // prefill the input box so we don't have to do additional typing
-                    if (query.term.trim() === "" && $input.select2('data') && $input.data('select2').kbaseHackLastSelection) {
-                        var searchbox = $input.data('select2').search;
-                        if (searchbox) {
-                            $(searchbox).val($input.select2('data').text);
-                            query.term = $input.select2('data').text;
-                            $input.data('select2').kbaseHackLastSelection = null;
-                        }
-                    }
-                    $input.data('select2').kbaseHackLastTerm = query.term;
-
-                    // populate the names from our valid data object list
-                    var exactMatch = false;
-                    if (self.validDataObjectList) {
-                        for (var i = 0; i < self.validDataObjectList.length; i++) {
-                            var d = self.validDataObjectList[i];
-                            if (query.term.trim() !== "") {
-                                if (self.select2Matcher(query.term, d.name)) {
-                                    if (query.term === d.name) {
-                                        exactMatch = true;
-                                    }
-                                    data.results.push({id: d.name, text: d.name, info: d.info});
-                                }
-                                // search metadata too
-                                else if (d.info[10]) {
-                                    for (var key in d.info[10]) {
-                                        if (d.info[10].hasOwnProperty(key)) {
-                                            if (self.select2Matcher(query.term, d.info[10][key])) {
-                                                data.results.push({id: d.name, text: d.name,
-                                                    mm: key + ' - ' + d.info[10][key], info: d.info});
-                                                // allow us to show metadata match!
-                                            }
-                                        }
-                                    }
-                                }
-
-                            } else {
-                                data.results.push({id: d.name, text: d.name, info: d.info});
-                            }
-                        }
-                    }
-
-                    //always allow the name if it is set as an output name, unshift it to the front...
-                    if (query.term.trim() !== "") {
-                        if (self.isOutputName && !exactMatch) {
-                            data.results.unshift({id: query.term, text: query.term});
-                        }
-                    }
-
-                    // paginate results
-                    var pageSize = self.options.wsObjSelectPageSize;
-                    query.callback({results: data.results.slice((query.page - 1) * pageSize, query.page * pageSize),
-                        more: data.results.length >= query.page * pageSize});
-                },
-                formatSelection: function (object, container) {
+                templateSelection: function (object) {
                     var display = '<span class="kb-parameter-data-selection">' + object.text + '</span>';
-                    return display;
+                    return $(display);
                 },
-                formatResult: function (object, container, query) {
+                templateResult: function (object) {
                     var display = '<span style="word-wrap:break-word;"><b>' + object.text + "</b></span>";
                     if (object.info) {
                         // we can add additional info here in the dropdown ...
@@ -483,31 +430,11 @@ define([
                         if (object.mm) {
                             display = display + "&nbsp&nbsp&nbsp<i>" + object.mm + "</i><br>";
                         }
-                        display = display + "&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3]) + "</i>";
+                        display = display + "&nbsp&nbsp&nbsp<i>updated " + TimeFormat.getTimeStampStr(object.info[3]) + "</i>";
                     }
-                    return display;
+                    return $(display);
                 }
-            })
-                .on("select2-selecting",
-                    function (e) {
-                        $input.data('select2').kbaseHackLastSelection = e.choice;
-                    }
-                )
-                .on("select2-focus",
-                    function (e) {
-                        Jupyter.narrative.disableKeyboardManager();
-                    }
-                )
-                .on("select2-blur",
-                    function (e) {
-                        Jupyter.narrative.enableKeyboardManager();
-                    }
-                );
-
-
-            if (defaultValue) {
-                $input.select2("data", {id: defaultValue, text: defaultValue});
-            }
+            });
         },
         /* private method */
         select2Matcher: function (term, text) {
@@ -526,7 +453,7 @@ define([
                 return {isValid: true, errormssgs: []}; // do not validate if disabled
             }
             var p = self.getParameterValue(true);
-            if (p === null) {
+            if (p === null && !self.required) {
                 return {isValid: true, errormssgs: []};
             }
             var errorDetected = false;
@@ -540,7 +467,7 @@ define([
                 if (p[i] === null) {
                     continue;
                 }
-                var pVal = p[i].trim();
+                var pVal = p ? p[i].trim() : '';
                 // if it is a required field and not empty, keep the required icon around but we have an error (only for the first element)
                 if (pVal === '' && self.required && i === 0) {
                     self.rowInfo[i].$row.removeClass("kb-method-parameter-row-error");
@@ -687,12 +614,7 @@ define([
             // disable the input
             this.enabled = false;
             for (var i = 0; i < this.rowInfo.length; i++) {
-                if (this.isUsingSelect2) {
-                    this.rowInfo[i].$input.select2('disable', true);
-                } else {
-                    this.rowInfo[i].$input.prop('disabled', true);
-                }
-                // stylize the row div
+                this.rowInfo[i].$input.prop('disabled', true);
                 this.rowInfo[i].$feedback.removeClass();
                 if (this.rowInfo[i].$removalButton) {
                     this.rowInfo[i].$removalButton.hide();
@@ -707,11 +629,7 @@ define([
             // enable the input
             this.enabled = true;
             for (var i = 0; i < this.rowInfo.length; i++) {
-                if (this.isUsingSelect2) {
-                    this.rowInfo[i].$input.select2('enable', true);
-                } else {
-                    this.rowInfo[i].$input.prop('disabled', false);
-                }
+                this.rowInfo[i].$input.prop('disabled', false);
                 if (this.rowInfo[i].$removalButton) {
                     this.rowInfo[i].$removalButton.show();
                 }
@@ -722,11 +640,7 @@ define([
         lockInputs: function () {
             if (this.enabled) {
                 for (var i = 0; i < this.rowInfo.length; i++) {
-                    if (this.isUsingSelect2) {
-                        this.rowInfo[i].$input.select2('disable', true);
-                    } else {
-                        this.rowInfo[i].$input.prop('disabled', true);
-                    }
+                    this.rowInfo[i].$input.prop('disabled', true);
                 }
             }
             for (var i = 0; i < this.rowInfo.length; i++) {
@@ -740,11 +654,7 @@ define([
         unlockInputs: function () {
             if (this.enabled) {
                 for (var i = 0; i < this.rowInfo.length; i++) {
-                    if (this.isUsingSelect2) {
-                        this.rowInfo[i].$input.select2('enable', true);
-                    } else {
-                        this.rowInfo[i].$input.prop('disabled', false);
-                    }
+                    this.rowInfo[i].$input.prop('disabled', false);
                     if (this.rowInfo[i].$removalButton) {
                         this.rowInfo[i].$removalButton.show();
                     }
@@ -795,9 +705,9 @@ define([
                 if (this.enabled) {
                     this.rowInfo[i].$input.select2("data", {id: value, text: value});
                 } else {
-                    this.rowInfo[i].$input.select2('disable', false);
+                    this.rowInfo[i].$input.prop('disable', false);
                     this.rowInfo[i].$input.select2("data", {id: value, text: value});
-                    this.rowInfo[i].$input.select2('disable', true);
+                    this.rowInfo[i].$input.prop('disable', true);
                 }
             } else {
                 this.rowInfo[i].$input.val(value);
@@ -820,7 +730,8 @@ define([
              *    what it's expected to validate as.
              */
             for (var i=0; i<this.rowInfo.length; i++) {
-                var val = this.rowInfo[i].$input.val().trim();
+                var val = this.rowInfo[i].$input.val() || '';
+                val = val.trim();
                 if (!isOptional || val.length > 0) {
                     if (!ignoreType) {
                         val = this.coerceType(val);
@@ -868,55 +779,10 @@ define([
             }
         },
 
-        // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
-        getTimeStampStr: function (objInfoTimeStamp) {
-            var date = new Date(objInfoTimeStamp);
-            var seconds = Math.floor((new Date() - date) / 1000);
-
-            // f-ing safari, need to add extra ':' delimiter to parse the timestamp
-            if (isNaN(seconds)) {
-                var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
-                var newTimestamp = tokens[0] + '+' + tokens[0].substr(0, 2) + ":" + tokens[1].substr(2, 2);
-                date = new Date(newTimestamp);
-                seconds = Math.floor((new Date() - date) / 1000);
-                if (isNaN(seconds)) {
-                    // just in case that didn't work either, then parse without the timezone offset, but
-                    // then just show the day and forget the fancy stuff...
-                    date = new Date(tokens[0]);
-                    return this.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-                }
-            }
-            var interval = Math.floor(seconds / 31536000);
-            if (interval > 1) {
-                return self.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-            }
-            interval = Math.floor(seconds / 2592000);
-            if (interval > 1) {
-                if (interval < 4) {
-                    return interval + " months";
-                } else {
-                    return this.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-                }
-            }
-            interval = Math.floor(seconds / 86400);
-            if (interval > 1) {
-                return interval + " days ago";
-            }
-            interval = Math.floor(seconds / 3600);
-            if (interval > 1) {
-                return interval + " hours ago";
-            }
-            interval = Math.floor(seconds / 60);
-            if (interval > 1) {
-                return interval + " minutes ago";
-            }
-            return Math.floor(seconds) + " seconds ago";
-        },
-        monthLookup: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
         // make a randomized string, assuming it's for an output.
         generateRandomOutputString: function (generProps) {
             var strArr = [];
-            var symbols = 8
+            var symbols = 8;
             if (generProps['symbols'])
                 symbols = generProps['symbols'];
             for (var i = 0; i < symbols; i++)
@@ -925,7 +791,7 @@ define([
             if (generProps['prefix'])
                 ret = generProps['prefix'] + ret;
             if (generProps['suffix'])
-                ret = ret + str(generProps['suffix']);
+                ret = ret + String(generProps['suffix']);
             return ret;
         },
         prepareValueBeforeRun: function (methodSpec) {
@@ -950,7 +816,7 @@ define([
                 }
                 var generatedValueMapping = null;
                 for (var i in inputMapping) {
-                    mapping = inputMapping[i];
+                    var mapping = inputMapping[i];
                     var aParamId = mapping['input_parameter'];
                     if (aParamId && aParamId === paramId && mapping['generated_value']) {
                         generatedValueMapping = mapping['generated_value'];
@@ -961,12 +827,6 @@ define([
                     this.setParameterValue(this.generateRandomOutputString(generatedValueMapping));
                 }
             }
-        },
-        genUUID: function () {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
         },
     });
 });

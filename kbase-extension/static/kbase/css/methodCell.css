@@ -1,3 +1,15 @@
 .kb-method-cell select.form-control {
     margin: 0;
 }
+
+.twitter-typeahead {
+    width: 100%;
+}
+
+.code_cell div.input_area {
+    display: none;
+}
+
+.code_cell div.input_area.-show {
+    display: block;
+}

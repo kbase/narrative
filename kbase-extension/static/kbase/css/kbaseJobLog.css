@@ -13,48 +13,56 @@
     vertical-align: top;
 }
 
-.kblog-line {
-    position: relative;
-    display: block;
+.kblog-header {
+    display: flex;
     font-family: monospace;
-    font-size: 9pt;
+    font-size: 85%;  
+}
+
+.kblog-line {
+    display: flex;
+    font-family: monospace;
+    font-size: 85%;
+}
+
+.kblog-line:hover {
+    background-color: #DDD;
 }
 
 .kblog-num-wrapper {
-    position: absolute;
-    background: none !important;
-    border: none !important;
-    font-size: 9pt;
-    z-index: 4;
-    user-select: none;
-    -moz-user-select: none;
-    -webkit-user-select: none;
+    font-size: 85%;
 }
 
 .kblog-line-num {
-    left: 0;
-    position: relative;
-    min-width: 25px;
+    flex-shrink: 0;
+    width: 9ex;
     text-align: right;
     color: #999;
     white-space: nowrap;
-}
 
-.kb-error .kblog-line-num {
-    color: #F00;
-    font-weight: bold;
+    /* makes text unselectabe */
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -o-user-select: none;
+    user-select: none;
 }
 
 .kblog-text {
     word-wrap: break-word;
-    position: relative;
-    padding-left: 32px;
-    z-index: 2;
+    flex: 1;
+    margin-left: 6px;
 }
 
-.kb-error {
-    background-color: rgba(200, 0, 0, 0.2);
-    color: #660000;
+.kb-error, .kb-error .kblog-line-num  {
+    color: darkred;
+    text-decoration: underline;
+    text-decoration-style: solid;
+    text-decoration-color: red;
+    font-weight: bold;
+    font-size: 12px;
+    background-color: rgb(255, 245, 245);
+
 }
 
 #kblog-msg {
@@ -63,5 +71,5 @@
 
 #kblog-err {
     margin-top: 5px;
-    color: #660000;
+    /* color: #660000; */
 }

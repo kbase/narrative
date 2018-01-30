@@ -36,10 +36,6 @@ require([
         Login) {
         'use strict';
         console.log('Initializing KBase Tree page.');
-        // Config.loadConfig()
-        //     .then(function () {
-        //         return Config.updateConfig();
-        //     })
         Config.updateConfig()
             .then(function (config) {
                 require(['kbapi', 'narrativeLogin'], function (API, Login) {

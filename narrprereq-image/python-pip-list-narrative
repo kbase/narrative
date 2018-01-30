@@ -4,6 +4,9 @@ biopython
 certifi==0.0.8
 chardet==1.0.1
 configobj
+elasticsearch>=5.0.0,<6.0.0
+elasticsearch_dsl>=5.0.0,<6.0.0
+ete3==3.0.0b35
 flup
 gitpython
 httplib2

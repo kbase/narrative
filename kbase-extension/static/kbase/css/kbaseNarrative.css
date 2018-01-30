@@ -1,5 +1,46 @@
 @import url("//fonts.googleapis.com/css?family=Roboto");
 
+.kb-dropzone div#upload-message {
+    font-family: "OxygenBold", Arial, sans-serif;
+}
+
+.kb-data-staging-table-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kb-data-staging-footer {
+    font-family : "OxygenBold", Arial, sans-serif;
+    font-size : 105%;
+    text-align : center;
+    background-color : #EEEEEE;
+    height : 32px;
+    padding : 8px;
+}
+
+.kb-data-staging-metadata-list {
+  font-family : 'OxygenBold';
+  width : 115px;
+  display : inline-block;
+  font-size : 90%;
+}
+
+.kb-data-staging-metadata-file-lines {
+  white-space : pre;
+ overflow : scroll;
+ font-family : monospace;
+ font-size : 90%;
+ background-color : #DDDDDD;
+ max-height : 200px;
+}
+
+.kb-dropzone {
+    border: 2px dashed #2196F3 !important;
+    margin-bottom:5px;
+    max-height: 150px;
+    overflow-y: auto;
+}
 
 .kb-ga-seq {
     word-wrap: break-word;
@@ -185,6 +226,10 @@ span#searchspan{
     padding: 8px;
 }
 
+.navbar-kbase a:hover {
+    cursor: pointer;
+}
+
 /* Top bar nav buttons
    --------------------------
 */
@@ -227,6 +272,22 @@ span#searchspan{
 }
 .kb-nav-btn-upgrade:hover {
     background-color: #43A047 !important;
+}
+.kb-nav-btn-upgrade.warning {
+    background-color: #F44336 !important;
+}
+.kb-nav-btn-upgrade.warning:hover {
+    background-color: #DC3C31 !important;
+}
+.kb-nav-menu-icon {
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+.kb-nav-menu-icon .fa {
+    font-size: 150%;
 }
 
 #kb-ipy-menu { /* restore rounded corners */
@@ -399,15 +460,17 @@ p#site-title {
     border-right: 5px solid #CECECE;
     top: 70px;
     bottom: 0;
-    overflow-y: auto;
+    /* overflow-y: auto; */
 }
 
 .kb-side-overlay-container {
-    width: 700px;  /* I would advise fixing this for UX sake */
+    width: 730px;
     border : 1px solid #CECECE;
     z-index : 1030;
     background : white;
     position : fixed;
+    max-height: calc(100% - 73px);
+    overflow-y:auto;
 }
 
 .kb-side-overlay-header {
@@ -430,8 +493,8 @@ p#site-title {
 }
 
 .kb-side-panel {
-    height: 100%;
     overflow-y: hidden;
+    height: 100%;
 }
 
 #kb-side-toggle-in {
@@ -514,12 +577,20 @@ p#site-title {
     border-bottom: 5px solid #CECECE;
 }
 
-.kb-side-tab {
-    display: none;
-}
+
 
 .kb-side-tab.active {
     display: inherit;
+}
+.kb-side-tab {
+    display: none;
+    height:100%;
+}
+.kb-narr-side-panel-set{
+    height:100%;
+}
+.kb-narr-side-panel-set:last-child{
+    height:50%;
 }
 
 .kb-overlay-dimmer {
@@ -695,7 +766,7 @@ ul.pane-list li {
     text-align: justify;
 }
 
-.kb-method-list-more-div > div:nth-child(2) {
+.kb-method-list-more-div > div:last-child {
 	text-align: right;
 }
 
@@ -945,7 +1016,9 @@ p span.notification{
 }
 
 .btn-default {
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+    /** not sure why this is here, but it makes buttons look fuzzy.
+        commenting out until answers come around. - WJR **/
+    /*text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);*/
 }
 
 #menus {
@@ -992,6 +1065,7 @@ div#notebook_panel {
 
 .kb-narr-side-panel {
     margin-bottom: 5px;
+    height:100%;
 }
 
 .kb-narr-side-panel .kb-title {
@@ -1152,8 +1226,18 @@ div#notebook_panel {
 }
 
 .kb-narr-panel-body {
+    height: calc(100%);
     padding: 3px;
-    /*overflow-y: auto;*/
+}
+.kb-narr-panel-body > div{
+    height: 100%;
+}
+.kb-narr-panel-body-wrapper {
+    overflow-y: auto;
+    height: 100%;
+}
+.kb-narr-panel-body-wrapper > div{
+    height: 100%;
 }
 
 .kb-narr-panel-toggle {
@@ -1168,9 +1252,8 @@ div#notebook_panel {
 
 /* Container for func list */
 .kb-function-body {
-    height: 45%;
-    max-height:45%;
-    overflow-y: auto;
+    height: 100%;
+    /* overflow-y: auto; */
     width: 100%;
 }
 
@@ -1347,6 +1430,14 @@ div#notebook_panel {
     cursor: pointer;
 }
 
+.kb-cell-toolbar {
+    xborder-bottom: 1px silver solid;
+}
+
+.kb-cell-toolbar.collapsed {
+    xborder-bottom: none;
+}
+
 .kb-cell-toolbar .buttons {
     font-weight: bold;
     color: #CECECE !important;
@@ -1354,6 +1445,18 @@ div#notebook_panel {
 
 .kb-cell-toolbar .btn {
     border: none;
+}
+
+.kb-cell-toolbar .icon {
+    display: inline-block;
+    height: 56px;
+    width: 56px;
+    padding: 0;
+    margin: 0 4px 0 4px;
+    vertical-align: top;
+    border: 0px red solid;
+    line-height: 56px;
+    overflow: hidden;
 }
 
 .kb-cell-toolbar .title {
@@ -1448,22 +1551,14 @@ div#notebook_panel {
     vertical-align: middle;
 }
 
-.kb-cell-params thead>tr>th, .kb-cell-params  tbody>tr>th, .kb-cell-params  tfoot>tr>th, .kb-cell-params  thead>tr>td, .kb-cell-params  tbody>tr>td, .kb-cell-params  tfoot>tr>td {
+.kb-cell-params thead>tr>th,
+.kb-cell-params tbody>tr>th,
+.kb-cell-params tfoot>tr>th,
+.kb-cell-params thead>tr>td,
+.kb-cell-params tbody>tr>td,
+.kb-cell-params tfoot>tr>td {
     padding: 2px 4px;
 }
-
-.kb-cell-params input {
-   /* margin-left: 5px;
-    margin-top: 5px; */
-}
-/*.kb-cell-params tr:nth-child(odd) {
-    background-color: #eee;
-    border-bottom: 1px solid #ddd;
-}
-.kb-cell-params tr:nth-child(even) {
-    background-color: #fff;
-    border-bottom: 1px solid #ddd;
-}*/
 
 .kb-cell-params tr:hover td, .kb-cell-params tr:hover th {
     background:#eee;
@@ -2070,7 +2165,85 @@ div[class="tooltip-inner"] {
 
 #kb-ws .dataTables_filter { display: none; }
 
+/*------------------------------------------
+ * View details on KBase objects
+ *
+ * Namespace: kb-data-obj
+ */
 
+/*  Button to activate the object pane */
+button.kb-data-obj {
+    float: right;
+}
+/* Panel */
+.kb-data-obj-panel {
+    background: linear-gradient(to bottom, #00d2ff, #B2ADCB);
+    padding: 0;
+    margin: 10px;
+}
+.kb-data-obj-panel button.close {
+    margin: 5px;
+    font-size: 125%;
+}
+.kb-data-obj-panel-info {
+    background: rgba(255,255,255,0.5);
+    height: 100%;
+    padding: 10px;
+}
+.kb-data-obj-panel-graph {
+    background: transparent;
+    height: 100%;
+    padding: 10px;
+}
+.kb-data-obj-panel-info dl {
+    margin: 0;
+}
+.kb-data-obj-panel-info dl dt {
+    float: left;
+    clear: left;
+    width: 90px;
+    text-align: right;
+    color: rgba(0, 0, 0, 0.5);
+    /*padding: 0 0 5px 0;*/
+}
+.kb-data-obj-panel-info dl dt:after {
+    content: ":";
+}
+.kb-data-obj-panel-info dl dd {
+    margin: 0 0 0 100px;
+    /*padding: 0 0 5px 0;*/
+}
+.kb-data-obj-panel-verlist span {
+    padding: 0px 5px;
+    margin-left: 3px;
+    border-radius: 2px;
+    background-color: rgba(255,255,255,0.5);
+    color: rgba(0,0,0,0.5);
+    cursor: pointer;
+}
+.kb-data-obj-panel-verlist span.selected {
+    background-color: #2196F3;
+    color: white;
+    cursor: default;
+}
+.kb-data-obj-panel-graph table {
+    background-color: rgba(255, 255, 255, 0.9);
+    width: 100%;
+    border: none;
+    color: rgba(0, 0, 0, 0.8);
+}
+.kb-data-obj-panel-graph thead tr {
+    background-color: rgb(230, 230, 230);
+    color: rgba(0, 0, 0, 1);
+}
+.kb-data-obj-graph-ref-to {
+    margin-top: 8px;
+}
+
+/*
+ * END: View details on KBase objects
+ *------------------------------------------
+ */
 
 /* default blue button in the new style */
 .kb-primary-btn {
@@ -2119,26 +2292,93 @@ div[class="tooltip-inner"] {
     font-size: 13px;
 }
 
+/* card layout */
 
+.narrative-card-logo{
+    display: flex;
+    width: 50px;
+    margin-right: 2px;
+}
+
+.narrative-card-row-main{
+    display: flex;
+    align-items: center;
+    width:98%;
+    margin:0px 2px;
+    padding:0px 4px;
+}
+
+.narrative-data-list-subcontent{
+    padding-left :10px;
+}
+
+.narrative-card-ellipsis{
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    width:20px;
+}
+
+
+.narrative-card-palette-icon{
+    position: relative;
+    color: '#888';
+    left: 15px;
+    top: -50px;
+}
+
+
+.narrative-card-action-button-wrapper{
+    width: 80px;
+    height: 50px;
+    margin: 0px 10px;
+}
+
+
+.narrative-card-action-button{
+    width: calc(100% - 6px);
+    height: 80%;
+    display: flex;
+    padding: 0px;
+    justify-content: center;
+}
+
+.narrative-card-action-button > span{
+    margin-right: 5px;
+}
+.narrative-card-action-button-name{
+    display: inline-block;
+}
+.narrative-data-panel-btnToolbar > span{
+    color: #888;
+}
+.narrative-data-panel-btnToolbar{
+    display: flex;
+    justify-content: center;
+}
 
 /* data list */
-.kb-data-list-obj-row {
+.kb-data-list-obj-row, .narrative-card-row{
     transition: all 0.1s ease;
 
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #fff;
     color:#333;
-    margin:2px;
-    padding:4px;
-    margin-bottom: 5px;
 
     box-shadow: 1px 1px 1px 1px #fff;
     -webkit-box-shadow: 1px 1px 1px 1px #fff;
     moz-box-shadow: 1px 1px 1px 1px #fff;
+
 }
 
-.kb-data-list-obj-row:hover {
+
+.kb-function-dim .kb-data-list-obj-row {
+    border-left-color: #eee;
+
+}
+
+.kb-data-list-obj-row:hover, .narrative-card-row:hover {
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #4BB856;
@@ -2146,6 +2386,10 @@ div[class="tooltip-inner"] {
     box-shadow: 1px 1px 1px 1px #aaa;
     -webkit-box-shadow: 1px 1px 1px 1px #aaa;
     moz-box-shadow: 1px 1px 1px 1px #aaa;
+}
+
+.palette {
+    background: #F5F5F5 !important;
 }
 
 .kb-data-list-obj-row-selected {
@@ -2291,6 +2535,40 @@ div[class="tooltip-inner"] {
     font-weight: bold;
     text-shadow: -1px 0 #777, 0 1px #777, 1px 0 #777, 0 -1px #777;
 }
+/* For shifting over logos that are stacked on
+ * top of eachother */
+.kb-data-list-logo-shifted1 {
+    margin-left: 1px;
+    margin-top: 1px;
+}
+.kb-data-list-logo-shiftedx1 {
+    margin-left: 8px;
+    margin-top: 6px;
+}
+.kb-data-list-logo-shifted2 {
+    margin-left: 9px;
+    margin-top: 7px;
+}
+.kb-data-list-logo-shiftedx2 {
+    margin-left: 16px;
+    margin-top: 12px;
+}
+
+.kb-data-list-logo-font1 {
+    font-size: 1.7em !important;
+}
+
+.kb-data-list-logo-font2 {
+    font-size: 1.5em !important;
+}
+
+/*  Nested item indent (crude!!) */
+.kb-data-list-level1 {
+    margin-left: 25px;
+}
+.kb-data-list-level2 {
+    margin-left: 50px;
+}
 
 /* Nudge the data icon a bit to the left or right */
 .kb-data-icon-rnudge {
@@ -2311,11 +2589,17 @@ div[class="tooltip-inner"] {
 }
 
 .kb-data-list-info {
+    width: 80%;
+    padding: 6px 0px;
+    min-height: 60px;
+    border-bottom: 1px solid #E0E0E0;
 }
+
+
 .kb-data-list-name {
     color:#2e618d;
     font-size: 11pt;
-    font-weight: bold;
+    font-family: 'OyxgenBold', Arial, sans-serif;
     margin: 2px;
 }
 .kb-data-list-name:hover {
@@ -2326,21 +2610,18 @@ div[class="tooltip-inner"] {
     font-size: 9pt;
     font-style: italic;
     white-space: nowrap;
-    margin: 2px;
     cursor:default;
 }
 .kb-data-list-type {
     color:#777;
     font-size: 10pt;
     margin: 2px;
-    margin-left: 10px;
     cursor:default;
 }
 .kb-data-list-date {
     color:#777;
     font-size: 10pt;
     margin: 2px;
-    margin-left: 10px;
     white-space: nowrap;
     cursor:default;
 }
@@ -2408,6 +2689,9 @@ div[class="tooltip-inner"] {
     color:#777;
     font-size: 10pt;
     margin: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .kb-data-list-more-div tr {
     color:#777;
@@ -2436,11 +2720,28 @@ div[class="tooltip-inner"] {
     text-align: left;
     margin: 2px;
     padding-left: 8px;
+    word-break: break-all;
 }
 .kb-data-list-job-name:hover {
     text-decoration: none;
 }
 
+
+/* Indent nested box */
+.kb-data-list-box > .kb-data-list-box {
+    margin-left: 40px;
+}
+
+/* Control buttons */
+.kb-data-list-ctl span.inviso {
+    /* like mayo on wonderbread */
+    color: #FFF;
+    background-color: #FFF;
+    text-shadow: none;
+}
+.kb-data-list-ctl[enabled] {
+    background-color: lightgrey;
+}
 
 /* end data list*/
 
@@ -2560,21 +2861,23 @@ div[class="tooltip-inner"] {
     font-size: 0.9em;
 }
 
-.kbcb-star {
+
+.kbcb-star-default{
+    color:#888;
 }
+
 .kbcb-star-favorite {
-    cursor:pointer;
     color:orange;
 }
-/*.kbcb-star-favorite:hover {
-    color:inherit;
-}*/
-
-.kbcb-star-nonfavorite {
+.kbcb-star-nonfavorite, .kbcb-star-favorite, .kbcb-star-default{
     cursor:pointer;
 }
-.kbcb-star-nonfavorite:hover {
+.kbcb-star-nonfavorite:hover, .kbcb-star-default:hover {
     color:red;
+}
+
+.kbcb-star-favorite:hover {
+    color:orange;
 }
 
 .kbcb-star-count {
@@ -2671,6 +2974,17 @@ div[class="tooltip-inner"] {
     height:auto;
 }
 
+.kb-share-select {
+    width: 200px;
+}
+
+/* hack to make the selection fill the width */
+.kb-share-select .select2-selection__choice {
+    width: 100% !important;
+    background-color: #F5F5F5 !important;
+}
+
+
 .kb-nar-manager-titles {
     font-family: 'OxygenBold';
     color:  #777;
@@ -2690,8 +3004,8 @@ div[class="tooltip-inner"] {
 .kb-import-content {
     position:relative;
     margin: 0 0 0 0px;
-    overflow-x: hidden;
-    overflow-y: auto;
+    /*overflow-x: hidden;
+    overflow-y: auto;*/
     /*height: 830px;*/
     display: block;
 }
@@ -2805,9 +3119,9 @@ div[class="tooltip-inner"] {
     /*background-color: #2196F3;
     color: #BBDEFB;*/
     color: #2196F3;
-    font-family: 'OxygenRegular', Arial, sans-serif;
+    font-family: 'OxygenBold', Arial, sans-serif;
     font-size: 16px;
-    font-weight: bold;
+    /* font-weight: bold; */
     padding: 3px;
     margin-top: -3px;
     width: 147px;
@@ -2833,9 +3147,9 @@ div[class="tooltip-inner"] {
 }
 /* this is the banner for readonly mode */
 .navbar-right div.label-warning {
-    font-family: 'OxygenRegular', Arial, sans-serif;
+    font-family: 'OxygenBold', Arial, sans-serif;
     font-size: 16px;
-    font-weight: bold;
+    /* font-weight: bold; */
 }
 
 /* Show this over the whole narrative UI until the
@@ -2849,7 +3163,7 @@ div[class="tooltip-inner"] {
 
    -Dan Gunter, Feb 10, 2015
 */
-#kb-wait-for-ws {
+#kb-loading-blocker {
     position: absolute;
     top: 0;
     left: 0;
@@ -2859,203 +3173,18 @@ div[class="tooltip-inner"] {
     z-index: 9999;
 }
 
-@keyframes load {
-    0% {
-        height: 10px;
-        margin: 20px 2px;
-    }
-    50% {
-        height: 50px;
-        margin: 0px 2px;
-    }
-    100% {
-        height: 10px;
-        margin: 20px 2px;
-    }
-}
-
-@-o-keyframes load {
-    0% {
-        height: 10px;
-        margin: 20px 2px;
-    }
-    50% {
-        height: 50px;
-        margin: 0px 2px;
-    }
-    100% {
-        height: 10px;
-        margin: 20px 2px;
-    }
-}
-
-@-ms-keyframes load {
-    0% {
-        height: 10px;
-        margin: 20px 2px;
-    }
-    50% {
-        height: 50px;
-        margin: 0px 2px;
-    }
-    100% {
-        height: 10px;
-        margin: 20px 2px;
-    }
-}
-
-@-moz-keyframes load {
-    0% {
-        height: 10px;
-        margin: 20px 2px;
-    }
-    50% {
-        height: 50px;
-        margin: 0px 2px;
-    }
-    100% {
-        height: 10px;
-        margin: 20px 2px;
-    }
-}
-
-@-webkit-keyframes load {
-    0% {
-        height: 10px;
-        margin: 20px 2px;
-    }
-    50% {
-        height: 50px;
-        margin: 0px 2px;
-    }
-    100% {
-        height: 10px;
-        margin: 20px 2px;
-    }
-}
-
-#kb-wait-for-ws-loader {
-    width: 85px;
-    height: 55px;
-    margin: 50px auto;
-    text-align: center;
-}
-
-#kb-wait-for-ws .bar {
-    float: left;
-    margin: 0px 2px;
-    width: 10px;
-    height: 50px;
-    background: #7bf;
-    border-top: 3px solid #7af;
-    border-bottom: 3px solid #7af;
-    /*border-radius*/
-    -webkit-border-radius: 10px;
-    -moz-border-radius: 10px;
-    border-radius: 10px;
-}
-
-#kb-wait-for-ws .bar:nth-child(1) {
-    /*animation*/
-    -webkit-animation: load 1s linear infinite;
-    -moz-animation: load 1s linear infinite;
-    -ms-animation: load 1s linear infinite;
-    -o-animation: load 1s linear infinite;
-    animation: load 1s linear infinite;
-}
-
-#kb-wait-for-ws .bar:nth-child(2) {
-    /*animation*/
-    -webkit-animation: load 1s linear infinite;
-    -moz-animation: load 1s linear infinite;
-    -ms-animation: load 1s linear infinite;
-    -o-animation: load 1s linear infinite;
-    animation: load 1s linear infinite;
-    /*animation-delay*/
-    -webkit-animation-delay: .2s;
-    -moz-animation-delay: .2s;
-    -ms-animation-delay: .2s;
-    -o-animation-delay: .2s;
-    animation-delay: .2s;
-}
-
-#kb-wait-for-ws .bar:nth-child(3) {
-    /*animation*/
-    -webkit-animation: load 1s linear infinite;
-    -moz-animation: load 1s linear infinite;
-    -ms-animation: load 1s linear infinite;
-    -o-animation: load 1s linear infinite;
-    animation: load 1s linear infinite;
-    /*animation-delay*/
-    -webkit-animation-delay: .4s;
-    -moz-animation-delay: .4s;
-    -ms-animation-delay: .4s;
-    -o-animation-delay: .4s;
-    animation-delay: .4s;
-}
-
-#kb-wait-for-ws .bar:nth-child(4) {
-    /*animation*/
-    -webkit-animation: load 1s linear infinite;
-    -moz-animation: load 1s linear infinite;
-    -ms-animation: load 1s linear infinite;
-    -o-animation: load 1s linear infinite;
-    animation: load 1s linear infinite;
-    /*animation-delay*/
-    -webkit-animation-delay: .6s;
-    -moz-animation-delay: .6s;
-    -ms-animation-delay: .6s;
-    -o-animation-delay: .6s;
-    animation-delay: .6s;
-}
-
-#kb-wait-for-ws .bar:nth-child(5) {
-    /*animation*/
-    -webkit-animation: load 1s linear infinite;
-    -moz-animation: load 1s linear infinite;
-    -ms-animation: load 1s linear infinite;
-    -o-animation: load 1s linear infinite;
-    animation: load 1s linear infinite;
-    /*animation-delay*/
-    -webkit-animation-delay: .8s;
-    -moz-animation-delay: .8s;
-    -ms-animation-delay: .8s;
-    -o-animation-delay: .8s;
-    animation-delay: .8s;
-}
-
-#kb-wait-for-ws .bar:nth-child(6) {
-    /*animation*/
-    -webkit-animation: load 1s linear infinite;
-    -moz-animation: load 1s linear infinite;
-    -ms-animation: load 1s linear infinite;
-    -o-animation: load 1s linear infinite;
-    animation: load 1s linear infinite;
-    /*animation-delay*/
-    -webkit-animation-delay: 1s;
-    -moz-animation-delay: 1s;
-    -ms-animation-delay: 1s;
-    -o-animation-delay: 1s;
-    animation-delay: 1s;
-}
-
-#kb-wait-for-ws img.kb-logo {
-    margin-left: 40%;
-    margin-bottom: 25px;
-    margin-top: 50px;
-    width: 20%;
-    border: 0;
-}
-
-#kb-wait-for-ws p {
+#kb-loading-blocker p {
     text-align: center;
     font-size: 24px;
     font-family: "OxygenBold" helvetica neue;
 }
 
-#kb-wait-for-ws a {
-    color: #7bf;
-    text-decoration: none;
+#kb-loading-blocker .progress-container {
+    width: 40%;
+    margin-left: 30%;
+    font-size: 16px;
+    text-align: left;
+    line-height: 1.5em;
 }
 
 /* Override the default max-width of the narrative box */
@@ -3080,4 +3209,3 @@ div[class="tooltip-inner"] {
 }
 
 /* bootstrap sillines */
-

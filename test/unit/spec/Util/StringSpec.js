@@ -4,12 +4,11 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define (
-	[
-		'util/string'
-	], function(
-		StringUtil
-	) {
+define ([
+    'util/string'
+], function(
+    StringUtil
+) {
     'use strict';
 
     describe('KBase String Utility function module', function() {
@@ -48,6 +47,16 @@ define (
             expect(jsonified).toContain('"a":1');
             expect(jsonified).toContain('"b":"a &quot;string&quot;"');
             expect(jsonified).toContain('"c":"another &apos;string&apos;"');
+        });
+
+        it('readableBytes should return reasonable values', function() {
+            expect(StringUtil.readableBytes(1000)).toBe('1000 B');
+            expect(StringUtil.readableBytes(0)).toBe('0 B');
+            expect(StringUtil.readableBytes(10000)).toBe('9.77 KB');
+            expect(StringUtil.readableBytes(100000)).toBe('97.66 KB');
+            expect(StringUtil.readableBytes(1024)).toBe('1 KB');
+            expect(StringUtil.readableBytes(9999999999999999999999999)).toBe('8.27 YB');
+            expect(StringUtil.readableBytes(99999999999999999999999999999)).toBe('82718.06 YB');
         });
     });
 });

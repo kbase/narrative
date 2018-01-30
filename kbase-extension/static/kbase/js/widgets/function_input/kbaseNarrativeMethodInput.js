@@ -69,6 +69,8 @@ define ([
             var method = this.options.method;
             var params = method.parameters;
 
+            // console.log('list params', params);
+
             var $inputParameterContainer = $('<div>');
             var $optionsDiv = $('<div>');
             this.$advancedOptionsDiv = $('<div>')
@@ -414,6 +416,7 @@ define ([
          * so that when it changes, something else can be updated.
          */
         addInputListener: function(parameterId, onChangeFunc) {
+            // console.log('adding input listener ...', this.parameterIdLookup);
             if (this.parameterIdLookup) {
                 var widget = this.parameterIdLookup[parameterId];
                 if (widget) {

@@ -4,23 +4,100 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define (
-	[
-		'bootstrap',
-		'jquery',
-		'util/timeFormat'
-	], function(
-		bootstrap,
-		$,
-		TF
-	) {
+define ([
+    'bootstrap',
+    'jquery',
+    'util/timeFormat',
+    'testUtil'
+], function(
+	bootstrap,
+	$,
+	TF,
+    TestUtil
+) {
     'use strict';
     var testISOTime = '2015-12-09T21:58:22.202Z';
     var testISOTime2 = '2016-01-06T00:48:43.196Z';
     var testOutputString = 'Wed Dec 09 2015';
     var reformattedString = '2015-12-09 13:58:22';
+    var testExactDayStr = 'Dec 9, 2015';
 
     describe('KBase Time Formatting Utility function module', function() {
+        it('getTimeStampStr should properly output an exact time string', function() {
+            var d = TF.getTimeStampStr(testISOTime, true);
+            expect(d).toBe(testExactDayStr);
+        });
+
+        it('getTimeStampStr should return a fuzzy relative time string', function() {
+            var prevDay = new Date();
+            prevDay.setDate(prevDay.getDate()-2);
+            var d = TF.getTimeStampStr(prevDay, false);
+            expect(d).toBe('2 days ago');
+        });
+
+        it('getTimeStampStr should return a fuzzy relative time string @ 2 days 2 hours', function() {
+            var prevDay = new Date();
+            prevDay.setDate(prevDay.getDate()-2);
+            prevDay.setHours(prevDay.getHours()-2);
+            var d = TF.getTimeStampStr(prevDay, false);
+            expect(d).toBe('2 days ago');
+        });
+
+        it('getTimeStampStr should return a fuzzy relative time string @ 1 day', function() {
+            var prevDay = new Date();
+            prevDay.setDate(prevDay.getDate()-1);
+            var d = TF.getTimeStampStr(prevDay, false);
+            expect(d).toBe('1 day ago');
+        });
+
+        it('getTimeStampStr should return a fuzzy relative time string @ 1 hour', function() {
+            var prevDay = new Date();
+            prevDay.setHours(prevDay.getHours()-1);
+            var d = TF.getTimeStampStr(prevDay, false);
+            expect(d).toBe('1 hour ago');
+        });
+
+        it('getTimeStampStr should return a fuzzy relative time string @ 1 minute', function() {
+            var prevDay = new Date();
+            prevDay.setMinutes(prevDay.getMinutes()-1);
+            var d = TF.getTimeStampStr(prevDay, false);
+            expect(d).toBe('1 minute ago');
+        });
+
+        it('getShortTimeStampStr should properly output an exact time string', function() {
+            var d = TF.getShortTimeStampStr(testISOTime, true);
+            expect(d).toBe(testExactDayStr);
+        });
+
+        it('getShortTimeStampStr should return a fuzzy relative time string [ 2 mons ]', function() {
+            var prevDay = new Date();
+            prevDay.setMonth(prevDay.getMonth()-2);
+            var d = TF.getShortTimeStampStr(prevDay, false);
+            expect(d).toBe('2 mons');
+        });
+
+        it('getShortTimeStampStr should return a fuzzy relative time string [ 1 hr ]', function() {
+            var prevDay = new Date();
+            prevDay.setHours(prevDay.getHours()-1);
+            var d = TF.getShortTimeStampStr(prevDay, false);
+            expect(d).toBe('1 hr');
+        });
+
+        it('getShortTimeStampStr should return a fuzzy relative time string [ 3 mins ]', function() {
+            var prevDay = new Date();
+            prevDay.setSeconds(prevDay.getSeconds()-5);
+            var d = TF.getShortTimeStampStr(prevDay, false);
+            expect(d).toBe('5 secs');
+        });
+
+        it('getShortTimeStampStr should return a fuzzy relative time string [ 5 secs ]', function() {
+            var prevDay = new Date();
+            prevDay.setMinutes(prevDay.getMinutes()-3);
+            var d = TF.getShortTimeStampStr(prevDay, false);
+            expect(d).toBe('3 mins');
+        });
+
+
         it('parseDate should properly parse an ISO date string', function() {
             var d = TF.parseDate(testISOTime);
             expect(d).toEqual(jasmine.any(Object));

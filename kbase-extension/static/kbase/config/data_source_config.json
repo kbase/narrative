@@ -114,8 +114,8 @@
                 "ws": "KBasePublicGenomesV5",
                 "search": true
             },
-            "plant_genomes": {
-                "name": "Plant Genomes",
+            "phytozome_genomes": {
+                "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Phytozome_Genomes",
                 "search": false
@@ -209,20 +209,8 @@
                 "ws": "ReferenceDataManager",
                 "search": true
             },
-             "plant_genomes": {
-                "name": "Plant Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "Phytozome_Genomes",
-                "search": false
-            },
-            "media": {
-                "name": "Media",
-                "type": "KBaseBiochem.Media",
-                "ws": "KBaseMedia",
-                "search": false
-            },
-            "plant_genomes": {
-                "name": "Plant Genomes",
+             "phytozome_genomes": {
+                "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Phytozome_Genomes",
                 "search": false
@@ -316,8 +304,8 @@
                 "ws": "ReferenceDataManager",
                 "search": true
             },
-            "plant_genomes": {
-                "name": "Plant Genomes",
+            "phytozome_genomes": {
+                "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Phytozome_Genomes",
                 "search": false

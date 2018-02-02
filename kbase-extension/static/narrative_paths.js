@@ -30,6 +30,8 @@ require.config({
         select2: 'ext_components/select2/dist/js/select2.full.min', //kbase/js/patched-components/select2/select2',
         uuid: 'ext_components/pure-uuid/uuid',
         'font-awesome': 'ext_components/font-awesome/css/font-awesome',
+        yaml : 'ext_components/require-yaml/yaml',
+        'js-yaml' : 'ext_components/js-yaml/dist/js-yaml.min',
 
         // not under bower control
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',

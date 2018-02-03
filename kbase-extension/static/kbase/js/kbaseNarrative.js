@@ -710,20 +710,20 @@ define([
                 this.loadingWidget.updateProgress('apps', true);
             }.bind(this));
 
+            // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
+            this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
+                ws_id: this.getWorkspaceName()
+            });
+            this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
+
             this.updateDocumentVersion()
                 .then(function() {
                     // init the controller
-                    // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
-                    this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
-                        ws_id: this.getWorkspaceName()
-                    });
-                    this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
                     return this.narrController.render();
                 }.bind(this))
                 .finally(function () {
                     this.sidePanel.render();
                 }.bind(this));
-
 
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);

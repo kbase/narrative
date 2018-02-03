@@ -150,6 +150,10 @@ define([
         return this;
     };
 
+    Narrative.prototype.getAuthToken = function () {
+        return NarrativeLogin.getAuthToken();
+    };
+
     /**
      * A wrapper around the Jupyter.notebook.kernel.execute() function.
      * If any KBase widget needs to make a kernel call, it should go through here.
@@ -356,7 +360,7 @@ define([
                 self.documentVersionInfo = docInfo;
             }
             else {
-                var workspace = new Workspace(Config.url('workspace'), {token: self.authToken});
+                var workspace = new Workspace(Config.url('workspace'), {token: self.getAuthToken()});
                 Promise.resolve(workspace.get_object_info_new({
                     'objects': [{'ref': self.workspaceRef}],
                     'includeMetadata': 1
@@ -661,7 +665,7 @@ define([
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0, 0);
 
-        this.authToken = NarrativeLogin.sessionInfo.token;
+        this.authToken = NarrativeLogin.getAuthToken();
         this.userId = NarrativeLogin.sessionInfo.user;
 
         Jupyter.narrative.patchKeyboardMapping();

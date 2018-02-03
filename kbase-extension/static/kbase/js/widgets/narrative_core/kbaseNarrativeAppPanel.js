@@ -27,6 +27,7 @@ define([
     'narrative_core/catalog/kbaseCatalogBrowser',
     'kbase/js/widgets/narrative_core/kbaseAppCard',
     'util/bootstrapAlert',
+    'common/runtime',
     'kbaseNarrative',
     'catalog-client-api',
     'kbase-client-api',
@@ -48,7 +49,8 @@ define([
     Uuid,
     KBaseCatalogBrowser,
     kbaseAppCard,
-    BootstrapAlert
+    BootstrapAlert,
+    Runtime
 ) {
     'use strict';
     return KBWidget({
@@ -420,7 +422,7 @@ define([
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-            this.catalog = new Catalog(this.options.catalogURL, {token: Jupyter.narrative.authToken});
+            this.catalog = new Catalog(this.options.catalogURL, {token: Runtime.make().authToken()});
             this.refreshFromService();
             return this;
         },
@@ -923,11 +925,11 @@ define([
         buildAppItem: function(app) {
             /**
              app.info:
-                authors:["rsutormin"], categories:["annotation"], icon:{url:}, id: str, 
-                input_types: ['KbaseGenomeAnnotations.Assembly'], module_name: str, 
+                authors:["rsutormin"], categories:["annotation"], icon:{url:}, id: str,
+                input_types: ['KbaseGenomeAnnotations.Assembly'], module_name: str,
                 name: str, namespace: str, output_types:["KBaseGenomes.Genome"],
                 subtitle: str, tooltip: str, ver: str
-             * 
+             *
             */
             var self = this;
 
@@ -951,7 +953,7 @@ define([
                         .append('more...')
                         .attr('target', '_blank')
                         .attr('href', moreLink)));
-  
+
             var $card = kbaseAppCard.apply(this, [
                 {
                     createdBy:false,

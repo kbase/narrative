@@ -665,7 +665,7 @@ define([
 
             Promise.try(function () {
                 if (curUser !== owner) {
-                    var wsClient = new Workspace(Config.url('workspace'), { token: Jupyter.narrative.authToken });
+                    var wsClient = new Workspace(Config.url('workspace'), { token: this.runtime.authToken() });
                     return Promise.resolve(wsClient.get_permissions({
                             id: Jupyter.narrative.workspaceId
                         }))

@@ -34,6 +34,7 @@ define([
     'kbase-generic-client-api',
     'util/bootstrapDialog',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
+    'common/runtime',
     'bootstrap'
 ], function (
     KBWidget,
@@ -52,7 +53,8 @@ define([
     kbaseNarrativeStagingDataTab,
     GenericClient,
     BootstrapDialog,
-    kbaseDataCard
+    kbaseDataCard,
+    Runtime
 ) {
     'use strict';
 
@@ -545,7 +547,7 @@ define([
             }
 
             // It is silly to invoke a new object for each widget
-            var auth = {token: Jupyter.narrative.authToken};
+            var auth = {token: Runtime.make().authToken()};
             var ws = new Workspace(this.options.workspaceURL, auth);
             var serviceClient = new GenericClient(Config.url('service_wizard'), auth);
 

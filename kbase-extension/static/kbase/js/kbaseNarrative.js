@@ -519,14 +519,16 @@ define([
             .addClass('table table-striped table-bordered');
         $.each(urlList,
             function (idx, val) {
-                var url = Config.url(val).toString();
+                var url = Config.url(val);
                 // if url looks like a url (starts with http), include it.
                 // ignore job proxy and submit ticket
                 if (val === 'narrative_job_proxy' ||
                     val === 'submit_jira_ticket' ||
-                    val === 'narrative_method_store_types') {
+                    val === 'narrative_method_store_types' ||
+                    url === null) {
                     return;
                 }
+                url = url.toString();
                 if (url && url.toLowerCase().indexOf('http') === 0) {
                     $versionTable.append($('<tr>')
                         .append($('<td>').append(val))
@@ -708,12 +710,21 @@ define([
                 this.loadingWidget.updateProgress('apps', true);
             }.bind(this));
 
-            // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
-            this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
+            this.updateDocumentVersion()
+                .then(function() {
+                    // init the controller
+                    // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
+                    this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
+                        ws_id: this.getWorkspaceName()
+                    });
+                    this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
+                    return this.narrController.render();
+                }.bind(this))
+                .finally(function () {
+                    this.sidePanel.render();
+                }.bind(this));
 
-            this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
-                ws_id: this.getWorkspaceName()
-            });
+
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
             KBaseCellToolbar.register(Jupyter.notebook);
@@ -736,14 +747,6 @@ define([
             this.initSharePanel();
             // this.initSettingsDialog();
 
-            this.updateDocumentVersion()
-                .then(function() {
-                    // init the controller
-                    return this.narrController.render();
-                }.bind(this))
-                .finally(function () {
-                    this.sidePanel.render();
-                }.bind(this));
             $([Jupyter.events]).trigger('loaded.Narrative');
             $([Jupyter.events]).on('kernel_ready.Kernel',
                 function () {

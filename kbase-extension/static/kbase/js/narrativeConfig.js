@@ -131,8 +131,14 @@ define([
             return Promise.resolve($.getJSON(config.urls.data_panel_sources));
         }).then(function (dataCategories) {
             console.log('Config: processing remote data configuration.');
-            config.publicCategories = dataCategories[config.environment].publicData;
-            config.exampleData = dataCategories[config.environment].exampleData;
+            var env = config.environment;
+            // little bit of a hack, but dev should => ci for all things data.
+            // it doesn't seem worth making a new dev block for the example data.
+            if (env === 'dev') {
+                env = 'ci';
+            }
+            config.publicCategories = dataCategories[env].publicData;
+            config.exampleData = dataCategories[env].exampleData;
             return Promise.try(function () {
                 return config;
             });
@@ -145,8 +151,12 @@ define([
             return Promise.resolve($.getJSON('static/kbase/config/' + path[path.length - 1]))
                 .then(function (dataCategories) {
                     console.log('Config: processing local data configuration.');
-                    config.publicCategories = dataCategories[config.environment].publicData;
-                    config.exampleData = dataCategories[config.environment].exampleData;
+                    var env = config.environment;
+                    if (env === 'dev') {
+                        env = 'ci';
+                    }
+                    config.publicCategories = dataCategories[env].publicData;
+                    config.exampleData = dataCategories[env].exampleData;
                     return config;
                 })
                 .catch(function (error) {

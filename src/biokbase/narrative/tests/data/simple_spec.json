@@ -1,0 +1,46 @@
+{
+    "ver": "0.0.1",
+    "authors": [
+        "wjriehl"
+    ],
+    "contact": "help@kbase.us",
+    "visible": true,
+    "categories": ["active"],
+    "app_type": "editor",
+    "widgets": {
+        "input": null,
+        "output": null
+    },
+    "parameters": [
+        {
+            "id": "simple_string",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [ "" ],
+            "field_type": "text",
+            "text_options": {
+            }
+        }
+    ],
+    "behavior": {
+        "service-mapping": {
+            "url": "",
+            "name": "NarrativeTest",
+            "method": "generic_test",
+            "input_mapping": [
+                {
+                    "input_parameter": "simple_string",
+                    "target_property": "simple_string"
+                }
+            ],
+            "output_mapping": [
+                {
+                    "service_method_output_path": [0,"simple_string"],
+                    "target_property": "simple_string"
+                }
+            ]
+        }
+    },
+    "job_id_output_field": "docker"
+}

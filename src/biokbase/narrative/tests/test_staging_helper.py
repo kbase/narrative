@@ -30,7 +30,7 @@ class StagingHelperTest(unittest.TestCase):
         self.assertTrue('Reason: Unauthorized' in str(context.exception.message))
         self.assertTrue('Error code: 401' in str(context.exception.message))
 
-    def mock_fetch_url(end_point):
+    def mock_fetch_url(end_point, values=None, headers=None, method='GET'):
         if 'list' in end_point:
             print 'mocking __fetch_url list endpoint'
             return '[{"path": "tgu/test_file_1", "isFolder": false},\
@@ -42,6 +42,15 @@ class StagingHelperTest(unittest.TestCase):
         elif 'metadata' in end_point:
             print 'mocking __fetch_url metadata endpoint'
             return '{"head": "head_line", "tail": "tail_line", "lineCount": 10}'
+        elif 'search' in end_point:
+            print 'mocking __fetch_url search endpoint'
+            return '[{"isFolder": false, "mtime": 1515526154896, "name": "LMS-PROC-315.pdf"}]'
+        elif 'delete' in end_point:
+            print 'mocking __fetch_url delete endpoint'
+            return "successfully deleted tgu2/test.pdf"
+        elif 'mv' in end_point:
+            print 'mocking __fetch_url mv endpoint'
+            return "successfully moved tgu2/test.pdf to tgu2/test_1.pdf"
 
     @patch.object(Helper, '_Helper__fetch_url', side_effect=mock_fetch_url)
     def test_list(self, _fetch_url):
@@ -72,6 +81,29 @@ class StagingHelperTest(unittest.TestCase):
         self.assertEqual(metadata.get('file_name'), 'test_file')
         self.assertTrue('file_status' in metadata)
         self.assertEqual(metadata.get('file_status'), 'BACKUP_COMPLETE')
+
+    @patch.object(Helper, '_Helper__fetch_url', side_effect=mock_fetch_url)
+    def test_search(self, _fetch_url):
+        search_ret = self.staging_helper.search('test_fake_file')
+        self.assertTrue(isinstance(search_ret, (list)))
+        element = search_ret[0]
+        self.assertTrue('isFolder' in element)
+        self.assertFalse(element.get('isFolder'))
+        self.assertTrue('name' in element)
+        self.assertEqual(element.get('name'), 'LMS-PROC-315.pdf')
+
+    @patch.object(Helper, '_Helper__fetch_url', side_effect=mock_fetch_url)
+    def test_delete(self, _fetch_url):
+        delete_ret = self.staging_helper.delete('test_fake_file')
+        self.assertTrue('server_response' in delete_ret)
+        self.assertEqual(delete_ret.get('server_response'), 'successfully deleted tgu2/test.pdf')
+
+    @patch.object(Helper, '_Helper__fetch_url', side_effect=mock_fetch_url)
+    def test_mv(self, _fetch_url):
+        mv_ret = self.staging_helper.mv('test.pdf ', 'test_1.pdf')
+        self.assertTrue('server_response' in mv_ret)
+        self.assertEqual(mv_ret.get('server_response'),
+                         'successfully moved tgu2/test.pdf to tgu2/test_1.pdf')
 
 if __name__ == "__main__":
     unittest.main()

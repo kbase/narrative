@@ -42,6 +42,9 @@
         }
     ],
     "app_info": {
+        "web_upload": {
+            "app_id": "kb_uploadmethods/upload_web_file"
+        },
         "test_fastq_reads": {
             "app_id": "NarrativeTest/example_reads_upload",
             "app_input_param": "fastq_fwd_staging_file_name",

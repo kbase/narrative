@@ -45,6 +45,10 @@ define([
     return new KBWidget({
         name: 'StagingAreaViewer',
 
+        options : {
+          refreshIntervalDuration : 30000,
+        },
+
         init: function(options) {
 
             this._super(options);
@@ -85,7 +89,24 @@ define([
 
             // Get this party started.
             this.setPath(options.path);
+
+            this.openFileInfo = {};
+
             return this;
+        },
+
+        activate : function() {
+          this.render();
+          if (!this.refreshInterval) {
+            this.refreshInterval = setInterval( function() { this.render()}.bind(this), this.options.refreshIntervalDuration);
+          }
+        },
+
+        deactivate : function() {
+          if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = undefined;
+          }
         },
 
         render: function() {
@@ -93,6 +114,7 @@ define([
         },
 
         updateView: function() {
+
             return this.stagingServiceClient.list({path: this.subpath})
                 .then(function(data) {
                     var files = JSON.parse(data);
@@ -101,9 +123,12 @@ define([
                             f.imported = {};
                         }
                     });
+                    var scrollTop = this.$elem.parent().scrollTop();
+
                     this.$elem.empty();
                     this.renderFileHeader();
                     this.renderFiles(files);
+                    setTimeout(function() { this.$elem.parent().scrollTop(scrollTop)}.bind(this),0);
                 }.bind(this))
                 .fail(function (xhr) {
                   this.$elem.empty();
@@ -175,6 +200,9 @@ define([
         },
 
         renderFiles: function(files) {
+
+          let parent = this.$elem.parent().get(0);
+
             var $fileTable = $(this.ftpFileTableTmpl({files: files, uploaders: this.uploaders.dropdown_order}));
             this.$elem.append($fileTable);
             this.$elem.find('table').dataTable({
@@ -267,9 +295,25 @@ define([
                     }.bind(this));
 
                     $('td:eq(0)', nRow).find('i[data-caret]').off('click');
+
+                    // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
+                    var $caret = $('td:eq(0)', nRow).find('i[data-caret]');
+                    //next, we use that caret to find the fileName, and the file Data.
+                    var fileName = $caret.data().caret;
+                    var myFile = getFileFromName(fileName);
+                    //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
+                    if (this.openFileInfo[fileName]) {
+                      //so we note that we've already loaded the info.
+                      myFile.loaded = this.openFileInfo[fileName].loaded;
+                      //toggle the caret
+                      $caret.toggleClass('fa-caret-down fa-caret-right');
+                      //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
+                      setTimeout( function() {$caret.parent().parent().after(
+                        this.renderMoreFileInfo( myFile )
+                      )}.bind(this), 0);
+                    }
+
                     $('td:eq(0)', nRow).find('i[data-caret]').on('click', function(e) {
-                        var fileName = $(e.currentTarget).data().caret;
-                        var myFile = getFileFromName(fileName);
 
                         $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
                         var $tr = $(e.currentTarget).parent().parent();
@@ -277,6 +321,7 @@ define([
                         if ($(e.currentTarget).hasClass('fa-caret-down')) {
                           $('.kb-dropzone').css('min-height', '75px');
                           $('.dz-message').css('margin', '0em 0');
+                          this.openFileInfo[fileName] = myFile;
                           $tr.after(
                             this.renderMoreFileInfo( myFile )
                           );
@@ -285,6 +330,7 @@ define([
                           $('.kb-dropzone').css('min-height', '200px');
                           $('.dz-message').css('margin', '3em 0');
                           $tr.next().remove();
+                          delete this.openFileInfo[fileName];
                         }
                     }.bind(this));
 

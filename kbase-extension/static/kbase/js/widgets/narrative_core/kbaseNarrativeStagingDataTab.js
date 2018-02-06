@@ -28,6 +28,14 @@ define([
             return this;
         },
 
+        activate : function() {
+          this.stagingAreaViewer.activate();
+        },
+
+        deactivate : function() {
+          this.stagingAreaViewer.deactivate();
+        },
+
         updatePath: function(newPath) {
             this.path = newPath;
             this.uploadWidget.setPath(newPath);

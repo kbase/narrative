@@ -201,7 +201,7 @@ define([
 
         renderFiles: function(files) {
 
-          let parent = this.$elem.parent().get(0);
+          var parent = this.$elem.parent().get(0);
 
             var $fileTable = $(this.ftpFileTableTmpl({files: files, uploaders: this.uploaders.dropdown_order}));
             this.$elem.append($fileTable);

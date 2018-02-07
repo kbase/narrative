@@ -7,6 +7,7 @@
         "numCells": 1,
         "dataIndex": 0,
         "dataSelector": ".icon-genome",
-        "mainUser": "wjriehl"
+        "mainUser": "wjriehl",
+        "widgetSelector": ".tabbable"
     }
 }

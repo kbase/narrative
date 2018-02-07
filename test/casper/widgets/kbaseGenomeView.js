@@ -1,6 +1,6 @@
 var WidgetTestBed = require('../widgetTestBed');
 
-function doValidation (test, config) {
+function validateCell (test, config) {
     test.assertEquals(casper.get_cells_length(), config.numCells + 1);
 
     // make sure we have the code for a data widget in that cell
@@ -25,7 +25,15 @@ function doValidation (test, config) {
     }, 'Metadata contains properly formatted UPA', config.numCells);
 }
 
+function validateWidget(test, config, widgetSelector) {
+
+    test.assertSelectorHasText(widgetSelector + ' .tabbable li:first-child', 'Overview');
+    test.assertSelectorHasText(widgetSelector + ' .tabbable li:nth-child(2)', 'Browse Features');
+    test.assertSelectorHasText(widgetSelector + ' .tabbable li:last-child', 'Browse Contigs');
+}
+
 WidgetTestBed.runWidgetTest({
     widget: 'kbaseGenomeView',
-    validateFn: doValidation
+    validateCellFn: validateCell,
+    validateWidgetFn: validateWidget
 });

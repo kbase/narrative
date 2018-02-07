@@ -17,8 +17,11 @@ function runWidgetTest(params) {
     if (!params.widget) {
         throw new Error('No widget entered for this test!');
     }
-    if (!params.validateFn) {
-        throw new Error('a validateFn is needed to validate the widget rendering.');
+    if (!params.validateCellFn) {
+        throw new Error('a validateFn is needed to validate the cell structure and metadata.');
+    }
+    if (!params.validateWidgetFn) {
+        throw new Error('needs a function for validating the widget rendering.');
     }
 
     var config = TestUtil.getWidgetConfig(params.widget);
@@ -59,7 +62,17 @@ function runWidgetTest(params) {
         }, config.numCells);
 
         casper.then(function() {
-            return params.validateFn(test, config);
+            return params.validateCellFn(test, config);
+        });
+
+        // next, we can go through the widget layout and all that... (need to have that code so
+        // we can test it on a copied narrative)
+        var widgetSelector = '#notebook .cell:last-child .kb-cell-output-content > div:last-child';
+        casper.waitUntilVisible(widgetSelector);
+        casper.waitUntilVisible(widgetSelector + ' ' + config.widgetSelector);
+
+        casper.then(function() {
+            return params.validateWidgetFn(test, config, widgetSelector);
         });
 
         casper.run(function() {

@@ -58,6 +58,17 @@ test-frontend-e2e:
 	cd $(FRONTEND_TEST_DIR)
 	@echo "done"
 
+# test-frontend-casper is an early-stage test, using a headless browser/scripting framework
+# (CasperJS). Right now, it's intended to run tests that verify that viewer widgets work as
+# intended.
+#
+# It requires an installed and running Narrative.
+test-frontend-casper:
+	@echo "running frontend viewer tests"
+	python test/casper/run_tests.py
+	@echo "done"
+
+
 build-docs:
 	cd src && export PYTHONPATH=`pwd` && python2.7 setup.py doc
 	-mkdir docs

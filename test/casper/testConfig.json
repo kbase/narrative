@@ -5,6 +5,8 @@
         "creatorName": "William Riehl",
         "ownerId": "wjriehl",
         "numCells": 1,
-        "dataIndex": 0
+        "dataIndex": 0,
+        "dataSelector": ".icon-genome",
+        "mainUser": "wjriehl"
     }
 }

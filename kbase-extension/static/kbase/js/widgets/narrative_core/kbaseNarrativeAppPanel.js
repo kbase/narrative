@@ -26,6 +26,7 @@ define([
     'uuid',
     'narrative_core/catalog/kbaseCatalogBrowser',
     'kbase/js/widgets/narrative_core/kbaseAppCard',
+    'common/runtime',
     'kbaseNarrative',
     'catalog-client-api',
     'kbase-client-api',
@@ -46,7 +47,8 @@ define([
     NarrativeMethodStore,
     Uuid,
     KBaseCatalogBrowser,
-    kbaseAppCard
+    kbaseAppCard,
+    Runtime
 ) {
     'use strict';
     return KBWidget({

@@ -1,12 +1,77 @@
+/* global casper module Jupyter */
+
 /**
- * params needs to be an object with certain keys:
- * widget = the name of the widget to test (as in testConfig.json)
- * dataSelector = the CSS-selector for finding a data object. An icon would be best.
- * validateFn = a function (full of casper's test.XXX commands) for validating that a
- *              widget instantiates and renders correctly.
- * mainUser = which user to use for initial permissions and ownership
- * sharedUser = which user to use for sharing
- * Eventually, this will handle the sharing and other validating that needs to happen.
+ * CasperJS widget test bed.
+ * -------------------------
+ * This exports a single function - runWidgetTest - that, oddly enough, tests a widget in place
+ * in a given narrative.
+ *
+ * Most of the fiddly test components are expected to be in test/casper/testConfig.json, so as
+ * not to be hard-coded in each test. Maybe they could be in a different version? Not sure
+ * what's better. I tried to err on the side of more configuration and less code.
+ *
+ * The single function here takes in a params object. It needs the following keys:
+ *
+ * widget
+ * ------
+ * The name of the widget to test. This will be used as the key for looking up info
+ * from testConfig.json
+ *
+ * validateCellFn
+ * --------------
+ * A function (full of casper's test.XXX commands) for validating that the cell containing a widget
+ * instantiates correctly. This is run before rendering, and should be used to validate things like
+ * the code block and metadata. Should have the following signature.
+ * myValidateFn(test, config)
+ *     test: the casper.test object in the correct context
+ *     config: the test configuration object (with configs set for each widget)
+ * That is to say, the test and config variables are passed into your validateCellFn
+ *
+ * validateWidgetFn
+ * ----------------
+ * A function for validating that a widget has rendered properly. This is run once the widget is
+ * "rendered" (the JavaScript code is executed by the browser). This doesn't mean it's done
+ * rendering - your widget could still be fetching data and building itself. But the DOM node and
+ * JS code has been run.
+ * As in the validateCellFn above, this is given the test and config objects, but is also given
+ * a widgetSelector variable. This is the selector for the DOM node containing the newly built
+ * widget itself. Any selectors used for testing the render should be relative to this one.
+ *
+ *
+ * The config file test/casper/testConfig.json should have a special mention here, too. Each block
+ * in that file represents some configuration stuff for each widget tested.
+ *
+ * Documentation by example!
+ * "kbaseGenomeView": {
+ *   "narrativeId": "ws.28238.obj.1",
+ *   "narrativeName": "Widget Test Bed",
+ *   "creatorName": "William Riehl",
+ *   "ownerId": "wjriehl",
+ *   "numCells": 1,
+ *   "dataSelector": ".icon-genome",
+ *   "widgetSelector": ".tabbable",
+ *   "mainUser": "wjriehl"
+ * }
+ * The main key should match the widget name.
+ * narrativeId = the id of the narrative (as in the URL path)
+ * narrativeName = the name that shows in the Narrative page header
+ * creatorName = the full name of the user that shows in the page header
+ * ownerId = the user id for the narrative creator
+ * numCells = the number of cells in that saved narrative
+ * dataSelector =
+ *     The CSS-selector for finding a data object. An icon would be best. This one is relative to
+ *     the "card" that holds each data object in the Data panel (that part gets filled out
+ *     automatically).
+ * widgetSelector =
+ *     A CSS-selector for the relevant part of the widget itself, used to test for its presence.
+ *     For example, if the main part of widget is sitting in a KBaseTabs, then ".tabbable" should
+ *     be used. The tests will wait until this becomes visible to proceed, so it should either be
+ *     right away (like some spinner in the widget), or delayed until the widget is expected to be
+ *     rendered (like the '.tabbable' that would appear only after data gets loaded).
+ * mainUser =
+ *     The user who's token will be used to open that narrative, make the widget, and share it.
+ * sharedUser =
+ *     The user who this narrative will be shared with to do the sharing validation
  */
 
 var TestUtil = require('./casperUtil');

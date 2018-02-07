@@ -1,3 +1,5 @@
+/* global Jupyter casper */
+
 var WidgetTestBed = require('../widgetTestBed');
 
 function validateCell (test, config) {
@@ -26,7 +28,6 @@ function validateCell (test, config) {
 }
 
 function validateWidget(test, config, widgetSelector) {
-
     test.assertSelectorHasText(widgetSelector + ' .tabbable li:first-child', 'Overview');
     test.assertSelectorHasText(widgetSelector + ' .tabbable li:nth-child(2)', 'Browse Features');
     test.assertSelectorHasText(widgetSelector + ' .tabbable li:last-child', 'Browse Contigs');

@@ -5,9 +5,8 @@
         "creatorName": "William Riehl",
         "ownerId": "wjriehl",
         "numCells": 1,
-        "dataIndex": 0,
         "dataSelector": ".icon-genome",
-        "mainUser": "wjriehl",
-        "widgetSelector": ".tabbable"
+        "widgetSelector": ".tabbable",
+        "mainUser": "wjriehl"
     }
 }

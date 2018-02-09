@@ -167,10 +167,10 @@ class KBaseWSManagerMixin(object):
         2. Build metadata object
         3. Save the narrative object (write_narrative)
         4. Return any notebook changes as a list-
-           (narrative, ws_id, obj_id)
+           (narrative, ws_id, obj_id, ver)
         """
 
-        if (nb.has_key('worksheets')):
+        if 'worksheets' in nb:
             # it's an old version. update it by replacing the 'worksheets' key with
             # the 'cells' subkey
             # the old version only uses the first 'worksheet', so if it's there,
@@ -281,7 +281,7 @@ class KBaseWSManagerMixin(object):
             obj_info = self.ws_client().save_objects({'id': ws_id,
                                                       'objects': [ws_save_obj]})[0]
 
-            return (nb, obj_info[6], obj_info[0])
+            return (nb, obj_info[6], obj_info[0], obj_info[4])
 
         except ServerError, err:
             raise self._ws_err_to_perm_err(err)

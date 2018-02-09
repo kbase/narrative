@@ -67,8 +67,6 @@ class TestClient(unittest.TestCase):
         time.sleep(self.poll_sec * 4)
 
         # fetch whatever the receiver got
-        data = self.recv.get_data()
-
         self.stop_receiver(kblog)
 
         # check that receiver got the (buffered) messages

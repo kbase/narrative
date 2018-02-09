@@ -34,13 +34,15 @@ class _KBaseEnv(object):
     env_client_ip  = "KB_CLIENT_IP"
     env_workspace  = "KB_WORKSPACE_ID"
     env_user       = "KB_USER_ID"
+    env_env        = "KB_ENVIRONMENT"
 
     _defaults = {'auth_token': 'none',
                  'narrative': 'none',
                  'session': 'none',
                  'client_ip': '0.0.0.0',
                  'user': 'anonymous',
-                 'workspace': 'none'}
+                 'workspace': 'none',
+                 'env': 'none'}
 
     def __getattr__(self, name):
         ename = "env_" + name

@@ -16,14 +16,33 @@ import threading
 import time
 import os
 import signal
+import json
+import biokbase.narrative.clients as clients
 
 KARMA_PORT = 9876
 JUPYTER_PORT = 32323
+TEST_ROOT = os.path.join("test", "casper")
+BASE_TEST_COMMAND = ['casperjs', 'test', '--includes=narr-venv/jupyter_notebook/notebook/tests/util.js']
 
-argparser = argparse.ArgumentParser(
-        description='Run KBase Narrative CasperJS tests'
-    )
-options = argparser.parse_args(sys.argv[1:])
+with open(os.path.join(TEST_ROOT, "testConfig.json"), 'r') as c:
+    testConfig = json.loads(c.read())
+
+for user in testConfig.get("users"):
+    tokenFile = testConfig['users'][user]['tokenFile']
+    with open(tokenFile, 'r') as t:
+        token = t.read().strip()
+    testConfig['users'][user]['token'] = token
+
+print(testConfig)
+sys.exit(0)
+
+
+
+
+
+
+
+
 
 nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"', '--ip=127.0.0.1',
               '--port={}'.format(JUPYTER_PORT)]
@@ -65,24 +84,35 @@ thread = threading.Thread(target=readlines)
 thread.setDaemon(True)
 thread.start()
 
-test_command = ['casperjs', 'test', '--includes=narr-venv/jupyter_notebook/notebook/tests/util.js']
+def init_test(config):
+    """
+    Initializes a widget test set by creating a new narrative and copying a single piece of data
+    in to it.
+    """
 
-# find all casper js test modules.
-# they're all the files under test/casper/widgets
 
-for dirpath, dnames, fnames in os.walk('test/casper/widgets'):
-    for f in fnames:
-        if f.endswith('.js'):
-            test_command.append(os.path.join(dirpath, f))
+def run_tests():
+    for widget in widgetConfig:
+        testConfig = widgetConfig[widget]
+        narrative = init_test(test_config)
+        resp = subprocess.check_call(test_command, stderr=subprocess.STDOUT)
+
+
+# # find all casper js test modules.
+# # they're all the files under test/casper/widgets
+#
+# for dirpath, dnames, fnames in os.walk('test/casper/widgets'):
+#     for f in fnames:
+#         if f.endswith('.js'):
+#             test_command.append(os.path.join(dirpath, f))
 
 resp = 1
 try:
     print("Jupyter server started, starting test script.")
-    resp = subprocess.check_call(test_command, stderr=subprocess.STDOUT)
+    run_tests()
 except subprocess.CalledProcessError:
     pass
 finally:
     print("Done running tests, killing server.")
     os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
-    # nb_server.terminate()
 sys.exit(resp)

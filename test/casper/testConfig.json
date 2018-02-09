@@ -1,12 +1,25 @@
 {
-    "kbaseGenomeView": {
-        "narrativeId": "ws.28238.obj.1",
-        "narrativeName": "Widget Test Bed",
-        "creatorName": "William Riehl",
-        "ownerId": "wjriehl",
-        "numCells": 1,
-        "dataSelector": ".icon-genome",
-        "widgetSelector": ".tabbable",
-        "mainUser": "wjriehl"
+    "users": {
+        "userA": {
+            "id": "wjriehl",
+            "tokenFile": "test/wjriehl.tok"
+        },
+        "userB": {
+            "id": "narrativetest",
+            "tokenFile": "test/narrativetest.tok"
+        }
+    },
+    "widgets": {
+        "kbaseGenomeView": {
+            "narrativeId": "ws.28238.obj.1",
+            "narrativeName": "Widget Test Bed",
+            "creatorName": "William Riehl",
+            "ownerId": "wjriehl",
+            "numCells": 1,
+            "dataSelector": ".icon-genome",
+            "widgetSelector": ".tabbable",
+            "mainUser": "wjriehl",
+            "testFile": "widgets/kbaseGenomeView.js"
+        }
     }
 }

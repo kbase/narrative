@@ -1,6 +1,7 @@
 /* global Jupyter casper */
 
 var WidgetTestBed = require('../widgetTestBed');
+var SharingTestBed = require('../sharingTestBed');
 
 function validateCell (test, config) {
     test.assertEquals(casper.get_cells_length(), config.numCells + 1);
@@ -33,8 +34,12 @@ function validateWidget(test, config, widgetSelector) {
     test.assertSelectorHasText(widgetSelector + ' .tabbable li:last-child', 'Browse Contigs');
 }
 
-WidgetTestBed.runWidgetTest({
-    widget: 'kbaseGenomeView',
-    validateCellFn: validateCell,
-    validateWidgetFn: validateWidget
+// WidgetTestBed.runWidgetTest({
+//     widget: 'kbaseGenomeView',
+//     validateCellFn: validateCell,
+//     validateWidgetFn: validateWidget
+// });
+
+SharingTestBed.runSharingTest({
+    widget: 'kbaseGenomeView'
 });

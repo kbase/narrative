@@ -277,6 +277,7 @@ define([
                         this.exampleTab.getExampleDataAndRender();
                     }.bind(this),
                   },
+                  { render : function() {} },
                 ];
 
                 if (Config.get('features').stagingDataViewer) {

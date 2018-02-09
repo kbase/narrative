@@ -7,6 +7,12 @@
                 "ws": "ReferenceDataManager",
                 "search": true
             },
+            "fungal_genomes": {
+                "name": "Fungal Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Fungal_Genomes",
+                "search": false
+            },
             "phytozome_genomes": {
                 "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
@@ -114,6 +120,12 @@
                 "ws": "KBasePublicGenomesV5",
                 "search": true
             },
+            "fungal_genomes": {
+                "name": "Fungal Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Fungal_Genomes",
+                "search": false
+            },
             "phytozome_genomes": {
                 "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
@@ -209,6 +221,12 @@
                 "ws": "ReferenceDataManager",
                 "search": true
             },
+            "fungal_genomes": {
+                "name": "Fungal Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Fungal_Genomes",
+                "search": false
+            },
              "phytozome_genomes": {
                 "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
@@ -303,6 +321,12 @@
                 "type": "KBaseGenomes.Genome",
                 "ws": "ReferenceDataManager",
                 "search": true
+            },
+            "fungal_genomes": {
+                "name": "Fungal Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Fungal_Genomes",
+                "search": false
             },
             "phytozome_genomes": {
                 "name": "Phytozome Genomes",

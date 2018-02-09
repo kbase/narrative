@@ -29,6 +29,7 @@ define([
     'narrative_core/catalog/kbaseCatalogBrowser',
     'kbase/js/widgets/narrative_core/kbaseAppCard',
     'util/bootstrapAlert',
+    'common/runtime',
     'kbaseNarrative',
     'catalog-client-api',
     'kbase-client-api',
@@ -51,7 +52,8 @@ define([
     Uuid,
     KBaseCatalogBrowser,
     kbaseAppCard,
-    BootstrapAlert
+    BootstrapAlert,
+    Runtime
 ) {
     'use strict';
     return KBWidget({
@@ -423,7 +425,7 @@ define([
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-            this.catalog = new Catalog(this.options.catalogURL, {token: Jupyter.narrative.authToken});
+            this.catalog = new Catalog(this.options.catalogURL, {token: Runtime.make().authToken()});
             this.refreshFromService();
             return this;
         },

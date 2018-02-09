@@ -56,7 +56,7 @@ define([
         // These are still module scope
 
         function authToken() {
-            return Jupyter.narrative.authToken;
+            return Jupyter.narrative.getAuthToken();
         }
 
         function userId() {

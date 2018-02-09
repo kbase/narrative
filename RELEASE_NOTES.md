@@ -3,6 +3,15 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
+### Version 3.6.1
+- SCT-533 - Remove the accidental test uploader that crept into production.
+- SCT-516 - Set staging panel to auto-refresh after various updates.
+- SCT-531 - Updated App Panel to have the same category names as the external App Catalog.
+- Added fungal genomes as a Public Data option.
+- Added Phytozome plant genomes as a Public Data option.
+- Repaired somewhat broken Doman Annotation viewer.
+- Text fixes to Import Tab tour.
+
 ### Version 3.6.0
 - SCT-400 - Deprecates the old Import panel, change text from "Staging (beta)" -> "Import (new)"
 - SCT-417
@@ -17,7 +26,6 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 - SCT-291 - Initial addition of tools for programmatically accessing the FTP file staging area.
 - SCT-405 - Custom compounds will now display properly in the media viewer.
 - KBASE-5417 - Fix long strings not wrapping correctly when showing object metadata in the Data panel.
-
 
 ### Version 3.5.2
 - PTV-682 - Fix problem with rendering a Pangenome widget in a copied Narrative.

@@ -19,6 +19,8 @@ define([
     'util/bootstrapDialog',
     'util/icon',
     'text!kbase/templates/beta_warning_body.html',
+    'yaml!ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml',
+    //'yaml!kbase/config/categories.yml',
     'kbaseAccordion',
     'kbaseNarrativeControlPanel',
     'base/js/namespace',
@@ -41,6 +43,7 @@ define([
     BootstrapDialog,
     Icon,
     BetaWarningTemplate,
+    Categories,
     kbaseAccordion,
     kbaseNarrativeControlPanel,
     Jupyter,
@@ -809,17 +812,25 @@ define([
                 return $('<div>').append($header).append($body.hide());
             };
 
+            var withCategories = function(a,b) {
+              var catA = (Categories.categories[a] || a).toLowerCase();
+              var catB = (Categories.categories[b] || b).toLowerCase();
+                   if (catA < catB) { return -1}
+              else if (catA > catB) { return  1}
+              else                  { return  0}
+            }
+
             var buildAccordionPanel = function(style) {
                 /* first, get elements in order like this:
                  * { category1: [ appId1, appId2, appId3, ...]}
                  */
                 var categorySet = self.categorizeApps(style, appSet);
                 var accordionList = [];
-                Object.keys(categorySet).sort().forEach(function(cat) {
+                Object.keys(categorySet).sort(withCategories).forEach(function(cat) {
                     if (cat === 'favorites') {
                         return;
                     }
-                    accordionList.push(buildSingleAccordion(cat, categorySet[cat]));
+                    accordionList.push(buildSingleAccordion(Categories.categories[cat] || cat, categorySet[cat]));
                 });
                 if (categorySet.favorites) {
                     accordionList.unshift(buildSingleAccordion('my favorites', categorySet.favorites));
@@ -923,11 +934,11 @@ define([
         buildAppItem: function(app) {
             /**
              app.info:
-                authors:["rsutormin"], categories:["annotation"], icon:{url:}, id: str, 
-                input_types: ['KbaseGenomeAnnotations.Assembly'], module_name: str, 
+                authors:["rsutormin"], categories:["annotation"], icon:{url:}, id: str,
+                input_types: ['KbaseGenomeAnnotations.Assembly'], module_name: str,
                 name: str, namespace: str, output_types:["KBaseGenomes.Genome"],
                 subtitle: str, tooltip: str, ver: str
-             * 
+             *
             */
             var self = this;
 
@@ -951,7 +962,7 @@ define([
                         .append('more...')
                         .attr('target', '_blank')
                         .attr('href', moreLink)));
-  
+
             var $card = kbaseAppCard.apply(this, [
                 {
                     createdBy:false,

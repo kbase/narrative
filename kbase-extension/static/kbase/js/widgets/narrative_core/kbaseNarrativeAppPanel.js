@@ -676,10 +676,19 @@ define([
         },
 
         categorizeApps: function(style, appSet) {
+
+            // previously, categories had the first letter of each word uppercased as part of display.
+            // now they're uppercased while the cats are built, to map similar cats to the same keyed
+            // display name (e.g. "metabolic_modeling" and "metabolic modeling" both go to "Metabolic Modeling")
+            // but 'uncategorized' is a hardwired special case. I opted to break it out into a constant defined
+            // here instead of use an upper case string as the key throughout later on.
+            var UNCATEGORIZED = 'Uncategorized';
+
             var allCategories = {
-                favorites: [],
-                uncategorized: []
+                favorites: []
             };
+            allCategories[UNCATEGORIZED] = [];  //my kingdom for es6 syntax
+
             Object.keys(appSet).forEach(function(appId) {
                 var categoryList = [];
                 switch (style) {
@@ -703,9 +712,14 @@ define([
                     break;
                 }
                 if (categoryList.length === 0) {
-                    allCategories.uncategorized.push(appId);
+                    allCategories[UNCATEGORIZED].push(appId);
                 }
                 categoryList.forEach(function(cat) {
+                    cat = Categories.categories[cat] || cat;
+                    cat = cat.replace('_', ' ')
+                        .replace(/\w\S*/g, function(txt) {
+                            return txt.charAt(0).toUpperCase() + txt.substr(1);
+                        });
                     if (!allCategories[cat]) {
                         allCategories[cat] = [];
                     }
@@ -728,8 +742,8 @@ define([
             if (allCategories.favorites.length === 0) {
                 delete allCategories['favorites'];
             }
-            if (allCategories.uncategorized.length === 0) {
-                delete allCategories['uncategorized'];
+            if (allCategories[UNCATEGORIZED].length === 0) {
+                delete allCategories[UNCATEGORIZED];
             }
             return allCategories;
         },
@@ -772,12 +786,9 @@ define([
                 appList.forEach(function(appId) {
                     $accordionBody.append(self.buildAppItem(appSet[appId]));
                 });
-                var categoryTitle = category.replace('_', ' ')
-                    .replace(/\w\S*/g, function(txt) {
-                        return txt.charAt(0).toUpperCase() + txt.substr(1);
-                    });
+
                 return {
-                    title: categoryTitle + ' <span class="label label-info pull-right" style="padding-top:0.4em">' + appList.length + '</span>',
+                    title: category + ' <span class="label label-info pull-right" style="padding-top:0.4em">' + appList.length + '</span>',
                     body: $accordionBody
                 };
             };
@@ -832,7 +843,7 @@ define([
                     if (cat === 'favorites') {
                         return;
                     }
-                    accordionList.push(buildSingleAccordion(Categories.categories[cat] || cat, categorySet[cat]));
+                    accordionList.push(buildSingleAccordion(cat, categorySet[cat]));
                 });
                 if (categorySet.favorites) {
                     accordionList.unshift(buildSingleAccordion('my favorites', categorySet.favorites));

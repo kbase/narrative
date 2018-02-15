@@ -315,7 +315,7 @@ define([
 
 
                     //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
-                    if (this.openFileInfo[fileName]) {
+                    if (fileName && this.openFileInfo[fileName]) {
                       //so we note that we've already loaded the info.
                       myFile.loaded = this.openFileInfo[fileName].loaded;
                       //toggle the caret

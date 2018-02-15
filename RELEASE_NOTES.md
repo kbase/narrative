@@ -5,6 +5,8 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
 ### Version 3.6.2
 - Fix problem preventing read-only Narratives from loading.
+- SCT-581 fix failure when reloading tabs in the data staging panel.
+- SCT-582 reconcile labels and order of App Panel with Catalog.
 
 ### Version 3.6.1
 - SCT-533 - Remove the accidental test uploader that crept into production.

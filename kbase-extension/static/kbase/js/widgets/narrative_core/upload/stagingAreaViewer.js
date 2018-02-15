@@ -348,6 +348,8 @@ define([
                         var fileName = $(e.currentTarget).data().decompress;
                         var myFile = getFileFromName(fileName);
 
+                        $(e.currentTarget).replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
+
                         this.stagingServiceClient.decompress({ path : myFile.name })
                             .then(function(data) {
                               this.updateView();

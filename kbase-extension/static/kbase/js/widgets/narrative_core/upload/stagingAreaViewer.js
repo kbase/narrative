@@ -123,7 +123,7 @@ define([
                         }
                     });
                     var scrollTop = this.$elem.parent().scrollTop();
-
+                    $('.staging-area-file-metadata').detach();
                     this.$elem.empty();
                     this.renderFileHeader();
                     this.renderFiles(files);
@@ -304,12 +304,18 @@ define([
                     $('td:eq(0)', nRow).find('i[data-caret]').off('click');
 
                     // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
-                    var $caret = $('td:eq(0)', nRow).find('i[data-caret]');
-                    //next, we use that caret to find the fileName, and the file Data.
-                    var fileName = $caret.data().caret;
-                    var myFile = getFileFromName(fileName);
+                    var $caret = $('td:eq(0)', nRow).find('i[data-caret]'),
+                        fileName,
+                        myFile;
+                    if ($caret.length) {
+                        //next, we use that caret to find the fileName, and the file Data.
+                        fileName = $caret.data().caret;
+                        myFile = getFileFromName(fileName);
+                    }
+
+
                     //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
-                    if (this.openFileInfo[fileName]) {
+                    if (fileName && this.openFileInfo[fileName]) {
                       //so we note that we've already loaded the info.
                       myFile.loaded = this.openFileInfo[fileName].loaded;
                       //toggle the caret
@@ -336,7 +342,7 @@ define([
                         else {
                           $('.kb-dropzone').css('min-height', '200px');
                           $('.dz-message').css('margin', '3em 0');
-                          $tr.next().remove();
+                          $tr.next().detach();
                           delete this.openFileInfo[fileName];
                         }
                     }.bind(this));
@@ -474,15 +480,10 @@ define([
                     .append( metadataContents )
                 }
               );
-
-              // finally, empty and append the tabs container.
-              $tabsDiv.empty();
-              $tabsDiv.append($tabsContainer);
             })
-            .fail(function (xhr) {
-              // if we failed, then there's no JGI metadata. That's fine. We still want to empty and append the tabs container.
-              // yes, yes, I could abstract this out into a separate function call so the code is DRY and not WET, but it's a duplicate
-              // of two lines that are right next to each other. I felt this was easier.
+            // there's nothing to catch here - if the jgi_metadata method errors, we just assume the file doesn't have any.
+            .always(function() {
+              // finally, empty and append the tabs container. no matter what
               $tabsDiv.empty();
               $tabsDiv.append($tabsContainer);
             });
@@ -499,6 +500,7 @@ define([
           });
 
           return fileData.loaded = $.jqElem('tr')
+            .addClass('staging-area-file-metadata')
             .append(
               $.jqElem('td')
                 .attr('colspan', 5)

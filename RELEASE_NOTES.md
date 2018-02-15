@@ -3,6 +3,9 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
+### Version 3.6.2
+- Fix problem preventing read-only Narratives from loading.
+
 ### Version 3.6.1
 - SCT-533 - Remove the accidental test uploader that crept into production.
 - SCT-516 - Set staging panel to auto-refresh after various updates.

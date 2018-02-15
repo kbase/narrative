@@ -304,10 +304,16 @@ define([
                     $('td:eq(0)', nRow).find('i[data-caret]').off('click');
 
                     // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
-                    var $caret = $('td:eq(0)', nRow).find('i[data-caret]');
-                    //next, we use that caret to find the fileName, and the file Data.
-                    var fileName = $caret.data().caret;
-                    var myFile = getFileFromName(fileName);
+                    var $caret = $('td:eq(0)', nRow).find('i[data-caret]'),
+                        fileName,
+                        myFile;
+                    if ($caret.length) {
+                        //next, we use that caret to find the fileName, and the file Data.
+                        fileName = $caret.data().caret;
+                        myFile = getFileFromName(fileName);
+                    }
+
+
                     //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
                     if (this.openFileInfo[fileName]) {
                       //so we note that we've already loaded the info.

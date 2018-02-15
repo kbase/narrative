@@ -306,18 +306,20 @@ define([
                     // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
                     var $caret = $('td:eq(0)', nRow).find('i[data-caret]');
                     //next, we use that caret to find the fileName, and the file Data.
-                    var fileName = $caret.data().caret;
-                    var myFile = getFileFromName(fileName);
-                    //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
-                    if (this.openFileInfo[fileName]) {
-                      //so we note that we've already loaded the info.
-                      myFile.loaded = this.openFileInfo[fileName].loaded;
-                      //toggle the caret
-                      $caret.toggleClass('fa-caret-down fa-caret-right');
-                      //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
-                      setTimeout( function() {$caret.parent().parent().after(
-                        this.renderMoreFileInfo( myFile )
-                      )}.bind(this), 0);
+                    if ($caret.length) {
+                      var fileName = $caret.data().caret;
+                      var myFile = getFileFromName(fileName);
+                      //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
+                      if (this.openFileInfo[fileName]) {
+                        //so we note that we've already loaded the info.
+                        myFile.loaded = this.openFileInfo[fileName].loaded;
+                        //toggle the caret
+                        $caret.toggleClass('fa-caret-down fa-caret-right');
+                        //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
+                        setTimeout( function() {$caret.parent().parent().after(
+                          this.renderMoreFileInfo( myFile )
+                        )}.bind(this), 0);
+                      }
                     }
 
                     $('td:eq(0)', nRow).find('i[data-caret]').on('click', function(e) {

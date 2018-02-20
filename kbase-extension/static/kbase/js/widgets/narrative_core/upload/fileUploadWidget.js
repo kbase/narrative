@@ -91,7 +91,6 @@ define([
                     //tack it onto our set path, then set that as the destPath form param.
                     if (file.fullPath) {
                       var subPath = file.fullPath.replace(new RegExp('/' + file.name + '$'), '');
-console.log("WTF IS DAMN DATA : ", data);
                       data.append('destPath', [this.path, subPath].join('/'));
                     }
                     //if we don't have a fullPath, then we're uploading a file and not a folder. Just use the current path.

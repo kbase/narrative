@@ -116,7 +116,17 @@ define([
 
             return this.stagingServiceClient.list({path: this.subpath})
                 .then(function(data) {
-                    var files = JSON.parse(data);
+                    //list is recursive, so it'd show all files in all subdirectories. This filters 'em out.
+                    var files = JSON.parse(data).filter(function(f) {
+                      // this is less complicated than you think. The path is the username, subpath, and name concatenated. The subpath may be empty
+                      // so we filter it out and only join defined things. If that's the same as the file's path, we're at the right level. If not, we're not.
+                      if ([this.userId, this.subpath, f.name].filter(function(p) { return p.length > 0}).join('/') === f.path) {
+                        return true;
+                      }
+                      else {
+                        return false;
+                      }
+                    }.bind(this));
                     files.forEach(function(f) {
                         if (!f.isFolder) {
                             f.imported = {};
@@ -185,7 +195,8 @@ define([
             if (splitPath.startsWith('/')) {
                 splitPath = splitPath.substring(1);
             }
-            splitPath = splitPath.split('/');
+            splitPath = splitPath.split('/').filter(function(p) { return p.length });
+            splitPath.unshift(this.userId);
             var pathTerms = [];
             for (var i=0; i<splitPath.length; i++) {
                 var prevPath = '';
@@ -197,6 +208,8 @@ define([
                     subpath: prevPath + '/' + splitPath[i]
                 };
             }
+            pathTerms[0].subpath = '/';
+
             this.$elem.find('div.file-path').append(this.filePathTmpl({path: pathTerms}));
             this.$elem.find('div.file-path a').click(function(e) {
                 this.updatePathFn($(e.currentTarget).data().element);
@@ -297,6 +310,20 @@ define([
                         this.initImportApp(importType, importFile);
                         this.updateView();
                     }.bind(this));
+
+                    $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', function(e) {
+                        var file = $(e.currentTarget).data('delete');
+                        if (window.confirm('Really delete ' + file + '?')) {
+                          this.stagingServiceClient.delete({ path : this.subpath + '/' + file}).then(function(d,s,x) {
+                            this.updateView();
+                          }.bind(this))
+                          .fail(function(xhr) {
+                            alert('Error ' + xhr.status + '\r' + xhr.responseText);
+                          }.bind(this));
+                        }
+                    }.bind(this));
+
+
                     $('td:eq(0)', nRow).find('button[data-name]').off('click').on('click', function(e) {
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     }.bind(this));
@@ -377,7 +404,7 @@ define([
           }
 
           var $tabsDiv = $.jqElem('div')
-            .css({'width' : '90%', display : 'inline-block'})
+            //.css({'width' : '90%', display : 'inline-block'})
             .append('<i class="fa fa-spinner fa-spin"></i> Loading file info...please wait')
           ;
 
@@ -504,28 +531,6 @@ define([
                 .attr('colspan', 5)
                 .css('vertical-align', 'top')
                 .append($tabsDiv)
-                .append(
-                  $.jqElem('button')
-                    .css({'float' : 'right', border : '1px solid #CCCCCC', 'border-radius' : '2px'})
-                    .addClass('btn btn-default btn-xs')
-                    .tooltip({ title : 'Delete ' + fileData.name })
-                    .on('click', function(e) {
-                      if (window.confirm('Really delete file ' + fileData.name + '?')) {
-                        this.stagingServiceClient.delete({ path : fileData.name}).then(function(d,s,x) {
-                          this.updateView();
-                        }.bind(this))
-                        .fail(function(xhr) {
-                          $tabsDiv.empty();
-                          $tabsDiv.append(
-                            $.jqElem('div')
-                              .addClass('alert alert-danger')
-                              .append('Error ' + xhr.status + '<br/>' + xhr.responseText)
-                          );
-                      }.bind(this));
-                      }
-                    }.bind(this))
-                  .append($.jqElem('i').addClass('fa fa-trash'))
-                )
             );
         },
 

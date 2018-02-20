@@ -195,6 +195,7 @@ define([
             if (splitPath.startsWith('/')) {
                 splitPath = splitPath.substring(1);
             }
+            // the staging service doesn't want the username as part of the path, but we still want to display it to the user for navigation purposes
             splitPath = splitPath.split('/').filter(function(p) { return p.length });
             splitPath.unshift(this.userId);
             var pathTerms = [];
@@ -409,7 +410,6 @@ define([
           }
 
           var $tabsDiv = $.jqElem('div')
-            //.css({'width' : '90%', display : 'inline-block'})
             .append('<i class="fa fa-spinner fa-spin"></i> Loading file info...please wait')
           ;
 

@@ -8,7 +8,7 @@
                 "search": true
             },
             "fungal_genomes": {
-                "name": "Fungal Genomes",
+                "name": "MycoCosm Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Fungal_Genomes",
                 "search": false
@@ -121,7 +121,7 @@
                 "search": true
             },
             "fungal_genomes": {
-                "name": "Fungal Genomes",
+                "name": "MycoCosm Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Fungal_Genomes",
                 "search": false
@@ -222,7 +222,7 @@
                 "search": true
             },
             "fungal_genomes": {
-                "name": "Fungal Genomes",
+                "name": "MycoCosm Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Fungal_Genomes",
                 "search": false
@@ -323,7 +323,7 @@
                 "search": true
             },
             "fungal_genomes": {
-                "name": "Fungal Genomes",
+                "name": "MycoCosm Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Fungal_Genomes",
                 "search": false

@@ -28,7 +28,7 @@ define([
             this.dropzoneTmpl = Handlebars.compile(DropzoneAreaHtml);
             this.dropFileTmpl = Handlebars.compile(DropFileHtml);
             this.path = options.path;
-            this.ftpUrl = Config.url('ftp_api_url');
+            this.stagingUrl = Config.url('staging_api_url');
             this.userId = options.userId;
             this.render();
             return this;
@@ -44,8 +44,10 @@ define([
             }.bind(this));
 
             this.$elem.append($dropzoneElem);
+            var self = this;
+
             this.dropzone = new Dropzone($dropzoneElem.get(0), {
-                url: this.ftpUrl + '/upload',
+                url: this.stagingUrl + '/upload',
                 accept: function(file, done) {
                     console.log('uploading ' + file.name + ' = ' + file.size + 'B');
                     done();
@@ -82,8 +84,19 @@ define([
                         $(file.previewElement.querySelector('.btn')).trigger('click');
                     });
                 }.bind(this))
-                .on('sending', function(file) {
+                .on('sending', function(file, xhr, data) {
+
                     $dropzoneElem.find('#global-info').css({'display': 'inline'});
+                    //okay, if we've been given a full path, then we pull out the pieces (ignoring the filename at the end) and then
+                    //tack it onto our set path, then set that as the destPath form param.
+                    if (file.fullPath) {
+                      var subPath = file.fullPath.replace(new RegExp('/' + file.name + '$'), '');
+                      data.append('destPath', [this.path, subPath].join('/'));
+                    }
+                    //if we don't have a fullPath, then we're uploading a file and not a folder. Just use the current path.
+                    else {
+                      data.append('destPath', this.path);
+                    }
                     $($dropzoneElem.find('#total-progress')).show();
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                 }.bind(this))
@@ -118,7 +131,6 @@ define([
 
         setPath: function(path) {
             this.path = path;
-            this.$elem.find('input[name="destPath"]').val(path);
         },
 
         getPath: function() {

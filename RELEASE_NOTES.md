@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
+### Version 3.6.3
+- SCT-585 add folder drag and drop upload to the Import area.
+- Remove old link to Search from the Narrative hamburger menu.
+- Relabel public data referencing fungal genomes.
+
 ### Version 3.6.2
 - Fix problem preventing read-only Narratives from loading.
 - SCT-581 fix failure when reloading tabs in the data staging panel.

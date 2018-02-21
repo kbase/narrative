@@ -22,7 +22,7 @@ define([
 
         init: function(options) {
             this._super(options);
-            this.path = '/' + Jupyter.narrative.userId;
+            this.path = '/';
 
             this.render();
             return this;

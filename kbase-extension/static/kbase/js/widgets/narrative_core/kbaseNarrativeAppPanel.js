@@ -28,7 +28,6 @@ define([
     'uuid',
     'narrative_core/catalog/kbaseCatalogBrowser',
     'kbase/js/widgets/narrative_core/kbaseAppCard',
-    'util/bootstrapAlert',
     'common/runtime',
     'kbaseNarrative',
     'catalog-client-api',
@@ -52,7 +51,6 @@ define([
     Uuid,
     KBaseCatalogBrowser,
     kbaseAppCard,
-    BootstrapAlert,
     Runtime
 ) {
     'use strict';

@@ -283,10 +283,12 @@ function KBaseFBA_FBAModel(modeltabs) {
 						"data": data[0].deltaG+" ("+data[0].deltaGErr+") kcal/mol"
 					});
 				}
-				output.push({
-					"label": "Enzymes",
-					"data": data[0].enzymes.join(", ")
-				});
+				if ("enzymes" in data[0]) {
+                    output.push({
+                        "label": "Enzymes",
+                        "data": data[0].enzymes.join(", ")
+                    });
+                }
 				var aliashash = {};
 				var finalaliases = [];
 				for (var i=0; i < data[0].aliases.length; i++) {
@@ -588,7 +590,7 @@ function KBaseFBA_FBAModel(modeltabs) {
                         var abscoef = Math.round(-1*100*rgt.coefficient)/100;
                         reactants += "("+abscoef+") ";
                     }
-                    reactants += this.cpdhash[rgt.cpdkbid].name+"["+this.cpdhash[rgt.cpdkbid].cmpkbid+"]";
+                    reactants += '<a class="id-click" data-id="'+rgt.cpdkbid+'" data-method="CompoundTab">'+this.cpdhash[rgt.cpdkbid].name+"["+this.cpdhash[rgt.cpdkbid].cmpkbid+"]</a>";
                 } else {
                     if (products.length > 0) {
                         products += " + ";
@@ -597,7 +599,7 @@ function KBaseFBA_FBAModel(modeltabs) {
                         var abscoef = Math.round(100*rgt.coefficient)/100;
                         products += "("+abscoef+") ";
                     }
-                    products += this.cpdhash[rgt.cpdkbid].name+"["+this.cpdhash[rgt.cpdkbid].cmpkbid+"]";
+                    products += '<a class="id-click" data-id="'+rgt.cpdkbid+'" data-method="CompoundTab">'+this.cpdhash[rgt.cpdkbid].name+"["+this.cpdhash[rgt.cpdkbid].cmpkbid+"]</a>";
                 }
             }
             rxn.ftrhash = {};

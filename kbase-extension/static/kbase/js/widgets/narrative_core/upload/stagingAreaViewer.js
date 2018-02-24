@@ -45,6 +45,10 @@ define([
     return new KBWidget({
         name: 'StagingAreaViewer',
 
+        options : {
+          refreshIntervalDuration : 30000,
+        },
+
         init: function(options) {
 
             this._super(options);
@@ -67,10 +71,9 @@ define([
             this.uploaders = Config.get('uploaders');
             this.userId = runtime.userId();
 
-            var self = this; // GAH I miss fat arrow functions.
+            var self = this; // GAH I miss fat arrow functions. (Me too.)
             this.authClient = Auth.make({url: Config.url('auth')});
             this.authClient.getCurrentProfile( runtime.authToken() ).then( function(res) {
-
               // check out the identities available for the user - if globus is a provider, then hang onto the user name and re-render the page.
               res.idents.forEach( function(i) {
                 if (i.provider === 'Globus') {
@@ -85,7 +88,24 @@ define([
 
             // Get this party started.
             this.setPath(options.path);
+
+            this.openFileInfo = {};
+
             return this;
+        },
+
+        activate : function() {
+          this.render();
+          if (!this.refreshInterval) {
+            this.refreshInterval = setInterval( function() { this.render()}.bind(this), this.options.refreshIntervalDuration);
+          }
+        },
+
+        deactivate : function() {
+          if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = undefined;
+          }
         },
 
         render: function() {
@@ -93,17 +113,31 @@ define([
         },
 
         updateView: function() {
+
             return this.stagingServiceClient.list({path: this.subpath})
                 .then(function(data) {
-                    var files = JSON.parse(data);
+                    //list is recursive, so it'd show all files in all subdirectories. This filters 'em out.
+                    var files = JSON.parse(data).filter(function(f) {
+                      // this is less complicated than you think. The path is the username, subpath, and name concatenated. The subpath may be empty
+                      // so we filter it out and only join defined things. If that's the same as the file's path, we're at the right level. If not, we're not.
+                      if ([this.userId, this.subpath, f.name].filter(function(p) { return p.length > 0}).join('/') === f.path) {
+                        return true;
+                      }
+                      else {
+                        return false;
+                      }
+                    }.bind(this));
                     files.forEach(function(f) {
                         if (!f.isFolder) {
                             f.imported = {};
                         }
                     });
+                    var scrollTop = this.$elem.parent().scrollTop();
+                    $('.staging-area-file-metadata').detach();
                     this.$elem.empty();
                     this.renderFileHeader();
                     this.renderFiles(files);
+                    setTimeout(function() { this.$elem.parent().scrollTop(scrollTop)}.bind(this),0);
                 }.bind(this))
                 .fail(function (xhr) {
                   this.$elem.empty();
@@ -134,6 +168,7 @@ define([
         renderFileHeader: function() {
             this.$elem.append(this.ftpFileHeaderTmpl());
 
+            // Set up the globus link if we have a user id. Otherwise, hide it.
             if (this.globus_name) {
               var $globus_link = this.$elem.find('.globus_link');
               var href = $globus_link.attr('href');
@@ -143,6 +178,13 @@ define([
             else {
               this.$elem.find('.globus_div').remove();
             }
+
+            // Set up the link to the web upload app.
+            this.$elem.find('.web_upload_div').click(function() {
+                this.initImportApp('web_upload');
+            }.bind(this));
+
+            // Bind the help button to start the tour.
             this.$elem.find('button#help').click(function() {
                 this.startTour();
             }.bind(this));
@@ -153,7 +195,9 @@ define([
             if (splitPath.startsWith('/')) {
                 splitPath = splitPath.substring(1);
             }
-            splitPath = splitPath.split('/');
+            // the staging service doesn't want the username as part of the path, but we still want to display it to the user for navigation purposes
+            splitPath = splitPath.split('/').filter(function(p) { return p.length });
+            splitPath.unshift(this.userId);
             var pathTerms = [];
             for (var i=0; i<splitPath.length; i++) {
                 var prevPath = '';
@@ -165,6 +209,8 @@ define([
                     subpath: prevPath + '/' + splitPath[i]
                 };
             }
+            pathTerms[0].subpath = '/';
+
             this.$elem.find('div.file-path').append(this.filePathTmpl({path: pathTerms}));
             this.$elem.find('div.file-path a').click(function(e) {
                 this.updatePathFn($(e.currentTarget).data().element);
@@ -175,6 +221,9 @@ define([
         },
 
         renderFiles: function(files) {
+
+          var parent = this.$elem.parent().get(0);
+
             var $fileTable = $(this.ftpFileTableTmpl({files: files, uploaders: this.uploaders.dropdown_order}));
             this.$elem.append($fileTable);
             this.$elem.find('table').dataTable({
@@ -208,11 +257,11 @@ define([
                             var decompressButton = '';
 
                             if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
-                              decompressButton = " <button class='btn btn-default btn-xs' style='border : 1px solid #cccccc; border-radius : 1px' data-decompress='" + data + "'><i class='fa fa-expand'></i>";
+                              decompressButton = "<button class='btn btn-default btn-xs' style='border : 1px solid #cccccc; border-radius : 1px' data-decompress='" + data + "'><i class='fa fa-expand'></i></button> ";
                             }
 
-                            return '<div class="kb-data-staging-table-name">' + data
-                              + decompressButton
+                            return '<div class="kb-data-staging-table-name">' + decompressButton
+                              + data
                             + '</div>';
                         }
                         return data;
@@ -262,14 +311,51 @@ define([
                         this.initImportApp(importType, importFile);
                         this.updateView();
                     }.bind(this));
+
+                    $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', function(e) {
+                        var file = $(e.currentTarget).data('delete');
+                        if (window.confirm('Really delete ' + file + '?')) {
+                          this.stagingServiceClient.delete({ path : this.subpath + '/' + file}).then(function(d,s,x) {
+                            this.updateView();
+                          }.bind(this))
+                          .fail(function(xhr) {
+                            alert('Error ' + xhr.status + '\r' + xhr.responseText);
+                          }.bind(this));
+                        }
+                    }.bind(this));
+
+
                     $('td:eq(0)', nRow).find('button[data-name]').off('click').on('click', function(e) {
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     }.bind(this));
 
                     $('td:eq(0)', nRow).find('i[data-caret]').off('click');
+
+                    // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
+                    var $caret = $('td:eq(0)', nRow).find('i[data-caret]'),
+                        fileName,
+                        myFile;
+                    if ($caret.length) {
+                        //next, we use that caret to find the fileName, and the file Data.
+                        fileName = $caret.data().caret;
+                        myFile = getFileFromName(fileName);
+                    }
+
+
+                    //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
+                    if (fileName && this.openFileInfo[fileName]) {
+                      //so we note that we've already loaded the info.
+                      myFile.loaded = this.openFileInfo[fileName].loaded;
+                      //toggle the caret
+                      $caret.toggleClass('fa-caret-down fa-caret-right');
+                      //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
+                      setTimeout( function() {$caret.parent().parent().after(
+                        this.renderMoreFileInfo( myFile )
+                      )}.bind(this), 0);
+
+                    }
+
                     $('td:eq(0)', nRow).find('i[data-caret]').on('click', function(e) {
-                        var fileName = $(e.currentTarget).data().caret;
-                        var myFile = getFileFromName(fileName);
 
                         $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
                         var $tr = $(e.currentTarget).parent().parent();
@@ -277,6 +363,7 @@ define([
                         if ($(e.currentTarget).hasClass('fa-caret-down')) {
                           $('.kb-dropzone').css('min-height', '75px');
                           $('.dz-message').css('margin', '0em 0');
+                          this.openFileInfo[fileName] = myFile;
                           $tr.after(
                             this.renderMoreFileInfo( myFile )
                           );
@@ -284,7 +371,8 @@ define([
                         else {
                           $('.kb-dropzone').css('min-height', '200px');
                           $('.dz-message').css('margin', '3em 0');
-                          $tr.next().remove();
+                          $tr.next().detach();
+                          delete this.openFileInfo[fileName];
                         }
                     }.bind(this));
 
@@ -292,6 +380,8 @@ define([
                     $('td:eq(1)', nRow).find('button[data-decompress]').on('click', function(e) {
                         var fileName = $(e.currentTarget).data().decompress;
                         var myFile = getFileFromName(fileName);
+
+                        $(e.currentTarget).replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
 
                         this.stagingServiceClient.decompress({ path : myFile.name })
                             .then(function(data) {
@@ -320,23 +410,25 @@ define([
           }
 
           var $tabsDiv = $.jqElem('div')
-            .css({'width' : '90%', display : 'inline-block'})
-            .append('Loading file info...please wait');
+            .append('<i class="fa fa-spinner fa-spin"></i> Loading file info...please wait')
+          ;
 
           var filePath = this.subpath;
           if (filePath.length) {
               filePath += '/';
           }
 
-          // we need to chop up the file to see if a metadata file exists. Assume that the first part of the file name is the ID
-          // and that it ends in .metadata. Route it into the appropriate subfolder.
-          var fileParts = fileData.name.split('.');
-          var metaDataFilePath = filePath + fileParts[0] + '.metadata';
-
           filePath += fileData.name;
 
+          // define our tabs externally. This is so we can do our metadata call and our jgi_metadata call (in serial) and then update
+          // the UI after they're completed. It's a smidgen slower this way (maybe 0.25 seconds) - we could load the metadata and display
+          // it to the user immediately, then add the JGI tab if it exists. But that causes a brief blink where the JGI tab isn't there and
+          // pops into being later. This way, it all shows up fully built. It seemed like the lesser of the evils.
+          var $tabs;
+
           this.stagingServiceClient.metadata({ path : filePath }).then( function(dataString, status, xhr) {
-            $tabsDiv.empty();
+
+            var $tabsContainer = $.jqElem('div');
             var data = JSON.parse(dataString);
 
             var $upaField = $.jqElem('span')
@@ -372,7 +464,7 @@ define([
               lineCount = 'Not provided';
             }
 
-            var $tabs = new KBaseTabs($tabsDiv, {
+            $tabs = new KBaseTabs($tabsContainer, {
               tabs : [
                 {
                   tab : 'Info',
@@ -401,33 +493,30 @@ define([
               ]
             });
 
-            // if the metaDataFilePath is not our file (i.e., the user didn't click on a metadata file, then we want to extract out that metadata file itself.
-            // We can't do it in parallel, since if the metadata file doesn't exist the promise wouldn't properly complete. The net effect is a quick blink
-            // wherein the table loads and a split second later we get the metadata tab.
-            if (filePath !== metaDataFilePath) {
-              self.stagingServiceClient.metadata({ path : metaDataFilePath }).then( function(dataString, status, xhr) {
-                var metadataFile = JSON.parse(dataString);
-                // these files are always a single line, so the head will contain the contents.
-                // but we parse it out and re-stringify it so it's pretty.
-                // XXX - while doing this, I ran into a NaN issue in the file, specifically on the key illumina_read_insert_size_avg_insert.
-                //       So we nuke any NaN fields to make it valid again.
-                var metadataJSON = JSON.parse(metadataFile.head.replace(/NaN/g, '\"\"'));
-                var metadataContents = JSON.stringify(metadataJSON, null, 2)
+            // attempt to load up a jgi metadata file, via the jgi-metadata endpoint. It'll only succeed if a jgi metadata file exists
+            // We can't do it in parallel, since if the metadata file doesn't exist the promise wouldn't properly complete.
 
-                $tabs.addTab(
-                  {
-                    tab : 'Metadata',
-                    content : $.jqElem('div')
-                      .addClass('kb-data-staging-metadata-file-lines')
-                      .append( metadataContents )
-                  }
-                );
-              })
-              .fail(function(xhr) {
-                // Don't actually need to do anything here - we assume that if it failed, it was due to the metadata file not existing. Yes, we generate
-                // a lot of messy extra metadata calls here since it's the only way to know if there's metadata is to look.
-              });
-            }
+            self.stagingServiceClient.jgi_metadata({ path : filePath }).then( function(dataString, status, xhr) {
+              // XXX - while doing this, I ran into a NaN issue in the file, specifically on the key illumina_read_insert_size_avg_insert.
+              //       So we nuke any NaN fields to make it valid again.
+              var metadataJSON      = JSON.parse(dataString.replace(/NaN/g, '\"\"'));
+              var metadataContents  = JSON.stringify(metadataJSON, null, 2)
+
+              $tabs.addTab(
+                {
+                  tab : 'JGI Metadata',
+                  content : $.jqElem('div')
+                    .addClass('kb-data-staging-metadata-file-lines')
+                    .append( metadataContents )
+                }
+              );
+            })
+            // there's nothing to catch here - if the jgi_metadata method errors, we just assume the file doesn't have any.
+            .always(function() {
+              // finally, empty and append the tabs container. no matter what
+              $tabsDiv.empty();
+              $tabsDiv.append($tabsContainer);
+            });
 
           })
           .fail(function (xhr) {
@@ -441,33 +530,12 @@ define([
           });
 
           return fileData.loaded = $.jqElem('tr')
+            .addClass('staging-area-file-metadata')
             .append(
               $.jqElem('td')
                 .attr('colspan', 5)
                 .css('vertical-align', 'top')
                 .append($tabsDiv)
-                .append(
-                  $.jqElem('button')
-                    .css({'float' : 'right', border : '1px solid #CCCCCC', 'border-radius' : '2px'})
-                    .addClass('btn btn-default btn-xs')
-                    .tooltip({ title : 'Delete ' + fileData.name })
-                    .on('click', function(e) {
-                      if (window.confirm('Really delete file ' + fileData.name + '?')) {
-                        this.stagingServiceClient.delete({ path : fileData.name}).then(function(d,s,x) {
-                          this.updateView();
-                        }.bind(this))
-                        .fail(function(xhr) {
-                          $tabsDiv.empty();
-                          $tabsDiv.append(
-                            $.jqElem('div')
-                              .addClass('alert alert-danger')
-                              .append('Error ' + xhr.status + '<br/>' + xhr.responseText)
-                          );
-                      }.bind(this));
-                      }
-                    }.bind(this))
-                  .append($.jqElem('i').addClass('fa fa-trash'))
-                )
             );
         },
 
@@ -481,19 +549,25 @@ define([
             var appInfo = this.uploaders.app_info[type];
             if (appInfo) {
                 var tag = APIUtil.getAppVersionTag(),
-                    fileParam = file.name,
+                    fileParam = file ? file.name : '',
                     inputs = {};
                 if (this.subpath) {
                     fileParam = this.subpath + '/' + file.name;
                 }
-                if (appInfo.app_input_param_type === 'list') {
+                if (appInfo.app_input_param_type && appInfo.app_input_param_type === 'list') {
                     fileParam = [fileParam];
                 }
-                inputs[appInfo.app_input_param] = fileParam;
-                inputs[appInfo.app_output_param] = file.name.replace(/\s/g, '_') + appInfo.app_output_suffix;
-                for (var p in appInfo.app_static_params) {
-                    if (appInfo.app_static_params.hasOwnProperty(p)) {
-                        inputs[p] = appInfo.app_static_params[p];
+                if (appInfo.app_input_param) {
+                    inputs[appInfo.app_input_param] = fileParam;
+                }
+                if (appInfo.app_output_param) {
+                    inputs[appInfo.app_output_param] = file.name.replace(/\s/g, '_') + appInfo.app_output_suffix;
+                }
+                if (appInfo.app_static_params) {
+                    for (var p in appInfo.app_static_params) {
+                        if (appInfo.app_static_params.hasOwnProperty(p)) {
+                            inputs[p] = appInfo.app_static_params[p];
+                        }
                     }
                 }
                 Jupyter.narrative.addAndPopulateApp(appInfo.app_id, tag, inputs);
@@ -502,8 +576,13 @@ define([
         },
 
         startTour: function() {
+            var tourStartFn = function () {
+            }
+
             if (!this.tour) {
-                this.tour = new UploadTour.Tour(this.$elem.parent());
+                this.tour = new UploadTour.Tour(
+                    this.$elem.parent(), this.globus_name, tourStartFn, this.updateView.bind(this)
+                );
             }
             this.tour.start();
         }

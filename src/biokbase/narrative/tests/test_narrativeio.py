@@ -241,6 +241,7 @@ class NarrIOTestCase(unittest.TestCase):
         nar = self.mixin.read_narrative(self.private_nar['ref'])['data']
         result = self.mixin.write_narrative(self.private_nar['ref'], nar, self.test_user)
         self.assertTrue(result[1] == self.private_nar['ws'] and result[2] == self.private_nar['obj'])
+        self.assertEquals(result[0]['metadata']['is_temporary'], 'false')
         self.logout()
 
     def test_write_narrative_valid_anon(self):

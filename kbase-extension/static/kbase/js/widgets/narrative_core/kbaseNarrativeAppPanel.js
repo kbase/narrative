@@ -19,6 +19,8 @@ define([
     'util/bootstrapDialog',
     'util/icon',
     'text!kbase/templates/beta_warning_body.html',
+    'yaml!ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml',
+    //'yaml!kbase/config/categories.yml',
     'kbaseAccordion',
     'kbaseNarrativeControlPanel',
     'base/js/namespace',
@@ -26,6 +28,8 @@ define([
     'uuid',
     'narrative_core/catalog/kbaseCatalogBrowser',
     'kbase/js/widgets/narrative_core/kbaseAppCard',
+    'util/bootstrapAlert',
+    'common/runtime',
     'kbaseNarrative',
     'catalog-client-api',
     'kbase-client-api',
@@ -40,13 +44,16 @@ define([
     BootstrapDialog,
     Icon,
     BetaWarningTemplate,
+    Categories,
     kbaseAccordion,
     kbaseNarrativeControlPanel,
     Jupyter,
     NarrativeMethodStore,
     Uuid,
     KBaseCatalogBrowser,
-    kbaseAppCard
+    kbaseAppCard,
+    BootstrapAlert,
+    Runtime
 ) {
     'use strict';
     return KBWidget({
@@ -418,7 +425,7 @@ define([
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-            this.catalog = new Catalog(this.options.catalogURL, {token: Jupyter.narrative.authToken});
+            this.catalog = new Catalog(this.options.catalogURL, {token: Runtime.make().authToken()});
             this.refreshFromService();
             return this;
         },
@@ -670,10 +677,19 @@ define([
         },
 
         categorizeApps: function(style, appSet) {
+
+            // previously, categories had the first letter of each word uppercased as part of display.
+            // now they're uppercased while the cats are built, to map similar cats to the same keyed
+            // display name (e.g. "metabolic_modeling" and "metabolic modeling" both go to "Metabolic Modeling")
+            // but 'uncategorized' is a hardwired special case. I opted to break it out into a constant defined
+            // here instead of use an upper case string as the key throughout later on.
+            var UNCATEGORIZED = 'Uncategorized';
+
             var allCategories = {
-                favorites: [],
-                uncategorized: []
+                favorites: []
             };
+            allCategories[UNCATEGORIZED] = [];  //my kingdom for es6 syntax
+
             Object.keys(appSet).forEach(function(appId) {
                 var categoryList = [];
                 switch (style) {
@@ -697,9 +713,14 @@ define([
                     break;
                 }
                 if (categoryList.length === 0) {
-                    allCategories.uncategorized.push(appId);
+                    allCategories[UNCATEGORIZED].push(appId);
                 }
                 categoryList.forEach(function(cat) {
+                    cat = Categories.categories[cat] || cat;
+                    cat = cat.replace('_', ' ')
+                        .replace(/\w\S*/g, function(txt) {
+                            return txt.charAt(0).toUpperCase() + txt.substr(1);
+                        });
                     if (!allCategories[cat]) {
                         allCategories[cat] = [];
                     }
@@ -722,8 +743,8 @@ define([
             if (allCategories.favorites.length === 0) {
                 delete allCategories['favorites'];
             }
-            if (allCategories.uncategorized.length === 0) {
-                delete allCategories['uncategorized'];
+            if (allCategories[UNCATEGORIZED].length === 0) {
+                delete allCategories[UNCATEGORIZED];
             }
             return allCategories;
         },
@@ -766,12 +787,9 @@ define([
                 appList.forEach(function(appId) {
                     $accordionBody.append(self.buildAppItem(appSet[appId]));
                 });
-                var categoryTitle = category.replace('_', ' ')
-                    .replace(/\w\S*/g, function(txt) {
-                        return txt.charAt(0).toUpperCase() + txt.substr(1);
-                    });
+
                 return {
-                    title: categoryTitle + ' <span class="label label-info pull-right" style="padding-top:0.4em">' + appList.length + '</span>',
+                    title: category + ' <span class="label label-info pull-right" style="padding-top:0.4em">' + appList.length + '</span>',
                     body: $accordionBody
                 };
             };
@@ -808,13 +826,21 @@ define([
                 return $('<div>').append($header).append($body.hide());
             };
 
+            var withCategories = function(a,b) {
+              var catA = (Categories.categories[a] || a).toLowerCase();
+              var catB = (Categories.categories[b] || b).toLowerCase();
+                   if (catA < catB) { return -1}
+              else if (catA > catB) { return  1}
+              else                  { return  0}
+            }
+
             var buildAccordionPanel = function(style) {
                 /* first, get elements in order like this:
                  * { category1: [ appId1, appId2, appId3, ...]}
                  */
                 var categorySet = self.categorizeApps(style, appSet);
                 var accordionList = [];
-                Object.keys(categorySet).sort().forEach(function(cat) {
+                Object.keys(categorySet).sort(withCategories).forEach(function(cat) {
                     if (cat === 'favorites') {
                         return;
                     }

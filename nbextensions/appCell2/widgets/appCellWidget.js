@@ -2613,15 +2613,20 @@ define([
             // If the app has been run before...
             // The app reference is already in the app cell metadata.
             return Promise.try(function() {
+                if (utils.getCellMeta(cell, 'kbase.type') !== 'devapp') {
                     return getAppSpec();
-                })
+                }
+                return {};
+            })
                 .then(function(appSpec) {
                     // Ensure that the current app spec matches our existing one.
-                    var warning = checkSpec(appSpec);
-                    if (warning && warning.severity === 'warning') {
-                        if (warning.type === 'app-spec-mismatched-commit') {
-                            model.setItem('outdated', true);
-                            model.setItem('newAppName', warning.info.newAppName);
+                    if (appSpec && utils.getCellMeta(cell, 'kbase.type') !== 'devapp') {
+                        var warning = checkSpec(appSpec);
+                        if (warning && warning.severity === 'warning') {
+                            if (warning.type === 'app-spec-mismatched-commit') {
+                                model.setItem('outdated', true);
+                                model.setItem('newAppName', warning.info.newAppName);
+                            }
                         }
                     }
 

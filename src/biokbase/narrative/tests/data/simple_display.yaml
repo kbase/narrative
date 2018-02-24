@@ -1,0 +1,36 @@
+#
+# define display information
+#
+name: Test Simple Inputs
+tooltip: |
+    A simple test spec with a single input.
+screenshots: []
+
+icon: icon.png
+
+#
+# define a set of similar methods that might be useful to the user
+#
+suggestions:
+    apps:
+        related:
+            []
+        next:
+            []
+    methods:
+        related:
+            []
+        next:
+            []
+
+#
+# Configure the display and description of parameters
+#
+parameters :
+    simple_string :
+        ui-name : |
+            A String
+        short-hint : |
+            A description string.
+description : |
+    <p>This is a tiny, simple method intended for testing the Narrative's ability to parse and display specs.</p>

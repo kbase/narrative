@@ -128,7 +128,7 @@ define([
                 element: '.kb-side-overlay-container .kb-side-header:nth-child(5)', // import tab
                 title: 'Import Data',
                 placement: 'bottom',
-                content: 'Finally, the <i>Import</i> tab allows you to upload your own data for analysis. Any data you add are kept private unless you choose to share your Narrative. This and other data you add are private unless you choose to share your Narrative. Click the drop-down menu to see a list of currently uploadable data types.',
+                content: 'Finally, the <i>Import</i> tab allows you to upload your own data for analysis. Any data you add are kept private unless you choose to share your Narrative. <a href="//kbase.us/data-upload-download-guide/" target="_blank">The Data Upload/Download Guide</a> has more information about how to import your data.',
                 onShow: function(tour) {
                     that.openDataSlideout(true);
                     $('.kb-side-overlay-container .kb-side-header:nth-child(5)').click();

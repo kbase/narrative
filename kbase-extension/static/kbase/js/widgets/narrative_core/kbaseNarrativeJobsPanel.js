@@ -434,7 +434,6 @@ define([
 
             case 'job_logs':
                 var jobId = msg.content.data.content.job_id;
-
                 this.sendJobMessage('job-logs', jobId, {
                     jobId: jobId,
                     logs: msg.content.data.content,
@@ -666,7 +665,7 @@ define([
 
             Promise.try(function () {
                 if (curUser !== owner) {
-                    var wsClient = new Workspace(Config.url('workspace'), { token: Jupyter.narrative.authToken });
+                    var wsClient = new Workspace(Config.url('workspace'), { token: this.runtime.authToken() });
                     return Promise.resolve(wsClient.get_permissions({
                             id: Jupyter.narrative.workspaceId
                         }))

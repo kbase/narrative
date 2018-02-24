@@ -146,7 +146,7 @@ define([
     $([Jupyter.events]).on('kernel_ready.Kernel', function () {
         Jupyter.notebook.kernel.execute(
             'import os;' +
-            'os.environ["KB_AUTH_TOKEN"]="' + Jupyter.narrative.authToken + '";' +
+            'os.environ["KB_AUTH_TOKEN"]="' + Jupyter.narrative.getAuthToken() + '";' +
             'os.environ["KB_WORKSPACE_ID"]="' + Jupyter.notebook.metadata.ws_name + '"'
         );
     });

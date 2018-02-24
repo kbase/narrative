@@ -12,9 +12,7 @@ class UrlConfigTest(unittest.TestCase):
         self.assertTrue(url.endswith('/services/ws'))
 
     def test_missing_url(self):
-        with self.assertRaises(Exception):
-            url = URLS.nope
-
+        self.assertIsNone(URLS.nope)
 
 if __name__ == "__main__":
     unittest.main()

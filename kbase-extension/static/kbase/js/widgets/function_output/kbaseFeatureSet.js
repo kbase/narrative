@@ -145,6 +145,7 @@ define (
                             included.push('features/'+idx+'/id');
                             included.push('features/'+idx+'/type');
                             included.push('features/'+idx+'/function');
+                            included.push('features/'+idx+'/functions');
                             included.push('features/'+idx+'/aliases');
                         }
 
@@ -155,10 +156,14 @@ define (
                                 // every feature we get back here is something in the list
                                 for(var f=0; f<g.features.length; f++) {
                                     var aliases = "None";
-                                    if(g.features[f].aliases) {
-                                        if(g.features[f].aliases.length>0) {
-                                            aliases= g.features[f].aliases.join(', ');
+                                    if (g.features[f].aliases && g.features[f].aliases.length>0){
+                                        if (g.features[f].aliases[0] instanceof Array){
+                                            g.features[f].aliases = g.features[f].aliases.map(function(x) { return x[1]; });
                                         }
+                                        aliases= g.features[f].aliases.join(', ');
+                                    }
+                                    if (g.features[f].functions) {
+                                        g.features[f].function = g.features[f].functions.join(', ');
                                     }
 
                                     self.featureTableData.push(

@@ -68,20 +68,20 @@ define ([
     function showTokenInjectionDialog() {
         var $inputField = $('<input type="text" class="form-control">');
         var $body = $('<div>')
-                    .append('<div>You appear to be working on a local development environment of the Narrative Interface, but you don\'t have a valid auth token. You can paste one in below.</div>')
-                    .append('<div><b>You are operating in the ' + Config.get('environment') + ' environment.')
-                    .append($('<div>').append($inputField));
+            .append('<div>You appear to be working on a local development environment of the Narrative Interface, but you don\'t have a valid auth token. You can paste one in below.</div>')
+            .append('<div><b>You are operating in the ' + Config.get('environment') + ' environment.')
+            .append($('<div>').append($inputField));
         var dialog = new BootstrapDialog({
             'title': 'Insert an authentication token?',
             'body': $body,
             'buttons': [$('<a type="button" class="btn btn-default">')
-                        .append('OK')
-                        .click(function () {
-                            dialog.hide();
-                            var newToken = $inputField.val();
-                            authClient.setAuthToken(newToken);
-                            location.reload();
-                        })]
+                .append('OK')
+                .click(function () {
+                    dialog.hide();
+                    var newToken = $inputField.val();
+                    authClient.setAuthToken(newToken);
+                    location.reload();
+                })]
         });
         dialog.show();
     }
@@ -90,12 +90,14 @@ define ([
         var dialog = new BootstrapDialog({
             'title': 'Not Logged In',
             'body': $('<div>').append('You are not logged in (or your session has expired), and you will be redirected to the sign in page shortly.'),
-            'buttons': [$('<a type="button" class="btn btn-default">')
-                        .append('OK')
-                        .click(function () {
-                            dialog.hide();
-                            ipythonLogout();
-                        })]
+            'buttons': [
+                $('<a type="button" class="btn btn-default">')
+                    .append('OK')
+                    .click(function () {
+                        dialog.hide();
+                        ipythonLogout();
+                    })
+            ]
         });
         dialog.show();
     }
@@ -104,18 +106,20 @@ define ([
         var dialog = new BootstrapDialog({
             'title': 'Expiring session',
             'body': $('<div>').append('Your authenticated KBase session will expire in approximately 5 minutes. To continue using KBase, we suggest you log out and back in.'),
-            'buttons': [$('<a type="button" class="btn btn-default">')
-                        .append('OK')
-                        .click(function () {
-                            var remainingTime = tokenExpirationTime - new Date().getTime();
-                            if (remainingTime < 0) {
-                                remainingTime = 0;
-                            }
-                            tokenWarningTimer = setTimeout(function() {
-                                tokenTimeout();
-                            });
-                            dialog.hide();
-                        })]
+            'buttons': [
+                $('<a type="button" class="btn btn-default">')
+                    .append('OK')
+                    .click(function () {
+                        var remainingTime = tokenExpirationTime - new Date().getTime();
+                        if (remainingTime < 0) {
+                            remainingTime = 0;
+                        }
+                        tokenWarningTimer = setTimeout(function() {
+                            tokenTimeout();
+                        });
+                        dialog.hide();
+                    })
+            ]
         });
         dialog.show();
     }
@@ -152,19 +156,19 @@ define ([
             if (validateOnCheck) {
                 console.warn('Revalidating token after sleeping for ' + (lastCheckInterval/1000) + 's');
                 authClient.validateToken(token)
-                .then(function(info) {
-                    if (info === true) {
-                        console.warn('Auth is still valid. Carry on.');
-                    } else {
-                        console.warn('Auth is invalid! Logging out.');
-                        tokenTimeout(true);
-                    }
-                    validateOnCheck = false;
-                })
-                .catch(function(error) {
-                    console.error('Error while validating token after sleep. Trying again...');
-                    console.error(error);
-                });
+                    .then(function(info) {
+                        if (info === true) {
+                            console.warn('Auth is still valid. Carry on.');
+                        } else {
+                            console.warn('Auth is invalid! Logging out.');
+                            tokenTimeout(true);
+                        }
+                        validateOnCheck = false;
+                    })
+                    .catch(function(error) {
+                        console.error('Error while validating token after sleep. Trying again...');
+                        console.error(error);
+                    });
             }
             lastCheckTime = new Date().getTime();
         }, 1000);
@@ -215,6 +219,10 @@ define ([
         }
     }
 
+    function getAuthToken() {
+        return authClient.getAuthToken();
+    }
+
     function init($elem) {
         /* Flow.
          * 1. Get cookie. If present and valid, yay. If not, dialog / redirect to login page.
@@ -260,6 +268,7 @@ define ([
 
     return {
         init: init,
-        sessionInfo: sessionInfo
+        sessionInfo: sessionInfo,
+        getAuthToken: getAuthToken
     };
 });

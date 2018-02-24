@@ -17,7 +17,7 @@ define([
         var $dummyNode = $('<div>'),
             stagingWidget;
         beforeEach(function() {
-            Jupyter.narrative = { userId: 'fakeUser' };
+            Jupyter.narrative = { userId: 'fakeUser', getAuthToken: function() { return 'fakeToken'; } };
             stagingWidget = new StagingDataTab($dummyNode);
         });
 

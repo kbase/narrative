@@ -710,19 +710,10 @@ define([
             }.bind(this));
 
             // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
+            this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
             this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
                 ws_id: this.getWorkspaceName()
             });
-            this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
-
-            this.updateDocumentVersion()
-                .then(function() {
-                    // init the controller
-                    return this.narrController.render();
-                }.bind(this))
-                .finally(function () {
-                    this.sidePanel.render();
-                }.bind(this));
 
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
@@ -745,6 +736,15 @@ define([
 
             this.initSharePanel();
             // this.initSettingsDialog();
+
+            this.updateDocumentVersion()
+                .then(function() {
+                    // init the controller
+                    return this.narrController.render();
+                }.bind(this))
+                .finally(function () {
+                    this.sidePanel.render();
+                }.bind(this));
 
             $([Jupyter.events]).trigger('loaded.Narrative');
             $([Jupyter.events]).on('kernel_ready.Kernel',

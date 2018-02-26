@@ -22,10 +22,18 @@ define([
 
         init: function(options) {
             this._super(options);
-            this.path = '/' + Jupyter.narrative.userId;
+            this.path = '/';
 
             this.render();
             return this;
+        },
+
+        activate : function() {
+          this.stagingAreaViewer.activate();
+        },
+
+        deactivate : function() {
+          this.stagingAreaViewer.deactivate();
         },
 
         updatePath: function(newPath) {

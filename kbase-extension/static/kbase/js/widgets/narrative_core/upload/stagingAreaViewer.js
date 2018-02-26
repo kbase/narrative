@@ -45,6 +45,10 @@ define([
     return new KBWidget({
         name: 'StagingAreaViewer',
 
+        options : {
+          refreshIntervalDuration : 30000,
+        },
+
         init: function(options) {
 
             this._super(options);
@@ -84,7 +88,24 @@ define([
 
             // Get this party started.
             this.setPath(options.path);
+
+            this.openFileInfo = {};
+
             return this;
+        },
+
+        activate : function() {
+          this.render();
+          if (!this.refreshInterval) {
+            this.refreshInterval = setInterval( function() { this.render()}.bind(this), this.options.refreshIntervalDuration);
+          }
+        },
+
+        deactivate : function() {
+          if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = undefined;
+          }
         },
 
         render: function() {
@@ -92,17 +113,31 @@ define([
         },
 
         updateView: function() {
+
             return this.stagingServiceClient.list({path: this.subpath})
                 .then(function(data) {
-                    var files = JSON.parse(data);
+                    //list is recursive, so it'd show all files in all subdirectories. This filters 'em out.
+                    var files = JSON.parse(data).filter(function(f) {
+                      // this is less complicated than you think. The path is the username, subpath, and name concatenated. The subpath may be empty
+                      // so we filter it out and only join defined things. If that's the same as the file's path, we're at the right level. If not, we're not.
+                      if ([this.userId, this.subpath, f.name].filter(function(p) { return p.length > 0}).join('/') === f.path) {
+                        return true;
+                      }
+                      else {
+                        return false;
+                      }
+                    }.bind(this));
                     files.forEach(function(f) {
                         if (!f.isFolder) {
                             f.imported = {};
                         }
                     });
+                    var scrollTop = this.$elem.parent().scrollTop();
+                    $('.staging-area-file-metadata').detach();
                     this.$elem.empty();
                     this.renderFileHeader();
                     this.renderFiles(files);
+                    setTimeout(function() { this.$elem.parent().scrollTop(scrollTop)}.bind(this),0);
                 }.bind(this))
                 .fail(function (xhr) {
                   this.$elem.empty();
@@ -160,7 +195,9 @@ define([
             if (splitPath.startsWith('/')) {
                 splitPath = splitPath.substring(1);
             }
-            splitPath = splitPath.split('/');
+            // the staging service doesn't want the username as part of the path, but we still want to display it to the user for navigation purposes
+            splitPath = splitPath.split('/').filter(function(p) { return p.length });
+            splitPath.unshift(this.userId);
             var pathTerms = [];
             for (var i=0; i<splitPath.length; i++) {
                 var prevPath = '';
@@ -172,6 +209,8 @@ define([
                     subpath: prevPath + '/' + splitPath[i]
                 };
             }
+            pathTerms[0].subpath = '/';
+
             this.$elem.find('div.file-path').append(this.filePathTmpl({path: pathTerms}));
             this.$elem.find('div.file-path a').click(function(e) {
                 this.updatePathFn($(e.currentTarget).data().element);
@@ -182,6 +221,9 @@ define([
         },
 
         renderFiles: function(files) {
+
+          var parent = this.$elem.parent().get(0);
+
             var $fileTable = $(this.ftpFileTableTmpl({files: files, uploaders: this.uploaders.dropdown_order}));
             this.$elem.append($fileTable);
             this.$elem.find('table').dataTable({
@@ -269,14 +311,51 @@ define([
                         this.initImportApp(importType, importFile);
                         this.updateView();
                     }.bind(this));
+
+                    $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', function(e) {
+                        var file = $(e.currentTarget).data('delete');
+                        if (window.confirm('Really delete ' + file + '?')) {
+                          this.stagingServiceClient.delete({ path : this.subpath + '/' + file}).then(function(d,s,x) {
+                            this.updateView();
+                          }.bind(this))
+                          .fail(function(xhr) {
+                            alert('Error ' + xhr.status + '\r' + xhr.responseText);
+                          }.bind(this));
+                        }
+                    }.bind(this));
+
+
                     $('td:eq(0)', nRow).find('button[data-name]').off('click').on('click', function(e) {
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     }.bind(this));
 
                     $('td:eq(0)', nRow).find('i[data-caret]').off('click');
+
+                    // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
+                    var $caret = $('td:eq(0)', nRow).find('i[data-caret]'),
+                        fileName,
+                        myFile;
+                    if ($caret.length) {
+                        //next, we use that caret to find the fileName, and the file Data.
+                        fileName = $caret.data().caret;
+                        myFile = getFileFromName(fileName);
+                    }
+
+
+                    //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
+                    if (fileName && this.openFileInfo[fileName]) {
+                      //so we note that we've already loaded the info.
+                      myFile.loaded = this.openFileInfo[fileName].loaded;
+                      //toggle the caret
+                      $caret.toggleClass('fa-caret-down fa-caret-right');
+                      //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
+                      setTimeout( function() {$caret.parent().parent().after(
+                        this.renderMoreFileInfo( myFile )
+                      )}.bind(this), 0);
+
+                    }
+
                     $('td:eq(0)', nRow).find('i[data-caret]').on('click', function(e) {
-                        var fileName = $(e.currentTarget).data().caret;
-                        var myFile = getFileFromName(fileName);
 
                         $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
                         var $tr = $(e.currentTarget).parent().parent();
@@ -284,6 +363,7 @@ define([
                         if ($(e.currentTarget).hasClass('fa-caret-down')) {
                           $('.kb-dropzone').css('min-height', '75px');
                           $('.dz-message').css('margin', '0em 0');
+                          this.openFileInfo[fileName] = myFile;
                           $tr.after(
                             this.renderMoreFileInfo( myFile )
                           );
@@ -291,7 +371,8 @@ define([
                         else {
                           $('.kb-dropzone').css('min-height', '200px');
                           $('.dz-message').css('margin', '3em 0');
-                          $tr.next().remove();
+                          $tr.next().detach();
+                          delete this.openFileInfo[fileName];
                         }
                     }.bind(this));
 
@@ -299,6 +380,8 @@ define([
                     $('td:eq(1)', nRow).find('button[data-decompress]').on('click', function(e) {
                         var fileName = $(e.currentTarget).data().decompress;
                         var myFile = getFileFromName(fileName);
+
+                        $(e.currentTarget).replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
 
                         this.stagingServiceClient.decompress({ path : myFile.name })
                             .then(function(data) {
@@ -327,7 +410,6 @@ define([
           }
 
           var $tabsDiv = $.jqElem('div')
-            .css({'width' : '90%', display : 'inline-block'})
             .append('<i class="fa fa-spinner fa-spin"></i> Loading file info...please wait')
           ;
 
@@ -428,15 +510,10 @@ define([
                     .append( metadataContents )
                 }
               );
-
-              // finally, empty and append the tabs container.
-              $tabsDiv.empty();
-              $tabsDiv.append($tabsContainer);
             })
-            .fail(function (xhr) {
-              // if we failed, then there's no JGI metadata. That's fine. We still want to empty and append the tabs container.
-              // yes, yes, I could abstract this out into a separate function call so the code is DRY and not WET, but it's a duplicate
-              // of two lines that are right next to each other. I felt this was easier.
+            // there's nothing to catch here - if the jgi_metadata method errors, we just assume the file doesn't have any.
+            .always(function() {
+              // finally, empty and append the tabs container. no matter what
               $tabsDiv.empty();
               $tabsDiv.append($tabsContainer);
             });
@@ -453,33 +530,12 @@ define([
           });
 
           return fileData.loaded = $.jqElem('tr')
+            .addClass('staging-area-file-metadata')
             .append(
               $.jqElem('td')
                 .attr('colspan', 5)
                 .css('vertical-align', 'top')
                 .append($tabsDiv)
-                .append(
-                  $.jqElem('button')
-                    .css({'float' : 'right', border : '1px solid #CCCCCC', 'border-radius' : '2px'})
-                    .addClass('btn btn-default btn-xs')
-                    .tooltip({ title : 'Delete ' + fileData.name })
-                    .on('click', function(e) {
-                      if (window.confirm('Really delete file ' + fileData.name + '?')) {
-                        this.stagingServiceClient.delete({ path : fileData.name}).then(function(d,s,x) {
-                          this.updateView();
-                        }.bind(this))
-                        .fail(function(xhr) {
-                          $tabsDiv.empty();
-                          $tabsDiv.append(
-                            $.jqElem('div')
-                              .addClass('alert alert-danger')
-                              .append('Error ' + xhr.status + '<br/>' + xhr.responseText)
-                          );
-                      }.bind(this));
-                      }
-                    }.bind(this))
-                  .append($.jqElem('i').addClass('fa fa-trash'))
-                )
             );
         },
 

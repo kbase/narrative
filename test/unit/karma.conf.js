@@ -18,7 +18,7 @@ module.exports = function (config) {
         },
         files: [
             {pattern: 'test/unit/spec/**/*.js', included: false},
-            // {pattern: 'test/unit/spec/narrative_core/kbaseNarrativeOutputCell-spec.js', included: false},
+            // {pattern: 'test/unit/spec/narrative_core/kbaseNarrativeAppPanel-spec.js', included: false},
             {pattern: 'node_modules/string.prototype.startswith/startswith.js', included: true},
             {pattern: 'node_modules/string.prototype.endswith/endswith.js', included: true},
             {pattern: 'kbase-extension/static/ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml', included: false, served: true},
@@ -76,6 +76,7 @@ module.exports = function (config) {
         //         }
         //     }
         // },
+        browserDisconnectTimeout: 10000,
         singleRun: true,
         proxies: {
             '/narrative/static/': '/base/kbase-extension/static/',

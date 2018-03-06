@@ -143,7 +143,8 @@ define([
         this.kbaseWidgets = {};
 
         this.loadingWidget = new LoadingWidget({
-            node: document.querySelector('#kb-loading-blocker')
+            node: document.querySelector('#kb-loading-blocker'),
+            timeout: 20000
         });
 
         //Jupyter.keyboard_manager.disable();

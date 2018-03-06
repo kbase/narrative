@@ -71,6 +71,7 @@ define ([
 
         it('getShortTimeStampStr should return a fuzzy relative time string [ 2 mons ]', function() {
             var prevDay = new Date();
+            prevDay.setDate(prevDay.getDate()-5);
             prevDay.setMonth(prevDay.getMonth()-2);
             var d = TF.getShortTimeStampStr(prevDay, false);
             expect(d).toBe('2 mons');

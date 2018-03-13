@@ -13,7 +13,7 @@ This is the repository for the KBase Narrative Interface.
 
 The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.org) and contains elements to interact with various KBase tools and data stores.
 
-This document contains links to various documentation in the [docs](/docs) directory, with a brief description of each.
+This document contains links to various documentation in the [docs](docs) directory, with a brief description of each.
 
 ## Local Installation (for developers)
 Short version:
@@ -32,7 +32,7 @@ kbase-narrative
 
 Long version:
 
-[Local Narrative setup/deployment](/docs/install/local_install.md)
+[Local Narrative setup/deployment](docs/install/local_install.md)
 
 ## Server installation (for administrators)
 
@@ -40,8 +40,8 @@ If you want to set up your own Narrative server that uses the Docker framework, 
 
 The document specifically describes how you would build the system on a [Vagrant](https://www.vagrantup.com) image, but is applicable to any Ubuntu-based system.
 
-[Production Narrative setup/deployment](/docs/install/deployment.md)
-[Dockerhub Narrative builds](/docs/install/dockerhub_builds.md)
+[Production Narrative setup/deployment](docs/install/deployment.md)
+[Dockerhub Narrative builds](docs/install/dockerhub_builds.md)
 
 ## Architecture
 
@@ -49,7 +49,7 @@ The document specifically describes how you would build the system on a [Vagrant
 
 The Narrative sits on top of the Jupyter Notebook, so most of its architecture is a mirror of that. However, the Narrative's interaction with other KBase elements - namely the data stores and job running services - merits its own description. This will be ongoing (and evolving!), but a brief description of how a job gets run and registered is available here:
 
-[Narrative App/Method Running](/docs/developer/narrative_app_error_states.md)
+[Narrative App/Method Running](docs/developer/narrative_app_error_states.md)
 
 When deployed in production, the Narrative Interface is compiled into a [Docker](https://www.docker.com) container. When a user logs in, they have their own instance provisioned for them through an [Nginx](http://nginx.org) proxy, which provides a temporary server-side Narrative environment only for that user. Any changes made to a Narrative get saved as part of KBase data stores, but any changes to the file system or the Narrative kernel (e.g. local variables) are lost when the user logs out and their Docker instance gets shut down.
 
@@ -67,7 +67,7 @@ Testing locally (i.e. not through Travis-CI) requires a local Narrative installa
 
 We currently use a modified version of the famous [Git flow](http://drewfradette.ca/a-simpler-successful-git-branching-model/) workflow, described below:
 
-[Narrative Git Workflow](/docs/git-workflow.md)
+[Narrative Git Workflow](docs/git-workflow.md)
 
 The short version is this - all development work is done on the `develop` branch. After some stability occurs, this gets merged to `staging` for internal testing, then to `master` where it is tagged and released to production.
 

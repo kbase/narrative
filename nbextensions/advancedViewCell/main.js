@@ -257,7 +257,7 @@ define([
     }
 
     function setupWorkspace(workspaceUrl) {
-        var workspaceRef = jupyter.getWorkspaceRef(),
+        var workspaceRef = { id: runtime.workspaceId() },
             workspace = new Workspace(workspaceUrl, {
                 token: runtime.authToken()
             });
@@ -289,7 +289,7 @@ define([
                 return setupNotebook();
             })
             .then(function() {
-                // insertedAtIndex.Cell issued after insert_at_index with 
+                // insertedAtIndex.Cell issued after insert_at_index with
                 // the following message:
                 // cell - cell object created
                 // type - jupyter cell type ('code', 'markdown')
@@ -299,8 +299,8 @@ define([
                     var cell = payload.cell;
                     var setupData = payload.data;
                     var jupyterCellType = payload.type;
-                    if (setupData && 
-                        jupyterCellType === 'code' && 
+                    if (setupData &&
+                        jupyterCellType === 'code' &&
                         setupData.type === 'advancedView') {
                         upgradeToViewCell(cell, setupData.appSpec, setupData.appTag)
                             .catch(function(err) {

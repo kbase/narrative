@@ -178,7 +178,7 @@ define([
 
             // Dispatch on the editor type.
             // Type is passed in the widgets.input spec property
-            // Editors are located in ./widgets/editors            
+            // Editors are located in ./widgets/editors
             switch (type) {
                 case 'reads_set_editor':
                     editorDir = 'readsSet';
@@ -255,7 +255,7 @@ define([
             utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
 
             // TODO: the code cell input widget should instantiate its state
-            // from the cell!!!!            
+            // from the cell!!!!
             var editorType = utils.getCellMeta(cell, 'kbase.editorCell.app.spec.widgets.input');
 
             return getEditorModule(editorType)
@@ -265,7 +265,7 @@ define([
                         appId = utils.getCellMeta(cell, 'kbase.editorCell.app.id'),
                         appTag = utils.getCellMeta(cell, 'kbase.editorCell.app.tag');
 
-                    //  determine the editor type based on the 
+                    //  determine the editor type based on the
                     var editor = editorModule.make({
                             bus: cellBus,
                             cell: cell,
@@ -317,26 +317,9 @@ define([
         }));
     }
 
-    function getWorkspaceRef() {
-        // TODO: all kbase notebook metadata should be on a kbase top level property;
-        var workspaceName = Jupyter.notebook.metadata.ws_name, // Jupyter.notebook.metadata.kbase.ws_name,
-            workspaceId;
-
-        if (workspaceName) {
-            return { workspace: workspaceName };
-        }
-
-        workspaceId = Jupyter.notebook.metadata.ws_id; // Jupyter.notebook.metadata.kbase.ws_id;
-        if (workspaceId) {
-            return { id: workspaceId };
-        }
-
-        throw new Error('workspace name or id is missing from this narrative');
-    }
-
     function setupWorkspace(workspaceUrl) {
         // TODO where to get config from generally?
-        var workspaceRef = getWorkspaceRef(),
+        var workspaceRef = { id: runtime.workspaceId() },
             workspace = new Workspace(workspaceUrl, {
                 token: runtime.authToken()
             });
@@ -395,11 +378,11 @@ define([
                     var cell = payload.cell;
                     var setupData = payload.data;
                     var jupyterCellType = payload.type;
-        
+
                     if (jupyterCellType === 'code' &&
-                        setupData && 
+                        setupData &&
                         setupData.type === 'editor') {
-                        // NB: the app spec and tag come in as appSpec and appTag, but 
+                        // NB: the app spec and tag come in as appSpec and appTag, but
                         // are rewritten in the "upgraded" cell to app.spec and app.tag
                         upgradeToEditorCell(cell, setupData.appSpec, setupData.appTag)
                             .catch(function(err) {

@@ -86,6 +86,14 @@ define([
     }
 
     function setupCell(cell) {
+        console.warn('codeCell-setupCell', JSON.parse(JSON.stringify(cell)));
+        if (!cell.metadata) {
+            console.warn('code cell setup - metadata not found');
+        }
+        if (cell.metadata.kbase) {
+            console.warn('code cell setup - found kbase metadata - type = ' + cell.metadata.kbase.type);
+            console.log('metadata', JSON.parse(JSON.stringify(cell.metadata)));
+        }
         if (cell.cell_type !== 'code') {
             return;
         }
@@ -116,11 +124,9 @@ define([
             node: null
         });
 
-        // jupyter.disableKeyListenersForCell(cell);
         cell.renderMinMax();
         // force toolbar rerender.
         cell.metadata = cell.metadata;
-        // cell.renderIcon();
     }
 
     function fixupCell(cell) {
@@ -143,7 +149,6 @@ define([
 
         // Accomodate import/job cells.
         // For now we create an import property on the side.
-
         var jobInfo;
         if (data && data.state) {
             jobInfo = {
@@ -209,30 +214,24 @@ define([
         }
     }
 
-    function load() {
-        // $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-        //     if (data.kbase && data.kbase.type === 'code') {
-        //         try {
-        //             var cell = upgradeCell(data);
-        //             setupCell(cell);
-        //         } catch (err) {
-        //             console.error('ERROR creating cell', err);
-        //             // delete cell.
-        //             $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
-        //             alert('Could not insert cell due to errors.\n' + err.message);
-        //         }
-        //     }
-        // });
-
-        // cases to handle:
-        // a kbase-inserted cell, with setup data indicating type of 'code'
-        // a jupyter-inserted cell, with no setup data
+    function doLoad() {
+        Jupyter.notebook.get_cells().forEach(function (cell) {
+            try {
+                if (ensureCodeCell(cell)) {
+                    setupCell(cell);
+                }
+            } catch (ex) {
+                console.error('ERROR setting up code cell', ex);
+            }
+        });
 
         $([Jupyter.events]).on('insertedAtIndex.Cell', function (event, payload) {
-            // console.log('cell inserted...', data);
+            console.log('cell inserted...', payload);
+
             var cell = payload.cell;
             var setupData = payload.data;
             var jupyterCellType = payload.type;
+            // var hasKBaseMetadata = payload.cell.metadata && payload.cell.metadata.kbase;
             if (jupyterCellType === 'code' &&
                 (!setupData || setupData.type === 'code')) {
                 try {
@@ -246,16 +245,20 @@ define([
                 }
             }
         });
+    }
 
-        Jupyter.notebook.get_cells().forEach(function (cell) {
-            try {
-                if (ensureCodeCell(cell)) {
-                    setupCell(cell);
-                }
-            } catch (ex) {
-                console.error('ERROR setting up code cell', ex);
-            }
-        });
+    function load() {
+        // cases to handle:
+        // a kbase-inserted cell, with setup data indicating type of 'code'
+        // a jupyter-inserted cell, with no setup data
+        if (Jupyter.notebook._fully_loaded) {
+            doLoad();
+        }
+        else {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+                doLoad();
+            });
+        }
     }
 
     return {

@@ -97,22 +97,6 @@ define([
         }, true);
     }
 
-    function getWorkspaceRef() {
-        var workspaceName = Jupyter.notebook.metadata.ws_name,
-            workspaceId;
-
-        if (workspaceName) {
-            return { workspace: workspaceName };
-        }
-
-        workspaceId = Jupyter.notebook.metadata.ws_id;
-        if (workspaceId) {
-            return { id: workspaceId };
-        }
-
-        throw new Error('workspace name or id is missing from this narrative');
-    }
-
     function onEvent(type, handler) {
         $([Jupyter.events]).on(type, function(event, data) {
             try {
@@ -123,12 +107,20 @@ define([
         });
     }
 
+    /**
+     * This gets called in places that might be running before we actually know whether a Narrative
+     * can be edited or not. So this returns a Promise that resolves into true or false.
+     */
     function uiModeIs(modeTest) {
-        return Jupyter.narrative.narrController.uiModeIs(modeTest);
+        return Jupyter.narrative.uiModeIs(modeTest);
     }
 
+    /**
+     * This gets called in places that might be running before we actually know whether a Narrative
+     * can be edited or not. So this returns a Promise that resolves into true or false.
+     */
     function canEdit() {
-        return Jupyter.narrative.narrController.uiModeIs('edit');
+        return Jupyter.narrative.uiModeIs('edit');
     }
 
     /**
@@ -148,7 +140,7 @@ define([
         getCells: getCells,
         getCell: getCell,
         disableKeyListenersForCell: disableKeyListenersForCell,
-        getWorkspaceRef: getWorkspaceRef,
+        // getWorkspaceRef: getWorkspaceRef,
         onEvent: onEvent,
         uiModeIs: uiModeIs,
         canEdit: canEdit,

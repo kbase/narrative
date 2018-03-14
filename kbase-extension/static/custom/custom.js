@@ -1009,12 +1009,15 @@ define([
                 var cell = originalMethod.apply(this, arguments);
                 var dataToSend = data || sidecarData;
                 sidecarData = null;
-                this.events.trigger('insertedAtIndex.Cell', {
-                    type: type || 'code',
-                    index: index,
-                    cell: cell,
-                    data: dataToSend
-                });
+                console.log('inserted cell type "' + type + '" at index ' + index, JSON.parse(JSON.stringify(cell)));
+                if (Jupyter.narrative.isLoaded()) {
+                    this.events.trigger('insertedAtIndex.Cell', {
+                        type: type || 'unknown',
+                        index: index,
+                        cell: cell,
+                        data: dataToSend
+                    });
+                }
                 return cell;
             };
         }());

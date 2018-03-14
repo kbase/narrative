@@ -46,9 +46,15 @@ define([
         div = t('div'),
         p = t('p');
 
+    console.warn('main.js for appCell2 extension');
+
     function setupNotebook(workspaceInfo) {
+        console.warn('running appCell2 setupNotebook');
+        // console.log(Jupyter.notebook.get_cells());
         return Promise.all(Jupyter.notebook.get_cells().map(function(cell) {
+            console.warn('appCell2: initing cell on nb startup');
             if (AppCell.isAppCell(cell)) {
+                console.warn('initing cell - ' + cell.metadata.kbase.attributes.id);
                 var appCell = AppCell.make({
                     cell: cell,
                     workspaceInfo: workspaceInfo
@@ -84,26 +90,9 @@ define([
         }));
     }
 
-    function getWorkspaceRef() {
-        // TODO: all kbase notebook metadata should be on a kbase top level property;
-        var workspaceName = Jupyter.notebook.metadata.ws_name,
-            workspaceId;
-
-        if (workspaceName) {
-            return { workspace: workspaceName };
-        }
-
-        workspaceId = Jupyter.notebook.metadata.ws_id;
-        if (workspaceId) {
-            return { id: workspaceId };
-        }
-
-        throw new Error('workspace name or id is missing from this narrative');
-    }
-
     function setupWorkspace(workspaceUrl) {
         // TODO where to get config from generally?
-        var workspaceRef = getWorkspaceRef(),
+        var workspaceRef = { id: runtime.workspaceId() },
             workspace = new Workspace(workspaceUrl, {
                 token: runtime.authToken()
             });
@@ -122,6 +111,7 @@ define([
      */
     function load_ipython_extension() {
         var workspaceInfo;
+        console.warn('appCell2.main:load_ipython_extension');
 
         // Listen for interesting narrative jquery events...
         // dataUpdated.Narrative is emitted by the data sidebar list
@@ -141,6 +131,7 @@ define([
                 workspaceInfo = serviceUtils.workspaceInfoToObject(wsInfo);
             })
             .then(function() {
+                console.warn('appCell2 - running setupNotebook');
                 return setupNotebook(workspaceInfo);
             })
             .then(function() {
@@ -149,8 +140,9 @@ define([
                 // Primary hook for new cell creation.
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
+                console.warn('appCell2 - adding new cell insertion check');
                 $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
-
+                    console.warn('inserted new app cell');
                     var cell = payload.cell;
                     var setupData = payload.data;
                     var jupyterCellType = payload.type;

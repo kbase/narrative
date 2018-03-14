@@ -309,26 +309,9 @@ define([
         }));
     }
 
-    function getWorkspaceRef() {
-        // TODO: all kbase notebook metadata should be on a kbase top level property;
-        var workspaceName = Jupyter.notebook.metadata.ws_name, // Jupyter.notebook.metadata.kbase.ws_name,
-            workspaceId;
-
-        if (workspaceName) {
-            return { workspace: workspaceName };
-        }
-
-        workspaceId = Jupyter.notebook.metadata.ws_id; // Jupyter.notebook.metadata.kbase.ws_id;
-        if (workspaceId) {
-            return { id: workspaceId };
-        }
-
-        throw new Error('workspace name or id is missing from this narrative');
-    }
-
     function setupWorkspace(workspaceUrl) {
         // TODO where to get config from generally?
-        var workspaceRef = getWorkspaceRef(),
+        var workspaceRef = { id: runtime.workspaceId() },
             workspace = new Workspace(workspaceUrl, {
                 token: runtime.authToken()
             });
@@ -385,7 +368,7 @@ define([
                     var setupData = payload.data;
                     var jupyterCellType = payload.type;
                     if (jupyterCellType === 'code' &&
-                        setupData && 
+                        setupData &&
                         setupData.type === 'view') {
                         upgradeToViewCell(cell, setupData.appSpec, setupData.appTag)
                             .then(function() {

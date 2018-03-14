@@ -136,6 +136,7 @@ define([
         this.cachedUserIds = {};
         this.workspaceRef = null;
         this.workspaceId = null;
+        this.workspaceInfo = {};
         this.sidePanel = null;
 
         // The set of currently instantiated KBase Widgets.
@@ -149,6 +150,15 @@ define([
 
         //Jupyter.keyboard_manager.disable();
         return this;
+    };
+
+    Narrative.prototype.isLoaded = function () {
+        return Jupyter.notebook._fully_loaded;
+    };
+
+    Narrative.prototype.uiModeIs = function (testMode) {
+        var uiMode = Jupyter.notebook.writable ? 'edit' : 'view';
+        return testMode.toLowerCase() === uiMode;
     };
 
     Narrative.prototype.getAuthToken = function () {

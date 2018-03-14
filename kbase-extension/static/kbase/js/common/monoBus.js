@@ -72,6 +72,7 @@ define([
                 spec.name = new Uuid(4).format();
             }
             if (channels[spec.name]) {
+                console.error('bus error - A channel with name "' + spec.name + '" already exists');
                 throw new Error('A channel with name "' + spec.name + '" already exists');
             }
             if (!spec.description) {
@@ -223,7 +224,7 @@ define([
                 channel.keyListeners[key].push(listener);
                 channel.listeners[id] = listener;
 
-                // If it matches a persistent message, we need to trigger the 
+                // If it matches a persistent message, we need to trigger the
                 // persistent message to emit a message immediately.
 
                 maybeSendPersistentMessages(channel, key, id);
@@ -278,7 +279,7 @@ define([
             });
         }
 
-        // PROCESSING ENGINE 
+        // PROCESSING ENGINE
 
         // PROCESSING ENGINE
 
@@ -479,7 +480,7 @@ define([
          * Respond sets up a special listener, which when it matches,
          * will put a return value into the bus as a new message targeted
          * at the requestId
-         * 
+         *
          *
          */
         function respond(spec) {
@@ -593,7 +594,7 @@ define([
          If the message is available already, return it.
          If not, then issue a listener with the timeout given in
          address.
-         Essentially, and this is how it is implemented, it is a 
+         Essentially, and this is how it is implemented, it is a
          listener with a timeout, wrapped in a promise.
         */
 
@@ -626,7 +627,7 @@ define([
         // CHANNEL BUS
 
         /*
-            Creates a bus api wrapped around a single bus. 
+            Creates a bus api wrapped around a single bus.
             Makes it easy to communicate over a single channel without
             having to name the channel each time.
             if no channel supplied, will create a channel with a uuid.
@@ -765,8 +766,8 @@ define([
 
         // CONNECT
         /*
-            A connection is essentially a bus api which remembers all 
-            listeners, which allows the connection owner to clean up 
+            A connection is essentially a bus api which remembers all
+            listeners, which allows the connection owner to clean up
             upon closing.
         */
 

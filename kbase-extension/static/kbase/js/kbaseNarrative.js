@@ -81,6 +81,7 @@ define([
 
     KBaseNarrativePrestart.loadDomEvents();
     KBaseNarrativePrestart.loadGlobals();
+    KBaseNarrativePrestart.loadJupyterEvents();
 
     /**
      * @constructor

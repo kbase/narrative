@@ -846,7 +846,7 @@ define([
                     accordionList.push(buildSingleAccordion(cat, categorySet[cat]));
                 });
                 if (categorySet.favorites) {
-                    accordionList.unshift(buildSingleAccordion('my favorites', categorySet.favorites));
+                    accordionList.unshift(buildSingleAccordion('My Favorites', categorySet.favorites));
                 }
                 accordionList.forEach(function(accordion) {
                     $appPanel.append(assembleAccordion(accordion));

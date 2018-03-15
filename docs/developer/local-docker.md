@@ -2,6 +2,10 @@
 
 It is useful to run the Narrative within a local docker container. E.g. this makes it easy to work on Narrative ui locally integrated with a local instance of kbase-ui.
 
+
+
+## Narrative
+
 The following changes are required:
 
 - omit the line `RUN grunt minify` from /Dockerfile
@@ -37,3 +41,30 @@ The container can't be killed with Ctrl-C; you'll need to stop it using Docker o
 
 If you need to update or change dependencies (bower.json), you'll need to rebuild the image.
 
+
+
+## kbase-ui
+
+The kbase-ui proxier needs to route narrative requests. In order to enable this, the proxier's nginx config needs to be modified:
+
+- in your kbase-ui repo
+
+- edit tools/proxier/docker/src/conf/nginx.conf.tmpl
+
+- comment out the line `proxy_pass https://{{ .Env.deploy_ui_hostname }}/narrative;` and uncomment the line below it
+
+- comment out the line `proxy_pass https://{{ .Env.deploy_hostname }}/narrative;` and uncomment the line below it.
+
+- rebuild the proxier image: make proxier-image
+
+- launch the proxier image: make run-proxier-image env=ci
+
+## Done?
+
+You should now be able to navigate to https://ci.kbase.us, log in, and pull a Narrative from the Dashboard.
+
+## Full Recipe
+
+TODO: all steps to from zero to hero.
+
+TODO: copy version of this doc into kbase-ui docs.

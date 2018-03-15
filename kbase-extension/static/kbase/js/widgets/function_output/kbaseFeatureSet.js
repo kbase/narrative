@@ -12,8 +12,7 @@ define (
 		'jquery',
 		'narrativeConfig',
 		'kbaseAuthenticatedWidget',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap',
+		'jquery-dataTables'
 		'knhx',
 		'widgetMaxWidthCorrection'
 	], function(
@@ -23,7 +22,6 @@ define (
 		Config,
 		kbaseAuthenticatedWidget,
 		jquery_dataTables,
-		jquery_dataTables_bootstrap,
 		knhx,
 		widgetMaxWidthCorrection
 	) {

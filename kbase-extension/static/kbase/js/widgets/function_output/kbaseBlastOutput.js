@@ -7,8 +7,7 @@ define (
 		'd3',
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -17,8 +16,7 @@ define (
 		d3,
 		kbaseAuthenticatedWidget,
 		kbaseTabs,
-		jquery_dataTables,
-		bootstrap
+		jquery_dataTables
 	) {
     return KBWidget({
         name: "kbaseBlastOutput",

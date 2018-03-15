@@ -21,8 +21,7 @@ define([
     'common/events',
     'util/bootstrapAlert',
 
-    'jquery-dataTables',
-    'jquery-dataTables-bootstrap'
+    'jquery-dataTables'
 ], function(
     bootstrap,
     $,

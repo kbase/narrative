@@ -9,8 +9,7 @@ define (
 		'util/string',
 		'kbaseAuthenticatedWidget',
         'kbaseTabs',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -20,8 +19,7 @@ define (
 		StringUtil,
 		kbaseAuthenticatedWidget,
         kbaseTabs,
-		jquery_dataTables,
-		dataTables_bootstrap
+		jquery_dataTables
 	) {
 return KBWidget({
     name: "kbaseFbaModelComparisonNew",

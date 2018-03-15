@@ -7,8 +7,8 @@ require.config({
         fileSaver: 'ext_components/file-saver/FileSaver.min',
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
         'bootstrap-slider': 'ext_components/bootstrap-slider/bootstrap-slider',
-        'jquery-dataTables': 'ext_components/datatables/media/js/jquery.dataTables.min',
-        'jquery-dataTables-bootstrap': 'ext_components/datatables/media/js/dataTables.bootstrap.min',
+        'jquery-dataTables-base': 'ext_components/datatables/media/js/jquery.dataTables.min',
+        'jquery-dataTables': 'ext_components/datatables/media/js/dataTables.bootstrap.min',
         bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',
         // css: 'ext_components/require-css/css',
         d3: 'ext_components/d3/d3.min',
@@ -55,7 +55,7 @@ require.config({
         narrativeViewers: 'kbase/js/widgets/narrative_core/narrativeViewers',
         jquery: 'ext_components/jquery/dist/jquery.min',
         jqueryui: 'components/jquery-ui/ui/minified/jquery-ui.min',
-        bootstrap: 'components/bootstrap/js/bootstrap.min',
+        bootstrap: 'ext_components/bootstrap/dist/js/bootstrap.min',
         // 'css'                                   : 'ext_components/require-css/css.min',
 
         narrativeConfig: 'kbase/js/narrativeConfig',
@@ -363,11 +363,11 @@ require.config({
         'jquery-nearest': {
             deps: ['jquery']
         },
-        'jquery-dataTables': {
+        'jquery-dataTables-base': {
             deps: ['jquery']
         },
-        'jquery-dataTables-bootstrap': {
-            deps: ['jquery', 'jquery-dataTables', 'bootstrap']
+        'jquery-dataTables': {
+            deps: ['jquery', 'jquery-dataTables-base', 'bootstrap']
         },
         kbaseNarrativeAppCell: {
             deps: ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell',
@@ -420,7 +420,7 @@ require.config({
         'kbaseTabTable': {
             'deps': ['jquery', 'kbwidget',
                 'jquery-dataTables',
-                'jquery-dataTables-bootstrap',
+                // 'jquery-dataTables-bootstrap',
                 'bootstrap',
                 'KBModeling',
                 'KBaseFBA.FBAModel',
@@ -443,7 +443,7 @@ require.config({
                 'kbwidget',
                 'KBModeling',
                 'jquery-dataTables',
-                'jquery-dataTables-bootstrap',
+                // 'jquery-dataTables-bootstrap',
                 'bootstrap',
                 'msPathway'
             ]

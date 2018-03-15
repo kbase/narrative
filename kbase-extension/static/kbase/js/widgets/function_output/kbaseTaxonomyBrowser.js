@@ -6,7 +6,7 @@ define (
 		'jquery',
 		'colorbrewer',
     'kbase-client-api',
-		'jquery-dataTables-bootstrap',
+		'jquery-dataTables',
 		'kbaseAuthenticatedWidget',
 		'kbaseTable',
 		'kbaseTabs',
@@ -18,7 +18,7 @@ define (
 		bootstrap,
 		$,
 		colorbrewer,
-    kbase_client_api,
+        kbase_client_api,
 		jquery_dataTables,
 		kbaseAuthenticatedWidget,
 		kbaseTable,
@@ -351,4 +351,3 @@ define (
     });
 
 });
-

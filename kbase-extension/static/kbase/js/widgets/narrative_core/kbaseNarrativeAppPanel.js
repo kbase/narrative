@@ -127,7 +127,7 @@ define([
             var $clearSearchBtn = $('<span>')
                 .addClass('input-group-addon btn btn-default kb-method-search-clear')
                 .attr('type', 'button')
-                .append($('<span class="glyphicon glyphicon-remove">'))
+                .append($('<span class="fa fa-times">'))
                 .click(
                     $.proxy(function() {
                         this.$searchInput.val('');
@@ -292,7 +292,7 @@ define([
             // Refresh button
             this.addButton($('<button>')
                 .addClass('btn btn-xs btn-default')
-                .append('<span class="glyphicon glyphicon-refresh">')
+                .append('<span class="fa fa-refresh">')
                 .tooltip({
                     title: 'Refresh app/method listings',
                     container: 'body',
@@ -795,7 +795,7 @@ define([
 
             var assembleAccordion = function(accordion) {
                 var $body = accordion.body;
-                var $toggle = $('<span class="glyphicon glyphicon-chevron-right">')
+                var $toggle = $('<span class="fa fa-chevron-right">')
                     .css({
                         'padding-right': '3px'
                     });
@@ -810,15 +810,15 @@ define([
                     .append($toggle)
                     .append(accordion.title)
                     .click(function() {
-                        if ($toggle.hasClass('glyphicon-chevron-right')) {
+                        if ($toggle.hasClass('fa-chevron-right')) {
                             $body.slideDown('fast', function() {
-                                $toggle.removeClass('glyphicon-chevron-right')
-                                    .addClass('glyphicon-chevron-down');
+                                $toggle.removeClass('fa-chevron-right')
+                                    .addClass('fa-chevron-down');
                             });
                         } else {
                             $body.slideUp('fast', function() {
-                                $toggle.removeClass('glyphicon-chevron-down')
-                                    .addClass('glyphicon-chevron-right');
+                                $toggle.removeClass('fa-chevron-down')
+                                    .addClass('fa-chevron-right');
                             });
                         }
                     });

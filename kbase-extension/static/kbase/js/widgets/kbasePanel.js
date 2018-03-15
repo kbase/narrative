@@ -1,11 +1,11 @@
-/* 
+/*
     kbasePanel
 
     This is a helper widget for drawing panels.
     The panels are removable and minimizable
 
     API Example:
-        var panel =  new kbasePanel(this.$elem, {title: 'Model Details', 
+        var panel =  new kbasePanel(this.$elem, {title: 'Model Details',
                                            rightLabel: 'Super Workspace,
                                            subText: 'kb|g.super.genome '});
 */define (
@@ -46,11 +46,9 @@ return KBWidget({
         var container = $('<div class="panel panel-default">'+
                                 '<div class="panel-heading">'+
                                     '<span class="panel-title"></span>'+
-                                    '<a class="pull-right btn-rm-panel text-muted hide"><span class="glyphicon glyphicon-remove"></span></a>'+
-                                    '<a class="pull-right btn-min-panel text-muted hide"><span class="glyphicon glyphicon-minus"></span></a> '+ 
+                                    '<a class="pull-right btn-rm-panel text-muted hide"><span class="fa fa-times"></span></a>'+
+                                    '<a class="pull-right btn-min-panel text-muted hide"><span class="fa fa-minus"></span></a> '+
                                     '<a class="btn-favorite pull-right" data-ws="'+ws+'" data-id="'+id+'" data-type="'+type+'">'+
-                                    //(fav ? '<span class="glyphicon glyphicon-star"></span>'  :
-                                    //    '<span class="glyphicon glyphicon-star-empty"></span>')+
                                     '</a>'+
                                     '<br>'+
                                     '<div class="panel-subtitle pull-left"></div>'+
@@ -60,11 +58,11 @@ return KBWidget({
 
         var panel_header = container.find('.panel-heading');
         var panel_title = container.find('.panel-title');
-        var panel_subtitle = container.find('.panel-subtitle');        
+        var panel_subtitle = container.find('.panel-subtitle');
         var panel_body = container.find('.panel-body');
         var fav_btn = container.find('.btn-favorite');
         var rm_panel_btn = container.find('.btn-rm-panel');
-        var min_panel_btn = container.find('.btn-min-panel');       
+        var min_panel_btn = container.find('.btn-min-panel');
 
         this.header = function(data) {
             if (data) panel_header.html(data);
@@ -78,12 +76,12 @@ return KBWidget({
 
         this.subText = function(data) {
             if (data) panel_subtitle.html(data)
-            return panel_subtitle;            
+            return panel_subtitle;
         }
 
         this.body = function(data) {
-            if (data) panel_body.html(data); 
-            this.rmLoading();         
+            if (data) panel_body.html(data);
+            this.rmLoading();
             return panel_body;
         }
 
@@ -98,14 +96,14 @@ return KBWidget({
         }
 
         this.toggleFavorite = function() {
-            var starred = fav_btn.find('span').hasClass('glyphicon-star')
+            var starred = fav_btn.find('span').hasClass('fa-star')
             console.log('starred', starred)
-            fav_btn.find('span').toggleClass('glyphicon-star-empty');
-            fav_btn.find('span').toggleClass('glyphicon-star');
+            fav_btn.find('span').toggleClass('fa-star-o');
+            fav_btn.find('span').toggleClass('fa-star');
         }
 
         if (title) this.title(title);
-        if (body) this.body(body); 
+        if (body) this.body(body);
         if (subText) panel_subtitle.append(subText);
         if (right_label) {
             panel_header.append('<span class="label label-primary pull-right">'
@@ -130,8 +128,8 @@ return KBWidget({
 
         // event for hover on panel header
         panel_header.hover(function() {
-            $(this).find('.glyphicon').parent().toggleClass('hide');
-        })            
+            $(this).find('.fa').parent().toggleClass('hide');
+        })
 
 
         rm_panel_btn.tooltip({title: 'Remove panel', placement: 'bottom', delay: {show: 700}});
@@ -150,4 +148,3 @@ return KBWidget({
     }  //end init
 })
 });
-

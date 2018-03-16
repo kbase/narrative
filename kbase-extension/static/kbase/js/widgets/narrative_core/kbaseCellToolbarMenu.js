@@ -104,7 +104,8 @@ define([
                     console.log('I want to toggle all cells!');
                 }
             }
-            cell.element.trigger('toggleMinMax.cell');
+            cell.toggleMinMax();
+            // cell.element.trigger('toggleMinMax.cell');
         }
 
         function doToggleCodeView() {

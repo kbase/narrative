@@ -142,12 +142,11 @@ define([
                 // we have a app cell.
                 console.warn('appCell2 - adding new cell insertion check');
                 $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
-                    console.warn('inserted new app cell');
                     var cell = payload.cell;
                     var setupData = payload.data;
                     var jupyterCellType = payload.type;
 
-                    if (setupData.type === 'app2') {
+                    if (setupData && setupData.type === 'app2') {
                         setupData.type = 'app';
                     }
 
@@ -162,6 +161,7 @@ define([
                         cell: cell,
                         workspaceInfo: workspaceInfo
                     });
+                    console.warn('inserted new app cell');
                     appCell.upgradeToAppCell(setupData.appSpec, setupData.appTag, setupData.type)
                         .catch(function(err) {
                             console.error('ERROR creating cell', err);
@@ -193,7 +193,6 @@ define([
                 // preset_activated.CellToolbar, preset_added.CellToolbar
             })
             .catch(function(err) {
-
                 console.error('ERROR setting up notebook', err);
             });
     }
@@ -208,9 +207,21 @@ define([
     });
     clock.start();
 
+    function load() {
+        /* Only initialize after the notebook is fully loaded. */
+        if (Jupyter.notebook._fully_loaded) {
+            load_ipython_extension();
+        }
+        else {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+                load_ipython_extension();
+            });
+        }
+    }
+
     return {
         // This is the sole ipython/jupyter api call
-        load_ipython_extension: load_ipython_extension
+        load_ipython_extension: load
     };
 }, function(err) {
     console.error('ERROR loading appCell main', err);

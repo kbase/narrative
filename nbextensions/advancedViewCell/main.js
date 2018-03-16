@@ -21,6 +21,7 @@ define([
     'bluebird',
     'uuid',
     'kb_common/html',
+    'base/js/namespace',
     './widgets/advancedViewCellWidget',
     'common/runtime',
     'common/parameterSpec',
@@ -41,6 +42,7 @@ define([
     Promise,
     Uuid,
     html,
+    Jupyter,
     ViewCellWidget,
     Runtime,
     ParameterSpec,
@@ -274,7 +276,7 @@ define([
      * the notebook or cells.
      * The work is carried out asynchronously through an orphan promise.
      */
-    function load() {
+    function initializeExtension() {
         // Listen for interesting narrative jquery events...
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
@@ -318,6 +320,17 @@ define([
     }
 
     // MAIN
+    function load() {
+        /* Only initialize after the notebook is fully loaded. */
+        if (Jupyter.notebook._fully_loaded) {
+            initializeExtension();
+        }
+        else {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+                initializeExtension();
+            });
+        }
+    }
 
     return {
         load_ipython_extension: load

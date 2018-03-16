@@ -336,7 +336,7 @@ define([
      * the notebook or cells.
      * The work is carried out asynchronously through an orphan promise.
      */
-    function load() {
+    function initializeExtension() {
         // Listen for interesting narrative jquery events...
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
@@ -410,6 +410,19 @@ define([
         resolution: 1000
     });
     clock.start();
+
+    function load() {
+        /* Only initialize after the notebook is fully loaded. */
+        if (Jupyter.notebook._fully_loaded) {
+            initializeExtension();
+        }
+        else {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+                initializeExtension();
+            });
+        }
+    }
+
     // runtime.bus().logMessages(true);
     // there is not a service/component lifecycle for the narrative is there?
     // so the clock starts, and is never stopped.

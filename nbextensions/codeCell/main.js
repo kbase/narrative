@@ -214,7 +214,7 @@ define([
         }
     }
 
-    function doLoad() {
+    function initializeExtension() {
         Jupyter.notebook.get_cells().forEach(function (cell) {
             try {
                 if (ensureCodeCell(cell)) {
@@ -226,8 +226,6 @@ define([
         });
 
         $([Jupyter.events]).on('insertedAtIndex.Cell', function (event, payload) {
-            console.log('cell inserted...', payload);
-
             var cell = payload.cell;
             var setupData = payload.data;
             var jupyterCellType = payload.type;
@@ -248,15 +246,13 @@ define([
     }
 
     function load() {
-        // cases to handle:
-        // a kbase-inserted cell, with setup data indicating type of 'code'
-        // a jupyter-inserted cell, with no setup data
+        /* Only initialize after the notebook is fully loaded. */
         if (Jupyter.notebook._fully_loaded) {
-            doLoad();
+            initializeExtension();
         }
         else {
             $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
-                doLoad();
+                initializeExtension();
             });
         }
     }

@@ -12,7 +12,7 @@ define (
 		'jquery',
 		'narrativeConfig',
 		'kbaseAuthenticatedWidget',
-		'jquery-dataTables'
+		'jquery-dataTables',
 		'knhx',
 		'widgetMaxWidthCorrection'
 	], function(
@@ -175,7 +175,7 @@ define (
                                                         '" target="_blank">'+featureData[0].info[1]+"</a>",
                                                 ali: aliases,
                                                 type: g.features[f].type,
-                                                func: g.features[f].function
+                                                func: g.features[f].function || ''
                                             }
                                         );
                                 }

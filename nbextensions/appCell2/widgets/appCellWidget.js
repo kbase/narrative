@@ -82,7 +82,6 @@ define([
         appStates = AppStates;
 
     function factory(config) {
-        console.warn('making channel for ' + utils.getMeta(config.cell, 'attributes', 'id'));
         var hostNode,
             container, ui,
             workspaceInfo = config.workspaceInfo,

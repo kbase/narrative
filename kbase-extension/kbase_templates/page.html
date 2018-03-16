@@ -13,11 +13,11 @@
     {% block stylesheet %}
     <link rel="stylesheet" href="{{ static_url("style/style.min.css") }}" type="text/css"/>
     {% endblock %}
-    <link rel="stylesheet" href="{{ static_url("custom/custom.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/custom/custom.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrative.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseIcons.css") }}"  type="text/css"/>
-    <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/landing-pages.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseEditor.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNotify.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/methodCell.css") }}" type="text/css" />
@@ -81,7 +81,7 @@
             termjs: 'components/term.js/src/term',
             typeahead: 'components/jquery-typeahead/dist/jquery.typeahead',
             jed: 'components/jed/jed',
-            custom: '{{static_url("custom/custom")}}',
+            custom: '{{static_url("kbase/custom")}}',
           },
           shim: {
             underscore: {
@@ -115,16 +115,16 @@
           }
       });
 
-      define("custom", function (require, exports, module) {
-          try {
-              var custom = require('custom/custom');
-              console.debug('loaded custom.js');
-              return custom;
-          } catch (e) {
-              console.error("error loading custom.js", e);
-              return {};
-          }
-      });
+      // define("custom", function (require, exports, module) {
+      //     try {
+      //         var custom = require('custom/custom');
+      //         console.debug('loaded custom.js');
+      //         return custom;
+      //     } catch (e) {
+      //         console.error("error loading custom.js", e);
+      //         return {};
+      //     }
+      // });
 
       document.nbjs_translations = {{ nbjs_translations|safe }};
     </script>

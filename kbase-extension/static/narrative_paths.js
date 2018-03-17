@@ -27,9 +27,9 @@ require.config({
         tipsy: 'ext_components/jquery.tipsy/js/jquery.tipsy',
         typeahead: 'ext_components/corejs-typeahead/dist/typeahead.jquery.min',
         underscore: 'ext_components/underscore/underscore-min',
-        select2: 'ext_components/select2/dist/js/select2.full.min', //kbase/js/patched-components/select2/select2',
+        select2: 'ext_components/select2/dist/js/select2.full.min',
         uuid: 'ext_components/pure-uuid/uuid',
-        'font-awesome': 'components/font-awesome/css/font-awesome',
+        'font-awesome': 'ext_components/font-awesome/css/font-awesome.min',
         yaml : 'ext_components/require-yaml/yaml',
         'js-yaml' : 'ext_components/js-yaml/dist/js-yaml.min',
 

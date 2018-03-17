@@ -73,7 +73,6 @@ define([
             // This allows disassociated elements to communicate with us
             // without a physical handle on the widget object.
 
-            console.warn('making code cell bus - ' + Props.getDataItem(cell.metadata, 'kbase.attributes.id'));
             cellBus = runtime.bus().makeChannelBus({
                 name: {
                     cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')

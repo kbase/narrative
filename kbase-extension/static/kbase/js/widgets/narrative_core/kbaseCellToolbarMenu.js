@@ -7,7 +7,8 @@ define([
     'base/js/namespace',
     'common/utils',
     'util/bootstrapDialog',
-    'kbase/js/widgets/appInfoPanel'
+    'kbase/js/widgets/appInfoPanel',
+    'custom/custom'
 ], function(
     $,
     html,
@@ -334,10 +335,9 @@ define([
                 return cell.getIcon();
             }
             return span({
-                class: 'fa fa-file fa-2x',
+                class: 'fa fa-thumbs-down fa-2x',
                 style: {
                     verticalAlign: 'top',
-                    xlineHeight: '56px'
                 }
             });
         }

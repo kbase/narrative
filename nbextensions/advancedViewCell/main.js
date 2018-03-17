@@ -36,7 +36,8 @@ define([
     'kb_service/client/workspace',
     'css!kbase/css/appCell.css',
     'css!./styles/main.css',
-    'bootstrap'
+    'bootstrap',
+    'custom/custom'
 ], function(
     $,
     Promise,

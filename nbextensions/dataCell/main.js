@@ -14,7 +14,8 @@ define([
     'common/ui',
     'common/jupyter',
     'kb_common/html',
-    './widgets/dataCell'
+    './widgets/dataCell',
+    'custom/custom'
 ], function(
     Promise,
     $,

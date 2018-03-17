@@ -14,7 +14,8 @@ define([
     'common/ui',
     'common/jupyter',
     'kb_common/html',
-    './widgets/codeCell'
+    './widgets/codeCell',
+    'custom/custom'
 ], function (
     Promise,
     $,
@@ -86,14 +87,6 @@ define([
     }
 
     function setupCell(cell) {
-        console.warn('codeCell-setupCell', JSON.parse(JSON.stringify(cell)));
-        if (!cell.metadata) {
-            console.warn('code cell setup - metadata not found');
-        }
-        if (cell.metadata.kbase) {
-            console.warn('code cell setup - found kbase metadata - type = ' + cell.metadata.kbase.type);
-            console.log('metadata', JSON.parse(JSON.stringify(cell.metadata)));
-        }
         if (cell.cell_type !== 'code') {
             return;
         }

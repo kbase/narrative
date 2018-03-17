@@ -27,7 +27,8 @@ define([
     './appCell',
     'css!kbase/css/appCell.css',
     'css!./styles/main.css',
-    'bootstrap'
+    'bootstrap',
+    'custom/custom'
 ], function(
     $,
     Jupyter,

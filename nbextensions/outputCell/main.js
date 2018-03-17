@@ -13,7 +13,8 @@ define([
     'common/jupyter',
     'kb_common/html',
     'util/string',
-    './widgets/outputCell'
+    './widgets/outputCell',
+    'custom/custom'
 ], function(
     Promise,
     $,

@@ -35,7 +35,8 @@
     "require-yaml": "^0.1.2",
     "bower": "*",
     "install": "^1.0.4",
-    "kbase-ui-plugin-catalog": "^1.2.0"
+    "kbase-ui-plugin-catalog": "^1.2.0",
+    "bootstrap": "3.3.7"
   },
   "resolutions": {
     "kbase-common-js": "^2.5.0",

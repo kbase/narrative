@@ -29,7 +29,7 @@ require.config({
         underscore: 'ext_components/underscore/underscore-min',
         select2: 'ext_components/select2/dist/js/select2.full.min',
         uuid: 'ext_components/pure-uuid/uuid',
-        'font-awesome': 'ext_components/font-awesome/css/font-awesome.min',
+        'font-awesome': 'components/font-awesome/css/font-awesome.min',
         yaml : 'ext_components/require-yaml/yaml',
         'js-yaml' : 'ext_components/js-yaml/dist/js-yaml.min',
 
@@ -55,7 +55,7 @@ require.config({
         narrativeViewers: 'kbase/js/widgets/narrative_core/narrativeViewers',
         jquery: 'ext_components/jquery/dist/jquery.min',
         jqueryui: 'components/jquery-ui/ui/minified/jquery-ui.min',
-        bootstrap: 'components/bootstrap/js/bootstrap.min',
+        bootstrap: 'ext_components/bootstrap/dist/js/bootstrap.min',
         // 'css'                                   : 'ext_components/require-css/css.min',
 
         narrativeConfig: 'kbase/js/narrativeConfig',

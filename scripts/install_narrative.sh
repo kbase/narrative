@@ -153,17 +153,17 @@ then
     # --------------------
     # 1. Setup Jupyter Notebook inside virtualenv
     # This will clone the specified tag or branch in single-branch mode
-    if [ $travis -eq 1 ]
-    then
+    # if [ $travis -eq 1 ]
+    # then
         log "Installing Jupyter notebook using $PYTHON and pip"
         pip install notebook==$JUPYTER_NOTEBOOK_TAG 2>&1 | tee ${logfile}
-    else
-        log "Installing Jupyter notebook from directory '$JUPYTER_NOTEBOOK_INSTALL_DIR'"
-        git clone --branch $JUPYTER_NOTEBOOK_TAG --single-branch $JUPYTER_NOTEBOOK_REPO $JUPYTER_NOTEBOOK_INSTALL_DIR 2>&1 | tee -a ${logfile}
-        cd $JUPYTER_NOTEBOOK_INSTALL_DIR
-        pip install --pre -e . 2>&1 | tee -a ${logfile}
-        cd ..
-    fi
+    # else
+    #     log "Installing Jupyter notebook from directory '$JUPYTER_NOTEBOOK_INSTALL_DIR'"
+    #     git clone --branch $JUPYTER_NOTEBOOK_TAG --single-branch $JUPYTER_NOTEBOOK_REPO $JUPYTER_NOTEBOOK_INSTALL_DIR 2>&1 | tee -a ${logfile}
+    #     cd $JUPYTER_NOTEBOOK_INSTALL_DIR
+    #     pip install --pre -e . 2>&1 | tee -a ${logfile}
+    #     cd ..
+    # fi
 
     # Setup ipywidgets addon
     log "Installing ipywidgets using $PYTHON"

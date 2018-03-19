@@ -156,15 +156,19 @@ define([
 
     // Patch the security mechanisms to allow any JavaScript to run for now.
     // TODO: update this so only the few KBase commands run.
-    security.sanitize_html = function (html, allow_css) {
-        return html;
-    };
-    security.sanitize_css = function (css, tagPolicy) {
-        return css;
-    };
-    security.sanitize_stylesheets = function (html, tagPolicy) {
-        return html;
-    };
+
+    // 3/19/2018 - removing this now as nobody is really using any ancient narratives that depend
+    // on embedding code in markdown cells. At least, they shouldn't be.
+
+    // security.sanitize_html = function (html, allow_css) {
+    //     return html;
+    // };
+    // security.sanitize_css = function (css, tagPolicy) {
+    //     return css;
+    // };
+    // security.sanitize_stylesheets = function (html, tagPolicy) {
+    //     return html;
+    // };
 
 
     // TODO: refactor

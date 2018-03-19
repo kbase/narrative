@@ -45,6 +45,7 @@ import biokbase.narrative.ws_util as ws_util
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import util
 from biokbase.narrative.common.kblogging import get_narrative_logger
+from biokbase.narrative.services.user import UserService
 
 # -----------------------------------------------------------------------------
 # Classes
@@ -129,6 +130,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         self.kbase_session = {}
         # Init the session info we need.
         self.narrative_logger = get_narrative_logger()
+        self.user_service = UserService()
 
     def _checkpoints_class_default(self):
         return KBaseCheckpoints
@@ -235,7 +237,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                     model['format'] = u'json'
                     nb = nbformat.reads(json.dumps(nar_obj['data']), 4)
                     nb['metadata'].pop('orig_nbformat', None)
-                    self.mark_trusted_cells(nb, path)
+                    self.mark_trusted_cells(nb, nar_obj['info'][5], path)
                     model['content'] = nb
                     model['name'] = nar_obj['data']['metadata'].get('name', 'Untitled')
                     util.kbase_env.narrative = 'ws.{}.obj.{}'.format(obj_ref['wsid'], obj_ref['objid'])
@@ -532,7 +534,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         else:
             self.log.warn("Saving untrusted notebook %s", path)
 
-    def mark_trusted_cells(self, nb, path=''):
+    def mark_trusted_cells(self, nb, saved_by, path=''):
         """Mark cells as trusted if the notebook signature matches.
 
         Called as a part of loading notebooks.
@@ -544,15 +546,17 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         path : string
             The notebook's path (for logging)
         """
-        # commenting out, but leaving behind for a while.
-        # trusted = self.notary.check_signature(nb)
-        # if not trusted:
-        #     self.log.warn("Notebook %s is not trusted", path)
-        # self.notary.mark_cells(nb, trusted)
+        if self.user_service.is_trusted_user(saved_by):
+            self.notary.mark_cells(nb, True)
+        else:
+            # commenting out, but leaving behind for a while.
+            trusted = self.notary.check_signature(nb)
+            if not trusted:
+                self.log.warn("Notebook %s is not trusted", path)
+            self.notary.mark_cells(nb, trusted)
 
-        self.log.warn("Notebook %s is totally trusted", path)
-        # all notebooks are trustworthy, because KBase is Pollyanna.
-        self.notary.mark_cells(nb, True)
+            # self.log.warn("Notebook %s is totally trusted", path)
+            # # all notebooks are trustworthy, because KBase is Pollyanna.
 
     def should_list(self, name):
         """Should this file/directory name be displayed in a listing?"""

@@ -708,6 +708,7 @@ define([
 
         $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
             this.loadingWidget.updateProgress('narrative', true);
+            $('#notification_area').find('div#notification_trusted').hide();
             var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
             if (wsInfo && wsInfo.length === 3) {
                 this.workspaceRef = wsInfo[1] + '/' + wsInfo[2];

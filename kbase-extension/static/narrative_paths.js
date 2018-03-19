@@ -29,7 +29,7 @@ require.config({
         underscore: 'ext_components/underscore/underscore-min',
         select2: 'ext_components/select2/dist/js/select2.full.min',
         uuid: 'ext_components/pure-uuid/uuid',
-        'font-awesome': 'components/font-awesome/css/font-awesome.min',
+        'font-awesome': 'ext_components/font-awesome/css/font-awesome.min',
         yaml : 'ext_components/require-yaml/yaml',
         'js-yaml' : 'ext_components/js-yaml/dist/js-yaml.min',
 

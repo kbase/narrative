@@ -5,7 +5,7 @@ A stubby no-op now. But putting this in so we have some boilerplate to update wh
 phase of the project.
 """
 import unittest
-from biokbase.narrative.services.user_service import UserService
+from biokbase.narrative.services.user import UserService
 from util import TestConfig
 
 

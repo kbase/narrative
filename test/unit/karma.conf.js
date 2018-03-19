@@ -83,6 +83,7 @@ module.exports = function (config) {
             '/narrative/static/notebook': 'http://localhost:32323/narrative/static/notebook',
             '/narrative/static/components': 'http://localhost:32323/narrative/static/components',
             '/narrative/static/services': 'http://localhost:32323/narrative/static/services',
+            '/narrative/static/bidi': 'http://localhost:32323/narrative/static/bidi',
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/'
         }

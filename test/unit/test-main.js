@@ -44,6 +44,7 @@ requirejs.config({
         testUtil: '../../test/unit/testUtil',
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
         jed: 'components/jed/jed',
+        custom: 'kbase/custom'
     },
     map: {
         '*': {

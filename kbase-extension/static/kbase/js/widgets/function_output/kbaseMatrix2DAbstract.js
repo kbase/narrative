@@ -7,16 +7,14 @@ define (
 		'jquery',
 		'narrativeConfig',
 		'kbaseAuthenticatedWidget',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
 		kbaseAuthenticatedWidget,
-		jquery_dataTables,
-		bootstrap
+		jquery_dataTables
 	) {
 
     var workspaceURL = Config.url('workspace');
@@ -513,4 +511,3 @@ define (
 
     });
 });
-

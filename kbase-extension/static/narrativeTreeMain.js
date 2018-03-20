@@ -29,7 +29,8 @@ require([
         'jquery',
         'bluebird',
         'narrativeConfig',
-        'narrativeLogin'
+        'narrativeLogin',
+        'css!font-awesome'
     ], function ($,
         Promise,
         Config,

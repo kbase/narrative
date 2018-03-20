@@ -2601,6 +2601,7 @@ button.kb-data-obj {
     font-size: 11pt;
     font-family: 'OyxgenBold', Arial, sans-serif;
     margin: 2px;
+    cursor: pointer;
 }
 .kb-data-list-name:hover {
     text-decoration: underline;

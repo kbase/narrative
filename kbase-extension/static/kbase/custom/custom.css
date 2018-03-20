@@ -4,6 +4,12 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 
 (or the specific css file if available)
 */
+@font-face {
+  font-family: 'Glyphicons Halflings';
+
+  src: url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot');
+  src: url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff2') format('woff2'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff') format('woff'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.ttf') format('truetype'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular') format('svg');
+}
 
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
     background-color: #337ab7;
@@ -39,7 +45,7 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 }
 
 .notebook_app {
-    overflow-y: auto;
+    overflow-y: hidden;
     background-color: #FFFFFF;
 }
 
@@ -78,7 +84,6 @@ div.text_cell_input {
 
 div.cell {
     margin: 8px 0 8px 0px;
-    xpadding: 0 10px 6px 4px;
     padding: 0;
     border: 1px solid #CCC;
     border-left: 5px solid #CCC;
@@ -98,6 +103,10 @@ div.cell.selected {
     box-shadow: 0px 1px 2px #aaa, 0 5px 5px #aaa;
     -moz-box-shadow: 0px 1px 2px #aaa, 0 5px 5px #aaa;
     -webkit-box-shadow: 0px 1px 2px #aaa, 0 5px 5px #aaa;
+}
+
+div.cell.selected:before {
+    background: none;
 }
 
 div.cell.opened {

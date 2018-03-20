@@ -97,15 +97,15 @@ define ([
                   .click(
                       $.proxy(function(event) {
                           event.preventDefault();
-                          if ($(event.currentTarget.firstChild).hasClass('glyphicon-chevron-down')) {
-                              $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-down')
-                                                               .addClass('glyphicon-chevron-right');
+                          if ($(event.currentTarget.firstChild).hasClass('fa-chevron-down')) {
+                              $(event.currentTarget.firstChild).removeClass('fa-chevron-down')
+                                                               .addClass('fa-chevron-right');
                               this.$bodyDiv.parent().slideUp(this.slideTime);
                               this.isMin = true;
                           }
                           else {
-                              $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-right')
-                                                               .addClass('glyphicon-chevron-down');
+                              $(event.currentTarget.firstChild).removeClass('fa-chevron-right')
+                                                               .addClass('fa-chevron-down');
                               this.$bodyDiv.parent().slideDown(this.slideTime);
                               this.isMin = false;
                           }
@@ -115,7 +115,7 @@ define ([
                       }, this)
                   )
                   .append($('<span>')
-                          .addClass('glyphicon glyphicon-chevron-down kb-narr-panel-toggle'))
+                          .addClass('fa fa-chevron-down kb-narr-panel-toggle'))
                   .append(this.options.title));
             }
             $titleSpan.append(this.$buttonPanel);

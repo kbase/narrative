@@ -81,6 +81,7 @@ define([
 
     KBaseNarrativePrestart.loadDomEvents();
     KBaseNarrativePrestart.loadGlobals();
+    KBaseNarrativePrestart.loadJupyterEvents();
 
     /**
      * @constructor
@@ -136,6 +137,7 @@ define([
         this.cachedUserIds = {};
         this.workspaceRef = null;
         this.workspaceId = null;
+        this.workspaceInfo = {};
         this.sidePanel = null;
 
         // The set of currently instantiated KBase Widgets.
@@ -149,6 +151,15 @@ define([
 
         //Jupyter.keyboard_manager.disable();
         return this;
+    };
+
+    Narrative.prototype.isLoaded = function () {
+        return Jupyter.notebook._fully_loaded;
+    };
+
+    Narrative.prototype.uiModeIs = function (testMode) {
+        var uiMode = Jupyter.notebook.writable ? 'edit' : 'view';
+        return testMode.toLowerCase() === uiMode;
     };
 
     Narrative.prototype.getAuthToken = function () {
@@ -697,6 +708,7 @@ define([
 
         $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
             this.loadingWidget.updateProgress('narrative', true);
+            $('#notification_area').find('div#notification_trusted').hide();
             var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
             if (wsInfo && wsInfo.length === 3) {
                 this.workspaceRef = wsInfo[1] + '/' + wsInfo[2];

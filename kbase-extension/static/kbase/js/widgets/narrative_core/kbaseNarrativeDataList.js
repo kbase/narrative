@@ -1577,7 +1577,7 @@ define([
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
-                .append('<span class="glyphicon glyphicon-refresh"></span>')
+                .append('<span class="fa fa-refresh"></span>')
                 .on('click', function () {
                     this.writingLock = false;
                     self.refresh();
@@ -1608,7 +1608,7 @@ define([
                 .append(self.$searchInput)
                 .append($('<span>').addClass('input-group-addon')
                     .append($('<span>')
-                        .addClass('glyphicon glyphicon-search')
+                        .addClass('fa fa-search')
                         .css({ 'cursor': 'pointer' })
                         .on('click', function () {
                             self.search();

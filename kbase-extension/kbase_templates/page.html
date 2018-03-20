@@ -5,7 +5,7 @@
     <meta charset="utf-8">
 
     <title>{% block title %}KBase Narrative{% endblock %}</title>
-    {% block favicon %}<link rel="shortcut icon" type="image/x-icon" href="{{static_url("kbase/images/KBase_favicon.ico") }}">{% endblock %}
+    {% block favicon %}<link id="favicon" rel="shortcut icon" type="image/x-icon" href="{{static_url("kbase/images/KBase_favicon.ico") }}">{% endblock %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="stylesheet" href="{{static_url("components/jquery-ui/themes/smoothness/jquery-ui.min.css") }}" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,12 +13,11 @@
     {% block stylesheet %}
     <link rel="stylesheet" href="{{ static_url("style/style.min.css") }}" type="text/css"/>
     {% endblock %}
-    <link rel="stylesheet" href="{{ static_url("custom/custom.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/custom/custom.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrative.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseIcons.css") }}"  type="text/css"/>
-    <link rel="stylesheet" href="{{ static_url("components/font-awesome/css/font-awesome.min.css") }}" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/landing-pages.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseEditor.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNotify.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/methodCell.css") }}" type="text/css" />
@@ -56,6 +55,9 @@
     </script>
 
     <script src="{{static_url("components/es6-promise/promise.min.js")}}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{static_url("components/preact/index.js")}}" type="text/javascript"></script>
+    <script src="{{static_url("components/proptypes/index.js")}}" type="text/javascript"></script>
+    <script src="{{static_url("components/preact-compat/index.js")}}" type="text/javascript"></script>
     <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
       require.config({
@@ -71,14 +73,15 @@
             underscore : 'components/underscore/underscore-min',
             backbone : 'components/backbone/backbone-min',
             jquery: 'components/jquery/jquery.min',
-            bootstrap: 'components/bootstrap/js/bootstrap.min',
+            bootstrap: '{{ static_url("ext_components/bootstrap/dist/js/bootstrap.min") }}',
             bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
             'jquery-ui': 'components/jquery-ui/ui/minified/jquery-ui.min',
             moment: 'components/moment/moment',
             codemirror: 'components/codemirror',
             termjs: 'components/term.js/src/term',
             typeahead: 'components/jquery-typeahead/dist/jquery.typeahead',
-            custom: '{{static_url("custom/custom")}}',
+            jed: 'components/jed/jed',
+            custom: '{{static_url("kbase/custom")}}',
           },
           shim: {
             underscore: {
@@ -111,6 +114,8 @@
               }
           }
       });
+
+      document.nbjs_translations = {{ nbjs_translations|safe }};
     </script>
 
     {% block meta %}

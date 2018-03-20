@@ -2,16 +2,16 @@
  * A decompartmentalized data table widget, factored out of the kbaseNarrativeDataPanel widget.
  * This is just a fancy datatables object that shows a single column (data id), with clickable buttons
  * that will trigger a dataInfoClicked.Narrative event.
- * It also has a Select element that allows the user to filter on object type, similar to the 
+ * It also has a Select element that allows the user to filter on object type, similar to the
  * Workspace browser.
- * 
+ *
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
 (function( $, undefined ) {
     return KBWidget({
         name: 'kbaseNarrativeDataTable',
-        
+
         version: '1.0.0',
         options: {
             noDataText: "No data found",
@@ -94,13 +94,13 @@
                             if (typeName && typeName[1]) {
                                 type = typeName[1];
                             }
-                            return "<div data-toggle='tooltip' title='" + type + "\n" + data + "'>" + 
+                            return "<div data-toggle='tooltip' title='" + type + "\n" + data + "'>" +
                                    "<span class='kb-data-obj-name' >" +
-                                            data + 
+                                            data +
                                    "</span>" +
-                                   "<span class='glyphicon glyphicon-question-sign kb-function-help' " + 
+                                   "<span class='fa fa-question-circle kb-function-help' " +
                                           "data-ws='" + row[0] + "' " +
-                                          "data-id='" + row[1] + "' " + 
+                                          "data-id='" + row[1] + "' " +
                                           "style='display: inline-block;'>" +
                                    "</span>" +
                                    "</div>";
@@ -138,7 +138,7 @@
          * }
          *
          * The extra 'data_type' in the elements is a little redundant, but it speeds up pre-processing
-         * by allowing this widget to just dump everything in the table, and is necessary to be in the 
+         * by allowing this widget to just dump everything in the table, and is necessary to be in the
          * table's row for filtering (though it's currently invisible).
          * @private
          */
@@ -171,7 +171,7 @@
                     var ws = $(event.target).attr('data-ws');
                     var id = $(event.target).attr('data-id');
                     this.trigger('dataInfoClicked.Narrative', [ws, id]);
-                }, 
+                },
                 this)
             );
             this.$dataTable.find('[data-toggle="tooltip"]').tooltip({'placement':'right', container: 'body'});

@@ -1,7 +1,7 @@
 {
   "name": "kbase-narrative-core",
   "description": "Core components for the KBase Narrative Interface",
-  "version": "3.6.3",
+  "version": "3.7.0",
   "private": true,
   "repository": "github.com/kbase/narrative",
   "devDependencies": {
@@ -27,7 +27,7 @@
     "karma-phantomjs-launcher": "1.0.1",
     "karma-requirejs": "1.0.0",
     "karma-safari-launcher": "1.0.0",
-    "phantomjs-prebuilt": "2.1.8",
+    "phantomjs-prebuilt": "2.1.16",
     "requirejs": "2.2.0",
     "selenium-standalone": "6.0.1",
     "selenium-webdriver": "^3.3.0",

@@ -170,6 +170,9 @@ define([
     //     return html;
     // };
 
+    // Make the favicon change a no-op for now. They use lots of hard-coded paths to
+    // Jupyter icons, so it's hard to change branding...
+    nbUtils.change_favicon = function() {};
 
     // TODO: refactor
     function cellType(cell) {

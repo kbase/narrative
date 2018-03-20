@@ -13,6 +13,8 @@ This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
 - SCT-559 - Fix ugly race condition that could prevent app cells from being properly rendered when loading an existing Narrative.
 - Re-enable security measure that prevents Markdown cells from rendering JavaScript. We're about a year past the point when that was necessary.
 - SCT-628 - adds a viewer for the CompoundSet object.
+- Bump Tornado dependency to 5.0.0
+- SCT-637 - adds a warning to the loading section if there's an extreme delay (20 seconds) in between loading individual steps.
 
 ### Version 3.6.3
 - SCT-585 add folder drag and drop upload to the Import area.

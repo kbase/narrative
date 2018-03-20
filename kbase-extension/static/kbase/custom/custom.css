@@ -282,6 +282,16 @@ span#notebook_name:hover {
     padding-bottom: 0;
 }
 
+.rendered_html tr,
+.rendered_html th,
+.rendered_html td {
+    text-align: inherit;
+}
+
+.rendered_html table {
+    table-layout: inherit;
+}
+
 
 /* narrative cell icons */
 

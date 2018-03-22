@@ -219,6 +219,7 @@ require.config({
         'KBaseFBA.FBAComparison': 'kbase/js/widgets/function_output/modeling/KBaseFBA.FBAComparison',
         'KBaseFBA.ModelComparison': 'kbase/js/widgets/function_output/kbaseFbaModelComparisonNew',
         'kbaseFbaModelComparisonNew': 'kbase/js/widgets/function_output/kbaseFbaModelComparisonNew',
+        'KBaseBiochem.CompoundSet': 'kbase/js/widgets/function_output/modeling/KBaseBiochem.CompoundSet',
         'KBaseBiochem.Media': 'kbase/js/widgets/function_output/modeling/KBaseBiochem.Media',
         'KBasePhenotypes.PhenotypeSet': 'kbase/js/widgets/function_output/modeling/KBasePhenotypes.PhenotypeSet',
         'KBasePhenotypes.PhenotypeSimulationSet': 'kbase/js/widgets/function_output/modeling/KBasePhenotypes.PhenotypeSimulationSet',
@@ -402,6 +403,9 @@ require.config({
         'KBaseFBA.FBAComparison': {
             'deps': ['KBModeling']
         },
+        'KBaseBiochem.CompoundSet': {
+            'deps': ['KBModeling']
+        },
         'KBaseBiochem.Media': {
             'deps': ['KBModeling']
         },
@@ -427,6 +431,7 @@ require.config({
                 'KBaseFBA.FBAModelSet',
                 'KBaseFBA.FBA',
                 'KBaseFBA.FBAComparison',
+                'KBaseBiochem.CompoundSet',
                 'KBaseBiochem.Media',
                 'KBasePhenotypes.PhenotypeSet',
                 'KBasePhenotypes.PhenotypeSimulationSet',

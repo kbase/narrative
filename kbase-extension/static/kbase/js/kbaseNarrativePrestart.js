@@ -219,6 +219,85 @@ define(
 
         }
 
+        function loadJupyterEvents() {
+            // Kickstart the Narrative loading routine once the notebook is loaded.
+            $([Jupyter.events]).on('app_initialized.NotebookApp', function () {
+                require(['kbaseNarrative'], function (Narrative) {
+
+                    Jupyter.narrative = new Narrative();
+                    Jupyter.narrative.init();
+
+                    /*
+                     * Override the move-cursor-down-or-next-cell and
+                     * move-cursor-up-or-previous-cell actions.
+                     *
+                     * When editing a textcell (markdown or code), if a user uses
+                     * the arrow keys to move to another cell, it normally lands
+                     * there in edit mode.
+                     *
+                     * This is bad for KBase-ified markdown cells, since it shows
+                     * the div and script tags that are used to render them, and
+                     * screws up the state management. These overrides just
+                     * check if the next cell is a KBase cell, and doesn't enable
+                     * edit mode if so.
+                     */
+                    Jupyter.keyboard_manager.actions.register({
+                        handler: function (env, event) {
+                            var index = env.notebook.get_selected_index();
+                            var cell = env.notebook.get_cell(index);
+                            if (cell.at_bottom() && index !== (env.notebook.ncells() - 1)) {
+                                if (event) {
+                                    event.preventDefault();
+                                }
+                                env.notebook.command_mode();
+                                env.notebook.select_next(true);
+                                if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
+                                    env.notebook.edit_mode();
+                                    var cm = env.notebook.get_selected_cell().code_mirror;
+                                    cm.setCursor(0, 0);
+                                }
+                            }
+                            return false;
+                        }
+                    },
+                    'move-cursor-down',
+                    'jupyter-notebook');
+
+                    Jupyter.keyboard_manager.actions.register({
+                        handler: function (env, event) {
+                            var index = env.notebook.get_selected_index(),
+                                cell = env.notebook.get_cell(index),
+                                cm = env.notebook.get_selected_cell().code_mirror,
+                                cur = cm.getCursor();
+                            if (cell && cell.at_top() && index !== 0 && cur.ch === 0) {
+                                if (event) {
+                                    event.preventDefault();
+                                }
+                                env.notebook.command_mode();
+                                env.notebook.select_prev(true);
+                                if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
+                                    env.notebook.edit_mode();
+                                    cm = env.notebook.get_selected_cell().code_mirror;
+                                    cm.setCursor(cm.lastLine(), 0);
+                                }
+                            }
+                            return false;
+                        }
+                    },
+                    'move-cursor-up',
+                    'jupyter-notebook');
+                });
+            });
+
+            $([Jupyter.events]).on('kernel_ready.Kernel', function () {
+                Jupyter.notebook.kernel.execute(
+                    'import os;' +
+                    'os.environ["KB_AUTH_TOKEN"]="' + Jupyter.narrative.getAuthToken() + '";' +
+                    'os.environ["KB_WORKSPACE_ID"]="' + Jupyter.notebook.metadata.ws_name + '"'
+                );
+            });
+        }
+
         function initializeRuntime() {
             var runtime = Runtime.make();
             var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
@@ -229,6 +308,7 @@ define(
 
         return {
             loadDomEvents: loadDomEvents,
-            loadGlobals: loadGlobals
+            loadGlobals: loadGlobals,
+            loadJupyterEvents: loadJupyterEvents
         };
     });

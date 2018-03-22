@@ -12,8 +12,7 @@ define (
         'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -21,8 +20,7 @@ define (
         Config,
 		kbaseAuthenticatedWidget,
 		kbaseTabs,
-		jquery_dataTables,
-		bootstrap
+		jquery_dataTables
 	) {
     return KBWidget({
         name: 'kbaseDomainAnnotation',

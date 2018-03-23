@@ -11,8 +11,9 @@
  * emptyIcon - font-awesome icon name (either fa-xxx or just xxx), placed when the input field is
  *             empty.
  * filledIcon - font-awesome icon name as above, placed when there's text present.
- * inputFunction - gets fired off when a user inputs something
- * escFunction - gets fired off if escape (key 27) is hit while the input is focused
+ * inputFunction - gets fired off when a user inputs something.
+ * addonFunction - gets fired off when a user clicks the addon area. default = clear input.
+ * escFunction - gets fired off if escape (key 27) is hit while the input is focused.
  */
 
 define([
@@ -28,6 +29,8 @@ define([
     'use strict';
 
     var BootstrapSearch = function($target, options) {
+        options = options || {};
+
         if (!options.placeholder) {
             options.placeholder = '';
         }
@@ -115,6 +118,7 @@ define([
         });
 
         this.$input = $input;
+        this.$container = $container;
     };
 
     BootstrapSearch.prototype.val = function(val) {

@@ -15,6 +15,7 @@ This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
 - SCT-628 - adds a viewer for the CompoundSet object.
 - Bump Tornado dependency to 5.0.0
 - SCT-637 - adds a warning to the loading section if there's an extreme delay (20 seconds) in between loading individual steps.
+- SCT-690 - truncate long Narrative names, show the whole thing on mouseover.
 
 ### Version 3.6.3
 - SCT-585 add folder drag and drop upload to the Import area.

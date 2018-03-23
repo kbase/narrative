@@ -6,8 +6,7 @@ define (
 		'plotly',
 		'kbaseGrowthParametersAbstract',
 		'kbaseTabs',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -15,61 +14,60 @@ define (
 		Plotly,
 		kbaseGrowthParametersAbstract,
 		kbaseTabs,
-		jquery_dataTables,
-		bootstrap
+		jquery_dataTables
 	) {
     return KBWidget({
         name: 'kbaseGrowthParamsPlot',
         parent : kbaseGrowthParametersAbstract,
-        version: '1.0.0',        
+        version: '1.0.0',
         options: {
             growthParam: null,
             conditionParam: null
         },
-        
+
         render: function(){
             var sampleParams = this.buildSamplesWithParameters();
             var seriesParams = this.groupSamplesWithParametersIntoSeries(sampleParams);
-            
+
             this.loading(false);
             var $vizContainer = $("<div/>");
             this.$elem.append( $vizContainer );
-            this.buildWidget( $vizContainer , seriesParams);                 
-        },        
-        
-        buildWidget: function($containerDiv, seriesParams){   
+            this.buildWidget( $vizContainer , seriesParams);
+        },
+
+        buildWidget: function($containerDiv, seriesParams){
             var growthParamNames = {
                 "growth_rate": "Growth rate",
                 "max_growth": "Max growth",
                 "lag_phase":  "Lag phase",
                 "area_under_curve": "Area under curve"
-            };                        
-            
+            };
+
             var growthParamType = this.options.growthParam;
             var growthParamName = growthParamNames[growthParamType];
-            var conditionParamX = this.options.conditionParam;                
-                        
+            var conditionParamX = this.options.conditionParam;
+
             this.buildPlot($containerDiv, growthParamType, growthParamName, seriesParams, conditionParamX);
         },
-        
+
         buildPlot: function($containerDiv, growthParamType, growthParamName, seriesParams, conditionParamX){
             var self = this;
-            
+
             var xyeValues = [];
             var conditionParamXUnit;
-            
+
             var filters = self.options.conditionFilter;
-            
+
             // iterate over all series
             for(var i in seriesParams){
                 var seriesParam = seriesParams[i];
                 var samples = seriesParam.samples;
-                
+
                 // Check all properties
                 var filterPassed = true;
                 var value = null;
                 var unit = null;
-                
+
                 for(var conditionName in seriesParam.conditionHash){
                     var pv = seriesParam.conditionHash[conditionName];
                     if(conditionName == conditionParamX){
@@ -78,16 +76,16 @@ define (
                     } else {
                         if( !(conditionName in filters)){
                             filterPassed = false;
-                            break;                                
+                            break;
                         }
                         if( pv.property_value != filters[conditionName] ){
                             filterPassed = false;
-                            break;                                
-                        }                        
+                            break;
+                        }
                     }
                 }
-                
-                
+
+
                 if( value != null && filterPassed){
                     xyeValues.push({
                         x: value,
@@ -99,17 +97,17 @@ define (
             }
 
 
-            
-            
+
+
             // Sort by xvalues
             if(conditionParamXUnit != null && conditionParamXUnit != ""){
                 // If unit is provided we expect that it x values are numeric
-                xyeValues.sort(function(a, b) { return a.x - b.x;});            
+                xyeValues.sort(function(a, b) { return a.x - b.x;});
             } else{
-                xyeValues.sort(function(a, b) { return a.x > b.x ? 1 : -1});            
+                xyeValues.sort(function(a, b) { return a.x > b.x ? 1 : -1});
             }
-            
-            
+
+
             // Build xValue and yValues arrays
             var xValues = [];
             var yValues = [];
@@ -119,8 +117,8 @@ define (
                 yValues.push(xyeValues[i].y);
                 yErrors.push(xyeValues[i].e);
             }
-            
-            
+
+
             // Build track
             var data = [];
             data.push({
@@ -131,7 +129,7 @@ define (
                       array: yErrors,
                       visible: true
                     },
-                
+
                 //                    text: names,
                     mode: 'lines+markers',
                     type: 'scatter',
@@ -146,14 +144,14 @@ define (
                 for(var param in filters){
                     var value = filters[param];
                     if(i > 0){
-                        title += ', ';                    
+                        title += ', ';
                     }
                     title += param + ":" + value;
                     i++;
                 }
                 title += "</span>";
             }
-            
+
             var layout = {
                 autosize: true,
                 margin: {
@@ -162,23 +160,23 @@ define (
                     b: 100,
                     t: 100,
                     pad: 4
-                },  
-                title: title, 
+                },
+                title: title,
                 titlefont: {
-                    color: "rgb(33, 33, 33)", 
-                    family: "", 
+                    color: "rgb(33, 33, 33)",
+                    family: "",
                     size: 0
-                },  
+                },
                 xaxis: {
                     title: conditionParamX + (conditionParamXUnit ? " (" + conditionParamXUnit + ")": "")   ,
                     type: "category"
-                },                 
+                },
                 yaxis: {
 //                    title: growthParamName,
                 }
-            };     
+            };
 
-            Plotly.plot( $containerDiv[0], data, layout, {showLink: false} );              
+            Plotly.plot( $containerDiv[0], data, layout, {showLink: false} );
         }
-    });        
-}); 
+    });
+});

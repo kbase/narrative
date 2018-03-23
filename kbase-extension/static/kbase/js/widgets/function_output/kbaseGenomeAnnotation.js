@@ -26,7 +26,6 @@ define (
         'bluebird',
 
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap',
 
         'kbase-client-api',
         'kbaseTable',
@@ -35,8 +34,8 @@ define (
         'util/string',
 
         'kbase-generic-client-api',
-        'GenomeAnnotationAPI-client-api',        
-        'AssemblyAPI-client-api',        
+        'GenomeAnnotationAPI-client-api',
+        'AssemblyAPI-client-api',
         'TaxonAPI-client-api',
         'GenomeSearchUtil-client-api'
 
@@ -49,14 +48,13 @@ define (
         Promise,
 
         jquery_dataTables,
-        bootstrap,
 
         kbase_client_api,
         kbaseTable,
         kbaseTabs,
         ContigBrowserPanel,
         StringUtil,
-        
+
         GenericClient,
         GenomeAnnotationAPI_client_api,
         AssemblyAPI_client_api,
@@ -108,12 +106,12 @@ define (
             self.genomeAPI = new GenomeAnnotationAPI(Config.url('service_wizard'), token);
             self.assemblyAPI = new AssemblyAPI(Config.url('service_wizard'), token);
 
-            
+
             self.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), token);
 
             self.genericClient = new GenericClient(Config.url('service_wizard'), token, null, false);
             self.genericClient.sync_call("ServiceWizard.get_service_status",
-                        [{'module_name': "GenomeSearchUtil", 'version': 'release'}], 
+                        [{'module_name': "GenomeSearchUtil", 'version': 'release'}],
                     function(status){
                         self.genomeSearchAPI = new GenomeSearchUtil(status[0].url, token, null, null, null, null, false);
                     },
@@ -196,7 +194,7 @@ define (
                 }
                 return true;
             };
-            
+
             var $resultDiv = $('<div>');
             var $noResultsDiv = $('<div>').append('<center>No matching features found.</center>').hide();
             var $loadingDiv = $('<div>');
@@ -344,7 +342,7 @@ define (
                             hasOntology = true;
                         }
                     }
-                } 
+                }
                 $tr.append($td);
 
                 var $td = $('<td>');
@@ -364,7 +362,7 @@ define (
                             hasAlias = true;
                         }
                     }
-                } 
+                }
                 $tr.append($td);
 
                 if(rowData['global_location']['contig_id']) {
@@ -441,7 +439,7 @@ define (
                             .css({'margin-left':'auto', 'margin-right':'auto'})
             $resultDiv.append($table);
 
-            
+
             var buildColumnHeader = function(name, id, click_event) {
                 var $sortIcon = $('<i>').css('margin-left','8px');
                 var $th = $('<th>')
@@ -529,12 +527,12 @@ define (
 
                 return { $colgroup:$colgroup, $theader:$tr };
             }
-            
+
             var headers = buildTableHeader()
             $table.append(headers.$colgroup);
             $table.append(headers.$theader);
 
-           
+
             // Ok, do stuff.  First show the loading icon
             setToLoad($loadingDiv);
 
@@ -641,7 +639,7 @@ define (
                 }
                 return true;
             };
-            
+
             var $resultDiv = $('<div>');
             var $noResultsDiv = $('<div>').append('<center>No matching contigs found.</center>').hide();
             var $loadingDiv = $('<div>');
@@ -790,7 +788,7 @@ define (
                             .css({'margin-left':'auto', 'margin-right':'auto'})
             $resultDiv.append($table);
 
-            
+
             var buildColumnHeader = function(name, id, click_event) {
                 var $sortIcon = $('<i>').css('margin-left','8px');
                 var $th = $('<th>')
@@ -869,12 +867,12 @@ define (
 
                 return { $colgroup:$colgroup, $theader:$tr };
             }
-            
+
             var headers = buildTableHeader()
             $table.append(headers.$colgroup);
             $table.append(headers.$theader);
 
-           
+
             // Ok, do stuff.  First show the loading icon
             setToLoad($loadingDiv);
 
@@ -1093,7 +1091,7 @@ define (
             } else {
                 // get info from metadata
                 self.genomeAPI
-                        .get_genome_v1({ 
+                        .get_genome_v1({
                             genomes: [{
                                 ref: self.genome_ref
                             }],
@@ -1191,7 +1189,7 @@ define (
             var included = ["domain","genetic_code","id","num_features",
                             "scientific_name","source","source_id","taxonomy"];
             self.genomeAPI
-                        .get_genome_v1({ 
+                        .get_genome_v1({
                             genomes: [{
                                 ref: self.genome_ref
                             }],
@@ -1503,7 +1501,7 @@ define (
 
             function printProtein(sequence, charWrap) {
                 var $div = $('<div>').css({'font-family': '"Lucida Console", Monaco, monospace'});
-                
+
                 $div.append($('<span>').css({color:'orange'}).append('Small Nonpolar'));
                 $div.append(' | ');
                 $div.append($('<span>').css({color:'green'}).append('Hyrdrophobic'));
@@ -1537,7 +1535,7 @@ define (
                     Positively charged  K, R    Blue*/
                     var aa = sequence[i];
                     if(aa==='G' || aa==='A' || aa==='S' || aa==='T') color='orange';
-                    if(aa==='C' || aa==='V' || aa==='I' || aa==='L' || aa==='P' || 
+                    if(aa==='C' || aa==='V' || aa==='I' || aa==='L' || aa==='P' ||
                        aa==='F' || aa==='Y' || aa==='M' || aa==='W' ) color='green';
                     if(aa==='N' || aa==='Q' || aa==='H') color='magenta';
                     if(aa==='D' || aa==='E') color='red';
@@ -1555,7 +1553,7 @@ define (
 
             function printDNA(sequence, charWrap) {
                 var $div = $('<div>').css({'font-family': '"Lucida Console", Monaco, monospace'});
-                
+
                 var $posTD = $('<td>').css({'text-align': 'right', 'border':'0', 'color':'#777'});
                 var $seqTD = $('<td>').css({'border':'0', 'color':'#000'});
                 var lines=1;
@@ -1638,7 +1636,7 @@ define (
                     if(isFirst) {
                         $aliases.append('None');
                     }
-                } 
+                }
                 tblData.push($aliases);
 
                 tblLabels.push('Type');
@@ -1666,7 +1664,7 @@ define (
                     if(isFirst) {
                         $ontology_terms.append('None');
                     }
-                } 
+                }
                 tblData.push($ontology_terms);
 
                 tblLabels.push('Location');
@@ -1698,7 +1696,7 @@ define (
                 } else {
                     $loc.append('None');
                 }
-                
+
                 tblData.push($loc);
 
 
@@ -1734,7 +1732,7 @@ define (
 
                 // get sequence and other information
                 self.genomeAPI
-                        .get_genome_v1({ 
+                        .get_genome_v1({
                             genomes: [{
                                 ref: genome_ref,
                                 feature_array: featureData['feature_array'],

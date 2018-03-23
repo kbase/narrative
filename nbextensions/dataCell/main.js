@@ -14,7 +14,8 @@ define([
     'common/ui',
     'common/jupyter',
     'kb_common/html',
-    './widgets/dataCell'
+    './widgets/dataCell',
+    'custom/custom'
 ], function(
     Promise,
     $,
@@ -199,7 +200,7 @@ define([
         });
     }
 
-    function load() {
+    function initializeExtension() {
         $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
             var cell = payload.cell;
             var setupData = payload.data;
@@ -225,6 +226,18 @@ define([
                 console.error('ERROR setting up output cell', ex);
             }
         });
+    }
+
+    function load() {
+        /* Only initialize after the notebook is fully loaded. */
+        if (Jupyter.notebook._fully_loaded) {
+            initializeExtension();
+        }
+        else {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+                initializeExtension();
+            });
+        }
     }
 
     return {

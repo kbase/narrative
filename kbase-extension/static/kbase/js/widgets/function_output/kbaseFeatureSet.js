@@ -13,7 +13,6 @@ define (
 		'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'jquery-dataTables',
-		'jquery-dataTables-bootstrap',
 		'knhx',
 		'widgetMaxWidthCorrection'
 	], function(
@@ -23,7 +22,6 @@ define (
 		Config,
 		kbaseAuthenticatedWidget,
 		jquery_dataTables,
-		jquery_dataTables_bootstrap,
 		knhx,
 		widgetMaxWidthCorrection
 	) {
@@ -177,7 +175,7 @@ define (
                                                         '" target="_blank">'+featureData[0].info[1]+"</a>",
                                                 ali: aliases,
                                                 type: g.features[f].type,
-                                                func: g.features[f].function
+                                                func: g.features[f].function || ''
                                             }
                                         );
                                 }

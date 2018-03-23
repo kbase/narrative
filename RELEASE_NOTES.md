@@ -16,6 +16,8 @@ This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
 - Bump Tornado dependency to 5.0.0
 - SCT-637 - adds a warning to the loading section if there's an extreme delay (20 seconds) in between loading individual steps.
 - SCT-690 - truncate long Narrative names, show the whole thing on mouseover.
+- SCT-590 - add cache busting to the public data mapping lookup. No more force-refreshing!
+- SCT-706 - fix problem where space characters were sometimes ignored in the app panel search.
 
 ### Version 3.6.3
 - SCT-585 add folder drag and drop upload to the Import area.

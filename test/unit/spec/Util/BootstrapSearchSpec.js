@@ -51,6 +51,8 @@ define ([
             expect(addon.hasClass(emptyFa)).toBe(true);
             bsSearch.val('stuff');
             expect(addon.hasClass(filledFa)).toBe(true);
+            bsSearch.val('');
+            expect(addon.hasClass(emptyFa)).toBe(true);
         });
 
         it('Should auto-set fa- in front of icons without it', function() {
@@ -67,6 +69,8 @@ define ([
             expect(addon.hasClass(emptyFa)).toBe(true);
             bsSearch.val('stuff');
             expect(addon.hasClass(filledFa)).toBe(true);
+            bsSearch.val('');
+            expect(addon.hasClass(emptyFa)).toBe(true);
         });
 
         it('Should clear input by default when clicking addon', function() {
@@ -93,6 +97,39 @@ define ([
             var bsSearch = new BootstrapSearch($targetElem);
             bsSearch.val('stuff');
             expect(bsSearch.val()).toEqual('stuff');
+        });
+
+        it('Should have a working focus function', function() {
+            var bsSearch = new BootstrapSearch($targetElem);
+            var passed = false;
+            $('body').append($targetElem);
+            $targetElem.find('input.form-control').on('focus', function() {
+                passed = true;
+            });
+            bsSearch.focus();
+            expect(passed).toBe(true);
+        });
+
+        it('Should set placeholder text', function() {
+            var placeholder = 'some text';
+            var bsSearch = new BootstrapSearch($targetElem, {
+                placeholder: placeholder
+            });
+            expect($targetElem.find('input.form-control').attr('placeholder')).toEqual(placeholder);
+        });
+
+        it('Should trigger an escape function', function() {
+            var passed = false;
+            var bsSearch = new BootstrapSearch($targetElem, {
+                escFunction: function() {
+                    passed = true;
+                }
+            });
+            var e = $.Event('keyup');
+            e.which = 27;
+            e.keyCode = 27;
+            $targetElem.find('input.form-control').trigger(e);
+            expect(passed).toBe(true);
         });
     });
 });

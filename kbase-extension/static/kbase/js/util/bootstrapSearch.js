@@ -90,7 +90,7 @@ define([
                 Jupyter.narrative.disableKeyboardManager();
             }
         }).on('input change', function (e) {
-            if ($input.val) {
+            if ($input.val()) {
                 $addonIcon.removeClass(self.options.emptyIcon);
                 $addonIcon.addClass(self.options.filledIcon);
             }
@@ -102,8 +102,10 @@ define([
                 self.options.inputFunction(e);
             }
         }).on('keyup', function (e) {
-            if (e.keyCode === 27 && self.options.escFunction) {
-                self.options.escFunction(e);
+            if (e.keyCode === 27) {
+                if (self.options.escFunction) {
+                    self.options.escFunction(e);
+                }
             }
         });
 
@@ -122,8 +124,12 @@ define([
     };
 
     BootstrapSearch.prototype.val = function(val) {
-        var retVal = val ? this.$input.val(val) : this.$input.val();
-        if (val) {
+        var retVal;
+        if (val === undefined || val === null) {
+            retVal = this.$input.val();
+        }
+        else {
+            retVal = this.$input.val(val);
             this.$input.trigger('input');
         }
         return retVal;

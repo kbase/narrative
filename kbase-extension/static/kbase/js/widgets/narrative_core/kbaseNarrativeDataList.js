@@ -1587,7 +1587,8 @@ define([
             self.bsSearch = new BootstrapSearch(self.$searchDiv, {
                 inputFunction: function() {
                     self.search();
-                }
+                },
+                placeholder: 'Search in your data'
             });
 
             self.$sortByDiv = $('<div>').css('text-align', 'center')

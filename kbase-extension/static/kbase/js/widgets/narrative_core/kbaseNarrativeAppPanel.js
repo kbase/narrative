@@ -130,7 +130,8 @@ define([
             this.bsSearch = new BootstrapSearch(this.$searchDiv, {
                 inputFunction: function(e) {
                     self.refreshPanel(this);
-                }
+                },
+                placeholder: 'Search apps'
             });
 
             // The 'loading' panel should just have a spinning gif in it.

@@ -11,16 +11,14 @@ define (
 		'jquery',
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseAuthenticatedWidget,
 		kbaseTabs,
-		jquery_dataTables,
-		bootstrap
+		jquery_dataTables
 	) {
     return KBWidget({
         name: "kbaseContigSetView",

@@ -13,7 +13,6 @@ define (
         'kbaseTabs',
         'narrativeConfig',
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap',
         'kbaseFeatureValues-client-api',
         'kbase-generic-client-api'
     ], function(
@@ -24,7 +23,6 @@ define (
         kbaseTabs,
         Config,
         jquery_dataTables,
-        jquery_dataTables_bootstrap,
         kbaseFeatureValues_client_api,
         GenericClient
     ) {

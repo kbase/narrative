@@ -73,6 +73,14 @@
     font-family: 'OxygenBold';
     font-size: 130%;
     padding-bottom: 7px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#kb-narr-name:hover {
+    text-overflow: inherit;
+    white-space: normal;
 }
 
 #kb-narr-name > #save_widget {
@@ -88,9 +96,13 @@
 .kb-narr-namestamp {
     margin-bottom: 0px;
     margin-top: 5px;
+    margin-left: auto;
+    margin-right: auto;
     padding-left: 20px;
     border-left: 2px solid #CECECE;
     display: block;
+    flex: 2;
+    min-width: 0;
 }
 
 .ui-draggable.kb-data-inflight {
@@ -247,6 +259,12 @@ span#searchspan{
 .navbar-right .fa::before { /* color nav icons */
     color: #2196F3;
 }
+
+.kb-navbar-container {
+    display: flex;
+    justify-content: space-between;
+}
+
 #kb-nav-menu { /* don't add shadows here */
     box-shadow: none;
 }
@@ -2587,6 +2605,7 @@ button.kb-data-obj {
     font-size: 11pt;
     font-family: 'OyxgenBold', Arial, sans-serif;
     margin: 2px;
+    cursor: pointer;
 }
 .kb-data-list-name:hover {
     text-decoration: underline;
@@ -3165,12 +3184,17 @@ button.kb-data-obj {
     font-family: "OxygenBold" helvetica neue;
 }
 
-#kb-loading-blocker .progress-container {
+#kb-loading-blocker .kb-loading-text {
     width: 40%;
     margin-left: 30%;
     font-size: 16px;
     text-align: left;
     line-height: 1.5em;
+}
+
+.loading-warning {
+    position:absolute;
+    display: none;
 }
 
 /* Override the default max-width of the narrative box */

@@ -71,6 +71,7 @@ define ([
 
         it('getShortTimeStampStr should return a fuzzy relative time string [ 2 mons ]', function() {
             var prevDay = new Date();
+            prevDay.setDate(prevDay.getDate()-5);
             prevDay.setMonth(prevDay.getMonth()-2);
             prevDay.setDate(prevDay.getDate()-3);  // so this can be run on March 1 without fail...
             var d = TF.getShortTimeStampStr(prevDay, false);

@@ -6,7 +6,6 @@ define (
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
 		'jquery-dataTables',
-		'jquery-dataTables-bootstrap',
         'util/string',
         'narrativeConfig',
 	], function(
@@ -16,7 +15,6 @@ define (
 		kbaseAuthenticatedWidget,
 		kbaseTabs,
 		jquery_dataTables,
-		jquery_dataTables_bootstrap,
         StringUtil,
         Config
 	) {

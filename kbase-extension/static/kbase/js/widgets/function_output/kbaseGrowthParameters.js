@@ -6,8 +6,7 @@ define (
 		'kbaseAuthenticatedWidget',
 		'kbaseGrowthParametersAbstract',
 		'kbaseTabs',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -15,8 +14,7 @@ define (
 		kbaseAuthenticatedWidget,
 		kbaseGrowthParametersAbstract,
 		kbaseTabs,
-		jquery_dataTables,
-		bootstrap
+		jquery_dataTables
 	) {
     return KBWidget({
         name: 'kbaseGrowthParameters',
@@ -221,8 +219,3 @@ define (
 
     });
 });
-
-
-
-
-

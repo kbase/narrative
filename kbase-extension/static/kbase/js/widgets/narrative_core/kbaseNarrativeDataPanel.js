@@ -1215,7 +1215,7 @@ define([
                             updateView(view);
                         })
                         .append($('<span>')
-                            .addClass('glyphicon glyphicon-refresh')));
+                            .addClass('fa fa-refresh')));
                 filterContainer.empty()
                     .append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
             }

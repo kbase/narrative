@@ -141,9 +141,10 @@ define ([
          * First timer - check for token existence very second.
          * trigger the logout behavior if it's not there.
          */
-        var lastCheckTime = new Date().getTime();
-        var browserSleepValidateTime = Config.get('auth_sleep_recheck_ms');
-        var validateOnCheck = false;
+        var lastCheckTime = new Date().getTime(),
+            browserSleepValidateTime = Config.get('auth_sleep_recheck_ms'),
+            validateOnCheck = false,
+            validationInProgress = false;
         tokenCheckTimer = setInterval(function() {
             var token = authClient.getAuthToken();
             if (!token) {
@@ -153,24 +154,28 @@ define ([
             if (lastCheckInterval > browserSleepValidateTime) {
                 validateOnCheck = true;
             }
-            if (validateOnCheck) {
-                console.warn('Revalidating token after sleeping for ' + (lastCheckInterval/1000) + 's');
+            if (validateOnCheck && !validationInProgress) {
+                validationInProgress = true;
                 authClient.validateToken(token)
                     .then(function(info) {
-                        if (info === true) {
-                            console.warn('Auth is still valid. Carry on.');
-                        } else {
-                            console.warn('Auth is invalid! Logging out.');
-                            tokenTimeout(true);
-                        }
                         validateOnCheck = false;
+                        if (info !== true) {
+                            tokenTimeout(true);
+                            // console.warn('Auth is invalid! Logging out.');
+                        } else {
+                            // console.warn('Auth is still valid after ' + (lastCheckInterval/1000) + 's.');
+                        }
                     })
                     .catch(function(error) {
+                        // This might happen while waiting for internet to reconnect.
                         console.error('Error while validating token after sleep. Trying again...');
                         console.error(error);
+                    })
+                    .finally(function() {
+                        validationInProgress = false;
                     });
+                lastCheckTime = new Date().getTime();
             }
-            lastCheckTime = new Date().getTime();
         }, 1000);
 
         var currentTime = new Date().getTime();
@@ -230,7 +235,6 @@ define ([
          * 3. events to trigger: loggedIn, loggedInFailure, loggedOut
          * 4. Set up user widget thing on #signin-button
          */
-        console.warn('Initializing auth token tracker');
         clearTokenCheckTimers();
         var sessionToken = authClient.getAuthToken();
         return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])

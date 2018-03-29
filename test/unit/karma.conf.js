@@ -18,7 +18,7 @@ module.exports = function (config) {
         },
         files: [
             {pattern: 'test/unit/spec/**/*.js', included: false},
-            // {pattern: 'test/unit/spec/narrative_core/upload/stagingAreaViewer-spec.js', included: false},
+            // {pattern: 'test/unit/spec/loadingWidgetSpec.js', included: false},
             {pattern: 'node_modules/string.prototype.startswith/startswith.js', included: true},
             {pattern: 'node_modules/string.prototype.endswith/endswith.js', included: true},
             {pattern: 'kbase-extension/static/ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml', included: false, served: true},
@@ -83,6 +83,7 @@ module.exports = function (config) {
             '/narrative/static/notebook': 'http://localhost:32323/narrative/static/notebook',
             '/narrative/static/components': 'http://localhost:32323/narrative/static/components',
             '/narrative/static/services': 'http://localhost:32323/narrative/static/services',
+            '/narrative/static/bidi': 'http://localhost:32323/narrative/static/bidi',
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/'
         }

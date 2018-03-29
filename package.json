@@ -37,6 +37,10 @@
   "scripts": {
     "bower": "bower install",
     "test": "grunt test",
-    "build": "grunt build"
+    "build": "grunt build",
+    "preinstall": "npm install --prefix kbase-extension/static/ext_components igv.js es6-set"
+  },
+  "dependencies": {
+    "es6-set": "^0.1.5"
   }
 }

@@ -36,6 +36,7 @@ require.config({
         // not under bower control
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',
         'igv' : 'ext_packages/igv.js/igv.min',
+        'es6set' : 'ext_packages/es6-set/index',
         // copied from the cdn
         'google-code-prettify': 'ext_packages/google-code-prettify/1.2.0/',
         jqueryCookie: 'ext_packages/jquery-extensions/js/jquery.cookie.min',
@@ -473,7 +474,7 @@ require.config({
             deps: ['jquery', 'jqueryui']
         },
         igv : {
-          deps : ['jquery', 'jqueryui', 'bootstrap']
+          deps : ['jquery', 'jqueryui', 'bootstrap', 'es6set']
         }
     }
 });

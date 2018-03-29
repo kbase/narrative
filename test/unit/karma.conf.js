@@ -4,14 +4,15 @@ module.exports = function (config) {
     'use strict';
     config.set({
         basePath: '../../',
-        frameworks: ['jasmine', 'requirejs'],
+        frameworks: ['jasmine', 'requirejs', 'es6-shim'],
         plugins: [
             'karma-jasmine',
             // 'karma-chrome-launcher',
             'karma-phantomjs-launcher',
             'karma-requirejs',
             'karma-coverage',
-            'karma-mocha-reporter'
+            'karma-mocha-reporter',
+            'karma-es6-shim'
         ],
         preprocessors: {
             'kbase-extension/static/kbase/js/**/*.js': ['coverage']

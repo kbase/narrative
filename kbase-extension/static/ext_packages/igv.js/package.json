@@ -1,0 +1,54 @@
+{
+  "_from": "igv.js@^0.1.0",
+  "_id": "igv.js@0.1.0",
+  "_inBundle": false,
+  "_integrity": "sha1-tecNMPKHjA2d6eIYhN3xCYJmEv0=",
+  "_location": "/igv.js",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "igv.js@^0.1.0",
+    "name": "igv.js",
+    "escapedName": "igv.js",
+    "rawSpec": "^0.1.0",
+    "saveSpec": null,
+    "fetchSpec": "^0.1.0"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/igv.js/-/igv.js-0.1.0.tgz",
+  "_shasum": "b5e70d30f2878c0d9de9e21884ddf109826612fd",
+  "_spec": "igv.js@^0.1.0",
+  "_where": "/Users/jim/DMZ/narrative-may-2",
+  "author": {
+    "name": "Jim Robinson",
+    "email": "igv-team@broadinstitute.org",
+    "url": "https://igv.org"
+  },
+  "bugs": {
+    "url": "https://github.com/igvteam/igv.js-npm/issues"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
+  "description": "Genomics visualization package",
+  "homepage": "https://github.com/igvteam/igv.js-npm#readme",
+  "keywords": [
+    "IGV",
+    "genomics",
+    "visualization"
+  ],
+  "license": "MIT",
+  "main": "igv.min.js",
+  "name": "igv.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/igvteam/igv.js-npm.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no tests defined\" && exit 1"
+  },
+  "version": "0.1.0"
+}

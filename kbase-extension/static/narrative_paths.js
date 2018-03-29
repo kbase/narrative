@@ -35,6 +35,7 @@ require.config({
 
         // not under bower control
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',
+        'igv' : 'ext_packages/igv.js/igv.min',
         // copied from the cdn
         'google-code-prettify': 'ext_packages/google-code-prettify/1.2.0/',
         jqueryCookie: 'ext_packages/jquery-extensions/js/jquery.cookie.min',
@@ -55,6 +56,7 @@ require.config({
         narrativeViewers: 'kbase/js/widgets/narrative_core/narrativeViewers',
         jquery: 'ext_components/jquery/dist/jquery.min',
         jqueryui: 'components/jquery-ui/ui/minified/jquery-ui.min',
+
         bootstrap: 'components/bootstrap/js/bootstrap.min',
         // 'css'                                   : 'ext_components/require-css/css.min',
 
@@ -465,6 +467,9 @@ require.config({
         },
         bootstrap: {
             deps: ['jquery', 'jqueryui']
+        },
+        igv : {
+          deps : ['jquery', 'jqueryui', 'bootstrap']
         }
     }
 });

@@ -1,4 +1,4 @@
- 
+
 
 
 define (
@@ -9,8 +9,7 @@ define (
 		'plotly',
 		'kbaseGrowthMatrixAbstract',
 		'kbaseTabs',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -18,8 +17,7 @@ define (
 		Plotly,
 		kbaseGrowthMatrixAbstract,
 		kbaseTabs,
-		jquery_dataTables,
-		bootstrap
+		jquery_dataTables
 	) {
     return KBWidget({
         name: 'kbaseGrowthParams2DPlot',
@@ -34,50 +32,50 @@ define (
 //            this.options.conditionFilter = [
 //                {'Molybdenum': 100}
 //            ];
-        },        
-        
+        },
+
         buildWidget: function($containerDiv){
-            
+
             var growthParamNames = {
                 "maxRate": "Max growth rate",
                 "maxRateTime": "Max growth rate time",
                 "maxOD":  "Max OD",
                 "maxODTime": "Max OD time"
-            };                        
-            
+            };
+
             var growthParamType = this.options.growthParam;
             var growthParamName = growthParamNames[growthParamType];
-            var conditionParamX = this.options.conditionParamX;     
-            var conditionParamY = this.options.conditionParamY;     
-            
-            
+            var conditionParamX = this.options.conditionParamX;
+            var conditionParamY = this.options.conditionParamY;
+
+
             this.buildPlot($containerDiv, growthParamType, growthParamName, conditionParamX, conditionParamY);
-        
+
         },
-        
+
         buildPlot: function($containerDiv, growthParamType, growthParamName, conditionParamX, conditionParamY){
             var self = this;
             var data = [];
             var xLabel = "";
-            var yLabel = "";  
-            
+            var yLabel = "";
+
             var xUnit = null;
             var yUnit = null;
-            
+
             var xValues = {};
             var yValues = {};
             var zValues = {};
-            
+
             var conditions = self.conditions;
             for(var ci in conditions){
                 var condition = conditions[ci];
-                
+
                 var xValue;
                 var yValue;
                 for(var i in condition.metadata){
                     var propValue  = condition.metadata[i];
                     if( propValue.entity != 'Condition') continue;
-                    
+
                     if( propValue.property_name == conditionParamX){
                         xValue = propValue.property_value;
                         xLabel = propValue.property_name;// + "." + propValue.property_name;
@@ -88,19 +86,19 @@ define (
                     }
                     if( propValue.property_name == conditionParamY){
                         yValue = propValue.property_value;
-                        yLabel = propValue.property_name;// + "." + propValue.property_name; 
+                        yLabel = propValue.property_name;// + "." + propValue.property_name;
                         yUnit = propValue.property_unit;
                         if(propValue.property_unit != undefined && propValue.property_unit != ''){
                             yLabel += " (" + propValue.property_unit + ")";
                         }
                     }
-                }                
+                }
                 xValues[xValue] = xValue;
                 yValues[yValue] = yValue;
                 zValues[xValue + "_" + yValue] = condition[growthParamType];
             }
-            
-            
+
+
             // Build data X's, Y's, and Z's
             var dataXs = [];
             for(var i in xValues){
@@ -110,8 +108,8 @@ define (
 //            console.log('before sort: dataXs', dataXs);
             dataXs.sort(function(a, b) { return a > b ? 1 : -1});
 //            console.log('after sort: dataXs', dataXs);
-//            dataXs.sort(function(a, b) { return parseFloat(a) > parseFloat(b) ? 1 : -1});            
-            
+//            dataXs.sort(function(a, b) { return parseFloat(a) > parseFloat(b) ? 1 : -1});
+
             var dataYs = [];
             for(var i in yValues){
                 dataYs.push( yUnit ?  parseFloat(yValues[i]) : yValues[i]);
@@ -121,8 +119,8 @@ define (
             dataYs.sort(function(a, b) { return a > b ? 1 : -1});
 //            console.log('after sort: dataYs', dataYs);
 //            dataYs.sort(function(a, b) { return parseFloat(a) > parseFloat(b) ? 1 : -1});
-                
-            
+
+
             var dataZs = [];
             for(var yIndex in dataYs){
                 var row = [];
@@ -155,14 +153,14 @@ define (
                 for(var param in filters){
                     var value = filters[param];
                     if(i > 0){
-                        title += ', ';                    
+                        title += ', ';
                     }
                     title += param + ":" + value;
                     i++;
                 }
                 title += "</span>";
-            }            
-            
+            }
+
             var layout = {
                 autosize: true,
                 margin: {
@@ -171,29 +169,28 @@ define (
                     b: 100,
                     t: 100,
                     pad: 4
-                },  
-                title: title, 
+                },
+                title: title,
                 titlefont: {
-                    color: "rgb(33, 33, 33)", 
-                    family: "", 
+                    color: "rgb(33, 33, 33)",
+                    family: "",
                     size: 0
-                },  
+                },
                 xaxis: {
-                    title: xLabel, 
+                    title: xLabel,
                     type:"category",
-//                    autorange:false                    
-                },                 
+//                    autorange:false
+                },
                 yaxis: {
-                    title: yLabel, 
+                    title: yLabel,
                     type:"category",
-//                    autorange:false                    
+//                    autorange:false
                 }
-            };     
+            };
 
             var $plotDiv = $("<div/>");
-            $containerDiv.append( $plotDiv );            
-            Plotly.plot( $plotDiv[0], data, layout, {showLink: false} );              
+            $containerDiv.append( $plotDiv );
+            Plotly.plot( $plotDiv[0], data, layout, {showLink: false} );
         }
-    });        
-}); 
-
+    });
+});

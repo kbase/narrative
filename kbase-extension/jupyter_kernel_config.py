@@ -63,7 +63,6 @@ c = get_config()
 
 # lines of code to run at IPython startup.
 c.InteractiveShellApp.exec_lines = [ 'import biokbase.narrative.magics',
-                                     'from biokbase.narrative.services import *',
                                      'from biokbase.narrative.widgetmanager import WidgetManager',
                                      'from biokbase.narrative.jobs import *' ]
 

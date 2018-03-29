@@ -27,7 +27,8 @@ define([
     './appCell',
     'css!kbase/css/appCell.css',
     'css!./styles/main.css',
-    'bootstrap'
+    'bootstrap',
+    'custom/custom'
 ], function(
     $,
     Jupyter,
@@ -47,6 +48,7 @@ define([
         p = t('p');
 
     function setupNotebook(workspaceInfo) {
+        // console.log(Jupyter.notebook.get_cells());
         return Promise.all(Jupyter.notebook.get_cells().map(function(cell) {
             if (AppCell.isAppCell(cell)) {
                 var appCell = AppCell.make({
@@ -84,26 +86,9 @@ define([
         }));
     }
 
-    function getWorkspaceRef() {
-        // TODO: all kbase notebook metadata should be on a kbase top level property;
-        var workspaceName = Jupyter.notebook.metadata.ws_name,
-            workspaceId;
-
-        if (workspaceName) {
-            return { workspace: workspaceName };
-        }
-
-        workspaceId = Jupyter.notebook.metadata.ws_id;
-        if (workspaceId) {
-            return { id: workspaceId };
-        }
-
-        throw new Error('workspace name or id is missing from this narrative');
-    }
-
     function setupWorkspace(workspaceUrl) {
         // TODO where to get config from generally?
-        var workspaceRef = getWorkspaceRef(),
+        var workspaceRef = { id: runtime.workspaceId() },
             workspace = new Workspace(workspaceUrl, {
                 token: runtime.authToken()
             });
@@ -150,12 +135,11 @@ define([
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
                 $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
-
                     var cell = payload.cell;
                     var setupData = payload.data;
                     var jupyterCellType = payload.type;
 
-                    if (setupData.type === 'app2') {
+                    if (setupData && setupData.type === 'app2') {
                         setupData.type = 'app';
                     }
 
@@ -201,7 +185,6 @@ define([
                 // preset_activated.CellToolbar, preset_added.CellToolbar
             })
             .catch(function(err) {
-
                 console.error('ERROR setting up notebook', err);
             });
     }
@@ -216,9 +199,21 @@ define([
     });
     clock.start();
 
+    function load() {
+        /* Only initialize after the notebook is fully loaded. */
+        if (Jupyter.notebook._fully_loaded) {
+            load_ipython_extension();
+        }
+        else {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+                load_ipython_extension();
+            });
+        }
+    }
+
     return {
         // This is the sole ipython/jupyter api call
-        load_ipython_extension: load_ipython_extension
+        load_ipython_extension: load
     };
 }, function(err) {
     console.error('ERROR loading appCell main', err);

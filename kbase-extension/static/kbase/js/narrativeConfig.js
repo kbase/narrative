@@ -128,7 +128,11 @@ define([
             }
         }).then(function (config) {
             console.log('Config: fetching remote data configuration.');
-            return Promise.resolve($.getJSON(config.urls.data_panel_sources));
+            return Promise.resolve($.ajax({
+                dataType: 'json',
+                cache: false,
+                url: config.urls.data_panel_sources
+            }));
         }).then(function (dataCategories) {
             console.log('Config: processing remote data configuration.');
             var env = config.environment;
@@ -148,7 +152,11 @@ define([
             // the filename is the last step of that url path (after the last /)
             var path = config.urls.data_panel_sources.split('/');
 
-            return Promise.resolve($.getJSON('static/kbase/config/' + path[path.length - 1]))
+            return Promise.resolve($.ajax({
+                dataType: 'json',
+                cache: false,
+                url: 'static/kbase/config/' + path[path.length - 1]
+            }))
                 .then(function (dataCategories) {
                     console.log('Config: processing local data configuration.');
                     var env = config.environment;

@@ -47,7 +47,7 @@ while 1:
     if not line:
         continue
     print(line)
-    if 'The Jupyter Notebook is running at: http://127.0.0.1:{}/'.format(JUPYTER_PORT) in line:
+    if 'The Jupyter Notebook is running at:' in line:
         break
     if 'is already in use' in line:
         os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)

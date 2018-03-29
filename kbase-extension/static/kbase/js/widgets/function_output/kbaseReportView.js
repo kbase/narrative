@@ -20,8 +20,7 @@ define([
     'common/iframe/hostMessages',
     'common/events',
 
-    'jquery-dataTables',
-    'jquery-dataTables-bootstrap'
+    'jquery-dataTables'
 ], function(
     bootstrap,
     $,

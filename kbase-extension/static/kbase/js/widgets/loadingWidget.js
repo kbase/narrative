@@ -1,11 +1,18 @@
+/**
+ * Spawns a loading widget that ticks off a few loading tasks.
+ * Requires a config object. This config should have the following attributes:
+ * node - a DOM node for the loader's location.
+ * timeout - if any given update takes longer than this (in ms), a message will be put up.
+ */
 define([
     'jquery'  // just for the handy fadeOut thing.
 ], function ($) {
     'use strict';
 
     var LoadingWidget = function (config) {
-        this.node = config.node;
-        this.container = this.node ? this.node.querySelector('.progress-container') : null;
+        this.config = config;
+        this.timeout = config.timeout ? config.timeout : 20000;
+        this.container = config.node ? config.node.querySelector('.progress-container') : null;
         this.progress = {
             data: false,
             jobs: false,
@@ -13,11 +20,28 @@ define([
             kernel: false,
             narrative: false
         };
-        this.progressBar = this.node ? this.node.querySelector('.progress-bar') : null;
+        this.progressBar = config.node ? config.node.querySelector('.progress-bar') : null;
         this.totalDone = 0;
         this.totalSteps = Object.keys(this.progress).length;
+        this.timeoutShown = false;
+        this.initializeTimeout();
 
         return this;
+    };
+
+    LoadingWidget.prototype.initializeTimeout = function () {
+        this.clearTimeout();
+        this.timer = setTimeout(function () {
+            this.showTimeoutWarning();
+        }.bind(this), this.timeout);
+    };
+
+    LoadingWidget.prototype.showTimeoutWarning = function () {
+        if (this.timeoutShown) {
+            return;
+        }
+        $(this.config.node).find('.loading-warning').fadeIn('fast');
+        this.timeoutShown = true;
     };
 
     LoadingWidget.prototype.updateProgress = function(name, done, error) {
@@ -31,6 +55,7 @@ define([
                 prog.innerHTML = text;
                 this.totalDone++;
                 this.progressBar.style.width = (this.totalDone / this.totalSteps * 100) + '%';
+                this.initializeTimeout();  // reset the timer for another round.
                 if (this.totalDone >= this.totalSteps) {
                     this.remove();
                 }
@@ -38,9 +63,16 @@ define([
         }
     };
 
+    LoadingWidget.prototype.clearTimeout = function () {
+        if (this.timer) {
+            clearTimeout(this.timer);
+        }
+    };
+
     LoadingWidget.prototype.remove = function () {
-        if (this.node) {
-            $(this.node).fadeOut('slow');
+        this.clearTimeout();
+        if (this.config.node) {
+            $(this.config.node).fadeOut('slow');
         }
     };
 

@@ -10,7 +10,7 @@ define (
 		'kbaseHistogram',
 		'kbase-client-api',
 		'kbaseTable',
-		'jquery-dataTables-bootstrap',
+		'jquery-dataTables',
 	], function(
 		KBWidget,
 		bootstrap,

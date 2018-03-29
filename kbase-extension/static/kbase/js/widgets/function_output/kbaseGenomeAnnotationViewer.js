@@ -16,7 +16,6 @@ define (
         'kbaseAuthenticatedWidget',
         'kbaseTabs',
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap',
         'GenomeAnnotationAPI-client-api',
         'kbaseTable'
     ], function(
@@ -30,7 +29,6 @@ define (
         kbaseAuthenticatedWidget,
         kbaseTabs,
         jquery_dataTables,
-        dataTables_bootstrap,
         gaa,
         kbaseTable
     ) {

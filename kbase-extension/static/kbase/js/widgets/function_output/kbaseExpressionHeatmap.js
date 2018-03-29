@@ -1,5 +1,5 @@
 /**
- * Browsing of heatmaps for a gene set for each condition. Basic statistics for each condition is also provided. 
+ * Browsing of heatmaps for a gene set for each condition. Basic statistics for each condition is also provided.
  *
  * Pavel Novichkov <psnovichkov@lbl.gov>
  * @public
@@ -12,7 +12,6 @@
 		'jquery',
 		'd3',
 		'jquery-dataTables',
-		'jquery-dataTables-bootstrap',
 		'kbaseExpressionGenesetBaseWidget'
 	], function(
 		KBWidget,
@@ -20,7 +19,6 @@
 		$,
 		d3,
 		jquery_dataTables,
-		bootstrap,
 		kbaseExpressionGenesetBaseWidget
 	) {
     return KBWidget({
@@ -58,7 +56,7 @@
                 fl_values: 1
             };
         },
-        
+
         $tableDiv: null,
 
 
@@ -111,13 +109,13 @@
             var $btn = $('<button>').addClass('btn btn-default btn-sm').append('Update')
                         .on('click', function() {
                             var min = parseFloat($minInput.val());
-                            if(min && !isNaN(min)) { 
+                            if(min && !isNaN(min)) {
                                 self.minColorValue = min;
                             }
                             $minInput.val(self.minColorValue);
                             var max = parseFloat($maxInput.val());
                             if(max && !isNaN(max)) {
-                                self.maxColorValue = max; 
+                                self.maxColorValue = max;
                             }
                             $maxInput.val(self.maxColorValue);
                             self.redrawTable();
@@ -183,12 +181,12 @@
                     "sDom": 'lftip',
                     "iDisplayLength": 10,
                     "scrollX": true,
-                    "aaData": self.buildConditionsTableData(),                  
+                    "aaData": self.buildConditionsTableData(),
                     "aoColumns": [
                         { sTitle: "Condition ID", mData:"id"},
                         { sTitle: "Min", mData:"min"},
                         { sTitle: "Max", mData:"max"},
-                        { sTitle: "Average", mData:"avg"},                            
+                        { sTitle: "Average", mData:"avg"},
                         { sTitle: "Std. Dev.", mData:"std"},
                         { sTitle: "Expression Values", mData: "values",
                             mRender: function ( values ) {
@@ -198,7 +196,7 @@
                                     var heatCell = $('<div/>')
                                         .addClass('heat_cell')
                                         .css('background',self.colorGenerator(values[i]))
-                                        .attr('title', 
+                                        .attr('title',
                                             'Feature: ' + self.submatrixStat.row_descriptors[i].id
                                              + '\n' + 'Value: ' + values[i].toFixed(2)
                                         );
@@ -208,7 +206,7 @@
                             }
                         }
                     ]
-                } ); 
+                } );
         },
         buildConditionsTableData: function(){
             var tableData = [];
@@ -251,7 +249,7 @@
             self.colorGenerator = d3.scale.linear()
                 .domain([min,(max+min)/2, max])
                 .range(['#FFA500', '#FFFFFF', '#0066AA']);
-            self.colorGenerator.clamp(true);       
+            self.colorGenerator.clamp(true);
         }
 
     });

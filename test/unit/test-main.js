@@ -11,6 +11,28 @@ for (var file in window.__karma__.files) {
     }
 }
 
+// hack to make jed (the i18n library that Jupyter uses) happy.
+document.nbjs_translations = {
+    'domain': 'nbjs',
+    'locale_data':
+    {
+        'nbjs': {
+            '': {
+                'domain': 'nbjs'
+            }
+        }
+    }
+};
+
+// hacks to spoof preact and preactCompat, needed by a Jupyter component we aren't testing.
+window.preact = {
+    render: function() { return null; }
+};
+window.preactCompat = {
+    createClass: function() { return {}; },
+    createElement: function() { return {}; }
+};
+
 requirejs.config({
     baseUrl: '/narrative/static/',
 
@@ -20,11 +42,13 @@ requirejs.config({
         bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
         bootstrap: 'components/bootstrap/js/bootstrap.min',
         testUtil: '../../test/unit/testUtil',
-        bluebird: 'ext_components/bluebird/js/browser/bluebird.min'
+        bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
+        jed: 'components/jed/jed',
+        custom: 'kbase/custom'
     },
     map: {
         '*': {
-            'jquery-ui': 'jqueryui'
+            'jquery-ui': 'jqueryui',
         },
     },
 
@@ -38,7 +62,7 @@ requirejs.config({
         bootstrap: {
             deps: ['jquery'],
             exports: 'Bootstrap'
-        }
+        },
     },
 
     callback: function() {

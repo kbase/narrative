@@ -37,7 +37,8 @@ define([
     'kb_service/client/workspace',
     'css!kbase/css/appCell.css',
     'css!./styles/main.css',
-    'bootstrap'
+    'bootstrap',
+    'custom/custom'
 ], function(
     $,
     Jupyter,
@@ -309,26 +310,9 @@ define([
         }));
     }
 
-    function getWorkspaceRef() {
-        // TODO: all kbase notebook metadata should be on a kbase top level property;
-        var workspaceName = Jupyter.notebook.metadata.ws_name, // Jupyter.notebook.metadata.kbase.ws_name,
-            workspaceId;
-
-        if (workspaceName) {
-            return { workspace: workspaceName };
-        }
-
-        workspaceId = Jupyter.notebook.metadata.ws_id; // Jupyter.notebook.metadata.kbase.ws_id;
-        if (workspaceId) {
-            return { id: workspaceId };
-        }
-
-        throw new Error('workspace name or id is missing from this narrative');
-    }
-
     function setupWorkspace(workspaceUrl) {
         // TODO where to get config from generally?
-        var workspaceRef = getWorkspaceRef(),
+        var workspaceRef = { id: runtime.workspaceId() },
             workspace = new Workspace(workspaceUrl, {
                 token: runtime.authToken()
             });
@@ -345,7 +329,7 @@ define([
      * the notebook or cells.
      * The work is carried out asynchronously through an orphan promise.
      */
-    function load() {
+    function initializeExtension() {
         // Listen for interesting narrative jquery events...
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
@@ -385,7 +369,7 @@ define([
                     var setupData = payload.data;
                     var jupyterCellType = payload.type;
                     if (jupyterCellType === 'code' &&
-                        setupData && 
+                        setupData &&
                         setupData.type === 'view') {
                         upgradeToViewCell(cell, setupData.appSpec, setupData.appTag)
                             .then(function() {
@@ -410,14 +394,11 @@ define([
     // MAIN
     // module state instantiation
 
-    function init() {}
-    init();
-
-    var clock = Clock.make({
-        bus: runtime.bus(),
-        resolution: 1000
-    });
-    clock.start();
+    // var clock = Clock.make({
+    //     bus: runtime.bus(),
+    //     resolution: 1000
+    // });
+    // clock.start();
     // runtime.bus().logMessages(true);
     // there is not a service/component lifecycle for the narrative is there?
     // so the clock starts, and is never stopped.
@@ -425,6 +406,18 @@ define([
     //    runtime.bus().on('clock-tick', function (message) {
     //       console.log('TICK', message);
     //    });
+
+    function load() {
+        /* Only initialize after the notebook is fully loaded. */
+        if (Jupyter.notebook._fully_loaded) {
+            initializeExtension();
+        }
+        else {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+                initializeExtension();
+            });
+        }
+    }
 
     return {
         // This is the sole ipython/jupyter api call

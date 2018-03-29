@@ -21,6 +21,7 @@ define([
     'bluebird',
     'uuid',
     'kb_common/html',
+    'base/js/namespace',
     './widgets/advancedViewCellWidget',
     'common/runtime',
     'common/parameterSpec',
@@ -35,12 +36,14 @@ define([
     'kb_service/client/workspace',
     'css!kbase/css/appCell.css',
     'css!./styles/main.css',
-    'bootstrap'
+    'bootstrap',
+    'custom/custom'
 ], function(
     $,
     Promise,
     Uuid,
     html,
+    Jupyter,
     ViewCellWidget,
     Runtime,
     ParameterSpec,
@@ -257,7 +260,7 @@ define([
     }
 
     function setupWorkspace(workspaceUrl) {
-        var workspaceRef = jupyter.getWorkspaceRef(),
+        var workspaceRef = { id: runtime.workspaceId() },
             workspace = new Workspace(workspaceUrl, {
                 token: runtime.authToken()
             });
@@ -274,7 +277,7 @@ define([
      * the notebook or cells.
      * The work is carried out asynchronously through an orphan promise.
      */
-    function load() {
+    function initializeExtension() {
         // Listen for interesting narrative jquery events...
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
@@ -289,7 +292,7 @@ define([
                 return setupNotebook();
             })
             .then(function() {
-                // insertedAtIndex.Cell issued after insert_at_index with 
+                // insertedAtIndex.Cell issued after insert_at_index with
                 // the following message:
                 // cell - cell object created
                 // type - jupyter cell type ('code', 'markdown')
@@ -299,8 +302,8 @@ define([
                     var cell = payload.cell;
                     var setupData = payload.data;
                     var jupyterCellType = payload.type;
-                    if (setupData && 
-                        jupyterCellType === 'code' && 
+                    if (setupData &&
+                        jupyterCellType === 'code' &&
                         setupData.type === 'advancedView') {
                         upgradeToViewCell(cell, setupData.appSpec, setupData.appTag)
                             .catch(function(err) {
@@ -318,6 +321,17 @@ define([
     }
 
     // MAIN
+    function load() {
+        /* Only initialize after the notebook is fully loaded. */
+        if (Jupyter.notebook._fully_loaded) {
+            initializeExtension();
+        }
+        else {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+                initializeExtension();
+            });
+        }
+    }
 
     return {
         load_ipython_extension: load

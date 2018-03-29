@@ -32,11 +32,11 @@ define([
         it('Should have a working search interface', function() {
             expect(appPanel.$methodList.children().children().length).not.toBe(0);
 
-            appPanel.$searchInput.val('should show nothing');
+            appPanel.bsSearch.val('should show nothing');
             appPanel.refreshPanel();
             expect(appPanel.$methodList.children().children().length).toBe(0);
 
-            appPanel.$searchInput.val('genome');
+            appPanel.bsSearch.val('genome');
             appPanel.refreshPanel();
             expect(appPanel.$methodList.children().children().length).not.toBe(0);
             //TODO:

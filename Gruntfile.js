@@ -25,8 +25,10 @@ module.exports = function(grunt) {
                 options: {
                     name: 'narrative_paths',
                     baseUrl: 'kbase-extension/static',
-                    include: ['narrativeMain',
-                              'buildTools/loadAppWidgets'],
+                    include: [
+                        'narrativeMain',
+                        'buildTools/loadAppWidgets'
+                    ],
                     mainConfigFile: 'kbase-extension/static/narrative_paths.js',
                     findNestedDependencies: true,
                     // optimize: 'uglify2',
@@ -48,7 +50,8 @@ module.exports = function(grunt) {
                         'base/js/keyboard': 'empty:',
                         'base/js/dialog': 'empty:',
                         'notebook/js/notebook': 'empty:',
-                        'notebook/js/main': 'empty:'
+                        'notebook/js/main': 'empty:',
+                        'custom/custom': 'empty:'
                     },
                     inlineText: false,
                     buildCSS: false,

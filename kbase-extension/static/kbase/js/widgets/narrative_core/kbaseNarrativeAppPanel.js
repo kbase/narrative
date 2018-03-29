@@ -17,6 +17,7 @@ define([
     'narrativeConfig',
     'util/display',
     'util/bootstrapDialog',
+    'util/bootstrapSearch',
     'util/icon',
     'text!kbase/templates/beta_warning_body.html',
     'yaml!ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml',
@@ -42,6 +43,7 @@ define([
     Config,
     DisplayUtil,
     BootstrapDialog,
+    BootstrapSearch,
     Icon,
     BetaWarningTemplate,
     Categories,
@@ -92,22 +94,7 @@ define([
 
             this.icon_colors = Config.get('icons').colors;
 
-            this.$searchDiv = $('<div>')
-                .addClass('input-group')
-                .css({ 'margin-bottom': '3px' })
-                .hide();
-
-            this.$searchInput = $('<input type="text">')
-                .addClass('form-control')
-                .attr('Placeholder', 'Search apps')
-                .on('input', function() {
-                    self.refreshPanel(this);
-                })
-                .on('keyup', function(e) {
-                    if (e.keyCode === 27) {
-                        self.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
-                    }
-                });
+            this.$searchDiv = $('<div>').hide();
 
             this.$numHiddenSpan = $('<span>0</span>');
             this.$showHideSpan = $('<span>show</span>');
@@ -124,20 +111,6 @@ define([
                     this.$showHideSpan.text(curText === 'show' ? 'hide' : 'show');
                 }, this));
 
-            var $clearSearchBtn = $('<span>')
-                .addClass('input-group-addon btn btn-default kb-method-search-clear')
-                .attr('type', 'button')
-                .append($('<span class="glyphicon glyphicon-remove">'))
-                .click(
-                    $.proxy(function() {
-                        this.$searchInput.val('');
-                        this.$searchInput.trigger('input');
-                    }, this)
-                );
-
-            this.$searchDiv.append(this.$searchInput)
-                .append($clearSearchBtn);
-
             // placeholder for apps and methods once they're loaded.
             this.$methodList = $('<div>')
                 .css({
@@ -153,6 +126,13 @@ define([
                     .append(this.$searchDiv)
                     .append(this.$toggleHiddenDiv))
                 .append(this.$methodList);
+
+            this.bsSearch = new BootstrapSearch(this.$searchDiv, {
+                inputFunction: function(e) {
+                    self.refreshPanel(this);
+                },
+                placeholder: 'Search apps'
+            });
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
@@ -175,23 +155,17 @@ define([
                 .append(this.$loadingPanel)
                 .append(this.$errorPanel));
 
-            $(document).on('filterMethods.Narrative',
-                $.proxy(function(e, filterString) {
-                    if (filterString) {
-                        this.$searchDiv.show({ effect: 'blind', duration: 'fast' });
-                        this.$searchInput.val(filterString);
-                        this.$searchInput.trigger('input');
-                    }
-                }, this)
-            );
+            $(document).on('filterMethods.Narrative', function(e, filterString) {
+                if (filterString) {
+                    this.$searchDiv.show({ effect: 'blind', duration: 'fast' });
+                    this.bsSearch.val(filterString);
+                }
+            }.bind(this));
 
-            $(document).on('removeFilterMethods.Narrative',
-                $.proxy(function() {
-                    this.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
-                    this.$searchInput.val('');
-                    this.$searchInput.trigger('input');
-                }, this)
-            );
+            $(document).on('removeFilterMethods.Narrative', function() {
+                this.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
+                this.bsSearch.val('');
+            }.bind(this));
 
             /* 'request' should be expected to be an object like this:
              * {
@@ -279,20 +253,20 @@ define([
                 .click(function() {
                     this.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
                     var new_height = this.$methodList.height();
-                    if(this.app_offset){
+                    if (this.app_offset) {
                         new_height = (new_height - 40) + 'px';
-                    }else{
+                    } else {
                         new_height = (new_height + 40) + 'px';
                     }
                     this.$methodList.css('height', new_height);
                     this.app_offset = !this.app_offset;
-                    this.$searchInput.focus();
+                    this.bsSearch.focus();
                 }.bind(this)));
 
             // Refresh button
             this.addButton($('<button>')
                 .addClass('btn btn-xs btn-default')
-                .append('<span class="glyphicon glyphicon-refresh">')
+                .append('<span class="fa fa-refresh">')
                 .tooltip({
                     title: 'Refresh app/method listings',
                     container: 'body',
@@ -750,7 +724,7 @@ define([
 
         refreshPanel: function() {
             var panelStyle = this.currentPanelStyle,
-                filterString = this.$searchInput.val(),
+                filterString = this.bsSearch.val(),
                 appSet = this.renderedApps,
                 self = this,
                 $appPanel = $('<div>');
@@ -795,7 +769,7 @@ define([
 
             var assembleAccordion = function(accordion) {
                 var $body = accordion.body;
-                var $toggle = $('<span class="glyphicon glyphicon-chevron-right">')
+                var $toggle = $('<span class="fa fa-chevron-right">')
                     .css({
                         'padding-right': '3px'
                     });
@@ -810,15 +784,15 @@ define([
                     .append($toggle)
                     .append(accordion.title)
                     .click(function() {
-                        if ($toggle.hasClass('glyphicon-chevron-right')) {
+                        if ($toggle.hasClass('fa-chevron-right')) {
                             $body.slideDown('fast', function() {
-                                $toggle.removeClass('glyphicon-chevron-right')
-                                    .addClass('glyphicon-chevron-down');
+                                $toggle.removeClass('fa-chevron-right')
+                                    .addClass('fa-chevron-down');
                             });
                         } else {
                             $body.slideUp('fast', function() {
-                                $toggle.removeClass('glyphicon-chevron-down')
-                                    .addClass('glyphicon-chevron-right');
+                                $toggle.removeClass('fa-chevron-down')
+                                    .addClass('fa-chevron-right');
                             });
                         }
                     });
@@ -826,12 +800,12 @@ define([
             };
 
             var withCategories = function(a,b) {
-              var catA = (Categories.categories[a] || a).toLowerCase();
-              var catB = (Categories.categories[b] || b).toLowerCase();
-                   if (catA < catB) { return -1}
-              else if (catA > catB) { return  1}
-              else                  { return  0}
-            }
+                var catA = (Categories.categories[a] || a).toLowerCase();
+                var catB = (Categories.categories[b] || b).toLowerCase();
+                if (catA < catB) { return -1; }
+                else if (catA > catB) { return  1; }
+                else                  { return  0; }
+            };
 
             var buildAccordionPanel = function(style) {
                 /* first, get elements in order like this:
@@ -846,7 +820,7 @@ define([
                     accordionList.push(buildSingleAccordion(cat, categorySet[cat]));
                 });
                 if (categorySet.favorites) {
-                    accordionList.unshift(buildSingleAccordion('my favorites', categorySet.favorites));
+                    accordionList.unshift(buildSingleAccordion('My Favorites', categorySet.favorites));
                 }
                 accordionList.forEach(function(accordion) {
                     $appPanel.append(assembleAccordion(accordion));

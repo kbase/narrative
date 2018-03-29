@@ -16,7 +16,6 @@ define([
     'bootstrap',
     'bootstrap-slider',
     'tipsy',
-    'jquery-dataTables-bootstrap',
   ],
   function (
     KBWidget,

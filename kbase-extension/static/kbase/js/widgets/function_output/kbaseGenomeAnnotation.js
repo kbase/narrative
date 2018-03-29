@@ -26,7 +26,6 @@ define (
         'bluebird',
 
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap',
 
         'kbase-client-api',
         'kbaseTable',
@@ -51,7 +50,6 @@ define (
         Promise,
 
         jquery_dataTables,
-        bootstrap,
 
         kbase_client_api,
         kbaseTable,

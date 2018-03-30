@@ -17,8 +17,11 @@ define([
     'narrativeConfig',
     'util/display',
     'util/bootstrapDialog',
+    'util/bootstrapSearch',
     'util/icon',
     'text!kbase/templates/beta_warning_body.html',
+    'yaml!ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml',
+    //'yaml!kbase/config/categories.yml',
     'kbaseAccordion',
     'kbaseNarrativeControlPanel',
     'base/js/namespace',
@@ -27,6 +30,7 @@ define([
     'narrative_core/catalog/kbaseCatalogBrowser',
     'kbase/js/widgets/narrative_core/kbaseAppCard',
     'util/bootstrapAlert',
+    'common/runtime',
     'kbaseNarrative',
     'catalog-client-api',
     'kbase-client-api',
@@ -39,8 +43,10 @@ define([
     Config,
     DisplayUtil,
     BootstrapDialog,
+    BootstrapSearch,
     Icon,
     BetaWarningTemplate,
+    Categories,
     kbaseAccordion,
     kbaseNarrativeControlPanel,
     Jupyter,
@@ -48,7 +54,8 @@ define([
     Uuid,
     KBaseCatalogBrowser,
     kbaseAppCard,
-    BootstrapAlert
+    BootstrapAlert,
+    Runtime
 ) {
     'use strict';
     return KBWidget({
@@ -87,22 +94,7 @@ define([
 
             this.icon_colors = Config.get('icons').colors;
 
-            this.$searchDiv = $('<div>')
-                .addClass('input-group')
-                .css({ 'margin-bottom': '3px' })
-                .hide();
-
-            this.$searchInput = $('<input type="text">')
-                .addClass('form-control')
-                .attr('Placeholder', 'Search apps')
-                .on('input', function() {
-                    self.refreshPanel(this);
-                })
-                .on('keyup', function(e) {
-                    if (e.keyCode === 27) {
-                        self.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
-                    }
-                });
+            this.$searchDiv = $('<div>').hide();
 
             this.$numHiddenSpan = $('<span>0</span>');
             this.$showHideSpan = $('<span>show</span>');
@@ -119,20 +111,6 @@ define([
                     this.$showHideSpan.text(curText === 'show' ? 'hide' : 'show');
                 }, this));
 
-            var $clearSearchBtn = $('<span>')
-                .addClass('input-group-addon btn btn-default kb-method-search-clear')
-                .attr('type', 'button')
-                .append($('<span class="glyphicon glyphicon-remove">'))
-                .click(
-                    $.proxy(function() {
-                        this.$searchInput.val('');
-                        this.$searchInput.trigger('input');
-                    }, this)
-                );
-
-            this.$searchDiv.append(this.$searchInput)
-                .append($clearSearchBtn);
-
             // placeholder for apps and methods once they're loaded.
             this.$methodList = $('<div>')
                 .css({
@@ -148,6 +126,13 @@ define([
                     .append(this.$searchDiv)
                     .append(this.$toggleHiddenDiv))
                 .append(this.$methodList);
+
+            this.bsSearch = new BootstrapSearch(this.$searchDiv, {
+                inputFunction: function(e) {
+                    self.refreshPanel(this);
+                },
+                placeholder: 'Search apps'
+            });
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
@@ -170,23 +155,17 @@ define([
                 .append(this.$loadingPanel)
                 .append(this.$errorPanel));
 
-            $(document).on('filterMethods.Narrative',
-                $.proxy(function(e, filterString) {
-                    if (filterString) {
-                        this.$searchDiv.show({ effect: 'blind', duration: 'fast' });
-                        this.$searchInput.val(filterString);
-                        this.$searchInput.trigger('input');
-                    }
-                }, this)
-            );
+            $(document).on('filterMethods.Narrative', function(e, filterString) {
+                if (filterString) {
+                    this.$searchDiv.show({ effect: 'blind', duration: 'fast' });
+                    this.bsSearch.val(filterString);
+                }
+            }.bind(this));
 
-            $(document).on('removeFilterMethods.Narrative',
-                $.proxy(function() {
-                    this.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
-                    this.$searchInput.val('');
-                    this.$searchInput.trigger('input');
-                }, this)
-            );
+            $(document).on('removeFilterMethods.Narrative', function() {
+                this.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
+                this.bsSearch.val('');
+            }.bind(this));
 
             /* 'request' should be expected to be an object like this:
              * {
@@ -274,20 +253,20 @@ define([
                 .click(function() {
                     this.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
                     var new_height = this.$methodList.height();
-                    if(this.app_offset){
+                    if (this.app_offset) {
                         new_height = (new_height - 40) + 'px';
-                    }else{
+                    } else {
                         new_height = (new_height + 40) + 'px';
                     }
                     this.$methodList.css('height', new_height);
                     this.app_offset = !this.app_offset;
-                    this.$searchInput.focus();
+                    this.bsSearch.focus();
                 }.bind(this)));
 
             // Refresh button
             this.addButton($('<button>')
                 .addClass('btn btn-xs btn-default')
-                .append('<span class="glyphicon glyphicon-refresh">')
+                .append('<span class="fa fa-refresh">')
                 .tooltip({
                     title: 'Refresh app/method listings',
                     container: 'body',
@@ -420,7 +399,7 @@ define([
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-            this.catalog = new Catalog(this.options.catalogURL, {token: Jupyter.narrative.authToken});
+            this.catalog = new Catalog(this.options.catalogURL, {token: Runtime.make().authToken()});
             this.refreshFromService();
             return this;
         },
@@ -671,10 +650,19 @@ define([
         },
 
         categorizeApps: function(style, appSet) {
+
+            // previously, categories had the first letter of each word uppercased as part of display.
+            // now they're uppercased while the cats are built, to map similar cats to the same keyed
+            // display name (e.g. "metabolic_modeling" and "metabolic modeling" both go to "Metabolic Modeling")
+            // but 'uncategorized' is a hardwired special case. I opted to break it out into a constant defined
+            // here instead of use an upper case string as the key throughout later on.
+            var UNCATEGORIZED = 'Uncategorized';
+
             var allCategories = {
-                favorites: [],
-                uncategorized: []
+                favorites: []
             };
+            allCategories[UNCATEGORIZED] = [];  //my kingdom for es6 syntax
+
             Object.keys(appSet).forEach(function(appId) {
                 var categoryList = [];
                 switch (style) {
@@ -698,9 +686,14 @@ define([
                     break;
                 }
                 if (categoryList.length === 0) {
-                    allCategories.uncategorized.push(appId);
+                    allCategories[UNCATEGORIZED].push(appId);
                 }
                 categoryList.forEach(function(cat) {
+                    cat = Categories.categories[cat] || cat;
+                    cat = cat.replace('_', ' ')
+                        .replace(/\w\S*/g, function(txt) {
+                            return txt.charAt(0).toUpperCase() + txt.substr(1);
+                        });
                     if (!allCategories[cat]) {
                         allCategories[cat] = [];
                     }
@@ -723,15 +716,15 @@ define([
             if (allCategories.favorites.length === 0) {
                 delete allCategories['favorites'];
             }
-            if (allCategories.uncategorized.length === 0) {
-                delete allCategories['uncategorized'];
+            if (allCategories[UNCATEGORIZED].length === 0) {
+                delete allCategories[UNCATEGORIZED];
             }
             return allCategories;
         },
 
         refreshPanel: function() {
             var panelStyle = this.currentPanelStyle,
-                filterString = this.$searchInput.val(),
+                filterString = this.bsSearch.val(),
                 appSet = this.renderedApps,
                 self = this,
                 $appPanel = $('<div>');
@@ -767,19 +760,16 @@ define([
                 appList.forEach(function(appId) {
                     $accordionBody.append(self.buildAppItem(appSet[appId]));
                 });
-                var categoryTitle = category.replace('_', ' ')
-                    .replace(/\w\S*/g, function(txt) {
-                        return txt.charAt(0).toUpperCase() + txt.substr(1);
-                    });
+
                 return {
-                    title: categoryTitle + ' <span class="label label-info pull-right" style="padding-top:0.4em">' + appList.length + '</span>',
+                    title: category + ' <span class="label label-info pull-right" style="padding-top:0.4em">' + appList.length + '</span>',
                     body: $accordionBody
                 };
             };
 
             var assembleAccordion = function(accordion) {
                 var $body = accordion.body;
-                var $toggle = $('<span class="glyphicon glyphicon-chevron-right">')
+                var $toggle = $('<span class="fa fa-chevron-right">')
                     .css({
                         'padding-right': '3px'
                     });
@@ -794,19 +784,27 @@ define([
                     .append($toggle)
                     .append(accordion.title)
                     .click(function() {
-                        if ($toggle.hasClass('glyphicon-chevron-right')) {
+                        if ($toggle.hasClass('fa-chevron-right')) {
                             $body.slideDown('fast', function() {
-                                $toggle.removeClass('glyphicon-chevron-right')
-                                    .addClass('glyphicon-chevron-down');
+                                $toggle.removeClass('fa-chevron-right')
+                                    .addClass('fa-chevron-down');
                             });
                         } else {
                             $body.slideUp('fast', function() {
-                                $toggle.removeClass('glyphicon-chevron-down')
-                                    .addClass('glyphicon-chevron-right');
+                                $toggle.removeClass('fa-chevron-down')
+                                    .addClass('fa-chevron-right');
                             });
                         }
                     });
                 return $('<div>').append($header).append($body.hide());
+            };
+
+            var withCategories = function(a,b) {
+                var catA = (Categories.categories[a] || a).toLowerCase();
+                var catB = (Categories.categories[b] || b).toLowerCase();
+                if (catA < catB) { return -1; }
+                else if (catA > catB) { return  1; }
+                else                  { return  0; }
             };
 
             var buildAccordionPanel = function(style) {
@@ -815,14 +813,14 @@ define([
                  */
                 var categorySet = self.categorizeApps(style, appSet);
                 var accordionList = [];
-                Object.keys(categorySet).sort().forEach(function(cat) {
+                Object.keys(categorySet).sort(withCategories).forEach(function(cat) {
                     if (cat === 'favorites') {
                         return;
                     }
                     accordionList.push(buildSingleAccordion(cat, categorySet[cat]));
                 });
                 if (categorySet.favorites) {
-                    accordionList.unshift(buildSingleAccordion('my favorites', categorySet.favorites));
+                    accordionList.unshift(buildSingleAccordion('My Favorites', categorySet.favorites));
                 }
                 accordionList.forEach(function(accordion) {
                     $appPanel.append(assembleAccordion(accordion));
@@ -923,11 +921,11 @@ define([
         buildAppItem: function(app) {
             /**
              app.info:
-                authors:["rsutormin"], categories:["annotation"], icon:{url:}, id: str, 
-                input_types: ['KbaseGenomeAnnotations.Assembly'], module_name: str, 
+                authors:["rsutormin"], categories:["annotation"], icon:{url:}, id: str,
+                input_types: ['KbaseGenomeAnnotations.Assembly'], module_name: str,
                 name: str, namespace: str, output_types:["KBaseGenomes.Genome"],
                 subtitle: str, tooltip: str, ver: str
-             * 
+             *
             */
             var self = this;
 
@@ -951,7 +949,7 @@ define([
                         .append('more...')
                         .attr('target', '_blank')
                         .attr('href', moreLink)));
-  
+
             var $card = kbaseAppCard.apply(this, [
                 {
                     createdBy:false,

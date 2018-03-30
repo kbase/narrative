@@ -81,6 +81,7 @@ define([
 
     KBaseNarrativePrestart.loadDomEvents();
     KBaseNarrativePrestart.loadGlobals();
+    KBaseNarrativePrestart.loadJupyterEvents();
 
     /**
      * @constructor
@@ -136,6 +137,7 @@ define([
         this.cachedUserIds = {};
         this.workspaceRef = null;
         this.workspaceId = null;
+        this.workspaceInfo = {};
         this.sidePanel = null;
 
         // The set of currently instantiated KBase Widgets.
@@ -143,11 +145,25 @@ define([
         this.kbaseWidgets = {};
 
         this.loadingWidget = new LoadingWidget({
-            node: document.querySelector('#kb-loading-blocker')
+            node: document.querySelector('#kb-loading-blocker'),
+            timeout: 20000
         });
 
         //Jupyter.keyboard_manager.disable();
         return this;
+    };
+
+    Narrative.prototype.isLoaded = function () {
+        return Jupyter.notebook._fully_loaded;
+    };
+
+    Narrative.prototype.uiModeIs = function (testMode) {
+        var uiMode = Jupyter.notebook.writable ? 'edit' : 'view';
+        return testMode.toLowerCase() === uiMode;
+    };
+
+    Narrative.prototype.getAuthToken = function () {
+        return NarrativeLogin.getAuthToken();
     };
 
     /**
@@ -356,7 +372,7 @@ define([
                 self.documentVersionInfo = docInfo;
             }
             else {
-                var workspace = new Workspace(Config.url('workspace'), {token: self.authToken});
+                var workspace = new Workspace(Config.url('workspace'), {token: self.getAuthToken()});
                 Promise.resolve(workspace.get_object_info_new({
                     'objects': [{'ref': self.workspaceRef}],
                     'includeMetadata': 1
@@ -515,14 +531,16 @@ define([
             .addClass('table table-striped table-bordered');
         $.each(urlList,
             function (idx, val) {
-                var url = Config.url(val).toString();
+                var url = Config.url(val);
                 // if url looks like a url (starts with http), include it.
                 // ignore job proxy and submit ticket
                 if (val === 'narrative_job_proxy' ||
                     val === 'submit_jira_ticket' ||
-                    val === 'narrative_method_store_types') {
+                    val === 'narrative_method_store_types' ||
+                    url === null) {
                     return;
                 }
+                url = url.toString();
                 if (url && url.toLowerCase().indexOf('http') === 0) {
                     $versionTable.append($('<tr>')
                         .append($('<td>').append(val))
@@ -661,7 +679,7 @@ define([
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0, 0);
 
-        this.authToken = NarrativeLogin.sessionInfo.token;
+        this.authToken = NarrativeLogin.getAuthToken();
         this.userId = NarrativeLogin.sessionInfo.user;
 
         Jupyter.narrative.patchKeyboardMapping();
@@ -690,6 +708,7 @@ define([
 
         $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
             this.loadingWidget.updateProgress('narrative', true);
+            $('#notification_area').find('div#notification_trusted').hide();
             var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
             if (wsInfo && wsInfo.length === 3) {
                 this.workspaceRef = wsInfo[1] + '/' + wsInfo[2];
@@ -706,10 +725,10 @@ define([
 
             // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
             this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
-
             this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
                 ws_id: this.getWorkspaceName()
             });
+
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
             KBaseCellToolbar.register(Jupyter.notebook);
@@ -740,6 +759,7 @@ define([
                 .finally(function () {
                     this.sidePanel.render();
                 }.bind(this));
+
             $([Jupyter.events]).trigger('loaded.Narrative');
             $([Jupyter.events]).on('kernel_ready.Kernel',
                 function () {

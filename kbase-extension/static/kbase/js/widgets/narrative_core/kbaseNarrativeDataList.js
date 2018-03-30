@@ -26,6 +26,7 @@ define([
     'text!kbase/templates/data_list/object_row.html',
     'kb_service/utils',
     'util/bootstrapAlert',
+    'util/bootstrapSearch',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
     'bootstrap',
     'jquery-nearest'
@@ -49,6 +50,7 @@ define([
     ObjectRowHtml,
     ServiceUtils,
     BootstrapAlert,
+    BootstrapSearch,
     kbaseDataCard
 ) {
     'use strict';
@@ -74,7 +76,6 @@ define([
         maxWsObjId: null,
         n_objs_rendered: 0,
         real_name_lookup: {},
-        $searchInput: null,
         $filterTypeSelect: null,
         availableTypes: {},
         $searchDiv: null,
@@ -1410,8 +1411,21 @@ define([
                 .on('click', function () {
                     self.reverseData();
                     self.sortOrder *= -1;
-                    $upOrDown.find('.fa').toggleClass('fa-sort-amount-desc fa-sort-amount-asc');
+                    var $icon = $upOrDown.find('.fa');
+                    if ($icon.is('.fa-sort-amount-desc,.fa-sort-amount-asc')) {
+                        $icon.toggleClass('fa-sort-amount-desc fa-sort-amount-asc');
+                    }
+                    else {
+                        $icon.toggleClass('fa-sort-alpha-desc fa-sort-alpha-asc');
+                    }
                 });
+
+            var setSortIcon = function(newIcon) {
+                $upOrDown
+                    .find('.fa')
+                    .removeClass()
+                    .addClass('fa ' + newIcon);
+            }
 
             var $byDate = $('<label id="nar-data-list-default-sort-label" class="btn btn-default">').addClass('btn btn-default')
                 .append($('<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'))
@@ -1421,6 +1435,7 @@ define([
                         return self.sortOrder * self.dataObjects[a.objId].info[3]
                             .localeCompare(self.dataObjects[b.objId].info[3]);
                     });
+                    setSortIcon(self.sortOrder > 0 ? 'fa-sort-amount-desc' : 'fa-sort-amount-asc');
                 });
 
             var $byName = $('<label class="btn btn-default">')
@@ -1431,6 +1446,7 @@ define([
                         return -1 * self.sortOrder * self.dataObjects[a.objId].info[1].toUpperCase()
                             .localeCompare(self.dataObjects[b.objId].info[1].toUpperCase());
                     });
+                    setSortIcon(self.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
                 });
 
             var $byType = $('<label class="btn btn-default">')
@@ -1442,6 +1458,7 @@ define([
                         var bType = self.dataObjects[b.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
                         return -1 * self.sortOrder * aType.localeCompare(bType);
                     });
+                    setSortIcon(self.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
                 });
 
 
@@ -1482,7 +1499,7 @@ define([
                     self.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
                     self.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
                     self.$searchDiv.show({ effect: 'blind', duration: 'fast' });
-                    self.$searchInput.focus();
+                    self.bsSearch.focus();
                 } else {
                     self.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
                 }
@@ -1561,42 +1578,18 @@ define([
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
-                .append('<span class="glyphicon glyphicon-refresh"></span>')
+                .append('<span class="fa fa-refresh"></span>')
                 .on('click', function () {
                     this.writingLock = false;
                     self.refresh();
                 });
-            self.$searchInput = $('<input type="text">')
-                .attr('Placeholder', 'Search in your data')
-                .addClass('form-control')
-                .on('focus', function () {
-                    if (Jupyter && Jupyter.narrative) {
-                        Jupyter.narrative.disableKeyboardManager();
-                    }
-                })
-                .on('blur', function () {
-                    if (Jupyter && Jupyter.narrative) {
-                        Jupyter.narrative.enableKeyboardManager();
-                    }
-                })
-                .on('input change blur', function () {
-                    this.search();
-                }.bind(this))
-                .on('keyup', function (e) {
-                    if (e.keyCode === 27) {
-                        this.search();
-                    }
-                }.bind(this));
-
-            self.$searchDiv = $('<div>').addClass('input-group').css({ 'margin-bottom': '10px' })
-                .append(self.$searchInput)
-                .append($('<span>').addClass('input-group-addon')
-                    .append($('<span>')
-                        .addClass('glyphicon glyphicon-search')
-                        .css({ 'cursor': 'pointer' })
-                        .on('click', function () {
-                            self.search();
-                        })));
+            self.$searchDiv = $('<div>');
+            self.bsSearch = new BootstrapSearch(self.$searchDiv, {
+                inputFunction: function() {
+                    self.search();
+                },
+                placeholder: 'Search in your data'
+            });
 
             self.$sortByDiv = $('<div>').css('text-align', 'center')
                 .append('<small>sort by: </small>')
@@ -1697,8 +1690,8 @@ define([
                 return;
             }
 
-            if (!term && this.$searchInput) {
-                term = this.$searchInput.val();
+            if (!term) {
+                term = this.bsSearch.val();
             }
 
             // if type wasn't selected, then we try to get something that was set

@@ -12,7 +12,6 @@
         'jquery',
         'd3',
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap',
         'kbaseExpressionConditionsetBaseWidget'
     ], function(
         KBWidget,
@@ -20,7 +19,6 @@
         $,
         d3,
         jquery_dataTables,
-        bootstrap,
         kbaseExpressionConditionsetBaseWidget
     ) {
     return KBWidget({
@@ -48,7 +46,7 @@
 
 
             var conditions = [];
-            if(self.options.conditionIds) { 
+            if(self.options.conditionIds) {
                 if ($.type(self.options.conditionIds) === "array") {
                     conditions = self.options.conditionIds;
                 } else {
@@ -64,7 +62,7 @@
                 fl_values: 1
             };
         },
-        
+
         $tableDiv: null,
 
 
@@ -117,13 +115,13 @@
             var $btn = $('<button>').addClass('btn btn-default btn-sm').append('Update')
                         .on('click', function() {
                             var min = parseFloat($minInput.val());
-                            if(min && !isNaN(min)) { 
+                            if(min && !isNaN(min)) {
                                 self.minColorValue = min;
                             }
                             $minInput.val(self.minColorValue);
                             var max = parseFloat($maxInput.val());
                             if(max && !isNaN(max)) {
-                                self.maxColorValue = max; 
+                                self.maxColorValue = max;
                             }
                             $maxInput.val(self.maxColorValue);
                             self.redrawTable();
@@ -189,13 +187,13 @@
                     "sDom": 'lftip',
                     "iDisplayLength": 10,
                     "scrollX": true,
-                    "aaData": self.buildFeaturesTableData(),                  
+                    "aaData": self.buildFeaturesTableData(),
                     "aoColumns": [
                         { sTitle: "Feature ID", mData:"id"},
                         { sTitle: "Function", mData:"function"},
                         { sTitle: "Min", mData:"min"},
                         { sTitle: "Max", mData:"max"},
-                        { sTitle: "Average", mData:"avg"},                            
+                        { sTitle: "Average", mData:"avg"},
                         { sTitle: "Std. Dev.", mData:"std"},
                         { sTitle: "Expression Values", mData: "values",
                             mRender: function ( values ) {
@@ -205,7 +203,7 @@
                                     var heatCell = $('<div/>')
                                         .addClass('heat_cell')
                                         .css('background',self.colorGenerator(values[i]))
-                                        .attr('title', 
+                                        .attr('title',
                                             'Condition: ' + self.submatrixStat.column_descriptors[i].id
                                              + '\n' + 'Value: ' + values[i].toFixed(2)
                                         );
@@ -215,7 +213,7 @@
                             }
                         }
                     ]
-                } ); 
+                } );
         },
         buildFeaturesTableData: function(){
             var tableData = [];
@@ -261,7 +259,7 @@
             self.colorGenerator = d3.scale.linear()
                 .domain([min,(max+min)/2, max])
                 .range(['#FFA500', '#FFFFFF', '#0066AA']);
-            self.colorGenerator.clamp(true);       
+            self.colorGenerator.clamp(true);
         }
 
     });

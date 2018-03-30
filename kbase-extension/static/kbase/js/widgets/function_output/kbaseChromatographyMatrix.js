@@ -5,16 +5,14 @@ define (
 		'jquery',
 		'kbaseMatrix2DAbstract',
 		'kbaseTabs',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseMatrix2DAbstract,
 		kbaseTabs,
-		jquery_dataTables,
-		bootstrap
+		jquery_dataTables
 	) {
     return KBWidget({
         name: 'kbaseChromatographyMatrix',
@@ -179,6 +177,3 @@ define (
 
     });
 });
-
-
-

@@ -22,10 +22,18 @@ define([
 
         init: function(options) {
             this._super(options);
-            this.path = '/' + Jupyter.narrative.userId;
+            this.path = '/';
 
             this.render();
             return this;
+        },
+
+        activate : function() {
+          this.stagingAreaViewer.activate();
+        },
+
+        deactivate : function() {
+          this.stagingAreaViewer.deactivate();
         },
 
         updatePath: function(newPath) {
@@ -35,11 +43,6 @@ define([
         },
 
         render: function() {
-            var $newWarning = $('<div>')
-                .addClass('alert alert-warning')
-                .css({'margin-bottom': '0'})
-                .append($('<b>').append('NOTE: '))
-                .append('This new import interface will replace the old (deprecated) import interface in early 2018.');
             var $mainElem = $('<div>')
                 .css({
                     'height': '604px',
@@ -49,7 +52,6 @@ define([
             var $dropzoneElem = $('<div>');
             this.$elem
                 .empty()
-                .append($newWarning)
                 .append($mainElem
                     .append($dropzoneElem)
                     .append(this.$myFiles));

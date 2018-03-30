@@ -10,11 +10,8 @@ import unittest
 import SocketServer
 from biokbase.narrative.common import util
 from biokbase.workspace.client import Workspace
-import biokbase.auth
 import os
-from getpass import getpass
 import json
-import time
 import ConfigParser
 
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>, Bill Riehl <wjriehl@lbl.gov>'
@@ -90,7 +87,7 @@ def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):
     If nothing is found, an empty Dict is returned.
     """
     ws_client = Workspace(url=url, token=auth_token)
-    nar_data = ws_client.get_objects([{'ref':nar_id}])
+    nar_data = ws_client.get_objects([{'ref': nar_id}])
     if len(nar_data) > 0:
         nar_json = json.dumps(nar_data[0])
         if file_name is not None:
@@ -148,7 +145,7 @@ def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False)
                                        'objects': [ws_save_obj]})
 
     # tweak the workspace's metadata to properly present its narrative
-    ws_client.alter_workspace_metadata({'wsi': {'id': ws_id}, 'new':{'narrative':obj_info[0][0]}})
+    ws_client.alter_workspace_metadata({'wsi': {'id': ws_id}, 'new': {'narrative': obj_info[0][0]}})
     return {
         'ws': ws_info[0],
         'obj': obj_info[0][0],
@@ -202,11 +199,11 @@ class MyTestCase(unittest.TestCase):
             self.assertEqual(text, rtext, "Text '{}' does not match "
                                           "result '{}' "
                                           "from input '{}'".format(
-                text, rtext, input))
+                                            text, rtext, input))
             self.assertEqual(text, rtext, "Dict '{}' does not match "
                                           "result '{}' "
                                           "from input '{}'".format(
-                kvp, rkvp, input))
+                                            kvp, rkvp, input))
 
 
 class SocketServerBuf(SocketServer.TCPServer):
@@ -234,39 +231,51 @@ def recvall(socket, n, timeout=0):
         if b:
             buf += b
             m += len(b)
-            #print("@@ recv {}".format(len(b)))
+            # print("@@ recv {}".format(len(b)))
         else:
             time.sleep(0.1)
-            #print("@@ recv 0/{}".format(n - m))
+            # print("@@ recv 0/{}".format(n - m))
     return buf
 
-class MessageBufferer(SocketServer.BaseRequestHandler):
+
+class LogProxyMessageBufferer(SocketServer.BaseRequestHandler):
     def handle(self):
         self.request.settimeout(1)
         while 1:
             try:
                 hdr = self.request.recv(4)
-            except Exception as err:
+            except Exception:
                 return
             if not hdr:
                 return
             size = struct.unpack('>L', hdr)[0]
-            #print("@@ body {}".format(size))
+            #  print("@@ body {}".format(size))
             if size < 65536:
                 chunk = recvall(self.request, size, timeout=1)
                 record = pickle.loads(chunk)
-                #print("@@ message <{}>".format(record['message']))
+                # print("@@ message <{}>".format(record['message']))
                 self.server.buf += record['message']
 
 
-def start_tcp_server(host, port, poll_interval):
+class NarrativeMessageBufferer(SocketServer.StreamRequestHandler):
+    def handle(self):
+        # self.rfile is a file-like object created by the handler;
+        # we can now use e.g. readline() instead of raw recv() calls
+        self.data = self.rfile.readline().strip()
+        print "{} wrote:".format(self.client_address[0])
+        print self.data
+        self.server.buf += self.data
+
+
+def start_tcp_server(host, port, poll_interval, bufferer=LogProxyMessageBufferer):
     _log.info("Starting server on {}:{}".format(host, port))
-    server = SocketServerBuf((host, port), MessageBufferer)
+    server = SocketServerBuf((host, port), bufferer)
     thr = threading.Thread(target=server.serve_forever,
                            args=[poll_interval])
     thr.daemon = True
     thr.start()
     return server, thr
+
 
 def stop_tcp_server(server, thr):
     _log.info("Stopping server")

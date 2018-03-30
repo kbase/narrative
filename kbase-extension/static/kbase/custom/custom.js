@@ -110,7 +110,6 @@ define([
     'common/utils',
     'common/jupyter',
     'kb_common/html',
-    'narrativeConfig',
 
     'components/requirejs/require',
     'narrative_paths'
@@ -132,93 +131,12 @@ define([
     cell,
     utils,
     NarrativeRuntime,
-    html,
-    narrativeConfig
+    html
 ) {
     'use strict';
 
     var t = html.tag,
         span = t('span');
-
-    // GLOBAL EVENTS AND OVERRIDES
-
-    // inject necessary environment vars into the kernel as soon as it's ready.
-    $([Jupyter.events]).on('kernel_ready.Kernel', function () {
-        Jupyter.notebook.kernel.execute(
-            'import os;' +
-            'os.environ["KB_AUTH_TOKEN"]="' + Jupyter.narrative.authToken + '";' +
-            'os.environ["KB_WORKSPACE_ID"]="' + Jupyter.notebook.metadata.ws_name + '"'
-        );
-    });
-
-    // Kickstart the Narrative loading routine once the notebook is loaded.
-    $([Jupyter.events]).on('app_initialized.NotebookApp', function () {
-        require(['kbaseNarrative'], function (Narrative) {
-
-            Jupyter.narrative = new Narrative();
-            Jupyter.narrative.init();
-
-            /*
-             * Override the move-cursor-down-or-next-cell and
-             * move-cursor-up-or-previous-cell actions.
-             *
-             * When editing a textcell (markdown or code), if a user uses
-             * the arrow keys to move to another cell, it normally lands
-             * there in edit mode.
-             *
-             * This is bad for KBase-ified markdown cells, since it shows
-             * the div and script tags that are used to render them, and
-             * screws up the state management. These overrides just
-             * check if the next cell is a KBase cell, and doesn't enable
-             * edit mode if so.
-             */
-            Jupyter.keyboard_manager.actions.register({
-                    handler: function (env, event) {
-                        var index = env.notebook.get_selected_index();
-                        var cell = env.notebook.get_cell(index);
-                        if (cell.at_bottom() && index !== (env.notebook.ncells() - 1)) {
-                            if (event) {
-                                event.preventDefault();
-                            }
-                            env.notebook.command_mode();
-                            env.notebook.select_next(true);
-                            if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
-                                env.notebook.edit_mode();
-                                var cm = env.notebook.get_selected_cell().code_mirror;
-                                cm.setCursor(0, 0);
-                            }
-                        }
-                        return false;
-                    }
-                },
-                'move-cursor-down',
-                'jupyter-notebook');
-
-            Jupyter.keyboard_manager.actions.register({
-                    handler: function (env, event) {
-                        var index = env.notebook.get_selected_index(),
-                            cell = env.notebook.get_cell(index),
-                            cm = env.notebook.get_selected_cell().code_mirror,
-                            cur = cm.getCursor();
-                        if (cell && cell.at_top() && index !== 0 && cur.ch === 0) {
-                            if (event) {
-                                event.preventDefault();
-                            }
-                            env.notebook.command_mode();
-                            env.notebook.select_prev(true);
-                            if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
-                                env.notebook.edit_mode();
-                                cm = env.notebook.get_selected_cell().code_mirror;
-                                cm.setCursor(cm.lastLine(), 0);
-                            }
-                        }
-                        return false;
-                    }
-                },
-                'move-cursor-up',
-                'jupyter-notebook');
-        });
-    });
 
     /*
      * We override this method because jupyter uses .height() rather than
@@ -238,15 +156,23 @@ define([
 
     // Patch the security mechanisms to allow any JavaScript to run for now.
     // TODO: update this so only the few KBase commands run.
-    security.sanitize_html = function (html, allow_css) {
-        return html;
-    };
-    security.sanitize_css = function (css, tagPolicy) {
-        return css;
-    };
-    security.sanitize_stylesheets = function (html, tagPolicy) {
-        return html;
-    };
+
+    // 3/19/2018 - removing this now as nobody is really using any ancient narratives that depend
+    // on embedding code in markdown cells. At least, they shouldn't be.
+
+    // security.sanitize_html = function (html, allow_css) {
+    //     return html;
+    // };
+    // security.sanitize_css = function (css, tagPolicy) {
+    //     return css;
+    // };
+    // security.sanitize_stylesheets = function (html, tagPolicy) {
+    //     return html;
+    // };
+
+    // Make the favicon change a no-op for now. They use lots of hard-coded paths to
+    // Jupyter icons, so it's hard to change branding...
+    nbUtils.change_favicon = function() {};
 
     // TODO: refactor
     function cellType(cell) {
@@ -448,22 +374,6 @@ define([
 
             var cell = this,
                 $cellNode = $(this.element);
-
-            // why here in rawcell
-            // this.element.dblclick(function() {
-            //     var cont = cell.unrender();
-            //     if (cont) {
-            //         cell.focus_editor();
-            //     }
-            // });
-
-            // /*
-            //  * This is the trick to get the markdown to render, and the edit area
-            //  * to disappear, when the user clicks out of the edit area.
-            //  */
-            // this.code_mirror.on('blur', function() {
-            //     cell.render();
-            // });
 
             /*
              * The cell toolbar buttons area knows how to set the title and
@@ -760,15 +670,6 @@ define([
             mode: 'ipythongfm'
         },
         placeholder: '_Markdown_/LaTeX cell - double click here to edit, click out of the edit area to preview.'
-            // "Type _Markdown_ and LaTeX: $\\alpha^2$" +
-            //     "<!-- " +
-            //     "The above text is Markdown and LaTeX markup.\n" +
-            //     "It is provided as a quick sample of what you can do in a Markdown cell.\n" +
-            //     "Markdown cells are marked with the paragraph icon.\n" +
-            //     "This is a comment, so it does not appear when rendered.\n" +
-            //     "Also note that the first item in the cell or the first first-level" +
-            //     "header will appear as the cell title." +
-            //     "-->"
     };
 
     // KEYBOARD MANAGER
@@ -823,12 +724,6 @@ define([
             var inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper');
 
-            // if (!inputArea.classList.contains('-show')) {
-            //     inputArea.classList.add('-show');
-            // }
-            // if (this.code_mirror) {
-            //     this.code_mirror.refresh();
-            // }
             outputArea.removeClass('hidden');
         };
 
@@ -940,23 +835,6 @@ define([
         };
     }());
 
-    /*
-     * NEW:
-     *
-     * Hides and shows code cell components based on the current toggle
-     * state of the cell, as reflected in the cell metadata
-     * (via getCellState).
-     */
-
-    // NOTEBOOK
-
-    notebook.Notebook.prototype.eachCell = function (fun) {
-        var cells = this.get_cells();
-        cells.forEach(function (cell) {
-            fun(cell);
-        });
-    };
-
     // Patch the Notebook to return the right name
     notebook.Notebook.prototype.get_notebook_name = function () {
         if (!this.metadata.name) {
@@ -1065,12 +943,12 @@ define([
         var that = this;
         var dialog_body = $('<div>').append(
             $('<p>').addClass('rename-message')
-            .text(options.message ? options.message : 'Enter a new Narrative name:')
+                .text(options.message ? options.message : 'Enter a new Narrative name:')
         ).append(
             $('<br>')
         ).append(
             $('<input>').attr('type', 'text').attr('size', '25').addClass('form-control')
-            .val(options.notebook.get_notebook_name())
+                .val(options.notebook.get_notebook_name())
         );
         var d = dialog.modal({
             title: 'Rename Narrative',

@@ -30,7 +30,8 @@ require(['./narrative_paths'], function (paths) {
         'bluebird',
         'narrativeConfig',
         'kbase-client-api',
-        'narrativeLogin'
+        'narrativeLogin',
+        'css!font-awesome'
     ], function ($,
         Promise,
         Config,

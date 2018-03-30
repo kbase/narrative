@@ -1,10 +1,6 @@
 {
     "dropdown_order": [
         {
-            "id": "test_fastq_reads",
-            "name": "(TEST) FASTQ Reads"
-        },
-        {
             "id": "fastq_reads",
             "name": "FASTQ Reads"
         },

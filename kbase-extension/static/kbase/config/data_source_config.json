@@ -7,6 +7,12 @@
                 "ws": "ReferenceDataManager",
                 "search": true
             },
+            "fungal_genomes": {
+                "name": "MycoCosm Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Fungal_Genomes",
+                "search": false
+            },
             "phytozome_genomes": {
                 "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
@@ -114,8 +120,14 @@
                 "ws": "KBasePublicGenomesV5",
                 "search": true
             },
-            "plant_genomes": {
-                "name": "Plant Genomes",
+            "fungal_genomes": {
+                "name": "MycoCosm Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Fungal_Genomes",
+                "search": false
+            },
+            "phytozome_genomes": {
+                "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Phytozome_Genomes",
                 "search": false
@@ -209,20 +221,14 @@
                 "ws": "ReferenceDataManager",
                 "search": true
             },
-             "plant_genomes": {
-                "name": "Plant Genomes",
+            "fungal_genomes": {
+                "name": "MycoCosm Genomes",
                 "type": "KBaseGenomes.Genome",
-                "ws": "Phytozome_Genomes",
+                "ws": "Fungal_Genomes",
                 "search": false
             },
-            "media": {
-                "name": "Media",
-                "type": "KBaseBiochem.Media",
-                "ws": "KBaseMedia",
-                "search": false
-            },
-            "plant_genomes": {
-                "name": "Plant Genomes",
+             "phytozome_genomes": {
+                "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Phytozome_Genomes",
                 "search": false
@@ -316,8 +322,14 @@
                 "ws": "ReferenceDataManager",
                 "search": true
             },
-            "plant_genomes": {
-                "name": "Plant Genomes",
+            "fungal_genomes": {
+                "name": "MycoCosm Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Fungal_Genomes",
+                "search": false
+            },
+            "phytozome_genomes": {
+                "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Phytozome_Genomes",
                 "search": false

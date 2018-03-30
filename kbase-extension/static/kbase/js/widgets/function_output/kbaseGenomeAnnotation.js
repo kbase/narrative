@@ -26,7 +26,6 @@ define (
         'bluebird',
 
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap',
 
         'kbase-client-api',
         'kbaseTable',
@@ -35,10 +34,13 @@ define (
         'util/string',
 
         'kbase-generic-client-api',
-        'GenomeAnnotationAPI-client-api',        
-        'AssemblyAPI-client-api',        
+        'GenomeAnnotationAPI-client-api',
+        'AssemblyAPI-client-api',
         'TaxonAPI-client-api',
-        'GenomeSearchUtil-client-api'
+        'GenomeSearchUtil-client-api',
+
+        'igv',
+        'css!ext_components/node_modules/igv.js/igv.css',
 
   ], function(
     KBWidget,
@@ -49,19 +51,19 @@ define (
         Promise,
 
         jquery_dataTables,
-        bootstrap,
 
         kbase_client_api,
         kbaseTable,
         kbaseTabs,
         ContigBrowserPanel,
         StringUtil,
-        
+
         GenericClient,
         GenomeAnnotationAPI_client_api,
         AssemblyAPI_client_api,
         TaxonAPI_client_api,
-        GenomeSearchUtil_client_api
+        GenomeSearchUtil_client_api,
+        igv
 
     ) {
     return KBWidget({
@@ -108,12 +110,12 @@ define (
             self.genomeAPI = new GenomeAnnotationAPI(Config.url('service_wizard'), token);
             self.assemblyAPI = new AssemblyAPI(Config.url('service_wizard'), token);
 
-            
+
             self.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), token);
 
             self.genericClient = new GenericClient(Config.url('service_wizard'), token, null, false);
             self.genericClient.sync_call("ServiceWizard.get_service_status",
-                        [{'module_name': "GenomeSearchUtil", 'version': 'release'}], 
+                        [{'module_name': "GenomeSearchUtil", 'version': 'release'}],
                     function(status){
                         self.genomeSearchAPI = new GenomeSearchUtil(status[0].url, token, null, null, null, null, false);
                     },
@@ -124,8 +126,22 @@ define (
 
 
         tabData : function(genome) {
+
+            /* XXX - The "Genome Browser" is just hardwired to an external URL to vend back a rhodobacter gff & fa file.
+                     So we never ever ever want this to accidentally escape into production, it's strictly a very vague proof
+                     of concept. This wiring ensures the "genome browser", such that it is, is only on CI, even if the widget
+                     goes out by accident. Clean this up when it actually works. */
+
+            var on_ci = Config.config.deploy.environment === 'ci';
+
             var names = ['Overview', 'Browse Features', 'Browse Contigs'];
             var ids = ['overview', 'browse_features', 'browse_contigs'];
+
+            if (on_ci) {
+              names.push('Genome Browser');
+              ids.push('genome_browser');
+            }
+
             return {
                 names : names,
                 ids : ids
@@ -196,7 +212,7 @@ define (
                 }
                 return true;
             };
-            
+
             var $resultDiv = $('<div>');
             var $noResultsDiv = $('<div>').append('<center>No matching features found.</center>').hide();
             var $loadingDiv = $('<div>');
@@ -344,7 +360,7 @@ define (
                             hasOntology = true;
                         }
                     }
-                } 
+                }
                 $tr.append($td);
 
                 var $td = $('<td>');
@@ -364,7 +380,7 @@ define (
                             hasAlias = true;
                         }
                     }
-                } 
+                }
                 $tr.append($td);
 
                 if(rowData['global_location']['contig_id']) {
@@ -441,7 +457,7 @@ define (
                             .css({'margin-left':'auto', 'margin-right':'auto'})
             $resultDiv.append($table);
 
-            
+
             var buildColumnHeader = function(name, id, click_event) {
                 var $sortIcon = $('<i>').css('margin-left','8px');
                 var $th = $('<th>')
@@ -529,12 +545,12 @@ define (
 
                 return { $colgroup:$colgroup, $theader:$tr };
             }
-            
+
             var headers = buildTableHeader()
             $table.append(headers.$colgroup);
             $table.append(headers.$theader);
 
-           
+
             // Ok, do stuff.  First show the loading icon
             setToLoad($loadingDiv);
 
@@ -603,6 +619,55 @@ define (
 
             }
         */
+
+        buildGenomeBrowserView : function(params) {
+          var $div = params['$div'];
+
+          /* XXX - IGV is trivially easy to work with, as is shown here. Note that there is no working dynamic service yet to vend back the fasta / gff files
+             that it requires, so it's just hardwired to an external URL that vends back some rhodobacter info. These URLs should be replaced with some
+             sort of RESTful dynamic service call to get the fasta and GFF files.
+
+             BUT NOTE - As I dug into this further, I also discovered that most of the fasta files that I can pull out of KBase are insanely huge. Like 100+ megs,
+             which causes a minute or so delay before rendering, which is unacceptable. There's gotta be a better way to display this data w/o requiring loading up
+             a gigantic fasta file. Presumably, a properly configured JBrowse with its interim track data would be unaffected by such large files. Maybe if we had
+             fasta indexes it'd help? Maybe we should build a KBase specific genome browser instead? I have no good suggestions right now.
+
+             IGV also wants to do its own fetch of the data, and it'll do a little pre-processing before handing it onwards. Meaning that while we could just load
+             the fasta/gff data directly from a service call, we'd need to re-tool igv a bit to accept direct data instead of loading it itself. I'm leery of a custom
+             fork of external code.
+
+             It will support data:// urls on fasta files (with some preprocessing - it looks like it's gunzipping it), but not gff, as best as I can tell.
+          */
+
+          $div.append("Please note - this isn't a real genome browser, it's just an igv view dropped in and hardwired to a rhodobacter genome. "
+                       + "So any genome shows the same data. It's strictly very minimal proof-of-concept. The Genome Browser tab will only show up on CI.");
+
+          var $igv = $div.append($.jqElem('div'));
+
+          options = {
+              showNavigation: true,
+              showRuler: true,
+              reference: {
+                  id: "rh",
+                  fastaURL : "http://prototypesite.net/rhodo/rhodo.fa",
+                  indexed : false,
+              },
+              tracks: [
+                  {
+                      name: "GFF3",
+                      sourceType: "file",
+                      url: "http://prototypesite.net/rhodo/rhodo.gff3",
+                      displayMode: "EXPANDED",
+                      color : '#00FFFF',
+                      nameField : "ID",
+                  }
+
+              ]
+          };
+
+          browser = igv.createBrowser($igv, options);
+        },
+
         buildContigSearchView: function(params) {
 
             // parse parameters
@@ -641,7 +706,7 @@ define (
                 }
                 return true;
             };
-            
+
             var $resultDiv = $('<div>');
             var $noResultsDiv = $('<div>').append('<center>No matching contigs found.</center>').hide();
             var $loadingDiv = $('<div>');
@@ -790,7 +855,7 @@ define (
                             .css({'margin-left':'auto', 'margin-right':'auto'})
             $resultDiv.append($table);
 
-            
+
             var buildColumnHeader = function(name, id, click_event) {
                 var $sortIcon = $('<i>').css('margin-left','8px');
                 var $th = $('<th>')
@@ -869,12 +934,12 @@ define (
 
                 return { $colgroup:$colgroup, $theader:$tr };
             }
-            
+
             var headers = buildTableHeader()
             $table.append(headers.$colgroup);
             $table.append(headers.$theader);
 
-           
+
             // Ok, do stuff.  First show the loading icon
             setToLoad($loadingDiv);
 
@@ -1075,6 +1140,13 @@ define (
                                 })
                             });
                         }
+                        else if (dataTab === 'Genome Browser') {
+                          aElem.on('click', function() {
+                            self.buildGenomeBrowserView({
+                              $div: $('#' + pref + 'genome_browser')
+                            })
+                          });
+                        }
                     }
 
 
@@ -1093,7 +1165,7 @@ define (
             } else {
                 // get info from metadata
                 self.genomeAPI
-                        .get_genome_v1({ 
+                        .get_genome_v1({
                             genomes: [{
                                 ref: self.genome_ref
                             }],
@@ -1191,7 +1263,7 @@ define (
             var included = ["domain","genetic_code","id","num_features",
                             "scientific_name","source","source_id","taxonomy"];
             self.genomeAPI
-                        .get_genome_v1({ 
+                        .get_genome_v1({
                             genomes: [{
                                 ref: self.genome_ref
                             }],
@@ -1503,7 +1575,7 @@ define (
 
             function printProtein(sequence, charWrap) {
                 var $div = $('<div>').css({'font-family': '"Lucida Console", Monaco, monospace'});
-                
+
                 $div.append($('<span>').css({color:'orange'}).append('Small Nonpolar'));
                 $div.append(' | ');
                 $div.append($('<span>').css({color:'green'}).append('Hyrdrophobic'));
@@ -1537,7 +1609,7 @@ define (
                     Positively charged  K, R    Blue*/
                     var aa = sequence[i];
                     if(aa==='G' || aa==='A' || aa==='S' || aa==='T') color='orange';
-                    if(aa==='C' || aa==='V' || aa==='I' || aa==='L' || aa==='P' || 
+                    if(aa==='C' || aa==='V' || aa==='I' || aa==='L' || aa==='P' ||
                        aa==='F' || aa==='Y' || aa==='M' || aa==='W' ) color='green';
                     if(aa==='N' || aa==='Q' || aa==='H') color='magenta';
                     if(aa==='D' || aa==='E') color='red';
@@ -1555,7 +1627,7 @@ define (
 
             function printDNA(sequence, charWrap) {
                 var $div = $('<div>').css({'font-family': '"Lucida Console", Monaco, monospace'});
-                
+
                 var $posTD = $('<td>').css({'text-align': 'right', 'border':'0', 'color':'#777'});
                 var $seqTD = $('<td>').css({'border':'0', 'color':'#000'});
                 var lines=1;
@@ -1638,7 +1710,7 @@ define (
                     if(isFirst) {
                         $aliases.append('None');
                     }
-                } 
+                }
                 tblData.push($aliases);
 
                 tblLabels.push('Type');
@@ -1666,7 +1738,7 @@ define (
                     if(isFirst) {
                         $ontology_terms.append('None');
                     }
-                } 
+                }
                 tblData.push($ontology_terms);
 
                 tblLabels.push('Location');
@@ -1698,7 +1770,7 @@ define (
                 } else {
                     $loc.append('None');
                 }
-                
+
                 tblData.push($loc);
 
 
@@ -1734,7 +1806,7 @@ define (
 
                 // get sequence and other information
                 self.genomeAPI
-                        .get_genome_v1({ 
+                        .get_genome_v1({
                             genomes: [{
                                 ref: genome_ref,
                                 feature_array: featureData['feature_array'],

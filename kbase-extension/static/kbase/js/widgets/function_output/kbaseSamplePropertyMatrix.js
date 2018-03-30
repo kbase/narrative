@@ -6,8 +6,7 @@ define (
 		'plotly',
 		'kbaseSamplePropertyMatrixAbstract',
 		'kbaseTabs',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -15,8 +14,7 @@ define (
 		Plotly,
 		kbaseSamplePropertyMatrixAbstract,
 		kbaseTabs,
-		jquery_dataTables,
-		bootstrap
+		jquery_dataTables
 	) {
     return KBWidget({
         name: 'kbaseSamplePropertyMatrix',
@@ -129,6 +127,3 @@ define (
         }
     });
 });
-
-
-

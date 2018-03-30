@@ -15,20 +15,15 @@ Distributed unspecified open source license as of 9/27/2013
 
 """
 # System
-import datetime
-import dateutil.parser
 import os
 import json
 import re
-import importlib
 # Third-party
-from unicodedata import normalize
 from tornado.web import HTTPError
 # IPython
 # from IPython import nbformat
 import nbformat
 from nbformat import (
-    sign,
     validate,
     ValidationError
 )
@@ -36,11 +31,8 @@ from notebook.services.contents.manager import ContentsManager
 from traitlets.traitlets import (
     Unicode,
     Dict,
-    Bool,
-    List,
-    TraitError
+    List
 )
-from IPython.utils import tz
 
 # Local
 from .manager_util import base_model
@@ -50,14 +42,15 @@ from .narrativeio import (
 )
 from .kbasecheckpoints import KBaseCheckpoints
 import biokbase.narrative.ws_util as ws_util
-from biokbase.workspace.client import Workspace
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import util
-import biokbase.auth
+from biokbase.narrative.common.kblogging import get_narrative_logger
+from biokbase.narrative.services.user import UserService
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Classes
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     """
@@ -136,6 +129,8 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         # Setup empty hash for session object
         self.kbase_session = {}
         # Init the session info we need.
+        self.narrative_logger = get_narrative_logger()
+        self.user_service = UserService()
 
     def _checkpoints_class_default(self):
         return KBaseCheckpoints
@@ -242,11 +237,12 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                     model['format'] = u'json'
                     nb = nbformat.reads(json.dumps(nar_obj['data']), 4)
                     nb['metadata'].pop('orig_nbformat', None)
-                    self.mark_trusted_cells(nb, path)
+                    self.mark_trusted_cells(nb, nar_obj['info'][5], path)
                     model['content'] = nb
                     model['name'] = nar_obj['data']['metadata'].get('name', 'Untitled')
                     util.kbase_env.narrative = 'ws.{}.obj.{}'.format(obj_ref['wsid'], obj_ref['objid'])
                     util.kbase_env.workspace = model['content'].metadata.ws_name
+                    self.narrative_logger.narrative_open(u'{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), nar_obj['info'][4])
                 if user is not None:
                     model['writable'] = self.narrative_writable(u'{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), user)
                 self.log.info(u'Got narrative {}'.format(model['name']))
@@ -304,6 +300,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             model = self.get(path, content=False)
             if validation_message:
                 model[u'message'] = validation_message
+            self.narrative_logger.narrative_save(u'{}/{}'.format(result[1], result[2]), result[3])
             return model
 
         except PermissionsError as err:
@@ -537,7 +534,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         else:
             self.log.warn("Saving untrusted notebook %s", path)
 
-    def mark_trusted_cells(self, nb, path=''):
+    def mark_trusted_cells(self, nb, saved_by, path=''):
         """Mark cells as trusted if the notebook signature matches.
 
         Called as a part of loading notebooks.
@@ -549,15 +546,17 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         path : string
             The notebook's path (for logging)
         """
-        # commenting out, but leaving behind for a while.
-        # trusted = self.notary.check_signature(nb)
-        # if not trusted:
-        #     self.log.warn("Notebook %s is not trusted", path)
-        # self.notary.mark_cells(nb, trusted)
+        if self.user_service.is_trusted_user(saved_by):
+            self.notary.mark_cells(nb, True)
+        else:
+            # commenting out, but leaving behind for a while.
+            trusted = self.notary.check_signature(nb)
+            if not trusted:
+                self.log.warn("Notebook %s is not trusted", path)
+            self.notary.mark_cells(nb, trusted)
 
-        self.log.warn("Notebook %s is totally trusted", path)
-        # all notebooks are trustworthy, because KBase is Pollyanna.
-        self.notary.mark_cells(nb, True)
+            # self.log.warn("Notebook %s is totally trusted", path)
+            # # all notebooks are trustworthy, because KBase is Pollyanna.
 
     def should_list(self, name):
         """Should this file/directory name be displayed in a listing?"""

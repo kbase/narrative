@@ -28,12 +28,12 @@ define([
     'kbaseNarrativeControlPanel',
     'kbaseNarrativeDataList',
     'kbaseNarrativeSidePublicTab',
-    'kbaseNarrativeSideImportTab',
     'kbaseNarrativeExampleDataTab',
     'kbaseNarrativeStagingDataTab',
     'kbase-generic-client-api',
     'util/bootstrapDialog',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
+    'common/runtime',
     'bootstrap'
 ], function (
     KBWidget,
@@ -47,12 +47,12 @@ define([
     kbaseNarrativeControlPanel,
     kbaseNarrativeDataList,
     kbaseNarrativeSidePublicTab,
-    kbaseNarrativeSideImportTab,
     kbaseNarrativeExampleDataTab,
     kbaseNarrativeStagingDataTab,
     GenericClient,
     BootstrapDialog,
-    kbaseDataCard
+    kbaseDataCard,
+    Runtime
 ) {
     'use strict';
 
@@ -201,6 +201,11 @@ define([
                     this.$slideoutBtn.tooltip('hide');
                     this.trigger('hideGalleryPanelOverlay.Narrative');
                     this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
+
+                    // NOTE - this will be missed and a widget will remain active if the panel is closed by means other than clicking this button.
+                    // This should be re-visited at some point.
+                    this.deactivateLastRenderedPanel();
+
                     //once we've clicked it 10 times, meaning we've open and shut the browser 5x, we reveal its TRUE NAME.
                     if (++numDataBrowserClicks >= 10) {
                         this.$slideoutBtn.attr('data-original-title', 'Hide / Show Slidey McSliderface');
@@ -244,29 +249,46 @@ define([
             this.isLoggedIn = true;
             if (this.ws_name) {
                 this.importerThing = this.dataImporter(this.ws_name);
-                this.renderFn = [
-                    function () {
+
+                this.tabMapping = [
+                  {
+                    widget : this.importerThing,
+                    render : function () {
                         this.importerThing.updateView('mine', this.ws_name);
                     }.bind(this),
-                    function () {
+                  },
+                  {
+                    widget : this.importerThing,
+                    render : function () {
                         this.importerThing.updateView('shared', this.ws_name);
                     }.bind(this),
-                    function () {
+                  },
+                  {
+                    widget : this.publicTab,
+                    render : function () {
                         this.publicTab.render();
                     }.bind(this),
-                    function () {
+                  },
+                  {
+                    widget : this.exampleTab,
+                    render : function () {
                         this.exampleTab.getExampleDataAndRender();
                     }.bind(this),
-                    function () {
-                    }.bind(this)
+                  },
+                  { render : function() {} },
                 ];
+
                 if (Config.get('features').stagingDataViewer) {
-                    this.renderFn.push(
-                        function () {
+                    this.tabMapping.push(
+                      {
+                        widget : this.stagingTab,
+                        render : function () {
                             this.stagingTab.updateView();
                         }.bind(this)
+                      }
                     );
                 }
+
             } else {
                 //console.error("ws_name is not defined");
             }
@@ -388,11 +410,28 @@ define([
                 body: $body
             };
         },
+
+        deactivateLastRenderedPanel : function() {
+          if (this.$lastRenderedWidget && this.$lastRenderedWidget.deactivate) {
+            this.$lastRenderedWidget.deactivate();
+            this.$lastRenderedWidget = undefined;
+          }
+        },
+
         updateSlideoutRendering: function (panelIdx) {
+
+            this.deactivateLastRenderedPanel();
+
             if (!this.renderedTabs[panelIdx]) {
-                this.renderFn[panelIdx]();
+                this.tabMapping[panelIdx].render();
                 this.renderedTabs[panelIdx] = true;
             }
+            var $widget = this.tabMapping[panelIdx].widget;
+            if ($widget && $widget.activate) {
+              $widget.activate();
+            }
+
+            this.$lastRenderedWidget = $widget;
         },
         /**
          * Renders the data importer panel
@@ -420,7 +459,6 @@ define([
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
                 publicPanel = $('<div class="kb-import-content kb-import-public">'),
-                importPanel = $('<div class="kb-import-content kb-import-import">'),
                 examplePanel = $('<div class="kb-import-content">'),
                 stagingPanel = $('<div class="kb-import-content">');
 
@@ -429,11 +467,10 @@ define([
                 {tabName: '<small>Shared With Me</small>', content: sharedPanel},
                 {tabName: '<small>Public</small>', content: publicPanel},
                 {tabName: '<small>Example</small>', content: examplePanel},
-                {tabName: '<small>Import</small>', content: importPanel},
             ];
 
             if (Config.get('features').stagingDataViewer) {
-                tabList.push({tabName: '<small>Import (New)<small>', content: stagingPanel});
+                tabList.push({tabName: '<small>Import<small>', content: stagingPanel});
             }
 
             // add tabs
@@ -538,14 +575,13 @@ define([
             //new kbaseNarrativeSharedDataTab(sharedPanel, {ws_name: this.ws_name});
 
             this.publicTab = new kbaseNarrativeSidePublicTab(publicPanel, {$importStatus: importStatus, ws_name: this.ws_name});
-            this.importTab = new kbaseNarrativeSideImportTab(importPanel, {ws_name: this.ws_name});
             this.exampleTab = new kbaseNarrativeExampleDataTab(examplePanel, {$importStatus: importStatus, ws_name: this.ws_name});
             if (Config.get('features').stagingDataViewer) {
                 this.stagingTab = new kbaseNarrativeStagingDataTab(stagingPanel);
             }
 
             // It is silly to invoke a new object for each widget
-            var auth = {token: Jupyter.narrative.authToken};
+            var auth = {token: Runtime.make().authToken()};
             var ws = new Workspace(this.options.workspaceURL, auth);
             var serviceClient = new GenericClient(Config.url('service_wizard'), auth);
 
@@ -1174,7 +1210,7 @@ define([
                             updateView(view);
                         })
                         .append($('<span>')
-                            .addClass('glyphicon glyphicon-refresh')));
+                            .addClass('fa fa-refresh')));
                 filterContainer.empty()
                     .append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
             }

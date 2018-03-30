@@ -461,7 +461,7 @@ define([
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
                 publicPanel = $('<div class="kb-import-content kb-import-public">'),
-                importPanel = $('<div class="kb-import-content kb-import-import">'),
+                // importPanel = $('<div class="kb-import-content kb-import-import">'),
                 examplePanel = $('<div class="kb-import-content">'),
                 stagingPanel = $('<div class="kb-import-content">');
 
@@ -470,11 +470,11 @@ define([
                 {tabName: '<small>Shared With Me</small>', content: sharedPanel},
                 {tabName: '<small>Public</small>', content: publicPanel},
                 {tabName: '<small>Example</small>', content: examplePanel},
-                {tabName: '<small>Import</small>', content: importPanel},
+                // {tabName: '<small>Import</small>', content: importPanel},
             ];
 
             if (Config.get('features').stagingDataViewer) {
-                tabList.push({tabName: '<small>Import (New)<small>', content: stagingPanel});
+                tabList.push({tabName: '<small>Import<small>', content: stagingPanel});
             }
 
             // add tabs
@@ -579,7 +579,7 @@ define([
             //new kbaseNarrativeSharedDataTab(sharedPanel, {ws_name: this.ws_name});
 
             this.publicTab = new kbaseNarrativeSidePublicTab(publicPanel, {$importStatus: importStatus, ws_name: this.ws_name});
-            this.importTab = new kbaseNarrativeSideImportTab(importPanel, {ws_name: this.ws_name});
+            // this.importTab = new kbaseNarrativeSideImportTab(importPanel, {ws_name: this.ws_name});
             this.exampleTab = new kbaseNarrativeExampleDataTab(examplePanel, {$importStatus: importStatus, ws_name: this.ws_name});
             if (Config.get('features').stagingDataViewer) {
                 this.stagingTab = new kbaseNarrativeStagingDataTab(stagingPanel);

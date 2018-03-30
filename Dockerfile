@@ -37,7 +37,7 @@ WORKDIR /kb/dev_container/narrative
 RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-update-config -f src/config.json -o /kb/deployment/ui-common/narrative_version
 
 # Install Javascript dependencies
-RUN npm install && bower install --allow-root --config.interactive=false
+RUN npm install npm -g && npm install && bower install --allow-root --config.interactive=false
 
 # Compile Javascript down into an itty-bitty ball.
 # (commented out for now)

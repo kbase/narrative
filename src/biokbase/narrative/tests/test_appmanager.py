@@ -85,6 +85,20 @@ class AppManagerTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
+    def test_dry_run_app(self, m, auth):
+        os.environ['KB_WORKSPACE_ID'] = self.public_ws
+        output = self.am.run_app(
+            self.test_app_id,
+            self.test_app_params,
+            tag=self.test_tag,
+            dry_run=True
+        )
+        self.assertIsInstance(output, dict)
+        print(output)
+
+    @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
     def test_run_app_good_inputs(self, m, auth):
         m.return_value._send_comm_message.return_value = None
         os.environ['KB_WORKSPACE_ID'] = self.public_ws

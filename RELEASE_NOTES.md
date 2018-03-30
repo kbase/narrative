@@ -7,7 +7,7 @@ This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
 - Update Jupyter Notebook to 5.4.1 with a few KBase adjustments
     - Prevent Jupyter favicon from overriding ours at various points.
     - Use local version of Font Awesome.
-    - Use local version of Glyphicons font pack (for Datatables-based widgets)
+    - Use local version of Glyphicons font pack (for Datatables-based widgets).
     - Use Bootstrap version 3.3.7
 - Update ipywidgets to 7.2.1
 - SCT-559 - Fix ugly race condition that could prevent app cells from being properly rendered when loading an existing Narrative.

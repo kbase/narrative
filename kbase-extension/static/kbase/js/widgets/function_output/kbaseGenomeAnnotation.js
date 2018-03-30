@@ -37,7 +37,10 @@ define (
         'GenomeAnnotationAPI-client-api',
         'AssemblyAPI-client-api',
         'TaxonAPI-client-api',
-        'GenomeSearchUtil-client-api'
+        'GenomeSearchUtil-client-api',
+
+        'igv',
+        'css!ext_components/node_modules/igv.js/igv.css',
 
   ], function(
     KBWidget,
@@ -59,7 +62,8 @@ define (
         GenomeAnnotationAPI_client_api,
         AssemblyAPI_client_api,
         TaxonAPI_client_api,
-        GenomeSearchUtil_client_api
+        GenomeSearchUtil_client_api,
+        igv
 
     ) {
     return KBWidget({
@@ -122,8 +126,22 @@ define (
 
 
         tabData : function(genome) {
+
+            /* XXX - The "Genome Browser" is just hardwired to an external URL to vend back a rhodobacter gff & fa file.
+                     So we never ever ever want this to accidentally escape into production, it's strictly a very vague proof
+                     of concept. This wiring ensures the "genome browser", such that it is, is only on CI, even if the widget
+                     goes out by accident. Clean this up when it actually works. */
+
+            var on_ci = Config.config.deploy.environment === 'ci';
+
             var names = ['Overview', 'Browse Features', 'Browse Contigs'];
             var ids = ['overview', 'browse_features', 'browse_contigs'];
+
+            if (on_ci) {
+              names.push('Genome Browser');
+              ids.push('genome_browser');
+            }
+
             return {
                 names : names,
                 ids : ids
@@ -601,6 +619,55 @@ define (
 
             }
         */
+
+        buildGenomeBrowserView : function(params) {
+          var $div = params['$div'];
+
+          /* XXX - IGV is trivially easy to work with, as is shown here. Note that there is no working dynamic service yet to vend back the fasta / gff files
+             that it requires, so it's just hardwired to an external URL that vends back some rhodobacter info. These URLs should be replaced with some
+             sort of RESTful dynamic service call to get the fasta and GFF files.
+
+             BUT NOTE - As I dug into this further, I also discovered that most of the fasta files that I can pull out of KBase are insanely huge. Like 100+ megs,
+             which causes a minute or so delay before rendering, which is unacceptable. There's gotta be a better way to display this data w/o requiring loading up
+             a gigantic fasta file. Presumably, a properly configured JBrowse with its interim track data would be unaffected by such large files. Maybe if we had
+             fasta indexes it'd help? Maybe we should build a KBase specific genome browser instead? I have no good suggestions right now.
+
+             IGV also wants to do its own fetch of the data, and it'll do a little pre-processing before handing it onwards. Meaning that while we could just load
+             the fasta/gff data directly from a service call, we'd need to re-tool igv a bit to accept direct data instead of loading it itself. I'm leery of a custom
+             fork of external code.
+
+             It will support data:// urls on fasta files (with some preprocessing - it looks like it's gunzipping it), but not gff, as best as I can tell.
+          */
+
+          $div.append("Please note - this isn't a real genome browser, it's just an igv view dropped in and hardwired to a rhodobacter genome. "
+                       + "So any genome shows the same data. It's strictly very minimal proof-of-concept. The Genome Browser tab will only show up on CI.");
+
+          var $igv = $div.append($.jqElem('div'));
+
+          options = {
+              showNavigation: true,
+              showRuler: true,
+              reference: {
+                  id: "rh",
+                  fastaURL : "http://prototypesite.net/rhodo/rhodo.fa",
+                  indexed : false,
+              },
+              tracks: [
+                  {
+                      name: "GFF3",
+                      sourceType: "file",
+                      url: "http://prototypesite.net/rhodo/rhodo.gff3",
+                      displayMode: "EXPANDED",
+                      color : '#00FFFF',
+                      nameField : "ID",
+                  }
+
+              ]
+          };
+
+          browser = igv.createBrowser($igv, options);
+        },
+
         buildContigSearchView: function(params) {
 
             // parse parameters
@@ -1072,6 +1139,13 @@ define (
                                             }
                                 })
                             });
+                        }
+                        else if (dataTab === 'Genome Browser') {
+                          aElem.on('click', function() {
+                            self.buildGenomeBrowserView({
+                              $div: $('#' + pref + 'genome_browser')
+                            })
+                          });
                         }
                     }
 

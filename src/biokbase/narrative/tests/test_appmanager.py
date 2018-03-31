@@ -94,7 +94,13 @@ class AppManagerTestCase(unittest.TestCase):
             dry_run=True
         )
         self.assertIsInstance(output, dict)
-        print(output)
+        self.assertEquals(output['app_id'], self.test_app_id)
+        self.assertIsInstance(output['params'], list)
+        self.assertIn('method', output)
+        self.assertIn('service_ver', output)
+        self.assertIn('meta', output)
+        self.assertIn('tag', output['meta'])
+        self.assertIn('wsid', output)
 
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')

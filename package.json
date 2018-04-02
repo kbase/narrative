@@ -38,7 +38,7 @@
     "bower": "bower install",
     "test": "grunt test",
     "build": "grunt build",
-    "preinstall": "npm install --prefix kbase-extension/static/ext_components igv.js"
+    "preinstall": "npm install --prefix kbase-extension/static/ext_components/ igv.js"
   },
   "dependencies": {
     "karma-es6-shim": "^1.0.0"

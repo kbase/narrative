@@ -40,7 +40,7 @@ define (
         'GenomeSearchUtil-client-api',
 
         'igv',
-        'css!ext_components/node_modules/igv.js/igv.css',
+        'css!ext_packages/igv/igv.js/igv.css',
 
   ], function(
     KBWidget,

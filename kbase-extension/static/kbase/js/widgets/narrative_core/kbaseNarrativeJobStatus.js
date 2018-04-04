@@ -25,7 +25,6 @@ define([
     'text!kbase/templates/job_status/log_panel.html',
     'text!kbase/templates/job_status/log_line.html',
     'text!kbase/templates/job_status/new_objects.html',
-    'util/bootstrapAlert',
 
     'css!kbase/css/kbaseJobLog.css',
     'bootstrap'

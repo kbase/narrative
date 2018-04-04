@@ -69,7 +69,23 @@ define ([
                 '[myws]/myobj/myver',
                 '[1]2/23/4',
                 '[1]2/3/4;5/6/7'
-            ];
+            ],
+            upaStruct = {
+                foo: '1/2/3',
+                bar: ['4/5/6', '7/8/9'],
+                baz: {
+                    a: '1/2/3',
+                    b: '1/2/3'
+                }
+            },
+            upaStructSerial = {
+                foo: '[1]/2/3',
+                bar: ['[4]/5/6', '[7]/8/9'],
+                baz: {
+                    a: '[1]/2/3',
+                    b: '[1]/2/3'
+                }
+            };
 
         beforeEach(function () {
             history.pushState(null, null, '/narrative/ws.31.obj.1');
@@ -161,6 +177,43 @@ define ([
                 expect(error).not.toBeNull();
                 expect(error.error).toEqual('Can only serialize UPA strings or Arrays of UPA paths');
             }
+        });
+
+        it('Should serialize all elements of a structure', function () {
+            var serialized = upaApi.serializeAll(upaStruct);
+            Object.keys(serialized).forEach(function(key) {
+                if (typeof upaStructSerial[key] === 'string') {
+                    expect(serialized[key]).toEqual(upaStructSerial[key]);
+                }
+                else if (Array.isArray(upaStructSerial[key])) {
+                    upaStructSerial[key].forEach(function(serialUpa) {
+                        expect(serialized[key].indexOf(serialUpa)).toBeGreaterThan(-1);
+                    });
+                }
+            });
+        });
+
+        it('Should throw an error when changing the version of an UPA that isn\t an UPA', function () {
+            try {
+                upaApi.changeUpaVersion('not an upa', 'no new version');
+                fail('Should have failed here!');
+            } catch (error) {
+                expect(error).not.toBeNull();
+                expect(error.error).toContain('is not a valid upa, so its version cannot be changed!');
+            }
+        });
+
+        it('Should throw an error when changing the version of an UPA to a bad value', function () {
+            var badVersionValues = [0, -1, '-1', '0', 'abc', '12V', 'V12', '1v3'];
+            badVersionValues.forEach(function(badVal) {
+                try {
+                    var newUpa = upaApi.changeUpaVersion('1/2/3', badVal);
+                    fail(newUpa + ' -- Should have failed here!');
+                } catch (error) {
+                    expect(error).not.toBeNull();
+                    expect(error.error).toContain(badVal + ' is not a valid version number!');
+                }
+            });
         });
     });
 });

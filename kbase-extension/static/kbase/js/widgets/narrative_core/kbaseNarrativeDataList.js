@@ -25,8 +25,7 @@ define([
     'handlebars',
     'text!kbase/templates/data_list/object_row.html',
     'kb_service/utils',
-    'util/bootstrapAlert',
-    'util/bootstrapSearch',
+    'util/bootstrapDialog',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
     'bootstrap',
     'jquery-nearest'
@@ -49,8 +48,7 @@ define([
     Handlebars,
     ObjectRowHtml,
     ServiceUtils,
-    BootstrapAlert,
-    BootstrapSearch,
+    BootstrapDialog,
     kbaseDataCard
 ) {
     'use strict';
@@ -76,6 +74,7 @@ define([
         maxWsObjId: null,
         n_objs_rendered: 0,
         real_name_lookup: {},
+        $searchInput: null,
         $filterTypeSelect: null,
         availableTypes: {},
         $searchDiv: null,
@@ -1213,10 +1212,11 @@ define([
             });
             targetDiv.addEventListener('drop', function (e) {
                 if (Jupyter.narrative.readonly) {
-                    new BootstrapAlert({
+                    new BootstrapDialog({
                         type: 'warning',
                         title: 'Warning',
-                        body: 'Read-only Narrative -- may not insert a data viewer into this Narrative'
+                        body: 'Read-only Narrative -- may not insert a data viewer into this Narrative',
+                        alertOnly: true
                     });
                     return;
                 }

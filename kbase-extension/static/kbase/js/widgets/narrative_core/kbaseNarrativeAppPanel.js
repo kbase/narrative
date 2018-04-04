@@ -29,7 +29,6 @@ define([
     'uuid',
     'narrative_core/catalog/kbaseCatalogBrowser',
     'kbase/js/widgets/narrative_core/kbaseAppCard',
-    'util/bootstrapAlert',
     'common/runtime',
     'kbaseNarrative',
     'catalog-client-api',
@@ -54,7 +53,6 @@ define([
     Uuid,
     KBaseCatalogBrowser,
     kbaseAppCard,
-    BootstrapAlert,
     Runtime
 ) {
     'use strict';
@@ -559,10 +557,11 @@ define([
          */
         triggerApp: function(app, tag, parameters) {
             if (Jupyter.narrative.narrController.uiModeIs('view')) {
-                new BootstrapAlert({
+                new BootstrapDialog({
                     type: 'warning',
                     title: 'Warning',
-                    body: 'Read-only Narrative -- you may not add apps to this Narrative'
+                    body: 'Read-only Narrative -- you may not add apps to this Narrative',
+                    alertOnly: true
                 });
                 // alert('Read-only Narrative -- may not add apps to this Narrative');
                 return;

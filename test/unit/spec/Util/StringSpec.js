@@ -58,5 +58,31 @@ define ([
             expect(StringUtil.readableBytes(9999999999999999999999999)).toBe('8.27 YB');
             expect(StringUtil.readableBytes(99999999999999999999999999999)).toBe('82718.06 YB');
         });
+
+        it('pretty print JSON should do exactly that', function() {
+            var obj = {
+                a: 1,
+                b: true,
+                c: [1, 2, 3],
+                d: {
+                    e: "foo",
+                    f: null
+                }
+            };
+            var result = '{\n' +
+                         '  <span class="key">"a":</span> <span class="number">1</span>,\n' +
+                         '  <span class="key">"b":</span> <span class="boolean">true</span>,\n' +
+                         '  <span class="key">"c":</span> [\n' +
+                         '    <span class="number">1</span>,\n' +
+                         '    <span class="number">2</span>,\n' +
+                         '    <span class="number">3</span>\n' +
+                         '  ],\n' +
+                         '  <span class="key">"d":</span> {\n' +
+                         '    <span class="key">"e":</span> <span class="string">"foo"</span>,\n' +
+                         '    <span class="key">"f":</span> <span class="null">null</span>\n' +
+                         '  }\n' +
+                         '}';
+            expect(StringUtil.prettyPrintJSON(obj)).toBe(result);
+        });
     });
 });

@@ -1448,14 +1448,6 @@ div#notebook_panel {
     cursor: pointer;
 }
 
-.kb-cell-toolbar {
-    xborder-bottom: 1px silver solid;
-}
-
-.kb-cell-toolbar.collapsed {
-    xborder-bottom: none;
-}
-
 .kb-cell-toolbar .buttons {
     font-weight: bold;
     color: #CECECE !important;
@@ -1470,7 +1462,7 @@ div#notebook_panel {
     height: 56px;
     width: 56px;
     padding: 0;
-    margin: 0 4px 0 4px;
+    margin-right: 4px;
     vertical-align: top;
     border: 0px red solid;
     line-height: 56px;
@@ -1668,12 +1660,6 @@ div#notebook_panel {
 
 .kb-func-panel > .panel-footer + .panel-collapse .panel-body {
   border-bottom-color: #bce8f1;
-}
-
-.kb-func-panel .panel-footer {
-    /*background-color: #fff;
-    border-top: none; */
-    /*padding: 2px 15px;*/
 }
 
 /** output cell styling */

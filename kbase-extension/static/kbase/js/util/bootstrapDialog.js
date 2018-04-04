@@ -1,13 +1,12 @@
 /*global define*/
 /*jslint white: true*/
-define (
-    [
-        'bootstrap',
-        'jquery'
-    ], function (
-        bootstrap,
-        $
-    ) {
+define ([
+    'bootstrap',
+    'jquery'
+], function (
+    bootstrap,
+    $
+) {
     'use strict';
 
     /**
@@ -17,7 +16,9 @@ define (
      *     body: jquery node
      *     buttons: array of jquery nodes
      *     closeButton: boolean, default false
-     *     enterToTrigger: boolean, default false
+     *     enterToTrigger: boolean, default false,
+     *     type: string, type of alert (from bootstrap text types: warning, error, etc.),
+     *     alertOnly: create as an "alert" with a single "Close" button in the footer
      * }
      */
     var BootstrapDialog = function (options) {
@@ -36,6 +37,14 @@ define (
         if (options.enterToTrigger) {
             this.enterToTrigger = options.enterToTrigger;
         }
+        if (options.alertOnly) {
+            options.closeButton = true;
+            options.buttons = [
+                $('<button type="button" class="btn btn-primary" data-dismiss="modal">')
+                    .text('Close')
+            ];
+            options.enterToTrigger = true;
+        }
 
         this.initialize(options);
     };
@@ -52,6 +61,9 @@ define (
         }
         if (options.title) {
             this.setTitle(options.title);
+        }
+        if (options.type) {
+            this.$headerTitle.addClass('text-' + options.type);
         }
         if (options.body) {
             this.setBody(options.body);
@@ -87,15 +99,14 @@ define (
         }
         if (this.enterToTrigger) {
             this.$modal
-            .off('keypress')
-            .on('keypress', (function(e) {
-                if (e.keyCode === 13) {
-                    e.stopPropagation();
-                    e.preventDefault();
-
-                    this.$footer.find('.btn:last').trigger('click');
-                }
-            }.bind(this)));
+                .off('keypress')
+                .on('keypress', (function(e) {
+                    if (e.keyCode === 13) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        this.$footer.find('button:last').trigger('click');
+                    }
+                }.bind(this)));
         }
     };
 

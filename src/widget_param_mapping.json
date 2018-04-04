@@ -1,0 +1,265 @@
+{
+    "kbaseTabTable": {
+        "ws": "ws_name",
+        "obj": "obj_name",
+        "name": "obj_name"
+    },
+    "AnnotationSetTable": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "kbaseExpressionSparkline": {
+        "featureset": "obj_name",
+        "workspaceID": "ws_name",
+        "expressionMatrixID": "obj_name"
+    },
+    "kbaseFeatureSet": {
+        "featureset_name": "obj_name",
+        "workspaceName": "ws_name"
+    },
+    "kbaseChromatographyMatrix": {
+        "workspaceID": "ws_name",
+        "matrixID": "obj_name"
+    },
+    "AbundanceDataBoxplot": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "MetagenomeView": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "kbaseGenomeSetBuilder": {
+        "genomeSetName": "obj_name",
+        "wsName": "ws_name"
+    },
+    "kbaseRNASeqSample": {
+        "output": "obj_name",
+        "workspace": "ws_name"
+    },
+    "kbaseFigureObjectHeatmap": {
+        "workspace": "ws_name",
+        "expression_object": "obj_name"
+    },
+    "kbaseOntologyTranslation": {
+        "objNameOrId": "obj_name",
+        "wsNameOrId": "ws_name"
+    },
+    "kbaseSamplePropertyMatrix": {
+        "workspaceID": "ws_name",
+        "matrixID": "obj_name"
+    },
+    "kbaseBlastOutput": {
+        "blast_output_name": "obj_name",
+        "workspaceName": "ws_name"
+    },
+    "kbaseCummerbundPlot": {
+        "generate_cummerbund_plots": "obj_name",
+        "ws_cummerbund_output": "obj_name",
+        "workspaceName": "ws_name"
+    },
+    "kbaseChromatograms": {
+        "workspaceID": "ws_name",
+        "matrixID": "obj_name"
+    },
+    "kbaseAssemblyView": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "RankAbundancePlot": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "kbaseOntologyDictionary": {
+        "objNameOrId": "obj_name",
+        "wsNameOrId": "ws_name"
+    },
+    "CollectionView": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "kbaseExpressionSampleTableNew": {
+        "output": "obj_name",
+        "workspace": "ws_name"
+    },
+    "kbaseTree": {
+        "treeID": "obj_name",
+        "workspaceID": "ws_name"
+    },
+    "kbaseExpressionVolcanoPlot": {
+        "volcano_plot_object": "obj_name",
+        "workspace": "ws_name"
+    },
+    "kbaseExpressionPairwiseCorrelation": {
+        "featureset": "obj_name",
+        "workspaceID": "ws_name",
+        "expressionMatrixID": "obj_name"
+    },
+    "AbundanceDataView": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "kbaseRNASeqAnalysisNew": {
+        "output": "obj_name",
+        "workspace": "ws_name"
+    },
+    "kbaseReportView": {
+        "workspace_name": "ws_name",
+        "report_ref": "obj_ref",
+        "report_name": "obj_name"
+    },
+    "kbaseGrowthMatrix": {
+        "workspaceID": "ws_name",
+        "matrixID": "obj_name"
+    },
+    "GenomeComparisonWidget": {
+        "ws_id": "obj_name",
+        "ws_name": "ws_name"
+    },
+    "kbaseSampleProperty2DPlot": {
+        "workspaceID": "ws_name",
+        "matrixID": "obj_name"
+    },
+    "kbaseExpressionFeatureTableHeatmap": {
+        "workspaceID": "ws_name",
+        "expressionMatrixID": "obj_name"
+    },
+    "kbaseExpressionMatrixHeatmap": {
+        "expression_object": "obj_name",
+        "workspace": "ws_name"
+    },
+    "kbaseGrowthParameters": {
+        "workspaceID": "ws_name",
+        "growthParametersID": "obj_name"
+    },
+    "AbundanceDataTable": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "kbaseGrowthCurves": {
+        "workspaceID": "ws_name",
+        "matrixID": "obj_name"
+    },
+    "kbaseContigSetView": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "kbaseDomainAnnotation": {
+        "workspaceID": "ws_name",
+        "domainAnnotationID": "obj_name"
+    },
+    "FbaModelComparisonWidget": {
+        "fba_model2_id": "obj_name",
+        "proteome_cmp": "obj_name",
+        "ws_name": "ws_name",
+        "fba_model1_id": "obj_name"
+    },
+    "kbasePanGenome": {
+        "ws": "ws_name",
+        "name": "obj_name"
+    },
+    "kbaseBinnedContigs": {
+        "objRef": "obj_ref",
+        "ws": "ws_name"
+    },
+    "kbaseSamplePropertyHistogram": {
+        "workspaceID": "",
+        "matrixID": ""
+    },
+    "kbaseNarrativeDefaultOutput": {},
+    "kbaseExpressionEstimateK": {
+        "estimateKResultID": "obj_name",
+        "workspaceID": "ws_name",
+        "expressionMatrix": "obj_name"
+    },
+    "kbaseGenomeView": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "kbaseGrowthParamsPlot": {
+        "workspaceID": "ws_name",
+        "growthParametersID": "obj_name"
+    },
+    "kbaseExpressionMatrix": {
+        "workspaceID": "ws_name",
+        "expressionMatrixID": "obj_name"
+    },
+    "kbaseExpressionAnalysis": {
+        "ws": "ws_name",
+        "obj": "obj_name"
+    },
+    "kbaseGenomeComparisonViewer": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "kbaseExpressionHeatmap": {
+        "featureset": "obj_name",
+        "workspaceID": "ws_name",
+        "expressionMatrixID": "obj_name"
+    },
+    "kbaseGenomeAnnotationAssembly": {
+        "objNameOrId": "obj_name",
+        "wsNameOrId": "ws_name"
+    },
+    "kbaseDifferentialExpressionMatrixSetViewer": {
+        "obj_ref": "obj_name",
+        "wsName": "ws_name"
+    },
+    "kbaseFbaModelComparisonNew": {
+        "mc_id": "obj_name",
+        "ws_name": "ws_name",
+        "workspace_name": "ws_name",
+        "mc_name": "obj_name"
+    },
+    "kbaseGenomeAnnotationViewer": {
+        "objNameOrId": "obj_name",
+        "wsNameOrId": "ws_name"
+    },
+    "AbundanceDataPcoa": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "kbaseReadsViewer": {
+        "obj_ref": "obj_ref",
+        "wsName": "ws_name"
+    },
+    "kbaseGenericSetViewer": {
+        "obj_ref": "obj_name",
+        "wsName": "ws_name"
+    },
+    "AbundanceDataHeatmap": {
+        "ws": "ws_name",
+        "id": "obj_name"
+    },
+    "kbaseRNASeqPieNew": {
+        "output": "obj_name",
+        "workspace": "ws_name"
+    },
+    "kbasePValueHistogram": {
+        "workspace": "ws_name",
+        "figure_object": "obj_name"
+    },
+    "kbaseRNASeqAnalysis": {
+        "output": "obj_name",
+        "workspace": "ws_name"
+    },
+    "kbaseReadsSetView": {
+        "wsId": "ws_name",
+        "objId": "obj_name"
+    },
+    "kbaseExpressionFeatureClusters": {
+        "clusterSetID": "obj_name",
+        "workspaceID": "ws_name"
+    },
+    "testCrazyExample": {
+        "obj_name1": "obj_name",
+        "obj_name2": "obj_name",
+        "obj_id1": "obj_id",
+        "obj_id2": "obj_id",
+        "ws_name": "ws_name",
+        "obj_ref1": "obj_ref",
+        "obj_ref2": "obj_ref",
+        "obj_names": "obj_name_list",
+        "obj_refs": "obj_ref_list"
+    }
+}

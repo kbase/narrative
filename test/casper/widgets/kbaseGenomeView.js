@@ -1,7 +1,7 @@
 /* global Jupyter casper */
 
 var WidgetTestBed = require('../widgetTestBed');
-var SharingTestBed = require('../sharingTestBed');
+// var SharingTestBed = require('../sharingTestBed');
 
 function validateCell (test, config) {
     test.assertEquals(casper.get_cells_length(), config.numCells + 1);
@@ -40,6 +40,6 @@ function validateWidget(test, config, widgetSelector) {
 //     validateWidgetFn: validateWidget
 // });
 
-SharingTestBed.runSharingTest({
-    widget: 'kbaseGenomeView'
-});
+// SharingTestBed.runSharingTest({
+//     widget: 'kbaseGenomeView'
+// });

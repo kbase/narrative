@@ -35,7 +35,7 @@ require.config({
 
         // not under bower control
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',
-        'igv' : 'ext_components/node_modules/igv.js/igv.min',
+        'igv' : 'ext_packages/igv/igv.js/igv.min',
         // copied from the cdn
         'google-code-prettify': 'ext_packages/google-code-prettify/1.2.0/',
         jqueryCookie: 'ext_packages/jquery-extensions/js/jquery.cookie.min',

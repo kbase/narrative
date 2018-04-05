@@ -38,5 +38,8 @@
     "bower": "bower install",
     "test": "grunt test",
     "build": "grunt build"
+  },
+  "dependencies": {
+    "karma-es6-shim": "^1.0.0"
   }
 }

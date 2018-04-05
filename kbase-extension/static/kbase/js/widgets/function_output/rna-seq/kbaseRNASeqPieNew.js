@@ -74,6 +74,7 @@ define (
             ],
             magicPieSize : 425,
             methodName : 'KBaseRNASeq/view_alignment_statistics',
+            upa: null,
         },
 
         value_for_wedge : function(val) {
@@ -328,6 +329,10 @@ define (
                   ws_params = { ref : this.options.ws_sample_id };
                 }
 
+                if (this.options.upas.output) {
+                    ws_params = { ref: this.options.upas.output };
+                }
+
                 ws.get_objects2({objects : [ws_params]}).then(function (d) {
                   $pie.options.output = d.data[0].data;
 
@@ -372,8 +377,8 @@ define (
 
         loadAlignment : function(ref) {
 
-          this.data('container').removeTab('Overview');
-          //this.data('container').removeTab('Pie chart');
+            this.data('container').removeTab('Overview');
+            //this.data('container').removeTab('Pie chart');
                 this.data('container').addTab(
                     {
                         tab : 'Overview',
@@ -381,7 +386,7 @@ define (
                     }
                 );
 
-          var $pie = this;
+            var $pie = this;
                 var ws = new Workspace(window.kbconfig.urls.workspace, {token : $pie.authToken()});
 
                 var ws_params = {
@@ -489,7 +494,7 @@ define (
                         }*/
                     ]
                 }
-            )
+            );
 
             this._rewireIds($containerElem, this);
             this.data('container', $container);

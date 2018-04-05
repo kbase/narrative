@@ -35,6 +35,7 @@ require.config({
 
         // not under bower control
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',
+        'igv' : 'ext_packages/igv/igv.js/igv.min',
         // copied from the cdn
         'google-code-prettify': 'ext_packages/google-code-prettify/1.2.0/',
         jqueryCookie: 'ext_packages/jquery-extensions/js/jquery.cookie.min',
@@ -219,6 +220,7 @@ require.config({
         'KBaseFBA.FBAComparison': 'kbase/js/widgets/function_output/modeling/KBaseFBA.FBAComparison',
         'KBaseFBA.ModelComparison': 'kbase/js/widgets/function_output/kbaseFbaModelComparisonNew',
         'kbaseFbaModelComparisonNew': 'kbase/js/widgets/function_output/kbaseFbaModelComparisonNew',
+        'KBaseBiochem.CompoundSet': 'kbase/js/widgets/function_output/modeling/KBaseBiochem.CompoundSet',
         'KBaseBiochem.Media': 'kbase/js/widgets/function_output/modeling/KBaseBiochem.Media',
         'KBasePhenotypes.PhenotypeSet': 'kbase/js/widgets/function_output/modeling/KBasePhenotypes.PhenotypeSet',
         'KBasePhenotypes.PhenotypeSimulationSet': 'kbase/js/widgets/function_output/modeling/KBasePhenotypes.PhenotypeSimulationSet',
@@ -402,6 +404,9 @@ require.config({
         'KBaseFBA.FBAComparison': {
             'deps': ['KBModeling']
         },
+        'KBaseBiochem.CompoundSet': {
+            'deps': ['KBModeling']
+        },
         'KBaseBiochem.Media': {
             'deps': ['KBModeling']
         },
@@ -427,6 +432,7 @@ require.config({
                 'KBaseFBA.FBAModelSet',
                 'KBaseFBA.FBA',
                 'KBaseFBA.FBAComparison',
+                'KBaseBiochem.CompoundSet',
                 'KBaseBiochem.Media',
                 'KBasePhenotypes.PhenotypeSet',
                 'KBasePhenotypes.PhenotypeSimulationSet',
@@ -465,6 +471,9 @@ require.config({
         },
         bootstrap: {
             deps: ['jquery', 'jqueryui']
+        },
+        igv : {
+          deps : ['jquery', 'jqueryui', 'bootstrap']
         }
     }
 });

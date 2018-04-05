@@ -25,7 +25,8 @@ define([
     'handlebars',
     'text!kbase/templates/data_list/object_row.html',
     'kb_service/utils',
-    'util/bootstrapAlert',
+    'util/bootstrapDialog',
+    'util/bootstrapSearch',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
     'bootstrap',
     'jquery-nearest'
@@ -48,7 +49,8 @@ define([
     Handlebars,
     ObjectRowHtml,
     ServiceUtils,
-    BootstrapAlert,
+    BootstrapDialog,
+    BootstrapSearch,
     kbaseDataCard
 ) {
     'use strict';
@@ -1212,10 +1214,11 @@ define([
             });
             targetDiv.addEventListener('drop', function (e) {
                 if (Jupyter.narrative.readonly) {
-                    new BootstrapAlert({
+                    new BootstrapDialog({
                         type: 'warning',
                         title: 'Warning',
-                        body: 'Read-only Narrative -- may not insert a data viewer into this Narrative'
+                        body: 'Read-only Narrative -- may not insert a data viewer into this Narrative',
+                        alertOnly: true
                     });
                     return;
                 }
@@ -1498,7 +1501,7 @@ define([
                     self.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
                     self.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
                     self.$searchDiv.show({ effect: 'blind', duration: 'fast' });
-                    self.$searchInput.focus();
+                    self.bsSearch.focus();
                 } else {
                     self.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
                 }
@@ -1582,37 +1585,13 @@ define([
                     this.writingLock = false;
                     self.refresh();
                 });
-            self.$searchInput = $('<input type="text">')
-                .attr('Placeholder', 'Search in your data')
-                .addClass('form-control')
-                .on('focus', function () {
-                    if (Jupyter && Jupyter.narrative) {
-                        Jupyter.narrative.disableKeyboardManager();
-                    }
-                })
-                .on('blur', function () {
-                    if (Jupyter && Jupyter.narrative) {
-                        Jupyter.narrative.enableKeyboardManager();
-                    }
-                })
-                .on('input change blur', function () {
-                    this.search();
-                }.bind(this))
-                .on('keyup', function (e) {
-                    if (e.keyCode === 27) {
-                        this.search();
-                    }
-                }.bind(this));
-
-            self.$searchDiv = $('<div>').addClass('input-group').css({ 'margin-bottom': '10px' })
-                .append(self.$searchInput)
-                .append($('<span>').addClass('input-group-addon')
-                    .append($('<span>')
-                        .addClass('fa fa-search')
-                        .css({ 'cursor': 'pointer' })
-                        .on('click', function () {
-                            self.search();
-                        })));
+            self.$searchDiv = $('<div>');
+            self.bsSearch = new BootstrapSearch(self.$searchDiv, {
+                inputFunction: function() {
+                    self.search();
+                },
+                placeholder: 'Search in your data'
+            });
 
             self.$sortByDiv = $('<div>').css('text-align', 'center')
                 .append('<small>sort by: </small>')
@@ -1713,8 +1692,8 @@ define([
                 return;
             }
 
-            if (!term && this.$searchInput) {
-                term = this.$searchInput.val();
+            if (!term) {
+                term = this.bsSearch.val();
             }
 
             // if type wasn't selected, then we try to get something that was set

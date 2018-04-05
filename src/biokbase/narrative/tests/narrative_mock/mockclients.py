@@ -47,6 +47,17 @@ class MockClients(object):
         ret_val = infos * len(params.get('objects', [0]))
         return ret_val
 
+    def get_object_info3(self, params):
+        infos = [[5, u'Sbicolor2', u'KBaseGenomes.Genome-12.3', u'2017-03-31T23:42:59+0000', 1,
+                  u'wjriehl', 18836, u'wjriehl:1490995018528', u'278abf8f0dbf8ab5ce349598a8674a6e',
+                  109180038, None]]
+        paths = [['18836/5/1']]
+        num_objects = len(params.get('objects', [0]))
+        return {
+            'infos': infos * num_objects,
+            'paths': paths * num_objects
+        }
+
     # ----- Narrative Job Service functions -----
 
     def run_job(self, params):

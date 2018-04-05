@@ -26,6 +26,7 @@ define([
     'text!kbase/templates/data_list/object_row.html',
     'kb_service/utils',
     'util/bootstrapDialog',
+    'util/bootstrapSearch',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
     'bootstrap',
     'jquery-nearest'
@@ -49,6 +50,7 @@ define([
     ObjectRowHtml,
     ServiceUtils,
     BootstrapDialog,
+    BootstrapSearch,
     kbaseDataCard
 ) {
     'use strict';

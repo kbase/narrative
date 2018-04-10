@@ -3,6 +3,9 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
 
+### Version 3.7.1
+- SCT-793 - Fix version of upstream dependency "file-saver" to 1.3.4; an upstream update had broken and taken down the Pangenome viewer and others.
+
 ### Version 3.7.0
 - Update Jupyter Notebook to 5.4.1 with a few KBase adjustments
     - Prevent Jupyter favicon from overriding ours at various points.

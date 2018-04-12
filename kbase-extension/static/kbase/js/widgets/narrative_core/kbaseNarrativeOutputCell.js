@@ -1,4 +1,4 @@
-/*global define,require, KBError */
+/*global define,require */
 /*jslint white:true,browser:true*/
 define([
     'jquery',
@@ -280,6 +280,8 @@ define([
                         self.$outWidget = new W(self.$widgetBody, widgetData);
                         resolve();
                     },
+                    // TODO: No, should reject the promise, or handle here and resolve,
+                    // otherwise on error the promise will dangle.
                     function (err) {
                         return self.renderError(err);
                     }

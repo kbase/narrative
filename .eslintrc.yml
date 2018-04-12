@@ -5,6 +5,9 @@ extends: 'eslint:recommended'
 parserOptions:
     ecmaVersion: 5
 rules:
+  strict:
+    - error
+    - function
   indent:
     - error
     - 4

@@ -15,7 +15,7 @@
     "handlebars": "^4.0.5",
     "jquery-nearest": "~1.3.1",
     "jquery.tipsy": "*",
-    "kbase-common-js": "2.5.0",
+    "kbase-common-js": "2.16.0",
     "kbase-service-clients-js": "3.3.4",
     "kbase-sdk-clients-js": "0.5.1",
     "numeral": "~1.5.0",

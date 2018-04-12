@@ -245,5 +245,9 @@ define([
         load_ipython_extension: load
     };
 }, function(err) {
+    'use strict';
+    // NB we should probably not be handling individual loading errors. If the 
+    // data cell couldn't load it is not recoverable -- the user should either reload the
+    // narrative or the system is broken.
     console.error('ERROR loading dataCell main', err);
 });

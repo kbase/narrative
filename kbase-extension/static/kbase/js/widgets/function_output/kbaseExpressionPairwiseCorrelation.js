@@ -5,20 +5,21 @@
  * @public
  */
 
- define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'kbaseExpressionGenesetBaseWidget',
-		'kbaseHeatmap'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		kbaseExpressionGenesetBaseWidget,
-		kbaseHeatmap
-	) {
+define ([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'kbaseExpressionGenesetBaseWidget',
+    'kbaseHeatmap'
+], function(
+    KBWidget,
+    bootstrap,
+    $,
+    kbaseExpressionGenesetBaseWidget,
+    kbaseHeatmap
+) {
+    'use strict';
+    
     return KBWidget({
         name: 'kbaseExpressionPairwiseCorrelation',
         parent : kbaseExpressionGenesetBaseWidget,
@@ -32,7 +33,7 @@
             var self = this;
 
             var features = [];
-            if(self.options.geneIds) { features = $.map(self.options.geneIds.split(","), $.trim); }
+            if(self.options.geneIds) { features = $.map(self.options.geneIds.split(','), $.trim); }
 
             self.minRange = -1; self.maxRange = 1;
             if(self.options.minRange) {
@@ -46,7 +47,7 @@
             }
 
             return{
-                input_data: self.options.workspaceID + "/" + self.options.expressionMatrixID,
+                input_data: self.options.workspaceID + '/' + self.options.expressionMatrixID,
                 row_ids: features,
                 fl_row_pairwise_correlation: 1,
                 fl_row_set_stats: 1
@@ -61,13 +62,14 @@
 
             //Build row ids
             var rowIds = [];
-            for(var i = 0 ; i < rowDescriptors.length; i++){
+            var i;
+            for(i = 0 ; i < rowDescriptors.length; i++){
                 rowIds.push(rowDescriptors[i].id);
             }
 
             // Build data
             var data = [];
-            for(var i = 0 ; i < rowDescriptors.length; i++){
+            for(i = 0 ; i < rowDescriptors.length; i++){
                 var row = [];
                 for(var j = 0 ; j < rowDescriptors.length; j++){
                     row.push(values[i][j].toFixed(3));
@@ -96,18 +98,17 @@
             var hmW = 150 + 110 + size * colW;
             if (hmW > 700)
                 hmW = 700;
-            $heatmapDiv = $("<div style = 'width : "+hmW+"px; height : "+hmH+"px'></div>");
+            var $heatmapDiv = $('<div style = \'width : '+hmW+'px; height : '+hmH+'px\'></div>');
             $containerDiv.append($heatmapDiv);
-            $containerDiv.append("<div style = 'width : 5px; height : 5px'></div>");
+            $containerDiv.append('<div style = \'width : 5px; height : 5px\'></div>');
 
             // TODO: heatmap values out of range still scale color instead of just the max/min color
-            var hm =  new kbaseHeatmap($heatmapDiv, {
-                    dataset : heatmap,
-                    colors : ['#FFA500', '#FFFFFF', '#0066AA'],
-                    minValue : self.minRange,
-                    maxValue : self.maxRange
-                }
-            );
+            new kbaseHeatmap($heatmapDiv, {
+                dataset : heatmap,
+                colors : ['#FFA500', '#FFFFFF', '#0066AA'],
+                minValue : self.minRange,
+                maxValue : self.maxRange
+            });
             
         }
     });

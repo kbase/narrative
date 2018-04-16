@@ -3,8 +3,10 @@
         "publicData": {
             "reference_genomes_ci": {
                 "name": "NCBI RefSeq Genomes",
-                "type": "KBaseGenomes.Genome",
+                "source": "refseq",
+                "sourceLabel": "RefSeq",
                 "ws": "ReferenceDataManager",
+                "type": "KBaseGenomes.Genome",
                 "search": true
             },
             "fungal_genomes": {

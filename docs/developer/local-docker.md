@@ -41,6 +41,10 @@ The container can't be killed with Ctrl-C; you'll need to stop it using Docker o
 
 If you need to update or change dependencies (bower.json), you'll need to rebuild the image.
 
+### config.json changes
+
+The Dockerfile runs 'src/scripts/kb-update-config' to generate '/kb/deployment/ui-common/narrative_version'. This script has the unfortunate side effect of overwriting the config file source in /src/config.json.
+This is a little frustrating because it means that a committer has to be very careful to omit this file when building the image for development or testing.
 
 
 ## kbase-ui

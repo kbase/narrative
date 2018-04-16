@@ -1,6 +1,6 @@
 {
   "name": "kbase-narrative",
-  "version": "3.7.0",
+  "version": "3.7.1",
   "homepage": "https://kbase.us",
   "dependencies": {
     "bluebird": "3.4.7",

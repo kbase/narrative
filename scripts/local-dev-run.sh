@@ -1,6 +1,8 @@
 #!/bin/bash
 root=$(git rev-parse --show-toplevel)
-dir=kbase-extension/static/kbase
+static_dir=kbase-extension/static/kbase
+ext_components_dir=kbase-extension/static/ext_components
+nbextension_dir=nbextensions
 container_root=/kb/dev_container/narrative/
 if [ -z $env ]; then
 	echo "The 'env' environment variable is required"
@@ -11,5 +13,7 @@ docker run \
 	-e "ENVIRON=${env}" \
 	--network=kbase-dev \
 	--name=narrative  \
-	--mount type=bind,src=${root}/${dir},dst=${container_root}/${dir} \
+	--mount type=bind,src=${root}/${static_dir},dst=${container_root}/${static_dir} \
+	--mount type=bind,src=${root}/${ext_components_dir},dst=${container_root}/${ext_components_dir} \
+	--mount type=bind,src=${root}/${nbextension_dir},dst=${container_root}/kbase-extension/static/${nbextension_dir} \
 	--rm kbase/narrative:dev

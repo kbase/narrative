@@ -67,8 +67,7 @@ define (
 
         render: function() {
             this.ws = new Workspace(this.options.wsURL, {token: this.token});
-            console.log("tok: " + this.token)
-            this.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), this.token);
+            this.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), {token: this.token});
             this.loading(false);
             this.$mainPanel.hide();
             this.$mainPanel.empty();
@@ -145,17 +144,17 @@ define (
             for(var gid in self.features) {
                 var query = {"feature_id": self.features[gid]}
                 self.search(gid, {"feature_id": self.features[gid]}, self.features[gid].length)
-                    .then(function(result) {
-                        console.log(results)
-                        for (feature in results.features) {
+                    .then(function(results) {
+                        for (var f in results.features) {
+                            var feature = results.features[f];
                             self.featureTableData.push(
                                 {
                                     fid: '<a href="/#dataview/'+gid+
-                                                '?sub=Feature&subid='+g.features[f].id + '" target="_blank">'+
-                                                g.features[f].id+'</a>',
+                                                '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
+                                                feature.feature_id+'</a>',
                                     gid: '<a href="/#dataview/'+gid+
                                             '" target="_blank">'+gid+"</a>",
-                                    ali: feature.aliases.keys().join(", "),
+                                    ali: Object.keys(feature.aliases).join(", "),
                                     type: feature.feature_type,
                                     func: feature.function
                                 }
@@ -170,80 +169,6 @@ define (
                 self.loading(true);
                 self.showMessage("This feature set is empty.")
             }
-
-
-            /*var subdata_query = [];
-            for(var gid in self.features) {
-                subdata_query.push({ref:gid, included:['features/[*]/id']});
-            }
-            self.ws.get_object_subset(subdata_query,
-                function(data) {
-                    for (var k=0; k<data.length; k++) {
-                        self.genomeObjectInfo[subdata_query[k].ref] = data[k].info;
-                        self.genomeLookupTable[subdata_query[k].ref] = {}
-                        for (var f=0; f<data[k].data.features.length; f++) {
-                            self.genomeLookupTable[subdata_query[k].ref][data[k].data.features[f].id] = f;
-                        }
-                    }
-
-                    for(var gid in self.features) {
-                        var included = [];
-                        for(var f=0; f<self.features[gid].length; f++) {
-                            var idx = self.genomeLookupTable[gid][self.features[gid][f].fid];
-                            included.push('features/'+idx+'/id');
-                            included.push('features/'+idx+'/type');
-                            included.push('features/'+idx+'/function');
-                            included.push('features/'+idx+'/functions');
-                            included.push('features/'+idx+'/aliases');
-                        }
-
-                        var subdata_query2 = [{ref:gid,included:included}];
-                        self.ws.get_object_subset(subdata_query2,
-                            function(featureData) {
-                                var g = featureData[0].data;
-                                // every feature we get back here is something in the list
-                                for(var f=0; f<g.features.length; f++) {
-                                    var aliases = "None";
-                                    if (g.features[f].aliases && g.features[f].aliases.length>0){
-                                        if (g.features[f].aliases[0] instanceof Array){
-                                            g.features[f].aliases = g.features[f].aliases.map(function(x) { return x[1]; });
-                                        }
-                                        aliases= g.features[f].aliases.join(', ');
-                                    }
-                                    if (g.features[f].functions) {
-                                        g.features[f].function = g.features[f].functions.join(', ');
-                                    }
-
-                                    self.featureTableData.push(
-                                            {
-                                                fid: '<a href="/#dataview/'+
-                                                            featureData[0].info[6]+'/'+featureData[0].info[1]+
-                                                            '?sub=Feature&subid='+g.features[f].id + '" target="_blank">'+
-                                                            g.features[f].id+'</a>',
-                                                gid: '<a href="/#dataview/'+
-                                                        featureData[0].info[6]+'/'+featureData[0].info[1]+
-                                                        '" target="_blank">'+featureData[0].info[1]+"</a>",
-                                                ali: aliases,
-                                                type: g.features[f].type,
-                                                func: g.features[f].function ''
-                                            }
-                                        );
-                                }
-                                self.renderFeatureTable(); // just rerender each time
-                                self.loading(true);
-                            },
-                            function(error) {
-                                self.loading(true);
-                                self.renderError(error);
-                            });
-                    }
-
-                },
-                function(error) {
-                    self.loading(true);
-                    self.renderError(error);
-                });*/
-
         },
 
         $featureTableDiv : null,

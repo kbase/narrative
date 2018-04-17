@@ -1,6 +1,4 @@
 /**
- * Output widget for visualization of tree object (species trees and gene trees).
- * Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
 'use strict';
@@ -14,7 +12,8 @@ define (
 		'kbaseAuthenticatedWidget',
 		'jquery-dataTables',
 		'knhx',
-		'widgetMaxWidthCorrection'
+		'widgetMaxWidthCorrection',
+		'kbase-generic-client-api'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -23,7 +22,8 @@ define (
 		kbaseAuthenticatedWidget,
 		jquery_dataTables,
 		knhx,
-		widgetMaxWidthCorrection
+		widgetMaxWidthCorrection,
+		GenericClient
 	) {
     return KBWidget({
         name: 'kbaseFeatureSet',
@@ -67,6 +67,8 @@ define (
 
         render: function() {
             this.ws = new Workspace(this.options.wsURL, {token: this.token});
+            console.log("tok: " + this.token)
+            this.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), this.token);
             this.loading(false);
             this.$mainPanel.hide();
             this.$mainPanel.empty();
@@ -94,9 +96,9 @@ define (
                             for (var k=0; k<fs.elements[fid].length; k++) {
                                 var gid = fs.elements[fid][k];
                                 if(self.features.hasOwnProperty(gid)) {
-                                    self.features[gid].push({'fid':fid});
+                                    self.features[gid].push(fid);
                                 } else {
-                                    self.features[gid] = [{'fid':fid}];
+                                    self.features[gid] = [fid];
                                 }
                             }
                         }
@@ -111,6 +113,25 @@ define (
                 });
         },
 
+        search: function(genome_ref, query, limit) {
+            console.log(genome_ref)
+            console.log(query)
+            return this.genomeSearchAPI.search({
+                    ref: genome_ref,
+                    structured_query: query,
+                    sort_by: [['contig_id',1]],
+                    start: 0,
+                    limit: limit
+                })
+                .then(function(d) {
+                    console.log('genomeSearchAPI.search()',d);
+                    return d;
+                })
+                .fail(function(e) {
+                    console.error(e);
+                 });
+        },
+
 
         genomeLookupTable: null, // genomeId: { featureId: indexInFeatureList }
         genomeObjectInfo: null, //{},
@@ -121,8 +142,37 @@ define (
             self.genomeLookupTable = {};
             self.genomeObjectInfo = {};
             self.featureTableData = [];
-            // first get subdata for each of the genomes to build up the Feature ID to index lookup table
-            var subdata_query = [];
+            for(var gid in self.features) {
+                var query = {"feature_id": self.features[gid]}
+                self.search(gid, {"feature_id": self.features[gid]}, self.features[gid].length)
+                    .then(function(result) {
+                        console.log(results)
+                        for (feature in results.features) {
+                            self.featureTableData.push(
+                                {
+                                    fid: '<a href="/#dataview/'+gid+
+                                                '?sub=Feature&subid='+g.features[f].id + '" target="_blank">'+
+                                                g.features[f].id+'</a>',
+                                    gid: '<a href="/#dataview/'+gid+
+                                            '" target="_blank">'+gid+"</a>",
+                                    ali: feature.aliases.keys().join(", "),
+                                    type: feature.feature_type,
+                                    func: feature.function
+                                }
+                            );
+
+                        }
+                        self.renderFeatureTable(); // just rerender each time
+                        self.loading(true);
+                    });
+            }
+            if (!self.features.length){
+                self.loading(true);
+                self.showMessage("This feature set is empty.")
+            }
+
+
+            /*var subdata_query = [];
             for(var gid in self.features) {
                 subdata_query.push({ref:gid, included:['features/[*]/id']});
             }
@@ -175,7 +225,7 @@ define (
                                                         '" target="_blank">'+featureData[0].info[1]+"</a>",
                                                 ali: aliases,
                                                 type: g.features[f].type,
-                                                func: g.features[f].function || ''
+                                                func: g.features[f].function ''
                                             }
                                         );
                                 }
@@ -192,7 +242,7 @@ define (
                 function(error) {
                     self.loading(true);
                     self.renderError(error);
-                });
+                });*/
 
         },
 

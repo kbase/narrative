@@ -109,17 +109,7 @@ define (
             self.kbws = new Workspace(Config.url('workspace'), token);
             self.genomeAPI = new GenomeAnnotationAPI(Config.url('service_wizard'), token);
             self.assemblyAPI = new AssemblyAPI(Config.url('service_wizard'), token);
-
-
             self.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), token);
-
-            self.genericClient = new GenericClient(Config.url('service_wizard'), token, null, false);
-            self.genericClient.sync_call("ServiceWizard.get_service_status",
-                        [{'module_name': "GenomeSearchUtil", 'version': 'release'}],
-                    function(status){
-                        self.genomeSearchAPI = new GenomeSearchUtil(status[0].url, token, null, null, null, null, false);
-                    },
-                    function(error){console.error(error);});
 
             return this;
         },
@@ -1814,7 +1804,7 @@ define (
                             }]
                         })
                         .then(function(data) {
-                            console.log('genomeAPI.get_genome_v1(fidx='+featureData['feature_idx']+')',data)
+                            console.log('genomeAPI.get_genome_v1(farr='+featureData['features_array']+', fidx='+featureData['feature_idx']+')',data)
                             featureFullRecord = data.genomes[0].data.features[0];
                             if(featureFullRecord['protein_translation']) {
                                 $protLen.empty().append(numberWithCommas(featureFullRecord['protein_translation'].length));

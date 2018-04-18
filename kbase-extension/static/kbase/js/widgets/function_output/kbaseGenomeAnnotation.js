@@ -109,8 +109,6 @@ define (
             self.kbws = new Workspace(Config.url('workspace'), token);
             self.genomeAPI = new GenomeAnnotationAPI(Config.url('service_wizard'), token);
             self.assemblyAPI = new AssemblyAPI(Config.url('service_wizard'), token);
-
-
             self.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), token);
 
             return this;

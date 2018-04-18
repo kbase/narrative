@@ -113,8 +113,6 @@ define (
         },
 
         search: function(genome_ref, query, limit) {
-            console.log(genome_ref)
-            console.log(query)
             return this.genomeSearchAPI.search({
                     ref: genome_ref,
                     structured_query: query,
@@ -122,13 +120,6 @@ define (
                     start: 0,
                     limit: limit
                 })
-                .then(function(d) {
-                    console.log('genomeSearchAPI.search()',d);
-                    return d;
-                })
-                .fail(function(e) {
-                    console.error(e);
-                 });
         },
 
 
@@ -163,9 +154,12 @@ define (
                         }
                         self.renderFeatureTable(); // just rerender each time
                         self.loading(true);
+                    })
+                    .fail(function(e) {
+                        console.error(e);
                     });
             }
-            if (!self.features.length){
+            if (Object.keys(self.features).length === 0){
                 self.loading(true);
                 self.showMessage("This feature set is empty.")
             }

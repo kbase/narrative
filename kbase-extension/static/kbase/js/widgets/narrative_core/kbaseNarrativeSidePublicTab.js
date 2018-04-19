@@ -123,6 +123,52 @@ define ([
         return $totals;
     }
 
+    function getNextAutoSuffix(targetName, narrativeObjects, nextSuffix) {
+        var targetNameRe = new RegExp('^' + targetName + '$');
+        var correctedTargetNameRe = new RegExp('^' + targetName + '_([\\d]+)$');
+        var foundRoot;
+        var maxSuffix;
+        if (narrativeObjects) {
+            narrativeObjects.forEach(function (object) {
+                var name = object[1];
+                var m = targetNameRe.exec(name);
+                if (m) {
+                    foundRoot = true;
+                    return;
+                }
+                m = correctedTargetNameRe.exec(name);
+                if (m) {
+                    maxSuffix = Math.max(maxSuffix || 0, parseInt(m[1], 10));
+                    return;
+                }
+            });
+        }
+       
+        // The suffix logic is careflly crafted to accomodate retry (via nextSuffix)
+        // and automatic next suffix via the max suffix determined above.
+        var suffix;
+        if (maxSuffix) {
+            if (nextSuffix) {
+                // a previous attempt to copy failed due to the object already existing. 
+                // We honor the maxSuffix found if greater, otherwise use this one.
+                if (maxSuffix > nextSuffix) {
+                    suffix = maxSuffix + 1;
+                } else {
+                    suffix = nextSuffix;
+                }
+            } else  {
+                suffix = maxSuffix + 1;
+            }
+        } else if (foundRoot) {
+            if (nextSuffix) {
+                suffix = nextSuffix;
+            } else {
+                suffix = 1;
+            }
+        }
+        return suffix;
+    }
+
     return KBWidget({
         name: 'kbaseNarrativeSidePublicTab',
         parent : kbaseAuthenticatedWidget,
@@ -1045,53 +1091,15 @@ define ([
             // Determine whether the targetName already exists, or if 
             // copies exist and if so the maximum suffix.
             // This relies upon the narrativeObjects being updated from the data list.
-            var targetNameRe = new RegExp('^' + targetName + '$');
-            var correctedTargetNameRe = new RegExp('^' + targetName + '_([\\d]+)$');
-            var foundRoot;
-            var maxSuffix;
-            this.narrativeObjects[type].forEach(function (object) {
-                var name = object[1];
-                var m = targetNameRe.exec(name);
-                if (m) {
-                    foundRoot = true;
-                    return;
-                }
-                m = correctedTargetNameRe.exec(name);
-                if (m) {
-                    maxSuffix = Math.max(maxSuffix || 0, parseInt(m[1], 10));
-                    return;
-                }
-            });
-           
-            // The suffix logic is careflly crafted to accomodate retry (via nextSuffix)
-            // and automatic next suffix via the max suffix determined above.
+
             var suffix;
-            if (maxSuffix) {
-                if (nextSuffix) {
-                    // a previous attempt to copy failed due to the object already existing. 
-                    // We honor the maxSuffix found if greater, otherwise use this one.
-                    if (maxSuffix > nextSuffix) {
-                        suffix = maxSuffix + 1;
-                    } else {
-                        suffix = nextSuffix;
-                    }
-                } else  {
-                    suffix = maxSuffix + 1;
-                }
-            } else if (foundRoot) {
-                if (nextSuffix) {
-                    suffix = nextSuffix;
-                } else {
-                    suffix = 1;
-                }
+            if (this.narrativeObjects[type]) {
+                suffix = getNextAutoSuffix(targetName, this.narrativeObjects[type], nextSuffix);
             }
 
             // If we have determined a suffix (to try), append it to the base object name
             // like _<suffix>
-            var correctedTargetName = targetName;
-            if (suffix) {
-                correctedTargetName += '_' + suffix;
-            }
+            var correctedTargetName = suffix ? targetName + '_' + suffix : targetName;
 
             // Attempt to get object info for the target object name. If it exists,
             // we try again with a hopefully unique filename.
@@ -1112,7 +1120,6 @@ define ([
                     // If an object already exists with this name, the attempt again,
                     // incrementing the suffix by 1. NB this will loop until a unique
                     // filename is found.
-                    // console.log('found?', infos);
                     if (infos[0] === null) {
                         return this.copyFinal(object, correctedTargetName, thisBtn);
                     }

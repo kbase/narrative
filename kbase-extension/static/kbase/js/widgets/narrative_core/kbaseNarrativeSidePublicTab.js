@@ -128,45 +128,42 @@ define ([
         var correctedTargetNameRe = new RegExp('^' + targetName + '_([\\d]+)$');
         var foundRoot;
         var maxSuffix;
-        if (narrativeObjects) {
-            narrativeObjects.forEach(function (object) {
-                var name = object[1];
-                var m = targetNameRe.exec(name);
-                if (m) {
-                    foundRoot = true;
-                    return;
-                }
-                m = correctedTargetNameRe.exec(name);
-                if (m) {
-                    maxSuffix = Math.max(maxSuffix || 0, parseInt(m[1], 10));
-                    return;
-                }
-            });
+        if (!narrativeObjects) {
+            return null;
         }
+        narrativeObjects.forEach(function (object) {
+            var name = object[1];
+            var m = targetNameRe.exec(name);
+            if (m) {
+                foundRoot = true;
+                return;
+            }
+            m = correctedTargetNameRe.exec(name);
+            if (m) {
+                maxSuffix = Math.max(maxSuffix || 0, parseInt(m[1], 10));
+                return;
+            }
+        });
        
         // The suffix logic is careflly crafted to accomodate retry (via nextSuffix)
         // and automatic next suffix via the max suffix determined above.
-        var suffix;
         if (maxSuffix) {
             if (nextSuffix) {
                 // a previous attempt to copy failed due to the object already existing. 
                 // We honor the maxSuffix found if greater, otherwise use this one.
                 if (maxSuffix > nextSuffix) {
-                    suffix = maxSuffix + 1;
-                } else {
-                    suffix = nextSuffix;
+                    return maxSuffix + 1;
                 }
-            } else  {
-                suffix = maxSuffix + 1;
+                return nextSuffix;
             }
+            return maxSuffix + 1;
         } else if (foundRoot) {
             if (nextSuffix) {
-                suffix = nextSuffix;
-            } else {
-                suffix = 1;
+                return nextSuffix;
             }
+            return 1;
         }
-        return suffix;
+        return null;
     }
 
     return KBWidget({

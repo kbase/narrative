@@ -128,9 +128,6 @@ define ([
         var correctedTargetNameRe = new RegExp('^' + targetName + '_([\\d]+)$');
         var foundRoot;
         var maxSuffix;
-        if (!narrativeObjects) {
-            return null;
-        }
         narrativeObjects.forEach(function (object) {
             var name = object[1];
             var m = targetNameRe.exec(name);

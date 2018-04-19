@@ -661,6 +661,7 @@ define([
 
             return nms.get_method_spec(appRef)
                 .then(function(data) {
+                    console.log('app cell spec', appRef, data);
                     if (!data[0]) {
                         throw new Error('App not found');
                     }
@@ -1018,6 +1019,7 @@ define([
             var runId = new Uuid(4).format(),
                 fixedApp = fixApp(app),
                 code = PythonInterop.buildAppRunner(cellId, runId, fixedApp, params);
+            console.log('app cell code', app);
             // TODO: do something with the runId
             cell.set_text(code);
         }

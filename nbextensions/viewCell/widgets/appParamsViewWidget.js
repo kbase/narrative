@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -30,8 +27,6 @@ define([
     FieldWidget,
     ParamResolver,
     Runtime
-
-    // Input widgets
 ) {
     'use strict';
 
@@ -159,7 +154,7 @@ define([
                         key: {
                             type: 'get-param-state'
                         },
-                        handle: function(message) {
+                        handle: function() {
                             return paramsBus.request({ id: parameterSpec.id }, {
                                 key: {
                                     type: 'get-param-state'
@@ -168,16 +163,15 @@ define([
                         }
                     });
 
-
                     /*
                      * Or in fact any parameter value at any time...
                      */
                     fieldWidget.bus.on('get-parameter-value', function(message) {
                         paramsBus.request({
-                                parameter: message.parameter
-                            }, {
-                                key: 'get-parameter-value'
-                            })
+                            parameter: message.parameter
+                        }, {
+                            key: 'get-parameter-value'
+                        })
                             .then(function(message) {
                                 bus.emit('parameter-value', {
                                     parameter: message.parameter
@@ -232,8 +226,6 @@ define([
                 return;
             }
 
-            //            ui.enableButton('toggle-advanced');
-
             var removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
                 addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
             for (var i = 0; i < advancedInputs.length; i += 1) {
@@ -246,24 +238,19 @@ define([
                     $(actualInput).trigger('advanced-shown.kbase');
                 }
             }
-            //
-            //            // How many advanaced?
-            //
-            //            // Also update the button
-            //            var button = container.querySelector('[data-button="toggle-advanced"]');
-            //            button.innerHTML = (settings.showAdvanced ? 'Hide Advanced' : 'Show Advanced (' + advancedInputs.length + ' hidden)');
 
             // Also update the count in the paramters.
             var events = Events.make({ node: container });
 
             var message;
+            var showAdvancedButton;
             if (settings.showAdvanced) {
                 if (advancedInputs.length > 1) {
                     message = String(advancedInputs.length) + ' advanced parameters showing';
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter showing';
                 }
-                var showAdvancedButton = ui.buildButton({
+                showAdvancedButton = ui.buildButton({
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -280,7 +267,7 @@ define([
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter hidden';
                 }
-                var showAdvancedButton = ui.buildButton({
+                showAdvancedButton = ui.buildButton({
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -302,7 +289,6 @@ define([
                     ui.buildPanel({
                         type: 'default',
                         body: [
-                            // ui.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
                             div({
                                 class: 'btn-toolbar pull-right'
                             }, [
@@ -314,7 +300,6 @@ define([
                                     },
                                     label: 'Reset'
                                 })
-                                // ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
                             ])
                         ],
                         classes: ['kb-panel-light']
@@ -325,7 +310,6 @@ define([
                         body: div({ dataElement: 'input-fields' }),
                         classes: ['kb-panel-light']
                     }),
-                    // ui.makePanel('Input Objects', 'input-fields'),
                     ui.buildPanel({
                         title: span(['Parameters', span({ dataElement: 'advanced-hidden-message', style: { marginLeft: '6px', fontStyle: 'italic' } })]),
                         name: 'parameters-area',
@@ -338,7 +322,6 @@ define([
                         body: div({ dataElement: 'output-fields' }),
                         classes: ['kb-panel-light']
                     })
-                    // ui.makePanel('Output Report', 'output-report')
                 ]);
 
             return {
@@ -375,13 +358,6 @@ define([
                 });
             });
             bus.on('toggle-advanced', function() {
-                // we can just do that here? Or defer to the inputs?
-                // I don't know ...
-                //inputBusses.forEach(function (bus) {
-                //    bus.send({
-                //        type: 'toggle-advanced'
-                //    });
-                //});
                 settings.showAdvanced = !settings.showAdvanced;
                 renderAdvanced('input-objects');
                 renderAdvanced('parameters');
@@ -391,25 +367,6 @@ define([
                 widgets.forEach(function(widget) {
                     widget.bus.emit('workspace-changed');
                 });
-            });
-        }
-
-        // Maybe
-        function validateParameterSpec(spec) {
-            // ensure that inputs are consistent with inputs
-
-            // and outputs with output
-
-            // and params with param
-
-            // validate type
-
-            return spec;
-        }
-
-        function validateParameterSpecs(params) {
-            return params.map(function(spec) {
-                return validateParameterSpec(spec);
             });
         }
 
@@ -455,23 +412,23 @@ define([
                         params.layout.filter(function(id) {
                             return (params.specs[id].ui.class === 'input');
                         })
-                        .map(function(id) {
-                            return params.specs[id];
-                        })),
+                            .map(function(id) {
+                                return params.specs[id];
+                            })),
                     outputParams = makeParamsLayout(
                         params.layout.filter(function(id) {
                             return (params.specs[id].ui.class === 'output');
                         })
-                        .map(function(id) {
-                            return params.specs[id];
-                        })),
+                            .map(function(id) {
+                                return params.specs[id];
+                            })),
                     parameterParams = makeParamsLayout(
                         params.layout.filter(function(id) {
                             return (params.specs[id].ui.class === 'parameter');
                         })
-                        .map(function(id) {
-                            return params.specs[id];
-                        }));
+                            .map(function(id) {
+                                return params.specs[id];
+                            }));
 
                 // new params format is a map with an accompanying ordering layout
 
@@ -479,7 +436,6 @@ define([
 
                 // based on the param ordering (layout), render the html layout,
                 // with an id mapped per parameter in this set
-
 
                 return Promise.resolve()
                     .then(function() {
@@ -561,22 +517,6 @@ define([
                             }));
                         }
                     })
-                    // .then(function () {
-                    //     console.log('advance-ing...');
-                    //     return Promise.all(widgets.map(function (widget) {
-                    //         return widget.widget.start()
-                    //             .catch(function (err) {
-                    //                 console.error('error', err, widget);
-                    //                 throw err;
-                    //             })
-                    //     }));
-                    // })
-                    // .then(function () {
-                    //     console.log('advance-ing2...');
-                    //     return Promise.all(widgets.map(function (widget) {
-                    //         return widget.widget.run(params);
-                    //     }));
-                    // })
                     .then(function() {
                         renderAdvanced('input-objects');
                         renderAdvanced('parameters');
@@ -617,7 +557,6 @@ define([
                                 parameter: message.parameter
                             }
                         });
-                        // bus.emit('parameter-changed', message);
                     });
                 });
             });
@@ -632,7 +571,6 @@ define([
         // CONSTRUCTION
 
         bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
-
 
         return {
             start: start,

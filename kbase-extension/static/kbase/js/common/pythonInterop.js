@@ -7,10 +7,10 @@ define([], function () {
     }
 
     function autoDelimiter(value) {
-        if (/\"/.test(value)) {
+        if (/"/.test(value)) {
             return '"';
         }
-        return "'";
+        return '\'';
     }
 
     var indentString = '    ';
@@ -66,9 +66,9 @@ define([], function () {
                 return name + '=' + pythonifyValue(value);
             }
         })
-        .filter(function (param) {
-            return (param !== undefined);
-        });
+            .filter(function (param) {
+                return (param !== undefined);
+            });
     }
 
     function buildNiceArgsList(args) {

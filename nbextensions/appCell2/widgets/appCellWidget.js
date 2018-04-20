@@ -661,7 +661,6 @@ define([
 
             return nms.get_method_spec(appRef)
                 .then(function(data) {
-                    console.log('app cell spec', appRef, data);
                     if (!data[0]) {
                         throw new Error('App not found');
                     }

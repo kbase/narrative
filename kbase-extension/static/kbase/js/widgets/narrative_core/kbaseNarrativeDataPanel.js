@@ -302,7 +302,7 @@ define([
          * It throws away the auth token and workspace client, and refreshes the widget
          * @private
          */
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             this.wsClient = null;
             this.isLoggedIn = false;
             this.ws_name = null;
@@ -600,7 +600,7 @@ define([
             var narrativeNameLookup = {};
             this.$overlayPanel = body.append(footer);
 
-            function cleanupData(data, view) {
+            function cleanupData(data) {
                 return Promise.try(function () {
                     // data = [].concat.apply([], data);
                     data.sort(function (a, b) {
@@ -664,7 +664,7 @@ define([
                             addFilters(view, sharedWorkspaces, sharedData, $sharedScrollPanel, $sharedFilterRow);
                     })
                     .catch(function (error) {
-                        console.log('ERROR ', error);
+                        console.error('ERROR ', error);
                     });
             }
 
@@ -740,21 +740,18 @@ define([
              * or just the one named wsName.
              * Also returns only data of the given type, if not undefined
              */
-            function getData(view, workspaces, types, wsName, ignoreWs, nameFilter) {
+            function getData(view, workspaces, types, wsName, ignoreWs) {
                 if (workspaces.length === 0) {
                     return Promise.try(function () {
                         return [];
                     });
                 }
-                var params = {includeMetadata: 1},
-                    wsIds = [],
-                    objCount = 0,
-                    maxObjCount = 0;
+                var i, thisWs, objCount = 0;
 
                 // first pass, get set of wsids and their counts
                 var wsIdsToCounts = [];
-                for (var i = 0; i < workspaces.length; i++) {
-                    var thisWs = workspaces[i];
+                for (i = 0; i < workspaces.length; i++) {
+                    thisWs = workspaces[i];
 
                     if ((wsName && workspaces[i].name !== wsName) ||
                         (ignoreWs && workspaces[i].name === ignoreWs))
@@ -804,14 +801,12 @@ define([
                 var paramsList = [],
                     curParam = newParamSet({types: types}),
                     curTotal = 0,
-                    maxRequest = Config.get('data_panel').max_single_request || 1000,
-                    totalFetch = 0;
+                    maxRequest = Config.get('data_panel').max_single_request || 1000;
 
                 // Set up all possible requests. We'll break out of
                 // the request loop in below
-                for (var i = 0; i < wsIdsToCounts.length; i++) {
-                    var thisWs = wsIdsToCounts[i];
-                    totalFetch += thisWs.count;
+                for (i = 0; i < wsIdsToCounts.length; i++) {
+                    thisWs = wsIdsToCounts[i];
 
                     // if there's room in the request for this
                     // ws, put it there, and boost the total
@@ -848,7 +843,6 @@ define([
                 if (objCount > maxObjFetch)
                     console.error('User\'s object count for owned workspaces was', objCount);
 
-                var headerMessage = '';
                 var requestCounter = 0;
                 return Promise.reduce(paramsList, function (dataList, param) {
                     requestCounter++;
@@ -934,25 +928,12 @@ define([
                 setLoading(view, false);
             }
 
-            function typeList(data) {
-                var types = [];
-
-                for (var i in data) {
-                    var mod_type = data[i][2].split('-')[0];
-                    // update model for types dropdown
-                    if (types.indexOf(mod_type) == -1)
-                        types.push(mod_type);
-                }
-                return types;
-            }
-
             function copyObjects(objs, nar_ws_name) {
                 importStatus.html('Adding <i>' + objs.length + '</i> objects to narrative...');
 
                 var proms = [];
                 for (var i in objs) {
                     var ref = objs[i].ref;
-                    var name = objs[i].name;
                     proms.push(
                         serviceClient.sync_call(
                             'NarrativeService.copy_object',
@@ -1006,7 +987,7 @@ define([
                         $(this).prop('disabled', true);
 
                         var proms = copyObjects(selected, narWSName);
-                        $.when.apply($, proms).done(function (data) {
+                        $.when.apply($, proms).done(function () {
                             importStatus.html('');
                             var status = $('<span class="text-success">done.</span>');
                             importStatus.append(status);
@@ -1192,7 +1173,7 @@ define([
                 });
 
                 // event for filter (search)
-                filterInput.keyup(function (e) {
+                filterInput.keyup(function () {
                     query = $(this).val();
                     setLoading(view, true);
                     var dataToFilter = sharedData;
@@ -1206,7 +1187,7 @@ define([
                     $('<button>')
                         .css({'margin-top': '12px'})
                         .addClass('btn btn-xs btn-default')
-                        .click(function (event) {
+                        .click(function () {
                             container.empty();
                             setLoading(view, true);
                             updateView(view);
@@ -1222,12 +1203,6 @@ define([
                 var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
 
                 var metadata = object_info[10] || {};
-                var metadataText = '';
-                for (var key in metadata) {
-                    if (metadata.hasOwnProperty(key)) {
-                        metadataText += '<tr><th>' + key + '</th><td>' + metadata[key] + '</td></tr>';
-                    }
-                }
                 var type_tokens = object_info[2].split('.');
                 var type = type_tokens[1].split('-')[0];
                 if (type === 'Genome' || type === 'GenomeAnnotation') {
@@ -1314,10 +1289,6 @@ define([
                     loader.reset();
                     container.show();
                 }
-            }
-
-            function objURL(module, type, ws, name) {
-                return self.options.lp_url + ws + '/' + name;
             }
 
             return {

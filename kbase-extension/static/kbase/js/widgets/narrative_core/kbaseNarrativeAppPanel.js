@@ -126,7 +126,7 @@ define([
                 .append(this.$methodList);
 
             this.bsSearch = new BootstrapSearch(this.$searchDiv, {
-                inputFunction: function(e) {
+                inputFunction: function() {
                     self.refreshPanel(this);
                 },
                 placeholder: 'Search apps'

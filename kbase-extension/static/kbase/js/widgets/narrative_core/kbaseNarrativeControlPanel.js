@@ -144,22 +144,6 @@ define ([
                             $.proxy(function(event) {
                                 event.preventDefault();
                                 this.toggleCollapse('user');
-                                // event.preventDefault();
-                                // if ($(event.currentTarget.firstChild).hasClass('fa-chevron-down')) {
-                                //     $(event.currentTarget.firstChild).removeClass('fa-chevron-down')
-                                //         .addClass('fa-chevron-right');
-                                //     this.$bodyDiv.parent().slideUp(this.slideTime);
-                                //     this.isMin = true;
-                                // }
-                                // else {
-                                //     $(event.currentTarget.firstChild).removeClass('fa-chevron-right')
-                                //         .addClass('fa-chevron-down');
-                                //     this.$bodyDiv.parent().slideDown(this.slideTime);
-                                //     this.isMin = false;
-                                // }
-                                // if(this.options.collapseCallback) {
-                                //     this.options.collapseCallback(this.isMin);
-                                // }
                             }, this)
                         )
                         .append($('<span>')

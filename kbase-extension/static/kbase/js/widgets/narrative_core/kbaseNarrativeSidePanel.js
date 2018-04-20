@@ -5,25 +5,25 @@ define(
         'kbwidget',
         'bootstrap',
         'jquery',
+        'base/js/namespace',
         'narrativeConfig',
         'jqueryui',
         'kbaseNarrativeDataPanel',
         'kbaseNarrativeAppPanel',
         'kbaseNarrativeManagePanel',
-        'kbaseNarrativeJobsPanel',
-        'kbaseNarrative'
+        'kbaseNarrativeJobsPanel'
     ],
     function(
         KBWidget,
         bootstrap,
         $,
+        Jupyter,
         Config,
         jqueryui,
         kbaseNarrativeDataPanel,
         kbaseNarrativeAppPanel,
         kbaseNarrativeManagePanel,
-        kbaseNarrativeJobsPanel,
-        kbaseNarrative
+        kbaseNarrativeJobsPanel
     ) {
         'use strict';
         return KBWidget({
@@ -90,7 +90,6 @@ define(
                     params: { autopopulate: true, showTitle: false }
                 }]);
                 this.$jobsWidget = jobsWidget['kbaseNarrativeJobsPanel'];
-                var $jobsPanel = jobsWidget['panelSet'];
 
                 this.$tabs = this.buildTabs([{
                     tabName: 'Analyze',
@@ -99,10 +98,6 @@ define(
                     tabName: 'Narratives',
                     content: $managePanel
                 },
-                // {
-                //     tabName : this.$jobsWidget.title,
-                //     content: $jobsPanel
-                // }
                 ], true);
 
                 this.$elem.addClass('kb-side-panel');
@@ -397,7 +392,6 @@ define(
 
                 var fullSize = h - this.heightPanelOffset;
                 this.$narrativesWidget.setHeight(fullSize);
-                this.$jobsWidget.setHeight(fullSize);
             },
 
             render: function() {

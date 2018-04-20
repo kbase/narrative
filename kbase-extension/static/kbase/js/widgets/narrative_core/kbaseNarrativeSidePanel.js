@@ -150,6 +150,7 @@ define(
                 // this.$tabs.header.find('div.kb-side-header').css({'width': (readOnly ? ((100-this.hideButtonSize)/2)+'%' : ((100-this.hideButtonSize)/3)+'%')});
 
                 this.$dataWidget.setReadOnlyMode(readOnly);
+                this.$methodsWidget.setReadOnlyMode(readOnly);
                 // this.handleMinimizedMethodPanel(readOnly);
             },
 

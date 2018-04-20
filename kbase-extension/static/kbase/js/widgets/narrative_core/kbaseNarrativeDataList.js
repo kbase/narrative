@@ -1219,7 +1219,7 @@ define([
                         title: 'Warning',
                         body: 'Read-only Narrative -- may not insert a data viewer into this Narrative',
                         alertOnly: true
-                    });
+                    }).show();
                     return;
                 }
                 var data = JSON.parse(e.dataTransfer.getData('info')),

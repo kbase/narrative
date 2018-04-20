@@ -415,13 +415,20 @@ define([
         },
 
         setListHeight: function(height, animate) {
-
             if (this.$methodList) {
                 if (animate) {
                     this.$methodList.animate({ 'height': height}, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
                 } else {
                     this.$methodList.css({ 'height': height});
                 }
+            }
+        },
+
+        setReadOnlyMode: function (readOnly) {
+            if (readOnly) {
+                this.toggleCollapse('collapse');
+            } else {
+                this.toggleCollapse('restore');
             }
         },
 
@@ -562,7 +569,7 @@ define([
                     title: 'Warning',
                     body: 'Read-only Narrative -- you may not add apps to this Narrative',
                     alertOnly: true
-                });
+                }).show();
                 // alert('Read-only Narrative -- may not add apps to this Narrative');
                 return;
             }
@@ -872,7 +879,6 @@ define([
                 var app = appSet[id];
                 switch (filterType) {
                 case 'in_type':
-
                 case 'input':
                     if (filterString.indexOf('.') !== -1) {
                         searchSet = app.info.input_types;

@@ -217,13 +217,15 @@ define([
             return this;
         },
         setReadOnlyMode: function (readOnly) {
-            this.$elem.css({'height': (readOnly ? '100%' : '50%')});
+            // this.$elem.css({'height': (readOnly ? '100%' : '50%')});
             if (readOnly) {
                 this.$slideoutBtn.hide();
                 this.dataListWidget.$addDataButton.hide();
+                this.toggleCollapse('expand');
             } else {
                 this.$slideoutBtn.show();
                 this.dataListWidget.$addDataButton.show();
+                this.toggleCollapse('restore');
             }
         },
         setListHeight: function (height, animate) {
@@ -251,41 +253,41 @@ define([
                 this.importerThing = this.dataImporter(this.ws_name);
 
                 this.tabMapping = [
-                  {
-                    widget : this.importerThing,
-                    render : function () {
-                        this.importerThing.updateView('mine', this.ws_name);
-                    }.bind(this),
-                  },
-                  {
-                    widget : this.importerThing,
-                    render : function () {
-                        this.importerThing.updateView('shared', this.ws_name);
-                    }.bind(this),
-                  },
-                  {
-                    widget : this.publicTab,
-                    render : function () {
-                        this.publicTab.render();
-                    }.bind(this),
-                  },
-                  {
-                    widget : this.exampleTab,
-                    render : function () {
-                        this.exampleTab.getExampleDataAndRender();
-                    }.bind(this),
-                  },
-                  { render : function() {} },
+                    {
+                        widget : this.importerThing,
+                        render : function () {
+                            this.importerThing.updateView('mine', this.ws_name);
+                        }.bind(this),
+                    },
+                    {
+                        widget : this.importerThing,
+                        render : function () {
+                            this.importerThing.updateView('shared', this.ws_name);
+                        }.bind(this),
+                    },
+                    {
+                        widget : this.publicTab,
+                        render : function () {
+                            this.publicTab.render();
+                        }.bind(this),
+                    },
+                    {
+                        widget : this.exampleTab,
+                        render : function () {
+                            this.exampleTab.getExampleDataAndRender();
+                        }.bind(this),
+                    },
+                    { render : function() {} },
                 ];
 
                 if (Config.get('features').stagingDataViewer) {
                     this.tabMapping.push(
-                      {
-                        widget : this.stagingTab,
-                        render : function () {
-                            this.stagingTab.updateView();
-                        }.bind(this)
-                      }
+                        {
+                            widget : this.stagingTab,
+                            render : function () {
+                                this.stagingTab.updateView();
+                            }.bind(this)
+                        }
                     );
                 }
 
@@ -412,10 +414,10 @@ define([
         },
 
         deactivateLastRenderedPanel : function() {
-          if (this.$lastRenderedWidget && this.$lastRenderedWidget.deactivate) {
-            this.$lastRenderedWidget.deactivate();
-            this.$lastRenderedWidget = undefined;
-          }
+            if (this.$lastRenderedWidget && this.$lastRenderedWidget.deactivate) {
+                this.$lastRenderedWidget.deactivate();
+                this.$lastRenderedWidget = undefined;
+            }
         },
 
         updateSlideoutRendering: function (panelIdx) {
@@ -428,7 +430,7 @@ define([
             }
             var $widget = this.tabMapping[panelIdx].widget;
             if ($widget && $widget.activate) {
-              $widget.activate();
+                $widget.activate();
             }
 
             this.$lastRenderedWidget = $widget;
@@ -624,13 +626,13 @@ define([
                     .then(function (data) {
                         var dataTypes = {};
                         data.forEach(function(datum) {
-                          var match = datum[2].match(/([^.]+)\.([^-]+)/)
-                          var module = match[1];
-                          var type = match[2];
-                          if (dataTypes[type] === undefined) {
-                            dataTypes[type] = {};
-                          }
-                          dataTypes[type][module + '.' + type] = true;
+                            var match = datum[2].match(/([^.]+)\.([^-]+)/);
+                            var module = match[1];
+                            var type = match[2];
+                            if (dataTypes[type] === undefined) {
+                                dataTypes[type] = {};
+                            }
+                            dataTypes[type][module + '.' + type] = true;
                         });
                         knownTypes = dataTypes;
                         if (view === 'mine') {
@@ -790,7 +792,7 @@ define([
                     if (start.type)
                         param.types = [start.type];
                     if (start.types)
-                      param.types = start.types;
+                        param.types = start.types;
                     if (start.id)
                         param.workspaces.push(start.id);
                     return param;
@@ -1181,7 +1183,7 @@ define([
                 typeInput.change(function () {
                     type = $(this).children('option:selected').data('type');
                     if (type) {
-                      type = type.split(',');
+                        type = type.split(',');
                     }
                     filterInput.val('');
                     // request again with filted type

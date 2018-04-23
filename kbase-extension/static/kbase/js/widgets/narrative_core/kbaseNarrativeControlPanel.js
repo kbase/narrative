@@ -59,6 +59,52 @@ define ([
             return this;
         },
 
+        userCollapse: false,
+        toggleCollapse: function (override) {
+            var $toggleIcon = this.$elem.find('.kb-narr-panel-toggle');
+
+            var collapse;
+            if (override) {
+                switch (override) {
+                case 'collapse':
+                    collapse = true;
+                    break;
+                case 'expand':
+                    collapse = false;
+                    break;
+                case 'restore':
+                    collapse = this.userCollapse;
+                    break;
+                case 'user':
+                    collapse = !this.isMinimized();
+                    this.userCollapse = collapse;
+                }
+            } else {
+                collapse = this.Min ? false: true;
+            }
+
+            // nothing to do if the new collapse state is the same as the old.
+            if ( (collapse && this.isMinimized()) ||
+                 (!collapse && !this.isMinimized()) ) {
+                return;
+            }
+
+            if (collapse) {
+                $toggleIcon.removeClass('fa-chevron-down')
+                    .addClass('fa-chevron-right');
+                this.$bodyDiv.parent().slideUp(this.slideTime);
+                this.isMin = true;
+            } else {
+                $toggleIcon.removeClass('fa-chevron-right')
+                    .addClass('fa-chevron-down');
+                this.$bodyDiv.parent().slideDown(this.slideTime);
+                this.isMin = false;
+            }
+            if(this.options.collapseCallback) {
+                this.options.collapseCallback(this.isMin);
+            }
+        },
+
         /**
          * @method
          * Renders the new containing panel widget
@@ -85,51 +131,37 @@ define ([
             this.$headerDiv = $('<div>');
 
             this.$buttonPanel = $('<span>')
-                                .addClass('btn-toolbar pull-right')
-                                .attr('role', 'toolbar')
-                                .css({'margin-top' : '-2px'});
+                .addClass('btn-toolbar pull-right')
+                .attr('role', 'toolbar')
+                .css({'margin-top' : '-2px'});
 
             var $titleSpan = $('<span>');
             if(this.options.showTitle) {
                 $titleSpan
-                .append($('<span>')
-                  .css({'cursor' : 'pointer'})
-                  .click(
-                      $.proxy(function(event) {
-                          event.preventDefault();
-                          if ($(event.currentTarget.firstChild).hasClass('fa-chevron-down')) {
-                              $(event.currentTarget.firstChild).removeClass('fa-chevron-down')
-                                                               .addClass('fa-chevron-right');
-                              this.$bodyDiv.parent().slideUp(this.slideTime);
-                              this.isMin = true;
-                          }
-                          else {
-                              $(event.currentTarget.firstChild).removeClass('fa-chevron-right')
-                                                               .addClass('fa-chevron-down');
-                              this.$bodyDiv.parent().slideDown(this.slideTime);
-                              this.isMin = false;
-                          }
-                          if(this.options.collapseCallback) {
-                              this.options.collapseCallback(this.isMin);
-                          }
-                      }, this)
-                  )
-                  .append($('<span>')
-                          .addClass('fa fa-chevron-down kb-narr-panel-toggle'))
-                  .append(this.options.title));
+                    .append($('<span>')
+                        .css({'cursor' : 'pointer'})
+                        .click(
+                            $.proxy(function(event) {
+                                event.preventDefault();
+                                this.toggleCollapse('user');
+                            }, this)
+                        )
+                        .append($('<span>')
+                            .addClass('fa fa-chevron-down kb-narr-panel-toggle'))
+                        .append(this.options.title));
             }
             $titleSpan.append(this.$buttonPanel);
 
             this.isMin = false;
             this.$elem.append($('<div>')
-                              .css({'height':'100%'})
-                              .addClass('kb-narr-side-panel')
-                              .append($('<div>')
-                                      .addClass('kb-title')
-                                      .append($titleSpan))
-                              .append($('<div>')
-                                      .addClass('kb-narr-panel-body-wrapper')
-                                      .append(this.$bodyDiv)));
+                .css({'height':'100%'})
+                .addClass('kb-narr-side-panel')
+                .append($('<div>')
+                    .addClass('kb-title')
+                    .append($titleSpan))
+                .append($('<div>')
+                    .addClass('kb-narr-panel-body-wrapper')
+                    .append(this.$bodyDiv)));
         },
 
         // remember the minimization state

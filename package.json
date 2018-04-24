@@ -1,7 +1,7 @@
 {
   "name": "kbase-narrative-core",
   "description": "Core components for the KBase Narrative Interface",
-  "version": "3.7.0",
+  "version": "3.7.1",
   "private": true,
   "repository": "github.com/kbase/narrative",
   "devDependencies": {
@@ -37,8 +37,7 @@
   "scripts": {
     "bower": "bower install",
     "test": "grunt test",
-    "build": "grunt build",
-    "preinstall": "npm install --prefix kbase-extension/static/ext_components/ igv.js"
+    "build": "grunt build"
   },
   "dependencies": {
     "karma-es6-shim": "^1.0.0"

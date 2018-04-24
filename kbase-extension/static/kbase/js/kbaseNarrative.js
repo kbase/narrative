@@ -850,7 +850,7 @@ define([
                 title: 'Warning',
                 body: 'Read-only Narrative -- may not add a data viewer to this Narrative',
                 alertOnly: true
-            });
+            }).show();
             return;
         }
         var cell = Jupyter.notebook.get_selected_cell(),

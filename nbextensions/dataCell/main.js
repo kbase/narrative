@@ -214,6 +214,7 @@ define([
                         console.error('ERROR creating cell', err);
                         // delete cell.
                         $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
+                        // TODO: better error handling - a cell failing to insert is a major error.
                         alert('Could not insert cell due to errors.\n' + err.message);
                     });
             }
@@ -232,8 +233,7 @@ define([
         /* Only initialize after the notebook is fully loaded. */
         if (Jupyter.notebook._fully_loaded) {
             initializeExtension();
-        }
-        else {
+        } else {
             $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
                 initializeExtension();
             });
@@ -245,5 +245,9 @@ define([
         load_ipython_extension: load
     };
 }, function(err) {
+    'use strict';
+    // NB we should probably not be handling individual loading errors. If the 
+    // data cell couldn't load it is not recoverable -- the user should either reload the
+    // narrative or the system is broken. This handling in particular will just hide the error.
     console.error('ERROR loading dataCell main', err);
 });

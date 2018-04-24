@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'jquery',
     'bluebird',
@@ -54,185 +51,184 @@ define([
         td = t('td'),
         pre = t('pre'),
         input = t('input'),
-        img = t('img'),
         appStates = [{
-                state: {
-                    mode: 'new'
+            state: {
+                mode: 'new'
+            },
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['run-app']
                 },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['run-app']
-                    },
-                    elements: {
-                        show: [],
-                        hide: ['fatal-error', 'parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
-                    }
-                },
-                next: [{
-                        mode: 'fatal-error'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'incomplete'
-                    }
-                ]
+                elements: {
+                    show: [],
+                    hide: ['fatal-error', 'parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
+                }
+            },
+            next: [{
+                mode: 'fatal-error'
             },
             {
-                state: {
-                    mode: 'fatal-error'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['run-app']
-                    },
-                    elements: {
-                        show: ['fatal-error'],
-                        hide: ['parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
-                    }
-                },
-                next: []
-
-            },
-            {
-                state: {
-                    mode: 'editing',
-                    params: 'incomplete'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['run-app']
-                    },
-                    elements: {
-                        show: ['parameters-group', 'output-group'],
-                        hide: ['fatal-error', 'parameters-display-group', 'exec-group']
-                    }
-                },
-                next: [{
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'incomplete'
-                    }
-                ]
-            },
-            {
-                state: {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['run-app'],
-                        disabled: []
-                    },
-                    elements: {
-                        show: ['parameters-group', 'output-group'],
-                        hide: ['fatal-error', 'parameters-display-group', 'exec-group']
-                    }
-                },
-                next: [{
-                        mode: 'editing',
-                        params: 'incomplete'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    },
-                    {
-                        mode: 'processing',
-                        stage: 'launching'
-                    },
-                    {
-                        mode: 'processing',
-                        stage: 'queued'
-                    },
-                    {
-                        mode: 'processing',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'success'
-                    },
-                    {
-                        mode: 'error',
-                        stage: 'launching'
-                    },
-                    {
-                        mode: 'error',
-                        stage: 'queued'
-                    },
-                    {
-                        mode: 'error',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'error'
-                    }
-                ]
-            },
-            {
-                state: {
-                    mode: 'success'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['run-app']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                on: {
-                    enter: {
-                        messages: [{
-                            emit: 'on-success'
-                        }]
-                    }
-                },
-                next: [{
-                        mode: 'success'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-            },
-            {
-                state: {
-                    mode: 'error'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['run-app']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                next: [{
-                        mode: 'error'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
+                mode: 'editing',
+                params: 'incomplete'
             }
+            ]
+        },
+        {
+            state: {
+                mode: 'fatal-error'
+            },
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['run-app']
+                },
+                elements: {
+                    show: ['fatal-error'],
+                    hide: ['parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
+                }
+            },
+            next: []
+
+        },
+        {
+            state: {
+                mode: 'editing',
+                params: 'incomplete'
+            },
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['run-app']
+                },
+                elements: {
+                    show: ['parameters-group', 'output-group'],
+                    hide: ['fatal-error', 'parameters-display-group', 'exec-group']
+                }
+            },
+            next: [{
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'editing',
+                params: 'incomplete'
+            }
+            ]
+        },
+        {
+            state: {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            ui: {
+                buttons: {
+                    enabled: ['run-app'],
+                    disabled: []
+                },
+                elements: {
+                    show: ['parameters-group', 'output-group'],
+                    hide: ['fatal-error', 'parameters-display-group', 'exec-group']
+                }
+            },
+            next: [{
+                mode: 'editing',
+                params: 'incomplete'
+            },
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'processing',
+                stage: 'launching'
+            },
+            {
+                mode: 'processing',
+                stage: 'queued'
+            },
+            {
+                mode: 'processing',
+                stage: 'running'
+            },
+            {
+                mode: 'success'
+            },
+            {
+                mode: 'error',
+                stage: 'launching'
+            },
+            {
+                mode: 'error',
+                stage: 'queued'
+            },
+            {
+                mode: 'error',
+                stage: 'running'
+            },
+            {
+                mode: 'error'
+            }
+            ]
+        },
+        {
+            state: {
+                mode: 'success'
+            },
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['run-app']
+                },
+                elements: {
+                    show: ['parameters-display-group', 'exec-group', 'output-group'],
+                    hide: ['parameters-group']
+                }
+            },
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-success'
+                    }]
+                }
+            },
+            next: [{
+                mode: 'success'
+            },
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            }
+            ]
+        },
+        {
+            state: {
+                mode: 'error'
+            },
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['run-app']
+                },
+                elements: {
+                    show: ['parameters-display-group', 'exec-group', 'output-group'],
+                    hide: ['parameters-group']
+                }
+            },
+            next: [{
+                mode: 'error'
+            },
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            }
+            ]
+        }
         ];
 
     function factory(config) {
@@ -246,7 +242,6 @@ define([
             // that is, the extension.
             cellBus,
             bus = runtime.bus().makeChannelBus({ description: 'A view cell widget' }),
-            env = {},
             model,
             paramsWidget,
 
@@ -273,9 +268,7 @@ define([
                     element: 'about-app'
                 }
             },
-            widgets = {},
-            fsm,
-            saveMaxFrequency = config.saveMaxFrequency || 5000;
+            fsm;
 
         if (runtime.config('features.developer')) {
             settings.showDeveloper = {
@@ -309,22 +302,7 @@ define([
                 .then(function(data) {
                     if (!data[0]) {
                         throw new Error('App not found');
-                    }
-                    // TODO: really the best way to store state?
-                    // env.appSpec = data[0];
-                    // DISABLED - we just get the spec from the metadata.
-
-                    // Get an input field widget per parameter
-                    // var parameterMap = {},
-                    //     parameters = data[0].parameters.map(function (parameterSpec) {
-                    //     // tee hee
-                    //     var param = ParameterSpec.make({parameterSpec: parameterSpec});
-                    //     parameterMap[param.id()] = param;
-                    //     return param;
-                    // });
-                    // env.parameters = parameters;
-                    // env.parameterMap = parameterMap;
-                    // return parameters;
+                    }                   
                 });
         }
 
@@ -336,9 +314,9 @@ define([
             ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
         }
 
-        function showFatalError(arg) {
-            ui.showElement('fatal-error');
-        }
+        // function showFatalError(arg) {
+        //     ui.showElement('fatal-error');
+        // }
 
         function showFsmBar() {
             var currentState = fsm.getCurrentState(),
@@ -407,17 +385,17 @@ define([
         function renderAboutApp() {
             return html.makeTabs({
                 tabs: [{
-                        label: 'Summary',
-                        name: 'summary',
-                        content: renderAppSummary()
-                    },
-                    ui.ifAdvanced(function() {
-                        return {
-                            label: 'Spec',
-                            name: 'spec',
-                            content: renderAppSpec()
-                        };
-                    })
+                    label: 'Summary',
+                    name: 'summary',
+                    content: renderAppSummary()
+                },
+                ui.ifAdvanced(function() {
+                    return {
+                        label: 'Spec',
+                        name: 'spec',
+                        content: renderAppSpec()
+                    };
+                })
                 ]
             });
         }
@@ -433,13 +411,13 @@ define([
 
             value = model.getItem(['user-settings', settingName], setting.defaultValue);
             switch (setting.type) {
-                case 'toggle':
-                    if (value) {
-                        ui.showElement(setting.element);
-                    } else {
-                        ui.hideElement(setting.element);
-                    }
-                    break;
+            case 'toggle':
+                if (value) {
+                    ui.showElement(setting.element);
+                } else {
+                    ui.hideElement(setting.element);
+                }
+                break;
             }
         }
 
@@ -635,50 +613,36 @@ define([
             return spec.validateModel(model.getItem('params'));
         }
 
-        // TODO: we need to determine the proper forms for a app identifier, and
-        // who creates this canonical identifier. E.g. the method panel supplies
-        // the app id to the cell, but it gets it from the kernel, which gets it
-        // directly from the nms/catalog. If the catalog provides the version
-        // for a beta or release tag ...
         function fixApp(app) {
             switch (app.tag) {
-                case 'release':
-                    {
-                        return {
-                            id: app.id,
-                            tag: app.tag,
-                            version: app.version
-                        };
-                    }
-                case 'beta':
-                case 'dev':
-                    return {
-                        id: app.id,
-                        tag: app.tag
-                    }
-                default:
-                    throw new Error('Invalid tag for app ' + app.id);
+            case 'release':
+                return {
+                    id: app.id,
+                    tag: app.tag,
+                    version: app.version
+                };
+            case 'beta':
+            case 'dev':
+                return {
+                    id: app.id,
+                    tag: app.tag,
+                    version: app.gitCommitHash
+                };
+            default:
+                throw new Error('Invalid tag for app ' + app.id);
             }
         }
 
         function buildPython(cell, cellId, app, params) {
             var runId = new Uuid(4).format(),
-                app = fixApp(app),
-                code = PythonInterop.buildViewRunner(cellId, runId, app, params);
+                code = PythonInterop.buildViewRunner(cellId, runId, fixApp(app), params);
+
             // TODO: do something with the runId
             cell.set_text(code);
         }
 
         function resetPython(cell) {
             cell.set_text('');
-        }
-
-        function setStatus(cell, status) {
-            model.setItem('attributes.status', status);
-        }
-
-        function getStatus(cell) {
-            model.getItem('attributes.status');
         }
 
         function initializeFSM() {
@@ -694,9 +658,6 @@ define([
                 initialState: {
                     mode: 'new'
                 },
-                //xinitialState: {
-                //    mode: 'editing', params: 'incomplete'
-                //},
                 onNewState: function(fsm) {
                     model.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
@@ -718,12 +679,6 @@ define([
         }
 
         function initCodeInputArea() {
-            // var codeInputArea = cell.input[0];
-            //if (!cell.kbase.inputAreaDisplayStyle) {
-            //    cell.kbase.inputAreaDisplayStyle = codeInputArea.css('display');
-            // }
-            // try this hack to reset the initial state for the input subarea...
-            //codeInputArea[0].setAttribute('data-toggle-initial-state', 'hidden');
             model.setItem('user-settings.showCodeInputArea', false);
         }
 
@@ -740,7 +695,7 @@ define([
             }
         }
 
-        function toggleCodeInputArea(cell) {
+        function toggleCodeInputArea() {
             if (model.getItem('user-settings.showCodeInputArea')) {
                 model.setItem('user-settings.showCodeInputArea', false);
             } else {
@@ -750,7 +705,7 @@ define([
             return model.getItem('user-settings.showCodeInputArea');
         }
 
-        function toggleSettings(cell) {
+        function toggleSettings() {
             var name = 'showSettings',
                 selector = 'settings',
                 node = ui.getElement(selector),
@@ -809,28 +764,7 @@ define([
             renderNotifications();
         }
 
-        function clearNotifications() {
-            model.setItem('notifications', []);
-        }
-
         // WIDGETS
-
-        function showWidget(name, widgetModule, path) {
-            var bus = runtime.bus().makeChannelBus({ description: 'Bus for showWidget' }),
-                widget = widgetModule.make({
-                    bus: bus,
-                    workspaceInfo: workspaceInfo
-                });
-            widgets[name] = {
-                path: path,
-                module: widgetModule,
-                instance: widget
-            };
-            widget.start();
-            bus.emit('attach', {
-                node: ui.getElement(path)
-            });
-        }
 
         /*
          *
@@ -859,45 +793,6 @@ define([
                 ui.hideElement(element);
             });
 
-        }
-
-        var saveTimer = null;
-
-        function saveNarrative() {
-            if (saveTimer) {
-                return;
-            }
-            saveTimer = window.setTimeout(function() {
-                saveTimer = null;
-                Narrative.saveNotebook();
-            }, saveMaxFrequency);
-        }
-
-        function doRerun() {
-            var confirmed = ui.confirmDialog('This will clear the App Execution area, and re-display the Input parameters. You may then change inputs and run the app again. (Any output you have already produced will be left intact.)\n\nProceed to prepare the app to Run Again?', 'Yes', 'No');
-            if (!confirmed) {
-                return;
-            }
-
-            var jobState = model.getItem('exec.jobState');
-            if (jobState) {
-                cancelJob(jobState.job_id);
-                // the job will be deleted form the notebook when the job cancellation
-                // event is received.
-            }
-
-            // Remove all of the execution state when we reset the app.
-            model.deleteItem('exec');
-
-            // Also ensure that the exec widget is reset
-            // widgets.execWidget.bus.emit('reset');
-
-            // TODO: evaluate the params again before we do this.
-            fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
-
-            clearOutput();
-
-            renderUI();
         }
 
         function doDeleteCell() {
@@ -960,56 +855,7 @@ define([
                 return null;
             });
         }
-
-        /*
-         * This message implementation is called whenever the app cell widget
-         * enters the "success" state.
-         *
-         * The job here is to evaluate the output of the execution and to ensure
-         * that any output products have been made available in the narrative.
-         *
-         * Here is what we need to handle:
-         *
-         * 1. The canonical case of one or more objects created in this workspace,
-         * and named in the output parameters.
-         *
-         * 2. A job report object which should also be displayed.
-         *
-         * After displaying the objects, we record this in the cell metadata
-         *
-         * If the user decides to delete the output cells, this ensures that we
-         * will not add them again.
-         *
-         * However, we will produce user interface elements to ensure that the
-         * user can re-insert them if they want to.
-         *
-         * OR
-         *
-         * I think it is supposed to work like this:
-         *
-         * kb_service_output_mapping in the app spec provides an array
-         * of "mappings" to produce input paramters (an argument which is a object
-         * composed of said properties) for an "output widget". The output widget
-         * is named in info.output_types
-         *
-         * All rather fishy and fragile looking to me.
-         * Why can't we just classify the types of output available?
-         * Are there really going to be many use cases of outputs customized
-         * like this? I expect the vast majority will either be reports or simply
-         * the output objects.
-         *
-         */
-
-
-        function clearOutput() {
-            var cellNode = cell.element.get(0),
-                textNode = document.querySelector('.output_area.output_text');
-
-            if (textNode) {
-                textNode.innerHTML = '';
-            }
-        }
-
+       
         function start() {
             return Promise.try(function() {
                 // DOM EVENTS
@@ -1020,15 +866,6 @@ define([
                  * listeners for the local input cell message bus
                  */
 
-                // bus.on('toggle-code-view', function() {
-                //     console.log('toggling code view...');
-                //     var showing = toggleCodeInputArea(),
-                //         label = showing ? 'Hide Code' : 'Show Code';
-                //     ui.setButtonLabel('toggle-code-view', label);
-                // });
-                bus.on('show-notifications', function() {
-                    doShowNotifications();
-                });
                 bus.on('edit-cell-metadata', function() {
                     doEditCellMetadata();
                 });
@@ -1052,27 +889,8 @@ define([
                 bus.on('run-app', function() {
                     doRun();
                 });
-                //                bus.on('re-run-app', function () {
-                //                    doRerun();
-                //                });
-                //                bus.on('remove', function () {
-                //                    doRemove();
-                //                });
-
-                bus.on('on-success', function() {
-                    doOnSuccess();
-                });
-
-                bus.on('sync-all-display-parameters', function() {
-                    console.log('hmm, sync all display parameters called...???');
-                    // widgets.paramsDisplayWidget.bus.emit('sync-all-parameters');
-                });
 
                 // Events from widgets...
-
-                parentBus.on('newstate', function(message) {
-                    console.log('GOT NEWSTATE', message);
-                });
 
                 parentBus.on('reset-to-defaults', function() {
                     bus.emit('reset-to-defaults');
@@ -1089,10 +907,7 @@ define([
                     doDeleteCell();
                 }));
 
-                eventManager.add(runtime.bus().on('ui-mode-changed', function(newMode) {
-                    // toggleViewOnlyMode(msg.readOnly);
-                    // renderUI();
-                    console.log('ui mode changed', newMode, Narrative.canEdit());
+                eventManager.add(runtime.bus().on('ui-mode-changed', function() {
                     if (Narrative.canEdit()) {
                         unloadParamsWidget()
                             .then(function() {
@@ -1105,47 +920,6 @@ define([
                             });
                     }
                 }));
-
-
-                // We need to listen for job-status messages is we are loading
-                // a cell that has a running job.
-
-                // TODO: inform the job manager that we are ready to receive
-                // messages for this job?
-                // At present the job manager will start doing this after it
-                // loads the narrative and has inspected the jobs in its metadata.
-                // But this is a race condition -- and it is probably better
-                // if the cell invokes this response and then can receive either
-                // the start of the job-status message stream or a response indicating
-                // that the job has completed, after which we don't need to
-                // listen any further.
-
-                // get the status
-
-                // if we are in a running state, start listening for jobs
-                var state = model.getItem('fsm.currentState');
-
-                if (state) {
-                    switch (state.mode) {
-                        case 'editing':
-                        case 'launching':
-                        case 'processing':
-                            switch (state.stage) {
-                                case 'launching':
-                                    // nothing to do.
-                                    break;
-                                case 'queued':
-                                case 'running':
-                                    startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
-                                    break;
-                            }
-                            break;
-                        case 'success':
-                        case 'error':
-                            // do nothing for now
-                    }
-                }
-
 
                 showCodeInputArea();
 
@@ -1195,8 +969,6 @@ define([
         function loadInputParamsWidget() {
             pRequire('nbextensions/viewCell/widgets/appParamsWidget')
                 .then(function(Widget) {
-
-
                     var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
 
                     paramsWidget = Widget.make({
@@ -1204,12 +976,6 @@ define([
                         workspaceInfo: workspaceInfo
                     });
 
-                    // widgets.paramsInputWidget = {
-                    //     path: ['parameters-group', 'widget'],
-                    //     // module: widgetModule,
-                    //     bus: bus,
-                    //     instance: widget
-                    // };
                     bus.on('parameter-sync', function(message) {
                         var value = model.getItem(['params', message.parameter]);
                         bus.send({
@@ -1250,18 +1016,6 @@ define([
                         }
                     });
 
-                    //                    bus.on('get-parameter-value', function (message) {
-                    //                        var value = model.getItem(['params', message.parameter]);
-                    //                        bus.send({
-                    //                            parameter: message.parameter,
-                    //                            value: value
-                    //                        }, {
-                    //                            key: {
-                    //                                type: 'parameter-value',
-                    //                                parameter: message.parameter
-                    //                            }
-                    //                        });
-                    //                    });
                     bus.on('parameter-changed', function(message) {
                         // We simply store the new value for the parameter.
                         model.setItem(['params', message.parameter], message.newValue);
@@ -1279,8 +1033,6 @@ define([
         function loadViewParamsWidget() {
             pRequire('nbextensions/viewCell/widgets/appParamsViewWidget')
                 .then(function(Widget) {
-
-
                     var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
 
                     paramsWidget = Widget.make({
@@ -1288,12 +1040,6 @@ define([
                         workspaceInfo: workspaceInfo
                     });
 
-                    // widgets.paramsInputWidget = {
-                    //     path: ['parameters-group', 'widget'],
-                    //     // module: widgetModule,
-                    //     bus: bus,
-                    //     instance: widget
-                    // };
                     bus.on('parameter-sync', function(message) {
                         var value = model.getItem(['params', message.parameter]);
                         bus.send({
@@ -1334,18 +1080,6 @@ define([
                         }
                     });
 
-                    //                    bus.on('get-parameter-value', function (message) {
-                    //                        var value = model.getItem(['params', message.parameter]);
-                    //                        bus.send({
-                    //                            parameter: message.parameter,
-                    //                            value: value
-                    //                        }, {
-                    //                            key: {
-                    //                                type: 'parameter-value',
-                    //                                parameter: message.parameter
-                    //                            }
-                    //                        });
-                    //                    });
                     bus.on('parameter-changed', function(message) {
                         // We simply store the new value for the parameter.
                         model.setItem(['params', message.parameter], message.newValue);
@@ -1358,108 +1092,6 @@ define([
                         params: model.getItem('params')
                     });
                 });
-        }
-
-        function xloadViewParamsWidget() {
-            return pRequire('nbextensions/viewCell/widgets/appParamsViewWidget')
-                .then(function(Widget) {
-                    // TODO: widget should make own bus
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input view widget' });
-
-                    paramsWidget = Widget.make({
-                        bus: bus,
-                        workspaceInfo: workspaceInfo
-                    });
-                    // widgets.paramsDisplayWidget = {
-                    //     path: ['parameters-display-group', 'widget'],
-                    //     // module: widgetModule,
-                    //     bus: bus,
-                    //     instance: widget
-                    // };
-                    bus.on('sync-all-parameters', function() {
-                        var params = model.getItem('params');
-                        Object.keys(params).forEach(function(key) {
-
-                            bus.send({
-                                parameter: key,
-                                value: params[key]
-                            }, {
-                                // This points the update back to a listener on this key
-                                key: {
-                                    type: 'update',
-                                    parameter: key
-                                }
-                            });
-
-                            //bus.emit('update', {
-                            //    parameter: key,
-                            //    value: params[key]
-                            //});
-                        });
-                    });
-                    bus.on('parameter-sync', function(message) {
-                        var value = model.getItem(['params', message.parameter]);
-                        bus.send({
-                            parameter: message.parameter,
-                            value: value
-                        }, {
-                            // This points the update back to a listener on this key
-                            key: {
-                                type: 'update',
-                                parameter: message.parameter
-                            }
-                        });
-                    });
-
-                    // return paramsWidget.start()
-                    //     .then(function() {
-                    //         bus.emit('run', {
-                    //             node: ui.getElement(['parameters-display-group', 'widget']),
-                    //             appSpec: env.appSpec,
-                    //             parameters: env.parameters
-                    //         });
-                    //     });
-                    return paramsWidget.start({
-                        node: ui.getElement(['parameters-group', 'widget']),
-                        appSpec: model.getItem('app.spec'),
-                        parameters: spec.getSpec().parameters,
-                        params: model.getItem('params')
-                    });
-                });
-        }
-
-        function makeIcon() {
-            // icon is in the spec ...
-            var appSpec = env.appSpec,
-                nmsBase = runtime.config('services.narrative_method_store_image.url'),
-                iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
-
-            if (iconUrl) {
-                return span({ class: 'fa-stack fa-2x', style: { padding: '2px' } }, [
-                    img({ src: nmsBase + iconUrl, style: { maxWidth: '46px', maxHeight: '46px', margin: '2px' } })
-                ]);
-            }
-
-            return span({ style: '' }, [
-                span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: 'rgb(103,58,183)' } }, [
-                    span({ class: 'fa fa-square fa-stack-2x', style: { color: 'rgb(103,58,183)' } }),
-                    span({ class: 'fa fa-inverse fa-stack-1x fa-cube' })
-                ])
-            ]);
-        }
-
-        function renderIcon() {
-            var prompt = cell.element[0].querySelector('.input_prompt');
-
-            if (!prompt) {
-                return;
-            }
-
-            prompt.innerHTML = div({
-                style: { textAlign: 'center' }
-            }, [
-                makeIcon()
-            ]);
         }
 
         // just a quick hack since we are not truly recursive yet..,
@@ -1511,23 +1143,9 @@ define([
                 })
                 .catch(function(err) {
                     alert('internal error'),
-                        console.error('INTERNAL ERROR', err);
+                    console.error('INTERNAL ERROR', err);
                 });
         }
-
-        // function evaluateAppState() {
-        //     var validationResult = validateModel();
-        //     if (validationResult.isValid) {
-        //         buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
-        //         fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
-        //         renderUI();
-        //     } else {
-        //         resetPython(cell);
-        //         fsm.newState({ mode: 'editing', params: 'incomplete' });
-        //         renderUI();
-        //     }
-        // }
-
 
         function run(params) {
             // First get the app specs, which is stashed in the model,
@@ -1558,7 +1176,6 @@ define([
                     showAppSpec();
                     PR.prettyPrint(null, container);
                     renderUI();
-                    // renderIcon();
                 })
                 .then(function() {
                     // if we start out in 'new' state, then we need to promote to
@@ -1586,9 +1203,7 @@ define([
         model = Props.make({
             data: utils.getMeta(cell, 'viewCell'),
             onUpdate: function(props) {
-                console.log('setting view cell metadata to ', props.getRawObject());
                 utils.setMeta(cell, 'viewCell', props.getRawObject());
-                // saveNarrative();
             }
         });
 
@@ -1610,5 +1225,6 @@ define([
         }
     };
 }, function(err) {
-    console.log('ERROR loading viewCell viewCellWidget', err);
+    'use strict';
+    console.error('ERROR loading viewCell viewCellWidget', err);
 });

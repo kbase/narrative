@@ -20,29 +20,19 @@ import json
 import biokbase.narrative.clients as clients
 
 KARMA_PORT = 9876
-JUPYTER_PORT = 32323
 TEST_ROOT = os.path.join("test", "casper")
-BASE_TEST_COMMAND = ['casperjs', 'test', '--includes=narr-venv/jupyter_notebook/notebook/tests/util.js']
+BASE_TEST_COMMAND = ['casperjs', 'test', '--includes=test/casper/jupyterUtil.js']
 
 with open(os.path.join(TEST_ROOT, "testConfig.json"), 'r') as c:
     testConfig = json.loads(c.read())
+
+JUPYTER_PORT = testConfig['jupyterPort']
 
 for user in testConfig.get("users"):
     tokenFile = testConfig['users'][user]['tokenFile']
     with open(tokenFile, 'r') as t:
         token = t.read().strip()
     testConfig['users'][user]['token'] = token
-
-print(testConfig)
-sys.exit(0)
-
-
-
-
-
-
-
-
 
 nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"', '--ip=127.0.0.1',
               '--port={}'.format(JUPYTER_PORT)]
@@ -62,7 +52,7 @@ while 1:
     if not line:
         continue
     print(line)
-    if 'The Jupyter Notebook is running at: http://127.0.0.1:{}/'.format(JUPYTER_PORT) in line:
+    if 'The Jupyter Notebook is running at:' in line:
         break
     if 'is already in use' in line:
         os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
@@ -89,13 +79,14 @@ def init_test(config):
     Initializes a widget test set by creating a new narrative and copying a single piece of data
     in to it.
     """
+    cmd = BASE_TEST_COMMAND + [os.path.join('test', 'casper', config['testFile'])]
+    return cmd
 
-
-def run_tests():
+def run_tests(widgetConfig):
     for widget in widgetConfig:
         testConfig = widgetConfig[widget]
-        narrative = init_test(test_config)
-        resp = subprocess.check_call(test_command, stderr=subprocess.STDOUT)
+        test_cmd = init_test(testConfig)
+        resp = subprocess.check_call(test_cmd, stderr=subprocess.STDOUT)
 
 
 # # find all casper js test modules.
@@ -109,7 +100,7 @@ def run_tests():
 resp = 1
 try:
     print("Jupyter server started, starting test script.")
-    run_tests()
+    run_tests(testConfig["widgets"])
 except subprocess.CalledProcessError:
     pass
 finally:

@@ -1,5 +1,4 @@
-/* global module phantom */
-
+/* global module phantom casper*/
 var fs = require('fs'),
     users = {},
     tokenConfigFile = 'test/unit/testConfig.json',
@@ -8,12 +7,14 @@ var fs = require('fs'),
     userId = tokenConfig.token.user,
     tokenFile = tokenConfig.token.file,
     testConfig = JSON.parse(fs.read(testConfigFile).trim()),
-    jupyterPort = tokenConfig.jupyterPort; // not true. but leave it for now.
+    jupyterPort = testConfig.jupyterPort; // not true. but leave it for now.
 
 // gotta munge the token file a bit to work with nodejs/ Casperjs, as opposed to Karma.
 tokenFile = tokenFile.substring(1);
 var token = fs.read(tokenFile).trim();
 users[userId] = token;
+
+casper.options.waitTimeout = 30000;
 
 /**
  * @method
@@ -22,8 +23,9 @@ users[userId] = token;
  * If not present, throws an error so the tests should bomb out.
  */
 function getWidgetConfig(widgetName) {
-    if (testConfig[widgetName]) {
-        return testConfig[widgetName];
+    'use strict';
+    if (testConfig.widgets[widgetName]) {
+        return testConfig.widgets[widgetName];
     }
     else {
         throw new Error('No configuration found for widget named "' + widgetName + '"');
@@ -38,6 +40,7 @@ function getWidgetConfig(widgetName) {
  * with Auth in test mode.
  */
 function getUserToken(user) {
+    'use strict';
     if (users[user]) {
         return users[user];
     }
@@ -56,6 +59,7 @@ function getUserToken(user) {
  * a casper.test block)
  */
 function setAuthCookie(user) {
+    'use strict';
     if (!users[user]) {
         throw new Error('Unable to set auth cookie - user "' + userId + '" not found');
     }
@@ -68,10 +72,11 @@ function setAuthCookie(user) {
 }
 
 function getNarrativeUrl(configKey) {
-    if (!testConfig[configKey]) {
+    'use strict';
+    if (!testConfig.widgets[configKey]) {
         throw new Error('Unable to build Narrative URL - unknown test config key "' + configKey + '"');
     }
-    return 'http://localhost:' + jupyterPort + '/narrative/' + testConfig[configKey].narrativeId;
+    return 'http://localhost:' + jupyterPort + '/narrative/' + testConfig.widgets[configKey].narrativeId;
 }
 
 /**
@@ -83,6 +88,7 @@ function getNarrativeUrl(configKey) {
  */
 
 function addDataWidgetFromIcon(selector) {
+    'use strict';
     var cardSelector = '.narrative-side-panel-content > .kb-side-tab:first-child .kb-side-separator:first-child .narrative-card-row ' + selector;
     casper.evaluate(function(selector) {
         var numCells = Jupyter.notebook.get_cells().length;

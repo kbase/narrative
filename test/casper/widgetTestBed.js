@@ -94,8 +94,12 @@ function runWidgetTest(params) {
         TestUtil.setAuthCookie(config.mainUser);
 
         // Start the test at this page.
-        casper.echo('starting page... ' + TestUtil.getNarrativeUrl(params.widget));
+        casper.echo('Starting page... ' + TestUtil.getNarrativeUrl(params.widget));
         casper.start(TestUtil.getNarrativeUrl(params.widget));
+        // casper.page.injectJs('require("node_modules/es6-shim/es6-shim");');
+
+        casper.options.clientScripts.push('node_modules/string.prototype.startswith/startswith.js');
+        // casper.options.clientScripts.push('node_modules/es6-shim/es6-shim.min.js');
 
         // Wait for the narrative to get going. We get the first line from Jupyter's test util,
         // and add the second to wait for the KBase loading screen to go away.
@@ -121,7 +125,7 @@ function runWidgetTest(params) {
         //
         // wait a second for it to run (the utility "wait_for_output" isn't working...), but this
         // shouldn't take longer than a second.
-        casper.wait(1000);
+        casper.wait(5000);
         casper.thenEvaluate(function(cellIdx) {
             Jupyter.narrative.scrollToCell(Jupyter.notebook.get_cell(cellIdx));
         }, config.numCells);

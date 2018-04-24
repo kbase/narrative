@@ -9,6 +9,7 @@
             "tokenFile": "test/narrativetest.tok"
         }
     },
+    "jupyterPort": 32323,
     "widgets": {
         "kbaseGenomeView": {
             "narrativeId": "ws.28238.obj.1",

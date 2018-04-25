@@ -6,6 +6,7 @@
   "repository": "github.com/kbase/narrative",
   "devDependencies": {
     "bower": "1.7.9",
+    "es6-weak-map": "^2.0.2",
     "geckodriver": "1.6.1",
     "grunt": "1.0.1",
     "grunt-cli": "1.2.0",

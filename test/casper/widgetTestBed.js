@@ -96,7 +96,6 @@ function runWidgetTest(params) {
         // Start the test at this page.
         casper.echo('Starting page... ' + TestUtil.getNarrativeUrl(params.widget));
         casper.start(TestUtil.getNarrativeUrl(params.widget));
-        // casper.page.injectJs('require("node_modules/es6-shim/es6-shim");');
 
         casper.options.clientScripts.push('node_modules/string.prototype.startswith/startswith.js');
         // casper.options.clientScripts.push('node_modules/es6-shim/es6-shim.min.js');
@@ -125,7 +124,7 @@ function runWidgetTest(params) {
         //
         // wait a second for it to run (the utility "wait_for_output" isn't working...), but this
         // shouldn't take longer than a second.
-        casper.wait(5000);
+        casper.wait(10000);
         casper.thenEvaluate(function(cellIdx) {
             Jupyter.narrative.scrollToCell(Jupyter.notebook.get_cell(cellIdx));
         }, config.numCells);
@@ -137,8 +136,12 @@ function runWidgetTest(params) {
         // next, we can go through the widget layout and all that... (need to have that code so
         // we can test it on a copied narrative)
         var widgetSelector = '#notebook .cell:last-child .kb-cell-output-content > div:last-child';
-        casper.waitUntilVisible(widgetSelector);
-        casper.waitUntilVisible(widgetSelector + ' ' + config.widgetSelector);
+        casper.then(function() {
+            casper.waitUntilVisible(widgetSelector);
+            casper.captureSelector('widget-test.png', '#notebook .cell:last-child');
+            casper.echo('here!');
+            casper.waitUntilVisible(widgetSelector + ' ' + config.widgetSelector);
+        });
 
         casper.then(function() {
             return params.validateWidgetFn(test, config, widgetSelector);

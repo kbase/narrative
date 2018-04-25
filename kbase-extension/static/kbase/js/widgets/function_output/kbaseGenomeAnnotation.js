@@ -65,7 +65,7 @@ define ([
     igv
 
 ) {
-    'use strict'; 
+    'use strict';
 
     return KBWidget({
         name: 'kbaseGenomeView',
@@ -747,6 +747,7 @@ define ([
             var setToLoad = function($panel) {
                 //clearInfo();
                 $panel.empty();
+                console.log('showing spinner...');
                 var $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                 $panel.append($loadingDiv);
                 window.setTimeout(function() {

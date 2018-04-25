@@ -141,7 +141,7 @@ define([
         }
 
         /*
-         * The single input control wraps a field widget, which provides the 
+         * The single input control wraps a field widget, which provides the
          * wrapper around the input widget itself.
          */
         function makeSingleInputControl(value, fieldSpec, events) {
@@ -155,7 +155,7 @@ define([
                             initialValue: value,
                             // appSpec: appSpec,
                             parameterSpec: fieldSpec,
-                            // workspaceId: workspaceInfo.id,
+                            workspaceId: config.workspaceId,
                             referenceType: 'ref'
                         });
 
@@ -221,9 +221,10 @@ define([
                     });
             } else {
                 return Promise.all(
-                        Object.keys(structFields).map(function(fieldName) {
-                            return structFields[fieldName].instance.stop();
-                        }))
+                    Object.keys(structFields).map(function(fieldName) {
+                        return structFields[fieldName].instance.stop();
+                    })
+                )
                     .then(function() {
                         ui.setContent('input-container.subcontrols', '');
                         structFields = {};
@@ -257,7 +258,7 @@ define([
 
         // LIFECYCLE API
 
-        // Okay, we need to 
+        // Okay, we need to
 
         function start(arg) {
             var events;
@@ -268,10 +269,6 @@ define([
                     events = Events.make({ node: container });
 
                     viewModel.data = lang.copy(config.initialValue);
-
-                    // return bus.request({}, {
-                    //     key: 'get-param-state'
-                    // });
                 })
                 .then(function() {
                     return render(events);
@@ -311,7 +308,7 @@ define([
                     });
 
                     // bus.on('')
-                    // The controller of this widget will be smart enough to 
+                    // The controller of this widget will be smart enough to
                     // know...
                     // bus.emit('sync');
                 })

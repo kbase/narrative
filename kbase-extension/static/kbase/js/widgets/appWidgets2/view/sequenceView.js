@@ -110,7 +110,7 @@ define([
             });
         }
 
-        // TODO: wrap this in a new type of field control -- 
+        // TODO: wrap this in a new type of field control --
         //   specialized to be very lightweight for the sequence control.
         function makeSingleViewControl(control, events) {
             return resolver.loadViewControl(itemSpec)
@@ -130,7 +130,8 @@ define([
                             initialValue: control.value,
                             parameterSpec: itemSpec,
                             referenceType: 'ref',
-                            paramsChannelName: config.paramsChannelName
+                            paramsChannelName: config.paramsChannelName,
+                            workspaceId: config.workspaceId
                         });
 
                     // set up listeners for the input
@@ -229,7 +230,7 @@ define([
                     inputControl: null,
                     // the actual dome node (used?) to which the input control is attached
                     node: null,
-                    // the current index - note: used by the inputControl 
+                    // the current index - note: used by the inputControl
                     index: null
                 };
                 var index = viewModel.pushItem(['items'], control);

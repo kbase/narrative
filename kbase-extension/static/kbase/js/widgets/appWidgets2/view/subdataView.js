@@ -147,82 +147,82 @@ define([
                 content = div({ style: { textAlign: 'center' } }, 'no available values');
             } else {
                 content = itemsToShow.map(function(item, index) {
-                        var isSelected = selected.some(function(id) {
-                                return (item.id === id);
-                            }),
-                            disabled = isSelected;
-                        return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
-                            div({
-                                class: 'col-md-2',
-                                style: {
-                                    verticalAlign: 'middle',
-                                    borderRadius: '3px',
-                                    padding: '2px',
-                                    backgroundColor: '#EEE',
-                                    color: '#444',
-                                    textAlign: 'right',
-                                    paddingRight: '6px',
-                                    fontFamily: 'monospace'
-                                }
-                            }, String(from + index + 1)),
-                            div({
-                                class: 'col-md-8',
-                                style: {
-                                    padding: '2px'
-                                }
-                            }, item.text),
-                            div({
-                                class: 'col-md-2',
-                                style: {
-                                    padding: '2px',
-                                    textAlign: 'right',
-                                    verticalAlign: 'top'
-                                }
-                            }, [
-                                (function() {
-                                    if (disabled) {
-                                        return span({
-                                            class: 'kb-btn-icon',
-                                            type: 'button',
-                                            dataToggle: 'tooltip',
-                                            title: 'Remove from selected'
-                                        }, [
-                                            span({
-                                                class: 'fa fa-minus-circle',
-                                                style: {
-                                                    color: 'red',
-                                                    fontSize: '200%'
-                                                }
-                                            })
-                                        ]);
-                                    }
-                                    if (allowSelection) {
-                                        return span({
-                                            class: 'kb-btn-icon',
-                                            type: 'button',
-                                            dataToggle: 'tooltip',
-                                            title: 'Add to selected',
-                                            dataItemId: item.id,
-                                        }, [span({
-                                            class: 'fa fa-plus-circle',
-                                            style: {
-                                                color: 'green',
-                                                fontSize: '200%'
-                                            }
-                                        })]);
-                                    }
+                    var isSelected = selected.some(function(id) {
+                            return (item.id === id);
+                        }),
+                        disabled = isSelected;
+                    return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
+                        div({
+                            class: 'col-md-2',
+                            style: {
+                                verticalAlign: 'middle',
+                                borderRadius: '3px',
+                                padding: '2px',
+                                backgroundColor: '#EEE',
+                                color: '#444',
+                                textAlign: 'right',
+                                paddingRight: '6px',
+                                fontFamily: 'monospace'
+                            }
+                        }, String(from + index + 1)),
+                        div({
+                            class: 'col-md-8',
+                            style: {
+                                padding: '2px'
+                            }
+                        }, item.text),
+                        div({
+                            class: 'col-md-2',
+                            style: {
+                                padding: '2px',
+                                textAlign: 'right',
+                                verticalAlign: 'top'
+                            }
+                        }, [
+                            (function() {
+                                if (disabled) {
                                     return span({
                                         class: 'kb-btn-icon',
                                         type: 'button',
                                         dataToggle: 'tooltip',
-                                        title: 'Can\'t add - remove one first',
-                                        dataItemId: item.id
-                                    }, span({ class: 'fa fa-ban', style: { color: 'silver', fontSize: '200%' } }));
-                                }())
+                                        title: 'Remove from selected'
+                                    }, [
+                                        span({
+                                            class: 'fa fa-minus-circle',
+                                            style: {
+                                                color: 'red',
+                                                fontSize: '200%'
+                                            }
+                                        })
+                                    ]);
+                                }
+                                if (allowSelection) {
+                                    return span({
+                                        class: 'kb-btn-icon',
+                                        type: 'button',
+                                        dataToggle: 'tooltip',
+                                        title: 'Add to selected',
+                                        dataItemId: item.id,
+                                    }, [span({
+                                        class: 'fa fa-plus-circle',
+                                        style: {
+                                            color: 'green',
+                                            fontSize: '200%'
+                                        }
+                                    })]);
+                                }
+                                return span({
+                                    class: 'kb-btn-icon',
+                                    type: 'button',
+                                    dataToggle: 'tooltip',
+                                    title: 'Can\'t add - remove one first',
+                                    dataItemId: item.id
+                                }, span({ class: 'fa fa-ban', style: { color: 'silver', fontSize: '200%' } }));
+                            }())
 
-                            ])
-                        ]);
-                    })
+                        ])
+                    ]);
+                })
                     .join('\n');
             }
 
@@ -252,8 +252,6 @@ define([
                         div({
                             class: 'col-md-2',
                             style: {
-                                xdisplay: 'inline-block',
-                                xwidth: '20%',
                                 verticalAlign: 'middle',
                                 borderRadius: '3px',
                                 padding: '2px',
@@ -267,16 +265,12 @@ define([
                         div({
                             class: 'col-md-8',
                             style: {
-                                xdisplay: 'inline-block',
-                                xwidth: '90%',
                                 padding: '2px'
                             }
                         }, item.text),
                         div({
                             class: 'col-md-2',
                             style: {
-                                xdisplay: 'inline-block',
-                                xwidth: '10%',
                                 padding: '2px',
                                 textAlign: 'right',
                                 verticalAlign: 'top'
@@ -377,7 +371,6 @@ define([
                     button({
                         type: 'button',
                         class: 'btn btn-default',
-                        style: { xwidth: '100%' },
                         id: events.addEvent({
                             type: 'click',
                             handler: function() {
@@ -388,7 +381,6 @@ define([
                     button({
                         class: 'btn btn-default',
                         type: 'button',
-                        style: { xwidth: '50%' },
                         id: events.addEvent({
                             type: 'click',
                             handler: function() {
@@ -399,7 +391,6 @@ define([
                     button({
                         class: 'btn btn-default',
                         type: 'button',
-                        style: { xwidth: '100%' },
                         id: events.addEvent({
                             type: 'click',
                             handler: function() {
@@ -410,7 +401,6 @@ define([
                     button({
                         type: 'button',
                         class: 'btn btn-default',
-                        style: { xwidth: '100%' },
                         id: events.addEvent({
                             type: 'click',
                             handler: function() {
@@ -869,7 +859,8 @@ define([
 
                 // Get initial data.
                 // Weird, but will make it look nicer.
-                Promise.all([
+                Promise
+                    .all([
                         bus.request({
                             parameterName: spec.id
                         }, {

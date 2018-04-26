@@ -57,7 +57,6 @@ define([
         var spec = config.parameterSpec,
             parent,
             container,
-            runtime = Runtime.make(),
             workspaceId = config.workspaceId,
             bus = config.bus,
             model,
@@ -66,7 +65,7 @@ define([
             options = {
                 objectSelectionPageSize: 20
             },
-            
+            runtime = Runtime.make(),
             ui;
 
         // Validate configuration.
@@ -486,7 +485,7 @@ define([
             }
         }
 
-        function makeInputControl(events, bus) {
+        function makeInputControl() {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
             var availableValues = model.getItem('availableValues');
@@ -560,17 +559,14 @@ define([
             switch (changedProperty) {
             case 'value':
                 // just change the selections.
-                var count = buildCount();
-                ui.setContent('input-control.count', count);
+                ui.setContent('input-control.count', buildCount());
 
                 break;
             case 'availableValues':
                 // rebuild the options
                 // re-apply the selections from the value
-                var options = buildOptions(),
-                    count = buildCount();
-                ui.setContent('input-control.input', options);
-                ui.setContent('input-control.count', count);
+                ui.setContent('input-control.input', buildOptions());
+                ui.setContent('input-control.count', buildCount());
 
                 break;
             case 'referenceObjectName':
@@ -718,7 +714,7 @@ define([
              * Issued when thre is a need to have all params reset to their
              * default value.
              */
-            bus.on('reset-to-defaults', function(message) {
+            bus.on('reset-to-defaults', function() {
                 resetModelValue();
                 // model.reset();
                 // TODO: this should really be set when the linked field is reset...
@@ -938,7 +934,7 @@ define([
                 showFrom: 0,
                 showTo: 5
             },
-            onUpdate: function(props) {
+            onUpdate: function() {
                 renderStats();
                 renderToolbar();
                 renderAvailableItems();

@@ -17,11 +17,19 @@ import time
 import os
 import signal
 import json
-import biokbase.narrative.clients as clients
+from biokbase.workspace.client import Workspace
+from biokbase.service.Client import Client as ServiceClient
 
 KARMA_PORT = 9876
 TEST_ROOT = os.path.join("test", "casper")
 BASE_TEST_COMMAND = ['casperjs', 'test', '--engine=phantomjs', '--includes=test/casper/jupyterUtil.js']
+
+# TODO: configure, inject from mini-kbase, etc.
+BASE_URL = "https://ci.kbase.us/services/"
+URLS = {
+    "workspace": BASE_URL + "ws",
+    "service_wizard": BASE_URL + "service_wizard"
+}
 
 with open(os.path.join(TEST_ROOT, "testConfig.json"), 'r') as c:
     testConfig = json.loads(c.read())
@@ -32,7 +40,7 @@ for user in testConfig.get("users"):
     tokenFile = testConfig['users'][user]['tokenFile']
     with open(tokenFile, 'r') as t:
         token = t.read().strip()
-    testConfig['users'][user]['token'] = token
+        testConfig['users'][user]['token'] = token
 
 nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"', '--ip=127.0.0.1',
               '--port={}'.format(JUPYTER_PORT)]
@@ -61,7 +69,6 @@ while 1:
             'The port {} was already taken, kill running notebook servers'.format(JUPYTER_PORT)
         )
 
-
 def readlines():
     """Print the notebook server output."""
     while 1:
@@ -69,24 +76,65 @@ def readlines():
         if line:
             print(line)
 
-
 thread = threading.Thread(target=readlines)
 thread.setDaemon(True)
 thread.start()
 
-def init_test(config):
+def init_test_narrative(widgetConfig, urls):
+    """
+    Makes a new test narrative for user A, with info and data as dictated in widgetConfig.
+    Specifically, it needs the publicData key to be an UPA, which gets copied into the new
+    Narrative's workspace.
+    """
+    global testConfig
+    ws_client = Workspace(url=urls['workspace'], token=testConfig['users']['userA']['token'])
+    service_client = ServiceClient(url=urls['service_wizard'], token=testConfig['users']['userA']['token'], use_url_lookup=True)
+    # make a new narrative.
+    new_nar = service_client.sync_call('NarrativeService.create_new_narrative', [{
+        'includeIntroCell': 1,
+        'title': widgetConfig['narrativeName']
+    }])
+    # add data
+    obj_info = service_client.sync_call('NarrativeService.copy_object', [{
+        'ref': widgetConfig['publicData'],
+        'target_ws_id': new_nar['workspaceInfo']['id']
+    }])
+    # share with user B
+    ws_client.set_permissions({
+        'id': new_nar['workspaceInfo']['id'],
+        'new_permission': 'r',
+        'users': testConfig['users']['userB']['id']
+    })
+    return {
+        'nar_info': new_nar['narrativeInfo'],
+        'ws_info': new_nar['workspaceInfo'],
+        'obj_info': obj_info
+    }
+
+def run_insertion_test(config):
     """
     Initializes a widget test set by creating a new narrative and copying a single piece of data
     in to it.
     """
     cmd = BASE_TEST_COMMAND + [os.path.join('test', 'casper', config['testFile'])]
-    return cmd
+    return subprocess.check_call(test_cmd, stderr=subprocess.STDOUT)
 
-def run_tests(widgetConfig):
-    for widget in widgetConfig:
-        testConfig = widgetConfig[widget]
-        test_cmd = init_test(testConfig)
-        resp = subprocess.check_call(test_cmd, stderr=subprocess.STDOUT)
+def run_widget_test(widget):
+    """
+    Master function that does all the test management for a single widget.
+    Does the following steps.
+    1. init_test_narrative - Makes a new narrative on behalf of user A and Copies a piece of data for the given widget based on config (also for user A)
+    2. run_insertion_test - Opens the narrative, "clicks" the data object and inserts a new cell with its viewer, validates the viewer, and saves that narrative.
+    3. share_and_copy_narrative - Does the NarrativeService and Workspace tasks of copying a narrative to user B.
+    4.
+    """
+    global testConfig
+    global urls
+    widgetConfig = testConfig["widgets"].get(widget)
+    if not widgetConfig:
+        raise "Widget {} not found in config!".format(widget)
+    narrative_id = init_test_narrative(widgetConfig, urls)
+    resp = run_insertion_test(widgetConfig)
 
 
 # # find all casper js test modules.
@@ -97,11 +145,15 @@ def run_tests(widgetConfig):
 #         if f.endswith('.js'):
 #             test_command.append(os.path.join(dirpath, f))
 
-resp = 1
+resp = 0
 try:
     print("Jupyter server started, starting test script.")
-    run_tests(testConfig["widgets"])
-    resp = 0
+    for widget in testConfig["widgets"]:
+        widget_resp = run_widget_test(widget)
+        if widget_resp != 0:
+            print("Failed testing widget {}".format(widget))
+            resp = resp + 1
+    # run_tests(testConfig["widgets"])
 except subprocess.CalledProcessError:
     pass
 finally:

@@ -26,8 +26,6 @@ define([
     // Constants
     var t = html.tag,
         div = t('div'),
-        input = t('input'),
-        span = t('span'),
         resolver = Resolver.make();
 
     function factory(config) {
@@ -49,8 +47,7 @@ define([
             // },
             // structFields,
             fieldLayout = spec.ui.layout,
-            struct = spec.parameters,
-            places = {};
+            struct = spec.parameters;
 
         if (spec.data.constraints.required || config.initialValue) {
             viewModel.state.enabled = true;
@@ -60,8 +57,8 @@ define([
 
         function setModelValue(value) {
             return Promise.try(function() {
-                    viewModel.data = value;
-                })
+                viewModel.data = value;
+            })
                 .then(function() {
                     // render();
                 })
@@ -72,9 +69,9 @@ define([
 
         function unsetModelValue() {
             return Promise.try(function() {
-                    viewModel.data = {};
-                })
-                .then(function(changed) {
+                viewModel.data = {};
+            })
+                .then(function() {
                     // render();
                 });
         }
@@ -144,7 +141,7 @@ define([
          * The single input control wraps a field widget, which provides the 
          * wrapper around the input widget itself.
          */
-        function makeSingleInputControl(value, fieldSpec, events) {
+        function makeSingleInputControl(value, fieldSpec) {
             return resolver.loadViewControl(fieldSpec)
                 .then(function(widgetFactory) {
                     var id = html.genId(),
@@ -221,9 +218,9 @@ define([
                     });
             } else {
                 return Promise.all(
-                        Object.keys(structFields).map(function(fieldName) {
-                            return structFields[fieldName].instance.stop();
-                        }))
+                    Object.keys(structFields).map(function(fieldName) {
+                        return structFields[fieldName].instance.stop();
+                    }))
                     .then(function() {
                         ui.setContent('input-container.subcontrols', '');
                         structFields = {};
@@ -231,7 +228,7 @@ define([
             }
         }
 
-        function renderStruct(events) {
+        function renderStruct() {
             var layout = div({
                 style: {
                     'border-left': '5px silver solid',
@@ -262,17 +259,17 @@ define([
         function start(arg) {
             var events;
             return Promise.try(function() {
-                    parent = arg.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    ui = UI.make({ node: container });
-                    events = Events.make({ node: container });
+                parent = arg.node;
+                container = parent.appendChild(document.createElement('div'));
+                ui = UI.make({ node: container });
+                events = Events.make({ node: container });
 
-                    viewModel.data = lang.copy(config.initialValue);
+                viewModel.data = lang.copy(config.initialValue);
 
-                    // return bus.request({}, {
-                    //     key: 'get-param-state'
-                    // });
-                })
+                // return bus.request({}, {
+                //     key: 'get-param-state'
+                // });
+            })
                 .then(function() {
                     return render(events);
                 })
@@ -323,12 +320,12 @@ define([
 
         function stop() {
             return Promise.try(function() {
-                    if (structFields) {
-                        return Promise.all(Object.keys(structFields).map(function(id) {
-                            return structFields[id].instance.stop();
-                        }));
-                    }
-                })
+                if (structFields) {
+                    return Promise.all(Object.keys(structFields).map(function(id) {
+                        return structFields[id].instance.stop();
+                    }));
+                }
+            })
                 .then(function() {
                     if (parent && container) {
                         parent.removeChild(container);

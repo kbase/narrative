@@ -63,10 +63,7 @@ define([
             model,
             subdataMethods,
             isAvailableValuesInitialized = false,
-            haveReferenceData = false,
-            options = {
-                objectSelectionPageSize: 20
-            },
+            minimumFilterLength = 0,
             ui;
 
         subdataMethods = SubdataMethods.make();
@@ -104,9 +101,9 @@ define([
             if (!filter) {
                 return items;
             }
-            var re = new RegExp(filter);
+            var re = new RegExp(filter, 'i');
             return items.filter(function (item) {
-                if (item.text && item.text.match(re, 'i')) {
+                if (item.text && item.text.match(re)) {
                     return true;
                 }
                 return false;
@@ -195,12 +192,11 @@ define([
 
             if (!isAvailableValuesInitialized) {
                 content = div({ style: { textAlign: 'center' } }, html.loading('Loading data...'));
-                // } else if (!haveReferenceData) {
-                //     content = div({ style: { textAlign: 'center' } }, 'no values available until reference data selected in parameter ' + spec.data.constraints.subdataSelection.parameter_id);
             } else if (itemsToShow.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no available values');
             } else {
                 content = itemsToShow.map(function (item, index) {
+                    item.isAdding = false;
                     var isSelected = selected.some(function (id) {
                             return (item.id === id);
                         }),
@@ -266,7 +262,10 @@ define([
                                         id: events.addEvent({
                                             type: 'click',
                                             handler: function () {
-                                                doAddItem(item.id);
+                                                if (!item.isAdding) {
+                                                    item.isAdding = true;
+                                                    doAddItem(item.id);
+                                                }
                                             }
                                         })
                                     }, [span({
@@ -305,8 +304,6 @@ define([
 
             if (selectedItems.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no selected values');
-                // } else {if (!haveReferenceData) {
-                //     content = div({ style: { textAlign: 'center' } }, 'no values may be chosen until reference data selected in parameter ' + spec.data.constraints.subdataSelection.parameter_id);
             } else {
                 content = selectedItems.map(function (itemId, index) {
                     var item = valuesMap[itemId];
@@ -421,6 +418,18 @@ define([
             events.attachEvents();
         }
 
+        function renderSearchMessage() {
+            var content = span({
+                dataElement: 'message'
+            });
+
+            ui.setContent('search-message', content);
+        }
+
+        function setSearchMessage(message) {
+            ui.setText('search-message.message', message);
+        }
+
         function renderStats() {
             var availableItems = model.getItem('availableValues', []),
                 filteredItems = model.getItem('filteredAvailableItems', []),
@@ -433,12 +442,17 @@ define([
                 content = span({ style: { fontStyle: 'italic' } }, [
                     ' - no available items'
                 ]);
+            } else if (filteredItems.length === availableItems.length) {
+                content = span({ style: { fontStyle: 'italic' } }, [
+                    ' - ',
+                    String(availableItems.length)
+                ]);
             } else {
                 content = span({ style: { fontStyle: 'italic' } }, [
-                    ' - filtering ',
+                    ' - filtered ',
                     span([
                         String(filteredItems.length),
-                        ' of ',
+                        ' out of ',
                         String(availableItems.length)
                     ])
                 ]);
@@ -557,10 +571,19 @@ define([
         }
 
         function doSearchKeyUp(e) {
-            if (e.target.value.length > 2) {
+            var filterLength = e.target.value.length;
+            if (filterLength >= minimumFilterLength) {
                 model.setItem('filter', e.target.value);
                 doFilterItems();
+                setSearchMessage('filter applied');
             } else {
+                if (filterLength > 0 && minimumFilterLength > 0) {
+                    setSearchMessage('Enter ' + 
+                        (minimumFilterLength - e.target.value.length) +
+                        ' more character to filter');
+                } else {
+                    setSearchMessage('');
+                }
                 if (model.getItem('filter')) {
                     model.setItem('filter', null);
                     doFilterItems();
@@ -594,7 +617,14 @@ define([
                             div({
                                 class: 'col-md-6'
                             }, [
-                                span({ dataElement: 'search-box' })
+                                span({ dataElement: 'search-box' }),
+                                span({ 
+                                    style: {
+                                        marginLeft: '4px',
+                                        fontStyle: 'italic'
+                                    }, 
+                                    dataElement: 'search-message' 
+                                })
                             ]),
                             div({
                                 class: 'col-md-6',
@@ -723,7 +753,6 @@ define([
             })
                 .spread(function (haveRefData, data) {
                     isAvailableValuesInitialized = true;
-                    haveReferenceData = haveRefData;
 
                     // If default values have been provided, prepend them to the data.
 
@@ -753,6 +782,12 @@ define([
                     // - a set of selected ids
                     // - a set of filtered ids
                     model.setItem('availableValues', newAvailableValues);
+
+                    if (newAvailableValues.length > 4000) {
+                        minimumFilterLength = 3;
+                    } else {
+                        minimumFilterLength = 0;
+                    }
 
                     // TODO: generate all of this in the fetchData -- it will be a bit faster.
                     var map = {};
@@ -801,6 +836,7 @@ define([
 
                 ui.setContent('input-container', content);
                 renderSearchBox();
+                renderSearchMessage();
                 renderStats();
                 renderToolbar();
                 renderAvailableItems();
@@ -1009,13 +1045,6 @@ define([
                 // Weird, but will make it look nicer.
                 return Promise.all([
                     paramsChannel.request({
-                        parameterName: spec.id
-                    }, {
-                        key: {
-                            type: 'get-parameter'
-                        }
-                    }),
-                    paramsChannel.request({
                         parameterName: spec.data.constraints.subdataSelection.parameter_id
                     }, {
                         key: {
@@ -1023,7 +1052,7 @@ define([
                         }
                     })
                 ])
-                    .spread(function (paramValue, referencedParamValue) {
+                    .spread(function (referencedParamValue) {
                         if (!config.initialValue) {
                             model.setItem('selectedItems', []);
                         } else {
@@ -1041,6 +1070,7 @@ define([
                         return syncAvailableValues()
                             .then(function () {
                                 updateInputControl('availableValues');
+                                return autoValidate();
                             })
                             .catch(function (err) {
                                 console.error('ERROR syncing available values', err);

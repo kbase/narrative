@@ -57,15 +57,19 @@ define([
         var spec = config.parameterSpec,
             parent,
             container,
-            workspaceId = config.workspaceId,
-            bus = config.bus,
+            runtime = Runtime.make(),
+            workspaceId = runtime.getEnv('workspaceId'),
+            // bus = config.bus,
+            busConnection = runtime.bus().connect(),
+            channel = busConnection.channel(config.channelName),
+            paramsChannel = busConnection.channel(config.paramsChannelName),
             model,
             subdataMethods,
             isAvailableValuesInitialized = false,
             options = {
                 objectSelectionPageSize: 20
             },
-            runtime = Runtime.make(),
+            minimumFilterLength = 0,
             ui;
 
         // Validate configuration.
@@ -110,9 +114,12 @@ define([
             if (!filter) {
                 return items;
             }
-            var re = new RegExp(filter);
+            var re = new RegExp(filter, 'i');
             return items.filter(function(item) {
-                if (item.text && item.text.match(re, 'i')) {
+                // TODO: better filtering, but need support from the 
+                // subdata generators (../subdataMethods) to expose the individual
+                // fields. Or, strip out any html from here.
+                if (item.text && item.text.match(re)) {
                     return true;
                 }
                 return false;
@@ -122,7 +129,6 @@ define([
         function doFilterItems() {
             var items = model.getItem('availableValues', []),
                 filteredItems = filterItems(items, model.getItem('filter'));
-
 
             // for now we just reset the from/to range to the beginning.
             model.setItem('filteredAvailableItems', filteredItems);
@@ -338,6 +344,18 @@ define([
             events.attachEvents();
         }
 
+        function renderSearchMessage() {
+            var content = span({
+                dataElement: 'message'
+            });
+
+            ui.setContent('search-message', content);
+        }
+
+        function setSearchMessage(message) {
+            ui.setText('search-message.message', message);
+        }
+
         function renderStats() {
             var availableItems = model.getItem('availableValues', []),
                 filteredItems = model.getItem('filteredAvailableItems', []),
@@ -350,12 +368,17 @@ define([
                 content = span({ style: { fontStyle: 'italic' } }, [
                     ' - no available items'
                 ]);
+            } else if (filteredItems.length === availableItems.length) {
+                content = span({ style: { fontStyle: 'italic' } }, [
+                    ' - ',
+                    String(availableItems.length)
+                ]);
             } else {
                 content = span({ style: { fontStyle: 'italic' } }, [
-                    ' - filtering ',
+                    ' - filtered ',
                     span([
                         String(filteredItems.length),
-                        ' of ',
+                        ' out of ',
                         String(availableItems.length)
                     ])
                 ]);
@@ -472,12 +495,21 @@ define([
         function doLastPage() {
             setPageStart(model.getItem('filteredAvailableItems').length);
         }
-
+       
         function doSearchKeyUp(e) {
-            if (e.target.value.length > 2) {
+            var filterLength = e.target.value.length;
+            if (filterLength >= minimumFilterLength) {
                 model.setItem('filter', e.target.value);
                 doFilterItems();
+                setSearchMessage('filter applied');
             } else {
+                if (filterLength > 0 && minimumFilterLength > 0) {
+                    setSearchMessage('Enter ' + 
+                        (minimumFilterLength - e.target.value.length) +
+                        ' more character to filter');
+                } else {
+                    setSearchMessage('');
+                }
                 if (model.getItem('filter')) {
                     model.setItem('filter', null);
                     doFilterItems();
@@ -512,7 +544,14 @@ define([
                             div({
                                 class: 'col-md-6'
                             }, [
-                                span({ dataElement: 'search-box' })
+                                span({ dataElement: 'search-box' }),
+                                span({ 
+                                    style: {
+                                        marginLeft: '4px',
+                                        fontStyle: 'italic'
+                                    }, 
+                                    dataElement: 'search-message' 
+                                })
                             ]),
                             div({
                                 class: 'col-md-6',
@@ -647,6 +686,12 @@ define([
                     // - a set of filtered ids
                     model.setItem('availableValues', data);
 
+                    if (data.length > 4000) {
+                        minimumFilterLength = 3;
+                    } else {
+                        minimumFilterLength = 0;
+                    }
+
                     // TODO: generate all of this in the fetchData -- it will be a bit faster.
                     var map = {};
                     data.forEach(function(datum) {
@@ -668,7 +713,7 @@ define([
             return Promise.try(function() {
                 // check to see if we have to render inputControl.
                 var events = Events.make({ node: container }),
-                    inputControl = makeInputControl(events, bus),
+                    inputControl = makeInputControl(),
                     content = div({
                         class: 'input-group',
                         style: {
@@ -678,6 +723,7 @@ define([
 
                 ui.setContent('input-container', content);
                 renderSearchBox();
+                renderSearchMessage();
                 renderStats();
                 renderToolbar();
                 renderAvailableItems();
@@ -714,7 +760,7 @@ define([
              * Issued when thre is a need to have all params reset to their
              * default value.
              */
-            bus.on('reset-to-defaults', function() {
+            channel.on('reset-to-defaults', function() {
                 resetModelValue();
                 // model.reset();
                 // TODO: this should really be set when the linked field is reset...
@@ -727,7 +773,7 @@ define([
             /*
              * Issued when there is an update for this param.
              */
-            bus.on('update', function(message) {
+            channel.on('update', function(message) {
                 model.setItem('value', message.value);
                 updateInputControl('value');
             });
@@ -737,7 +783,7 @@ define([
              * any parameter which has a dependency upon any other.
              *
              */
-            bus.listen({
+            paramsChannel.listen({
                 key: {
                     type: 'parameter-changed',
                     parameter: spec.data.constraints.subdataSelection.constant_ref
@@ -760,7 +806,7 @@ define([
                 }
             });
 
-            bus.listen({
+            paramsChannel.listen({
                 key: {
                     type: 'parameter-changed',
                     parameter: spec.data.constraints.subdataSelection.parameter_id
@@ -783,7 +829,7 @@ define([
                 }
             });
 
-            bus.listen({
+            paramsChannel.listen({
                 key: {
                     type: 'parameter-value',
                     parameter: spec.data.constraints.subdataSelection.parameter_id
@@ -815,9 +861,9 @@ define([
             //                model.setItem('referenceObjectName', value)
             //                setReferenceValue(message.objectRef);
             //            });
-            bus.emit('sync');
+            // bus.emit('sync');
 
-            bus.request({
+            paramsChannel.request({
                 parameterName: spec.id
             }, {
                 key: {
@@ -843,6 +889,8 @@ define([
          *
          */
 
+         
+
         // LIFECYCLE API
 
         function start(arg) {
@@ -866,14 +914,7 @@ define([
                 // Get initial data.
                 // Weird, but will make it look nicer.
                 Promise.all([
-                    bus.request({
-                        parameterName: spec.id
-                    }, {
-                        key: {
-                            type: 'get-parameter'
-                        }
-                    }),
-                    bus.request({
+                    paramsChannel.request({
                         parameterName: spec.data.constraints.subdataSelection.parameter_id
                     }, {
                         key: {
@@ -881,15 +922,15 @@ define([
                         }
                     })
                 ])
-                    .spread(function(paramValue, referencedParamValue) {
+                    .spread(function(referencedParamValue) {
                         // hmm, the default value of a subdata is null, but that does
                         // not play nice with the model props defaulting mechanism which
                         // works with absent or undefined (null being considered an actual value, which
                         // it is of course!)
-                        if (paramValue.value === null) {
+                        if (!config.initialValue) {
                             model.setItem('selectedItems', []);
                         } else {
-                            var selectedItems = paramValue.value;
+                            var selectedItems = config.initialValue;
                             if (!(selectedItems instanceof Array)) {
                                 selectedItems = [selectedItems];
                             }

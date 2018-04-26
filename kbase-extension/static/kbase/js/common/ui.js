@@ -723,6 +723,13 @@ define([
             });
         }
 
+        function setText(path, text) {
+            var node = getElements(path);
+            node.forEach(function (node) {
+                node.innerText = text;
+            });
+        }
+
         function enableTooltips(path) {
             var node = getElement(path);
             if (!node) {
@@ -1280,6 +1287,7 @@ define([
             expandPanel: expandPanel,
             createNode: createNode,
             setContent: setContent,
+            setText: setText,
             na: na,
             ifAdvanced: ifAdvanced,
             ifDeveloper: ifDeveloper,

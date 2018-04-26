@@ -153,7 +153,8 @@ define([
                             // appSpec: appSpec,
                             parameterSpec: fieldSpec,
                             // workspaceId: workspaceInfo.id,
-                            referenceType: 'ref'
+                            referenceType: 'ref',
+                            paramsChannelName: config.paramsChannelName
                         });
 
                     // set up listeners for the input

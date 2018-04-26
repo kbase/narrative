@@ -392,7 +392,7 @@ define([
             d.log_q_value = 'MIN';
           }
           else {
-            d.log_q_value = - Math.log10(parseFloat(d.p_value_f));
+            d.log_q_value = - Math.log10(parseFloat(d.q_value));
             if (d.log_q_value < min_log_q_value) {
               min_log_q_value = d.log_q_value;
             }

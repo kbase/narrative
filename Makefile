@@ -62,7 +62,7 @@ test-frontend-e2e:
 # (CasperJS). Right now, it's intended to run tests that verify that viewer widgets work as
 # intended.
 #
-# It requires an installed and running Narrative.
+# It requires an installed Narrative.
 test-frontend-casper:
 	@echo "running frontend viewer tests"
 	python test/casper/run_tests.py

@@ -21,7 +21,7 @@ import biokbase.narrative.clients as clients
 
 KARMA_PORT = 9876
 TEST_ROOT = os.path.join("test", "casper")
-BASE_TEST_COMMAND = ['casperjs', 'test', '--includes=test/casper/jupyterUtil.js']
+BASE_TEST_COMMAND = ['casperjs', 'test', '--engine=phantomjs', '--includes=test/casper/jupyterUtil.js']
 
 with open(os.path.join(TEST_ROOT, "testConfig.json"), 'r') as c:
     testConfig = json.loads(c.read())
@@ -101,6 +101,7 @@ resp = 1
 try:
     print("Jupyter server started, starting test script.")
     run_tests(testConfig["widgets"])
+    resp = 0
 except subprocess.CalledProcessError:
     pass
 finally:

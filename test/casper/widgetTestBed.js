@@ -95,10 +95,10 @@ function runWidgetTest(params) {
 
         // Start the test at this page.
         casper.echo('Starting page... ' + TestUtil.getNarrativeUrl(params.widget));
-        casper.start(TestUtil.getNarrativeUrl(params.widget));
+        casper.start(TestUtil.getNarrativeUrl(params.widget))
+            .viewport(2000,2000);
 
-        casper.options.clientScripts.push('node_modules/string.prototype.startswith/startswith.js');
-        // casper.options.clientScripts.push('node_modules/es6-shim/es6-shim.min.js');
+        casper.options.clientScripts.push('node_modules/babel-polyfill/dist/polyfill.js');
 
         // Wait for the narrative to get going. We get the first line from Jupyter's test util,
         // and add the second to wait for the KBase loading screen to go away.
@@ -136,12 +136,8 @@ function runWidgetTest(params) {
         // next, we can go through the widget layout and all that... (need to have that code so
         // we can test it on a copied narrative)
         var widgetSelector = '#notebook .cell:last-child .kb-cell-output-content > div:last-child';
-        casper.then(function() {
-            casper.waitUntilVisible(widgetSelector);
-            casper.captureSelector('widget-test.png', '#notebook .cell:last-child');
-            casper.echo('here!');
-            casper.waitUntilVisible(widgetSelector + ' ' + config.widgetSelector);
-        });
+        casper.waitUntilVisible(widgetSelector);
+        casper.waitUntilVisible(widgetSelector + ' ' + config.widgetSelector);
 
         casper.then(function() {
             return params.validateWidgetFn(test, config, widgetSelector);

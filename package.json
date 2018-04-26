@@ -5,8 +5,8 @@
   "private": true,
   "repository": "github.com/kbase/narrative",
   "devDependencies": {
+    "babel-polyfill": "^6.26.0",
     "bower": "1.7.9",
-    "es6-weak-map": "^2.0.2",
     "geckodriver": "1.6.1",
     "grunt": "1.0.1",
     "grunt-cli": "1.2.0",
@@ -22,6 +22,7 @@
     "karma": "1.1.2",
     "karma-chrome-launcher": "1.0.1",
     "karma-coverage": "1.1.1",
+    "karma-es6-shim": "^1.0.0",
     "karma-firefox-launcher": "1.0.0",
     "karma-jasmine": "1.0.2",
     "karma-mocha-reporter": "^2.2.5",
@@ -40,7 +41,5 @@
     "test": "grunt test",
     "build": "grunt build"
   },
-  "dependencies": {
-    "karma-es6-shim": "^1.0.0"
-  }
+  "dependencies": {}
 }

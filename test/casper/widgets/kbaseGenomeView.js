@@ -33,7 +33,7 @@ function validateWidget(test, config, widgetSelector) {
     'use strict';
     test.assertSelectorHasText(widgetSelector + ' .tabbable li:first-child', 'Overview');
     test.assertSelectorHasText(widgetSelector + ' .tabbable li:nth-child(2)', 'Browse Features');
-    test.assertSelectorHasText(widgetSelector + ' .tabbable li:last-child', 'Browse Contigs');
+    test.assertSelectorHasText(widgetSelector + ' .tabbable li:nth-child(3)', 'Browse Contigs');
 }
 
 WidgetTestBed.runWidgetTest({

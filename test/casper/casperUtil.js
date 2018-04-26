@@ -7,7 +7,7 @@ var fs = require('fs'),
     userId = tokenConfig.token.user,
     tokenFile = tokenConfig.token.file,
     testConfig = JSON.parse(fs.read(testConfigFile).trim()),
-    jupyterPort = testConfig.jupyterPort; // not true. but leave it for now.
+    jupyterPort = testConfig.jupyterPort;
 
 // gotta munge the token file a bit to work with nodejs/ Casperjs, as opposed to Karma.
 tokenFile = tokenFile.substring(1);

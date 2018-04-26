@@ -131,10 +131,10 @@ define([
       colorx : function (d, pv, fc) {
 
         var x = d.log2fc_f
-        var y = d.p_value_f
+        var y = d.log_q_value
 
         if ( Math.abs(x) > fc && Math.abs(y) > pv ) {
-          if (d.significant  === 'yes'){
+          if (true || d.significant  === 'yes'){
            return "red";
           }
         }
@@ -327,12 +327,12 @@ define([
               var cc = self.colorx(d, pv, fc);
               if ( cc  ===  "red" ) {
                 redRows.push([
-                    d.gene,
-                    d.gene_function,
-                    d.value_1,
-                    d.value_2,
-                    d.log2fc_text,
-                    d.p_value_f,
+                    d.gene           || '',
+                    d.gene_function  || '',
+                    d.value_1        || '',
+                    d.value_2        || '',
+                    d.log2fc_text    || '',
+                    d.log_q_value    || '',
                 ]);
               }
               return cc;
@@ -384,6 +384,26 @@ define([
 
 
         var data = text.condition_pairs[counter].voldata;
+
+        // add in the -log_q_values.
+        var min_log_q_value = Number.MAX_VALUE;
+        data.forEach( function(d) {
+          if (d.q_value === 0) {
+            d.log_q_value = 'MIN';
+          }
+          else {
+            d.log_q_value = - Math.log10(parseFloat(d.p_value_f));
+            if (d.log_q_value < min_log_q_value) {
+              min_log_q_value = d.log_q_value;
+            }
+          }
+        });
+
+        data.forEach( function(d) {
+          if (d.log_q_value === 'MIN') {
+            d.log_q_value = min_log_q_value;
+          }
+        });
         self.data( "cond1").text(text.condition_pairs[counter].condition_1);
         self.data( "cond2").text(text.condition_pairs[counter].condition_2);
 
@@ -392,7 +412,7 @@ define([
         // name = gene
         // f = significant
         // x = log2fc_fa
-        // y = p_value_f
+        // y = log_q_value
 
         // tables contents
         // Gene
@@ -409,8 +429,8 @@ define([
         var xmin = d3.min(data, function(d) { return parseFloat(d.log2fc_f); });
         var xmax = d3.max(data, function(d) { return parseFloat(d.log2fc_f); });
 
-        var ymin = d3.min(data, function(d) { return parseFloat(d.p_value_f); });
-        var ymax = d3.max(data, function(d) { return parseFloat(d.p_value_f); });
+        var ymin = d3.min(data, function(d) { return parseFloat(d.log_q_value); });
+        var ymax = d3.max(data, function(d) { return parseFloat(d.log_q_value); });
 
 
 
@@ -461,6 +481,7 @@ define([
         var slider2Update = _.debounce(function(){
           pv = self.data( "pvalue").val();
           self.data('selpval').text(parseFloat(pv).toFixed(2));
+
           var numCircles = svg.selectAll("circle").size();
           var seenCircles = 0;
           svg.selectAll("circle")
@@ -497,7 +518,6 @@ define([
           .domain([ymin, ymax])
           .range([svgHeight - padding, 10]);
 
-
         svg.selectAll("circle")
           .data(data)
           .enter()
@@ -506,7 +526,7 @@ define([
             return xScale(parseFloat(d.log2fc_f));
           })
         .attr("cy", function(d) {
-          return yScale(parseFloat(d.p_value_f));
+          return yScale(parseFloat(d.log_q_value));
         })
         .attr("r", 3)
           .attr("fill", function(d) { return self.colorx(d, pv, fc); })

@@ -5,25 +5,21 @@ ENV IPYWIDGETS_VERSION 7.1.2
 
 RUN mkdir -p /kb/installers
 
-RUN \
-    curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash - && \
-    apt-get install -y nodejs && \
-    pip install --upgrade pip && \
-    pip install setuptools==33.1.1  # https://github.com/pypa/setuptools/issues/942
-
-# Install Node, R and Jupyter Notebook and ipywidgets
+# Install Base libraries, Node, R and Jupyter Notebook and ipywidgets from distinct channels
+ADD ./conda-requirements /root/conda
 RUN conda update -n base conda && \
-    conda install -c javascript bower && \
-    conda install -c wakari grunt-cli
+    conda install --file /root/conda/base && \
+    conda install -c etetoolkit ete3 && \
+        conda install -c anaconda-platform --file /root/conda/base.anaconda-platform && \
+    conda install -c javascript --file /root/conda/base.javascript && \
+    conda install -c wakari --file /root/conda/base.wakari && \
+    conda install -c r r-base && \
+    conda install -c conda-forge --file /root/conda/r.conda-forge && \
+    conda install -c r --file /root/conda/r.r 
 
-# Note that some R packages are available on multiple channels, and changing the channel
-# may cause incompatibility with R version
+# Install misc R packages not available on Coda
 ADD ./r-packages-postconda.R /root/r-packages.R
-RUN conda install -c r r-base && \
-    conda install -c conda-forge r-wordcloud r-timeseries  r-amap r-pheatmap r-googlevis r-tiff && \
-    conda install -c r r-pkgconfig r-knitr r-plyr r-stringr r-rgl r-data.table r-ggplot2 r-lme4 r-reshape \
-                   r-rcolorbrewer r-gplots r-png r-lattice r-tm r-igraph r-rjsonio r-curl \
-                   r-tseries r-zoo r-xts r-lubridate r-codetools r-devtools && \
+RUN apt-get install -y gfortran && \
     R --vanilla < /root/r-packages.R
 
 RUN conda install tornado=4.5.3 && \

@@ -12,21 +12,24 @@
 #
 
 FROM kbase/narrbase:4.9
-MAINTAINER Bill Riehl wjriehl@lbl.gov
 
 EXPOSE 8888
 
-# Remove Debian's older Tornado package
-RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y python-tornado
+# Remove Debian's older Tornado package - updated/removed in the narrbase package
+#RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y python-tornado
 
+# install pyopenssl cryptography idna and requests is the same as installing
+# requests[security]
+RUN conda install -c conda-forge  ndg-httpsclient pyasn1 pyopenssl cryptography idna requests \
+          beautifulsoup4 html5lib
 # TEMPORARY!
 # Update bs4 and pandas to resolve inability to run them
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev libffi-dev libssl-dev \
-    && pip install pyopenssl ndg-httpsclient pyasn1 \
-    && pip install requests --upgrade \
-    && pip install 'requests[security]' --upgrade \
-    && pip install 'beautifulsoup4' --upgrade \
-    && pip install 'html5lib' --upgrade
+#RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev libffi-dev libssl-dev \
+#    && pip install pyopenssl ndg-httpsclient pyasn1 \
+#    && pip install requests --upgrade \
+#    && pip install 'requests[security]' --upgrade \
+#    && pip install 'beautifulsoup4' --upgrade \
+#    && pip install 'html5lib' --upgrade
 
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative
@@ -65,6 +68,13 @@ RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_pr
 # and configures the notebook server to use /narrative/{CMD} as the prefix for a reverse
 # proxy environment
 USER nobody
+
+LABEL org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.vcs-url="https://github.com/kbase/narrative.git" \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.schema-version="1.0.0-rc1" \
+      us.kbase.vcs-branch=$BRANCH \
+      maintainer="William Riehl wjriehl@lbl.gov"
 
 # ENTRYPOINT ["/usr/bin/tini", "--"]
 # The entrypoint can be set to "headless-narrative" to run headlessly

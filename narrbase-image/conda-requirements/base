@@ -10,7 +10,6 @@ jsonrpcbase
 jsonschema
 markdown
 networkx
-nodejs
 nose
 paramiko=1.12.2
 pexpect

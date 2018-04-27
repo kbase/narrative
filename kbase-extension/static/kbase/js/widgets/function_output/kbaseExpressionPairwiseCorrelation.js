@@ -98,7 +98,6 @@ define ([
             var colW = rowH;
             var hmW = 150 + 110 + size * colW;
 
-console.log("ACTUAL SIZE IS : ", hmW, hmH, rowIds.length);
             var $heatmapDiv = $('<div style = \'width : '+hmW+'px; height : '+hmH+'px\'></div>');
 //            $containerDiv.append($heatmapDiv);
             $containerDiv.append('<div style = \'width : 5px; height : 5px\'></div>');

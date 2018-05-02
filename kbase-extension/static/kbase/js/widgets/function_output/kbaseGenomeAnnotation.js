@@ -1855,19 +1855,19 @@ define ([
                                 $functions.empty().append(featureFullRecord['functional_descriptions'].join("<br>"));
                             }
                             if(featureFullRecord['parent_gene']) {
-                                $relationships.append(`Parent Gene: ${parent_gene}<br>`);
+                                $relationships.append("Parent Gene: " + parent_gene + "<br>");
                             }
                             if(featureFullRecord['parent_mrna']) {
-                                $relationships.append(`Parent mRNA: ${parent_mrna}<br>`);
+                                $relationships.append("Parent mRNA: "+parent_mrna+"<br>");
                             }
                             if(featureFullRecord['mrnas']) {
-                                featureFullRecord['mrnas'].forEach(function(mrna){$relationships.append(`Child mRNA: ${mrna}<br>`)});
+                                featureFullRecord['mrnas'].forEach(function(mrna){$relationships.append("Child mRNA: "+ mrna + "<br>")});
                             }
                             if(featureFullRecord['cdss']) {
-                                featureFullRecord['cdss'].forEach(function(cds){$relationships.append(`Child CDS: ${cds}<br>`)});
+                                featureFullRecord['cdss'].forEach(function(cds){$relationships.append("Child CDS: "+cds+"<br>")});
                             }
                             if(featureFullRecord['cds']) {
-                                $relationships.append(`Child CDS: ${cds}<br>`);
+                                $relationships.append("Child CDS: "+ cds+ "<br>"");
                             }
                         })
                         .fail(function(e) {

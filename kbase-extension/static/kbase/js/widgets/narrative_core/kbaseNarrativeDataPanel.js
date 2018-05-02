@@ -217,13 +217,15 @@ define([
             return this;
         },
         setReadOnlyMode: function (readOnly) {
-            this.$elem.css({'height': (readOnly ? '100%' : '50%')});
+            // this.$elem.css({'height': (readOnly ? '100%' : '50%')});
             if (readOnly) {
                 this.$slideoutBtn.hide();
                 this.dataListWidget.$addDataButton.hide();
+                this.toggleCollapse('expand');
             } else {
                 this.$slideoutBtn.show();
                 this.dataListWidget.$addDataButton.show();
+                this.toggleCollapse('restore');
             }
         },
         setListHeight: function (height, animate) {
@@ -251,41 +253,41 @@ define([
                 this.importerThing = this.dataImporter(this.ws_name);
 
                 this.tabMapping = [
-                  {
-                    widget : this.importerThing,
-                    render : function () {
-                        this.importerThing.updateView('mine', this.ws_name);
-                    }.bind(this),
-                  },
-                  {
-                    widget : this.importerThing,
-                    render : function () {
-                        this.importerThing.updateView('shared', this.ws_name);
-                    }.bind(this),
-                  },
-                  {
-                    widget : this.publicTab,
-                    render : function () {
-                        this.publicTab.render();
-                    }.bind(this),
-                  },
-                  {
-                    widget : this.exampleTab,
-                    render : function () {
-                        this.exampleTab.getExampleDataAndRender();
-                    }.bind(this),
-                  },
-                  { render : function() {} },
+                    {
+                        widget : this.importerThing,
+                        render : function () {
+                            this.importerThing.updateView('mine', this.ws_name);
+                        }.bind(this),
+                    },
+                    {
+                        widget : this.importerThing,
+                        render : function () {
+                            this.importerThing.updateView('shared', this.ws_name);
+                        }.bind(this),
+                    },
+                    {
+                        widget : this.publicTab,
+                        render : function () {
+                            this.publicTab.render();
+                        }.bind(this),
+                    },
+                    {
+                        widget : this.exampleTab,
+                        render : function () {
+                            this.exampleTab.getExampleDataAndRender();
+                        }.bind(this),
+                    },
+                    { render : function() {} },
                 ];
 
                 if (Config.get('features').stagingDataViewer) {
                     this.tabMapping.push(
-                      {
-                        widget : this.stagingTab,
-                        render : function () {
-                            this.stagingTab.updateView();
-                        }.bind(this)
-                      }
+                        {
+                            widget : this.stagingTab,
+                            render : function () {
+                                this.stagingTab.updateView();
+                            }.bind(this)
+                        }
                     );
                 }
 
@@ -300,7 +302,7 @@ define([
          * It throws away the auth token and workspace client, and refreshes the widget
          * @private
          */
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             this.wsClient = null;
             this.isLoggedIn = false;
             this.ws_name = null;
@@ -412,10 +414,10 @@ define([
         },
 
         deactivateLastRenderedPanel : function() {
-          if (this.$lastRenderedWidget && this.$lastRenderedWidget.deactivate) {
-            this.$lastRenderedWidget.deactivate();
-            this.$lastRenderedWidget = undefined;
-          }
+            if (this.$lastRenderedWidget && this.$lastRenderedWidget.deactivate) {
+                this.$lastRenderedWidget.deactivate();
+                this.$lastRenderedWidget = undefined;
+            }
         },
 
         updateSlideoutRendering: function (panelIdx) {
@@ -428,7 +430,7 @@ define([
             }
             var $widget = this.tabMapping[panelIdx].widget;
             if ($widget && $widget.activate) {
-              $widget.activate();
+                $widget.activate();
             }
 
             this.$lastRenderedWidget = $widget;
@@ -598,7 +600,7 @@ define([
             var narrativeNameLookup = {};
             this.$overlayPanel = body.append(footer);
 
-            function cleanupData(data, view) {
+            function cleanupData(data) {
                 return Promise.try(function () {
                     // data = [].concat.apply([], data);
                     data.sort(function (a, b) {
@@ -624,13 +626,13 @@ define([
                     .then(function (data) {
                         var dataTypes = {};
                         data.forEach(function(datum) {
-                          var match = datum[2].match(/([^.]+)\.([^-]+)/)
-                          var module = match[1];
-                          var type = match[2];
-                          if (dataTypes[type] === undefined) {
-                            dataTypes[type] = {};
-                          }
-                          dataTypes[type][module + '.' + type] = true;
+                            var match = datum[2].match(/([^.]+)\.([^-]+)/);
+                            var module = match[1];
+                            var type = match[2];
+                            if (dataTypes[type] === undefined) {
+                                dataTypes[type] = {};
+                            }
+                            dataTypes[type][module + '.' + type] = true;
                         });
                         knownTypes = dataTypes;
                         if (view === 'mine') {
@@ -662,7 +664,7 @@ define([
                             addFilters(view, sharedWorkspaces, sharedData, $sharedScrollPanel, $sharedFilterRow);
                     })
                     .catch(function (error) {
-                        console.log('ERROR ', error);
+                        console.error('ERROR ', error);
                     });
             }
 
@@ -738,21 +740,18 @@ define([
              * or just the one named wsName.
              * Also returns only data of the given type, if not undefined
              */
-            function getData(view, workspaces, types, wsName, ignoreWs, nameFilter) {
+            function getData(view, workspaces, types, wsName, ignoreWs) {
                 if (workspaces.length === 0) {
                     return Promise.try(function () {
                         return [];
                     });
                 }
-                var params = {includeMetadata: 1},
-                    wsIds = [],
-                    objCount = 0,
-                    maxObjCount = 0;
+                var i, thisWs, objCount = 0;
 
                 // first pass, get set of wsids and their counts
                 var wsIdsToCounts = [];
-                for (var i = 0; i < workspaces.length; i++) {
-                    var thisWs = workspaces[i];
+                for (i = 0; i < workspaces.length; i++) {
+                    thisWs = workspaces[i];
 
                     if ((wsName && workspaces[i].name !== wsName) ||
                         (ignoreWs && workspaces[i].name === ignoreWs))
@@ -790,7 +789,7 @@ define([
                     if (start.type)
                         param.types = [start.type];
                     if (start.types)
-                      param.types = start.types;
+                        param.types = start.types;
                     if (start.id)
                         param.workspaces.push(start.id);
                     return param;
@@ -802,14 +801,12 @@ define([
                 var paramsList = [],
                     curParam = newParamSet({types: types}),
                     curTotal = 0,
-                    maxRequest = Config.get('data_panel').max_single_request || 1000,
-                    totalFetch = 0;
+                    maxRequest = Config.get('data_panel').max_single_request || 1000;
 
                 // Set up all possible requests. We'll break out of
                 // the request loop in below
-                for (var i = 0; i < wsIdsToCounts.length; i++) {
-                    var thisWs = wsIdsToCounts[i];
-                    totalFetch += thisWs.count;
+                for (i = 0; i < wsIdsToCounts.length; i++) {
+                    thisWs = wsIdsToCounts[i];
 
                     // if there's room in the request for this
                     // ws, put it there, and boost the total
@@ -846,7 +843,6 @@ define([
                 if (objCount > maxObjFetch)
                     console.error('User\'s object count for owned workspaces was', objCount);
 
-                var headerMessage = '';
                 var requestCounter = 0;
                 return Promise.reduce(paramsList, function (dataList, param) {
                     requestCounter++;
@@ -932,25 +928,12 @@ define([
                 setLoading(view, false);
             }
 
-            function typeList(data) {
-                var types = [];
-
-                for (var i in data) {
-                    var mod_type = data[i][2].split('-')[0];
-                    // update model for types dropdown
-                    if (types.indexOf(mod_type) == -1)
-                        types.push(mod_type);
-                }
-                return types;
-            }
-
             function copyObjects(objs, nar_ws_name) {
                 importStatus.html('Adding <i>' + objs.length + '</i> objects to narrative...');
 
                 var proms = [];
                 for (var i in objs) {
                     var ref = objs[i].ref;
-                    var name = objs[i].name;
                     proms.push(
                         serviceClient.sync_call(
                             'NarrativeService.copy_object',
@@ -1004,7 +987,7 @@ define([
                         $(this).prop('disabled', true);
 
                         var proms = copyObjects(selected, narWSName);
-                        $.when.apply($, proms).done(function (data) {
+                        $.when.apply($, proms).done(function () {
                             importStatus.html('');
                             var status = $('<span class="text-success">done.</span>');
                             importStatus.append(status);
@@ -1181,7 +1164,7 @@ define([
                 typeInput.change(function () {
                     type = $(this).children('option:selected').data('type');
                     if (type) {
-                      type = type.split(',');
+                        type = type.split(',');
                     }
                     filterInput.val('');
                     // request again with filted type
@@ -1190,7 +1173,7 @@ define([
                 });
 
                 // event for filter (search)
-                filterInput.keyup(function (e) {
+                filterInput.keyup(function () {
                     query = $(this).val();
                     setLoading(view, true);
                     var dataToFilter = sharedData;
@@ -1204,7 +1187,7 @@ define([
                     $('<button>')
                         .css({'margin-top': '12px'})
                         .addClass('btn btn-xs btn-default')
-                        .click(function (event) {
+                        .click(function () {
                             container.empty();
                             setLoading(view, true);
                             updateView(view);
@@ -1220,12 +1203,6 @@ define([
                 var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
 
                 var metadata = object_info[10] || {};
-                var metadataText = '';
-                for (var key in metadata) {
-                    if (metadata.hasOwnProperty(key)) {
-                        metadataText += '<tr><th>' + key + '</th><td>' + metadata[key] + '</td></tr>';
-                    }
-                }
                 var type_tokens = object_info[2].split('.');
                 var type = type_tokens[1].split('-')[0];
                 if (type === 'Genome' || type === 'GenomeAnnotation') {
@@ -1312,10 +1289,6 @@ define([
                     loader.reset();
                     container.show();
                 }
-            }
-
-            function objURL(module, type, ws, name) {
-                return self.options.lp_url + ws + '/' + name;
             }
 
             return {

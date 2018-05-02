@@ -102,16 +102,36 @@ var heatmap_dataset =                     {
 
                 var chartBounds = $heatmap.chartBounds();
 
-//groupInfo.ygtick_labels = ['zero', 'alpha', 'bravo', 'charlie'];
-//groupInfo.ygroup = [20,100,100,80];
-
                 //this one assumes that all genes will always be in the dataset. They will not be.
                 //var total_groups = groupInfo.ygroup.reduce(function(p,v) { return p + v} );
 
                 //so, instead, we assign the total_groups to the length of the first row. Somewhat arbitrarily.
                 var total_groups = newDataset.data[0].length;
 
-                var groups = $heatmap.D3svg().select( $heatmap.region('xPadding') ).selectAll('.groupBox').data(groupInfo.ygtick_labels);
+                // the ygtick_labels which are returned from the server are wrong. They are indexed starting at 1, but we want them indexed
+                // starting at 0. We're not going to update the server code because of reasons.
+
+                // First thing we're going to do is a little bit of bounds checking and see if we actually need to decrement at all.
+
+                var needs_decrement = groupInfo.ygtick_labels.reduce( function(needs_it, label) {
+                  if (label === 'Cluster_0') { needs_it = false };
+                  return needs_it;
+                }, true);
+
+                var ygtick_labels = groupInfo.ygtick_labels.map( function(label) {
+                  // yes, I know that I don't need to loop and map to nothing if needs_decrement is false.
+                  // I'm mapping invalid data from the server anyway. I put in the bounds check at all.
+                  // Let me have this little protest.
+                  if (needs_decrement) {
+                    label = label.replace(/(\d+)$/, function(m,d) { return d - 1 });
+                  }
+                  return label;
+                });
+
+                // finally, also just note that the "Results" tab of View Multi-Cluster Heatmap will, of course, still display the ygtick_labels
+                // as they were originally generated on the server, and so will not be in sync with the data in the heatmap itself.
+
+                var groups = $heatmap.D3svg().select( $heatmap.region('xPadding') ).selectAll('.groupBox').data(ygtick_labels);
 
                 var groupsEnter = groups.enter().insert('g', ':first-child');
 

@@ -601,7 +601,7 @@ define (
 
                         $hm.showToolTip(
                             {
-                                label : d.label || 'Value for: ' + d.row + ' - ' + d.column + '<br>is ' + d.value,
+                                label : d.label || 'Value for: ' + d.row + ' - ' + d.column + '<br>is ' + d.value.toPrecision(4),
                             }
                         );
 

@@ -1867,7 +1867,7 @@ define ([
                                 featureFullRecord['cdss'].forEach(function(cds){$relationships.append("Child CDS: "+cds+"<br>")});
                             }
                             if(featureFullRecord['cds']) {
-                                $relationships.append("Child CDS: "+ cds+ "<br>"");
+                                $relationships.append("Child CDS: "+ cds+ "<br>");
                             }
                         })
                         .fail(function(e) {

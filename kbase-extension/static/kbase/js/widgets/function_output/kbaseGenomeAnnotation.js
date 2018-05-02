@@ -65,7 +65,7 @@ define ([
     igv
 
 ) {
-    'use strict'; 
+    'use strict';
 
     return KBWidget({
         name: 'kbaseGenomeView',
@@ -1065,30 +1065,30 @@ define ([
                     .append($('<tr>').append($('<td>').append('<b>Taxonomy</b>')))
                     .append($('<tr>').append(taxonomy)));
 
-                var n_features = gnm.n_features;
-                if(n_features) {
-                    n_features = numberWithCommas(n_features);
-                }
+                    var size = gnm.size;
+                    if(size) {
+                        size = numberWithCommas(size);
+                    }
 
-                var overviewLabels = [
-                    'KBase Object Name',
-                    'Scientific Name',
-                    'Domain',
-                    'Genetic Code',
-                    'Source',
-                    'Source ID',
-                    'Number of Features'
-                ];
+                    var overviewLabels = [
+                            'KBase Object Name',
+                            'Scientific Name',
+                            'Domain',
+                            'Genetic Code',
+                            'Source',
+                            'Source ID',
+                            'Size'
+                        ];
 
-                var overviewData = [
-                    id,
-                    scientific_name,
-                    domain,
-                    genetic_code,
-                    source,
-                    source_id,
-                    n_features
-                ];
+                    var overviewData = [
+                            id,
+                            scientific_name,
+                            domain,
+                            genetic_code,
+                            source,
+                            source_id,
+                            size
+                        ];
 
                 for (var i=0; i<overviewData.length; i++) {
                     $overviewTable.append(
@@ -1218,7 +1218,7 @@ define ([
                 source: '',
                 source_id: '',
                 taxonomy: '',
-                n_features: ''
+                size: ''
             };
 
             if(metadata['Name']) {
@@ -1242,8 +1242,8 @@ define ([
             if(metadata['Taxonomy']) {
                 genomeData.taxonomy = metadata['Taxonomy'];
             }
-            if(metadata['Number features']) {
-                genomeData.n_features = metadata['Number features'];
+            if(metadata['Size']) {
+                genomeData.size = metadata['Size'];
             }
             return genomeData;
         },
@@ -1269,25 +1269,25 @@ define ([
                     genomeData['version'] = info[4];
                     genomeData['ref'] = info[6] + '/' + info[1] + '/' + info[4];
 
-                    // normalize these data fields too
-                    if(!genomeData['domain']) {
-                        genomeData.domain = '';
-                    }
-                    if(!genomeData['genetic_code']) {
-                        genomeData.genetic_code = '';
-                    }
-                    if(!genomeData['source']) {
-                        genomeData.source = '';
-                    }
-                    if(!genomeData['source_id']) {
-                        genomeData.source_id = '';
-                    }
-                    if(!genomeData['taxonomy']) {
-                        genomeData.taxonomy = '';
-                    }
-                    if(!genomeData['num_features']) {
-                        genomeData.n_features = '';
-                    }
+                            // normalize these data fields too
+                            if(!genomeData['domain']) {
+                                genomeData.domain = '';
+                            }
+                            if(!genomeData['genetic_code']) {
+                                genomeData.genetic_code = '';
+                            }
+                            if(!genomeData['source']) {
+                                genomeData.source = '';
+                            }
+                            if(!genomeData['source_id']) {
+                                genomeData.source_id = '';
+                            }
+                            if(!genomeData['taxonomy']) {
+                                genomeData.taxonomy = '';
+                            }
+                            if(!genomeData['size']) {
+                                genomeData.size = '';
+                            }
 
                     noDataCallback(genomeData);
                 });
@@ -1684,7 +1684,9 @@ define ([
                 var tblData = [];
 
                 tblLabels.push('Feature ID');
-                tblData.push('<a href="/#dataview/'+self.genome_ref+'?sub=Feature&subid='+fid+'" target="_blank">'+fid+'</a>');
+                // Landing pages don't work for all features yet
+                //tblData.push('<a href="/#dataview/'+self.genome_ref+'?sub=Feature&subid='+fid+'" target="_blank">'+fid+'</a>');
+                tblData.push(fid);
 
                 tblLabels.push('Aliases');
                 var $aliases = $('<div>');
@@ -1707,12 +1709,16 @@ define ([
                 tblLabels.push('Type');
                 tblData.push(featureData['feature_type']);
 
-                tblLabels.push('Function');
+                tblLabels.push('Product Function');
                 if(featureData['function']) {
                     tblData.push(featureData['function']);
                 } else {
                     tblData.push('None');
                 }
+
+                var $functions = $('<div>');
+                tblLabels.push('Function Descriptions');
+                tblData.push($functions);
 
                 tblLabels.push('Ontology Terms');
                 var $ontology_terms = $('<div>');
@@ -1771,6 +1777,10 @@ define ([
                 tblData.push($contigBrowser);
 
 
+                var $relationships = $('<div>');
+                tblLabels.push('Relationships');
+                tblData.push($relationships);
+
                 var $protLen = $('<div>');
                 tblLabels.push('Protein Length');
                 tblData.push($protLen);
@@ -1788,6 +1798,18 @@ define ([
                 tblLabels.push('DNA Sequence');
                 tblData.push($dnaSeq);
 
+                var $flags = $('<div>');
+                tblLabels.push('Flags');
+                tblData.push($flags);
+
+                var $notes = $('<div>');
+                tblLabels.push('Notes');
+                tblData.push($notes);
+
+                var $warnings = $('<div>');
+                tblLabels.push('Warnings');
+                tblData.push($warnings);
+
 
                 for (var i=0; i<tblLabels.length; i++) {
                     $tbl.append($('<tr>')
@@ -1797,49 +1819,77 @@ define ([
 
                 // get sequence and other information
                 self.genomeAPI
-                    .get_genome_v1({
-                        genomes: [{
-                            ref: genome_ref,
-                            feature_array: featureData['feature_array'],
-                            included_feature_position_index: [featureData['feature_idx']]
-                        }]
-                    })
-                    .then(function(data) {
-                        // console.log('genomeAPI.get_genome_v1(farr='+featureData['features_array']+', fidx='+featureData['feature_idx']+')',data);
-                        featureFullRecord = data.genomes[0].data.features[0];
-                        if(featureFullRecord['protein_translation']) {
-                            $protLen.empty().append(numberWithCommas(featureFullRecord['protein_translation'].length));
-                            $protSeq.empty().append(printProtein(featureFullRecord['protein_translation'],50));
-                        } else {
-                            $protSeq.empty().append('Not Available');
-                        }
-                        if(featureFullRecord['dna_sequence']) {
-                            $dnaLen.empty().append(numberWithCommas(featureFullRecord['dna_sequence'].length));
-                            $dnaSeq.empty().append(printDNA(featureFullRecord['dna_sequence'],50));
-                        } else {
-                            $dnaSeq.empty().append('Not Available');
-                        }
-                    })
-                    .fail(function(e) {
-                        console.error(e);
-                        $protLen.empty();
-                        $protSeq.empty();
-                        $dnaLen.empty();
-                        $dnaSeq.empty();
-                        var errorMssg = '';
-                        if(e['error']) {
-                            errorMssg = JSON.stringify(e['error']);
-                            if(e['error']['message']){
-                                errorMssg = e['error']['message'];
-                                if(e['error']['error']){
-                                    errorMssg += '<br><b>Trace</b>:' + e['error']['error'];
-                                }
+                        .get_genome_v1({
+                            genomes: [{
+                                ref: genome_ref,
+                                feature_array: featureData['feature_array'],
+                                included_feature_position_index: [featureData['feature_idx']]
+                            }]
+                        })
+                        .then(function(data) {
+                            //console.log('genomeAPI.get_genome_v1(farr='+featureData['features_array']+', fidx='+featureData['feature_idx']+')',data)
+                            featureFullRecord = data.genomes[0].data.features[0];
+                            if(featureFullRecord['protein_translation']) {
+                                $protLen.empty().append(numberWithCommas(featureFullRecord['protein_translation'].length));
+                                $protSeq.empty().append(printProtein(featureFullRecord['protein_translation'],50));
                             } else {
-                                errorMssg = JSON.stringify(e['error']);
+                                $protSeq.empty().append('Not Available');
                             }
-                        } else { e['error']['message']; }
-                        $protSeq.append($('<div>').addClass('alert alert-danger').append(errorMssg));
-                    });
+                            if(featureFullRecord['dna_sequence']) {
+                                $dnaLen.empty().append(numberWithCommas(featureFullRecord['dna_sequence'].length));
+                                $dnaSeq.empty().append(printDNA(featureFullRecord['dna_sequence'],50));
+                            } else {
+                                $dnaSeq.empty().append('Not Available');
+                            }
+                            if(featureFullRecord['warnings']) {
+                                console.log(featureFullRecord['warnings']);
+                                $warnings.empty().append(featureFullRecord['warnings'].join('<br>'));
+                            }
+                            if(featureFullRecord['notes']) {
+                                $notes.empty().append(featureFullRecord['notes']);
+                            }
+                            if(featureFullRecord['flags']) {
+                                $flags.empty().append(featureFullRecord['flags'].join(", "));
+                            }
+                            if(featureFullRecord['functional_descriptions']) {
+                                $functions.empty().append(featureFullRecord['functional_descriptions'].join("<br>"));
+                            }
+                            if(featureFullRecord['parent_gene']) {
+                                $relationships.append("Parent Gene: " + parent_gene + "<br>");
+                            }
+                            if(featureFullRecord['parent_mrna']) {
+                                $relationships.append("Parent mRNA: "+parent_mrna+"<br>");
+                            }
+                            if(featureFullRecord['mrnas']) {
+                                featureFullRecord['mrnas'].forEach(function(mrna){$relationships.append("Child mRNA: "+ mrna + "<br>")});
+                            }
+                            if(featureFullRecord['cdss']) {
+                                featureFullRecord['cdss'].forEach(function(cds){$relationships.append("Child CDS: "+cds+"<br>")});
+                            }
+                            if(featureFullRecord['cds']) {
+                                $relationships.append("Child CDS: "+ cds+ "<br>");
+                            }
+                        })
+                        .fail(function(e) {
+                            console.error(e);
+                            $protLen.empty();
+                            $protSeq.empty();
+                            $dnaLen.empty();
+                            $dnaSeq.empty();
+                            var errorMssg = '';
+                            if(e['error']) {
+                                errorMssg = JSON.stringify(e['error']);
+                                if(e['error']['message']){
+                                    errorMssg = e['error']['message'];
+                                    if(e['error']['error']){
+                                        errorMssg += '<br><b>Trace</b>:' + e['error']['error'];
+                                    }
+                                } else {
+                                    errorMssg = JSON.stringify(e['error']);
+                                }
+                            } else { e['error']['message']; }
+                                $protSeq.append($('<div>').addClass('alert alert-danger').append(errorMssg));
+                        });
 
 
                 // setup mini contig browser
@@ -1943,7 +1993,7 @@ define ([
                                     cgb.data.options.centerFeature = featureData['feature_id'];
                                     cgb.data.options.showButtons = false;
                                     cgb.data.options.token = self.token;
-                                    cgb.data.$elem = $('<div style="width:100%; height: 120px;"/>');
+                                    cgb.data.$elem = $('<div style="width:100%; height: 200px;"/>');
                                     cgb.data.$elem.show(function(){
                                         cgb.data.update();
                                     });

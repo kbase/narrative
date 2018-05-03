@@ -91,6 +91,15 @@ function runWidgetTest(params) {
 
     var config = TestUtil.getWidgetConfig(params.widget);
     casper.test.begin('Testing widget "' + params.widget + '"', function (test) {
+        var doWidgetInsert = casper.cli.get('insert-widget');
+        var doSave = casper.cli.get('save');
+        var doValidate = true;
+
+        Object.keys(casper.cli.options).forEach(function(k) {
+            casper.echo(k + ': "' + casper.cli.get(k) + '"');
+        });
+
+
         TestUtil.setAuthCookie(config.mainUser);
 
         // Start the test at this page.
@@ -111,27 +120,29 @@ function runWidgetTest(params) {
         casper.then(function() {
             test.assertSelectorHasText('span#kb-narr-creator', config.creatorName);
             test.assertTitle(config.narrativeName);
-            test.assertEquals(casper.get_cells_length(), config.numCells);
         });
 
-        casper.then(function() {
-            // Now, evaluate a data panel click to make a viewer cell
-            // gotta be inside a .then block, otherwise will just run while outside of the
-            // evaluation cycle.
-            TestUtil.addDataWidgetFromIcon(config.dataSelector);
-        });
+        if (doWidgetInsert) {
+            casper.then(function() {
+                // Now, evaluate a data panel click to make a viewer cell
+                // gotta be inside a .then block, otherwise will just run while outside of the
+                // evaluation cycle.
+                TestUtil.addDataWidgetFromIcon(config.dataSelector);
+            });
+            // wait a second for it to run (the utility "wait_for_output" isn't working...), but this
+            // shouldn't take longer than a second.
+            casper.wait(10000);
+            casper.thenEvaluate(function() {
+                var numCells = Jupyter.notebook.get_cells().length;
+                Jupyter.narrative.scrollToCell(Jupyter.notebook.get_cell(numCells-1));
+            });
+        }
 
-        //
-        // wait a second for it to run (the utility "wait_for_output" isn't working...), but this
-        // shouldn't take longer than a second.
-        casper.wait(10000);
-        casper.thenEvaluate(function(cellIdx) {
-            Jupyter.narrative.scrollToCell(Jupyter.notebook.get_cell(cellIdx));
-        }, config.numCells);
-
-        casper.then(function() {
-            return params.validateCellFn(test, config);
-        });
+        if (doValidate) {
+            casper.then(function() {
+                params.validateCellFn(test, config, casper.get_cells_length()-1);
+            });
+        }
 
         // next, we can go through the widget layout and all that... (need to have that code so
         // we can test it on a copied narrative)
@@ -142,6 +153,15 @@ function runWidgetTest(params) {
         casper.then(function() {
             return params.validateWidgetFn(test, config, widgetSelector);
         });
+
+        // finally, save the resulting narrative, if the --save argument is given
+        if (doSave) {
+            casper.then(function() {
+                casper.click('#kb-save-btn');
+                casper.waitWhileSelector('#kb-save-btn .fa.fa-save.fa-spin');
+                casper.echo('Narrative saved.');
+            });
+        }
 
         casper.run(function() {
             test.done();

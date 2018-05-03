@@ -31,7 +31,7 @@ URLS = {
     "service_wizard": BASE_URL + "service_wizard"
 }
 
-with open(os.path.join(TEST_ROOT, "test_cfg.json"), 'r') as c:
+with open(os.path.join(TEST_ROOT, "testConfig.json"), 'r') as c:
     test_cfg = json.loads(c.read())
 
 JUPYTER_PORT = test_cfg['jupyterPort']
@@ -116,7 +116,15 @@ def run_insertion_test(config):
     Initializes a widget test set by creating a new narrative and copying a single piece of data
     in to it.
     """
-    cmd = BASE_TEST_COMMAND + [os.path.join('test', 'casper', config['testFile'])]
+    cmd = BASE_TEST_COMMAND + [
+        os.path.join('test', 'casper', config['testFile']),
+        '--insert-widget',
+        '--save',
+        '--narrative-id={}'.format(),
+        '--username={}'.format(),
+        '--fullname="{}"'.format(),
+        '--title="{}"'.format(),
+        ]
     return subprocess.check_call(test_cmd, stderr=subprocess.STDOUT)
 
 def copy_and_unshare_narrative(info):
@@ -141,7 +149,8 @@ def copy_and_unshare_narrative(info):
     return copy_result
 
 def run_validation_test(widget_cfg, narr_info):
-    cmd = BASE_TEST_COMMAND + [os.path.join('test', 'casper', config['testFile'])]
+    cmd = BASE_TEST_COMMAND + [os.path.join('test', 'casper', config['testFile']), '--validate-only']
+    return subprocess.check_call(test_cmd, stderr=subprocess.STDOUT)
 
 def run_widget_test(widget):
     """

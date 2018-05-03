@@ -16,7 +16,6 @@
             "narrativeName": "Widget Test Bed",
             "creatorName": "William Riehl",
             "ownerId": "wjriehl",
-            "numCells": 1,
             "dataSelector": ".icon-genome",
             "widgetSelector": ".tabbable",
             "mainUser": "wjriehl",

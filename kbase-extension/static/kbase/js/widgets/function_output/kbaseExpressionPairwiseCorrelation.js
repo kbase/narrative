@@ -5,6 +5,8 @@
  * @public
  */
 
+ var MAGIC_DOWNLOAD_NUMBER = 50;
+
 define ([
     'kbwidget',
     'bootstrap',
@@ -19,7 +21,7 @@ define ([
     kbaseHeatmap
 ) {
     'use strict';
-    
+
     return KBWidget({
         name: 'kbaseExpressionPairwiseCorrelation',
         parent : kbaseExpressionGenesetBaseWidget,
@@ -73,9 +75,9 @@ define ([
                 var row = [];
                 for(var j = 0 ; j < rowDescriptors.length; j++){
                     row.push(values[i][j].toFixed(3));
-                }                
+                }
                 data.push(row);
-            }            
+            }
             var heatmap =
                 {
                     row_ids : rowIds,
@@ -86,20 +88,18 @@ define ([
                 };
 
             var size = rowIds.length;
-            var rowH = 35;
+            var rowH = 15;
             var hmH = 80 + 20 + size * rowH;
-            if (hmH > 700)
-                hmH = 700;
+
             if (hmH < 210) {
                 hmH = 210;
                 rowH = Math.round((hmH - 100) / size);
             }
             var colW = rowH;
             var hmW = 150 + 110 + size * colW;
-            if (hmW > 700)
-                hmW = 700;
+
             var $heatmapDiv = $('<div style = \'width : '+hmW+'px; height : '+hmH+'px\'></div>');
-            $containerDiv.append($heatmapDiv);
+//            $containerDiv.append($heatmapDiv);
             $containerDiv.append('<div style = \'width : 5px; height : 5px\'></div>');
 
             // TODO: heatmap values out of range still scale color instead of just the max/min color
@@ -109,7 +109,34 @@ define ([
                 minValue : self.minRange,
                 maxValue : self.maxRange
             });
-            
+
+            if (rowIds.length < MAGIC_DOWNLOAD_NUMBER) {
+              $containerDiv.append($heatmapDiv);
+            }
+            else {
+              var $svg = $heatmapDiv.find('svg');
+              var $dummy = $.jqElem('div').append($svg);
+
+              $containerDiv.append(
+                $.jqElem('button')
+                  .append("Please download the svg of this pairwise correlation")
+                  .addClass('btn btn-primary')
+                  .on('click', function(e) {
+                  var file = new Blob([$dummy.html()], {type : 'text'});
+                  var a = document.createElement("a"),
+                          url = URL.createObjectURL(file);
+                  a.href = url;
+                  a.download = 'pairwise.svg';
+                  document.body.appendChild(a);
+                  a.click();
+                  setTimeout(function() {
+                      document.body.removeChild(a);
+                      window.URL.revokeObjectURL(url);
+                  }, 0);
+                })
+              );
+            }
+
         }
     });
 });

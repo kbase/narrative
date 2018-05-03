@@ -71,12 +71,7 @@ define([
         div = t('div'),
         span = t('span'),
         a = t('a'),
-        table = t('table'),
-        tr = t('tr'),
-        th = t('th'),
-        td = t('td'),
         pre = t('pre'),
-        input = t('input'),
         p = t('p'),
         blockquote = t('blockquote'),
         appStates = AppStates;
@@ -88,7 +83,6 @@ define([
             runtime = Runtime.make(),
             cell = config.cell,
             parentBus = config.bus,
-            kernelReady = Narrative.isKernelReady(),
             // TODO: the cell bus should be created and managed through main.js,
             // that is, the extension.
             cellBus = runtime.bus().makeChannelBus({
@@ -106,28 +100,13 @@ define([
             model,
             spec,
             // HMM. Sync with metadata, or just keep everything there?
-            settings = {
-                showNotifications: {
-                    label: 'Show the Notifications panel',
-                    help: 'The notifications panel may contain informational, warning, or error messages emitted during the operation of the app cell',
-                    defaultValue: false,
-                    type: 'toggle',
-                    element: 'notifications'
-                },
-                showAboutApp: {
-                    label: 'Show the About This App panel',
-                    help: 'The "About This App" panel shows summary and detailed information about the App for this App Cell.',
-                    defaultValue: false,
-                    type: 'toggle',
-                    element: 'about-app'
-                }
-            },
             widgets = {},
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000,
             controlBarTabs = {},
             readOnly = false,
             viewOnly = false,
+            kernelReady = null,
             actionButtons = {
                 current: {
                     name: null,
@@ -241,7 +220,7 @@ define([
                         handle: function(message) {
                             return {
                                 state: model.getItem('paramState', message.id)
-                            }
+                            };
                         }
                     });
 
@@ -269,10 +248,10 @@ define([
                     });
 
                     return widget.start({
-                            node: arg.node,
-                            appSpec: model.getItem('app.spec'),
-                            parameters: spec.getSpec().parameters
-                        })
+                        node: arg.node,
+                        appSpec: model.getItem('app.spec'),
+                        parameters: spec.getSpec().parameters
+                    })
                         .then(function() {
                             return {
                                 bus: bus,
@@ -360,10 +339,10 @@ define([
                     });
 
                     return widget.start({
-                            node: arg.node,
-                            appSpec: model.getItem('app.spec'),
-                            parameters: spec.getSpec().parameters
-                        })
+                        node: arg.node,
+                        appSpec: model.getItem('app.spec'),
+                        parameters: spec.getSpec().parameters
+                    })
                         .then(function() {
                             return {
                                 bus: bus,
@@ -374,19 +353,18 @@ define([
         }
 
         function configureWidget() {
-            function factory(config) {
+            function factory() {
                 var container,
                     widget;
 
                 function start(arg) {
                     container = arg.node;
                     return loadParamsWidget({
-                            node: container
-                        })
+                        node: container
+                    })
                         .then(function(result) {
                             widget = result;
                         });
-
                 }
 
                 function stop() {
@@ -411,15 +389,15 @@ define([
         }
 
         function viewConfigureWidget() {
-            function factory(config) {
+            function factory() {
                 var container,
                     widget;
 
                 function start(arg) {
                     container = arg.node;
                     return loadViewParamsWidget({
-                            node: container
-                        })
+                        node: container
+                    })
                         .then(function(result) {
                             widget = result;
                         });
@@ -647,30 +625,30 @@ define([
             }
 
             switch (app.tag) {
-                case 'release':
-                    return {
-                        ids: [app.spec.info.id],
-                        tag: 'release',
-                        version: app.spec.info.ver
-                    };
-                case 'dev':
-                case 'beta':
-                    return {
-                        ids: [app.spec.info.id],
-                        tag: app.tag
-                    };
-                default:
-                    console.error('Invalid tag', app);
-                    throw new ToErr.KBError({
-                        type: 'internal-app-cell-error',
-                        message: 'This app cell is corrrupt -- the app tag ' + String(app.tag) + ' is not recognized',
-                        advice: [
-                            'This condition should never occur outside of a development environment',
-                            'The tag of the app associated with the app cell must be one of "release", "beta", or "dev"',
-                            'Chances are that this app cell was inserted in a development environment in which the app cell structure was in flux',
-                            'You should remove this app cell from the narrative an insert an new one'
-                        ]
-                    });
+            case 'release':
+                return {
+                    ids: [app.spec.info.id],
+                    tag: 'release',
+                    version: app.spec.info.ver
+                };
+            case 'dev':
+            case 'beta':
+                return {
+                    ids: [app.spec.info.id],
+                    tag: app.tag
+                };
+            default:
+                console.error('Invalid tag', app);
+                throw new ToErr.KBError({
+                    type: 'internal-app-cell-error',
+                    message: 'This app cell is corrrupt -- the app tag ' + String(app.tag) + ' is not recognized',
+                    advice: [
+                        'This condition should never occur outside of a development environment',
+                        'The tag of the app associated with the app cell must be one of "release", "beta", or "dev"',
+                        'Chances are that this app cell was inserted in a development environment in which the app cell structure was in flux',
+                        'You should remove this app cell from the narrative an insert an new one'
+                    ]
+                });
             }
 
         }
@@ -734,151 +712,6 @@ define([
             ui.setContent('fsm-display.content', content);
         }
 
-        function renderAppSpec() {
-            //            if (!env.appSpec) {
-            //                return;
-            //            }
-            //            var specText = JSON.stringify(env.appSpec, false, 3),
-            //                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return pre({
-                dataElement: 'spec',
-                class: 'prettyprint lang-json',
-                style: { fontSize: '80%' }
-            });
-        }
-
-        function renderAppSummary() {
-            return table({ class: 'table table-striped' }, [
-                tr([
-                    th('Name'),
-                    td({ dataElement: 'name' })
-                ]),
-                ui.ifAdvanced(function() {
-                    return tr([
-                        th('Module'),
-                        td({ dataElement: 'module' })
-                    ]);
-                }),
-                tr([
-                    th('Id'),
-                    td({ dataElement: 'id' })
-                ]),
-                tr([
-                    th('Version'),
-                    td({ dataElement: 'version' })
-                ]),
-                tr([
-                    th('Summary'),
-                    td({ dataElement: 'summary' })
-                ]),
-                tr([
-                    th('Authors'),
-                    td({ dataElement: 'authors' })
-                ]),
-                ui.ifAdvanced(function() {
-                    return tr([
-                        th('Git commit hash'),
-                        td({ dataElement: 'git-commit-hash' })
-                    ]);
-                }),
-                tr([
-                    th('More info'),
-                    td({ dataElement: 'catalog-link' })
-                ])
-            ]);
-        }
-
-        function renderAboutApp() {
-            var aboutTabs = [{
-                label: 'Summary',
-                name: 'summary',
-                content: renderAppSummary()
-            }];
-
-            return html.makeTabs({
-                tabs: aboutTabs
-            });
-        }
-
-        function showElement(name) {
-            var node = ui.getElement(name);
-            if (!node) {
-                return;
-            }
-            node.classList.remove('hidden');
-        }
-
-        function hideElement(name) {
-            var node = ui.getElement(name);
-            if (!node) {
-                return;
-            }
-            node.classList.add('hidden');
-        }
-
-
-        function renderSetting(settingName) {
-            var setting = settings[settingName],
-                value;
-
-            if (!setting) {
-                return;
-            }
-
-            value = model.getItem(['user-settings', settingName], setting.defaultValue);
-            switch (setting.type) {
-                case 'toggle':
-                    if (value) {
-                        showElement(setting.element);
-                    } else {
-                        hideElement(setting.element);
-                    }
-                    break;
-            }
-        }
-
-        function doChangeSetting(event) {
-            var control = event.target,
-                settingName = control.value;
-
-            model.setItem(['user-settings', settingName], control.checked);
-
-            renderSetting(settingName);
-        }
-
-        function renderSettings() {
-            var events = Events.make({ node: container }),
-                content = Object.keys(settings).map(function(key) {
-                    var setting = settings[key],
-                        settingsValue = model.getItem(['user-settings', key]) || setting.defaultValue;
-                    return div({}, [
-                        input({
-                            type: 'checkbox',
-                            checked: (settingsValue ? true : false),
-                            dataSetting: key,
-                            value: key,
-                            id: events.addEvent({
-                                type: 'change',
-                                handler: function(e) {
-                                    doChangeSetting(e);
-                                }
-                            })
-                        }),
-                        span({ style: { marginLeft: '4px', fontStyle: 'italic' } }, setting.label)
-                    ]);
-                }).join('\n');
-            ui.setContent('settings.content', div([
-                p('These options show or hide optional areas of the app cell'),
-                content
-            ]));
-            events.attachEvents();
-
-            //Ensure that the settings are reflected in the UI.
-            Object.keys(settings).forEach(function(key) {
-                renderSetting(key);
-            });
-        }
-
         function toBoolean(value) {
             if (value && value !== null) {
                 return true;
@@ -917,20 +750,20 @@ define([
 
         function doActionButton(data) {
             switch (data.action) {
-                case 'runApp':
-                    doRun();
-                    break;
-                case 'reRunApp':
-                    doRerun();
-                    break;
-                case 'resetApp':
-                    doResetApp();
-                    break;
-                case 'cancel':
-                    doCancel();
-                    break;
-                default:
-                    alert('Undefined action:' + data.action);
+            case 'runApp':
+                doRun();
+                break;
+            case 'reRunApp':
+                doRerun();
+                break;
+            case 'resetApp':
+                doResetApp();
+                break;
+            case 'cancel':
+                doCancel();
+                break;
+            default:
+                alert('Undefined action:' + data.action);
             }
         }
 
@@ -941,40 +774,40 @@ define([
             // }
             style.padding = '6px';
             var buttonDiv = div({
-                    class: 'btn-group',
-                    style: style
-                },
-                Object.keys(actionButtons.availableButtons).map(function(key) {
-                    var button = actionButtons.availableButtons[key],
-                        classes = [].concat(button.classes),
-                        icon;
-                    if (button.icon) {
-                        icon = {
-                            name: button.icon.name,
-                            size: 2
-                        };
-                    }
-                    return ui.buildButton({
-                        tip: button.help,
-                        name: key,
-                        events: events,
-                        type: button.type || 'default',
-                        classes: classes,
-                        hidden: true,
-                        // Overriding button class styles for this context.
-                        style: {
-                            width: '80px'
-                        },
-                        event: {
-                            type: 'actionButton',
-                            data: {
-                                action: key
-                            }
-                        },
-                        icon: icon,
-                        label: button.label
-                    });
-                })
+                class: 'btn-group',
+                style: style
+            },
+            Object.keys(actionButtons.availableButtons).map(function(key) {
+                var button = actionButtons.availableButtons[key],
+                    classes = [].concat(button.classes),
+                    icon;
+                if (button.icon) {
+                    icon = {
+                        name: button.icon.name,
+                        size: 2
+                    };
+                }
+                return ui.buildButton({
+                    tip: button.help,
+                    name: key,
+                    events: events,
+                    type: button.type || 'default',
+                    classes: classes,
+                    hidden: true,
+                    // Overriding button class styles for this context.
+                    style: {
+                        width: '80px'
+                    },
+                    event: {
+                        type: 'actionButton',
+                        data: {
+                            action: key
+                        }
+                    },
+                    icon: icon,
+                    label: button.label
+                });
+            })
             );
             return buttonDiv;
         }
@@ -1139,35 +972,6 @@ define([
                                     span({ style: { 'font-weight': 'bold' }, dataElement: 'new-app-name' }),
                                     '" App for the most recent version.'
                                 ]),
-                                ui.buildPanel({
-                                    title: 'App Cell Settings',
-                                    name: 'settings',
-                                    hidden: true,
-                                    type: 'default',
-                                    classes: ['kb-panel-container'],
-                                    body: div({ dataElement: 'content' })
-                                }),
-                                ui.buildCollapsiblePanel({
-                                    title: 'Notifications',
-                                    name: 'notifications',
-                                    hidden: true,
-                                    type: 'default',
-                                    classes: ['kb-panel-container'],
-                                    body: [
-                                        div({ dataElement: 'content' })
-                                    ]
-                                }),
-                                ui.buildCollapsiblePanel({
-                                    title: 'About',
-                                    name: 'about-app',
-                                    hidden: true,
-                                    collapsed: false,
-                                    type: 'default',
-                                    classes: ['kb-panel-container'],
-                                    body: [
-                                        div({ dataElement: 'about-app' }, renderAboutApp())
-                                    ]
-                                }),
                                 buildRunControlPanel(events)
                             ])
                         ])
@@ -1192,21 +996,21 @@ define([
         // for a beta or release tag ...
         function fixApp(app) {
             switch (app.tag) {
-                case 'release':
-                    return {
-                        id: app.id,
-                        tag: app.tag,
-                        version: app.version
-                    };
-                case 'beta':
-                case 'dev':
-                    return {
-                        id: app.id,
-                        tag: app.tag,
-                        version: app.gitCommitHash
-                    };
-                default:
-                    throw new Error('Invalid tag for app ' + app.id);
+            case 'release':
+                return {
+                    id: app.id,
+                    tag: app.tag,
+                    version: app.version
+                };
+            case 'beta':
+            case 'dev':
+                return {
+                    id: app.id,
+                    tag: app.tag,
+                    version: app.gitCommitHash
+                };
+            default:
+                throw new Error('Invalid tag for app ' + app.id);
             }
         }
 
@@ -1214,6 +1018,7 @@ define([
             var runId = new Uuid(4).format(),
                 fixedApp = fixApp(app),
                 code = PythonInterop.buildAppRunner(cellId, runId, fixedApp, params);
+            console.log('app cell code', app);
             // TODO: do something with the runId
             cell.set_text(code);
         }
@@ -1278,7 +1083,7 @@ define([
             });
 
             fsm.bus.on('resume-success', function() {
-                doOnSuccess(true);
+                doResumeSuccess(true);
             });
 
             fsm.bus.on('exit-success', function() {
@@ -1363,73 +1168,7 @@ define([
             return model.getItem('user-settings.showCodeInputArea');
         }
 
-        function toggleSettings() {
-            var name = 'showSettings',
-                selector = 'settings',
-                node = ui.getElement(selector),
-                showing = model.getItem(['user-settings', name]);
-            if (showing) {
-                model.setItem(['user-settings', name], false);
-            } else {
-                model.setItem(['user-settings', name], true);
-            }
-
-            showing = model.getItem(['user-settings', name]);
-            if (showing) {
-                node.classList.remove('hidden');
-            } else {
-                node.classList.add('hidden');
-            }
-            return showing;
-        }
-
-        function doRemoveNotification(index) {
-            var notifications = model.getItem('notifications') || [];
-            notifications.splice(index, 1);
-            model.setItem('notifications', notifications);
-            renderNotifications();
-        }
-
-        function renderNotifications() {
-            var events = Events.make(),
-                notifications = model.getItem('notifications') || [],
-                content;
-
-            if (notifications.length === 0) {
-                content = span({ style: { fontStyle: 'italic' } }, 'There are currently no notifications');
-            } else {
-                content = notifications.map(function(notification, index) {
-                    return div({ class: 'row' }, [
-                        div({ class: 'col-md-10' }, notification),
-                        div({ class: 'col-md-2', style: { textAlign: 'right' } }, span({}, [
-                            a({
-                                class: 'btn btn-default',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function() {
-                                        doRemoveNotification(index);
-                                    }
-                                })
-                            }, 'X')
-                        ]))
-                    ]);
-                }).join('\n');
-            }
-            ui.setContent('notifications.content', content);
-            events.attachEvents(container);
-        }
-
-        function addNotification(notification) {
-            var notifications = model.getItem('notifications') || [];
-            notifications.push(notification);
-            model.setItem('notifications', notifications);
-            renderNotifications();
-        }
-
-        function clearNotifications() {
-            model.setItem('notifications', []);
-        }
-
+      
         // WIDGETS
 
         /*
@@ -1438,29 +1177,11 @@ define([
          */
         function renderUI() {
             showFsmBar();
-            renderNotifications();
-            renderSettings();
             var state = fsm.getCurrentState();
-            // var viewOnly = (state.state.perm === 'viewonly');
             if (!viewOnly && model.getItem('outdated')) {
                 ui.setContent('outdated.new-app-name', model.getItem('newAppName', model.getItem('app.spec.info.name')));
                 ui.showElement('outdated');
             }
-
-            // In view only mode, the cell button bar is hidden.
-            // var buttonBar = container.querySelector('.kb-btn-toolbar-cell-widget');
-            // console.log('button bar?', buttonBar);
-            // if (buttonBar) {
-            //     if (viewOnly) {
-            //         if (!buttonBar.classList.contains('hidden')) {
-            //             buttonBar.classList.add('hidden');
-            //         }
-            //     } else {
-            //         if (buttonBar.classList.contains('hidden')) {
-            //             buttonBar.classList.remove('hidden');
-            //         }
-            //     }
-            // }
 
             var indicatorNode = ui.getElement('run-control-panel.status.indicator');
             var iconNode = ui.getElement('run-control-panel.status.indicator.icon');
@@ -1472,9 +1193,6 @@ define([
                 iconNode.className = '';
                 iconNode.classList.add('fa', 'fa-' + state.ui.appStatus.icon.type, 'fa-3x');
             }
-
-            // Clear the measure
-            // ui.setContent('run-control-panel.status.measure', '');
 
             // Tab state
 
@@ -1604,7 +1322,7 @@ define([
             });
         }
 
-        function resetToEditMode(from) {
+        function resetToEditMode() {
             // only do this if we are not editing.
             model.deleteItem('exec');
 
@@ -1703,14 +1421,14 @@ define([
             // Update FSM
             var newFsmState = (function() {
                 switch (message.event) {
-                    case 'launched_job':
-                        // NEW: start listening for jobs.
-                        startListeningForJobMessages(message.job_id);
-                        return { mode: 'processing', stage: 'launched' };
-                    case 'error':
-                        return { mode: 'error', stage: 'launching' };
-                    default:
-                        throw new Error('Invalid launch state ' + message.event);
+                case 'launched_job':
+                    // NEW: start listening for jobs.
+                    startListeningForJobMessages(message.job_id);
+                    return { mode: 'processing', stage: 'launched' };
+                case 'error':
+                    return { mode: 'error', stage: 'launching' };
+                default:
+                    throw new Error('Invalid launch state ' + message.event);
                 }
             }());
             fsm.newState(newFsmState);
@@ -1718,52 +1436,47 @@ define([
         }
 
         function updateFromJobState(jobState) {
-            var currentState = fsm.getCurrentState().state;
             var newFsmState = (function() {
                 switch (jobState.job_state) {
-                    case 'queued':
-                        return { mode: 'processing', stage: 'queued' };
-                    case 'job_started':
-                        return { mode: 'processing', stage: 'running' };
-                    case 'in-progress':
-                        return { mode: 'processing', stage: 'running' };
-                    case 'completed':
-                        stopListeningForJobMessages();
-                        return { mode: 'success' };
-                    case 'canceled':
-                        stopListeningForJobMessages();
-                        return { mode: 'canceled' };
-                    case 'suspend':
-                    case 'error':
-                        stopListeningForJobMessages();
+                case 'queued':
+                    return { mode: 'processing', stage: 'queued' };
+                case 'job_started':
+                    return { mode: 'processing', stage: 'running' };
+                case 'in-progress':
+                    return { mode: 'processing', stage: 'running' };
+                case 'completed':
+                    stopListeningForJobMessages();
+                    return { mode: 'success' };
+                case 'canceled':
+                    stopListeningForJobMessages();
+                    return { mode: 'canceled' };
+                case 'suspend':
+                case 'error':
+                    stopListeningForJobMessages();
 
-                        // Due to the course granularity of job status
-                        // messages, we don't can't rely on the prior state
-                        // to inform us about what procesing stage the
-                        // error occured in -- we need to inspect the job state.
-                        var errorStage;
-                        if (jobState.exec_start_time) {
-                            errorStage = 'running';
-                        } else if (jobState.creation_time) {
-                            errorStage = 'queued';
-                        }
-                        if (errorStage) {
-                            return {
-                                mode: 'error',
-                                stage: errorStage
-                            };
-                        }
+                    // Due to the course granularity of job status
+                    // messages, we don't can't rely on the prior state
+                    // to inform us about what processing stage the
+                    // error occurred in -- we need to inspect the job state.
+                    var errorStage;
+                    if (jobState.exec_start_time) {
+                        errorStage = 'running';
+                    } else if (jobState.creation_time) {
+                        errorStage = 'queued';
+                    }
+                    if (errorStage) {
                         return {
-                            mode: 'error'
+                            mode: 'error',
+                            stage: errorStage
                         };
-                    default:
-                        throw new Error('Invalid job state ' + jobState.job_state);
+                    }
+                    return {
+                        mode: 'error'
+                    };
+                default:
+                    throw new Error('Invalid job state ' + jobState.job_state);
                 }
             }());
-            // TODO: maybe a better way of propagating viewonly state...
-            // if (currentState.perm === 'viewonly') {
-            //     newFsmState.perm = 'viewonly';
-            // }
             fsm.newState(newFsmState);
             renderUI();
         }
@@ -1773,7 +1486,6 @@ define([
         //       to the kernel)
         function doRun() {
             if (readOnly) {
-                // TODO: issue warning?
                 console.warn('run request ignored in readOnly mode');
                 return;
             }
@@ -1784,20 +1496,7 @@ define([
             // the fact that the user may have opened and closed the tab...
             userSelectedTab = false;
 
-            // TODO: if we don't use this, we should remove it.
-            // Save this to the exec state change log.
-            var execLog = model.getItem('exec.log');
-            if (!execLog) {
-                execLog = [];
-            }
-            execLog.push({
-                timestamp: new Date(),
-                event: 'execute-requested',
-                data: {
-                    runId: 'should be here'
-                }
-            });
-            model.setItem('exec.log', execLog);
+            
 
             cell.execute();
         }
@@ -1863,23 +1562,10 @@ define([
                             model.setItem('exec.outputWidgetInfo', outputWidgetInfo);
                         }
 
-                        var execLog = model.getItem('exec.log');
-                        if (!execLog) {
-                            execLog = [];
-                        }
-                        execLog.push({
-                            timestamp: new Date(),
-                            event: 'job-status',
-                            data: {
-                                jobState: newJobState
-                            }
-                        });
-                        model.setItem('exec.log', execLog);
-
                         // Now we send the job state on the cell bus, generally.
                         // The model is that a cell can only have one job active at a time.
                         // Thus we can just emit the state of the current job globally
-                        // on the cell bus for thos widgets interested.
+                        // on the cell bus for those widgets interested.
                         cellBus.emit('job-state', {
                             jobState: newJobState
                         });
@@ -2000,9 +1686,9 @@ define([
                 suffix: ' ago'
             });
             widgets.runClock.start({
-                    node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                    startTime: jobState.exec_start_time
-                })
+                node: ui.getElement('run-control-panel.status.execMessage.clock'),
+                startTime: jobState.exec_start_time
+            })
                 .catch(function(err) {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
                 });
@@ -2032,9 +1718,9 @@ define([
                 prefix: 'for '
             });
             widgets.runClock.start({
-                    node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                    startTime: jobState.creation_time
-                })
+                node: ui.getElement('run-control-panel.status.execMessage.clock'),
+                startTime: jobState.creation_time
+            })
                 .catch(function(err) {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
                 });
@@ -2057,21 +1743,21 @@ define([
             var label;
             var color;
             switch (jobState) {
-                case 'completed':
-                    label = 'success';
-                    color = 'green';
-                    break;
-                case 'suspend':
-                    label = 'error';
-                    color = 'red';
-                    break;
-                case 'canceled':
-                    label = 'cancelation';
-                    color = 'orange';
-                    break;
-                default:
-                    label = jobState;
-                    color = 'black';
+            case 'completed':
+                label = 'success';
+                color = 'green';
+                break;
+            case 'suspend':
+                label = 'error';
+                color = 'red';
+                break;
+            case 'canceled':
+                label = 'cancelation';
+                color = 'orange';
+                break;
+            default:
+                label = jobState;
+                color = 'black';
             }
 
             return span({
@@ -2082,12 +1768,10 @@ define([
             }, label);
         }
 
-        function doOnSuccess(resumed) {
+        function doOnSuccess() {
             // have we created output yet?
             var jobState = model.getItem('exec.jobState'),
-                jobId = model.getItem('exec.jobState.job_id'),
-                outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']),
-                outputCell, notification;
+                jobId = model.getItem('exec.jobState.job_id');
 
             // show either the clock, if < 24 hours, or the timestamp.
             var message = span([
@@ -2123,9 +1807,9 @@ define([
                 }
             });
             widgets.runClock.start({
-                    node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                    startTime: jobState.finish_time
-                })
+                node: ui.getElement('run-control-panel.status.execMessage.clock'),
+                startTime: jobState.finish_time
+            })
                 .catch(function(err) {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
                 });
@@ -2134,46 +1818,48 @@ define([
 
             // If not in edit mode, we just skip this, and issue a warning to the console.
             if (!Narrative.canEdit()) {
-                if (!resumed) {
-                    console.warn('App cell completion in read-only narrative, cannot process output. Please save the narrative after app cells have completed.');
-                }
+                console.warn('App cell completion in read-only narrative, cannot process output. Please save the narrative after app cells have completed.');
                 return;
             }
 
-            // widgets named 'no-display' are a trigger to skip the output cell process.
-            var skipOutputCell = model.getItem('exec.outputWidgetInfo.name') === 'no-display';
 
             // If so, is the cell still there?
+            var outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']);
+
+            // If the output cell is already recorded in the app cell, and it it is in the 
+            // narrative, do not try to inserted it.
             if (outputCellId) {
-                outputCell = cellUtils.findById(outputCellId);
-                if (outputCell) {
+                if (cellUtils.findById(outputCellId)) {
                     return;
                 }
-                notification = div([
-                    div('Output cell not found: ' + outputCellId + '. Would you like to recreate it? ')
-                ]);
-                addNotification(notification);
-                return;
             }
 
             /*
              If the job output specifies that no output is to be shown to the user,
              skip the output cell creation.
              */
+            // widgets named 'no-display' are a trigger to skip the output cell process.
+            var skipOutputCell = model.getItem('exec.outputWidgetInfo.name') === 'no-display';
             var cellInfo;
             if (skipOutputCell) {
                 cellInfo = {
                     created: false
                 };
             } else {
-                // If not created yet, create it.
+                // No, we don't check here
                 outputCellId = createOutputCell(jobId);
                 cellInfo = {
                     id: outputCellId,
                     created: true
                 };
             }
-            // TODO: insert job info as well.
+
+            // Record the ouptput cell info by the job id.
+            // This serves to "stamp" the ouput cell in to the app cell
+            // TODO: this logic is probably no longer required. This used to be linked
+            // to functionality which allowed a user to re-insert an output cell if it 
+            // had been deleted. Some output cells cannot be replicated, since their output
+            // is not derived from an object visible in the data panel.
             model.setItem(['output', 'byJob', jobId], {
                 cell: cellInfo,
                 createdAt: new Date().toGMTString(),
@@ -2181,8 +1867,50 @@ define([
             });
         }
 
-        function doReportError() {
-            alert('placeholder for reporting an error');
+        function doResumeSuccess() {
+            var jobState = model.getItem('exec.jobState');
+
+            // show either the clock, if < 24 hours, or the timestamp.
+            var message = span([
+                'Finished with ',
+                niceState(jobState.job_state),
+                ' ',
+                span({ dataElement: 'clock' })
+            ]);
+            ui.setContent('run-control-panel.status.execMessage', message);
+
+            // Show time since this app cell run finished.
+            widgets.runClock = RunClock.make({
+                on: {
+                    tick: function(elapsed) {
+                        var clock;
+                        var day = 1000 * 60 * 60 * 24;
+                        if (elapsed > day) {
+                            clock = span([
+                                ' on ',
+                                format.niceTime(jobState.finish_time)
+                            ]);
+                            return {
+                                content: clock,
+                                stop: true
+                            };
+                        } else {
+                            clock = [config.prefix || '', format.niceDuration(elapsed), config.suffix || ''].join('');
+                            return {
+                                content: clock + ' ago'
+                            };
+                        }
+                    }
+                }
+            });
+            widgets.runClock.start({
+                node: ui.getElement('run-control-panel.status.execMessage.clock'),
+                startTime: jobState.finish_time
+            })
+                .catch(function(err) {
+                    ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
+                });
+
         }
 
         function doOnError() {
@@ -2205,9 +1933,9 @@ define([
                 suffix: ' ago'
             });
             widgets.runClock.start({
-                    node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                    startTime: jobState.finish_time
-                })
+                node: ui.getElement('run-control-panel.status.execMessage.clock'),
+                startTime: jobState.finish_time
+            })
                 .catch(function(err) {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
                 });
@@ -2247,9 +1975,9 @@ define([
                 suffix: ' ago'
             });
             widgets.runClock.start({
-                    node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                    startTime: jobState.finish_time
-                })
+                node: ui.getElement('run-control-panel.status.execMessage.clock'),
+                startTime: jobState.finish_time
+            })
                 .catch(function(err) {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
                 });
@@ -2324,18 +2052,18 @@ define([
 
         function start() {
             return Promise.try(function() {
-                    // Initial ui tweaks
+                // Initial ui tweaks
 
-                    // Honor the code input area show/hide.
-                    // TODO: this fixup is far too late in the cell lifecycle, leaving the code
-                    // area showing if it marked as hidden. We need to at least hide the input area
-                    // by default.
-                    showCodeInputArea();
+                // Honor the code input area show/hide.
+                // TODO: this fixup is far too late in the cell lifecycle, leaving the code
+                // area showing if it marked as hidden. We need to at least hide the input area
+                // by default.
+                showCodeInputArea();
 
-                    if (readOnly) {
-                        ui.hideElement('outdated');
-                    }
-                })
+                if (readOnly) {
+                    ui.hideElement('outdated');
+                }
+            })
                 .then(function() {
                     return Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'));
                 })
@@ -2347,20 +2075,7 @@ define([
                     // DOM EVENTS
                     cell.element.on('toggleCodeArea.cell', function() {
                         toggleCodeInputArea(cell);
-                    });
-                    // the settings toggle is now emitted from the toolbar, which
-                    // doesn't have a reference to the bus (yet).
-                    cell.element.on('toggleCellSettings.cell', function() {
-                        var showing = toggleSettings(cell),
-                            label = span({ class: 'fa fa-cog ' }),
-                            buttonNode = ui.getButton('toggle-settings');
-                        buttonNode.innerHTML = label;
-                        if (showing) {
-                            buttonNode.classList.add('active');
-                        } else {
-                            buttonNode.classList.remove('active');
-                        }
-                    });
+                    });                    
 
                     // APP CELL EVENTS
 
@@ -2369,10 +2084,6 @@ define([
                             label = showing ? 'Hide Code' : 'Show Code';
                         ui.setButtonLabel('toggle-code-view', label);
                     }));
-                    busEventManager.add(bus.on('show-notifications', function() {
-                        // TODO: re-enable notifications
-                        // doShowNotifications();
-                    }));
                     busEventManager.add(bus.on('edit-cell-metadata', function() {
                         doEditCellMetadata();
                     }));
@@ -2380,17 +2091,6 @@ define([
                         doEditNotebookMetadata();
                     }));
 
-                    busEventManager.add(bus.on('toggle-settings', function() {
-                        var showing = toggleSettings(cell),
-                            label = span({ class: 'fa fa-cog ' }),
-                            buttonNode = ui.getButton('toggle-settings');
-                        buttonNode.innerHTML = label;
-                        if (showing) {
-                            buttonNode.classList.add('active');
-                        } else {
-                            buttonNode.classList.remove('active');
-                        }
-                    }));
                     busEventManager.add(bus.on('actionButton', function(message) {
                         doActionButton(message.data);
                     }));
@@ -2416,17 +2116,6 @@ define([
                         updateFromLaunchEvent(message);
 
                         model.setItem('exec.launchState', message);
-
-                        // Save this to the exec state change log.
-                        model.pushItem('exec.log', {
-                            timestamp: new Date(),
-                            event: 'launch-status',
-                            data: {
-                                jobId: message.jobId,
-                                runId: message.runId,
-                                status: message.event
-                            }
-                        });
 
                         saveNarrative();
 
@@ -2557,7 +2246,7 @@ define([
                 })
                 .catch(function(err) {
                     alert('internal error'),
-                        console.error('INTERNAL ERROR', err);
+                    console.error('INTERNAL ERROR', err);
                 });
         }
 
@@ -2592,8 +2281,8 @@ define([
                         cellCommitHash: cellAppSpec.info.git_commit_hash,
                         catalogCommitHash: appSpec.info.git_commit_hash,
                         newAppName: appSpec.info.name
-                            //cellAppSpec: cellAppSpec,
-                            //catalogAppSpec: appSpec
+                        //cellAppSpec: cellAppSpec,
+                        //catalogAppSpec: appSpec
                     },
                     advice: [
                         'Due to potential incompatibilities between different versions of an dev or beta app, this app cell cannot be rendered',
@@ -2654,24 +2343,23 @@ define([
 
                     // Initial job state listening.
                     switch (fsm.getCurrentState().state.mode) {
-                        case 'execute-requested':
-                            // alert('started in "sending" state?');
-                            break;
-                        case 'editing':
-                            break;
-                        case 'processing':
-                            startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
-                            requestJobStatus(model.getItem('exec.jobState.job_id'));
-                            break;
-                        case 'success':
-                        case 'error':
+                    case 'execute-requested':
+                        // alert('started in "sending" state?');
+                        break;
+                    case 'editing':
+                        break;
+                    case 'processing':
+                        startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
+                        requestJobStatus(model.getItem('exec.jobState.job_id'));
+                        break;
+                    case 'success':
+                    case 'error':
                             // do nothing for now
                     }
                 })
                 .catch(function(err) {
                     var error = ToErr.grokError(err);
                     console.error('ERROR loading main widgets', error);
-                    addNotification('Error loading main widgets: ' + error.message);
 
                     model.setItem('fatalError', {
                         title: 'Error loading main widgets',

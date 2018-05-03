@@ -4,14 +4,22 @@ define([
     'jquery',
     'bluebird',
     'kbwidget',
-    'base/js/namespace'
+    'base/js/namespace',
+    'util/timeFormat',
+    'narrativeConfig',
+    'kbase/js/widgets/narrative_core/objectCellHeader',
+    'api/upa'
 ], function (
     $,
     Promise,
     KBWidget,
-    Jupyter
-    ) {
-    "use strict";
+    Jupyter,
+    TimeFormat,
+    Config,
+    ObjectCellHeader,
+    UpaApi
+) {
+    'use strict';
     return KBWidget({
         name: 'kbaseNarrativeOutputCell',
         version: '1.0.0',
@@ -25,12 +33,43 @@ define([
             showMenu: true,
             lazyRender: true // used in init()
         },
+        isRendered: false,
         OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
+        headerShown: false,
+
+        initMetadata: function () {
+            var baseMeta = {
+                kbase: {
+                    dataCell: {}
+                }
+            };
+            if (!this.cell) {
+                return baseMeta;
+            }
+            else {
+                var metadata = this.cell.metadata;
+                if (!metadata || !metadata.kbase) {
+                    metadata = baseMeta;
+                    this.cell.metadata = metadata;
+                }
+                if (!metadata.kbase.dataCell) {
+                    metadata.kbase.dataCell = {};
+                }
+                return metadata;
+            }
+        },
+
         init: function (options) {
+            // handle where options.widget == null.
+            options.widget = options.widget || this.options.widget;
+            // handle where options.widget == 'null' string. I know. It happens.
+            options.widget = options.widget === 'null' ? this.options.widget : options.widget;
             this._super(options);
+            this.upaApi = new UpaApi();
 
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
+
             if (this.options.cellId) {
                 this.cell = Jupyter.narrative.getCellByKbaseId(this.options.cellId);
                 if (!this.cell) {
@@ -43,8 +82,11 @@ define([
                     this.cell.element.trigger('hideCodeArea.cell');
                 }
             }
-            if (this.options.widget.toLowerCase() === "null") {
-                this.options.widget = 'kbaseDefaultNarrativeOutput';
+
+            this.metadata = this.initMetadata();
+
+            if (this.cell) {
+                this.handleUpas();
             }
 
             /*
@@ -56,16 +98,17 @@ define([
              * XXX: Not sure whether "on every scroll event" is going to be
              * too heavy-weight a check once there are 100+ elements to worry about.
              */
-            if (this.options.lazyRender) {
-                this.is_rendered = false;
-                var nb_container = $('#notebook-container');
-                this.visible_settings = {
-                    container: nb_container,
-                    threshold: 100};
+            if (Config.get('features').lazyWidgetRender) {
+                var $nbContainer = $('#notebook-container');
+                this.visibleSettings = {
+                    container: $nbContainer,
+                    threshold: 100
+                };
                 this.lazyRender({data: this}); // try to render at first view
-                if (!this.is_rendered) {
+                if (!this.isRendered) {
                     // Not initially rendered, so add handler to re-check after scroll events
-                    nb_container.scroll(this, this.lazyRender);
+                    // $nbContainer.scroll(this, this.lazyRender);
+                    this.visibleSettings.container.scroll(this, this.lazyRender);
                 }
             }
             /* For testing/comparison, do eager-rendering instead */
@@ -75,94 +118,77 @@ define([
 
             return this;
         },
-        // Log debug message with cell id
-        cellDebug: function (msg) {
-            console.debug('cell ' + this.options.cellId + ': ' + msg);
+
+        /**
+         * handle upas here! Needs to do the following:
+         * - check cell metadata. if no field present for upas, drop them in. if present, use
+         *   them instead.
+         *     - might need to double check key names. maybe a silly user repurposed/re-ran the
+         *       cell? Should try to get the Python stack to reset the metadata in that case.
+         *       Not sure if that's possible.
+         * - have cell header widget control which version of objects are seen.
+         *   - should auto-serialize on change
+         *   - should re-render widget as appropriate
+         * - Finally, all widgets should take upas as inputs. Enforce that here.
+         * - All widgets should have an 'upas' input that handles the mapping. Part of spec?
+         * - Need to start writing widget spec / standard. Share with Jim & Erik & Steve/Shane
+         *
+         * useLocal - forces the serialization to use only the locally defined upas
+         *            in this.upas, NOT the ones in the cell metadata.
+         */
+        handleUpas: function(useLocal) {
+            // if useLocal, then drop the current values in this.upas into the metadata.
+            // otherwise, if there's existing upas in metadata, supplant this.upas with those.
+            if (!this.metadata.kbase.dataCell.upas) {
+                // bail out silently if we don't have any upas, AND there's non in the cell meta.
+                // This likely means that we're dealing with a non-updated Narrative.
+                if (!this.options.upas) {
+                    return;
+                }
+                this.metadata.kbase.dataCell.upas = this.upaApi.serializeAll(this.options.upas);
+            }
+            else if (!useLocal && this.metadata.kbase.dataCell.upas) {
+                this.options.upas = this.upaApi.deserializeAll(this.metadata.kbase.dataCell.upas);
+            }
+            else {
+                this.metadata.kbase.dataCell.upas = this.upaApi.serializeAll(this.options.upas);
+            }
         },
-        // Return true if cell is visible on page, false otherwise
-        lazyVisible: function () {
-            return this.inviewport(this.$elem, this.visible_settings);
-        },
+
         // Possibly render lazily not-yet-rendered cell
         lazyRender: function (event) {
             var self = event.data;
-            if (self.is_rendered) {
-                //self.cellDebug('already rendered');
+            if (self.isRendered) {
                 // Note: We could also see if a cell that is rendered, is now
                 // no longer visible, and somehow free its resources.
                 return;
             }
             // see if it is visible before trying to render
-            if (!self.lazyVisible()) {
-                //self.cellDebug('do not render cell. not visible');
+            if (!self.inViewport(self.$elem, self.visibleSettings)) {
                 return;
             }
             return self.render();
         },
-        // Render cell (unconditionally)
+
+        /**
+         * Tests the current UPAs by testing to see if the user has permission to see them all.
+         * If they don't, then we shouldn't even bother to try showing the viewer, and instead
+         * show a permissions error instead.
+         */
+        testUpas: function() {
+            return {};
+        },
+
         render: function () {
-            // render the cell
-            var icon;
-            switch (this.options.type) {
-                case 'method':
-                    this.renderMethodOutputCell();
-                    break;
-                case 'app':
-                    this.renderAppOutputCell();
-                    break;
-                case 'error':
-                    this.renderErrorOutputCell();
-                    break;
-                case 'viewer':
-                    this.renderViewerCell();
-                    break;
-                default:
-                    this.renderErrorOutputCell();
-                    break;
-            }
-            // remember; don't render again
-            this.is_rendered = true;
-        },
-        renderViewerCell: function () {
-            require(['kbaseNarrativeDataCell'], $.proxy(function () {
-                var $label = $('<span>').addClass('label label-info').append('Viewer');
-                this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'data viewer');
-                var $cell = this.$elem.closest('.cell');
-                $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-table data-viewer-icon"></i>']);
-            }, this));
-        },
-        renderMethodOutputCell: function () {
-            var $label = $('<span>').addClass('label label-info').append('Output');
-            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'app output');
-            var $cell = this.$elem.closest('.cell');
-            $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o method-output-icon"></i>']);
-        },
-        // same as method for now
-        renderAppOutputCell: function () {
-            var $label = $('<span>').addClass('label label-info').append('Output');
-            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'app output');
-            var $cell = this.$elem.closest('.cell');
-            $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o app-output-icon"></i>']);
-        },
-        renderErrorOutputCell: function () {
-            require(['kbaseNarrativeError'], function () {
-                if (!this.options.title) {
-                    this.options.title = 'Narrative Error';
-                }
-                var $label = $('<span>').addClass('label label-danger').append('Error');
-                this.renderCell('kb-cell-error', 'panel-danger', 'kb-err-desc', $label);
-                var $cell = this.$elem.closest('.cell');
-                $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-exclamation-triangle error-icon"></i>']);
-                $cell.addClass('kb-error');
-            }.bind(this));
-        },
-        renderCell: function (baseClass, panelClass, headerClass, $label, titleSuffix) {
             // set up the widget line
-            var widget = this.options.widget;
+            // todo find cell and trigger icon setting.
+
             var methodName = this.options.title ? this.options.title : 'Unknown App';
             var title = methodName;
-            if (titleSuffix) {
-                title += ' (' + titleSuffix + ')';
+
+            var upaTest = this.testUpas();
+            if (upaTest.error) {
+                this.renderError(upaTest.error);
             }
 
             if (this.cell) {
@@ -187,95 +213,109 @@ define([
                 this.cell.metadata = meta;
             }
 
-
-            var widgetData = this.options.data;
-            if (widget === 'kbaseDefaultNarrativeOutput')
-                widgetData = {data: this.options.data};
-
             this.$timestamp = $('<span>')
                 .addClass('pull-right kb-func-timestamp');
 
             if (this.options.time) {
                 this.$timestamp.append($('<span>')
-                    .append(this.readableTimestamp(this.options.time)));
+                    .append(TimeFormat.readableTimestamp(this.options.time)));
                 this.$elem.closest('.cell').find('.button_container').trigger('set-timestamp.toolbar', this.options.time);
             }
 
-            var $headerLabel = $('<span>')
-                .addClass('label label-info')
-                .append('Output');
-
-            var $headerInfo = $('<span>')
-                .addClass(headerClass)
-                .append($('<b>').append(methodName))
-                .append(this.$timestamp);
-
-            var $body = $('<div class="kb-cell-output-content">');
-
-            try {
-                new Promise(function (resolve, reject) {
-                    try {
-                        require([widget], resolve, reject);
-                    } catch (ex) {
-                        reject(ex);
-                    }
-                })
-                    .then(function (W) {
-                        // If we successfully Require the widget code, render it:
-                        this.$outWidget = new W($body, widgetData);
-                        // this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
-                        this.$elem.append($body);
-                    }.bind(this))
-                    .catch(function (err) {
-                        // If we fail, render the error widget and log the error.
-                        KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
-                        this.options.title = 'App Error';
-                        this.options.data = {
-                            error: {
-                                msg: 'An error occurred while showing your output:',
-                                method_name: 'kbaseNarrativeOutputCell.renderCell',
-                                type: 'Output',
-                                severity: '',
-                                traceback: err.stack
-                                //traceback: 'Failed while trying to show a "' + widget + '"\n' +
-                                //    'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
-                                //    err.message
-                            }
-                        };
-                        this.options.widget = this.OUTPUT_ERROR_WIDGET;
-                        this.renderErrorOutputCell();
+            if (this.isRendered) {
+                // update the header
+                this.headerWidget.updateUpas(this.options.upas);
+            }
+            else {
+                if (this.$body) {
+                    this.$body.remove();
+                }
+                var $headController = $('<div>').hide();
+                this.headerWidget = new ObjectCellHeader($headController, {
+                    upas: this.options.upas,
+                    versionCallback: this.displayVersionChange.bind(this),
+                });
+                var $headerBtn = $('<button>')
+                    .addClass('btn btn-default kb-data-obj')
+                    .attr('type', 'button')
+                    .text('Details...')
+                    .click(function() {
+                        if (this.headerShown) {
+                            $headController.hide();
+                            this.headerShown = false;
+                        } else {
+                            $headController.show();
+                            this.headerShown = true;
+                        }
                     }.bind(this));
-
-            } catch (err) {
-                KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
-                this.options.title = 'App Error';
-                this.options.data = {
-                    error: {
-                        msg: 'An error occurred while showing your output:',
-                        method_name: 'kbaseNarrativeOutputCell.renderCell',
-                        type: 'Output',
-                        severity: '',
-                        trace: err.trace
-                        //traceback: 'Failed while trying to show a "' + widget + '"\n' +
-                        //    'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
-                        //    err.message
-                    }
-                };
-                this.options.widget = this.OUTPUT_ERROR_WIDGET;
-                this.renderErrorOutputCell();
-
-                // this.$outWidget = $body.find('.panel-body > div')[this.OUTPUT_ERROR_WIDGET]({'error': {
-                //     'msg': 'An error occurred while showing your output:',
-                //     'method_name': 'kbaseNarrativeOutputCell.renderCell',
-                //     'type': 'Output',
-                //     'severity': '',
-                //     'traceback': 'Failed while trying to show a "' + widget + '"\n' +
-                //                  'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
-                //                  err.message
-                // }});
+                this.$body = $('<div class="kb-cell-output-content">')
+                    .append($headController)
+                    .append($headerBtn);
+                this.$elem.append(this.$body);
             }
 
+            return this.renderBody()
+                .then(function() {
+                    this.isRendered = true;
+                }.bind(this));
         },
+
+        renderBody: function() {
+            var self = this;
+            return new Promise(function(resolve) {
+                var widget = self.options.widget,
+                    widgetData = self.options.data;
+                if (widget === 'kbaseDefaultNarrativeOutput') {
+                    widgetData = { data: self.options.data };
+                }
+                widgetData.upas = self.options.upas;
+
+                require([widget],
+                    function (W) {
+                        if (self.$widgetBody) {
+                            self.$widgetBody.remove();
+                        }
+                        self.$widgetBody = $('<div>');
+                        self.$body.append(self.$widgetBody);
+                        self.$outWidget = new W(self.$widgetBody, widgetData);
+                        resolve();
+                    },
+                    // TODO: No, should reject the promise, or handle here and resolve,
+                    // otherwise on error the promise will dangle.
+                    function (err) {
+                        return self.renderError(err);
+                    }
+                );
+            });
+        },
+
+        displayVersionChange: function(upaId, newVersion) {
+            /* Modify upa.
+             * Serialize.
+             * re-render all the things.
+             */
+            var newUpa = this.upaApi.changeUpaVersion(this.options.upas[upaId], newVersion);
+            this.options.upas[upaId] = newUpa;
+            this.handleUpas(true);
+            this.render();
+        },
+
+        renderError: function(err) {
+            // KBError('Output::' + this.options.title, 'failed to render output widget: "' + this.options.widget + '"');
+            this.options.title = 'App Error';
+            this.options.data = {
+                error: {
+                    msg: 'An error occurred while showing your output:',
+                    method_name: 'kbaseNarrativeOutputCell.renderCell',
+                    type: 'Output',
+                    severity: '',
+                    traceback: err.stack
+                }
+            };
+            this.options.widget = this.OUTPUT_ERROR_WIDGET;
+            return this.render();
+        },
+
         getState: function () {
             var state = null;
             if (this.$outWidget && this.$outWidget.getState) {
@@ -283,49 +323,18 @@ define([
             }
             return state;
         },
+
         loadState: function (state) {
             if (state) {
                 if (state.time) {
-                    this.$timestamp.html(readableTimestamp(state.time));
+                    this.$timestamp.html(TimeFormat.readableTimestamp(state.time));
                 }
                 if (this.$outWidget && this.$outWidget.loadState) {
                     this.$outWidget.loadState(state);
                 }
             }
         },
-        /**
-         * Returns a timestamp in milliseconds since the epoch.
-         * (This is a one-liner, but kept as a separate function in case our needs change.
-         * Maybe we'll want to use UTC or whatever...)
-         * @public
-         */
-        getTimestamp: function () {
-            return new Date().getTime();
-        },
-        /**
-         * Converts a timestamp to a simple string.
-         * Do this American style - HH:MM:SS MM/DD/YYYY
-         *
-         * @param {string} timestamp - a timestamp in number of milliseconds since the epoch.
-         * @return {string} a human readable timestamp
-         */
-        readableTimestamp: function (timestamp) {
-            var format = function (x) {
-                if (x < 10)
-                    x = '0' + x;
-                return x;
-            };
 
-            var d = new Date(timestamp);
-            var hours = format(d.getHours());
-            var minutes = format(d.getMinutes());
-            var seconds = format(d.getSeconds());
-            var month = d.getMonth() + 1;
-            var day = format(d.getDate());
-            var year = d.getFullYear();
-
-            return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
-        },
         /* -------------------------------------------------------
          * Code modified from:
          * Lazy Load - jQuery plugin for lazy loading images
@@ -333,10 +342,13 @@ define([
          * Licensed under the MIT license
          * Project home: http://www.appelsiini.net/projects/lazyload
          */
-        inviewport: function (element, settings) {
+        inViewport: function (element, settings) {
+            if (!element || !settings) {
+                return true;
+            }
             var fold = settings.container.offset().top + settings.container.height(),
-                element_top = $(element).offset().top - settings.threshold;
-            return element_top <= fold; // test if it is "above the fold"
+                elementTop = $(element).offset().top - settings.threshold;
+            return elementTop <= fold; // test if it is "above the fold"
         }
         /* End of Lazy Load code.
          * ------------------------------------------------------- */

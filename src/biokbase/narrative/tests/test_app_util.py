@@ -2,6 +2,7 @@
 Tests for the app_util module
 """
 import unittest
+import biokbase.auth
 from biokbase.narrative.app_util import (
     check_tag,
     system_variable,
@@ -12,6 +13,7 @@ from biokbase.narrative.app_util import (
 from narrative_mock.mockclients import get_mock_client
 import os
 import mock
+import util
 
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
@@ -24,12 +26,15 @@ class DummyWorkspace():
 class AppUtilTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
+        config = util.TestConfig()
+        self.user_id = config.get('users', 'test_user')
+        self.user_token = util.read_token_file(config.get_path('token_files', 'test_user', from_root=True))
+
         self.good_tag = "release"
         self.bad_tag = "notATag"
-
         # inject phony variables into the environment
-        self.user_id = "KBaseTest"
-        self.good_fake_token = "un={}|tokenid=12345|expiry=1592895594|client_id={}|token_type=bearer|SigningSubject=whaaaaaaaaaaat".format(self.user_id, self.user_id)
+        # self.user_id = "KBaseTest"
+        # self.good_fake_token = "A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6"
         self.bad_fake_token = "NotAGoodTokenLOL"
         self.workspace = "valid_workspace"
 
@@ -44,8 +49,9 @@ class AppUtilTestCase(unittest.TestCase):
             check_tag(self.bad_tag, raise_exception=True)
 
     def test_sys_var_user(self):
-        os.environ['KB_AUTH_TOKEN'] = self.good_fake_token
-        self.assertEquals(system_variable('user_id'), self.user_id)
+        if (self.user_token):
+            biokbase.auth.set_environ_token(self.user_token)
+            self.assertEquals(system_variable('user_id'), self.user_id)
 
     def test_sys_var_no_ws(self):
         if 'KB_WORKSPACE_ID' in os.environ:
@@ -57,8 +63,9 @@ class AppUtilTestCase(unittest.TestCase):
         self.assertEquals(system_variable('workspace'), self.workspace)
 
     def test_sys_var_token(self):
-        os.environ['KB_AUTH_TOKEN'] = self.good_fake_token
-        self.assertEquals(system_variable('token'), self.good_fake_token)
+        if (self.user_token):
+            biokbase.auth.set_environ_token(self.user_token)
+        self.assertEquals(system_variable('token'), self.user_token)
 
     def test_sys_var_no_ws_id(self):
         if 'KB_WORKSPACE_ID' in os.environ:
@@ -81,7 +88,7 @@ class AppUtilTestCase(unittest.TestCase):
         self.assertIsNone(system_variable('token'))
 
     def test_sys_var_user_bad(self):
-        os.environ['KB_AUTH_TOKEN'] = self.bad_fake_token
+        biokbase.auth.set_environ_token(self.bad_fake_token)
         self.assertIsNone(system_variable('user_id'))
 
     def test_sys_var_user_none(self):

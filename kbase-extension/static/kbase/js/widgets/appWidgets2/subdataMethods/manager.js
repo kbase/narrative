@@ -29,26 +29,26 @@ define([
     var t = html.tag,
         div = t('div');
 
-    function factory(config) {
+    function factory() {
 
         var runtime = Runtime.make();
 
         function workspaceCall(subObjectIdentity) {
             return new Workspace(runtime.config('services.workspace.url'), {
-                    token: runtime.authToken()
-                })
+                token: runtime.authToken()
+            })
                 .get_object_subset([subObjectIdentity]);
         }
 
         function genericClientCall(subdataSelection, subObjectIdentity) {
-            var swUrl = runtime.config('services.workspace.url').replace("ws", "service_wizard"),
+            var swUrl = runtime.config('services.workspace.url').replace('ws', 'service_wizard'),
                 genericClient = new GenericClient(swUrl, {
                     token: runtime.authToken()
                 });
             return genericClient.sync_call(subdataSelection.service_function, [
-                    [subObjectIdentity]
-                ], null, null,
-                subdataSelection.service_version);
+                [subObjectIdentity]
+            ], null, null,
+            subdataSelection.service_version);
         }
 
         function makeLabel(item, showSourceObjectName) {

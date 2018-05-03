@@ -3,6 +3,20 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
 
+### Version 3.7.2
+- SCT-908 - Fix formatting issues with heatmaps.
+- SCT-875 - Accept poorly formatted input data into the RNA-Seq data heatmap viewers.
+- SCT-878 - Deal with very large heatmaps so that they get downloaded instead of displayed inline, otherwise allow it to grow to some proper size and embed it in a scroll panel.
+- SCT-875 - Fix labels on heatmaps under certain data conditions.
+- SCT-809 - Fix configuration view mode when there are deeply nested parameters, especially lists of grouped parameters containing a subdata param.
+- SCT-866 - Improve side panel behavior in view-only mode; stretch data panel to full height.
+- SCT-821 - Add "info" item to view cell menu, also some other cleanup for viewer cells.
+- SCT-762 - Convert the Feature set viewer to use a dynamic service to fetch feature data.
+- SCT-657 - Narrative Public Data search now uses new Search API to find KBase data.
+    - Due to the nature of the Search API, this also changes the interface to require the user to press "enter" to do a search, instead of as-you-type.
+    - Changes the layout of the retrieved items from searching.
+- SCT-804 - General updates to fix a compilation problem with FeatureValues data widgets.
+
 ### Version 3.7.1
 - SCT-793 - Fix version of upstream dependency "file-saver" to 1.3.4; an upstream update had broken and taken down the Pangenome viewer and others.
 
@@ -10,7 +24,7 @@ This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
 - Update Jupyter Notebook to 5.4.1 with a few KBase adjustments
     - Prevent Jupyter favicon from overriding ours at various points.
     - Use local version of Font Awesome.
-    - Use local version of Glyphicons font pack (for Datatables-based widgets)
+    - Use local version of Glyphicons font pack (for Datatables-based widgets).
     - Use Bootstrap version 3.3.7
 - Update ipywidgets to 7.2.1
 - SCT-559 - Fix ugly race condition that could prevent app cells from being properly rendered when loading an existing Narrative.

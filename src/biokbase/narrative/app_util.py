@@ -2,6 +2,7 @@ import os
 import re
 import json
 import biokbase.narrative.clients as clients
+import biokbase.auth
 
 """
 Some utility functions for running KBase Apps or Methods or whatever they are this week.
@@ -51,16 +52,20 @@ def system_variable(var):
         except:
             return None
     elif var == 'token':
-        return os.environ.get('KB_AUTH_TOKEN', None)
+        token = biokbase.auth.get_auth_token()
+        if token == 'none':
+            return None
+        return token
     elif var == 'user_id':
-        token = os.environ.get('KB_AUTH_TOKEN', None)
+        token = biokbase.auth.get_auth_token()
         if token is None:
             return None
-        m = re.match("un=(\w+)|", token)
-        if m is not None and len(m.groups()) == 1:
-            return m.group(1)
-        else:
+        try:
+            user_info = biokbase.auth.get_user_info(token)
+            return user_info.get('user', None)
+        except:
             return None
+        # TODO: make this better with more exception handling.
     else:
         return None
 
@@ -667,12 +672,12 @@ def resolve_single_ref(workspace, value):
         ret = "{}/{}/{}".format(info[6], info[0], info[4])
     return ret
 
+
 def resolve_ref(workspace, value):
     if isinstance(value, list):
         return [resolve_single_ref(workspace, v) for v in value]
     else:
         return resolve_single_ref(workspace, value)
-
 
 
 def resolve_ref_if_typed(value, spec_param):

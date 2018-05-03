@@ -1,5 +1,3 @@
-/*global define,console*/
-/*jslint white:true,browser:true*/
 /*
  * KBase View Cell Extension
  *
@@ -32,9 +30,11 @@ define([
     'common/appUtils',
     'common/jupyter',
     'common/spec',
-    //    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
+    './widgets/appInfoDialog',
+
+    // for effect
     'css!kbase/css/appCell.css',
     'css!./styles/main.css',
     'bootstrap',
@@ -56,9 +56,11 @@ define([
     jupyter,
     Spec,
     serviceUtils,
-    Workspace
+    Workspace,
+    appInfoDialog
 ) {
     'use strict';
+
     var t = html.tag,
         div = t('div'),
         workspaceInfo,
@@ -69,30 +71,12 @@ define([
      * Dealing with metadata
      */
 
-
     // This is copied out of jupyter code.
     function activateToolbar() {
         var toolbarName = 'KBase';
         Jupyter.CellToolbar.global_show();
         Jupyter.CellToolbar.activate_preset(toolbarName, Jupyter.events);
         Jupyter.notebook.metadata.celltoolbar = toolbarName;
-    }
-
-
-
-    // TODO: move into app cell widget and invoke with an event 'reset-to-default-values'
-    function setupParams(cell, appSpec) {
-        var defaultParams = {};
-        appSpec.parameters.forEach(function(parameterSpec) {
-            var param = ParameterSpec.make({ parameterSpec: parameterSpec }),
-                defaultValue = param.defaultValue();
-
-            // A default value may be undefined, e.g. if the parameter is required and there is no default value.
-            if (defaultValue !== undefined) {
-                defaultParams[param.id()] = defaultValue;
-            }
-        });
-        utils.setMeta(cell, 'viewCell', 'params', defaultParams);
     }
 
     /*
@@ -102,42 +86,42 @@ define([
      */
     function upgradeToViewCell(cell, appSpec, appTag) {
         return Promise.try(function() {
-                // Create base app cell
-                var meta = cell.metadata;
-                meta.kbase = {
-                    type: 'view',
-                    attributes: {
-                        id: new Uuid(4).format(),
-                        status: 'new',
-                        created: (new Date()).toUTCString(),
-                        icon: 'bar-chart'
+            // Create base app cell
+            var meta = cell.metadata;
+            meta.kbase = {
+                type: 'view',
+                attributes: {
+                    id: new Uuid(4).format(),
+                    status: 'new',
+                    created: (new Date()).toUTCString(),
+                    icon: 'bar-chart'
+                },
+                cellState: {
+                    icon: 'bar-chart'
+                },
+                viewCell: {
+                    app: {
+                        id: appSpec.info.id,
+                        gitCommitHash: appSpec.info.git_commit_hash,
+                        version: appSpec.info.ver,
+                        tag: appTag,
+                        spec: appSpec
                     },
-                    cellState: {
-                        icon: 'bar-chart'
-                    },
-                    viewCell: {
-                        app: {
-                            id: appSpec.info.id,
-                            gitCommitHash: appSpec.info.git_commit_hash,
-                            version: appSpec.info.ver,
-                            tag: appTag,
-                            spec: appSpec
-                        },
-                        state: {
-                            edit: 'editing',
-                            params: null,
-                            code: null,
-                            request: null,
-                            result: null
-                        },
+                    state: {
+                        edit: 'editing',
                         params: null,
-                        output: {
-                            byJob: {}
-                        }
+                        code: null,
+                        request: null,
+                        result: null
+                    },
+                    params: null,
+                    output: {
+                        byJob: {}
                     }
-                };
-                cell.metadata = meta;
-            })
+                }
+            };
+            cell.metadata = meta;
+        })
             .then(function() {
                 // Add the params
                 var spec = Spec.make({
@@ -200,10 +184,18 @@ define([
             var icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'));
             return icon;
         };
+        cell.showInfo = function() {
+            var app = utils.getCellMeta(cell, 'kbase.viewCell.app');
+            appInfoDialog.show({
+                id: app.spec.info.id,
+                version: app.spec.info.ver,
+                module: app.spec.info.module_name,
+                tag: app.tag
+            });
+        };
     }
 
     function checkAndRepairCell(cell) {
-
         // Has proper structure?
         // TODO:
 
@@ -218,24 +210,19 @@ define([
             console.warn('Editor cell repaired -- the app spec was set on the old property');
             delete utils.getCellMeta(cell, 'kbase.viewCell.app').appSpec;
         }
-
     }
-
 
     function setupCell(cell) {
         return Promise.try(function() {
             // Only handle kbase cells.
 
             if (cell.cell_type !== 'code') {
-                // console.log('not a code cell!');
                 return;
             }
             if (!cell.metadata.kbase) {
-                // console.log('not a kbase code cell');
                 return;
             }
             if (cell.metadata.kbase.type !== 'view') {
-                // console.log('not a kbase app cell, ignoring');
                 return;
             }
 
@@ -245,8 +232,6 @@ define([
 
             var cellElement = cell.element;
             cellElement.addClass('kb-cell').addClass('kb-view-cell');
-
-
 
             // The kbase property is only used for managing runtime state of the cell
             // for kbase. Anything to be persistent should be on the metadata.
@@ -318,7 +303,6 @@ define([
             });
 
         return workspace.get_workspace_info(workspaceRef);
-
     }
 
     /*
@@ -372,9 +356,6 @@ define([
                         setupData &&
                         setupData.type === 'view') {
                         upgradeToViewCell(cell, setupData.appSpec, setupData.appTag)
-                            .then(function() {
-                                // console.log('Cell created?');
-                            })
                             .catch(function(err) {
                                 console.error('ERROR creating cell', err);
                                 // delete cell.
@@ -394,19 +375,6 @@ define([
     // MAIN
     // module state instantiation
 
-    // var clock = Clock.make({
-    //     bus: runtime.bus(),
-    //     resolution: 1000
-    // });
-    // clock.start();
-    // runtime.bus().logMessages(true);
-    // there is not a service/component lifecycle for the narrative is there?
-    // so the clock starts, and is never stopped.
-
-    //    runtime.bus().on('clock-tick', function (message) {
-    //       console.log('TICK', message);
-    //    });
-
     function load() {
         /* Only initialize after the notebook is fully loaded. */
         if (Jupyter.notebook._fully_loaded) {
@@ -422,8 +390,8 @@ define([
     return {
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load
-            // These are kbase api calls
     };
 }, function(err) {
-    console.log('ERROR loading viewCell main', err);
+    'use strict';
+    console.error('ERROR loading viewCell main', err);
 });

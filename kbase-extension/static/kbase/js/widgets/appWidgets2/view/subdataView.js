@@ -54,19 +54,22 @@ define([
         button = t('button');
 
     function factory(config) {
-        var options = {},
-            spec = config.parameterSpec,
+        var spec = config.parameterSpec,
             parent,
             container,
-            workspaceId = config.workspaceId,
-            bus = config.bus,
+            runtime = Runtime.make(),
+            workspaceId = runtime.getEnv('workspaceId'),
+            // bus = config.bus,
+            busConnection = runtime.bus().connect(),
+            channel = busConnection.channel(config.channelName),
+            paramsChannel = busConnection.channel(config.paramsChannelName),
             model,
             subdataMethods,
             isAvailableValuesInitialized = false,
             options = {
                 objectSelectionPageSize: 20
             },
-            runtime = Runtime.make(),
+            minimumFilterLength = 0,
             ui;
 
         // Validate configuration.
@@ -111,9 +114,12 @@ define([
             if (!filter) {
                 return items;
             }
-            var re = new RegExp(filter);
+            var re = new RegExp(filter, 'i');
             return items.filter(function(item) {
-                if (item.text && item.text.match(re, 'i')) {
+                // TODO: better filtering, but need support from the 
+                // subdata generators (../subdataMethods) to expose the individual
+                // fields. Or, strip out any html from here.
+                if (item.text && item.text.match(re)) {
                     return true;
                 }
                 return false;
@@ -123,7 +129,6 @@ define([
         function doFilterItems() {
             var items = model.getItem('availableValues', []),
                 filteredItems = filterItems(items, model.getItem('filter'));
-
 
             // for now we just reset the from/to range to the beginning.
             model.setItem('filteredAvailableItems', filteredItems);
@@ -147,82 +152,82 @@ define([
                 content = div({ style: { textAlign: 'center' } }, 'no available values');
             } else {
                 content = itemsToShow.map(function(item, index) {
-                        var isSelected = selected.some(function(id) {
-                                return (item.id === id);
-                            }),
-                            disabled = isSelected;
-                        return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
-                            div({
-                                class: 'col-md-2',
-                                style: {
-                                    verticalAlign: 'middle',
-                                    borderRadius: '3px',
-                                    padding: '2px',
-                                    backgroundColor: '#EEE',
-                                    color: '#444',
-                                    textAlign: 'right',
-                                    paddingRight: '6px',
-                                    fontFamily: 'monospace'
-                                }
-                            }, String(from + index + 1)),
-                            div({
-                                class: 'col-md-8',
-                                style: {
-                                    padding: '2px'
-                                }
-                            }, item.text),
-                            div({
-                                class: 'col-md-2',
-                                style: {
-                                    padding: '2px',
-                                    textAlign: 'right',
-                                    verticalAlign: 'top'
-                                }
-                            }, [
-                                (function() {
-                                    if (disabled) {
-                                        return span({
-                                            class: 'kb-btn-icon',
-                                            type: 'button',
-                                            dataToggle: 'tooltip',
-                                            title: 'Remove from selected'
-                                        }, [
-                                            span({
-                                                class: 'fa fa-minus-circle',
-                                                style: {
-                                                    color: 'red',
-                                                    fontSize: '200%'
-                                                }
-                                            })
-                                        ]);
-                                    }
-                                    if (allowSelection) {
-                                        return span({
-                                            class: 'kb-btn-icon',
-                                            type: 'button',
-                                            dataToggle: 'tooltip',
-                                            title: 'Add to selected',
-                                            dataItemId: item.id,
-                                        }, [span({
-                                            class: 'fa fa-plus-circle',
-                                            style: {
-                                                color: 'green',
-                                                fontSize: '200%'
-                                            }
-                                        })]);
-                                    }
+                    var isSelected = selected.some(function(id) {
+                            return (item.id === id);
+                        }),
+                        disabled = isSelected;
+                    return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
+                        div({
+                            class: 'col-md-2',
+                            style: {
+                                verticalAlign: 'middle',
+                                borderRadius: '3px',
+                                padding: '2px',
+                                backgroundColor: '#EEE',
+                                color: '#444',
+                                textAlign: 'right',
+                                paddingRight: '6px',
+                                fontFamily: 'monospace'
+                            }
+                        }, String(from + index + 1)),
+                        div({
+                            class: 'col-md-8',
+                            style: {
+                                padding: '2px'
+                            }
+                        }, item.text),
+                        div({
+                            class: 'col-md-2',
+                            style: {
+                                padding: '2px',
+                                textAlign: 'right',
+                                verticalAlign: 'top'
+                            }
+                        }, [
+                            (function() {
+                                if (disabled) {
                                     return span({
                                         class: 'kb-btn-icon',
                                         type: 'button',
                                         dataToggle: 'tooltip',
-                                        title: 'Can\'t add - remove one first',
-                                        dataItemId: item.id
-                                    }, span({ class: 'fa fa-ban', style: { color: 'silver', fontSize: '200%' } }));
-                                }())
+                                        title: 'Remove from selected'
+                                    }, [
+                                        span({
+                                            class: 'fa fa-minus-circle',
+                                            style: {
+                                                color: 'red',
+                                                fontSize: '200%'
+                                            }
+                                        })
+                                    ]);
+                                }
+                                if (allowSelection) {
+                                    return span({
+                                        class: 'kb-btn-icon',
+                                        type: 'button',
+                                        dataToggle: 'tooltip',
+                                        title: 'Add to selected',
+                                        dataItemId: item.id,
+                                    }, [span({
+                                        class: 'fa fa-plus-circle',
+                                        style: {
+                                            color: 'green',
+                                            fontSize: '200%'
+                                        }
+                                    })]);
+                                }
+                                return span({
+                                    class: 'kb-btn-icon',
+                                    type: 'button',
+                                    dataToggle: 'tooltip',
+                                    title: 'Can\'t add - remove one first',
+                                    dataItemId: item.id
+                                }, span({ class: 'fa fa-ban', style: { color: 'silver', fontSize: '200%' } }));
+                            }())
 
-                            ])
-                        ]);
-                    })
+                        ])
+                    ]);
+                })
                     .join('\n');
             }
 
@@ -307,36 +312,48 @@ define([
                 value: model.getItem('filter') || '',
                 id: events.addEvents({
                     events: [{
-                            type: 'keyup',
-                            handler: function(e) {
-                                doSearchKeyUp(e);
-                            }
-                        },
-                        {
-                            type: 'focus',
-                            handler: function() {
-                                Jupyter.narrative.disableKeyboardManager();
-                            }
-                        },
-                        {
-                            type: 'blur',
-                            handler: function() {
-                                // console.log('SingleSubData Search BLUR');
-                                // Jupyter.narrative.enableKeyboardManager();
-                            }
-                        },
-                        {
-                            type: 'click',
-                            handler: function() {
-                                Jupyter.narrative.disableKeyboardManager();
-                            }
+                        type: 'keyup',
+                        handler: function(e) {
+                            doSearchKeyUp(e);
                         }
+                    },
+                    {
+                        type: 'focus',
+                        handler: function() {
+                            Jupyter.narrative.disableKeyboardManager();
+                        }
+                    },
+                    {
+                        type: 'blur',
+                        handler: function() {
+                            // console.log('SingleSubData Search BLUR');
+                            // Jupyter.narrative.enableKeyboardManager();
+                        }
+                    },
+                    {
+                        type: 'click',
+                        handler: function() {
+                            Jupyter.narrative.disableKeyboardManager();
+                        }
+                    }
                     ]
                 })
             });
 
             ui.setContent('search-box', content);
             events.attachEvents();
+        }
+
+        function renderSearchMessage() {
+            var content = span({
+                dataElement: 'message'
+            });
+
+            ui.setContent('search-message', content);
+        }
+
+        function setSearchMessage(message) {
+            ui.setText('search-message.message', message);
         }
 
         function renderStats() {
@@ -351,12 +368,17 @@ define([
                 content = span({ style: { fontStyle: 'italic' } }, [
                     ' - no available items'
                 ]);
+            } else if (filteredItems.length === availableItems.length) {
+                content = span({ style: { fontStyle: 'italic' } }, [
+                    ' - ',
+                    String(availableItems.length)
+                ]);
             } else {
                 content = span({ style: { fontStyle: 'italic' } }, [
-                    ' - filtering ',
+                    ' - filtered ',
                     span([
                         String(filteredItems.length),
-                        ' of ',
+                        ' out of ',
                         String(availableItems.length)
                     ])
                 ]);
@@ -473,12 +495,21 @@ define([
         function doLastPage() {
             setPageStart(model.getItem('filteredAvailableItems').length);
         }
-
+       
         function doSearchKeyUp(e) {
-            if (e.target.value.length > 2) {
+            var filterLength = e.target.value.length;
+            if (filterLength >= minimumFilterLength) {
                 model.setItem('filter', e.target.value);
                 doFilterItems();
+                setSearchMessage('filter applied');
             } else {
+                if (filterLength > 0 && minimumFilterLength > 0) {
+                    setSearchMessage('Enter ' + 
+                        (minimumFilterLength - e.target.value.length) +
+                        ' more character to filter');
+                } else {
+                    setSearchMessage('');
+                }
                 if (model.getItem('filter')) {
                     model.setItem('filter', null);
                     doFilterItems();
@@ -486,7 +517,7 @@ define([
             }
         }
 
-        function makeInputControl(events, bus) {
+        function makeInputControl() {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
             var availableValues = model.getItem('availableValues');
@@ -513,7 +544,14 @@ define([
                             div({
                                 class: 'col-md-6'
                             }, [
-                                span({ dataElement: 'search-box' })
+                                span({ dataElement: 'search-box' }),
+                                span({ 
+                                    style: {
+                                        marginLeft: '4px',
+                                        fontStyle: 'italic'
+                                    }, 
+                                    dataElement: 'search-message' 
+                                })
                             ]),
                             div({
                                 class: 'col-md-6',
@@ -558,22 +596,19 @@ define([
          */
         function updateInputControl(changedProperty) {
             switch (changedProperty) {
-                case 'value':
-                    // just change the selections.
-                    var count = buildCount();
-                    ui.setContent('input-control.count', count);
+            case 'value':
+                // just change the selections.
+                ui.setContent('input-control.count', buildCount());
 
-                    break;
-                case 'availableValues':
-                    // rebuild the options
-                    // re-apply the selections from the value
-                    var options = buildOptions(),
-                        count = buildCount();
-                    ui.setContent('input-control.input', options);
-                    ui.setContent('input-control.count', count);
+                break;
+            case 'availableValues':
+                // rebuild the options
+                // re-apply the selections from the value
+                ui.setContent('input-control.input', buildOptions());
+                ui.setContent('input-control.count', buildCount());
 
-                    break;
-                case 'referenceObjectName':
+                break;
+            case 'referenceObjectName':
                     // refetch the available values
                     // set available values
                     // update input control for available values
@@ -617,8 +652,8 @@ define([
 
         function syncAvailableValues() {
             return Promise.try(function() {
-                    return fetchData();
-                })
+                return fetchData();
+            })
                 .then(function(data) {
                     isAvailableValuesInitialized = true;
                     if (!data) {
@@ -651,6 +686,12 @@ define([
                     // - a set of filtered ids
                     model.setItem('availableValues', data);
 
+                    if (data.length > 4000) {
+                        minimumFilterLength = 3;
+                    } else {
+                        minimumFilterLength = 0;
+                    }
+
                     // TODO: generate all of this in the fetchData -- it will be a bit faster.
                     var map = {};
                     data.forEach(function(datum) {
@@ -670,25 +711,26 @@ define([
          */
         function render() {
             return Promise.try(function() {
-                    // check to see if we have to render inputControl.
-                    var events = Events.make({ node: container }),
-                        inputControl = makeInputControl(events, bus),
-                        content = div({
-                            class: 'input-group',
-                            style: {
-                                width: '100%'
-                            }
-                        }, inputControl);
+                // check to see if we have to render inputControl.
+                var events = Events.make({ node: container }),
+                    inputControl = makeInputControl(),
+                    content = div({
+                        class: 'input-group',
+                        style: {
+                            width: '100%'
+                        }
+                    }, inputControl);
 
-                    ui.setContent('input-container', content);
-                    renderSearchBox();
-                    renderStats();
-                    renderToolbar();
-                    renderAvailableItems();
-                    renderSelectedItems();
+                ui.setContent('input-container', content);
+                renderSearchBox();
+                renderSearchMessage();
+                renderStats();
+                renderToolbar();
+                renderAvailableItems();
+                renderSelectedItems();
 
-                    events.attachEvents();
-                })
+                events.attachEvents();
+            })
                 .catch(function(err) {
                     console.error('ERROR in render', err);
                 });
@@ -718,7 +760,7 @@ define([
              * Issued when thre is a need to have all params reset to their
              * default value.
              */
-            bus.on('reset-to-defaults', function(message) {
+            channel.on('reset-to-defaults', function() {
                 resetModelValue();
                 // model.reset();
                 // TODO: this should really be set when the linked field is reset...
@@ -731,7 +773,7 @@ define([
             /*
              * Issued when there is an update for this param.
              */
-            bus.on('update', function(message) {
+            channel.on('update', function(message) {
                 model.setItem('value', message.value);
                 updateInputControl('value');
             });
@@ -741,7 +783,7 @@ define([
              * any parameter which has a dependency upon any other.
              *
              */
-            bus.listen({
+            paramsChannel.listen({
                 key: {
                     type: 'parameter-changed',
                     parameter: spec.data.constraints.subdataSelection.constant_ref
@@ -764,7 +806,7 @@ define([
                 }
             });
 
-            bus.listen({
+            paramsChannel.listen({
                 key: {
                     type: 'parameter-changed',
                     parameter: spec.data.constraints.subdataSelection.parameter_id
@@ -787,7 +829,7 @@ define([
                 }
             });
 
-            bus.listen({
+            paramsChannel.listen({
                 key: {
                     type: 'parameter-value',
                     parameter: spec.data.constraints.subdataSelection.parameter_id
@@ -819,9 +861,9 @@ define([
             //                model.setItem('referenceObjectName', value)
             //                setReferenceValue(message.objectRef);
             //            });
-            bus.emit('sync');
+            // bus.emit('sync');
 
-            bus.request({
+            paramsChannel.request({
                 parameterName: spec.id
             }, {
                 key: {
@@ -847,6 +889,8 @@ define([
          *
          */
 
+         
+
         // LIFECYCLE API
 
         function start(arg) {
@@ -870,30 +914,23 @@ define([
                 // Get initial data.
                 // Weird, but will make it look nicer.
                 Promise.all([
-                        bus.request({
-                            parameterName: spec.id
-                        }, {
-                            key: {
-                                type: 'get-parameter'
-                            }
-                        }),
-                        bus.request({
-                            parameterName: spec.data.constraints.subdataSelection.parameter_id
-                        }, {
-                            key: {
-                                type: 'get-parameter'
-                            }
-                        })
-                    ])
-                    .spread(function(paramValue, referencedParamValue) {
+                    paramsChannel.request({
+                        parameterName: spec.data.constraints.subdataSelection.parameter_id
+                    }, {
+                        key: {
+                            type: 'get-parameter'
+                        }
+                    })
+                ])
+                    .spread(function(referencedParamValue) {
                         // hmm, the default value of a subdata is null, but that does
                         // not play nice with the model props defaulting mechanism which
                         // works with absent or undefined (null being considered an actual value, which
                         // it is of course!)
-                        if (paramValue.value === null) {
+                        if (!config.initialValue) {
                             model.setItem('selectedItems', []);
                         } else {
-                            var selectedItems = paramValue.value;
+                            var selectedItems = config.initialValue;
                             if (!(selectedItems instanceof Array)) {
                                 selectedItems = [selectedItems];
                             }
@@ -938,7 +975,7 @@ define([
                 showFrom: 0,
                 showTo: 5
             },
-            onUpdate: function(props) {
+            onUpdate: function() {
                 renderStats();
                 renderToolbar();
                 renderAvailableItems();

@@ -401,7 +401,11 @@ class AppManager(object):
         self.spec_manager.check_app(app_id, tag, raise_exception=True)
 
         if version is not None and tag != "release":
-            raise ValueError("App versions only apply to released modules!")
+            if re.match(r'\d+\.\d+\.\d+', version) is not None:
+                raise ValueError(
+                    "Semantic versions only apply to released app modules. " +
+                    "You can use a Git commit hash instead to specify a " +
+                    "version.")
 
         # Get the spec & params
         spec = self.spec_manager.get_spec(app_id, tag)

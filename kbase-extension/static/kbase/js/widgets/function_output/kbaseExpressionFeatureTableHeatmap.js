@@ -5,22 +5,22 @@
  * @public
  */
 
- define (
-    [
-        'kbwidget',
-        'bootstrap',
-        'jquery',
-        'd3',
-        'jquery-dataTables',
-        'kbaseExpressionConditionsetBaseWidget'
-    ], function(
-        KBWidget,
-        bootstrap,
-        $,
-        d3,
-        jquery_dataTables,
-        kbaseExpressionConditionsetBaseWidget
-    ) {
+define ([
+    'kbwidget',
+    'jquery',
+    'd3',
+    'kbaseExpressionConditionsetBaseWidget',
+    // for effect
+    'bootstrap',
+    'jquery-dataTables'
+], function(
+    KBWidget,
+    $,
+    d3,
+    kbaseExpressionConditionsetBaseWidget
+) {
+    'use strict';
+    
     return KBWidget({
         name: 'kbaseExpressionFeatureTableHeatmap',
         parent: kbaseExpressionConditionsetBaseWidget,
@@ -47,15 +47,15 @@
 
             var conditions = [];
             if(self.options.conditionIds) {
-                if ($.type(self.options.conditionIds) === "array") {
+                if ($.type(self.options.conditionIds) === 'array') {
                     conditions = self.options.conditionIds;
                 } else {
-                    conditions = $.map(self.options.conditionIds.split(","), $.trim);
+                    conditions = $.map(self.options.conditionIds.split(','), $.trim);
                 }
             }
 
             return{
-                input_data: self.options.workspaceID + "/" + self.options.expressionMatrixID,
+                input_data: self.options.workspaceID + '/' + self.options.expressionMatrixID,
                 column_ids: conditions,
                 fl_column_set_stat: 1,
                 fl_row_set_stats: 1,
@@ -68,21 +68,21 @@
 
         buildWidget: function($containerDiv){
             var self = this;
-            var pref = this.pref;
-
-            $containerDiv.append(
-                $('<div style="font-size: 1.2em; width:100%; text-align: center;">Browse Features</div>')
-            );
-            $containerDiv.append(
-                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; '+
-                    'text-align: center;">Statistics calculated for the selected conditions for all features</div>')
-            );
 
             self.$tableDiv = $('<div>');
-            $containerDiv.append(self.$tableDiv);
+
+            $containerDiv
+                .append(
+                    $('<div style="font-size: 1.2em; width:100%; text-align: center;">Browse Features</div>')
+                )
+                .append(
+                    $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; '+
+                        'text-align: center;">Statistics calculated for the selected conditions for all features</div>')
+                )
+                .append(self.$tableDiv);
 
             // Define stype for the heat cell
-            $("<style type='text/css'> \
+            $('<style type=\'text/css\'> \
                 .heat_cell{  \
                     float: left;\
                     width: 1em; \
@@ -90,50 +90,50 @@
                     border: 0.1em solid #AAAAAA; \
                     border-radius: 0.2em; \
                 } \
-                </style>").appendTo("head");
+                </style>').appendTo('head');
 
             self.redrawTable();
 
 
             var minCell = $('<div>')
-                             .addClass('heat_cell')
-                             .css('float','right')
-                             .css('padding','4px')
-                             .css('background',self.colorGenerator(self.minColorValue));
+                .addClass('heat_cell')
+                .css('float','right')
+                .css('padding','4px')
+                .css('background',self.colorGenerator(self.minColorValue));
 
             var maxCell = $('<div>')
-                             .addClass('heat_cell')
-                             .css('float','right')
-                             .css('padding','4px')
-                             .css('background',self.colorGenerator(self.maxColorValue));
+                .addClass('heat_cell')
+                .css('float','right')
+                .css('padding','4px')
+                .css('background',self.colorGenerator(self.maxColorValue));
 
             $containerDiv.append('<br><br><br>');
             var padding = '2px';
             var $rangeController = $('<div class="row">');
-            var $minInput = $('<input id="min" type="text" size="6">').val(self.minColorValue)
-            var $maxInput = $('<input id="max" type="text" size="6">').val(self.maxColorValue)
+            var $minInput = $('<input id="min" type="text" size="6">').val(self.minColorValue);
+            var $maxInput = $('<input id="max" type="text" size="6">').val(self.maxColorValue);
             var $btn = $('<button>').addClass('btn btn-default btn-sm').append('Update')
-                        .on('click', function() {
-                            var min = parseFloat($minInput.val());
-                            if(min && !isNaN(min)) {
-                                self.minColorValue = min;
-                            }
-                            $minInput.val(self.minColorValue);
-                            var max = parseFloat($maxInput.val());
-                            if(max && !isNaN(max)) {
-                                self.maxColorValue = max;
-                            }
-                            $maxInput.val(self.maxColorValue);
-                            self.redrawTable();
-                        });
+                .on('click', function() {
+                    var min = parseFloat($minInput.val());
+                    if(min && !isNaN(min)) {
+                        self.minColorValue = min;
+                    }
+                    $minInput.val(self.minColorValue);
+                    var max = parseFloat($maxInput.val());
+                    if(max && !isNaN(max)) {
+                        self.maxColorValue = max;
+                    }
+                    $maxInput.val(self.maxColorValue);
+                    self.redrawTable();
+                });
             $rangeController
                 .append($('<div class="form-group col-xs-4">'))
                 .append($('<div class="form-group col-xs-2 text-right">').css('padding',padding)
-                    .append("<small>Min Color Range</small>&nbsp").append(minCell))
+                    .append('<small>Min Color Range</small>&nbsp').append(minCell))
                 .append($('<div class="form-group col-xs-1 text-left">').css('padding',padding)
                     .append($minInput))
                 .append($('<div class="form-group col-xs-2 text-right">').css('padding',padding)
-                    .append("<small>Max Color Range</small>&nbsp").append(maxCell))
+                    .append('<small>Max Color Range</small>&nbsp').append(maxCell))
                 .append($('<div class="form-group col-xs-1 text-left">').css('padding',padding)
                     .append($maxInput))
                 .append($('<div class="form-group col-xs-1 text-right">').css('padding',padding)
@@ -174,28 +174,29 @@
 
         redrawTable: function() {
             var self = this;
-            var pref = self.pref;
 
             self.updateColorGenerator();
 
+            // NB this strange ordering because data table will not work unless the table is 
+            // actually in the dom.
             self.$tableDiv.empty();
-            var $tableFeatures = $('<table id="' + pref + 'features-table" \
+            $('<table id="' + self.pref + 'features-table" \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
                 </table>')
                 .appendTo(self.$tableDiv)
                 .dataTable( {
-                    "sDom": 'lftip',
-                    "iDisplayLength": 10,
-                    "scrollX": true,
-                    "aaData": self.buildFeaturesTableData(),
-                    "aoColumns": [
-                        { sTitle: "Feature ID", mData:"id"},
-                        { sTitle: "Function", mData:"function"},
-                        { sTitle: "Min", mData:"min"},
-                        { sTitle: "Max", mData:"max"},
-                        { sTitle: "Average", mData:"avg"},
-                        { sTitle: "Std. Dev.", mData:"std"},
-                        { sTitle: "Expression Values", mData: "values",
+                    'sDom': 'lftip',
+                    'iDisplayLength': 10,
+                    'scrollX': true,
+                    'aaData': self.buildFeaturesTableData(),
+                    'aoColumns': [
+                        { sTitle: 'Feature ID', mData:'id'},
+                        { sTitle: 'Function', mData:'function'},
+                        { sTitle: 'Min', mData:'min'},
+                        { sTitle: 'Max', mData:'max'},
+                        { sTitle: 'Average', mData:'avg'},
+                        { sTitle: 'Std. Dev.', mData:'std'},
+                        { sTitle: 'Expression Values', mData: 'values',
                             mRender: function ( values ) {
                                 var $heatRow = $('<div class="heat_row"/>');
 

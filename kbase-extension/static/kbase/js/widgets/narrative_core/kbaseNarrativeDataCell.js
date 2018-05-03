@@ -9,26 +9,25 @@
  */
 /*global define*/
 /*jslint white:true,browser:true*/
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'underscore',
-		'narrativeConfig',
-		'narrativeViewers',
-		'kbaseNarrativeCell',
-        'kb_service/utils'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		_,
-		Config,
-		Viewers,
-		kbaseNarrativeCell,
-        ServiceUtils
-	) {
+define ([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'underscore',
+    'narrativeConfig',
+    'narrativeViewers',
+    'kbaseNarrativeCell',
+    'kb_service/utils'
+], function(
+    KBWidget,
+    bootstrap,
+    $,
+    _,
+    Config,
+    Viewers,
+    kbaseNarrativeCell,
+    ServiceUtils
+) {
     'use strict';
 
     /**

@@ -1,7 +1,7 @@
 {
   "name": "kbase-narrative-core",
   "description": "Core components for the KBase Narrative Interface",
-  "version": "3.7.1",
+  "version": "3.7.2",
   "private": true,
   "repository": "github.com/kbase/narrative",
   "devDependencies": {
@@ -38,5 +38,8 @@
     "bower": "bower install",
     "test": "grunt test",
     "build": "grunt build"
+  },
+  "dependencies": {
+    "karma-es6-shim": "^1.0.0"
   }
 }

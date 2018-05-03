@@ -108,13 +108,64 @@ define([
             return deserial;
         };
 
+        var changeUpaVersion = function(upa, newVersion) {
+            if (!isUpa(upa)) {
+                throw {
+                    error: upa + ' is not a valid upa, so its version cannot be changed!'
+                };
+            }
+            if ((!(/^\d+$/.test(newVersion)) || newVersion <= 0)) {
+                throw {
+                    error: newVersion + ' is not a valid version number!'
+                };
+            }
+            var newUpa = upa.replace(/^(.+\/)(\d+)$/, '$1' + newVersion);
+            return newUpa;
+        };
+
+        var serializeAll = function(upas) {
+            if (typeof upas === 'string') {
+                return serialize(upas);
+            }
+            else if (Array.isArray(upas)) {
+                return upas.map(function(upa) {
+                    return serialize(upa);
+                });
+            }
+            else {
+                return Object.keys(upas).reduce(function(acc, key) {
+                    acc[key] = serializeAll(upas[key]);
+                    return acc;
+                }, {});
+            }
+        };
+
+        var deserializeAll = function(upas) {
+            if (typeof upas === 'string') {
+                return deserialize(upas);
+            }
+            else if (Array.isArray(upas)) {
+                return upas.map(function(upa) {
+                    return deserialize(upa);
+                });
+            }
+            else {
+                return Object.keys(upas).reduce(function(acc, key) {
+                    acc[key] = deserializeAll(upas[key]);
+                    return acc;
+                }, {});
+            }
+        };
 
         return {
             serialize: serialize,
             deserialize: deserialize,
             serializeExternal: serializeExternal,
             externalTag: externalTag,
-            isUpa: isUpa
+            isUpa: isUpa,
+            changeUpaVersion: changeUpaVersion,
+            serializeAll: serializeAll,
+            deserializeAll: deserializeAll
         };
     };
 

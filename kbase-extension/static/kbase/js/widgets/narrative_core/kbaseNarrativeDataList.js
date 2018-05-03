@@ -1,7 +1,3 @@
-/* global define,Jupyter,KBError */
-/* global Workspace */
-/* jslint white: true */
-/* eslint no-console: 0 */
 /**
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
@@ -18,6 +14,7 @@ define([
     'util/timeFormat',
     'util/icon',
     'kbase-client-api',
+    'kb_service/client/workspace',
     'kbase-generic-client-api',
     'kbaseAuthenticatedWidget',
     'kbaseNarrativeDownloadPanel',
@@ -25,7 +22,7 @@ define([
     'handlebars',
     'text!kbase/templates/data_list/object_row.html',
     'kb_service/utils',
-    'util/bootstrapAlert',
+    'util/bootstrapDialog',
     'util/bootstrapSearch',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
     'bootstrap',
@@ -42,6 +39,7 @@ define([
     TimeFormat,
     Icon,
     kbase_client_api,
+    Workspace,
     GenericClient,
     kbaseAuthenticatedWidget,
     kbaseNarrativeDownloadPanel,
@@ -49,7 +47,7 @@ define([
     Handlebars,
     ObjectRowHtml,
     ServiceUtils,
-    BootstrapAlert,
+    BootstrapDialog,
     BootstrapSearch,
     kbaseDataCard
 ) {
@@ -76,6 +74,7 @@ define([
         maxWsObjId: null,
         n_objs_rendered: 0,
         real_name_lookup: {},
+        $searchInput: null,
         $filterTypeSelect: null,
         availableTypes: {},
         $searchDiv: null,
@@ -118,7 +117,7 @@ define([
         /*
         variables to keep track of current state before workspace refresh
         */
-        selectedType : "",
+        selectedType : '',
         lastSortFunction : null,
 
         /**
@@ -547,7 +546,7 @@ define([
                     this.availableTypes[typeName] = {
                         type: typeName,
                         count: 0
-                    }
+                    };
                 }
                 this.availableTypes[typeName].count++;
             }.bind(this);
@@ -561,7 +560,7 @@ define([
                             div: null,
                             expanded: false,
                             item_ids: []
-                        }
+                        };
                     }
                     this.setInfo[setId].item_ids.push(itemId);
                     if (!this.setItems[itemId]) {
@@ -606,7 +605,7 @@ define([
                 .catch(function (error) {
                     this.showBlockingError('Sorry, an error occurred while fetching your data.', error);
                     console.error(error);
-                    KBError('kbaseNarrativeDataList.fetchWorkspaceData', error.error.message);
+                    window.KBError('kbaseNarrativeDataList.fetchWorkspaceData', error.error.message);
                     throw error;
                 }.bind(this));
 
@@ -806,7 +805,7 @@ define([
                                             })
                                                 .click(function () {
                                                     self.ws.revert_object(revertRefLocal,
-                                                        function (reverted_obj_info) {
+                                                        function () {
                                                             self.writingLock = false;
                                                             self.refresh();
                                                         },
@@ -951,18 +950,18 @@ define([
 
                                 if (self.ws_name && self.ws) {
                                     self.ws.rename_object({
-                                            obj: { ref: object_info[6] + '/' + object_info[0] },
-                                            new_name: $newNameInput.val()
-                                        },
-                                        function (renamed_info) {
-                                            self.writingLock = false;
-                                            self.refresh();
-                                        },
-                                        function (error) {
-                                            console.error(error);
-                                            $alertContainer.empty();
-                                            $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
-                                        });
+                                        obj: { ref: object_info[6] + '/' + object_info[0] },
+                                        new_name: $newNameInput.val()
+                                    },
+                                    function () {
+                                        self.writingLock = false;
+                                        self.refresh();
+                                    },
+                                    function (error) {
+                                        console.error(error);
+                                        $alertContainer.empty();
+                                        $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                    });
                                 }
                             }))
                         .append($('<button>').addClass('kb-data-list-cancel-btn')
@@ -1003,28 +1002,28 @@ define([
                             .click(function () {
                                 if (self.ws_name && self.ws) {
                                     self.ws.rename_object({
-                                            obj: { ref: object_info[6] + '/' + object_info[0] },
-                                            new_name: object_info[1].split('-deleted-')[0] + '-deleted-' + (new Date()).getTime()
-                                        },
-                                        function (renamed_info) {
-                                            self.ws.delete_objects([{ ref: object_info[6] + '/' + object_info[0] }],
-                                                function () {
-                                                    $(document).trigger('deleteDataList.Narrative', object_info[1]);
-                                                    self.writingLock = false;
-                                                    self.refresh();
+                                        obj: { ref: object_info[6] + '/' + object_info[0] },
+                                        new_name: object_info[1].split('-deleted-')[0] + '-deleted-' + (new Date()).getTime()
+                                    },
+                                    function () {
+                                        self.ws.delete_objects([{ ref: object_info[6] + '/' + object_info[0] }],
+                                            function () {
+                                                $(document).trigger('deleteDataList.Narrative', object_info[1]);
+                                                self.writingLock = false;
+                                                self.refresh();
 
-                                                },
-                                                function (error) {
-                                                    console.error(error);
-                                                    $alertContainer.empty();
-                                                    $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
-                                                });
-                                        },
-                                        function (error) {
-                                            console.error(error);
-                                            $alertContainer.empty();
-                                            $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
-                                        });
+                                            },
+                                            function (error) {
+                                                console.error(error);
+                                                $alertContainer.empty();
+                                                $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                            });
+                                    },
+                                    function (error) {
+                                        console.error(error);
+                                        $alertContainer.empty();
+                                        $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                    });
 
                                 }
                             }))
@@ -1053,13 +1052,14 @@ define([
 
         toggleSetExpansion: function (objId, $setDiv) {
             var setInfo = this.setInfo[objId];
+            var setItemsShown, i;
             if (!setInfo) {
                 return;
             }
             var showItems = this.dataObjects[objId].expanded;
             if (showItems) {
-                var setItemsShown = 0;
-                for (var i = 0; i < setInfo.item_ids.length; i++) {
+                setItemsShown = 0;
+                for (i = 0; i < setInfo.item_ids.length; i++) {
                     var setItemId = setInfo.item_ids[i];
                     var viewInfo = _.findWhere(this.viewOrder, { objId: setItemId });
                     if (viewInfo.inFilter) {
@@ -1070,8 +1070,8 @@ define([
                 }
                 this.setInfo[objId].setItemsShown = setItemsShown;
             } else {
-                var setItemsShown = setInfo.setItemsShown || 0;
-                for (var i = 0; i < setItemsShown; i++) {
+                setItemsShown = setInfo.setItemsShown || 0;
+                for (i = 0; i < setItemsShown; i++) {
                     $setDiv.next().remove();
                 }
             }
@@ -1213,11 +1213,12 @@ define([
             });
             targetDiv.addEventListener('drop', function (e) {
                 if (Jupyter.narrative.readonly) {
-                    new BootstrapAlert({
+                    new BootstrapDialog({
                         type: 'warning',
                         title: 'Warning',
-                        body: 'Read-only Narrative -- may not insert a data viewer into this Narrative'
-                    });
+                        body: 'Read-only Narrative -- may not insert a data viewer into this Narrative',
+                        alertOnly: true
+                    }).show();
                     return;
                 }
                 var data = JSON.parse(e.dataTransfer.getData('info')),
@@ -1425,7 +1426,7 @@ define([
                     .find('.fa')
                     .removeClass()
                     .addClass('fa ' + newIcon);
-            }
+            };
 
             var $byDate = $('<label id="nar-data-list-default-sort-label" class="btn btn-default">').addClass('btn btn-default')
                 .append($('<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'))
@@ -1627,7 +1628,7 @@ define([
                         .append($viewMode)
                         .append($openSearch)
                         .append($openSort)
-                        .append($openFilter))
+                        .append($openFilter));
             }
 
 
@@ -1774,5 +1775,5 @@ define([
             var $usernameTd = $moreRow.find('.kb-data-list-username-td');
             DisplayUtil.displayRealName(object_info[5], $usernameTd);
         }
-    })
+    });
 });

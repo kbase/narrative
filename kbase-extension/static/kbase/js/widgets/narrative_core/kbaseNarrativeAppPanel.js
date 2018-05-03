@@ -29,7 +29,6 @@ define([
     'uuid',
     'narrative_core/catalog/kbaseCatalogBrowser',
     'kbase/js/widgets/narrative_core/kbaseAppCard',
-    'util/bootstrapAlert',
     'common/runtime',
     'kbaseNarrative',
     'catalog-client-api',
@@ -54,7 +53,6 @@ define([
     Uuid,
     KBaseCatalogBrowser,
     kbaseAppCard,
-    BootstrapAlert,
     Runtime
 ) {
     'use strict';
@@ -128,7 +126,7 @@ define([
                 .append(this.$methodList);
 
             this.bsSearch = new BootstrapSearch(this.$searchDiv, {
-                inputFunction: function(e) {
+                inputFunction: function() {
                     self.refreshPanel(this);
                 },
                 placeholder: 'Search apps'
@@ -417,13 +415,20 @@ define([
         },
 
         setListHeight: function(height, animate) {
-
             if (this.$methodList) {
                 if (animate) {
                     this.$methodList.animate({ 'height': height}, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
                 } else {
                     this.$methodList.css({ 'height': height});
                 }
+            }
+        },
+
+        setReadOnlyMode: function (readOnly) {
+            if (readOnly) {
+                this.toggleCollapse('collapse');
+            } else {
+                this.toggleCollapse('restore');
             }
         },
 
@@ -559,11 +564,12 @@ define([
          */
         triggerApp: function(app, tag, parameters) {
             if (Jupyter.narrative.narrController.uiModeIs('view')) {
-                new BootstrapAlert({
+                new BootstrapDialog({
                     type: 'warning',
                     title: 'Warning',
-                    body: 'Read-only Narrative -- you may not add apps to this Narrative'
-                });
+                    body: 'Read-only Narrative -- you may not add apps to this Narrative',
+                    alertOnly: true
+                }).show();
                 // alert('Read-only Narrative -- may not add apps to this Narrative');
                 return;
             }
@@ -873,7 +879,6 @@ define([
                 var app = appSet[id];
                 switch (filterType) {
                 case 'in_type':
-
                 case 'input':
                     if (filterString.indexOf('.') !== -1) {
                         searchSet = app.info.input_types;

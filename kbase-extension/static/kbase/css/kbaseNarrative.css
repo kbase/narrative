@@ -1459,13 +1459,9 @@ div#notebook_panel {
 
 .kb-cell-toolbar .icon {
     display: inline-block;
-    height: 56px;
-    width: 56px;
     padding: 0;
     margin-right: 4px;
     vertical-align: top;
-    border: 0px red solid;
-    line-height: 56px;
     overflow: hidden;
 }
 
@@ -2572,24 +2568,6 @@ button.kb-data-obj {
 }
 .kb-data-list-level2 {
     margin-left: 50px;
-}
-
-/* Nudge the data icon a bit to the left or right */
-.kb-data-icon-rnudge {
-  margin-left: 3px;
-}
-.kb-data-icon-lnudge {
-  margin-right: 3px;
-}
-.kb-data-icon-unudge {
-  margin-bottom: 3px;
-}
-.kb-data-icon-dnudge {
-  margin-top: 3px;
-}
-
-.kb-data-icon-dnudge2 {
-    margin-top: 6px;
 }
 
 .kb-data-list-info {

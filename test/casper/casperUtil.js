@@ -1,18 +1,30 @@
 /* global module phantom casper*/
 var fs = require('fs'),
-    users = {},
-    tokenConfigFile = 'test/unit/testConfig.json',
+    tokens = {},
     testConfigFile = 'test/casper/testConfig.json',
-    tokenConfig = JSON.parse(fs.read(tokenConfigFile).trim()),
-    userId = tokenConfig.token.user,
-    tokenFile = tokenConfig.token.file,
     testConfig = JSON.parse(fs.read(testConfigFile).trim()),
     jupyterPort = testConfig.jupyterPort;
 
 // gotta munge the token file a bit to work with nodejs/ Casperjs, as opposed to Karma.
-tokenFile = tokenFile.substring(1);
-var token = fs.read(tokenFile).trim();
-users[userId] = token;
+Object.keys(testConfig.users).forEach(function(user) {
+    'use strict';
+    var userInfo = testConfig.users[user];
+    var token = fs.read(userInfo.tokenFile).trim();
+    tokens[userInfo.id] = token;
+    casper.echo("user - " + userInfo.id + " - token - " + token);
+});
+
+//
+//
+//
+// tokenConfig = JSON.parse(fs.read(tokenConfigFile).trim()),
+// userId = tokenConfig.token.user,
+// tokenFile = tokenConfig.token.file,
+//
+//
+// tokenFile = tokenFile.substring(1);
+// var token = fs.read(tokenFile).trim();
+// users[userId] = token;
 
 casper.options.waitTimeout = 30000;
 
@@ -41,11 +53,11 @@ function getWidgetConfig(widgetName) {
  */
 function getUserToken(user) {
     'use strict';
-    if (users[user]) {
-        return users[user];
+    if (tokens[user]) {
+        return tokens[user];
     }
     else {
-        throw new Error('No auth token found for user "' + userId + '"');
+        throw new Error('No auth token found for user "' + user + '"');
     }
 }
 
@@ -60,15 +72,23 @@ function getUserToken(user) {
  */
 function setAuthCookie(user) {
     'use strict';
-    if (!users[user]) {
-        throw new Error('Unable to set auth cookie - user "' + userId + '" not found');
+    if (!tokens[user]) {
+        throw new Error('Unable to set auth cookie - user "' + user + '" not found');
     }
     phantom.addCookie({
         'name': 'kbase_session',
-        'value': token,
+        'value': tokens[user],
         'domain': 'localhost',
         'path': '/'
     });
+}
+
+function buildNarrativeUrl(workspaceId, narrativeId) {
+    'use strict';
+    if (!workspaceId || !narrativeId) {
+        throw new Error('Unable to build Narrative URL - need both workspace and narrative ids!');
+    }
+    return 'http://localhost:' + jupyterPort + '/narrative/ws.' + workspaceId + '.obj.' + narrativeId;
 }
 
 function getNarrativeUrl(configKey) {
@@ -77,6 +97,24 @@ function getNarrativeUrl(configKey) {
         throw new Error('Unable to build Narrative URL - unknown test config key "' + configKey + '"');
     }
     return 'http://localhost:' + jupyterPort + '/narrative/' + testConfig.widgets[configKey].narrativeId;
+}
+
+function serializeUpa(upa) {
+    'use strict';
+    if (typeof upa !== 'string') {
+        // stringify the array version of an UPA, if that's what we have.
+        if (Array.isArray(upa)) {
+            upa = upa.join(';');
+        }
+        else {
+            throw {error: 'Can only serialize UPA strings or Arrays of UPA paths'};
+        }
+    }
+    // if (!isUpa(upa)) {
+    //     throw {error: '"' + upa + '" is not a valid UPA. It may already have been serialized.'};
+    // }
+    // return upa;
+    return upa.replace(/^(\d+)\//, '[$1]/');
 }
 
 /**
@@ -98,11 +136,11 @@ function addDataWidgetFromIcon(selector) {
 }
 
 module.exports = {
-    userId: userId,
-    authToken: token,
     getWidgetConfig: getWidgetConfig,
     getUserToken: getUserToken,
     setAuthCookie: setAuthCookie,
     getNarrativeUrl: getNarrativeUrl,
-    addDataWidgetFromIcon: addDataWidgetFromIcon
+    buildNarrativeUrl: buildNarrativeUrl,
+    addDataWidgetFromIcon: addDataWidgetFromIcon,
+    serializeUpa: serializeUpa
 };

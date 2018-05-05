@@ -12,14 +12,18 @@
     "jupyterPort": 32323,
     "widgets": {
         "kbaseGenomeView": {
-            "narrativeId": "ws.28238.obj.1",
-            "narrativeName": "Widget Test Bed",
-            "creatorName": "William Riehl",
-            "ownerId": "wjriehl",
             "dataSelector": ".icon-genome",
             "widgetSelector": ".tabbable",
-            "mainUser": "wjriehl",
-            "testFile": "widgets/kbaseGenomeView.js"
+            "testFile": "widgets/kbaseGenomeView.js",
+            "publicData": "28238/2/8",
+            "narrativeName": "Test Genome Viewer"
         }
+    },
+    "unused": {
+        "narrativeId": "ws.28238.obj.1",
+        "narrativeName": "Widget Test Bed",
+        "creatorName": "William Riehl",
+        "ownerId": "wjriehl",
+        "mainUser": "wjriehl"
     }
 }

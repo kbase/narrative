@@ -91,20 +91,28 @@ function runWidgetTest(params) {
 
     var config = TestUtil.getWidgetConfig(params.widget);
     casper.test.begin('Testing widget "' + params.widget + '"', function (test) {
-        var doWidgetInsert = casper.cli.get('insert-widget');
-        var doSave = casper.cli.get('save');
-        var doValidate = true;
+        var doWidgetInsert = casper.cli.get('insert-widget'),
+            doSave = casper.cli.get('save'),
+            doValidate = true,
+            currentUser = casper.cli.get('current-user'),
+            narrativeId = casper.cli.get('narrative-id'),
+            workspaceId = casper.cli.get('workspace-id'),
+            ownerId = casper.cli.get('owner-id'),
+            ownerName = casper.cli.get('owner-name'),
+            narrativeTitle = casper.cli.get('title');
+        config.objectUpa = casper.cli.get('object-upa'),
+        config.objectName = casper.cli.get('object-name'),
+        config.widgetName = casper.cli.get('widget-name');
 
         Object.keys(casper.cli.options).forEach(function(k) {
             casper.echo(k + ': "' + casper.cli.get(k) + '"');
         });
 
-
-        TestUtil.setAuthCookie(config.mainUser);
+        TestUtil.setAuthCookie(currentUser);
 
         // Start the test at this page.
-        casper.echo('Starting page... ' + TestUtil.getNarrativeUrl(params.widget));
-        casper.start(TestUtil.getNarrativeUrl(params.widget))
+        casper.echo('Starting page... ' + TestUtil.buildNarrativeUrl(workspaceId, narrativeId));
+        casper.start(TestUtil.buildNarrativeUrl(workspaceId, narrativeId))
             .viewport(2000,2000);
 
         casper.options.clientScripts.push('node_modules/babel-polyfill/dist/polyfill.js');
@@ -118,8 +126,8 @@ function runWidgetTest(params) {
         // This checks that the Jupyter stuff works (title) and our stuff can talk to the
         // server (user name)
         casper.then(function() {
-            test.assertSelectorHasText('span#kb-narr-creator', config.creatorName);
-            test.assertTitle(config.narrativeName);
+            test.assertSelectorHasText('span#kb-narr-creator', ownerName);
+            test.assertTitle(narrativeTitle);
         });
 
         if (doWidgetInsert) {
@@ -129,29 +137,64 @@ function runWidgetTest(params) {
                 // evaluation cycle.
                 TestUtil.addDataWidgetFromIcon(config.dataSelector);
             });
-            // wait a second for it to run (the utility "wait_for_output" isn't working...), but this
-            // shouldn't take longer than a second.
-            casper.wait(10000);
-            casper.thenEvaluate(function() {
-                var numCells = Jupyter.notebook.get_cells().length;
-                Jupyter.narrative.scrollToCell(Jupyter.notebook.get_cell(numCells-1));
-            });
         }
+
+        // wait a second for it to run (the utility "wait_for_output" isn't working...), but this
+        // shouldn't take longer than a second.
+        casper.wait(3000);
+        var numCells = casper.evaluate(function() {
+            return Jupyter.notebook.get_cells().length;
+        });
+        casper.thenEvaluate(function() {
+            var numCells = Jupyter.notebook.get_cells().length;
+            Jupyter.narrative.scrollToCell(Jupyter.notebook.get_cell(numCells-1));
+        });
 
         if (doValidate) {
             casper.then(function() {
-                params.validateCellFn(test, config, casper.get_cells_length()-1);
+                var cellIdx = numCells-1;
+
+                // Validate that the show_data_widget code chunk looks right enough.
+                test.assertEval(function(params) {
+                    var cellIdx = Jupyter.notebook.get_cells().length-1;
+                    var cell = Jupyter.notebook.get_cell(cellIdx);
+                    var text = cell.get_text();
+                    return (text.indexOf('WidgetManager().show_data_widget') !== -1) &&
+                           (text.indexOf('title="' + params[0] + '",') !== -1) &&
+                           (text.indexOf('"' + params[1] + '"') !== -1);
+                }, 'show_data_widget function added to code cell', [config.objectName, config.objectUpa]);
+
+                // make sure the cell's output area has JS for a KBase widget
+                test.assertEval(function(widgetName) {
+                    var cellIdx = Jupyter.notebook.get_cells().length-1;
+                    var cell = Jupyter.notebook.get_cell(cellIdx);
+                    var outputCode = cell.output_area.outputs[0].data['application/javascript'];
+
+                    return (outputCode.indexOf('"widget": "' + widgetName + '"') !== -1);
+                }, 'widget "' + config.widgetName + '" added to output area', config.widgetName);
+
+                // make sure the metadata has a serialized UPA in the right place
+                test.assertEval(function(serialUpa) {
+                    var cellIdx = Jupyter.notebook.get_cells().length-1;
+                    var metadata = Jupyter.notebook.get_cell(cellIdx).metadata;
+                    return (metadata.kbase.dataCell.upas.id === serialUpa);
+                }, 'Metadata contains properly formatted UPA', TestUtil.serializeUpa(config.objectUpa));
+
+                // if there's anything extra special to do. Like something else in metadata.
+                if (params.validateCellFn) {
+                    params.validateCellFn(test, config);
+                }
             });
         }
 
         // next, we can go through the widget layout and all that... (need to have that code so
         // we can test it on a copied narrative)
-        var widgetSelector = '#notebook .cell:last-child .kb-cell-output-content > div:last-child';
-        casper.waitUntilVisible(widgetSelector);
-        casper.waitUntilVisible(widgetSelector + ' ' + config.widgetSelector);
+        var widgetDivSelector = '#notebook .cell:last-child .kb-cell-output-content > div:last-child';
+        casper.waitUntilVisible(widgetDivSelector);
+        casper.waitUntilVisible(widgetDivSelector + ' ' + config.widgetSelector);
 
         casper.then(function() {
-            return params.validateWidgetFn(test, config, widgetSelector);
+            return params.validateWidgetFn(test, config, widgetDivSelector);
         });
 
         // finally, save the resulting narrative, if the --save argument is given

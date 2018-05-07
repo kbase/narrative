@@ -100,6 +100,9 @@ define ([
                 self.genome_info = options._obj_info;
                 self.genome_ref = self.genome_info['ws_id'] + '/' + self.genome_info['id'] + '/' + self.genome_info['version'];
             }
+            if (options.upas && options.upas.id) {
+                self.genome_ref = options.upas.id;
+            }
 
             var token = null;
             if(self.auth()) {

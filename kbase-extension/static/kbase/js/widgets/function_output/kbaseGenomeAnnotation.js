@@ -1827,8 +1827,8 @@ define ([
                             }]
                         })
                         .then(function(data) {
-                            //console.log('genomeAPI.get_genome_v1(farr='+featureData['features_array']+', fidx='+featureData['feature_idx']+')',data)
-                            featureFullRecord = data.genomes[0].data.features[0];
+                            //console.log('genomeAPI.get_genome_v1(farr='+featureData['features_array']+', fidx='+featureData['feature_idx']+')',data);
+                            var featureFullRecord = data.genomes[0].data.features[0];
                             if(featureFullRecord['protein_translation']) {
                                 $protLen.empty().append(numberWithCommas(featureFullRecord['protein_translation'].length));
                                 $protSeq.empty().append(printProtein(featureFullRecord['protein_translation'],50));

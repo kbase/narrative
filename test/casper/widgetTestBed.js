@@ -142,9 +142,6 @@ function runWidgetTest(params) {
         // wait a second for it to run (the utility "wait_for_output" isn't working...), but this
         // shouldn't take longer than a second.
         casper.wait(3000);
-        var numCells = casper.evaluate(function() {
-            return Jupyter.notebook.get_cells().length;
-        });
         casper.thenEvaluate(function() {
             var numCells = Jupyter.notebook.get_cells().length;
             Jupyter.narrative.scrollToCell(Jupyter.notebook.get_cell(numCells-1));
@@ -152,8 +149,6 @@ function runWidgetTest(params) {
 
         if (doValidate) {
             casper.then(function() {
-                var cellIdx = numCells-1;
-
                 // Validate that the show_data_widget code chunk looks right enough.
                 test.assertEval(function(params) {
                     var cellIdx = Jupyter.notebook.get_cells().length-1;

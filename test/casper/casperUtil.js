@@ -11,7 +11,6 @@ Object.keys(testConfig.users).forEach(function(user) {
     var userInfo = testConfig.users[user];
     var token = fs.read(userInfo.tokenFile).trim();
     tokens[userInfo.id] = token;
-    casper.echo("user - " + userInfo.id + " - token - " + token);
 });
 
 //

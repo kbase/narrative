@@ -18,12 +18,5 @@
             "publicData": "28238/2/8",
             "narrativeName": "Test Genome Viewer"
         }
-    },
-    "unused": {
-        "narrativeId": "ws.28238.obj.1",
-        "narrativeName": "Widget Test Bed",
-        "creatorName": "William Riehl",
-        "ownerId": "wjriehl",
-        "mainUser": "wjriehl"
     }
 }

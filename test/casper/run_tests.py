@@ -37,28 +37,6 @@ def init_test_narrative(widget_cfg):
     """
     global test_cfg
     global URLS
-    # return {
-    #     'nar_info': {
-    #         'id': 1,
-    #         'wsid': 28238,
-    #         'metadata': {
-    #             'creator': 'wjriehl',
-    #             'name': 'Widget Test Bed',
-    #         }
-    #     },
-    #     'user_info': {
-    #         'id': 'wjriehl',
-    #         'name': 'William Riehl'
-    #     },
-    #     'obj_info': {
-    #         'upa': '28238/2/8',
-    #         'name': 'Sbicolor.JGI-v2.1',
-    #         'type': 'KBaseGenomes.Genome-8.0'
-    #     },
-    #     'ws_info': {
-    #         'id': 28238
-    #     }
-    # }
 
     ws_client = Workspace(url=URLS['workspace'], token=test_cfg['users']['userA']['token'])
     service_client = ServiceClient(url=URLS['service_wizard'], token=test_cfg['users']['userA']['token'], use_url_lookup=True)
@@ -121,7 +99,7 @@ def copy_and_unshare_narrative(info):
     # B copies narrative A (in info)
     copy_result = service_B.sync_call("NarrativeService.copy_narrative", [{
         "workspaceRef": "{}/{}".format(info['ws_info']['id'], info['nar_info']['id']),
-        "newName": info['nar_info']['name'] + ' copy'
+        "newName": info['nar_info']['metadata']['name'] + ' copy'
     }])[0]
     # A removes B's privileges
     ws_A.set_permissions({
@@ -140,7 +118,7 @@ def run_validation_test(widget_cfg, widget, nar_info, copy_info):
         '--workspace-id={}'.format(copy_info['newWsId']),
         '--owner-id={}'.format(nar_info['user_info']['id']),
         '--owner-name={}'.format(nar_info['user_info']['name']),
-        '--title={}'.format(nar_info['nar_info']['name'] + ' copy'),
+        '--title={}'.format(nar_info['nar_info']['metadata']['name'] + ' copy'),
         '--object-upa={}'.format(nar_info['obj_info']['upa']),
         '--object-name={}'.format(nar_info['obj_info']['name']),
         '--widget-name={}'.format(widget),

@@ -122,7 +122,7 @@ define (
 			self.domainModelSetName = data[0].data.set_name;
                         // make regex for each prefix to map to external URLs
                         $.each(data[0].data.domain_prefix_to_dbxref_url, function(prefix,url) {
-                            self.prefixToURL['^'+prefix] = url;
+                            self.prefixToURL[prefix] = url;
                         });
                         // make short & long descriptions for ones that are too long
                         $.each(self.accessionToShortDescription, function(domainID,description) {
@@ -206,7 +206,7 @@ define (
 			// the most relevant match per set
 			var domainRef = domainID;
 			$.each(self.prefixToURL, function(prefix,url) {
-			    if (domainID.match(prefix)) {
+			    if (domainID.match('^'+prefix)) {
 				self.accessionToPrefix[domainID] = prefix;
 				domainRef += ' <small><a href="'+url+domainID.replace(prefix,"")+'" target="_blank">(more&nbsp;info)</a></small>';
 				return false;

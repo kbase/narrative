@@ -68,7 +68,7 @@ test-frontend-e2e:
 # e.g.: > make WIDGET=kbaseGenomeView test-widgets
 test-widgets:
 	@echo "running frontend viewer tests"
-	python test/casper/run_tests.py $(WIDGET)
+	python test/integration/run_tests.py $(WIDGET)
 	@echo "done"
 
 

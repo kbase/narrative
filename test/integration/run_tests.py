@@ -21,7 +21,7 @@ import biokbase.auth as auth
 from biokbase.workspace.client import Workspace
 from biokbase.service.Client import Client as ServiceClient
 
-TEST_ROOT = os.path.join("test", "casper")
+TEST_ROOT = os.path.join("test", "integration")
 BASE_TEST_COMMAND = ["casperjs", "test", "--engine=phantomjs", "--includes=test/casper/jupyterUtil.js"]
 # TODO: configure, inject from mini-kbase, etc.
 BASE_URL = "https://ci.kbase.us/services/"

@@ -13,18 +13,6 @@ Object.keys(testConfig.users).forEach(function(user) {
     tokens[userInfo.id] = token;
 });
 
-//
-//
-//
-// tokenConfig = JSON.parse(fs.read(tokenConfigFile).trim()),
-// userId = tokenConfig.token.user,
-// tokenFile = tokenConfig.token.file,
-//
-//
-// tokenFile = tokenFile.substring(1);
-// var token = fs.read(tokenFile).trim();
-// users[userId] = token;
-
 casper.options.waitTimeout = 30000;
 
 /**
@@ -109,10 +97,6 @@ function serializeUpa(upa) {
             throw {error: 'Can only serialize UPA strings or Arrays of UPA paths'};
         }
     }
-    // if (!isUpa(upa)) {
-    //     throw {error: '"' + upa + '" is not a valid UPA. It may already have been serialized.'};
-    // }
-    // return upa;
     return upa.replace(/^(\d+)\//, '[$1]/');
 }
 

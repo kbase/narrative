@@ -43,21 +43,13 @@
  *
  * Documentation by example!
  * "kbaseGenomeView": {
- *   "narrativeId": "ws.28238.obj.1",
  *   "narrativeName": "Widget Test Bed",
- *   "creatorName": "William Riehl",
- *   "ownerId": "wjriehl",
- *   "numCells": 1,
  *   "dataSelector": ".icon-genome",
  *   "widgetSelector": ".tabbable",
- *   "mainUser": "wjriehl"
+ *   "testFile": "widgets/kbaseGenomeView",
+ *   "publicData": "28238/2/8"
  * }
  * The main key should match the widget name.
- * narrativeId = the id of the narrative (as in the URL path)
- * narrativeName = the name that shows in the Narrative page header
- * creatorName = the full name of the user that shows in the page header
- * ownerId = the user id for the narrative creator
- * numCells = the number of cells in that saved narrative
  * dataSelector =
  *     The CSS-selector for finding a data object. An icon would be best. This one is relative to
  *     the "card" that holds each data object in the Data panel (that part gets filled out
@@ -68,10 +60,13 @@
  *     be used. The tests will wait until this becomes visible to proceed, so it should either be
  *     right away (like some spinner in the widget), or delayed until the widget is expected to be
  *     rendered (like the '.tabbable' that would appear only after data gets loaded).
- * mainUser =
- *     The user who's token will be used to open that narrative, make the widget, and share it.
- * sharedUser =
- *     The user who this narrative will be shared with to do the sharing validation
+ * narrativeName =
+ *     A name that should be used for the generated narrative
+ * testFile =
+ *     The name of the CasperJS test file to be used to test this widget. Path is relative to
+ *     test/casper.
+ * publicData =
+ *     The UPA of the public data object to be copied and used for testing.
  */
 
 var TestUtil = require('./casperUtil');

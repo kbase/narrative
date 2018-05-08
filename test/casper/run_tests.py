@@ -182,7 +182,7 @@ def run_widget_test(widget, test_cfg):
     return resp
 
 
-def start_and_run_tests():
+def start_and_run_tests(single_widget=None):
     # load main config
     with open(os.path.join(TEST_ROOT, "testConfig.json"), 'r') as c:
         test_cfg = json.loads(c.read())
@@ -235,11 +235,18 @@ def start_and_run_tests():
     # Run all the widget tests from here.
     try:
         print_warning("Jupyter server started, starting test script.")
-        for widget in test_cfg["widgets"]:
-            widget_resp = run_widget_test(widget, test_cfg)
+        if single_widget is not None:
+            print_warning("Only running a single test on " + single_widget)
+            widget_resp = run_widget_test(single_widget, test_cfg)
             if widget_resp != 0:
                 print_warning("Failed testing widget {}".format(widget))
                 resp = resp + 1
+        else:
+            for widget in test_cfg["widgets"]:
+                widget_resp = run_widget_test(widget, test_cfg)
+                if widget_resp != 0:
+                    print_warning("Failed testing widget {}".format(widget))
+                    resp = resp + 1
     except subprocess.CalledProcessError:
         pass
     finally:
@@ -247,6 +254,8 @@ def start_and_run_tests():
         os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
     sys.exit(resp)
 
-
 if __name__ == "__main__":
-    sys.exit(start_and_run_tests())
+    widget = None
+    if sys.argv > 1:
+        widget = sys.argv[1]
+    sys.exit(start_and_run_tests(widget))

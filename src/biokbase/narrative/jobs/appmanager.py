@@ -195,29 +195,12 @@ class AppManager(object):
                    They can be found by using the app_usage function. If any
                    non-optional apps are missing, a ValueError will be raised.
         """
-        # Intro tests:
-        self.spec_manager.check_app(app_id, tag, raise_exception=True)
+        ws_id = system_variable('workspace_id')
+        if ws_id is None:
+            raise ValueError('Unable to retrieve current ' +
+                             'Narrative workspace information!')
 
-        if version is not None and tag != "release":
-            if re.match(r'\d+\.\d+\.\d+', version) is not None:
-                raise ValueError(
-                    "Semantic versions only apply to released app modules. " +
-                    "You can use a Git commit hash instead to specify a " +
-                    "version.")
-
-        # Get the spec & params
-        spec = self.spec_manager.get_spec(app_id, tag)
-
-        # There's some branching to do here.
-        # Cases:
-        # app has behavior.kb_service_input_mapping - valid long-running app.
-        # app has behavior.output_mapping - not kb_service_input_mapping or
-        #     script_module - it's a viewer and should return immediately
-        # app has other things besides kb_service_input_mapping - not valid.
-        if 'behavior' not in spec:
-            raise Exception("This app appears invalid - " +
-                            "it has no defined behavior")
-
+        spec = self._get_validated_app_spec(app_id, tag, version=version)
         if 'kb_service_input_mapping' not in spec['behavior']:
             raise Exception("This app does not appear to be a long-running " +
                             "job! Please use 'run_local_app' to start this " +
@@ -230,11 +213,6 @@ class AppManager(object):
                                for i in range(len(spec_params)))
 
         ws_input_refs = extract_ws_refs(app_id, tag, spec_params, params)
-
-        ws_id = system_variable('workspace_id')
-        if ws_id is None:
-            raise ValueError('Unable to retrive current ' +
-                             'Narrative workspace information!')
 
         input_vals = self._map_inputs(
             spec['behavior']['kb_service_input_mapping'],
@@ -320,7 +298,8 @@ class AppManager(object):
         else:
             return new_job
 
-    def run_local_app(self, app_id, params, tag="release", version=None, cell_id=None, run_id=None):
+    def run_local_app(self, app_id, params, tag="release", version=None, cell_id=None, run_id=None,
+                      widget_state=None):
         """
         Attempts to run a local app. These do not return a Job object, but just
         the result of the app. In most cases, this will be a Javascript display
@@ -353,7 +332,7 @@ class AppManager(object):
         try:
             if params is None:
                 params = dict()
-            return self._run_local_app_internal(app_id, params, tag, version,
+            return self._run_local_app_internal(app_id, params, widget_state, tag, version,
                                                 cell_id, run_id)
         except Exception as e:
             e_type = type(e).__name__
@@ -373,7 +352,7 @@ class AppManager(object):
             print("Error while trying to start your app (run_local_app)!\n" +
                   "-------------------------------------\n" + str(e))
 
-    def _run_local_app_internal(self, app_id, params, tag, version, cell_id, run_id):
+    def _run_local_app_internal(self, app_id, params, widget_state, tag, version, cell_id, run_id):
         self._send_comm_message('run_status', {
             'event': 'validating_app',
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
@@ -381,29 +360,7 @@ class AppManager(object):
             'run_id': run_id
         })
 
-        # Intro tests:
-        self.spec_manager.check_app(app_id, tag, raise_exception=True)
-
-        if version is not None and tag != "release":
-            if re.match(r'\d+\.\d+\.\d+', version) is not None:
-                raise ValueError(
-                    "Semantic versions only apply to released app modules. " +
-                    "You can use a Git commit hash instead to specify a " +
-                    "version.")
-
-        # Get the spec & params
-        spec = self.spec_manager.get_spec(app_id, tag)
-
-        if 'behavior' not in spec:
-            raise ValueError("This app appears invalid - " +
-                             "it has no defined behavior")
-
-        behavior = spec['behavior']
-
-        if 'script_module' in behavior or 'script_name' in behavior:
-            # It's an old NJS script. These don't work anymore.
-            raise ValueError('This app relies on a service that is now ' +
-                             'obsolete. Please contact the administrator.')
+        spec = self._get_validated_app_spec(app_id, tag, version=version)
 
         # Here, we just deal with two behaviors:
         # 1. None of the above - it's a viewer.
@@ -439,131 +396,20 @@ class AppManager(object):
 
         # All a local app does is route the inputs to outputs through the
         # spec's mapping, and then feed that into the specified output widget.
-        return WidgetManager().show_output_widget(output_widget,
-                                                  widget_params,
-                                                  cell_id=cell_id, tag=tag)
+        wm = WidgetManager()
+        if widget_state is not None:
+            return wm.show_advanced_viewer_widget(
+                output_widget, widget_params, widget_state, cell_id=cell_id, tag=tag
+            )
+        else:
+            return wm.show_output_widget(
+                output_widget, widget_params, cell_id=cell_id, tag=tag
+            )
 
     def run_local_app_advanced(self, app_id, params, widget_state, tag="release", version=None,
                                cell_id=None, run_id=None):
-        """
-        Attempts to run a local app. These do not return a Job object, but just
-        the result of the app. In most cases, this will be a Javascript display
-        of the result, but could be anything.
-
-        If the app_spec looks like it makes a service call, then this raises a
-        ValueError. Otherwise, it validates each parameter in **kwargs against
-        the app spec, executes it, and returns the result.
-
-        Parameters:
-        -----------
-        app_id - should be from the app spec, e.g. 'view_expression_profile'
-        params - the dictionary of parameters for the app. Should be key-value
-                 pairs where they keys are strings. If any non-optional
-                 parameters are missing, an informative string will be printed.
-        tag - optional, one of [release|beta|dev] (default=release)
-        version - optional, a semantic version string. Only released modules
-                  have versions, so if the tag is not 'release', and a version
-                  is given, a ValueError will be raised.
-        **kwargs - these are the set of parameters to be used with the app.
-                   They can be found by using the app_usage function. If any
-                   non-optional apps are missing, a ValueError will be raised.
-
-        Example:
-        run_local_app('NarrativeViewers/view_expression_profile',
-                      version='0.0.1',
-                      input_expression_matrix="MyMatrix",
-                      input_gene_ids="1234")
-        """
-        try:
-            if params is None:
-                params = dict()
-            return self._run_local_app_advanced_internal(app_id, params, widget_state, tag, version,
-                                                         cell_id, run_id)
-        except Exception as e:
-            e_type = type(e).__name__
-            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
-            e_trace = traceback.format_exc()
-            e_trace = e_trace.replace('<', '&lt;').replace('>', '&gt;')
-            self._send_comm_message('run_status', {
-                'event': 'error',
-                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-                'cell_id': cell_id,
-                'run_id': run_id,
-                'error_message': e_message,
-                'error_type': e_type,
-                'error_stacktrace': e_trace
-            })
-            # raise
-            print("Error while trying to start your app (run_local_app_advanced)!\n" +
-                  "-------------------------------------\n" + str(e) +
-                  "\n-------------------------------------\n" + e_trace)
-
-    def _run_local_app_advanced_internal(self, app_id, params, widget_state, tag, version,
-                                         cell_id, run_id):
-        self._send_comm_message('run_status', {
-            'event': 'validating_app',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
-
-        # Intro tests:
-        self.spec_manager.check_app(app_id, tag, raise_exception=True)
-
-        if version is not None and tag != "release":
-            raise ValueError("App versions only apply to released modules!")
-
-        # Get the spec & params
-        spec = self.spec_manager.get_spec(app_id, tag)
-
-        if 'behavior' not in spec:
-            raise ValueError("This app appears invalid - " +
-                             "it has no defined behavior")
-
-        behavior = spec['behavior']
-
-        if 'script_module' in behavior or 'script_name' in behavior:
-            # It's an old NJS script. These don't work anymore.
-            raise ValueError('This app relies on a service that is now ' +
-                             'obsolete. Please contact the administrator.')
-
-        # Here, we just deal with two behaviors:
-        # 1. None of the above - it's a viewer.
-        # 2. ***TODO*** python_class / python_function.
-        #    Import and exec the python code.
-
-        # for now, just map the inputs to outputs.
-        # First, validate.
-        # Preflight check the params - all required ones are present, all
-        # values are the right type, all numerical values are in given ranges
-        spec_params = self.spec_manager.app_params(spec)
-        (params, ws_refs) = validate_parameters(app_id, tag, spec_params, params)
-
-        # Log that we're trying to run a job...
-        log_info = {
-            'app_id': app_id,
-            'tag': tag,
-            'username': system_variable('user_id'),
-            'ws': system_variable('workspace')
-        }
-        kblogging.log_event(self._log, "run_local_app", log_info)
-
-        self._send_comm_message('run_status', {
-            'event': 'success',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
-
-        (output_widget, widget_params) = map_outputs_from_state([],
-                                                                params,
-                                                                spec)
-
-        # All a local app does is route the inputs to outputs through the
-        # spec's mapping, and then feed that into the specified output widget.
-        return WidgetManager().show_advanced_viewer_widget(
-            output_widget, widget_params, widget_state, cell_id=cell_id, tag=tag
-        )
+        return self.run_local_app(app_id, params, widget_state=widget_state, tag=tag,
+                                  version=version, cell_id=cell_id, run_id=run_id)
 
     def run_dynamic_service(self, app_id, params, tag="release", version=None,
                             cell_id=None, run_id=None):
@@ -614,28 +460,12 @@ class AppManager(object):
                     }
                 })
             else:
-                print("Error while trying to start your app (run_local_app)!",
-                      "\n-------------------------------------\n",
+                print("Error while trying to start your app (run_local_app)!" +
+                      "\n-------------------------------------\n" +
                       str(e))
 
     def _run_dynamic_service_internal(self, app_id, params, tag, version, cell_id, run_id):
-        # Intro tests:
-        self.spec_manager.check_app(app_id, tag, raise_exception=True)
-
-        if version is not None and tag != "release":
-            raise ValueError("App versions only apply to released app modules!")
-
-        # Get the spec & params
-        spec = self.spec_manager.get_spec(app_id, tag)
-
-        if 'behavior' not in spec:
-            raise ValueError("This app appears invalid - it has no defined behavior")
-
-        behavior = spec['behavior']
-
-        if 'script_module' in behavior or 'script_name' in behavior:
-            # It's an old NJS script. These don't work anymore.
-            raise ValueError('This app relies on a service that is now obsolete. Please contact the administrator.')
+        spec = self._get_validated_app_spec(app_id, tag, version=version)
 
         # Log that we're trying to run a job...
         log_info = {
@@ -686,6 +516,23 @@ class AppManager(object):
             'address': address,
             'message': message
         })
+
+    def _get_validated_app_spec(self, app_id, tag, version=None):
+        if version is not None and tag != "release":
+            if re.match(r'\d+\.\d+\.\d+', version) is not None:
+                raise ValueError(
+                    "Semantic versions only apply to released app modules. " +
+                    "You can use a Git commit hash instead to specify a " +
+                    "version.")
+        self.spec_manager.check_app(app_id, tag, raise_exception=True)
+        # Get the spec & params
+        spec = self.spec_manager.get_spec(app_id, tag)
+        if 'behavior' not in spec:
+            raise ValueError("This app appears invalid - it has no defined behavior")
+        if 'script_module' in spec['behavior'] or 'script_name' in spec['behavior']:
+            # It's an old NJS script. These don't work anymore.
+            raise ValueError('This app relies on a service that is now obsolete. Please contact the administrator.')
+        return spec
 
     def _map_group_inputs(self, value, spec_param, spec_params):
         if isinstance(value, list):

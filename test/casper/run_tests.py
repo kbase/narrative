@@ -21,23 +21,36 @@ import biokbase.auth as auth
 from biokbase.workspace.client import Workspace
 from biokbase.service.Client import Client as ServiceClient
 
+TEST_ROOT = os.path.join("test", "casper")
+BASE_TEST_COMMAND = ["casperjs", "test", "--engine=phantomjs", "--includes=test/casper/jupyterUtil.js"]
+# TODO: configure, inject from mini-kbase, etc.
+BASE_URL = "https://ci.kbase.us/services/"
+URLS = {
+    "workspace": BASE_URL + "ws",
+    "service_wizard": BASE_URL + "service_wizard",
+    "auth": BASE_URL + "auth"
+}
+auth.token_api_url = URLS['auth'] + "/api/V2"
+
+def print_warning(text):
+    print("\033[93m" + text + "\033[0m")
 
 def readlines():
     """Print the notebook server output."""
     while 1:
-        line = nb_server.stdout.readline().decode('utf-8').strip()
+        line = nb_server.stdout.readline().decode("utf-8").strip()
         if line:
             print(line)
 
-def init_test_narrative(widget_cfg):
+def init_test_narrative(widget_cfg, test_cfg):
     """
     Makes a new test narrative for user A, with info and data as dictated in widget_cfg.
     Specifically, it needs the publicData key to be an UPA, which gets copied into the new
     Narrative's workspace.
     """
-    global test_cfg
     global URLS
 
+    print_warning("Creating new test narrative for user " + test_cfg['users']['userA']['id'])
     ws_client = Workspace(url=URLS['workspace'], token=test_cfg['users']['userA']['token'])
     service_client = ServiceClient(url=URLS['service_wizard'], token=test_cfg['users']['userA']['token'], use_url_lookup=True)
     # make a new narrative.
@@ -57,6 +70,7 @@ def init_test_narrative(widget_cfg):
         'new_permission': 'r',
         'users': [test_cfg['users']['userB']['id']]
     })
+    print_warning("Done. New narrative with ref {}/{}".format(new_nar['workspaceInfo']['id'], new_nar['narrativeInfo']['id']))
     return {
         'nar_info': new_nar['narrativeInfo'],
         'ws_info': new_nar['workspaceInfo'],
@@ -64,12 +78,13 @@ def init_test_narrative(widget_cfg):
         'user_info': test_cfg['users']['userA']
     }
 
-def run_insertion_test(widget_config, widget, nar_info):
+def run_insertion_test(test_cfg, widget, nar_info):
     """
     Initializes a widget test set by creating a new narrative and copying a single piece of data
     in to it.
     """
-    global test_cfg
+    print_warning("Testing insertion of new widget into primary test narrative")
+    widget_config = test_cfg["widgets"][widget]
     test_cmd = BASE_TEST_COMMAND + [
         os.path.join('test', 'casper', widget_config['testFile']),
         '--insert-widget',
@@ -86,14 +101,14 @@ def run_insertion_test(widget_config, widget, nar_info):
     ]
     return subprocess.check_call(test_cmd, stderr=subprocess.STDOUT)
 
-def copy_and_unshare_narrative(info):
+def copy_and_unshare_narrative(info, test_cfg):
     """
     Info is a dict with three keys: nar_info, ws_info, and obj_info, the usual workspace info for
     the narrative, workspace, and tested data object, respectively.
     This makes a copy of the given narrative (e.g. workspace), and returns the new, updated info.
     """
-    global test_cfg
     global URLS
+    print_warning("Copying primary test narrative for user " + test_cfg['users']['userB']['id'])
     ws_A = Workspace(url=URLS['workspace'], token=test_cfg['users']['userA']['token'])
     service_B = ServiceClient(url=URLS['service_wizard'], token=test_cfg['users']['userB']['token'], use_url_lookup=True)
     # B copies narrative A (in info)
@@ -107,10 +122,12 @@ def copy_and_unshare_narrative(info):
         'new_permission': 'n',
         'users': [test_cfg['users']['userB']['id']]
     })
+    print_warning("Done. New copied narrative with ref {}/{}".format(copy_result['newWsId'], copy_result['newNarId']))
     return copy_result
 
-def run_validation_test(widget_cfg, widget, nar_info, copy_info):
-    global test_cfg
+def run_validation_test(test_cfg, widget, nar_info, copy_info):
+    print_warning("Running validation test on narrative copied by user " + test_cfg['users']['userB']['id'])
+    widget_cfg = test_cfg["widgets"][widget]
     test_cmd = BASE_TEST_COMMAND + [
         os.path.join('test', 'casper', widget_cfg['testFile']),
         '--validate-only',
@@ -126,15 +143,16 @@ def run_validation_test(widget_cfg, widget, nar_info, copy_info):
     ]
     return subprocess.check_call(test_cmd, stderr=subprocess.STDOUT)
 
-def delete_narratives(wsidA, wsidB):
-    global test_cfg
+def delete_narratives(wsidA, wsidB, test_cfg):
     global URLS
+    print_warning("Deleting test narratives...")
     ws_client = Workspace(url=URLS['workspace'], token=test_cfg['users']['userA']['token'])
     ws_client.delete_workspace({'id': wsidA})
     ws_client = Workspace(url=URLS['workspace'], token=test_cfg['users']['userB']['token'])
     ws_client.delete_workspace({'id': wsidB})
+    print_warning("Done")
 
-def run_widget_test(widget):
+def run_widget_test(widget, test_cfg):
     """
     Master function that does all the test management for a single widget.
     Does the following steps.
@@ -143,101 +161,92 @@ def run_widget_test(widget):
     3. copy_and_unshare_narrative - Does the NarrativeService and Workspace tasks of copying a narrative to user B, then A unshared from B.
     4.
     """
-    global test_cfg
     global URLS
+    print_warning("Starting tests for widget " + widget)
     widget_cfg = test_cfg["widgets"].get(widget)
     if not widget_cfg:
         raise "Widget {} not found in config!".format(widget)
-    infoA = init_test_narrative(widget_cfg)
-    resp = run_insertion_test(widget_cfg, widget, infoA)
+    infoA = init_test_narrative(widget_cfg, test_cfg)
+    resp = run_insertion_test(test_cfg, widget, infoA)
     if resp != 0:
-        print("Failed insertion test from userA on widget {}".format(widget))
+        print_warning("Failed insertion test from userA on widget {}".format(widget))
         return resp
     # copy_result == has newNarId and newWsId keys
-    copy_result = copy_and_unshare_narrative(infoA)
-    resp = run_validation_test(widget_cfg, widget, infoA, copy_result)
+    copy_result = copy_and_unshare_narrative(infoA, test_cfg)
+    resp = run_validation_test(test_cfg, widget, infoA, copy_result)
     if resp != 0:
-        print("Failed validation test from userB on widget {}".format(widget))
+        print_warning("Failed validation test from userB on widget {}".format(widget))
         return resp
-    delete_narratives(infoA['ws_info']['id'], copy_result['newWsId'])
+    delete_narratives(infoA['ws_info']['id'], copy_result['newWsId'], test_cfg)
 
     return resp
 
 
+def start_and_run_tests():
+    # load main config
+    with open(os.path.join(TEST_ROOT, "testConfig.json"), 'r') as c:
+        test_cfg = json.loads(c.read())
+    JUPYTER_PORT = test_cfg['jupyterPort']
 
-KARMA_PORT = 9876
-TEST_ROOT = os.path.join("test", "casper")
-BASE_TEST_COMMAND = ['casperjs', 'test', '--engine=phantomjs', '--includes=test/casper/jupyterUtil.js']
+    # Set up user config
+    for user in test_cfg.get("users"):
+        token_file = test_cfg['users'][user]['tokenFile']
+        with open(token_file, 'r') as t:
+            token = t.read().strip()
+            test_cfg['users'][user]['token'] = token
+            user_info = auth.get_user_info(token)
+            test_cfg['users'][user]['id'] = user_info['user']
+            user_name = auth.get_user_names([user_info['user']], token=token)
+            test_cfg['users'][user]['name'] = user_name[user_info['user']]
 
-# TODO: configure, inject from mini-kbase, etc.
-BASE_URL = "https://ci.kbase.us/services/"
-URLS = {
-    "workspace": BASE_URL + "ws",
-    "service_wizard": BASE_URL + "service_wizard",
-    "auth": BASE_URL + "auth"
-}
-auth.token_api_url = URLS['auth'] + "/api/V2"
+    # start the notebook server!
+    nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"', '--ip=127.0.0.1',
+                  '--port={}'.format(JUPYTER_PORT)]
+    if not hasattr(sys, 'real_prefix'):
+        nb_command[0] = 'narrative-venv/bin/kbase-narrative'
 
-with open(os.path.join(TEST_ROOT, "testConfig.json"), 'r') as c:
-    test_cfg = json.loads(c.read())
+    global nb_server
+    nb_server = subprocess.Popen(nb_command,
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE,
+        preexec_fn = os.setsid
+    )
 
-JUPYTER_PORT = test_cfg['jupyterPort']
+    # wait for notebook server to start up
+    while 1:
+        line = nb_server.stdout.readline().decode('utf-8').strip()
+        if not line:
+            continue
+        print(line)
+        if 'The Jupyter Notebook is running at:' in line:
+            break
+        if 'is already in use' in line:
+            os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
+            # nb_server.terminate()
+            raise ValueError(
+                'The port {} was already taken, kill running notebook servers'.format(JUPYTER_PORT)
+            )
 
-# Set up user config
-for user in test_cfg.get("users"):
-    token_file = test_cfg['users'][user]['tokenFile']
-    with open(token_file, 'r') as t:
-        token = t.read().strip()
-        test_cfg['users'][user]['token'] = token
-        user_info = auth.get_user_info(token)
-        test_cfg['users'][user]['id'] = user_info['user']
-        user_name = auth.get_user_names([user_info['user']], token=token)
-        test_cfg['users'][user]['name'] = user_name[user_info['user']]
+    thread = threading.Thread(target=readlines)
+    thread.setDaemon(True)
+    thread.start()
 
-
-nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"', '--ip=127.0.0.1',
-              '--port={}'.format(JUPYTER_PORT)]
-
-if not hasattr(sys, 'real_prefix'):
-    nb_command[0] = 'narrative-venv/bin/kbase-narrative'
-
-nb_server = subprocess.Popen(nb_command,
-    stderr=subprocess.STDOUT,
-    stdout=subprocess.PIPE,
-    preexec_fn = os.setsid
-)
-
-# wait for notebook server to start up
-while 1:
-    line = nb_server.stdout.readline().decode('utf-8').strip()
-    if not line:
-        continue
-    print(line)
-    if 'The Jupyter Notebook is running at:' in line:
-        break
-    if 'is already in use' in line:
+    resp = 0
+    # Run all the widget tests from here.
+    try:
+        print_warning("Jupyter server started, starting test script.")
+        for widget in test_cfg["widgets"]:
+            widget_resp = run_widget_test(widget, test_cfg)
+            if widget_resp != 0:
+                print_warning("Failed testing widget {}".format(widget))
+                resp = resp + 1
+    except subprocess.CalledProcessError:
+        pass
+    finally:
+        print_warning("Done running tests, killing server.")
         os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
-        # nb_server.terminate()
-        raise ValueError(
-            'The port {} was already taken, kill running notebook servers'.format(JUPYTER_PORT)
-        )
+    sys.exit(resp)
 
-thread = threading.Thread(target=readlines)
-thread.setDaemon(True)
-thread.start()
 
-resp = 0
-try:
-    print("Jupyter server started, starting test script.")
-    for widget in test_cfg["widgets"]:
-        widget_resp = run_widget_test(widget)
-        if widget_resp != 0:
-            print("Failed testing widget {}".format(widget))
-            resp = resp + 1
-    # run_tests(test_cfg["widgets"])
-except subprocess.CalledProcessError:
-    pass
-finally:
-    print("Done running tests, killing server.")
-    os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
-sys.exit(resp)
+if __name__ == "__main__":
+    sys.exit(start_and_run_tests())

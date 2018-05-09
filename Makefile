@@ -58,6 +58,20 @@ test-frontend-e2e:
 	cd $(FRONTEND_TEST_DIR)
 	@echo "done"
 
+# test-widgets is an early-stage test, using a headless browser/scripting framework
+# (CasperJS). Right now, it's intended to run tests that verify that viewer widgets work as
+# intended.
+#
+# It requires an installed Narrative.
+#
+# You can test a single widget by setting the WIDGET variable.
+# e.g.: > make WIDGET=kbaseGenomeView test-widgets
+test-widgets:
+	@echo "running frontend viewer tests"
+	python test/integration/run_tests.py $(WIDGET)
+	@echo "done"
+
+
 build-docs:
 	cd src && export PYTHONPATH=`pwd` && python2.7 setup.py doc
 	-mkdir docs

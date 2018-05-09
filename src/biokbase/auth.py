@@ -12,6 +12,7 @@ tokenenv = 'KB_AUTH_TOKEN'
 token_api_url = URLS.auth + "/api/V2"
 endpt_token = "/token"
 endpt_token_revoke = "/tokens/revoke"
+endpt_users = "/users/?list="
 
 
 def validate_token():
@@ -52,6 +53,21 @@ def get_user_info(token):
     auth_info = json.loads(r.content)
     auth_info['token'] = token
     return auth_info
+
+
+def get_user_names(names, token=None):
+    """
+    Runs /users/ on the list of names.
+    If token is None, uses the token currently stored in the environment.
+    """
+    if token is None:
+        token = kbase_env.auth_token
+    headers = {"Authorization": token}
+    r = requests.get(token_api_url + endpt_users + ",".join(names), headers=headers)
+    if r.status_code != requests.codes.ok:
+        r.raise_for_status()
+    user_names = json.loads(r.content)
+    return user_names
 
 
 def init_session_env(auth_info, ip):

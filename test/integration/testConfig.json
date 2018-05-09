@@ -1,0 +1,22 @@
+{
+    "users": {
+        "userA": {
+            "id": "wjriehl",
+            "tokenFile": "test/wjriehl.tok"
+        },
+        "userB": {
+            "id": "narrativetest",
+            "tokenFile": "test/narrativetest.tok"
+        }
+    },
+    "jupyterPort": 32323,
+    "widgets": {
+        "kbaseGenomeView": {
+            "dataSelector": ".icon-genome",
+            "widgetSelector": ".tabbable",
+            "testFile": "widgets/kbaseGenomeView.js",
+            "publicData": "28238/2/8",
+            "narrativeName": "Test Genome Viewer"
+        }
+    }
+}

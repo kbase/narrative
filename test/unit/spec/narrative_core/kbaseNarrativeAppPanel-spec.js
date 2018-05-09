@@ -14,6 +14,7 @@ define([
 
     describe('Test the kbaseNarrativeAppPanel widget', function() {
         beforeEach(function(done) {
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
             Jupyter.narrative = new Narrative();
             appPanel = new AppPanel($panel);
             appPanel.refreshFromService().then(function() {

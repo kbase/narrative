@@ -9,6 +9,7 @@ import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager
 from biokbase.narrative.app_util import (
     system_variable,
+    strict_system_variable,
     map_outputs_from_state,
     validate_parameters,
     resolve_ref_if_typed,
@@ -117,6 +118,153 @@ class AppManager(object):
         """
         return self.spec_manager.available_apps(tag)
 
+    def run_app_batch(self, app_id, params, tag="release", version=None,
+                      cell_id=None, run_id=None):
+        try:
+            if params is None:
+                params = list()
+            return self._run_batch_app_internal(app_id, params, tag, version, cell_id, run_id)
+        except Exception as e:
+            e_type = type(e).__name__
+            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
+            e_trace = traceback.format_exc()
+            e_trace = e_trace.replace('<', '&lt;').replace('>', '&gt;')
+            e_code = getattr(e, 'code', -1)
+            e_source = getattr(e, 'source', 'appmanager')
+            self._send_comm_message('run_status', {
+                'event': 'error',
+                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+                'cell_id': cell_id,
+                'run_id': run_id,
+                'error_message': e_message,
+                'error_type': e_type,
+                'error_stacktrace': e_trace,
+                'error_code': e_code,
+                'error_source': e_source
+            })
+            print("Error while trying to start your app (run_app_batch)!\n" +
+                  "-----------------------------------------------------\n" +
+                  str(e) + "\n" +
+                  "-----------------------------------------------------\n" +
+                  e_trace)
+            return
+
+    def _run_batch_app_internal(self, app_id, params, tag, version, cell_id, run_id):
+        batch_method = "kb_BatchApp.run_batch"
+        batch_method_ver = "dev"
+        ws_id = strict_system_variable('workspace_id')
+        spec = self._get_validated_app_spec(app_id, tag, True, version=version)
+
+        # Preflight check the params - all required ones are present, all
+        # values are the right type, all numerical values are in given ranges
+        spec_params = self.spec_manager.app_params(spec)
+
+        # A list of lists of UPAs, used for each subjob.
+        batch_ws_upas = list()
+        # The list of actual input values, post-mapping.
+        batch_run_inputs = list()
+
+        for param_set in params:
+            spec_params_map = dict((spec_params[i]['id'], spec_params[i])
+                                   for i in range(len(spec_params)))
+            batch_ws_upas.append(extract_ws_refs(app_id, tag, spec_params, params))
+            batch_run_inputs.append(self._map_inputs(
+                spec['behavior']['kb_service_input_mapping'],
+                params,
+                spec_params_map))
+
+        service_method = spec['behavior']['kb_service_method']
+        service_name = spec['behavior']['kb_service_name']
+        service_ver = spec['behavior'].get('kb_service_version', None)
+
+        # Let the given version override the spec's version.
+        if version is not None:
+            service_ver = version
+
+        # This is what calls the function in the back end - Module.method
+        # This isn't the same as the app spec id.
+        function_name = service_name + '.' + service_method
+        job_meta = {'tag': tag}
+        if cell_id is not None:
+            job_meta['cell_id'] = cell_id
+        if run_id is not None:
+            job_meta['run_id'] = run_id
+
+        # Now put these all together in a way that can be sent to the batch processing app.
+        batch_params = {
+            "app_id": app_id,
+            "method": function_name,
+            "service_ver": service_ver,
+            "wsid": ws_id,
+            "meta": job_meta,
+            "params": [{
+                "params": batch_run_inputs[i],
+                "source_ws_objects": batch_ws_upas[i]
+            } for i in range(len(batch_run_inputs))],
+        }
+
+        # We're now almost ready to run the job. Last, we need an agent token.
+        try:
+            token_name = 'KBApp_{}'.format(app_id)
+            token_name = token_name[:self.__MAX_TOKEN_NAME_LEN]
+            agent_token = auth.get_agent_token(auth.get_auth_token(), token_name=token_name)
+        except Exception as e:
+            raise
+
+        job_meta['token_id'] = agent_token['id']
+        # This is the input set for NJSW.run_job. Now we need the workspace id
+        # and whatever fits in the metadata.
+        job_runner_inputs = {
+            'method': batch_method,
+            'service_ver': batch_method_ver,
+            'params': batch_params,
+            'app_id': app_id,
+            'wsid': ws_id,
+            'meta': job_meta
+        }
+        # if len(ws_input_refs) > 0:
+        #     job_runner_inputs['source_ws_objects'] = ws_input_refs
+
+        # Log that we're trying to run a job...
+        log_info = {
+            'app_id': app_id,
+            'tag': tag,
+            'version': service_ver,
+            'username': system_variable('user_id'),
+            'wsid': ws_id
+        }
+        kblogging.log_event(self._log, "run_batch_app", log_info)
+
+        try:
+            job_id = clients.get("job_service").run_job(job_runner_inputs)
+        except Exception as e:
+            log_info.update({'err': str(e)})
+            kblogging.log_event(self._log, "run_batch_app_error", log_info)
+            raise transform_job_exception(e)
+
+        new_job = Job(job_id,
+                      batch_method,
+                      batch_params,
+                      system_variable('user_id'),
+                      tag=tag,
+                      app_version=batch_method_ver,
+                      cell_id=cell_id,
+                      run_id=run_id,
+                      token_id=agent_token['id'])
+
+        self._send_comm_message('run_status', {
+            'event': 'launched_job',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+            'cell_id': cell_id,
+            'run_id': run_id,
+            'job_id': job_id
+        })
+        JobManager().register_new_job(new_job)
+        if cell_id is not None:
+            return
+        else:
+            return new_job
+
     def run_app(self, app_id, params, tag="release", version=None,
                 cell_id=None, run_id=None):
         """
@@ -186,7 +334,7 @@ class AppManager(object):
         -----------
         app_id - should be from the app spec, e.g. 'build_a_metabolic_model'
                     or 'MegaHit/run_megahit'.
-        params - the dictionary of parameters.
+        params - a dictionary of parameters.
         tag - optional, one of [release|beta|dev] (default=release)
         version - optional, a semantic version string. Only released modules
                   have versions, so if the tag is not 'release', and a version
@@ -195,25 +343,16 @@ class AppManager(object):
                    They can be found by using the app_usage function. If any
                    non-optional apps are missing, a ValueError will be raised.
         """
-        ws_id = system_variable('workspace_id')
-        if ws_id is None:
-            raise ValueError('Unable to retrieve current ' +
-                             'Narrative workspace information!')
-
-        spec = self._get_validated_app_spec(app_id, tag, version=version)
-        if 'kb_service_input_mapping' not in spec['behavior']:
-            raise Exception("This app does not appear to be a long-running " +
-                            "job! Please use 'run_local_app' to start this " +
-                            "instead.")
+        ws_id = strict_system_variable('workspace_id')
+        spec = self._get_validated_app_spec(app_id, tag, True, version=version)
 
         # Preflight check the params - all required ones are present, all
         # values are the right type, all numerical values are in given ranges
         spec_params = self.spec_manager.app_params(spec)
+
         spec_params_map = dict((spec_params[i]['id'], spec_params[i])
                                for i in range(len(spec_params)))
-
         ws_input_refs = extract_ws_refs(app_id, tag, spec_params, params)
-
         input_vals = self._map_inputs(
             spec['behavior']['kb_service_input_mapping'],
             params,
@@ -360,7 +499,7 @@ class AppManager(object):
             'run_id': run_id
         })
 
-        spec = self._get_validated_app_spec(app_id, tag, version=version)
+        spec = self._get_validated_app_spec(app_id, tag, False, version=version)
 
         # Here, we just deal with two behaviors:
         # 1. None of the above - it's a viewer.
@@ -465,7 +604,7 @@ class AppManager(object):
                       str(e))
 
     def _run_dynamic_service_internal(self, app_id, params, tag, version, cell_id, run_id):
-        spec = self._get_validated_app_spec(app_id, tag, version=version)
+        spec = self._get_validated_app_spec(app_id, tag, False, version=version)
 
         # Log that we're trying to run a job...
         log_info = {
@@ -517,7 +656,7 @@ class AppManager(object):
             'message': message
         })
 
-    def _get_validated_app_spec(self, app_id, tag, version=None):
+    def _get_validated_app_spec(self, app_id, tag, is_long, version=None):
         if version is not None and tag != "release":
             if re.match(r'\d+\.\d+\.\d+', version) is not None:
                 raise ValueError(
@@ -531,7 +670,12 @@ class AppManager(object):
             raise ValueError("This app appears invalid - it has no defined behavior")
         if 'script_module' in spec['behavior'] or 'script_name' in spec['behavior']:
             # It's an old NJS script. These don't work anymore.
-            raise ValueError('This app relies on a service that is now obsolete. Please contact the administrator.')
+            raise ValueError('This app relies on a service that is now obsolete. Please contact ' +
+                             'the administrator.')
+        if is_long and 'kb_service_input_mapping' not in spec['behavior']:
+            raise ValueError("This app does not appear to be a long-running " +
+                             "job! Please use 'run_local_app' to start this " +
+                             "instead.")
         return spec
 
     def _map_group_inputs(self, value, spec_param, spec_params):

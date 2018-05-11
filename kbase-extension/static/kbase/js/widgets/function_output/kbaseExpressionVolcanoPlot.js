@@ -437,7 +437,7 @@ define([
         self.renderSVG();
     },
 
-    renderSVG() {
+    renderSVG : function() {
 
         var self = this;
         var text = self.text;

@@ -20,6 +20,7 @@ branches:
     - develop
     - master
     - travis-firefox
+    - dockerize
 
 before_install:
   - pip install virtualenv coveralls

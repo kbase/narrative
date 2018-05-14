@@ -46,22 +46,7 @@ define (
           this._super(options);
 
           var $self = this;
-          if (options._obj_info) {
-            $self.obj_info = options._obj_info;
-            $self.obj_ref = $self.obj_info.ws_id + '/' +
-                            $self.obj_info.id + '/' +
-                            $self.obj_info.version;
-            $self.link_ref = $self.obj_info.ws_id + '/' +
-                             $self.obj_info.name + '/' +
-                             $self.obj_info.version;
-            //$self.update_overview_info_from_nar_info($self.obj_info);
-          } else {
-            $self.obj_ref = $self.options.wsId + '/' +
-                            $self.options.objId;
-            $self.link_ref = $self.obj_ref;
-            $self.set_overview.name = $self.options.objId;
-            //$self.set_overview.link_ref = $self.link_ref;
-          }
+          $self.obj_ref = this.options.upas.obj_ref;
 
           var $volcanoDiv = $.jqElem('div');
           var $volcano = new KBaseExpressionVolcanoPlot($volcanoDiv, {

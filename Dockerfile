@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM kbase/narrbase:4.9
+FROM kbase/narrbase:5.0dockerize
 
 EXPOSE 8888
 
@@ -37,7 +37,7 @@ ADD ./kbase-logdb.conf /tmp/kbase-logdb.conf
 WORKDIR /kb/dev_container/narrative
 
 # Generate a version file that we can scrape later
-RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-update-config -f src/config.json -o /kb/deployment/ui-common/narrative_version
+RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version
 
 # Install Javascript dependencies
 RUN npm install && bower install --allow-root --config.interactive=false
@@ -58,7 +58,7 @@ RUN grunt minify
 
 RUN /bin/bash scripts/install_narrative_docker.sh
 
-RUN ./fixupURL.sh && chmod 666 /kb/dev_container/narrative/src/config.json
+# RUN ./fixupURL.sh && chmod 666 /kb/dev_container/narrative/src/config.json
 RUN pip install jupyter-console
 
 WORKDIR /tmp
@@ -67,7 +67,7 @@ RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_pr
 # Setup the container to automatically run a script that uses the narrative_mongo profile
 # and configures the notebook server to use /narrative/{CMD} as the prefix for a reverse
 # proxy environment
-USER nobody
+USER root
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-url="https://github.com/kbase/narrative.git" \
@@ -78,9 +78,17 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
 
 # ENTRYPOINT ["/usr/bin/tini", "--"]
 # The entrypoint can be set to "headless-narrative" to run headlessly
-ENTRYPOINT ["kbase-narrative"]
-
-ONBUILD USER root
-ONBUILD ADD url.cfg /kb/dev_container/narrative/url.cfg
-ONBUILD RUN cd /kb/dev_container/narrative && ./fixupURL.sh
-ONBUILD USER nobody
+ENTRYPOINT ["/kb/deployment/bin/dockerize"]
+CMD [ "--template", \
+      "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/src/config.json", \
+      "--template", \
+      "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/kbase-extension/static/kbase/config/config.json", \
+      "-euid", \
+      "65534", \
+      "-egid", \
+      "65534", \
+      "kbase-narrative"]
+#ONBUILD USER root
+#ONBUILD ADD url.cfg /kb/dev_container/narrative/url.cfg
+#ONBUILD RUN cd /kb/dev_container/narrative && ./fixupURL.sh
+#ONBUILD USER nobody

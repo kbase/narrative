@@ -1,5 +1,5 @@
 bokeh
-decorator 
+decorator
 jsonschema
 markupsafe
 pickleshare

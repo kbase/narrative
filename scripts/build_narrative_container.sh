@@ -7,11 +7,13 @@ DS=$( date +%Y%m%d%H%M )
 NAR_NAME="kbase/narrative"
 HEADLESS_NAME="kbase/narrative_headless"
 NAR_BASE="kbase/narrbase"
-NAR_BASE_VER="4.9"
-NAR_PREREQ="kbase/narrprereq"
-NAR_PREREQ_VER="1.3"
+NAR_BASE_VER="5.0dockerize"
+NARRATIVE_VER="dockerize"
+#NAR_PREREQ="kbase/narrprereq"
+#NAR_PREREQ_VER="1.3"
 WEBROOT_DIR="/kb/deployment/services/kbase-ui"
 DOCKERFILE_HEADLESS="Dockerfile_headless"
+
 
 function usage () {
     printf "usage: $0 [options]\n"
@@ -54,13 +56,13 @@ mkdir -p $WEBROOT_DIR
 cp kbase-extension/static/kbase/config/data_source_config.json $WEBROOT_DIR/data_source_config.json
 
 # Make sure the prereq image is there. If not, build it.
-echo "Checking for prereq image v$NAR_PREREQ_VER"
-docker images |grep "^$NAR_PREREQ "|grep " $NAR_PREREQ_VER " > /dev/null
+#echo "Checking for prereq image v$NAR_PREREQ_VER"
+#docker images |grep "^$NAR_PREREQ "|grep " $NAR_PREREQ_VER " > /dev/null
 
-if [ $? -eq 1 ] ; then
-    echo "Prereq image not found! Building..."
-    docker build --no-cache -q -t $NAR_PREREQ:$NAR_PREREQ_VER narrprereq-image/
-fi
+#if [ $? -eq 1 ] ; then
+#    echo "Prereq image not found! Building..."
+#    docker build --no-cache -q -t $NAR_PREREQ:$NAR_PREREQ_VER narrprereq-image/
+#fi
 
 # Make sure the base image is there. If not, build it.
 echo "Checking for base image v$NAR_BASE_VER"
@@ -76,8 +78,8 @@ echo "Building latest narrative version"
 # Build the Narrative container and tag it (as a backup)
 # Force the entrypoint to "headless-narrative" for the headless
 # narrative runner
-docker build -q -t $NAR_NAME .
-docker tag $NAR_NAME:latest $NAR_NAME:$DS
+docker build -q -t $NAR_NAME:$NARRATIVE_VER .
+docker tag $NAR_NAME:$NARRATIVE_VER $NAR_NAME:$DS
 
 # Remove any provisioned, but not used, containers
 curl -k -X DELETE https://localhost/proxy_map/provisioned || echo "Ignore Error"

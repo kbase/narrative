@@ -6,3 +6,4 @@ httplib2
 requests-oauthlib
 pika
 matplotlib
+dateutils

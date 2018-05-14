@@ -10,9 +10,10 @@ ADD ./conda-requirements /root/conda
 RUN conda update -n base conda && \
     conda install --file /root/conda/base && \
     conda install -c etetoolkit ete3 && \
-        conda install -c anaconda-platform --file /root/conda/base.anaconda-platform && \
+    conda install -c anaconda-platform --file /root/conda/base.anaconda-platform && \
     conda install -c javascript --file /root/conda/base.javascript && \
     conda install -c wakari --file /root/conda/base.wakari && \
+    conda install --file /root/conda/biokbase-requirements.txt && \
     conda install -c r r-base && \
     conda install -c conda-forge --file /root/conda/r.conda-forge && \
     conda install -c r --file /root/conda/r.r 

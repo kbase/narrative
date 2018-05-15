@@ -45,9 +45,8 @@ before_script:
 script:
   - make build-travis-narrative
   - make test
-  - make
 
 after_script:
   - coveralls-lcov -v -n js-coverage/lcov/lcov.info > js-coverage.json
   - coveralls --merge js-coverage.json
-  - 
+  - bash -x scripts/build_narrative_container.sh

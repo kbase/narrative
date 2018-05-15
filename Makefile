@@ -26,7 +26,7 @@ build-travis-narrative:
 	npm install && \
 	bash $(INSTALLER) --no-venv --travis && \
 	grunt minify && \
-	sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/ci/" && \
+	sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/" && \
 	jupyter notebook --version
 
 test: test-backend test-frontend-unit test-frontend-e2e

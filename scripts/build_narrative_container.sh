@@ -70,7 +70,7 @@ docker images |grep "^$NAR_BASE "|grep " $NAR_BASE_VER " > /dev/null
 
 if [ $? -eq 1 ] ; then
   echo "Base image not found! Building..."
-  docker build -q -t $NAR_BASE:$NAR_BASE_VER narrbase-image/
+  docker build -t $NAR_BASE:$NAR_BASE_VER narrbase-image/
 fi
 
 echo "Building latest narrative version"
@@ -78,7 +78,7 @@ echo "Building latest narrative version"
 # Build the Narrative container and tag it (as a backup)
 # Force the entrypoint to "headless-narrative" for the headless
 # narrative runner
-docker build -q -t $NAR_NAME:$NARRATIVE_VER .
+docker build -t $NAR_NAME:$NARRATIVE_VER .
 docker tag $NAR_NAME:$NARRATIVE_VER $NAR_NAME:$DS
 
 # Remove any provisioned, but not used, containers

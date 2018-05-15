@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VER_OUTFILE="/kb/deployment/ui-common/narrative_version"
+VER_OUTFILE="deployment/ui-common/narrative_version"
 DS=$( date +%Y%m%d%H%M )
 
 # This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
@@ -11,7 +11,7 @@ NAR_BASE_VER="5.0dockerize"
 NARRATIVE_VER="dockerize"
 #NAR_PREREQ="kbase/narrprereq"
 #NAR_PREREQ_VER="1.3"
-WEBROOT_DIR="/kb/deployment/services/kbase-ui"
+WEBROOT_DIR="deployment/services/kbase-ui"
 DOCKERFILE_HEADLESS="Dockerfile_headless"
 
 

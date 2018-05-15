@@ -34,6 +34,7 @@ RUN conda install -c conda-forge  ndg-httpsclient pyasn1 pyopenssl cryptography 
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative
 ADD ./kbase-logdb.conf /tmp/kbase-logdb.conf
+ADD ./deployment/ /kb/deployment/
 WORKDIR /kb/dev_container/narrative
 
 # Generate a version file that we can scrape later

@@ -271,7 +271,7 @@ class AppManager(object):
             return new_job
 
     def run_app(self, app_id, params, tag="release", version=None,
-                cell_id=None, run_id=None):
+                cell_id=None, run_id=None, dry_run=False, **kwargs):
         """
         Attempts to run the app, returns a Job with the running app info.
         If this is given a cell_id, then returns None. If not, it returns the
@@ -303,7 +303,8 @@ class AppManager(object):
         try:
             if params is None:
                 params = dict()
-            return self._run_app_internal(app_id, params, tag, version, cell_id, run_id)
+            return self._run_app_internal(app_id, params, tag, version,
+                                          cell_id, run_id, dry_run, **kwargs)
         except Exception as e:
             e_type = type(e).__name__
             e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
@@ -329,7 +330,8 @@ class AppManager(object):
                   e_trace)
             return
 
-    def _run_app_internal(self, app_id, params, tag, version, cell_id, run_id):
+    def _run_app_internal(self, app_id, params, tag, version,
+                          cell_id, run_id, dry_run, **kwargs):
         """
         Attemps to run the app, returns a Job with the running app info.
         Should *hopefully* also inject that app into the Narrative's metadata.
@@ -380,15 +382,6 @@ class AppManager(object):
         if run_id is not None:
             job_meta['run_id'] = run_id
 
-        # We're now almost ready to run the job. Last, we need an agent token.
-        try:
-            token_name = 'KBApp_{}'.format(app_id)
-            token_name = token_name[:self.__MAX_TOKEN_NAME_LEN]
-            agent_token = auth.get_agent_token(auth.get_auth_token(), token_name=token_name)
-        except Exception as e:
-            raise
-
-        job_meta['token_id'] = agent_token['id']
         # This is the input set for NJSW.run_job. Now we need the workspace id
         # and whatever fits in the metadata.
         job_runner_inputs = {
@@ -401,6 +394,17 @@ class AppManager(object):
         }
         if len(ws_input_refs) > 0:
             job_runner_inputs['source_ws_objects'] = ws_input_refs
+        if dry_run:
+            return job_runner_inputs
+
+        # We're now almost ready to run the job. Last, we need an agent token.
+        try:
+            token_name = 'KBApp_{}'.format(app_id)
+            token_name = token_name[:self.__MAX_TOKEN_NAME_LEN]
+            agent_token = auth.get_agent_token(auth.get_auth_token(), token_name=token_name)
+        except Exception as e:
+            raise
+        job_runner_inputs['meta']['token_id'] = agent_token['id']
 
         # Log that we're trying to run a job...
         log_info = {

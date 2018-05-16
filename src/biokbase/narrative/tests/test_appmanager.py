@@ -3,6 +3,7 @@ Tests for the app manager.
 """
 from biokbase.narrative.jobs.appmanager import AppManager
 from biokbase.narrative.jobs.specmanager import SpecManager
+import biokbase.narrative.app_util as app_util
 from biokbase.narrative.jobs.job import Job
 from IPython.display import HTML
 import unittest
@@ -191,10 +192,7 @@ class AppManagerTestCase(unittest.TestCase):
         os.environ['KB_WORKSPACE_ID'] = self.public_ws
         sm = SpecManager()
         spec = sm.get_spec(app_id, tag=tag)
-        (params, ws_inputs) = self.am._validate_parameters(app_id,
-                                                           tag,
-                                                           sm.app_params(spec),
-                                                           inputs)
+        (params, ws_inputs) = app_util.validate_parameters(app_id, tag, sm.app_params(spec), inputs)
         self.assertDictEqual(params, inputs)
         self.assertIn('11635/9/1', ws_inputs)
         self.assertIn('11635/10/1', ws_inputs)
@@ -260,7 +258,7 @@ class AppManagerTestCase(unittest.TestCase):
         }]
         self.assertDictEqual(expected[0], mapped_inputs[0])
         ref_path = ws_name + '/MyReadsSet; ' + ws_name + "/rhodobacterium.art.q10.PE.reads"
-        ret = self.am._transform_input("resolved-ref", ref_path, None)
+        ret = app_util.transform_param_value("resolved-ref", ref_path, None)
         self.assertEqual(ret, "wjriehl:1475006266615/MyReadsSet;11635/10/1")
         if prev_ws_id is None:
             del(os.environ['KB_WORKSPACE_ID'])
@@ -388,13 +386,13 @@ class AppManagerTestCase(unittest.TestCase):
         ]
         for test in test_data:
             spec = test.get('spec', None)
-            ret = self.am._transform_input(test['type'], test['value'], spec)
+            ret = app_util.transform_param_value(test['type'], test['value'], spec)
             self.assertEqual(ret, test['expected'])
         del(os.environ['KB_WORKSPACE_ID'])
 
     def test_transform_input_bad(self):
         with self.assertRaises(ValueError):
-            self.am._transform_input('foo', 'bar', None)
+            app_util.transform_param_value('foo', 'bar', None)
 
 if __name__ == "__main__":
     unittest.main()

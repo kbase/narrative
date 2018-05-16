@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 # 
 # This script is intended to be run in the deploy stage of a travis build
 # It checks to make sure that this is a not a PR, and that we have the secure
@@ -24,7 +24,7 @@ if ( [ "$TRAVIS_SECURE_ENV_VARS" == "true" ] && [ "$TRAVIS_PULL_REQUEST" == "fal
         docker login -u $DOCKER_USER -p $DOCKER_PASS && \
         docker tag $IMAGE_NAME:$COMMIT $IMAGE_NAME:$TAG && \
         echo "Pushing $IMAGE_NAME:$TAG" && \
-        # docker push $IMAGE_NAME:$TAG || \
+        docker push $IMAGE_NAME:$TAG || \
         ( echo "Failed to login and push tagged image" && exit 1 )
     else
         echo "Not pushing image for branch $TAG"

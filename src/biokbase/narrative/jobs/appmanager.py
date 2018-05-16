@@ -119,11 +119,12 @@ class AppManager(object):
         return self.spec_manager.available_apps(tag)
 
     def run_app_batch(self, app_id, params, tag="release", version=None,
-                      cell_id=None, run_id=None):
+                      cell_id=None, run_id=None, dry_run=False):
         try:
             if params is None:
                 params = list()
-            return self._run_batch_app_internal(app_id, params, tag, version, cell_id, run_id)
+            return self._run_batch_app_internal(app_id, params, tag, version,
+                                                cell_id, run_id, dry_run)
         except Exception as e:
             e_type = type(e).__name__
             e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
@@ -149,7 +150,7 @@ class AppManager(object):
                   e_trace)
             return
 
-    def _run_batch_app_internal(self, app_id, params, tag, version, cell_id, run_id):
+    def _run_batch_app_internal(self, app_id, params, tag, version, cell_id, run_id, dry_run):
         batch_method = "kb_BatchApp.run_batch"
         batch_method_ver = "dev"
         ws_id = strict_system_variable('workspace_id')
@@ -167,10 +168,10 @@ class AppManager(object):
         for param_set in params:
             spec_params_map = dict((spec_params[i]['id'], spec_params[i])
                                    for i in range(len(spec_params)))
-            batch_ws_upas.append(extract_ws_refs(app_id, tag, spec_params, params))
+            batch_ws_upas.append(extract_ws_refs(app_id, tag, spec_params, param_set))
             batch_run_inputs.append(self._map_inputs(
                 spec['behavior']['kb_service_input_mapping'],
-                params,
+                param_set,
                 spec_params_map))
 
         service_method = spec['behavior']['kb_service_method']
@@ -224,6 +225,10 @@ class AppManager(object):
         }
         # if len(ws_input_refs) > 0:
         #     job_runner_inputs['source_ws_objects'] = ws_input_refs
+
+        # if we're doing a dry run, just return the inputs that we made.
+        if dry_run:
+            return job_runner_inputs
 
         # Log that we're trying to run a job...
         log_info = {

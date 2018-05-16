@@ -271,7 +271,7 @@ class AppManager(object):
             return new_job
 
     def run_app(self, app_id, params, tag="release", version=None,
-                cell_id=None, run_id=None, dry_run=False, **kwargs):
+                cell_id=None, run_id=None, dry_run=False):
         """
         Attempts to run the app, returns a Job with the running app info.
         If this is given a cell_id, then returns None. If not, it returns the
@@ -304,7 +304,7 @@ class AppManager(object):
             if params is None:
                 params = dict()
             return self._run_app_internal(app_id, params, tag, version,
-                                          cell_id, run_id, dry_run, **kwargs)
+                                          cell_id, run_id, dry_run)
         except Exception as e:
             e_type = type(e).__name__
             e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
@@ -331,7 +331,7 @@ class AppManager(object):
             return
 
     def _run_app_internal(self, app_id, params, tag, version,
-                          cell_id, run_id, dry_run, **kwargs):
+                          cell_id, run_id, dry_run):
         """
         Attemps to run the app, returns a Job with the running app info.
         Should *hopefully* also inject that app into the Narrative's metadata.

@@ -86,7 +86,10 @@ define (
                 return total;
             }
             else {
-                return val || 0;
+                return (val || 0).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 3
+                });
             }
         },
 

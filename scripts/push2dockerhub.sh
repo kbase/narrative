@@ -14,7 +14,7 @@
 # Assign the tag to be used for the docker image, and pull the git commit from either
 # the TRAVIS_COMMIT env var if available, or else get the short commit via git cmd
 TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
-COMMIT=${TRAVIS_COMMIT:-`git rev-parse --short HEAD`}
+COMMIT=`git rev-parse --short HEAD`
 
 if ( [ "$TRAVIS_SECURE_ENV_VARS" == "true" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] ); then
     # $TAG was set from TRAVIS_BRANCH, which is a little wonky on pull requests,

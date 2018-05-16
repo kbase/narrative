@@ -9,6 +9,8 @@ HEADLESS_NAME="kbase/narrative_headless"
 NAR_BASE="kbase/narrbase"
 NAR_BASE_VER="5.0dockerize"
 NARRATIVE_VER="dockerize"
+COMMIT=`git rev-parse --short HEAD`
+
 #NAR_PREREQ="kbase/narrprereq"
 #NAR_PREREQ_VER="1.3"
 WEBROOT_DIR="deployment/services/kbase-ui"
@@ -79,7 +81,7 @@ echo "Building latest narrative version"
 # Force the entrypoint to "headless-narrative" for the headless
 # narrative runner
 docker build -t $NAR_NAME:$NARRATIVE_VER .
-docker tag $NAR_NAME:$NARRATIVE_VER $NAR_NAME:$DS
+docker tag $NAR_NAME:$NARRATIVE_VER $NAR_NAME:$COMMIT
 
 # Remove any provisioned, but not used, containers
 curl -k -X DELETE https://localhost/proxy_map/provisioned || echo "Ignore Error"

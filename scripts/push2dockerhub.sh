@@ -15,7 +15,6 @@
 # the TRAVIS_COMMIT env var if available, or else get the short commit via git cmd
 TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
 COMMIT=${TRAVIS_COMMIT:-`git rev-parse --short HEAD`}
-DS=$( date +%Y%m%d%H%M )
 
 if ( [ "$TRAVIS_SECURE_ENV_VARS" == "true" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] ); then
     # $TAG was set from TRAVIS_BRANCH, which is a little wonky on pull requests,
@@ -23,7 +22,7 @@ if ( [ "$TRAVIS_SECURE_ENV_VARS" == "true" ] && [ "$TRAVIS_PULL_REQUEST" == "fal
     if  ( [ "$TAG" == "latest" ] || [ "$TAG" == "develop" ] || [ "$TAG" == "dockerize" ] ) ; then
         echo "Logging into Dockerhub as $DOCKER_USER"
         docker login -u $DOCKER_USER -p $DOCKER_PASS && \
-        docker tag $IMAGE_NAME:$DS $IMAGE_NAME:$TAG && \
+        docker tag $IMAGE_NAME:$COMMIT $IMAGE_NAME:$TAG && \
         echo "Pushing $IMAGE_NAME:$TAG" && \
         # docker push $IMAGE_NAME:$TAG || \
         ( echo "Failed to login and push tagged image" && exit 1 )

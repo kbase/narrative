@@ -21,8 +21,12 @@ import biokbase.auth as auth
 from biokbase.workspace.client import Workspace
 from biokbase.service.Client import Client as ServiceClient
 
+# print(os.path.dirname(os.path.abspath(__file__)))
+# exit(0)
+
+# os.environ['NARRATIVE_DIR'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 TEST_ROOT = os.path.join("test", "integration")
-BASE_TEST_COMMAND = ["casperjs", "test", "--engine=phantomjs", "--includes=test/casper/jupyterUtil.js"]
+BASE_TEST_COMMAND = ["casperjs", "test", "--engine=phantomjs", "--includes=test/integration/jupyterUtil.js"]
 # TODO: configure, inject from mini-kbase, etc.
 BASE_URL = "https://ci.kbase.us/services/"
 URLS = {
@@ -86,7 +90,7 @@ def run_insertion_test(test_cfg, widget, nar_info):
     print_warning("Testing insertion of new widget into primary test narrative")
     widget_config = test_cfg["widgets"][widget]
     test_cmd = BASE_TEST_COMMAND + [
-        os.path.join('test', 'casper', widget_config['testFile']),
+        os.path.join('test', 'integration', widget_config['testFile']),
         '--insert-widget',
         '--save',
         '--narrative-id={}'.format(nar_info['nar_info']['id']),
@@ -129,7 +133,7 @@ def run_validation_test(test_cfg, widget, nar_info, copy_info):
     print_warning("Running validation test on narrative copied by user " + test_cfg['users']['userB']['id'])
     widget_cfg = test_cfg["widgets"][widget]
     test_cmd = BASE_TEST_COMMAND + [
-        os.path.join('test', 'casper', widget_cfg['testFile']),
+        os.path.join('test', 'integration', widget_cfg['testFile']),
         '--validate-only',
         '--narrative-id={}'.format(copy_info['newNarId']),
         '--workspace-id={}'.format(copy_info['newWsId']),
@@ -256,6 +260,6 @@ def start_and_run_tests(single_widget=None):
 
 if __name__ == "__main__":
     widget = None
-    if sys.argv > 1:
+    if len(sys.argv) > 1:
         widget = sys.argv[1]
     sys.exit(start_and_run_tests(widget))

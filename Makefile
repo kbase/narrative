@@ -67,6 +67,7 @@ test-frontend-e2e:
 # You can test a single widget by setting the WIDGET variable.
 # e.g.: > make WIDGET=kbaseGenomeView test-widgets
 test-widgets:
+	export NARRATIVE_DIR=$(shell pwd)
 	@echo "running frontend viewer tests"
 	python test/integration/run_tests.py $(WIDGET)
 	@echo "done"

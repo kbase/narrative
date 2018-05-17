@@ -152,6 +152,7 @@ class AppManager(object):
 
     def _run_batch_app_internal(self, app_id, params, tag, version, cell_id, run_id, dry_run):
         batch_method = "kb_BatchApp.run_batch"
+        batch_app_id = "kb_BatchApp/run_batch"
         batch_method_ver = "dev"
         ws_id = strict_system_variable('workspace_id')
         spec = self._get_validated_app_spec(app_id, tag, True, version=version)
@@ -218,8 +219,8 @@ class AppManager(object):
         job_runner_inputs = {
             'method': batch_method,
             'service_ver': batch_method_ver,
-            'params': batch_params,
-            'app_id': app_id,
+            'params': [batch_params],
+            'app_id': batch_app_id,
             'wsid': ws_id,
             'meta': job_meta
         }

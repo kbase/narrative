@@ -6,13 +6,15 @@ define([
     'kb_common/html',
     'common/ui',
     './jobLogViewer',
-    './jobStateViewer'
+    './jobStateViewer',
+    './jobStateList',
 ], function (
     Promise,
     html,
     UI,
     LogViewer,
-    JobStateViewer
+    JobStateViewer,
+    JobStateList
 ) {
     'use strict';
 
@@ -92,6 +94,9 @@ define([
                 widgets.jobState = JobStateViewer.make({
                     model: model
                 });
+                widgets.jobList = JobStateList.make({
+                    model: model
+                });
                 return Promise.all([
                     widgets.log.start({
                         node: ui.getElement('log.body'),
@@ -99,6 +104,10 @@ define([
                     }),
                     widgets.jobState.start({
                         node: ui.getElement('jobState.body'),
+                        jobId: model.getItem('exec.jobState.job_id')
+                    }),
+                    widgets.jobList.start({
+                        node: ui.getElement('subjobs.body'),
                         jobId: model.getItem('exec.jobState.job_id')
                     })
                 ]);

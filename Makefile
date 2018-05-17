@@ -5,6 +5,7 @@ REPO_NAME = narrative
 INSTALLER = ./scripts/install_narrative.sh
 INSTALL_VENV = narrative-venv
 BACKEND_TEST_SCRIPT = scripts/narrative_backend_tests.sh
+WIDGET_TEST_SCRIPT = scripts/narrative_widget_tests.sh
 FRONTEND_TEST_DIR = test
 
 # Docker build script
@@ -67,9 +68,8 @@ test-frontend-e2e:
 # You can test a single widget by setting the WIDGET variable.
 # e.g.: > make WIDGET=kbaseGenomeView test-widgets
 test-widgets:
-	export NARRATIVE_DIR=$(shell pwd)
 	@echo "running frontend viewer tests"
-	python test/integration/run_tests.py $(WIDGET)
+	sh $(WIDGET_TEST_SCRIPT) $(WIDGET)
 	@echo "done"
 
 

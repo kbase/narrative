@@ -19,27 +19,7 @@ define([
     var t = html.tag,
         div = t('div');
 
-    function loadLogViewer(args) {
-        return new Promise(function (resolve, reject) {
-            var logViewer = LogViewer.make();
-            logViewer.start()
-                .then(function () {
-                    logViewer.bus.emit('run', {
-                        node: args.node,
-                        jobId: args.jobId
-                    });
-                    resolve(logViewer);
-                })
-                .catch(function (err) {
-                    reject(err);
-                });
-        });
-    }
-
     function factory(config) {
-        // The node donated by the caller.
-        var hostNode;
-
         // The top level node used by this widget.
         var container;
             
@@ -49,31 +29,60 @@ define([
         // A cheap widget collection.
         var widgets = {};
 
-        // The data model from the app cell.
         var model = config.model;
 
         function layout() {
-            return div({}, [
+            var list = div({ class: 'col-md-4', dataElement: 'kb-job-list-wrapper'}, [
                 ui.buildPanel({
-                    title: 'Job Status',
-                    name: 'jobState',
-                    classes: [
-                        'kb-panel-light'
-                    ]
-                }),
-                ui.buildPanel({
-                    title: 'Job Log',
-                    name: 'log',
+                    title: 'Sub Jobs',
+                    name: 'subjobs',
                     classes: [
                         'kb-panel-light'
                     ]
                 })
             ]);
+
+            var jobStatus = div({ class: 'col-md-8',  dataElement: 'kb-job-status-wrapper' },[
+                ui.buildCollapsiblePanel({
+                    title: 'Job Status',
+                    name: 'job-status-section-toggle',
+                    hidden: false,
+                    type: 'default',
+                    classes: ['kb-panel-container'],
+                    body: div({ }, [
+                        ui.buildPanel({
+                            // title: 'Job Status',
+                            name: 'jobState',
+                            classes: [
+                                'kb-panel-light'
+                            ]
+                        })
+                    ])
+                }),
+                ui.buildCollapsiblePanel({
+                    title: 'Job Log',
+                    name: 'job-log-section-toggle',
+                    hidden: false,
+                    type: 'default',
+                    collapsed: true,
+                    classes: ['kb-panel-container'],
+                    body: div({ }, [
+                        ui.buildPanel({
+                            // title: 'Job Log',
+                            name: 'log',
+                            classes: [
+                                'kb-panel-light'
+                            ]
+                        })
+                    ])
+                })
+            ]);
+            return div({}, [list, jobStatus]);
+
         }
 
         function start(arg) {
             return Promise.try(function () {
-                hostNode = arg.node;
                 container = arg.node.appendChild(document.createElement('div'));
                 ui = UI.make({
                     node: container

@@ -48,6 +48,7 @@ class AppManagerTestCase(unittest.TestCase):
         self.public_ws = config.get('app_tests', 'public_ws_name')
         self.ws_id = int(config.get('app_tests', 'public_ws_id'))
         self.app_input_ref = config.get('app_tests', 'test_input_ref')
+        self.batch_app_id = config.get('app_tests', 'batch_app_id')
 
     def test_reload(self):
         self.am.reload()
@@ -132,6 +133,26 @@ class AppManagerTestCase(unittest.TestCase):
             tag=self.test_tag,
             cell_id="12345"
         ))
+
+    @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
+    def test_run_batch_app_good_inputs(self, m, auth):
+        m.return_value._send_comm_message.return_value = None
+        os.environ['KB_WORKSPACE_ID'] = self.public_ws
+        new_job = self.am.run_app_batch(
+            self.test_app_id,
+            [
+                self.test_app_params,
+                self.test_app_params
+            ],
+            tag=self.test_tag
+        )
+        self.assertIsInstance(new_job, Job)
+        self.assertEquals(new_job.job_id, self.test_job_id)
+        self.assertEquals(new_job.app_id, self.batch_app_id)
+        self.assertEquals(new_job.tag, self.test_tag)
+        self.assertIsNone(new_job.cell_id)
 
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_bad_id(self, m):

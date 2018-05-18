@@ -73,6 +73,7 @@ define ([
             var prevDay = new Date();
             prevDay.setDate(prevDay.getDate()-5);
             prevDay.setMonth(prevDay.getMonth()-2);
+            prevDay.setDate(prevDay.getDate()-3);  // so this can be run on March 1 without fail...
             var d = TF.getShortTimeStampStr(prevDay, false);
             expect(d).toBe('2 mons');
         });

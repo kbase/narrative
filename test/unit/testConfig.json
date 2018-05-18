@@ -8,5 +8,6 @@
         "file": "/test/data/blah.xyz",
         "type": "Module.type-1.0",
         "name": "obj_name"
-    }]
+    }],
+    "jupyterPort": 32323
 }

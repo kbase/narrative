@@ -100,6 +100,9 @@ define ([
                 self.genome_info = options._obj_info;
                 self.genome_ref = self.genome_info['ws_id'] + '/' + self.genome_info['id'] + '/' + self.genome_info['version'];
             }
+            if (options.upas && options.upas.id) {
+                self.genome_ref = options.upas.id;
+            }
 
             var token = null;
             if(self.auth()) {
@@ -747,6 +750,7 @@ define ([
             var setToLoad = function($panel) {
                 //clearInfo();
                 $panel.empty();
+                console.log('showing spinner...');
                 var $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                 $panel.append($loadingDiv);
                 window.setTimeout(function() {

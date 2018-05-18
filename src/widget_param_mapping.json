@@ -166,7 +166,7 @@
         "workspaceID": "",
         "matrixID": ""
     },
-    "kbaseNarrativeDefaultOutput": {},
+    "kbaseDefaultNarrativeOutput": {},
     "kbaseExpressionEstimateK": {
         "estimateKResultID": "obj_name",
         "workspaceID": "ws_name",

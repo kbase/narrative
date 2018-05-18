@@ -312,6 +312,8 @@ define([
                     traceback: err.stack
                 }
             };
+            console.error(err);
+            console.error(err.stack);
             this.options.widget = this.OUTPUT_ERROR_WIDGET;
             return this.render();
         },

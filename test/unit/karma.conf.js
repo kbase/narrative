@@ -77,6 +77,7 @@ module.exports = function (config) {
         //         }
         //     }
         // },
+        browserDisconnectTimeout: 10000,
         singleRun: true,
         proxies: {
             '/narrative/static/': '/base/kbase-extension/static/',

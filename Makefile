@@ -5,6 +5,7 @@ REPO_NAME = narrative
 INSTALLER = ./scripts/install_narrative.sh
 INSTALL_VENV = narrative-venv
 BACKEND_TEST_SCRIPT = scripts/narrative_backend_tests.sh
+WIDGET_TEST_SCRIPT = scripts/narrative_widget_tests.sh
 FRONTEND_TEST_DIR = test
 
 # Docker build script
@@ -57,6 +58,20 @@ test-frontend-e2e:
 	@echo "running frontend end-to-end tests"
 	cd $(FRONTEND_TEST_DIR)
 	@echo "done"
+
+# test-widgets is an early-stage test, using a headless browser/scripting framework
+# (CasperJS). Right now, it's intended to run tests that verify that viewer widgets work as
+# intended.
+#
+# It requires an installed Narrative.
+#
+# You can test a single widget by setting the WIDGET variable.
+# e.g.: > make WIDGET=kbaseGenomeView test-widgets
+test-widgets:
+	@echo "running frontend viewer tests"
+	sh $(WIDGET_TEST_SCRIPT) $(WIDGET)
+	@echo "done"
+
 
 build-docs:
 	cd src && export PYTHONPATH=`pwd` && python2.7 setup.py doc

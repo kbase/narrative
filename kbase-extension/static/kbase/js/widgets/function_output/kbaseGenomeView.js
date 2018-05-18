@@ -1,17 +1,17 @@
 /**
  * Prototype Genome View widget.
  * Early prototype made during some refactoring on a Friday afternoon.
- * 
+ *
  * Bill Riehl
- * wjriehl@lbl.gov 
+ * wjriehl@lbl.gov
  * October 25, 2013
  */
 define(['kbwidget', 'jquery', 'bootstrap'],
 function(KBWidget, $, bootstrap) {
-
+    'use strict';
 	return KBWidget({
-        name: "GenomeView", 
-        
+        name: "GenomeView",
+
 		version: "1.0.0",
         options: {
             data: null

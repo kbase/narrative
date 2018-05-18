@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white: true*/
 /**
  * "Import" tab on data side panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>
@@ -17,15 +15,16 @@ define ([
     'base/js/namespace',
     'kb_common/jsonRpc/dynamicServiceClient',
     'kb_common/jsonRpc/genericClient',
+    'kb_common/utils',
     'util/icon',
     'util/string',
     'util/bootstrapDialog',
     'common/kbaseSearchEngine',
     'common/runtime',
-    'text!kbase/templates/data_slideout/object_row.html',
     'text!kbase/templates/data_slideout/action_button_partial.html',
-    'text!kbase/templates/data_slideout/jgi_data_policy.html',
-    'text!kbase/templates/data_slideout/data_policy_panel.html'
+    'text!kbase/templates/data_slideout/data_policy_panel.html',
+    'widgets/narrative_core/publicDataSources/workspaceDataSource',
+    'widgets/narrative_core/publicDataSources/searchDataSource'
 ], function (
     KBWidget,
     bootstrap,
@@ -38,30 +37,31 @@ define ([
     Jupyter,
     DynamicServiceClient,
     ServiceClient,
+    Utils,
     Icon,
     StringUtil,
     BootstrapDialog,
     KBaseSearchEngine,
     Runtime,
-    StagingRowHtml,
     ActionButtonHtml,
-    JGIDataPolicyHtml,
-    DataPolicyPanelHtml
+    DataPolicyPanelHtml,
+    WorkspaceDataSource,
+    SearchDataSource
 ) {
     'use strict';
 
     function formatValue(value) {
         if (typeof value === 'undefined' || 
             (typeof value === 'string' && value.length === 0)) {
-            return '-';
+            return '<span style="color: #AAA; font-weight: normal; font-style: italic">n/a</span>';
         } else {
             return String(value);
         }
     }
     function formatItem(item) {
         return [
-            item.label, 
-            ':&nbsp;',
+            '<span style="color: #AAA; font-weight: normal; font-style: italic">' + item.label + ':</span>', 
+            '&nbsp;',
             formatValue(item.value)
         ].join('');
     }
@@ -80,23 +80,63 @@ define ([
             if (item.value instanceof Array) {
                 value = item.value.map(function (item) {
                     return formatItem(item);
-                }).join('; ');
+                }).join('&nbsp;&nbsp;&nbsp;');
             } else {
                 value = formatValue(item.value);
             }
 
             $row = $('<tr>')
+                .css('margin-bottom', '2px')
                 .append($('<td>')
+                    .css('width', '7em')
+                    .css('font-weight', 'normal')
                     .css('font-style', 'italic')
                     .css('padding-right', '4px')
                     .css('color', '#AAA')
+                    .css('vertical-align', 'top')
+                    .css('padding-bottom', '2px')
                     .text(item.label))
-                .append($('<td>').html(value));
+                .append($('<td>')
+                    // .css('font-weight', 'bold')
+                    .css('vertical-align', 'top')
+                    .css('padding-bottom', '2px')
+                    .html(value));
 
             $table.append($row);
         });
         return $table;
     }
+
+    // function metadataToRaggedTable(metadata) {
+    //     var $table = $('<div>')
+    //         .css('padding-bottom', '2px')
+    //         .css('font-size', '100%');
+
+    //     metadata.forEach(function (item) {
+    //         var $row;
+    //         var value;
+    //         if (item.value instanceof Array) {
+    //             value = item.value.map(function (item) {
+    //                 return formatItem(item);
+    //             }).join('&nbsp;&nbsp;&nbsp;');
+    //         } else {
+    //             value = formatValue(item.value);
+    //         }
+
+    //         $row = $('<div>')
+    //             .append($('<span>')
+    //                 .css('font-style', 'italic')
+    //                 .css('padding-right', '4px')
+    //                 .css('color', '#AAA')
+    //                 .text(item.label))
+    //             .append($('<span>')
+    //                 .css('font-weight', 'bold')
+    //                 .html(value));
+
+    //         $table.append($row);
+    //     });
+    //     return $table;
+    // }
 
     function renderTotals(found, total) {
         var $totals = $('<span>').addClass('kb-data-list-type');
@@ -105,14 +145,15 @@ define ([
                 .append($('<span>None available</span>'));
         } else if (found === 0) {
             $totals
-                .append($('<span>').css('font-weight', 'bold').text('None found out of '))
-                .append($('<span>').text(numeral(total).format('0,0')))
+                .append($('<span>').css('font-weight', 'bold').text('None'))
+                .append($('<span>').text(' found out of '))
+                .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
                 .append($('<span>').text(' available'));
         } else if (total > found) {
             $totals
                 .append($('<span>').css('font-weight', 'bold').text(numeral(found).format('0,0')))
                 .append($('<span>').text(' found out of '))
-                .append($('<span>').text(numeral(total).format('0,0')))
+                .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
                 .append($('<span>').text(' available'));
                 
         } else {
@@ -162,7 +203,7 @@ define ([
         }
         return null;
     }
-
+ 
     return KBWidget({
         name: 'kbaseNarrativeSidePublicTab',
         parent : kbaseAuthenticatedWidget,
@@ -180,7 +221,6 @@ define ([
         loadingImage: Config.get('loading_gif'),
         wsUrl: Config.url('workspace'),
         workspace: null,
-        jgiGateway: null,
         narrativeService: null,
         mainListPanelHeight: '535px',
         maxNameLength: 60,
@@ -191,7 +231,7 @@ define ([
         currentQuery: null,
         currentPage: null,
         totalAvailable: null,
-        totalResults: null,
+        currentFilteredlResults: null,
         itemsPerPage: 20,
         maxAutoCopyCount: 5,
         narrativeObjects: {},
@@ -207,25 +247,18 @@ define ([
             if (!this.categoryDescr) {
                 this.categoryDescr = {};
             }
-            if (Config.get('features').jgiPublicStaging) {
-                this.categoryDescr['jgi_gateway'] = {
-                    name: 'JGI Public Data (TEST)',
-                    type: null,
-                    ws: null,
-                    search: false,
-                    source: 'jgi_gateway'
-                };
-            }
-            if (this.categoryDescr)
+            if (this.categoryDescr) {
                 this.categories = Object.keys(this.categoryDescr);
+            }
 
-            Handlebars.registerPartial('actionPartial', ActionButtonHtml);
-            this.stagingRowTmpl = Handlebars.compile(StagingRowHtml);
-
-            $(document).on('dataUpdated.Narrative', function () {
-                this.loadObjects();
-            }.bind(this));
-
+            // Cause the search to be re-run whenever the data state for this 
+            // narrative changes.
+            // TODO: disabled. since this is public data, the state of this narrative
+            // should not affect any of the browser/searches!
+            // $(document).on('dataUpdated.Narrative', function () {
+            //     this.loadObjects();
+            // }.bind(this));
+            
             this.loadObjects();
 
             return this;
@@ -252,11 +285,6 @@ define ([
                 return;
             }
 
-            this.jgiGatewayClient = new DynamicServiceClient({
-                module: 'jgi_gateway',
-                url: Config.url('service_wizard'), 
-                token: this.token
-            });
             this.narrativeService = new DynamicServiceClient({
                 module: 'NarrativeService',
                 url: Config.url('service_wizard'), 
@@ -284,7 +312,8 @@ define ([
                     .append($('<span class="fa fa-search">'))
                     .css('padding', '4px 8px')
                     .click(function () {
-                        this.searchAndRender($typeInput.val(), $filterInput.val());
+                        $filterInput.change();
+                        // this.searchAndRender($typeInput.val(), $filterInput.val());
                     }.bind(this)))
                 .append($('<div class="input-group-addon btn btn-default">')
                     .append($('<span class="fa fa-times">'))
@@ -300,15 +329,6 @@ define ([
             */
             $typeInput.change(function() {
                 this.searchAndRender($typeInput.val(), $filterInput.val());
-                /** HACK TO SHOW DATA POLICY **/
-                if (!this.agreeDataPolicy && $typeInput.val() === 'jgi_gateway') {
-                    this.dataPolicyPanel.show();
-                    this.showDataPolicy();
-                }
-                else {
-                    this.dataPolicyPanel.hide();
-                }
-                /** END DATA POLICY HACK **/
             }.bind(this));
 
             /*
@@ -317,11 +337,11 @@ define ([
             var inputFieldLastValue = null;
             $filterInput.change(function() {
                 inputFieldLastValue = $filterInput.val();
-                inputFieldState();
+                renderInputFieldState();
                 this.searchAndRender($typeInput.val(), $filterInput.val());
             }.bind(this));
 
-            function inputFieldState() {
+            function renderInputFieldState() {
                 if ($filterInput.val() === '') {
                     $filterInput.css('background-color', 'transparent');
                     return;
@@ -334,9 +354,8 @@ define ([
             }
 
             $filterInput.keyup(function () {
-                inputFieldState();
+                renderInputFieldState();
             });
-
 
             /*
                 search and render for every keystroke!
@@ -365,7 +384,8 @@ define ([
             return this;
         },
 
-        searchAndRender: function(category, query) {
+        searching: false,
+        searchAndRender: function(category, query) { 
             if (query) {
                 query = query.trim();
                 if (query.length == 0) {
@@ -398,169 +418,59 @@ define ([
             this.currentQuery = query;
             this.currentPage = 0;
             this.totalAvailable = null;
-            this.totalResults = null;
+            this.currentFilteredlResults = null;
 
             // Get and render the first batch of data.
             // Note that the loading ui is only displayed on the initial load.
             this.totalPanel.append($('<span>').addClass('kb-data-list-type').append('<img src="'+this.loadingImage+'"/> searching...'));
-            this.renderMore(true);
+            return this.renderMore(true);
         },
 
-        renderFromWorkspace: function(cat) {
-            if (this.currentPage > 0) {
-                return;
+        renderTotalsPanel: function (arg) {
+            var $totals = renderTotals(arg.totalFiltered, arg.totalAvailable);                    
+            this.totalPanel.html($totals);
+        },
+
+        renderFromWorkspace: function (dataSourceConfig, initial) {
+            var _this = this;
+            var workspaceDS;
+            if (this.currentDataSource && this.currentDataSource.dataSourceConfig === dataSourceConfig) {
+                workspaceDS = this.currentDataSource;
+            } else {
+                workspaceDS = Object.create(WorkspaceDataSource).init({
+                    dataSourceConfig: dataSourceConfig,
+                    serviceWizardURL: Config.url('service_wizard'),
+                    token: this.token,
+                    pageSize: _this.itemsPerPage
+                });
             }
-            this.currentPage++;
-            var type = cat.type;
-            var ws = cat.ws;
-            var that = this;
-
-            var thisQuery = this.currentQuery;
-            this.narrativeService.callFunc('list_objects_with_sets', [{
-                ws_name: ws,
-                types: [type]
-            }])
-                .spread(function(data) {
-                    data = data.data;
-                    if (thisQuery !== this.currentQuery)
-                        return;
-                    var query = this.currentQuery.replace(/[*]/g,' ').trim().toLowerCase();
-                    for (var i=0; i<data.length; i++) {
-                        var info = data[i].object_info;
-                        // object_info:
-                        // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                        // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                        // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                        // [9] : int size // [10] : usermeta meta
-                        var name = info[1];
-                        var id = info[0];
-                        var metadata = [];
-                        var objectMeta = info[10] || {};
-                        if (this.currentCategory === 'plant_gnms') {
-                            if (objectMeta.Name) {
-                                metadata.push({
-                                    label: 'ID',
-                                    value: objectMeta.Name
-                                });
-                            }
-                            metadata.push({
-                                label: 'Source',
-                                value: objectMeta.Source
-                            }, {
-                                label: 'Genes',
-                                value: objectMeta['Number features']
-                            });
-                        }
-                        if(query) {
-                            if (name.toLowerCase().indexOf(query) == -1)
-                                continue;
-                        }
-                        this.objectList.push({
-                            $div: null,
-                            info: info,
-                            id: id,
-                            name: name,
-                            objectName: name,
-                            metadata: metadata,
-                            ws: cat.ws,
-                            type: cat.type,
-                            attached: false
-                        });
-                        this.attachRow(this.objectList.length - 1);
-                    }
-                    // 
-                    var totalAvailable = data.length;
-                    that.totalResults = this.objectList.length;
-
-                    var $totals = renderTotals(that.totalResults, totalAvailable);                    
-                    this.totalPanel.html($totals);
-                    
-                }.bind(this))
-                .catch(function(error) {
-                    console.error(error);
-                    var $total = $('<span class="kb-data-list-type">');
-                    if (error.error && error.error.message.match(/^No workspace with name/)) {
-                        $total.html('Error: Data source unavailable');
-                    } else {
-                        $total.html('Error fetching object info');
-                    }
-                    this.totalPanel.html($total);
-                    // this.totalPanel.empty();
-                    // this.totalPanel.append($('<span>').addClass('kb-data-list-type')
-                    //     .append('Total results: 0'));
-                }.bind(this));
-        },
-        
-        objectGuidToRef: function (guid) {
-            var m = guid.match(/^WS:(\d+)\/(\d+)\/(\d+)$/);
-            var objectRef = m.slice(1, 4).join('/');
-            return {
-                workspaceId: parseInt(m[1]),
-                objectId: parseInt(m[2]),
-                version: parseInt(m[3]),
-                ref: objectRef,
-                dataviewId: objectRef
+            var query = {
+                input: _this.currentQuery,
+                page: _this.currentPage,
             };
+            return workspaceDS.search(query)
+                .then(function (result) {
+                    result.forEach(function (item) {
+                        _this.addRow(dataSourceConfig, item);
+                    });
+
+                    _this.totalAvailable = workspaceDS.availableDataCount;
+                    _this.currentFilteredResults = workspaceDS.filteredDataCount;
+
+                    _this.renderTotalsPanel({
+                        totalFiltered:  _this.currentFilteredResults, 
+                        totalAvailable: _this.totalAvailable
+                    });
+                });
         },
 
         formatInt: function (value, format, defaultValue) {
             if (typeof value === 'undefined' || value === null) {
                 return defaultValue;
             }
-            // return String(value);
             return numeral(value).format(format);
         },
 
-        parseGenomeIndexV1: function (item) {
-            return {
-                genome_id: item.data.id,
-                genome_source: item.data.source,
-                genome_source_id: item.data.source_id,
-                scientific_name: item.data.scientific_name,
-                domain: item.data.domain,
-                num_contigs: item.data.num_contigs,
-                num_cds: item.data.cdss,
-                num_features: item.data.features,
-                ws_ref: this.objectGuidToRef(item.guid).ref,
-                workspace_name: null,
-                object_name: item.object_name
-            };
-        },
-
-        parseGenomeIndexV2: function (item) {
-            return {
-                genome_id: item.data.id,
-                genome_source: item.data.source,
-                genome_source_id: item.data.source_id,
-                scientific_name: item.data.scientific_name,
-                domain: item.data.domain,
-                num_contigs: item.data.num_contigs,
-                num_cds: item.data.cdss,
-                num_features: item.data.feature_counts,
-                ws_ref: this.objectGuidToRef(item.guid).ref,
-                workspace_name: null,
-                object_name: item.object_name
-            };
-        },
-
-        parseGenomeSearchResultItem: function (item) {
-            // get the type and version
-            var indexType = item.type.toLowerCase();
-            var indexTypeVersion = item.type_ver;
-
-            if (indexType !== 'genome') {
-                throw new Error('Item is not a genome: ' + indexType);
-            }
-
-            switch (indexTypeVersion) {
-            case 1:
-                return this.parseGenomeIndexV1(item);
-            case 2:
-                return this.parseGenomeIndexV2(item);
-            default:
-                throw new Error('Unsupported genome index version: ' + indexTypeVersion);
-            }
-        },
 
         // nb: the data source is derived from the dropdown the user used to select
         // the public data source.
@@ -578,347 +488,112 @@ define ([
             If it is not an initial query, it is due to paging/scrolling, and we need
             to abandon a new query if one is already pending. Otherwise we may end up 
         */
-        renderFromSearch: function(dataSource, initial) {
-            var that = this;
-
-            if (typeof this.renderFromSearchState === 'undefined') {
-                this.renderFromSearchState = {
-                    lastSearchAt: null,
-                    inProgress: false,
-                    lastQuery: null,
-                    currentQueryState: null
-                };
-            }
-
-            if (this.renderFromSearchState.currentQueryState) {
-                if (initial) {
-                    this.renderFromSearchState.currentQueryState.promise.cancel();
-                    this.renderFromSearchState.currentQueryState.canceled = true;
-                } else {
-                    return;
-                }
-            }
-
-
-            this.currentPage++;
-
-            // Prepare the query and page.
-            var query;
-            if (this.currentQuery === '*') {
-                query = null;
-            } else {
-                // strip off "*" suffix if it was added by the code which 
-                // calls this method.
-                query = this.currentQuery.split(/[ ]+/)
-                    .map(function (term) {
-                        if (term.charAt(term.length-1) === '*') {
-                            return term.slice(0, -1);
-                        } else {
-                            return term;
-                        } 
-                    }).join(' ');
-            }
-
-            var page;
-            if (this.currentPage) {
-                page = this.currentPage - 1;
-            } else {
-                page = 0;
-            }
-
-            /*
-            It is expected that a search data source specifies the 
-            source id - the source id as specified in the object and propogated to the search index
-            source label - the display name for the source
-            type - kbase type for the refdata index; indexes are homogeneous
-
-            note that the source id id is used to query search; if it spans indexes then the indexes 
-            need to intersect on the fields used in the query/render method.
-
-            */
-            var now = new Date().getTime();
-
-            if (this.renderFromSearchState.lastQuery !== query) {
-                this.renderFromSearchState.lastQuery = query;
-            }
-            this.renderFromSearchState.lastSearchAt = now;
-
-            var queryState = {
-                query: query,
-                page: page,
-                started: now,
-                promise: null,
-                canceled: false
+        renderFromSearch: function (dataSourceConfig) {
+            var _this = this;
+           
+            var query = {
+                input: _this.currentQuery,
+                page: _this.currentPage,
             };
 
-            this.renderFromSearchState.currentQueryState = queryState;
-
-            var searchCall = (function (dataSource, query, page, itemsPerPage, token) {
-                
-                var searchApi = KBaseSearchEngine.make({
-                    url: Config.url('KBaseSearchEngine'),
-                    token: token
+            var searchDS;
+            if (this.currentDataSource && this.currentDataSource.dataSourceConfig === dataSourceConfig) {
+                searchDS = this.currentDataSource;
+            } else {
+                searchDS = Object.create(SearchDataSource).init({
+                    dataSourceConfig: dataSourceConfig,
+                    searchUrl: Config.url('KBaseSearchEngine'),
+                    token: this.token,
+                    pageSize: _this.itemsPerPage
                 });
-
-                // add debouncing here. it may not be appropriate for the general purpose 
-                // search input.
-                var methods = {
-                    refseq: function () {
-                        return searchApi.referenceGenomeSearch({
-                            source: dataSource.source,
-                            pageSize: itemsPerPage,
-                            query: query,
-                            page: page
-                        });
-                    }
-                };
-                return methods[dataSource.source];
-            }(dataSource, query, page, this.itemsPerPage, this.token));
-
-            queryState.promise = searchCall()
-                .then(function(result) {
-                    if (queryState.canceled) {
-                        console.warn('query canceled');
-                        return;
-                    }
-
-                    that.totalAvailable = result.totalAvailable;
-                    that.totalResults = result.result.total;
-                    result.result.objects.forEach(function (item) {
-                        // This call givs us a normalized genome result object.
-                        // In porting this over, we are preserving the field names.
-                        var genomeRecord = that.parseGenomeSearchResultItem(item);
-
-                        var id = genomeRecord.genome_id;
-                        var genome_source_id = '';
-                        if (genomeRecord.genome_source_id) {
-                            genome_source_id = String(genomeRecord.genome_source_id);
-                        }
-                        var name = genomeRecord.scientific_name;
-                        var domain = genomeRecord.domain;
-                        var ws_ref = null;
-                        if (genomeRecord.ws_ref) {
-                            ws_ref = genomeRecord.ws_ref;
-                        }
-                        var ws_name = dataSource.ws;
-                        if(genomeRecord.workspace_name) {
-                            ws_name = genomeRecord.workspace_name;
-                        }
-
-                        // This creates the generic object results list item.
-                        that.objectList.push({
-                            $div: null,
-                            info: null,
-                            id: id,
-                            name: name,
-                            objectName: genomeRecord.object_name, 
-                            // This is a problem, because ordering of the fields is in no way
-                            // guaranteed.
-                            metadata: [
-                                {
-                                    label: 'Domain',
-                                    value: domain
-                                },
-                                // original one
-                                // {
-                                //     label: 'Source',
-                                //     value: id + ' (' + source + ') ' + genome_source_id
-                                // },
-                                // but doesn't this make more sense?
-                                {   
-                                    label: 'KBase ID',
-                                    value: id
-                                },
-                                {
-                                    label: dataSource.sourceLabel + ' ID',
-                                    value: genome_source_id
-                                },
-                                {
-                                    label: 'Stats',
-                                    value:  [
-                                        {
-                                            label: 'Contigs',
-                                            value: that.formatInt(genomeRecord.num_contigs, '0,0', 'n/a')
-                                        },
-                                        {
-                                            label: 'Features',
-                                            value: that.formatInt(genomeRecord.num_features, '0,0', 'n/a')
-                                        }
-                                    ]
-                                }
-                                
-                            ],
-                            ws: ws_name,
-                            type: dataSource.type,
-                            attached: false,
-                            ws_ref: ws_ref
-                        });
-                        that.attachRow(that.objectList.length - 1);
-                    });
-
-                    var $totals = renderTotals(that.totalResults, that.totalAvailable);
-                    that.totalPanel.html($totals);
-
-                    that.renderFromSearchState.currentQueryState = null;
-                })
-                .catch(function (error) {
-                    console.error(error);
-                    if (that.objectList.length == 0) {
-                        that.totalPanel.empty();
-                        that.totalPanel.append($('<span>    ').addClass('kb-data-list-type')
-                            .append('Total results: 0'));
-                    }
-                });
-        },
-
-        searchInService: function(query, page, service) {
-            if (service === 'jgi_gateway') {
-                return this.jgiGateway.callFunc('search_jgi',[{
-                    search_string: query,
-                    limit: this.itemsPerPage,
-                    page: page-1
-                }])
-                    .spread(function(results) {
-                        return {
-                            query: query,
-                            results: results
-                        };
-                    });
             }
-        },
 
-        stageFile: function(source, id) {
-            return function() {
-                if (source === 'jgi') {
-                    return this.jgiGateway.callFunc('stage_objects',[{ 
-                        ids: [id] 
-                    }]);
-                }
-            }.bind(this);
-        },
-
-        renderFromService: function(cat) {
-            this.currentServiceQuery = this.currentQuery;
-            this.currentPage++;
-            this.searchInService(this.currentServiceQuery, this.currentPage, cat.source)
-                .then(function(results) {
-                    if (results.query !== this.currentQuery) {
-                        return;
-                    }
-                    var items = results.results[0];
-
-                    for (var i=0; i<items.hits.length; i++) {
-                        var hit = items.hits[i];
-                        this.objectList.push({
-                            $div: null,
-                            info: null,
-                            id: hit._id,
-                            name: hit._source.file_name,
-                            ws: null,
-                            type: 'JGI.File',
-                            attached: false,
-                            copyAction: this.stageFile('jgi', hit._id),
-                            hitMetadata: hit._source.metadata,
-                            metadata: [
-                                {
-                                    label: 'File Id',
-                                    value: hit._id
-                                },
-                                {
-                                    label: 'File Type',
-                                    value: hit._source.file_type[0]
-                                },
-                                {
-                                    label: 'Project Id',
-                                    value: hit._source.metadata.sequencing_project_id
-                                }
-                            ]
+            return searchDS.search(query)
+                .then(function (result) {
+                    // a null result means that the search was not run for some
+                    // reason -- most likely it was canceled due to overlapping
+                    // queries.
+                    if (result) {
+                        result.forEach(function (item) {
+                            _this.addRow(dataSourceConfig, item);
                         });
-                        this.attachRow(this.objectList.length - 1, true);
+
+                        _this.totalAvailable = searchDS.totalAvailable;
+                        _this.currentFilteredResults = searchDS.totalResults;
+
+                        _this.renderTotalsPanel({
+                            totalFiltered: searchDS.totalResults, 
+                            totalAvailable: searchDS.totalAvailable
+                        });
                     }
-                    this.totalPanel.empty();
-                    this.totalPanel.append($('<span>').addClass('kb-data-list-type')
-                        .append('Results: ' + this.objectList.length + ' of ' + items.total));
-                }.bind(this))
-                .catch(function(error) {
-                    console.error(error);
-                    this.showError('Unable to retrieve public data.');
-                    this.totalPanel.empty();
-                }.bind(this));
-        },
 
-        showDataPolicy: function() {
-            var showPolicyModal = function() {
-                var policyDialog = new BootstrapDialog({
-                    title: 'JGI Data Usage and Download Policy (October 1, 2013)',
-                    body: JGIDataPolicyHtml,
-                    closeButton: true,
-                    enterToTrigger: true,
-                    buttons: [$('<button class="kb-primary-btn">OK</button>').click(function() {
-                        policyDialog.hide();
-                    })]
+                    _this.currentDataSource = searchDS;
                 });
-                policyDialog.getElement().one('hidden.bs.modal', function() {
-                    policyDialog.destroy();
-                });
-                policyDialog.show();
-            };
-
-            var $dataPolicyAlert = $(Handlebars.compile(DataPolicyPanelHtml)());
-            $dataPolicyAlert.find('#view_policy_btn')
-                .click(function() {
-                    showPolicyModal();
-                });
-            $dataPolicyAlert.find('#agree_policy_btn')
-                .click(function() {
-                    this.agreeDataPolicy = true;
-                    $dataPolicyAlert.slideUp();
-                }.bind(this));
-
-            this.dataPolicyPanel.empty().append($dataPolicyAlert);
         },
 
         renderMore: function(initial) {
             this.hideError();
             var cat = this.categoryDescr[this.currentCategory];
-            if (!cat.search && cat.ws) {
-                this.renderFromWorkspace(cat);
-            } else if (cat.search) {
-                this.renderFromSearch(cat, initial);
-            } else {
-                this.renderFromService(cat);
+            // suss out whether we really need more...
+            if (this.currentPage !== null && this.currentFilteredResults !== null && !initial) {
+                var maxPage = Math.ceil(this.currentFilteredResults / this.itemsPerPage);
+                if (this.currentPage >= maxPage) {                    
+                    return;
+                }
+            }
+
+            this.currentPage += 1;
+
+            switch (cat.sourceType) {
+            case 'search':
+                return this.renderFromSearch(cat, initial);
+            case 'workspace':
+                return this.renderFromWorkspace(cat);
+            default: 
+                throw new Error('Invalid data source type: ' + cat.sourceType);
             }
         },
 
-        attachRow: function(index, toStaging) {
-            var obj = this.objectList[index];
-            if (obj.attached) {
-                return;
-            }
-            if (obj.$div) {
-                this.resultPanel.append(obj.$div);
-            } else {
-                obj.$div = toStaging ? this.renderStagingObjectRowDiv(obj) : this.renderObjectRowDiv(obj);
-                this.resultPanel.append(obj.$div);
-            }
-            obj.attached = true;
-            this.n_objs_rendered++;
+        // attachRow: function(dataSource, index, toStaging) {
+        //     var obj = this.objectList[index];
+        //     if (obj.attached) {
+        //         return;
+        //     }
+        //     if (obj.$div) {
+        //         this.resultPanel.append(obj.$div);
+        //     } else {
+        //         obj.$div = toStaging ? this.renderStagingObjectRowDiv(obj) : this.renderObjectRow(dataSource, obj);
+        //         this.resultPanel.append(obj.$div);
+        //     }
+        //     obj.attached = true;
+        //     this.n_objs_rendered++;
+        // },
+
+        addRow: function(dataSource, row) {
+            var $row = this.renderObjectRow(dataSource, row);
+            this.resultPanel.append($row);
         },
 
         escapeSearchQuery: function(str) {
             return str.replace(/[%]/g, '').replace(/[:"\\]/g, '\\$&');
         },
 
-        renderObjectRowDiv: function(object) {
+        /*
+        renderObjectRow
+        */
+        renderObjectRow: function(dataSource, object) {
             var self = this;
-            var type_tokens = object.type.split('.');
-            var type = type_tokens[1].split('-')[0];
+            var type = object.type.split('.')[1].split('-')[0];
             var copyText = ' Add';
 
             var $addDiv =
                 $('<div>').append(
-                    $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
-                        .append($('<span>').addClass('fa fa-chevron-circle-left')).append(copyText)
+                    $('<button>')
+                        .addClass('kb-primary-btn')
+                        .css({'white-space':'nowrap', padding: '10px 15px'})
+                        .append($('<span>')
+                            .addClass('fa fa-chevron-circle-left'))
+                        .append(copyText)
                         .on('click',function() { // probably should move action outside of render func, but oh well
                             $(this).attr('disabled', 'disabled');
                             $(this).html('<img src="'+self.loadingImage+'">');
@@ -935,7 +610,7 @@ define ([
             var shortName = object.name;
             var isShortened=false;
             if (shortName.length>this.maxNameLength) {
-                shortName = shortName.substring(0,this.maxNameLength-3)+'...';
+                shortName = shortName.substring(0,this.maxNameLength-3)+'…';
                 isShortened=true;
             }
             var landingPageLink = this.options.lp_url + object.ws + '/' + object.id;
@@ -947,9 +622,18 @@ define ([
             var $name = $('<span>')
                 .addClass('kb-data-list-name')
                 .append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
-            if (isShortened) { $name.tooltip({title:object.name, placement:'bottom'}); }
+            if (isShortened) { 
+                $name.tooltip({title:object.name, placement:'bottom'}); 
+            }
 
-            var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
+            // Mouseover toolbar
+            var $btnToolbar = $('<span>')
+                .addClass('btn-toolbar')
+                .css('position', 'absolute')
+                .css('right', '6px')
+                .css('top', '0')
+                .attr('role', 'toolbar')
+                .hide();
             var btnClasses = 'btn btn-xs btn-default';
             var css = {'color':'#888'};
             var $openLandingPage = $('<span>')
@@ -972,17 +656,35 @@ define ([
                 });
             $btnToolbar.append($openLandingPage).append($openProvenance);
 
-            var titleElement = $('<div>').css({'xmargin':'10px'}).append($btnToolbar.hide()).append($name);
+            var $titleElement = $('<div>')
+                .css('position', 'relative')
+                .append($btnToolbar.hide())
+                .append($name);
 
+            // if (object.metadata && object.metadata.length) {
+            //     titleElement.append(metadataToTable(object.metadata));
+            // } else {
+            //     titleElement.append('<br>').append('&nbsp;');
+            // }
+
+            var $bodyElement;
             if (object.metadata && object.metadata.length) {
-                titleElement.append(metadataToTable(object.metadata));
+                $bodyElement  = metadataToTable(object.metadata);
             } else {
-                titleElement.append('<br>').append('&nbsp;');
+                $bodyElement = null;
             }
 
             // Set data icon
             var $logo = $('<span>');
-            Icon.buildDataIcon($logo, type);
+            if (dataSource.iconUrl) {
+                $logo
+                    .append($('<img>')
+                        .attr('src', dataSource.iconUrl)
+                        .css('height', '32px'));                
+            } else {
+                Icon.buildDataIcon($logo, type);
+            }
+            
             var $topTable = $('<table>')
                 // set background to white looks better on DnD
                 .css({'width':'100%','background':'#fff'})
@@ -991,10 +693,14 @@ define ([
                         .css({'width':'90px'})
                         .append($addDiv.hide()))
                     .append($('<td>')
-                        .css({'width':'50px'})
+                        .css('width', '50px')
+                        .css('vertical-align', 'top')
                         .append($logo))
+                        
                     .append($('<td>')
-                        .append(titleElement)));
+                        .css('padding-right', '15px')
+                        .append($titleElement)
+                        .append($bodyElement)));
             var $row = $('<div>')
                 .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
                 .append($('<div>').addClass('kb-data-list-obj-row-main')
@@ -1012,61 +718,12 @@ define ([
             var $rowWithHr = $('<div>')
                 .append($('<hr>')
                     .addClass('kb-data-list-row-hr')
-                    .css({'margin-left':'155px'}))
+                    .css('width', '100%'))
+                // .css({'margin-left':'155px'}))
                 .append($row);
+
             return $rowWithHr;
         },
-
-        renderStagingObjectRowDiv: function(object) {
-            // basic rendering
-            var $row = $(this.stagingRowTmpl({
-                displayName: object.name,
-                objModDate: object.modDate,
-                simpleMetadata: object.metadata,
-                buttonIcon: 'fa-chevron-circle-right',
-                buttonAction: 'Stage',
-                actionLeft: false,
-                detailedMetadata: object.hitMetadata
-            }));
-            Icon.buildDataIcon($row.find('#icon'), 'file');
-
-            // event binding
-            $row.mouseenter(function() {
-                $row.find('#action-button-div').show();
-                $row.find('.btn-toolbar').show();
-                $row.find('#meta-toggle').show();
-            })
-                .mouseleave(function() {
-                    $row.find('#action-button-div').hide();
-                    $row.find('.btn-toolbar').hide();
-                    $row.find('#meta-toggle').hide();
-                });
-
-            $row.find('#more-metadata').empty().html('<pre>' + StringUtil.prettyPrintJSON(object.hitMetadata) + '</pre>');
-            $row.find('#meta-toggle button').click(function() {
-                $row.find('#more-metadata').slideToggle();
-            });
-
-            var self = this;
-            $row.find('#action-button-div button').click(function() {
-                if (!self.agreeDataPolicy) {
-                    alert('You must agree to the JGI Data Policy before copying.');
-                    return;
-                }
-                $(this).attr('disabled', 'disabled');
-                $(this).html('<img src="' + Config.get('loading_gif') + '">');
-
-                object.copyAction().then(function() {
-                    $(this).html('Copied!');
-                }.bind(this))
-                    .catch(function(error) {
-                        console.error(error);
-                        $(this).html('Error!');
-                    }.bind(this));
-            });
-            return $row;
-        },
-
 
         /*
             TODO: rethink the logic here.

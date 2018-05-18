@@ -136,7 +136,7 @@ function runWidgetTest(params) {
 
         // wait a second for it to run (the utility "wait_for_output" isn't working...), but this
         // shouldn't take longer than a second.
-        casper.wait(3000);
+        casper.wait(5000);
         casper.thenEvaluate(function() {
             var numCells = Jupyter.notebook.get_cells().length;
             Jupyter.narrative.scrollToCell(Jupyter.notebook.get_cell(numCells-1));

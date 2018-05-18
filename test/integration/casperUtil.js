@@ -1,7 +1,7 @@
 /* global module phantom casper*/
 var fs = require('fs'),
     tokens = {},
-    testConfigFile = 'test/casper/testConfig.json',
+    testConfigFile = 'test/integration/testConfig.json',
     testConfig = JSON.parse(fs.read(testConfigFile).trim()),
     jupyterPort = testConfig.jupyterPort;
 

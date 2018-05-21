@@ -10,8 +10,9 @@ define ([
     'kbwidget',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
-    'narrativeConfig',    
+    'narrativeConfig',
     'kb_common/jsonRpc/dynamicServiceClient',
+    'ExpressionUtils-client-api',
     // For effect
     'bootstrap',
     'jquery-dataTables'
@@ -22,7 +23,8 @@ define ([
     kbaseAuthenticatedWidget,
     kbaseTabs,
     Config,
-    DynamicServiceClient
+    DynamicServiceClient,
+    ExpressionUtilsClient,
 ) {
     'use strict';
 
@@ -69,6 +71,16 @@ define ([
                 token: auth.token
             });
 
+            /*this.expressionUtils = new DynamicServiceClient({
+                module: 'ExpressionUtils',
+                url: Config.url('service_wizard'),
+                token: auth.token
+            });*/
+
+            this.expressionUtils = new ExpressionUtils(
+                Config.url('service_wizard'),
+                {'token': this.authToken()});
+console.log("EU IS : ", this.expressionUtils);
             // Let's go...
             this.loadAndRender();
 
@@ -85,15 +97,19 @@ define ([
 
             self.loading(true);
             var expressionMatrixRef = this.options.workspaceID + '/' + this.options.expressionMatrixID;
-            self.featureValues.callFunc('get_matrix_stat', [{
-                input_data: expressionMatrixRef
-            }])
-                .spread(function (data) {
+            Promise.resolve(self.expressionUtils.get_enhancedFilteredExpressionMatrix({
+                fem_objet_ref: expressionMatrixRef
+            }))
+            .then( function (data) {
+              console.log("I HAVE ME DATA : ", data);
+            })
+                /*.spread(function (data) {
                     self.matrixStat = data;
                     self.render();
                     self.loading(false);
-                })
+                })*/
                 .catch(function(error){
+                console.log("FAILED WITH : ", error);
                     self.clientError(error);
                 });
         },
@@ -299,7 +315,7 @@ define ([
 
         clientError: function(error){
             this.loading(false);
-            // TODO: Don't know that this is a service error; should 
+            // TODO: Don't know that this is a service error; should
             // inspect the error object.
             this.showMessage(error.message);
         }

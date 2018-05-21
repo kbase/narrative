@@ -23,35 +23,55 @@ define([
         th = t('th');
 
     function niceState(jobState) {
-        var label;
-        var color;
+        var label, icon, color;
         switch (jobState) {
         case 'completed':
             label = 'success';
+            icon = 'fa fa-check';
+            color = 'green';
+            break;
+        case 'queued':
+            label = 'success';
+            icon = 'fa fa-angle-double-right';
+            color = 'green';
+            break;
+        case 'in-progress':
+            label = 'success';
+            icon = 'fa fa-spinner';
             color = 'green';
             break;
         case 'suspend':
             label = 'error';
+            icon = 'fa fa-pause';
+            color = 'red';
+            break;
+        case 'error':
+            label = 'error';
+            icon = 'fa fa-pause';
             color = 'red';
             break;
         case 'canceled':
             label = 'cancelation';
+            icon = 'fa fa-times';
             color = 'orange';
             break;
         case 'does_not_exist':
             label = 'does_not_exist';
+            icon = 'fa fa-question';
             color: 'orange';
             break;
         default:
             label = jobState;
+            icon = 'fa fa-question';
             color = 'black';
         }
 
-        return span({
+        return td({
             style: {
                 color: color,
                 fontWeight: 'bold'
-            }
+            },
+            class: icon
         }, label);
     }
 
@@ -64,8 +84,7 @@ define([
             container.getElementsByTagName('tbody')[0].appendChild(row);
         }        
         var jobStatus = jobState ? jobState.job_state : 'Determining Job State...';
-        row.innerHTML = th(jobState.job_id) + td(jobStatus);
-
+        row.innerHTML = th(jobState.job_id) + niceState(jobState.job_state);
     }
     function renderTable(){
         return table({class: 'table'},[

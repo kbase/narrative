@@ -61,12 +61,10 @@ define([
         if(row === null){
             row = document.createElement('tr');
             row.setAttribute('data-element-job-id', jobState.job_id);
-            container.appendChild(row);
-        }
-
-        
+            container.getElementsByTagName('tbody')[0].appendChild(row);
+        }        
         var jobStatus = jobState ? jobState.job_state : 'Determining Job State...';
-        row.innerHTML = th(jobState.job_id)+ td(jobStatus);
+        row.innerHTML = th(jobState.job_id) + td(jobStatus);
 
     }
     function renderTable(){

@@ -169,7 +169,7 @@ define([
         }
     });
 
-    Handlebars.registerHelper('lineage', function(value, startAt) {
+    Handlebars.registerHelper('lineage', function(value, startAt, startAfter) {
         if (!value || value.length === 0) {
             return 'n/a';
         }
@@ -183,10 +183,16 @@ define([
             .map(function (item) {
                 return item.trim();
             });
+        var start;
         if (startAt) {
-            var start = lineage.indexOf(startAt);
+            start = lineage.indexOf(startAt);
             if (start >= 0) {
                 lineage = lineage.slice(start);
+            }
+        } else if (startAfter) {
+            start = lineage.indexOf(startAfter);
+            if (start >= 0) {
+                lineage = lineage.slice(start + 1);
             }
         }
         return new Handlebars.SafeString(lineage

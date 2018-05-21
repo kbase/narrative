@@ -44,13 +44,15 @@ define([
             num_contigs: item.data.num_contigs,
             num_cds: item.data.cdss,
             num_features: item.data.features,
-            ws_ref: objectGuidToRef(item.guid).ref,
+            ws_ref: objectGuidToRef(item.guid),
             workspace_name: null,
+            taxonomy: item.data.taxonomy,
             object_name: item.object_name
         };
     }
 
     function parseGenomeIndexV2 (item) {
+        // oh, lordy, people messing with the metadata...
         return {
             genome_id: item.data.id,
             genome_source: item.data.source,
@@ -59,9 +61,10 @@ define([
             domain: item.data.domain,
             num_contigs: item.data.num_contigs,
             num_cds: item.data.cdss,
-            num_features: item.data.feature_counts,
-            ws_ref: objectGuidToRef(item.guid).ref,
+            num_features: item.data.feature_counts.gene,
+            ws_ref: objectGuidToRef(item.guid),
             workspace_name: null,
+            taxonomy: item.data.taxonomy,
             object_name: item.object_name
         };
     }
@@ -88,21 +91,22 @@ define([
     var SearchDataSource = Object.create({}, {
         init: {
             value: function (arg) {
-                common.requireArg(arg, 'dataSourceConfig');
+                common.requireArg(arg, 'config');
                 common.requireArg(arg, 'token');
-                common.requireArg(arg, 'searchUrl');
+                common.requireArg(arg, 'urls.KBaseSearchEngine');
                 common.requireArg(arg, 'pageSize');
 
                 this.pageSize = arg.pageSize;
 
                 this.currentPage = null;
                 this.page = null;
-                this.dataSourceConfig = arg.dataSourceConfig;
+                this.config = arg.config;
                 this.queryExpression = null;
                 this.availableData = null;
+                this.fetchedDataCount = null;
                 this.filteredData = null;
                 this.searchApi = KBaseSearchEngine.make({
-                    url: arg.searchUrl,
+                    url: arg.urls.KBaseSearchEngine,
                     token: arg.token
                 });
                 this.searchState = {
@@ -111,16 +115,15 @@ define([
                     lastQuery: null,
                     currentQueryState: null
                 };
-                this.titleTemplate = Handlebars.compile(this.dataSourceConfig.templates.title);             
-                this.metadataTemplates = common.compileTemplates(this.dataSourceConfig.templates.metadata);
+                this.titleTemplate = Handlebars.compile(this.config.templates.title);             
+                this.metadataTemplates = common.compileTemplates(this.config.templates.metadata);
                 return this;
             }
         },
         search: {
             value: function(query) {
-                var _this = this;
                 return Promise.try(function () {
-                    if (_this.searchState.currentQueryState) {
+                    if (this.searchState.currentQueryState) {
                         return;
                     }
 
@@ -166,27 +169,27 @@ define([
                     };
 
                     // And update the uber-search-state.
-                    _this.searchState.currentQueryState = queryState;
-                    _this.searchState.lastSearchAt = now;
-                    _this.searchState.lastQuery = newQuery;
+                    this.searchState.currentQueryState = queryState;
+                    this.searchState.lastSearchAt = now;
+                    this.searchState.lastQuery = newQuery;
                 
                     // this.setQuery(query);
-                    queryState.promise  = _this.searchApi.referenceGenomeSearch({
-                        source: this.dataSourceConfig.source,
+                    queryState.promise  = this.searchApi.referenceGenomeSearch({
+                        source: this.config.source,
                         pageSize: this.pageSize,
                         query: this.queryExpression,
                         page: this.page
                     })
                         .then(function (result) {
-                            _this.totalAvailable = result.totalAvailable;
-                            _this.totalResults = result.result.total;
-                            _this.availableData = result.result.objects.map(function (item) {
+                            this.availableDataCount = result.totalAvailable;
+                            this.filteredDataCount = result.result.total;
+                            this.availableData = result.result.objects.map(function (item) {
                                 // This call givs us a normalized genome result object.
                                 // In porting this over, we are preserving the field names.
                                 var genomeRecord = parseGenomeSearchResultItem(item);
     
-                                var name = _this.titleTemplate(genomeRecord);
-                                var metadata = common.applyMetadataTemplates(_this.metadataTemplates, genomeRecord);
+                                var name = this.titleTemplate(genomeRecord);
+                                var metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
                                 return {
                                     info: null,
                                     id: genomeRecord.genome_id,
@@ -194,19 +197,22 @@ define([
                                     name: name,
                                     objectName: genomeRecord.object_name,
                                     metadata: metadata,
-                                    ws: _this.dataSourceConfig.workspaceName,
-                                    type: _this.dataSourceConfig.type,
-                                    attached: false
+                                    ws: this.config.workspaceName,
+                                    type: this.config.type,
+                                    attached: false,
+                                    workspaceReference: genomeRecord.ws_ref
                                 };
-                            });
-                            return _this.availableData;
+                            }.bind(this));
+                            // for now assume that all items before the page have been fetched
+                            this.fetchedDataCount = (this.page + 1) * this.pageSize + this.availableData.length;
+                            return this.availableData;
                         }.bind(this));
 
                     return queryState.promise;
                 }.bind(this))
                     .finally(function () {
-                        _this.searchState.currentQueryState = null;      
-                    });
+                        this.searchState.currentQueryState = null;      
+                    }.bind(this));
             }
         },
         setQuery: {
@@ -226,14 +232,14 @@ define([
                 var _this = this;
 
                 return this.searchApi.referenceGenomeSearch({
-                    source: this.dataSourceConfig.source,
+                    source: this.config.source,
                     pageSize: this.itemsPerPage,
                     query: this.queryExpression,
                     page: this.page
                 })
                     .then(function (result) {
-                        _this.totalAvailable = result.totalAvailable;
-                        _this.totalResults = result.result.total;
+                        _this.availableDataCount = result.totalAvailable;
+                        _this.filteredDataCount = result.result.total;
                         _this.availableData = result.result.objects.map(function (item) {
                             // This call givs us a normalized genome result object.
                             // In porting this over, we are preserving the field names.
@@ -248,8 +254,8 @@ define([
                                 name: name,
                                 objectName: genomeRecord.object_name,
                                 metadata: metadata,
-                                ws: _this.dataSourceConfig.workspaceName,
-                                type: _this.dataSourceConfig.type,
+                                ws: _this.config.workspaceName,
+                                type: _this.config.type,
                                 attached: false
                             };
                         });
@@ -260,8 +266,8 @@ define([
         load: {
             value: function() {
                 return this.narrativeService.callFunc('list_objects_with_sets', [{
-                    ws_name: this.dataSourceConfig.workspaceName,
-                    types: [this.dataSourceConfig.type],
+                    ws_name: this.config.workspaceName,
+                    types: [this.config.type],
                     includeMetadata: 1
                 }])
                     .spread(function(data) {
@@ -275,28 +281,8 @@ define([
                                 metadata: objectMeta
                             };
                         });
-                        this.totalAvailable = this.availableData.length;                        
+                        this.availableDataCount = this.availableData.length;                        
                     }.bind(this));
-            }
-        },
-        // TODO: look at this structure, fold into above.
-        render: {
-            value: function () {
-                return this.filteredData.map(function (item) {
-                    var name = this.titleTemplate(item);
-                    var metadata = common.applyMetadataTemplates(this.metadataTemplates, item);
-                    return {
-                        info: item.info,
-                        id: item.info[0],
-                        objectId: item.info[0],
-                        name: name,
-                        objectName: item.info[1],
-                        metadata: metadata,
-                        ws: this.dataSourceConfig.workspaceName,
-                        type: this.dataSourceConfig.type,
-                        attached: false
-                    };
-                }.bind(this));
             }
         }
     });

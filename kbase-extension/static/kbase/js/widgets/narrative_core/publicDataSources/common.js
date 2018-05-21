@@ -42,9 +42,15 @@ define([
     }
 
     function requireArg(arg, name) {
-        if (!(name in arg)) {
-            throw new Error('Required argument "' + name + '" is required but missing');
+        var argPath = name.split('.');
+        for (var i = 0; i < argPath.length; i += 1) {
+            var key = argPath[i];
+            if (!(key in arg)) {
+                throw new Error('Required argument "' + key + '" in "' + name +  '" is required but missing');
+            }
+            arg = arg[key];
         }
+        return arg;
     }
     return Object.freeze({
         compileTemplates: compileTemplates,

@@ -1,5 +1,6 @@
 # Public Data Sources
 ---
+  # All data sources are specified in this field.
   sources:
     - 
       # the label displayed to the user

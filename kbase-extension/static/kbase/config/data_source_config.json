@@ -11,8 +11,8 @@
                     "title": "{{scientific_name}}",
                     "metadata": [
                         {
-                            "label": "Domain",
-                            "template": "{{domain}}"
+                            "label": "Lineage",
+                            "template": "{{lineage metadata.Taxonomy}}"
                         },
                         {
                             "label": "KBase ID",
@@ -78,6 +78,12 @@
                 "searchFields": [
                     "metadata.Name", "metadata.Domain", "objectName", "metadata.Taxonomy"
                 ],
+                "sort": [
+                    {
+                        "field": "metadata.Name",
+                        "ascending": true
+                    }
+                ],
                 "sourceType": "workspace"
             },
             "phytozome_genomes": {
@@ -118,6 +124,12 @@
                 },
                 "searchFields": [
                     "metadata.Name", "metadata.Domain", "objectName", "metadata.Taxonomy"
+                ],
+                "sort": [
+                    {
+                        "field": "metadata.Name",
+                        "ascending": true
+                    }
                 ]
             },
             "media": {
@@ -132,6 +144,12 @@
                 },
                 "searchFields": [
                     "objectName"
+                ],
+                "sort": [
+                    {
+                        "field": "objectName",
+                        "ascending": true
+                    }
                 ]
             },
             "se_reads": {
@@ -146,6 +164,12 @@
                 },
                 "searchFields": [
                     "objectName"
+                ],
+                "sort": [
+                    {
+                        "field": "objectName",
+                        "ascending": true
+                    }
                 ]
             },
             "pe_reads": {
@@ -160,6 +184,12 @@
                 },
                 "searchFields": [
                     "objectName"
+                ],
+                "sort": [
+                    {
+                        "field": "objectName",
+                        "ascending": true
+                    }
                 ]
             },
             "plant_rnaseq_anno": {
@@ -174,6 +204,12 @@
                 },
                 "searchFields": [
                     "objectName"
+                ],
+                "sort": [
+                    {
+                        "field": "objectName",
+                        "ascending": true
+                    }
                 ]
             },
             "plant_bowtie2_idx": {
@@ -188,6 +224,12 @@
                 },
                 "searchFields": [
                     "objectName"
+                ],
+                "sort": [
+                    {
+                        "field": "objectName",
+                        "ascending": true
+                    }
                 ]
             },
             "ontology": {
@@ -202,6 +244,12 @@
                 },
                 "searchFields": [
                     "objectName"
+                ],
+                "sort": [
+                    {
+                        "field": "objectName",
+                        "ascending": true
+                    }
                 ]
             },
             "ontology_translation": {
@@ -216,6 +264,12 @@
                 },
                 "searchFields": [
                     "objectName"
+                ],
+                "sort": [
+                    {
+                        "field": "objectName",
+                        "ascending": true
+                    }
                 ]
             }
         },

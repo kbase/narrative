@@ -1,52 +1,38 @@
 /**
- * "Import" tab on data side panel.
+ * "Public Data" tab on data side panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
 define ([
     'kbwidget',
-    'bootstrap',
-    'handlebars',
     'jquery',
-    'bluebird',
     'numeral',
     'narrativeConfig',
     'kbaseAuthenticatedWidget',
     'base/js/namespace',
     'kb_common/jsonRpc/dynamicServiceClient',
     'kb_common/jsonRpc/genericClient',
-    'kb_common/utils',
+    'kb_common/html',
     'util/icon',
-    'util/string',
-    'util/bootstrapDialog',
-    'common/kbaseSearchEngine',
-    'common/runtime',
-    'text!kbase/templates/data_slideout/action_button_partial.html',
-    'text!kbase/templates/data_slideout/data_policy_panel.html',
     'widgets/narrative_core/publicDataSources/workspaceDataSource',
-    'widgets/narrative_core/publicDataSources/searchDataSource'
+    'widgets/narrative_core/publicDataSources/searchDataSource',
+    'yaml!kbase/config/publicDataSources.yaml',
+
+    'bootstrap'
 ], function (
     KBWidget,
-    bootstrap,
-    Handlebars,
     $,
-    Promise,
     numeral,
     Config,
     kbaseAuthenticatedWidget,
     Jupyter,
     DynamicServiceClient,
     ServiceClient,
-    Utils,
+    html,
     Icon,
-    StringUtil,
-    BootstrapDialog,
-    KBaseSearchEngine,
-    Runtime,
-    ActionButtonHtml,
-    DataPolicyPanelHtml,
     WorkspaceDataSource,
-    SearchDataSource
+    SearchDataSource,
+    DataSourceConfig
 ) {
     'use strict';
 
@@ -203,7 +189,21 @@ define ([
         }
         return null;
     }
- 
+    var dataSourceTypes = {
+        search: {
+            serviceDependencies: {
+                KBaseSearchEngine: 'KBaseSearchEngine'
+            },
+            baseObject: SearchDataSource
+        },
+        workspace: {
+            serviceDependencies: {
+                ServiceWizard: 'service_wizard'
+            },
+            baseObject: WorkspaceDataSource
+        }
+    };
+
     return KBWidget({
         name: 'kbaseNarrativeSidePublicTab',
         parent : kbaseAuthenticatedWidget,
@@ -212,14 +212,15 @@ define ([
             $importStatus:$('<div>'),
             addToNarrativeButton: null,
             selectedItems: null,
-            lp_url: Config.url('landing_pages'),
+            landingPageURL: Config.url('landing_pages'),
+            provenanceViewerBaseURL: Config.url('provenance_view'),
             ws_name: null
         },
         token: null,
         wsName: null,
         searchUrlPrefix: Config.url('search'),
         loadingImage: Config.get('loading_gif'),
-        wsUrl: Config.url('workspace'),
+        workspaceUrl: Config.url('workspace'),
         workspace: null,
         narrativeService: null,
         mainListPanelHeight: '535px',
@@ -233,7 +234,6 @@ define ([
         totalAvailable: null,
         currentFilteredlResults: null,
         itemsPerPage: 20,
-        maxAutoCopyCount: 5,
         narrativeObjects: {},
         narrativeObjectsClean: null,
 
@@ -243,13 +243,15 @@ define ([
             this.data_icons = Config.get('icons').data;
             this.icon_colors = Config.get('icons').colors;
             this.wsName = Jupyter.narrative.getWorkspaceName();
-            this.categoryDescr = Config.get('publicCategories');
-            if (!this.categoryDescr) {
-                this.categoryDescr = {};
-            }
-            if (this.categoryDescr) {
-                this.categories = Object.keys(this.categoryDescr);
-            }
+            // this.categoryDescr = Config.get('publicCategories');
+            this.dataSourceConfigs = DataSourceConfig.sources;
+            // if (!this.dataSourceConfig) {
+            //     this.categoryDescr = {};
+            // }
+            // this.categories = DataSourceConfig.sources.map(function (source) {
+            //     return source.id;
+            // });
+
 
             // Cause the search to be re-run whenever the data state for this 
             // narrative changes.
@@ -273,17 +275,19 @@ define ([
         },
 
         render: function() {
-            if ((!this.token) || (!this.wsName))
+            if ((!this.token) || (!this.wsName)) {
                 return;
+            }
             this.infoPanel = $('<div>');
             this.dataPolicyPanel = $('<div>');
             this.$elem.empty()
                 .append(this.infoPanel)
                 .append(this.dataPolicyPanel);
-            if (!this.categories) {
-                this.showError('Unable to load public data configuration! Please refresh your page to try again. If this continues to happen, please <a href="https://kbase.us/contact-us/">click here</a> to contact KBase with the problem.');
-                return;
-            }
+
+            // if (!this.categories) {
+            //     this.showError('Unable to load public data configuration! Please refresh your page to try again. If this continues to happen, please <a href="https://kbase.us/contact-us/">click here</a> to contact KBase with the problem.');
+            //     return;
+            // }
 
             this.narrativeService = new DynamicServiceClient({
                 module: 'NarrativeService',
@@ -296,24 +300,48 @@ define ([
                 token: this.token
             });
 
-            var mrg = {margin: '10px 0px 10px 0px'};
-            var $typeInput = $('<select class="form-control">').css(mrg);
-            for (var catPos in this.categories) {
-                var cat = this.categories[catPos];
-                var catName = this.categoryDescr[cat].name;
-                $typeInput.append('<option value="'+cat+'">'+catName+'</option>');
-            }
+            var margin = {margin: '10px 0px 10px 0px'};
+            var $typeInput = $('<select class="form-control">')
+                .css(margin);
 
-            var typeFilter = $('<div class="col-sm-3">').append($typeInput);
+            this.dataSourceConfigs.forEach(function (config, index) {
+                $typeInput.append('<option value="' + String(index) + '">' + config.name + '</option>');
+            });
+
+            // for (var catPos in this.categories) {
+            //     var cat = this.categories[catPos];
+            //     var catName = this.dataSourceConfigs[cat].name;
+            //     $typeInput.append('<option value="'+cat+'">'+catName+'</option>');
+            // }
+
+            var $dataSourceLogo = $('<span>')
+                .addClass('input-group-addon')
+                .css('width', '40px')
+                .css('border', 'none')
+                .css('padding', '0 4px')
+                .css('border', 'none')
+                .css('border-radius', '0')
+                .css('background-color', 'transparent');
+            this.$dataSourceLogo = $dataSourceLogo;
+
+            var $inputGroup = $('<div>')
+                .addClass('input-group')
+                .css('width', '100%');
+
+            var typeFilter = $('<div class="col-sm-4">')
+                .append($inputGroup
+                    .append($typeInput)
+                    .append($dataSourceLogo));
+
             var $filterInput = $('<input type="text" class="form-control" placeholder="Filter data...">');
-            var $filterInputField = $('<div class="input-group">').css(mrg)
+            var $filterInputField = $('<div class="input-group">')
+                .css(margin)
                 .append($filterInput)
                 .append($('<div class="input-group-addon btn btn-default">')
                     .append($('<span class="fa fa-search">'))
                     .css('padding', '4px 8px')
                     .click(function () {
                         $filterInput.change();
-                        // this.searchAndRender($typeInput.val(), $filterInput.val());
                     }.bind(this)))
                 .append($('<div class="input-group-addon btn btn-default">')
                     .append($('<span class="fa fa-times">'))
@@ -324,11 +352,22 @@ define ([
                         $filterInput.change();
                     }));
 
+
             /*
                 search and render when the type dropdown changes.
             */
             $typeInput.change(function() {
-                this.searchAndRender($typeInput.val(), $filterInput.val());
+                var newDataSourceID = parseInt($typeInput.val());
+                var dataSource = this.dataSourceConfigs[newDataSourceID];
+                this.$dataSourceLogo.empty();
+                if (dataSource) {
+                    if (dataSource.logoUrl) {
+                        console.log('use logo!', dataSource.logoUrl);
+                        this.$dataSourceLogo.append($('<img>')
+                            .attr('src', dataSource.logoUrl));
+                    }
+                }
+                this.searchAndRender(newDataSourceID, $filterInput.val());
             }.bind(this));
 
             /*
@@ -338,7 +377,8 @@ define ([
             $filterInput.change(function() {
                 inputFieldLastValue = $filterInput.val();
                 renderInputFieldState();
-                this.searchAndRender($typeInput.val(), $filterInput.val());
+                var dataSourceID = parseInt($typeInput.val());
+                this.searchAndRender(dataSourceID, $filterInput.val());
             }.bind(this));
 
             function renderInputFieldState() {
@@ -353,6 +393,13 @@ define ([
                 }            
             }
 
+            // function inputFieldDirty() {
+            //     if (inputFieldLastValue !== $filterInput.val()) {
+            //         return true;
+            //     } 
+            //     return false;
+            // }
+
             $filterInput.keyup(function () {
                 renderInputFieldState();
             });
@@ -364,27 +411,45 @@ define ([
             //     this.searchAndRender(typeInput.val(), filterInput.val());
             // }.bind(this));
 
-            var searchFilter = $('<div class="col-sm-9">').append($filterInputField);
+            var searchFilter = $('<div class="col-sm-8">').append($filterInputField);
 
-            var header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'}).append(typeFilter).append(searchFilter);
+            var header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'})
+                .append(typeFilter)
+                .append(searchFilter);
             this.$elem.append(header);
             this.totalPanel = $('<div>').css({'margin': '0px 0px 0px 10px'});
             this.$elem.append(this.totalPanel);
 
-            var self = this;
-            this.resultPanel = $('<div>')
-                .css({'overflow-x' : 'hidden', 'overflow-y':'auto', 'height':this.mainListPanelHeight })
-                .on('scroll', function() {
-                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
-                        self.renderMore(false);
+            this.resultPanel = $('<div>');
+
+            this.resultsFooterMessage = $('<div>');
+
+            this.resultFooter = $('<div>')
+                // .css('border', '1px red solid')
+                .css('background-color', 'rgba(200,200,200,0.5')
+                .css('padding', '6px')
+                .css('font-style', 'italic')
+                .css('text-align', 'center')
+                .append(this.resultsFooterMessage);              
+
+            this.resultArea = $('<div>')
+                .css('overflow-x', 'hidden')
+                .css('overflow-y', 'auto')
+                .css('height', this.mainListPanelHeight)
+                .on('scroll', function(e) {
+                    if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight) {
+                        this.renderMore();
                     }
-                });
-            this.$elem.append(this.resultPanel);
-            this.searchAndRender($typeInput.val(), $filterInput.val());
+                }.bind(this))
+                .append(this.resultPanel)
+                .append(this.resultFooter);
+
+            this.$elem.append(this.resultArea);
+            var dataSourceID = parseInt($typeInput.val(), 10);
+            this.searchAndRender(dataSourceID, $filterInput.val());
             return this;
         },
 
-        searching: false,
         searchAndRender: function(category, query) { 
             if (query) {
                 query = query.trim();
@@ -404,13 +469,9 @@ define ([
             }
 
             // Duplicate queries are suppressed.
-            if (self.currentQuery && self.currentQuery === query && category === self.currentCategory) {
+            if (this.currentQuery && this.currentQuery === query && category === this.currentCategory) {
                 return;
             }
-
-            // Reset the ui.
-            this.totalPanel.empty();
-            this.resultPanel.empty();
 
             // Reset the query data structures.
             this.objectList = [];
@@ -420,122 +481,37 @@ define ([
             this.totalAvailable = null;
             this.currentFilteredlResults = null;
 
-            // Get and render the first batch of data.
-            // Note that the loading ui is only displayed on the initial load.
-            this.totalPanel.append($('<span>').addClass('kb-data-list-type').append('<img src="'+this.loadingImage+'"/> searching...'));
-            return this.renderMore(true);
+            return this.renderInitial();
         },
 
-        renderTotalsPanel: function (arg) {
-            var $totals = renderTotals(arg.totalFiltered, arg.totalAvailable);                    
+        renderTotalsPanel: function () {
+            var $totals = renderTotals(this.currentFilteredResults, this.totalAvailable);                    
             this.totalPanel.html($totals);
         },
 
-        renderFromWorkspace: function (dataSourceConfig, initial) {
-            var _this = this;
-            var workspaceDS;
-            if (this.currentDataSource && this.currentDataSource.dataSourceConfig === dataSourceConfig) {
-                workspaceDS = this.currentDataSource;
-            } else {
-                workspaceDS = Object.create(WorkspaceDataSource).init({
-                    dataSourceConfig: dataSourceConfig,
-                    serviceWizardURL: Config.url('service_wizard'),
-                    token: this.token,
-                    pageSize: _this.itemsPerPage
-                });
-            }
-            var query = {
-                input: _this.currentQuery,
-                page: _this.currentPage,
-            };
-            return workspaceDS.search(query)
-                .then(function (result) {
-                    result.forEach(function (item) {
-                        _this.addRow(dataSourceConfig, item);
-                    });
+        renderInitial: function() {
+            // Get and render the first batch of data.
+            // Note that the loading ui is only displayed on the initial load.
+            // Reset the ui.
+            this.totalPanel.empty();
+            this.resultPanel.empty();
+            this.resultsFooterMessage.empty();
+            this.totalPanel
+                .append($('<span>')
+                    .addClass('kb-data-list-type')
+                    .append('<img src="'+this.loadingImage+'"/> searching...'));
 
-                    _this.totalAvailable = workspaceDS.availableDataCount;
-                    _this.currentFilteredResults = workspaceDS.filteredDataCount;
-
-                    _this.renderTotalsPanel({
-                        totalFiltered:  _this.currentFilteredResults, 
-                        totalAvailable: _this.totalAvailable
-                    });
-                });
-        },
-
-        formatInt: function (value, format, defaultValue) {
-            if (typeof value === 'undefined' || value === null) {
-                return defaultValue;
-            }
-            return numeral(value).format(format);
-        },
-
-
-        // nb: the data source is derived from the dropdown the user used to select
-        // the public data source.
-
-        /*
-            Execute a search query, update the query results data structures,
-            and update the ui.
-            All in one!
-
-            Supports query cancellation or suppression logic in this way:
-
-            If it is an initial query it is expected to populate an empty display, 
-            so any pending queries are canceled.
-
-            If it is not an initial query, it is due to paging/scrolling, and we need
-            to abandon a new query if one is already pending. Otherwise we may end up 
-        */
-        renderFromSearch: function (dataSourceConfig) {
-            var _this = this;
-           
-            var query = {
-                input: _this.currentQuery,
-                page: _this.currentPage,
-            };
-
-            var searchDS;
-            if (this.currentDataSource && this.currentDataSource.dataSourceConfig === dataSourceConfig) {
-                searchDS = this.currentDataSource;
-            } else {
-                searchDS = Object.create(SearchDataSource).init({
-                    dataSourceConfig: dataSourceConfig,
-                    searchUrl: Config.url('KBaseSearchEngine'),
-                    token: this.token,
-                    pageSize: _this.itemsPerPage
-                });
-            }
-
-            return searchDS.search(query)
-                .then(function (result) {
-                    // a null result means that the search was not run for some
-                    // reason -- most likely it was canceled due to overlapping
-                    // queries.
-                    if (result) {
-                        result.forEach(function (item) {
-                            _this.addRow(dataSourceConfig, item);
-                        });
-
-                        _this.totalAvailable = searchDS.totalAvailable;
-                        _this.currentFilteredResults = searchDS.totalResults;
-
-                        _this.renderTotalsPanel({
-                            totalFiltered: searchDS.totalResults, 
-                            totalAvailable: searchDS.totalAvailable
-                        });
-                    }
-
-                    _this.currentDataSource = searchDS;
-                });
-        },
-
-        renderMore: function(initial) {
             this.hideError();
-            var cat = this.categoryDescr[this.currentCategory];
+            this.currentPage = 1;
+
+            return this.renderFromDataSource(this.currentCategory, true);
+        },
+
+        renderMore: function() {
+            this.hideError();
+
             // suss out whether we really need more...
-            if (this.currentPage !== null && this.currentFilteredResults !== null && !initial) {
+            if (this.currentPage !== null && this.currentFilteredResults !== null) {
                 var maxPage = Math.ceil(this.currentFilteredResults / this.itemsPerPage);
                 if (this.currentPage >= maxPage) {                    
                     return;
@@ -544,14 +520,81 @@ define ([
 
             this.currentPage += 1;
 
-            switch (cat.sourceType) {
-            case 'search':
-                return this.renderFromSearch(cat, initial);
-            case 'workspace':
-                return this.renderFromWorkspace(cat);
-            default: 
-                throw new Error('Invalid data source type: ' + cat.sourceType);
+            return this.renderFromDataSource(this.currentCategory, false);
+        },
+
+        fetchFromDataSource: function(dataSource) {
+            var _this = this;
+           
+            var query = {
+                input: _this.currentQuery,
+                page: _this.currentPage,
+            };
+
+            return dataSource.search(query);   
+        },
+
+        getDataSource: function (dataSourceID) {
+            var dataSource;
+            var dataSourceConfig = this.dataSourceConfigs[dataSourceID];
+            if (this.currentDataSource && this.currentDataSource.config === dataSourceConfig) {
+                dataSource = this.currentDataSource;
+            } else {
+                var dataSourceType = dataSourceTypes[dataSourceConfig.sourceType];
+               
+                var urls = Object.keys(dataSourceType.serviceDependencies).reduce(function (urls, key) {
+                    var configKey = dataSourceType.serviceDependencies[key];
+                    urls[key] = Config.url(configKey);
+                    return urls;
+                }, {});
+                dataSource = Object.create(dataSourceType.baseObject).init({
+                    config: dataSourceConfig,
+                    urls: urls,
+                    token: this.token,
+                    pageSize: this.itemsPerPage
+                });
+                this.currentDataSource = dataSource;
             }
+            return dataSource;
+        },
+
+        renderFromDataSource: function(dataSourceID, initial) {
+            var _this = this;
+            var dataSource = this.getDataSource(dataSourceID);
+            _this.resultsFooterMessage.html(html.loading('fetching another ' + this.itemsPerPage));
+            this.fetchFromDataSource(dataSource, initial)
+                .then(function (result) {
+                    // a null result means that the search was not run for some
+                    // reason -- most likely it was canceled due to overlapping
+                    // queries.
+                    if (result) {
+                        // _this.removeLastRowPlaceholder();
+                        if (initial) {
+                            _this.totalPanel.empty();
+                            _this.resultPanel.empty();
+                            _this.resultsFooterMessage.empty();                
+                        }
+                        result.forEach(function (item, index) {
+                            _this.addRow(dataSource, item, index);
+                        });
+                        // _this.addLastRowPlaceholder();
+
+                        _this.totalAvailable = dataSource.availableDataCount;
+                        _this.currentFilteredResults = dataSource.filteredDataCount;
+
+                        var message;
+                        if (dataSource.fetchedDataCount === dataSource.filteredDataCount) {
+                            message = 'all ' + _this.currentFilteredResults + ' fetched';
+                        } else {
+                            message = 'fetched ' + result.length + ' of ' + _this.currentFilteredResults;
+                        }
+                        _this.resultsFooterMessage.text(message);
+
+                        _this.renderTotalsPanel();
+                    }
+
+                    _this.currentDataSource = dataSource;
+                });
         },
 
         // attachRow: function(dataSource, index, toStaging) {
@@ -568,6 +611,10 @@ define ([
         //     obj.attached = true;
         //     this.n_objs_rendered++;
         // },
+
+        clearRows: function () {
+            this.resultPanel.empty();
+        },
 
         addRow: function(dataSource, row) {
             var $row = this.renderObjectRow(dataSource, row);
@@ -586,39 +633,22 @@ define ([
             var type = object.type.split('.')[1].split('-')[0];
             var copyText = ' Add';
 
-            var $addDiv =
-                $('<div>').append(
-                    $('<button>')
-                        .addClass('kb-primary-btn')
-                        .css({'white-space':'nowrap', padding: '10px 15px'})
-                        .append($('<span>')
-                            .addClass('fa fa-chevron-circle-left'))
-                        .append(copyText)
-                        .on('click',function() { // probably should move action outside of render func, but oh well
-                            $(this).attr('disabled', 'disabled');
-                            $(this).html('<img src="'+self.loadingImage+'">');
-
-                            var thisBtn = this;
-                            var targetName = object.name;
-                            if (!isNaN(targetName)) {
-                                targetName = self.categoryDescr[self.currentCategory].type.split('.')[1] + ' ' + targetName;
-                            }
-                            targetName = targetName.replace(/[^a-zA-Z0-9|.-_]/g,'_');
-                            self.copy(object, targetName, thisBtn);
-                        }));
-
             var shortName = object.name;
             var isShortened=false;
             if (shortName.length>this.maxNameLength) {
                 shortName = shortName.substring(0,this.maxNameLength-3)+'…';
                 isShortened=true;
             }
-            var landingPageLink = this.options.lp_url + object.ws + '/' + object.id;
-            var provenanceLink = '/#objgraphview/'+object.ws+'/'+object.id;
-            if(object['ws_ref']) {
-                landingPageLink = this.options.lp_url + object.ws_ref;
-                provenanceLink = '/#objgraphview/' + object.ws_ref;
-            }
+
+            // TODO: more failsafe method for building these urls.
+            // e.g. not clear wht the form of the config url is:
+            // path or url?
+            // terminal / or not?
+            // absolute or relative (initial /)
+            var objectRef = object.workspaceReference.ref;
+            var landingPageLink = this.options.landingPageURL + objectRef;
+            var provenanceLink = [this.options.provenanceViewerBaseURL, objectRef].join('/');
+
             var $name = $('<span>')
                 .addClass('kb-data-list-name')
                 .append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
@@ -654,18 +684,83 @@ define ([
                     e.stopPropagation();
                     window.open(provenanceLink);
                 });
-            $btnToolbar.append($openLandingPage).append($openProvenance);
+            $btnToolbar
+                .append($openLandingPage)
+                .append($openProvenance);
 
+            // var $topTable = $('<div>')
+            //     // set background to white looks better on DnD
+            //     .css({'width':'100%','background':'#fff'})
+            //     .append($('<tr>')
+            //         .append($('<td>')
+            //             .css({'width':'90px'})
+            //             .append($addDiv.hide()))
+
+            //         .append($('<td>')
+            //             .css('width', '50px')
+            //             .css('vertical-align', 'middle')
+            //             .css('border-right', '1px rgba(200,200,200,0.6) solid')
+            //             .append($logo))
+                        
+            //         .append($('<td>')
+            //             .css('padding-left', '4px')
+            //             .css('padding-right', '15px')
+            //             .append($titleElement)
+            //             .append($bodyElement)));
+
+            // Action Column
+
+            var $addDiv =
+                $('<div>').append(
+                    $('<button>')
+                        .addClass('kb-primary-btn')
+                        .css({'white-space':'nowrap', padding: '10px 15px'})
+                        .append($('<span>')
+                            .addClass('fa fa-chevron-circle-left'))
+                        .append(copyText)
+                        .on('click',function() { // probably should move action outside of render func, but oh well
+                            $(this).attr('disabled', 'disabled');
+                            $(this).html('<img src="'+self.loadingImage+'">');
+
+                            var thisBtn = this;
+                            var targetName = object.name;
+                            if (!isNaN(targetName)) {
+                                targetName = self.dataSourceConfigs[self.currentCategory].type.split('.')[1] + ' ' + targetName;
+                            }
+                            targetName = targetName.replace(/[^a-zA-Z0-9|.-_]/g,'_');
+                            self.copy(object, targetName, thisBtn);
+                        }));
+
+            var $actionColumn = $('<div>')
+                .css('flex', '0 0 90px')
+                .css('display', 'flex')
+                .css('align-items', 'center')
+                .css('vertical-align', 'middle')
+                .append($addDiv.hide());
+
+            // Icon Column
+            var $logo = $('<span>');
+            // if (dataSource.config.logoUrl) {
+            //     $logo
+            //         .append($('<img>')
+            //             .attr('src', dataSource.config.logoUrl)
+            //             .css('height', '32px'));                
+            // } else {
+            Icon.buildDataIcon($logo, type);
+            // }
+            var $iconColumn = $('<div>')
+                .css('flex', '0 0 50px')
+                .css('display', 'flex')
+                .css('align-items', 'center')
+                .css('border-right', '1px rgba(200,200,200,0.6) solid')
+                .css('vertical-align', 'middle')
+                .append($logo);
+
+            // Main Column
             var $titleElement = $('<div>')
                 .css('position', 'relative')
                 .append($btnToolbar.hide())
                 .append($name);
-
-            // if (object.metadata && object.metadata.length) {
-            //     titleElement.append(metadataToTable(object.metadata));
-            // } else {
-            //     titleElement.append('<br>').append('&nbsp;');
-            // }
 
             var $bodyElement;
             if (object.metadata && object.metadata.length) {
@@ -674,37 +769,22 @@ define ([
                 $bodyElement = null;
             }
 
-            // Set data icon
-            var $logo = $('<span>');
-            if (dataSource.iconUrl) {
-                $logo
-                    .append($('<img>')
-                        .attr('src', dataSource.iconUrl)
-                        .css('height', '32px'));                
-            } else {
-                Icon.buildDataIcon($logo, type);
-            }
-            
-            var $topTable = $('<table>')
-                // set background to white looks better on DnD
-                .css({'width':'100%','background':'#fff'})
-                .append($('<tr>')
-                    .append($('<td>')
-                        .css({'width':'90px'})
-                        .append($addDiv.hide()))
-                    .append($('<td>')
-                        .css('width', '50px')
-                        .css('vertical-align', 'top')
-                        .append($logo))
-                        
-                    .append($('<td>')
-                        .css('padding-right', '15px')
-                        .append($titleElement)
-                        .append($bodyElement)));
+            var $resultColumn = $('<div>')
+                .css('flex', '1 1 0px')
+                .css('padding-left', '4px')
+                .css('padding-right', '15px')
+                // .css('border-top', '1px rgba(200,200,200,0.6) solid')
+                .append($titleElement)
+                .append($bodyElement);
+
             var $row = $('<div>')
-                .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
-                .append($('<div>').addClass('kb-data-list-obj-row-main')
-                    .append($topTable))
+                .css('margin', '2px')
+                .css('padding', '4px')
+                .css('display', 'flex')
+                .css('flex-direction', 'row')
+                // .css('border-top', '1px rgba(200,200,200,0.6) solid')
+                // .append($('<div>').addClass('kb-data-list-obj-row-main')
+                //     .append($topTable))
                 // show/hide ellipses on hover, show extra info on click
                 .mouseenter(function(){
                     $addDiv.show();
@@ -713,16 +793,19 @@ define ([
                 .mouseleave(function(){
                     $addDiv.hide();
                     $btnToolbar.hide();
-                });
+                })
+                .append($actionColumn)
+                .append($iconColumn)
+                .append($resultColumn);
 
-            var $rowWithHr = $('<div>')
-                .append($('<hr>')
-                    .addClass('kb-data-list-row-hr')
-                    .css('width', '100%'))
-                // .css({'margin-left':'155px'}))
+            var $divider = $('<hr>')
+                .addClass('kb-data-list-row-hr')
+                .css('width', '100%');
+            var $rowContainer = $('<div>')
+                .append($divider)
                 .append($row);
 
-            return $rowWithHr;
+            return $rowContainer;
         },
 
         /*

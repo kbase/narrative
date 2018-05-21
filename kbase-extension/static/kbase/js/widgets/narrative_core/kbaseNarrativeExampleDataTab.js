@@ -186,7 +186,7 @@ define ([
                     .append($('<div>').css({'margin':'4px','margin-top':'15px','color':'#555','font-size':'large','font-weight':'bold'})
                         .append('Other Examples'))
                     .append($('<div>').css({'margin':'4px','color':'#555'})
-                        .append('Assorted data types used in more advanced analyses')));
+                        .append('Assorted data types used in other analyses')));
             typeDivs['other.types'] = $tc;
 
             var hasOthers = false;

@@ -22,25 +22,25 @@ define([
         var label;
         var color;
         switch (jobState) {
-            case 'completed':
-                label = 'success';
-                color = 'green';
-                break;
-            case 'suspend':
-                label = 'error';
-                color = 'red';
-                break;
-            case 'canceled':
-                label = 'cancelation';
-                color = 'orange';
-                break;
-            case 'does_not_exist':
-                label = 'does_not_exist';
-                color: 'orange';
-                break;
-            default:
-                label = jobState;
-                color = 'black';
+        case 'completed':
+            label = 'success';
+            color = 'green';
+            break;
+        case 'suspend':
+            label = 'error';
+            color = 'red';
+            break;
+        case 'canceled':
+            label = 'cancelation';
+            color = 'orange';
+            break;
+        case 'does_not_exist':
+            label = 'does_not_exist';
+            color: 'orange';
+            break;
+        default:
+            label = jobState;
+            color = 'black';
         }
 
         return span({
@@ -151,6 +151,45 @@ define([
             console.error('ERROR updating from view model', err);
         }
     }
+    function updateRunStats2(ui, viewModel, jobState) {
+        if (!jobState) {
+            viewModel.launch._attrib.hidden = false;
+            viewModel.launch.label = 'Determining Job State...';
+        } else {
+            var now = new Date().getTime();
+            viewModel.launch._attrib.hidden = true;
+            if(jobState.job_state === 'completed'){
+                viewModel.finish._attrib.hidden = false;
+                viewModel.finish._attrib.style = { fontWeight: 'bold' };
+                viewModel.finish.active = true;
+                viewModel.finish.state = niceState(jobState.job_state);
+                viewModel.finish.time = format.niceTime(jobState.finish_time);
+                viewModel.finish.elapsed = format.niceDuration(now - jobState.finish_time);
+            } else if (jobState.job_state === 'queued'){
+                viewModel.queue._attrib.style = { fontWeight: 'bold' };
+                viewModel.queue.active = true;
+                viewModel.queue.label = 'Queued ' + ui.loading({ size: null, color: 'orange' });
+                if (jobState.position) {
+                    viewModel.queue.position.label = ', currently at position ';
+                    viewModel.queue.position.number = jobState.position;
+                } else {
+                    viewModel.queue.position.label = '';
+                    viewModel.queue.position.number = '';
+                }
+                viewModel.queue.elapsed = format.niceDuration(now - jobState.creation_time);
+            } else if (jobState.job_state === 'in-progress'){
+                viewModel.run._attrib.style = { fontWeight: 'bold' };
+                viewModel.run.active = true;
+                viewModel.run.label = 'Running ' + ui.loading({ size: null, color: 'green' });
+                viewModel.run.elapsed = format.niceDuration(now - jobState.exec_start_time);
+            }        
+        }
+        try {
+            ui.updateFromViewModel(viewModel);
+        } catch (err) {
+            console.error('ERROR updating from view model', err);
+        }
+    }
 
     function renderRunStats() {
         return div({ dataElement: 'run-stats', style: { paddingTop: '6px' } }, [
@@ -238,7 +277,6 @@ define([
             runtime = Runtime.make(),
             listeningForJob = false,
             jobId;
-        debugger
         var viewModel = {
             lastUpdated: {
                 elapsed: null,
@@ -330,20 +368,22 @@ define([
         function handleJobStatusUpdate(message) {
             jobState = message.jobState;
             switch (jobState.job_state) {
-                case 'queued':
-                case 'in-progress':
-                    startJobUpdates();
-                    break;
-                case 'completed':
-                case 'error':
-                case 'suspend':
-                case 'canceled':
-                    stopJobUpdates();
-                    break;
-                default:
-                    stopJobUpdates();
-                    console.error('Unknown job status', jobState.job_state, message);
-                    throw new Error('Unknown job status ' + jobState.job_state);
+            case 'queued':
+            case 'in-progress':
+                startJobUpdates();
+                break;
+            case 'completed':
+                stopJobUpdates();
+                break;
+            case 'error':
+            case 'suspend':
+            case 'canceled':
+                stopJobUpdates();
+                break;
+            default:
+                stopJobUpdates();
+                console.error('Unknown job status', jobState.job_state, message);
+                throw new Error('Unknown job status ' + jobState.job_state);
             }
         }
 
@@ -398,7 +438,7 @@ define([
                 jobId = arg.jobId;
 
                 listeners.push(runtime.bus().on('clock-tick', function() {
-                    updateRunStats(ui, viewModel, jobState);
+                    updateRunStats2(ui, viewModel, jobState);
                 }));
 
                 listenForJobStatus();

@@ -46,6 +46,7 @@ define([
         this._super(options);
         this.ws_id = options.volcano_plot_object;
         this.ws_name = options.workspace;
+        this.redRows = [];
         return this;
       },
 
@@ -65,8 +66,8 @@ define([
         var self = this;
         //login related error
         var $container = this.$elem;
+        $container.empty();
         if (!self.token) {
-          $container.empty();
           $container.append("<div>[Error] You're not logged in</div>");
           return;
         }
@@ -131,10 +132,10 @@ define([
       colorx : function (d, pv, fc) {
 
         var x = d.log2fc_f
-        var y = d.p_value_f
+        var y = d.log_q_value
 
         if ( Math.abs(x) > fc && Math.abs(y) > pv ) {
-          if (d.significant  === 'yes'){
+          if (true || d.significant  === 'yes'){
            return "red";
           }
         }
@@ -155,12 +156,12 @@ define([
         var overviewTable = self.data('overview-table');
 
 
-        var counter=0;
+        self.counter=0;
         for (i=0; i < text.condition_pairs.length; i++){
           c1 = text.condition_pairs[i].condition_1
           c2 = text.condition_pairs[i].condition_2
           if (c1 === this.options.sample1 && c2 === this.options.sample2 || c1 === this.options.sample2 && c2 === this.options.sample1){
-            counter = i
+            self.counter = i
           }
         }
 
@@ -183,7 +184,7 @@ define([
                         .attr('type', 'text')
                         .addClass('span2')
                         .attr('data-slider-step', '0.01')
-                        .attr('id', 'pvalue')
+                        .attr('id', 'log_q_value')
                     )
                     .append(
                       $.jqElem('b')
@@ -226,6 +227,53 @@ define([
           )
           .append(
             $.jqElem('table')
+              .css({margin : 'auto'})
+              .append(
+                $.jqElem('tr')
+                  .append(
+                    $.jqElem('td').append('Min -Log10(q-value)').append(
+                    $.jqElem('input')
+                      .attr('id', 'minY')
+                      .addClass('form-control')
+                      .on('change', function(e) {
+                        self.options.ymin = parseFloat(e.target.value);
+                        self.renderSVG();
+                      })
+                  ))
+                  .append(
+                    $.jqElem('td').append('Max -Log10(q-value)').append(
+                    $.jqElem('input')
+                      .addClass('form-control')
+                      .attr('id', 'maxY')
+                      .on('change', function(e) {
+                        self.options.ymax = parseFloat(e.target.value);
+                        self.renderSVG();
+                      })
+                  ))
+                  .append(
+                    $.jqElem('td').append('Min Log2(Fold Change)').append(
+                    $.jqElem('input')
+                      .attr('id', 'minX')
+                      .addClass('form-control')
+                      .on('change', function(e) {
+                        self.options.xmin = parseFloat(e.target.value);
+                        self.renderSVG();
+                      })
+                  ))
+                  .append(
+                    $.jqElem('td').append('Max Log2(Fold Change)').append(
+                    $.jqElem('input')
+                      .attr('id', 'maxX')
+                      .addClass('form-control')
+                      .on('change', function(e) {
+                        self.options.xmax = parseFloat(e.target.value);
+                        self.renderSVG();
+                      })
+                  ))
+              )
+          )
+          .append(
+            $.jqElem('table')
               .css({ margin : 'auto', marginTop : '10px' })
               .append(
                 $.jqElem('tr')
@@ -255,12 +303,13 @@ define([
                 .addClass('btn btn-primary')
                 .on('click', function(e) {
                   var fc = self.data('fc').val() || 0;
-                  var pvalue = self.data('pvalue').val() || 0;
+                  var log_q_value = self.data('log_q_value').val() || 0;
+
                   Jupyter.narrative.addAndPopulateApp('FeatureSetUtils/upload_featureset_from_diff_expr', 'dev',
                     {
                       'diff_expression_ref' : self.diffExprMatrixSet_name,
-                      'p_cutoff' : parseFloat(parseFloat(pvalue, 10).toPrecision(4), 10),
-                      'fold_change_cutoff' : parseFloat(parseFloat(fc, 10).toPrecision(4), 10)
+                      'q_cutoff'            : parseFloat(parseFloat(log_q_value, 10).toPrecision(4), 10),
+                      'fold_change_cutoff'  : parseFloat(parseFloat(fc, 10).toPrecision(4), 10)
                     });
                 })
                 .append('Export as feature set')
@@ -284,9 +333,8 @@ define([
                   .append(
                     $.jqElem('tr')
                       .append( $.jqElem('th').append('Gene'))
-                      .append( $.jqElem('th').append('Gene description'))
-                      .append( $.jqElem('th').append('Log2(FPKM+1) Condition 1 '))
-                      .append( $.jqElem('th').append('Log2(FPKM+1) Condition 2'))
+                      .append( $.jqElem('th').append('p-value'))
+                      .append( $.jqElem('th').append('q-value'))
                       .append( $.jqElem('th').append('Log2(Fold Change) '))
                       .append( $.jqElem('th').append('-Log10(q-value)'))
                   )
@@ -296,9 +344,8 @@ define([
                   .append(
                     $.jqElem('tr')
                       .append( $.jqElem('th').append('Gene'))
-                      .append( $.jqElem('th').append('Gene description'))
-                      .append( $.jqElem('th').append('Log2(FPKM+1) Condition 1 '))
-                      .append( $.jqElem('th').append('Log2(FPKM+1) Condition 2'))
+                      .append( $.jqElem('th').append('p-value'))
+                      .append( $.jqElem('th').append('q-value'))
                       .append( $.jqElem('th').append('Log2(Fold Change) '))
                       .append( $.jqElem('th').append('-Log10(q-value)'))
                   )
@@ -318,50 +365,54 @@ define([
         self.data("showselectedgenes").click(function() {
           dtable.clear().draw();
           self.data("voltable").show();
-          var redRows     = [];
-          var seenCircles = 0;
-          var numCircles  = svg.selectAll("circle").size();
-          svg.selectAll("circle")
-            .transition()
-            .attr("fill", function(d) {
-              var cc = self.colorx(d, pv, fc);
-              if ( cc  ===  "red" ) {
-                redRows.push([
-                    d.gene,
-                    d.gene_function,
-                    d.value_1,
-                    d.value_2,
-                    d.log2fc_text,
-                    d.p_value_f,
-                ]);
-              }
-              return cc;
-            })
-            .each('end', function(d) {
-              seenCircles++;
-              if (seenCircles  ===  numCircles) {
-                dtable.rows.add(redRows).draw();
-              }
-            });
-
-          self.data("voltable").show();
-
-          pv = self.data("pvalue").val();
-          fc = self.data("fc").val();
-
-          svg.selectAll("circle")
-            .attr("fill", function(d) { return self.colorx(d, pv, fc); });
+          dtable.rows.add(self.redRows).draw();
         });
 
+        self.text = text;
 
-        var svgWidth  = 800;
-        var svgHeight = 350;
-        var padding   = 100;
+        self.svgWidth  = 800;
+        self.svgHeight = 350;
+        self.padding   = 100;
 
-        var svg = d3.select(self.data('chart')[0])
+        var svg = self.svg = d3.select(self.data('chart')[0])
           .append("svg")
-          .attr("width", svgWidth)
-          .attr("height", svgHeight);
+          .attr("width", self.svgWidth)
+          .attr("height", self.svgHeight);
+
+        self.svg.append("text")
+          .attr("class", "xlabel")
+          .attr("text-anchor", "end")
+          .attr("x", self.svgWidth/2)
+          .attr("y", self.svgHeight-40)
+          .text("Log2(Fold change)");
+
+        self.svg.append("text")
+          .attr("class", "ylabel")
+          .attr("text-anchor", "end")
+          .attr("y", 40)
+          .attr("x", -self.svgHeight/2+50)
+          .attr("transform", "rotate(-90)")
+          .text("-Log10(q-value)");
+
+        self.svg.append("g")
+          .attr("class", "xaxis axis")
+          .attr("transform", "translate(0," + (self.svgHeight - self.padding + 20) + ")");
+
+        self.svg.append("g")
+          .attr("class", "yaxis axis")
+          .attr("transform", "translate(" + (self.padding-10) + ",0)");
+
+        self.renderSVG();
+    },
+
+    renderSVG : function() {
+
+        var self = this;
+        var text = self.text;
+        var counter = self.counter;
+        var padding = self.padding;
+
+        var svg = self.svg
 
         var highlightElement = null;
 
@@ -384,6 +435,26 @@ define([
 
 
         var data = text.condition_pairs[counter].voldata;
+
+        // add in the -log_q_values.
+        var min_log_q_value = Number.MAX_VALUE;
+        data.forEach( function(d) {
+          if (d.q_value === 0) {
+            d.log_q_value = 'MIN';
+          }
+          else {
+            d.log_q_value = - Math.log10(parseFloat(d.q_value));
+            if (d.log_q_value < min_log_q_value) {
+              min_log_q_value = d.log_q_value;
+            }
+          }
+        });
+
+        data.forEach( function(d) {
+          if (d.log_q_value === 'MIN') {
+            d.log_q_value = min_log_q_value;
+          }
+        });
         self.data( "cond1").text(text.condition_pairs[counter].condition_1);
         self.data( "cond2").text(text.condition_pairs[counter].condition_2);
 
@@ -392,7 +463,7 @@ define([
         // name = gene
         // f = significant
         // x = log2fc_fa
-        // y = p_value_f
+        // y = log_q_value
 
         // tables contents
         // Gene
@@ -406,13 +477,28 @@ define([
         // Range slider
 
 
-        var xmin = d3.min(data, function(d) { return parseFloat(d.log2fc_f); });
-        var xmax = d3.max(data, function(d) { return parseFloat(d.log2fc_f); });
+        var xmin = this.options.xmin || d3.min(data, function(d) { return parseFloat(d.log2fc_f); });
+        var xmax = this.options.xmax || d3.max(data, function(d) { return parseFloat(d.log2fc_f); });
 
-        var ymin = d3.min(data, function(d) { return parseFloat(d.p_value_f); });
-        var ymax = d3.max(data, function(d) { return parseFloat(d.p_value_f); });
+        var ymin = this.options.ymin || d3.min(data, function(d) { return parseFloat(d.log_q_value); });
+        var ymax = this.options.ymax || d3.max(data, function(d) { return parseFloat(d.log_q_value); });
+
+        self.data('minX').val(xmin);
+        self.data('maxX').val(xmax);
+        self.data('minY').val(ymin);
+        self.data('maxY').val(ymax);
 
 
+        data = data.filter( function(d) {
+          if (    !Number.isNaN(parseFloat(d.log2fc_f)) && !Number.isNaN(parseFloat(d.log_q_value))
+               && d.log2fc_f    >= xmin && d.log2fc_f    <= xmax
+               && d.log_q_value >= ymin && d.log_q_value <= ymax ) {
+                return true;
+          }
+          else {
+            return false;
+          }
+        });
 
         //$("#fc").slider({tooltip_position:'bottom', step: 0.01, min :xmin, max:xmax, value: [xmin.toFixed(2),xmax.toFixed(2)]});
         //$("#pvalue").slider({tooltip_position:'bottom', step:0.01, min :ymin, max:ymax, value: [ymin.toFixed(2),ymax.toFixed(2)]});
@@ -433,12 +519,21 @@ define([
           self.data('selfc').text(parseFloat(fc).toFixed(2));
           var numCircles = svg.selectAll("circle").size();
           var seenCircles = 0;
+          self.redRows = [];
           svg.selectAll("circle")
             .transition()
             .attr("fill", function(d) {
               var cc = self.colorx(d, pv, fc);
               if ( cc  ===  "red" ) {
                 cnt = cnt + 1;
+                self.redRows.push([
+                    d.gene           || '',
+                    //d.gene_function  || '',
+                    d.p_value_f        || '',
+                    d.q_value        || '',
+                    d.log2fc_f       || '',
+                    d.log_q_value    || '',
+                ]);
               }
               return cc;
             }).each('end', function() {
@@ -459,16 +554,26 @@ define([
         }
 
         var slider2Update = _.debounce(function(){
-          pv = self.data( "pvalue").val();
+          pv = self.data( 'log_q_value').val();
           self.data('selpval').text(parseFloat(pv).toFixed(2));
+
           var numCircles = svg.selectAll("circle").size();
           var seenCircles = 0;
+          self.redRows = [];
           svg.selectAll("circle")
             .transition()
             .attr("fill", function(d) {
               var cc = self.colorx(d, pv, fc);
               if ( cc  ===  "red" ) {
                 cnt = cnt + 1;
+                self.redRows.push([
+                    d.gene           || '',
+                    //d.gene_function  || '',
+                    d.p_value_f        || '',
+                    d.q_value        || '',
+                    d.log2fc_f       || '',
+                    d.log_q_value    || '',
+                ]);
               }
               return cc;
             }).each('end', function() {
@@ -479,34 +584,35 @@ define([
             });
         });
 
-        self.data( "pvalue").slider({tooltip_position:'bottom', step:0.01, precision: 2, min :ymin, max:ymax.toFixed(2)}).on('slide',slider2Update);
+        self.data( 'log_q_value').slider({tooltip_position:'bottom', step:0.01, precision: 2, min :ymin, max:ymax.toFixed(2)}).on('slide',slider2Update);
 
         self.data( "fc").slider('setValue', fcmax.toFixed(2));
-        self.data( "pvalue").slider('setValue', ymax.toFixed(2));
+        self.data( 'log_q_value').slider('setValue', ymax.toFixed(2));
         self.data('selpval').text(ymax.toFixed(2));
         self.data('selfc').text(fcmax.toFixed(2));
 
-        pv = self.data( "pvalue").slider('getValue');
+        pv = self.data( 'log_q_value').slider('getValue');
         fc = self.data( "fc").slider('getValue');
 
         var xScale = d3.scale.linear()
           .domain([xmin,xmax])
-          .range([padding, svgWidth - padding]);
+          .range([padding, self.svgWidth - padding]);
 
         var yScale = d3.scale.linear()
           .domain([ymin, ymax])
-          .range([svgHeight - padding, 10]);
-
+          .range([self.svgHeight - padding, 10]);
 
         svg.selectAll("circle")
           .data(data)
           .enter()
-          .append("svg:circle")
+          .append("svg:circle");
+        svg.selectAll("circle")
+          .data(data)
           .attr("cx", function(d) {
             return xScale(parseFloat(d.log2fc_f));
           })
         .attr("cy", function(d) {
-          return yScale(parseFloat(d.p_value_f));
+          return yScale(parseFloat(d.log_q_value));
         })
         .attr("r", 3)
           .attr("fill", function(d) { return self.colorx(d, pv, fc); })
@@ -522,6 +628,10 @@ define([
         })
         .on("click", info)
           .attr("id", function(d) { return d.significant; });
+
+        svg.selectAll("circle")
+          .data(data)
+          .exit().remove();
 
 
 
@@ -547,30 +657,12 @@ define([
           .ticks(10);
 
 
-        svg.append("g")
-          .attr("class", "axis")
-          .attr("transform", "translate(0," + (svgHeight - padding + 20) + ")")
+        svg.selectAll('.xaxis')
           .call(xAxis);
 
-        svg.append("g")
-          .attr("class", "axis")
-          .attr("transform", "translate(" + (padding-10) + ",0)")
+        svg.selectAll('.yaxis')
           .call(yAxis);
 
-        svg.append("text")
-          .attr("class", "xlabel")
-          .attr("text-anchor", "end")
-          .attr("x", svgWidth/2)
-          .attr("y", svgHeight-40)
-          .text("Log2(Fold change)");
-
-        svg.append("text")
-          .attr("class", "ylabel")
-          .attr("text-anchor", "end")
-          .attr("y", 40)
-          .attr("x", -svgHeight/2+50)
-          .attr("transform", "rotate(-90)")
-          .text("-Log10(q-value)");
 
       },
 

@@ -9,6 +9,7 @@ define([
     'base/js/namespace',
     'kbaseNarrative'
 ], function($, AppPanel, Jupyter, Narrative) {
+    'use strict';
     var $panel = $('<div>');
     var appPanel = null;
 

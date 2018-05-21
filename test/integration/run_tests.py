@@ -26,7 +26,7 @@ from biokbase.service.Client import Client as ServiceClient
 
 # os.environ['NARRATIVE_DIR'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 TEST_ROOT = os.path.join("test", "integration")
-BASE_TEST_COMMAND = ["casperjs", "test", "--engine=phantomjs", "--includes=test/integration/jupyterUtil.js"]
+BASE_TEST_COMMAND = [os.path.join("node_modules", "casperjs", "bin", "casperjs"), "test", "--engine=phantomjs", "--includes=test/integration/jupyterUtil.js"]
 # TODO: configure, inject from mini-kbase, etc.
 BASE_URL = "https://ci.kbase.us/services/"
 URLS = {
@@ -103,6 +103,7 @@ def run_insertion_test(test_cfg, widget, nar_info):
         '--widget-name={}'.format(widget),
         '--current-user={}'.format(test_cfg['users']['userA']['id'])
     ]
+
     return subprocess.check_call(test_cmd, stderr=subprocess.STDOUT)
 
 def copy_and_unshare_narrative(info, test_cfg):

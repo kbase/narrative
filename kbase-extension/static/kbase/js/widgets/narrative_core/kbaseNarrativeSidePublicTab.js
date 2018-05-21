@@ -866,8 +866,9 @@ define ([
         },
 
         copyFinal: function(object, targetName, thisBtn) {
+            console.log('copying..', object);
             return this.narrativeService.callFunc('copy_object', [{
-                ref: object.ws + '/' + object.id,
+                ref: object.workspaceReference.ref,
                 target_ws_name: this.wsName,
                 target_name: targetName
             }])

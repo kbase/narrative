@@ -232,13 +232,13 @@ define([
         ]);
     }
 
-    function factory(config) {
+    function factory() {
         var container, ui, listeners = [],
             jobState = null,
             runtime = Runtime.make(),
             listeningForJob = false,
             jobId;
-
+        debugger
         var viewModel = {
             lastUpdated: {
                 elapsed: null,
@@ -392,7 +392,7 @@ define([
             return Promise.try(function() {
                 container = arg.node;
                 ui = UI.make({ node: container });
-
+                
                 container.innerHTML = renderRunStats();
 
                 jobId = arg.jobId;
@@ -426,8 +426,8 @@ define([
     }
 
     return {
-        make: function(config) {
-            return factory(config);
+        make: function() {
+            return factory();
         }
     };
 

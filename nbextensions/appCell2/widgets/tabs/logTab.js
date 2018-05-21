@@ -97,6 +97,7 @@ define([
                 widgets.jobList = JobStateList.make({
                     model: model
                 });
+                
                 return Promise.all([
                     widgets.log.start({
                         node: ui.getElement('log.body'),

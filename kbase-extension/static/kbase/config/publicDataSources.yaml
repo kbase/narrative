@@ -1,0 +1,187 @@
+# Public Data Sources
+---
+  sources:
+    - 
+      # the label displayed to the user
+      name: NCBI RefSeq Genomes
+      # The type of data source. The data source will understand this configuration.
+      sourceType: search
+      # For search data types this us used to match the "source" index key, which is 
+      # derived form the Source metadata property.
+      source: refseq
+      # TODO: remove - not used?
+      sourceLabel: RefSeq
+      # The kbase type, without version. 
+      type: KBaseGenomes.Genome
+      # Templates are used to build the structure provided to the view code.
+      # Two properties are expected:X
+      # title - the title line in the listing display
+      # metadata: a simplec 1 or 2 level array, whose elements are either
+      # label or template. The label forms the value label, the template forms 
+      # the value display. 
+      templates:
+        title: "{{scientific_name}}"
+        metadata:
+        - label: Lineage
+          template: "{{lineage taxonomy null 'cellular organisms'}}"
+        - label: KBase ID
+          template: "{{genome_id}}"
+        - label: RefSeq ID
+          template: "{{genome_source_id}}"
+        - label: ''
+          template:
+            - label: Contigs
+              template: '{{numeral num_contigs "0,0"}}'
+            - label: Features
+              template: '{{numeral num_features "0,0"}}'
+      searchFields: null
+    -
+      name: MycoCosm Genomes
+      type: KBaseGenomes.Genome
+      workspaceName: Fungal_Genomes
+      lineageStart: Fungi
+      logoUrl: "/narrative/static/kbase/images/logos/jgi-mycocosm-logo.png"
+      templates:
+        title: "{{metadata.Name}}"
+        metadata:
+          - label: Lineage
+            template: "{{lineage metadata.Taxonomy 'Fungi'}}"
+          - label: MycoCosm ID
+            template: "{{objectName}}"
+          - label: ''
+            template:
+              - label: Contigs
+                template: '{{numeral metadata.[Number contigs] "0,0"}}'
+              - label: Features
+                template: '{{numeral metadata.[Number of CDS] "0,0"}}'
+              - label: GC
+                template: '{{numeral metadata.[GC content] "0.0%"}}'
+      searchFields:
+        - metadata.Name
+        - metadata.Domain
+        - objectName
+        - metadata.Taxonomy
+      sort:
+        - field: metadata.Name
+          ascending: true
+      sourceType: workspace
+    -
+      name: Phytozome Genomes
+      type: KBaseGenomes.Genome
+      workspaceName: Phytozome_Genomes
+      lineageStart: Viridiplantae
+      sourceType: workspace
+      templates:
+        title: "{{metadata.Name}}"
+        metadata:
+          - label: Lineage
+            template: "{{lineage metadata.Taxonomy 'Viridiplantae'}}"
+          - label: Source ID
+            template: "{{metadata.[Source ID]}}"
+          - label: ''
+            template:
+              - label: Contigs
+                template: '{{numeral metadata.[Number contigs] "0,0"}}'
+              - label: Features
+                template: '{{numeral metadata.[Number of CDS] "0,0"}}'
+              - label: GC
+                template: '{{numeral metadata.[GC content] "0.0%"}}'
+      searchFields:
+        - metadata.Name
+        - metadata.Domain
+        - objectName
+        - metadata.Taxonomy
+      sort:
+        - field: metadata.Name
+          ascending: true
+    -
+      name: Media
+      type: KBaseBiochem.Media
+      workspaceName: KBaseMedia
+      sourceType: workspace
+      templates:
+        title: "{{objectName}}"
+        metadata: []
+      searchFields:
+        - objectName
+      sort:
+        - field: objectName
+          ascending: true
+    -
+      name: RNA-seq Reads (single-end)
+      type: KBaseAssembly.SingleEndLibrary
+      workspaceName: PlantCSGenomes
+      sourceType: workspace
+      templates:
+        title: "{{objectName}}"
+        metadata: []
+      searchFields:
+        - objectName
+      sort:
+        - field: objectName
+          ascending: true
+    - 
+      name: RNA-seq Reads (paired-end)
+      type: KBaseAssembly.PairedEndLibrary
+      workspaceName: PlantCSGenomes
+      sourceType: workspace
+      templates:
+        title: "{{objectName}}"
+        metadata: []
+      searchFields:
+        - objectName
+      sort:
+        - field: objectName
+          ascending: true
+    -
+      name: Plant RNA-seq Annotations
+      type: KBaseRNASeq.ReferenceAnnotation
+      workspaceName: PlantCSGenomes
+      sourceType: workspace
+      templates:
+        title: "{{objectName}}"
+        metadata: []
+      searchFields:
+        - objectName
+      sort:
+        - field: objectName
+          ascending: true
+    -
+      name: Plant Bowtie2 Indexes
+      type: KBaseRNASeq.Bowtie2Indexes
+      workspaceName: PlantCSGenomes
+      sourceType: workspace
+      templates:
+        title: "{{objectName}}"
+        metadata: []
+      searchFields:
+        - objectName
+      sort:
+        - field: objectName
+          ascending: true
+    -
+      name: Public ontologies
+      type: KBaseOntology.OntologyDictionary
+      workspaceName: KBaseOntology
+      sourceType: workspace
+      templates:
+        title: "{{objectName}}"
+        metadata: []
+      searchFields:
+        - objectName
+      sort:
+        - field: objectName
+          ascending: true
+    -
+      name: Ontology translations
+      type: KBaseOntology.OntologyTranslation
+      workspaceName: KBaseOntology
+      sourceType: workspace
+      templates:
+        title: "{{objectName}}"
+        metadata: []
+      searchFields:
+        - objectName
+      sort:
+        - field: objectName
+          ascending: true

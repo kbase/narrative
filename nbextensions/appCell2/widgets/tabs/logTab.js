@@ -8,13 +8,15 @@ define([
     './jobLogViewer',
     './jobStateViewer',
     './jobStateList',
+    './jobInputParams'
 ], function (
     Promise,
     html,
     UI,
     LogViewer,
     JobStateViewer,
-    JobStateList
+    JobStateList,
+    JobInputParams
 ) {
     'use strict';
 
@@ -46,10 +48,27 @@ define([
 
             var jobStatus = div({ class: 'col-md-8',  dataElement: 'kb-job-status-wrapper' },[
                 ui.buildCollapsiblePanel({
+                    title: 'Job Params',
+                    name: 'job-params-section-toggle',
+                    hidden: false,
+                    type: 'default',
+                    classes: ['kb-panel-container'],
+                    body: div({ }, [
+                        ui.buildPanel({
+                            // title: 'Job Params',
+                            name: 'params',
+                            classes: [
+                                'kb-panel-light'
+                            ]
+                        })
+                    ])
+                }),
+                ui.buildCollapsiblePanel({
                     title: 'Job Status',
                     name: 'job-status-section-toggle',
                     hidden: false,
                     type: 'default',
+                    collapsed: true,
                     classes: ['kb-panel-container'],
                     body: div({ }, [
                         ui.buildPanel({
@@ -90,6 +109,9 @@ define([
                     node: container
                 });
                 container.innerHTML = layout();
+                widgets.params = JobInputParams.make({
+                    model: model
+                });
                 widgets.log = LogViewer.make();
                 widgets.jobState = JobStateViewer.make({
                     model: model
@@ -99,6 +121,10 @@ define([
                 });
                 
                 return Promise.all([
+                    widgets.params.start({
+                        node: ui.getElement('params.body'),
+                        jobId: model.getItem('exec.jobState.job_id')
+                    }),
                     widgets.log.start({
                         node: ui.getElement('log.body'),
                         jobId: model.getItem('exec.jobState.job_id')

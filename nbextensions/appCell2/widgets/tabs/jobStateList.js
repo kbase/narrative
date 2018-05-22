@@ -92,12 +92,8 @@ define([
     function renderTable(){
         return table({class: 'table'},[
             tr([
-                th('Name'),
-                td("test")
-            ]),
-            tr([
-                th('Name2'),
-                td("test2")
+                th('Job Id'),
+                th("Status")
             ])
         ]);
     }

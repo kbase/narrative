@@ -119,11 +119,10 @@ define([
                 widgets.jobList = JobStateList.make({
                     model: model
                 });
-                
                 return Promise.all([
                     widgets.params.start({
                         node: ui.getElement('params.body'),
-                        jobId: model.getItem('exec.jobState.job_id')
+                        params: model.getItem('params')
                     }),
                     widgets.log.start({
                         node: ui.getElement('log.body'),

@@ -1,12 +1,12 @@
 {
     "users": {
         "userA": {
-            "id": "wjriehl",
-            "tokenFile": "test/wjriehl.tok"
+            "id": "thomasoniii",
+            "tokenFile": "test/thomasoniii.tok"
         },
         "userB": {
-            "id": "narrativetest",
-            "tokenFile": "test/narrativetest.tok"
+            "id": "thomasoniii2",
+            "tokenFile": "test/thomasoniii2.tok"
         }
     },
     "jupyterPort": 32323,
@@ -15,8 +15,22 @@
             "dataSelector": ".icon-genome",
             "widgetSelector": ".tabbable",
             "testFile": "widgets/kbaseGenomeView.js",
-            "publicData": "28238/2/8",
+            "publicData": "31082/46/1",
             "narrativeName": "Test Genome Viewer"
+        },
+        "kbaseGenomeAnnotationAssembly": {
+            "dataSelector": ".icon-genome",
+            "widgetSelector": ".tabbable",
+            "testFile": "widgets/kbaseGenomeAnnotationAssembly.js",
+            "publicData": "31082/40/2",
+            "narrativeName": "Test Assembly Viewer"
+        },
+        "kbaseOntologyDictionary": {
+            "dataSelector": ".icon-genome",
+            "widgetSelector": ".tabbable",
+            "testFile": "widgets/kbaseOntologyDictionary.js",
+            "publicData": "31082/47/2",
+            "narrativeName": "Test Ontology Dictionary Viewer"
         }
     }
 }

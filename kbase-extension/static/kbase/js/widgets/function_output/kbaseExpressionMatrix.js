@@ -71,15 +71,16 @@ define ([
                 token: auth.token
             });
 
-            /*this.expressionUtils = new DynamicServiceClient({
+            this.expressionUtils = new DynamicServiceClient({
                 module: 'ExpressionUtils',
                 url: Config.url('service_wizard'),
-                token: auth.token
-            });*/
+                token: auth.token,
+                version : 'dev',
+            });
 
-            this.expressionUtils = new ExpressionUtils(
+            /*this.expressionUtils = new ExpressionUtils(
                 Config.url('service_wizard'),
-                {'token': this.authToken()});
+                {'token': this.authToken()});*/
 console.log("EU IS : ", this.expressionUtils);
             // Let's go...
             this.loadAndRender();
@@ -96,10 +97,13 @@ console.log("EU IS : ", this.expressionUtils);
             var self = this;
 
             self.loading(true);
-            var expressionMatrixRef = this.options.workspaceID + '/' + this.options.expressionMatrixID;
-            Promise.resolve(self.expressionUtils.get_enhancedFilteredExpressionMatrix({
+            var expressionMatrixRef = '16162/40/2';//this.options.workspaceID + '/' + this.options.expressionMatrixID;
+            /*Promise.resolve(self.expressionUtils.get_enhancedFilteredExpressionMatrix({
                 fem_objet_ref: expressionMatrixRef
-            }))
+            }))*/
+            self.expressionUtils.callFunc('get_enhancedFilteredExpressionMatrix', {
+              fem_objet_ref: expressionMatrixRef
+            } )
             .then( function (data) {
               console.log("I HAVE ME DATA : ", data);
             })
@@ -109,7 +113,7 @@ console.log("EU IS : ", this.expressionUtils);
                     self.loading(false);
                 })*/
                 .catch(function(error){
-                console.log("FAILED WITH : ", error);
+                console.log("FAILED WITH : ", error, expressionMatrixRef);
                     self.clientError(error);
                 });
         },

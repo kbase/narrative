@@ -31,32 +31,32 @@ define([
             color = 'green';
             break;
         case 'queued':
-            label = 'success';
+            label = jobState;
             icon = 'fa fa-angle-double-right';
             color = 'green';
             break;
         case 'in-progress':
-            label = 'success';
+            label = jobState;
             icon = 'fa fa-spinner';
             color = 'green';
             break;
         case 'suspend':
-            label = 'error';
+            label = 'suspended';
             icon = 'fa fa-pause';
             color = 'red';
             break;
         case 'error':
-            label = 'error';
-            icon = 'fa fa-pause';
+            label = jobState;
+            icon = 'fa fa-times';
             color = 'red';
             break;
         case 'canceled':
-            label = 'cancelation';
+            label = jobState;
             icon = 'fa fa-times';
             color = 'orange';
             break;
         case 'does_not_exist':
-            label = 'does_not_exist';
+            label = 'does not exist';
             icon = 'fa fa-question';
             color: 'orange';
             break;

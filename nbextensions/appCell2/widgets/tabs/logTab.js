@@ -34,7 +34,7 @@ define([
         var widgets = {};
 
         var model = config.model;
-
+        var selectedJobId = config.jobId;
         function layout() {
             var list = div({ class: 'col-md-4', dataElement: 'kb-job-list-wrapper'}, [
                 ui.buildPanel({
@@ -101,6 +101,9 @@ define([
             return div({}, [list, jobStatus]);
 
         }
+        function getSelectedJobId (){
+            return config.clickedId;
+        }
 
 
         function start(arg) {
@@ -120,7 +123,12 @@ define([
                 widgets.jobList = JobStateList.make({
                     model: model
                 });
+                if (selectedJobId){
+                    startDetails();
+                }
                 function startDetails() {
+                    //will need to change for getting arrays
+                    config.clickedId = model.getItem('exec.jobState.job_id');
                     return Promise.all([
                         widgets.params.start({
                             node: ui.getElement('params.body'),
@@ -158,7 +166,8 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
+            getSelectedJobId: getSelectedJobId
         };
     }
 

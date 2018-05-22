@@ -104,6 +104,7 @@ define([
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000,
             controlBarTabs = {},
+            selectedJobId,
             readOnly = false,
             viewOnly = false,
             kernelReady = null,
@@ -436,8 +437,8 @@ define([
 
         function startTab(tabId) {
             var selectedTab = controlBarTabs.tabs[tabId];
-
             if (selectedTab.widgetModule) {
+                debugger;
                 return loadWidget(selectedTab.widgetModule)
                     .then(function(Widget) {
                         controlBarTabs.selectedTab = {
@@ -449,16 +450,19 @@ define([
 
                         var node = document.createElement('div');
                         ui.getElement('run-control-panel.tab-pane.widget').appendChild(node);
-
                         return controlBarTabs.selectedTab.widget.start({
-                            node: node
+                            node: node,
+                            jobId: selectedJobId
                         });
                     });
             }
+
             controlBarTabs.selectedTab = {
                 id: tabId,
                 widget: selectedTab.widget.make({
-                    model: model
+                    model: model,
+                    jobId: selectedJobId
+
                 })
             };
 
@@ -475,12 +479,15 @@ define([
 
         function stopTab() {
             ui.deactivateButton(controlBarTabs.selectedTab.id);
-
+            if (controlBarTabs.selectedTab.widget.getSelectedJobId){
+                selectedJobId = controlBarTabs.selectedTab.widget.getSelectedJobId();
+            }
             return controlBarTabs.selectedTab.widget.stop()
                 .catch(function(err) {
                     console.error('ERROR stopping', err);
                 })
                 .finally(function() {
+                    config;
                     var widgetNode = ui.getElement('run-control-panel.tab-pane.widget');
                     if (widgetNode.firstChild) {
                         widgetNode.removeChild(widgetNode.firstChild);
@@ -571,7 +578,6 @@ define([
                     userSelectedTab = true;
                 });
         }
-
 
         controlBarTabs = {
             selectedTab: null,

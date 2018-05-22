@@ -87,7 +87,7 @@ define([
                     type: 'default',
                     collapsed: true,
                     classes: ['kb-panel-container'],
-                    body: div({ }, [
+                    body: div({}, [
                         ui.buildPanel({
                             // title: 'Job Log',
                             name: 'log',
@@ -101,6 +101,7 @@ define([
             return div({}, [list, jobStatus]);
 
         }
+
 
         function start(arg) {
             return Promise.try(function () {
@@ -119,22 +120,27 @@ define([
                 widgets.jobList = JobStateList.make({
                     model: model
                 });
+                function startDetails() {
+                    return Promise.all([
+                        widgets.params.start({
+                            node: ui.getElement('params.body'),
+                            params: model.getItem('params')
+                        }),
+                        widgets.log.start({
+                            node: ui.getElement('log.body'),
+                            jobId: model.getItem('exec.jobState.job_id')
+                        }),
+                        widgets.jobState.start({
+                            node: ui.getElement('jobState.body'),
+                            jobId: model.getItem('exec.jobState.job_id')
+                        })
+                    ]);
+                }
                 return Promise.all([
-                    widgets.params.start({
-                        node: ui.getElement('params.body'),
-                        params: model.getItem('params')
-                    }),
-                    widgets.log.start({
-                        node: ui.getElement('log.body'),
-                        jobId: model.getItem('exec.jobState.job_id')
-                    }),
-                    widgets.jobState.start({
-                        node: ui.getElement('jobState.body'),
-                        jobId: model.getItem('exec.jobState.job_id')
-                    }),
                     widgets.jobList.start({
                         node: ui.getElement('subjobs.body'),
-                        jobId: model.getItem('exec.jobState.job_id')
+                        jobId: model.getItem('exec.jobState.job_id'),
+                        clickFunction : startDetails
                     })
                 ]);
             });

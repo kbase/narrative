@@ -75,7 +75,7 @@ define([
         }, label);
     }
 
-    function updateRowStatus(ui, jobState, container) {
+    function updateRowStatus(ui, jobState, container, clickFunction) {
         if(!jobState){
             return;
         }
@@ -84,9 +84,12 @@ define([
         if(row === null){
             row = document.createElement('tr');
             row.setAttribute('data-element-job-id', jobState.job_id);
+            if(clickFunction){
+                row.onclick = clickFunction;
+            }
             container.getElementsByTagName('tbody')[0].appendChild(row);
         }        
-        var jobStatus = jobState ? jobState.job_state : 'Determining Job State...';
+        // var jobStatus = jobState ? jobState.job_state : 'Determining Job State...';
         row.innerHTML = th(jobState.job_id) + niceState(jobState.job_state);
     }
     function renderTable(){
@@ -202,9 +205,9 @@ define([
                 container.innerHTML = renderTable();
 
                 jobId = arg.jobId;
-
+                var clickFunction = arg.clickFunction;
                 listeners.push(runtime.bus().on('clock-tick', function() {
-                    updateRowStatus(ui, jobState, container, listeningForJob);
+                    updateRowStatus(ui, jobState, container, clickFunction);
                 }));
 
                 listenForJobStatus();

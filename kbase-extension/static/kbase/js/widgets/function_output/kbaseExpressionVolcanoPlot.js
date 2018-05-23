@@ -46,6 +46,7 @@ define([
         this._super(options);
         this.ws_id = options.volcano_plot_object;
         this.ws_name = options.workspace;
+        this.redRows = [];
         return this;
       },
 
@@ -183,7 +184,7 @@ define([
                         .attr('type', 'text')
                         .addClass('span2')
                         .attr('data-slider-step', '0.01')
-                        .attr('id', 'pvalue')
+                        .attr('id', 'log_q_value')
                     )
                     .append(
                       $.jqElem('b')
@@ -302,12 +303,13 @@ define([
                 .addClass('btn btn-primary')
                 .on('click', function(e) {
                   var fc = self.data('fc').val() || 0;
-                  var pvalue = self.data('pvalue').val() || 0;
+                  var log_q_value = self.data('log_q_value').val() || 0;
+
                   Jupyter.narrative.addAndPopulateApp('FeatureSetUtils/upload_featureset_from_diff_expr', 'dev',
                     {
                       'diff_expression_ref' : self.diffExprMatrixSet_name,
-                      'p_cutoff' : parseFloat(parseFloat(pvalue, 10).toPrecision(4), 10),
-                      'fold_change_cutoff' : parseFloat(parseFloat(fc, 10).toPrecision(4), 10)
+                      'q_cutoff'            : parseFloat(parseFloat(log_q_value, 10).toPrecision(4), 10),
+                      'fold_change_cutoff'  : parseFloat(parseFloat(fc, 10).toPrecision(4), 10)
                     });
                 })
                 .append('Export as feature set')
@@ -331,9 +333,8 @@ define([
                   .append(
                     $.jqElem('tr')
                       .append( $.jqElem('th').append('Gene'))
-                      .append( $.jqElem('th').append('Gene description'))
-                      .append( $.jqElem('th').append('Log2(FPKM+1) Condition 1 '))
-                      .append( $.jqElem('th').append('Log2(FPKM+1) Condition 2'))
+                      .append( $.jqElem('th').append('p-value'))
+                      .append( $.jqElem('th').append('q-value'))
                       .append( $.jqElem('th').append('Log2(Fold Change) '))
                       .append( $.jqElem('th').append('-Log10(q-value)'))
                   )
@@ -343,9 +344,8 @@ define([
                   .append(
                     $.jqElem('tr')
                       .append( $.jqElem('th').append('Gene'))
-                      .append( $.jqElem('th').append('Gene description'))
-                      .append( $.jqElem('th').append('Log2(FPKM+1) Condition 1 '))
-                      .append( $.jqElem('th').append('Log2(FPKM+1) Condition 2'))
+                      .append( $.jqElem('th').append('p-value'))
+                      .append( $.jqElem('th').append('q-value'))
                       .append( $.jqElem('th').append('Log2(Fold Change) '))
                       .append( $.jqElem('th').append('-Log10(q-value)'))
                   )
@@ -365,39 +365,7 @@ define([
         self.data("showselectedgenes").click(function() {
           dtable.clear().draw();
           self.data("voltable").show();
-          var redRows     = [];
-          var seenCircles = 0;
-          var numCircles  = svg.selectAll("circle").size();
-          svg.selectAll("circle")
-            .transition()
-            .attr("fill", function(d) {
-              var cc = self.colorx(d, pv, fc);
-              if ( cc  ===  "red" ) {
-                redRows.push([
-                    d.gene           || '',
-                    d.gene_function  || '',
-                    d.value_1        || '',
-                    d.value_2        || '',
-                    d.log2fc_text    || '',
-                    d.log_q_value    || '',
-                ]);
-              }
-              return cc;
-            })
-            .each('end', function(d) {
-              seenCircles++;
-              if (seenCircles  ===  numCircles) {
-                dtable.rows.add(redRows).draw();
-              }
-            });
-
-          self.data("voltable").show();
-
-          pv = self.data("pvalue").val();
-          fc = self.data("fc").val();
-
-          svg.selectAll("circle")
-            .attr("fill", function(d) { return self.colorx(d, pv, fc); });
+          dtable.rows.add(self.redRows).draw();
         });
 
         self.text = text;
@@ -551,12 +519,21 @@ define([
           self.data('selfc').text(parseFloat(fc).toFixed(2));
           var numCircles = svg.selectAll("circle").size();
           var seenCircles = 0;
+          self.redRows = [];
           svg.selectAll("circle")
             .transition()
             .attr("fill", function(d) {
               var cc = self.colorx(d, pv, fc);
               if ( cc  ===  "red" ) {
                 cnt = cnt + 1;
+                self.redRows.push([
+                    d.gene           || '',
+                    //d.gene_function  || '',
+                    d.p_value_f        || '',
+                    d.q_value        || '',
+                    d.log2fc_f       || '',
+                    d.log_q_value    || '',
+                ]);
               }
               return cc;
             }).each('end', function() {
@@ -577,17 +554,26 @@ define([
         }
 
         var slider2Update = _.debounce(function(){
-          pv = self.data( "pvalue").val();
+          pv = self.data( 'log_q_value').val();
           self.data('selpval').text(parseFloat(pv).toFixed(2));
 
           var numCircles = svg.selectAll("circle").size();
           var seenCircles = 0;
+          self.redRows = [];
           svg.selectAll("circle")
             .transition()
             .attr("fill", function(d) {
               var cc = self.colorx(d, pv, fc);
               if ( cc  ===  "red" ) {
                 cnt = cnt + 1;
+                self.redRows.push([
+                    d.gene           || '',
+                    //d.gene_function  || '',
+                    d.p_value_f        || '',
+                    d.q_value        || '',
+                    d.log2fc_f       || '',
+                    d.log_q_value    || '',
+                ]);
               }
               return cc;
             }).each('end', function() {
@@ -598,14 +584,14 @@ define([
             });
         });
 
-        self.data( "pvalue").slider({tooltip_position:'bottom', step:0.01, precision: 2, min :ymin, max:ymax.toFixed(2)}).on('slide',slider2Update);
+        self.data( 'log_q_value').slider({tooltip_position:'bottom', step:0.01, precision: 2, min :ymin, max:ymax.toFixed(2)}).on('slide',slider2Update);
 
         self.data( "fc").slider('setValue', fcmax.toFixed(2));
-        self.data( "pvalue").slider('setValue', ymax.toFixed(2));
+        self.data( 'log_q_value').slider('setValue', ymax.toFixed(2));
         self.data('selpval').text(ymax.toFixed(2));
         self.data('selfc').text(fcmax.toFixed(2));
 
-        pv = self.data( "pvalue").slider('getValue');
+        pv = self.data( 'log_q_value').slider('getValue');
         fc = self.data( "fc").slider('getValue');
 
         var xScale = d3.scale.linear()

@@ -362,7 +362,6 @@ define ([
                 this.$dataSourceLogo.empty();
                 if (dataSource) {
                     if (dataSource.logoUrl) {
-                        console.log('use logo!', dataSource.logoUrl);
                         this.$dataSourceLogo.append($('<img>')
                             .attr('src', dataSource.logoUrl));
                     }
@@ -866,7 +865,6 @@ define ([
         },
 
         copyFinal: function(object, targetName, thisBtn) {
-            console.log('copying..', object);
             return this.narrativeService.callFunc('copy_object', [{
                 ref: object.workspaceReference.ref,
                 target_ws_name: this.wsName,

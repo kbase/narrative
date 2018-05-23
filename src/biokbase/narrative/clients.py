@@ -33,9 +33,21 @@ def __init_client(client_name):
         c = Catalog(URLS.catalog)
     elif client_name == 'service' or client_name == 'service_wizard':
         c = ServiceClient(URLS.service_wizard, use_url_lookup=True)
-
+    elif client_name == 'job_service_mock':
+        c = JobServiceMock()
     else:
         raise ValueError('Unknown client name "%s"' % client_name)
 
     __clients[client_name] = c
     return c
+
+
+class JobServiceMock():
+    def __init__(self):
+        self.client = get('service')
+
+    def check_job(self, job_id):
+        return self.client.sync_call('narrative_job_mock.check_job', [job_id])[0]
+
+    def check_jobs(self, params):
+        return self.client.sync_call('narrative_job_mock.check_jobs', [params])[0]

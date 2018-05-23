@@ -3,6 +3,7 @@ Tests for the app manager.
 """
 from biokbase.narrative.jobs.appmanager import AppManager
 from biokbase.narrative.jobs.specmanager import SpecManager
+import biokbase.narrative.app_util as app_util
 from biokbase.narrative.jobs.job import Job
 from IPython.display import HTML
 import unittest
@@ -47,6 +48,7 @@ class AppManagerTestCase(unittest.TestCase):
         self.public_ws = config.get('app_tests', 'public_ws_name')
         self.ws_id = int(config.get('app_tests', 'public_ws_id'))
         self.app_input_ref = config.get('app_tests', 'test_input_ref')
+        self.batch_app_id = config.get('app_tests', 'batch_app_id')
 
     def test_reload(self):
         self.am.reload()
@@ -81,6 +83,26 @@ class AppManagerTestCase(unittest.TestCase):
     def test_available_apps_bad(self):
         with self.assertRaises(ValueError):
             self.am.available_apps(self.bad_tag)
+
+    @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
+    def test_dry_run_app(self, m, auth):
+        os.environ['KB_WORKSPACE_ID'] = self.public_ws
+        output = self.am.run_app(
+            self.test_app_id,
+            self.test_app_params,
+            tag=self.test_tag,
+            dry_run=True
+        )
+        self.assertIsInstance(output, dict)
+        self.assertEquals(output['app_id'], self.test_app_id)
+        self.assertIsInstance(output['params'], list)
+        self.assertIn('method', output)
+        self.assertIn('service_ver', output)
+        self.assertIn('meta', output)
+        self.assertIn('tag', output['meta'])
+        self.assertIn('wsid', output)
 
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
@@ -152,6 +174,82 @@ class AppManagerTestCase(unittest.TestCase):
                                           tag="dev",
                                           version="1.0.0"))
 
+    @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
+    def test_run_app_batch_good_inputs(self, m, auth):
+        m.return_value._send_comm_message.return_value = None
+        os.environ['KB_WORKSPACE_ID'] = self.public_ws
+        new_job = self.am.run_app_batch(
+            self.test_app_id,
+            [
+                self.test_app_params,
+                self.test_app_params
+            ],
+            tag=self.test_tag
+        )
+        self.assertIsInstance(new_job, Job)
+        self.assertEquals(new_job.job_id, self.test_job_id)
+        self.assertEquals(new_job.app_id, self.batch_app_id)
+        self.assertEquals(new_job.tag, self.test_tag)
+        self.assertIsNone(new_job.cell_id)
+
+    @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
+    def test_run_app_batch_gui_cell(self, m, auth):
+        m.return_value._send_comm_message.return_value = None
+        os.environ['KB_WORKSPACE_ID'] = self.public_ws
+        self.assertIsNone(self.am.run_app_batch(
+            self.test_app_id,
+            [
+                self.test_app_params,
+                self.test_app_params
+            ],
+            tag=self.test_tag,
+            cell_id="12345"
+        ))
+
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    def test_run_app_batch_bad_id(self, m):
+        m.return_value._send_comm_message.return_value = None
+        self.assertIsNone(self.am.run_app_batch(self.bad_app_id, None))
+
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    def test_run_app_batch_bad_tag(self, m):
+        m.return_value._send_comm_message.return_value = None
+        self.assertIsNone(self.am.run_app_batch(self.good_app_id,
+                                                None,
+                                                tag=self.bad_tag))
+
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    def test_run_app_batch_bad_version_match(self, m):
+        # fails because a non-release tag can't be versioned
+        m.return_value._send_comm_message.return_value = None
+        self.assertIsNone(self.am.run_app_batch(self.good_app_id,
+                                                None,
+                                                tag=self.good_tag,
+                                                version=">0.0.1"))
+
+    # Running an app with missing inputs is now allowed. The app can
+    # crash if it wants to, it can leave its process behind.
+    @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
+    def test_run_app_missing_inputs(self, m, auth):
+        m.return_value._send_comm_message.return_value = None
+        self.assertIsNotNone(self.am.run_app_batch(self.good_app_id,
+                                                   None,
+                                                   tag=self.good_tag))
+
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    def test_run_app_batch_bad_version(self, m):
+        m.return_value._send_comm_message.return_value = None
+        self.assertIsNone(self.am.run_app_batch(self.good_app_id,
+                                                None,
+                                                tag="dev",
+                                                version="1.0.0"))
+
     def test_app_description(self):
         desc = self.am.app_description(self.good_app_id, tag=self.good_tag)
         self.assertIsInstance(desc, HTML)
@@ -191,10 +289,7 @@ class AppManagerTestCase(unittest.TestCase):
         os.environ['KB_WORKSPACE_ID'] = self.public_ws
         sm = SpecManager()
         spec = sm.get_spec(app_id, tag=tag)
-        (params, ws_inputs) = self.am._validate_parameters(app_id,
-                                                           tag,
-                                                           sm.app_params(spec),
-                                                           inputs)
+        (params, ws_inputs) = app_util.validate_parameters(app_id, tag, sm.app_params(spec), inputs)
         self.assertDictEqual(params, inputs)
         self.assertIn('11635/9/1', ws_inputs)
         self.assertIn('11635/10/1', ws_inputs)
@@ -260,7 +355,7 @@ class AppManagerTestCase(unittest.TestCase):
         }]
         self.assertDictEqual(expected[0], mapped_inputs[0])
         ref_path = ws_name + '/MyReadsSet; ' + ws_name + "/rhodobacterium.art.q10.PE.reads"
-        ret = self.am._transform_input("resolved-ref", ref_path, None)
+        ret = app_util.transform_param_value("resolved-ref", ref_path, None)
         self.assertEqual(ret, "wjriehl:1475006266615/MyReadsSet;11635/10/1")
         if prev_ws_id is None:
             del(os.environ['KB_WORKSPACE_ID'])
@@ -388,13 +483,13 @@ class AppManagerTestCase(unittest.TestCase):
         ]
         for test in test_data:
             spec = test.get('spec', None)
-            ret = self.am._transform_input(test['type'], test['value'], spec)
+            ret = app_util.transform_param_value(test['type'], test['value'], spec)
             self.assertEqual(ret, test['expected'])
         del(os.environ['KB_WORKSPACE_ID'])
 
     def test_transform_input_bad(self):
         with self.assertRaises(ValueError):
-            self.am._transform_input('foo', 'bar', None)
+            app_util.transform_param_value('foo', 'bar', None)
 
 if __name__ == "__main__":
     unittest.main()

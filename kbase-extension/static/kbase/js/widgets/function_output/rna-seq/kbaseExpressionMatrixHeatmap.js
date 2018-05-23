@@ -40,7 +40,7 @@ define ([
                     .addClass('alert alert-danger')
                     .html('Could not load object : ' + newDataset.description);
             } else {
-                var $heatElem = $.jqElem('div').css({width : 800, height : newDataset.data.row_ids.length * 10});
+                var $heatElem = $.jqElem('div').css({width : 800, height : newDataset.data.row_ids.length * 10 + 100});
 
                 var $heatmap = new kbaseHeatmap($heatElem, {
                     xPadding : 170,

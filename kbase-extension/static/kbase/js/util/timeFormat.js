@@ -336,6 +336,9 @@ define([], function() {
      * @return {string} a human readable timestamp
      */
     function readableTimestamp (timestamp) {
+        if (!timestamp) {
+            timestamp = 0;
+        }
         var format = function (x) {
             if (x < 10)
                 x = '0' + x;

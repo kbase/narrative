@@ -88,9 +88,10 @@ define([], function () {
                 run_id: runId
             }),
             args = positionalArgs.concat(namedArgs),
+            appCall = params instanceof Array ? 'run_app_batch' : 'run_app',
             pythonCode = [
                 'from biokbase.narrative.jobs.appmanager import AppManager',
-                'AppManager().run_app(' + buildNiceArgsList(args) + ')'
+                'AppManager().' + appCall + '(' + buildNiceArgsList(args) + ')'
             ].join('\n');
 
         return pythonCode;

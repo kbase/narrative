@@ -48,7 +48,7 @@
           - label: Lineage
             template: "{{lineage metadata.Taxonomy 'Fungi'}}"
           - label: MycoCosm ID
-            template: "{{objectName}}"
+            template: "{{metadata.[Source ID]}}"
           - label: ''
             template:
               - label: Contigs
@@ -57,10 +57,12 @@
                 template: '{{numeral metadata.[Number of CDS] "0,0"}}'
               - label: GC
                 template: '{{numeral metadata.[GC content] "0.0%"}}'
+      # Note that search fields are object path strings; they are split at dots (.)
+      # and used to traverse the object info.
       searchFields:
         - metadata.Name
         - metadata.Domain
-        - objectName
+        - 'metadata.Source ID'
         - metadata.Taxonomy
       sort:
         - field: metadata.Name
@@ -90,7 +92,7 @@
       searchFields:
         - metadata.Name
         - metadata.Domain
-        - objectName
+        - 'metadata.Source ID'
         - metadata.Taxonomy
       sort:
         - field: metadata.Name

@@ -694,14 +694,14 @@ define ([
                 showRuler: true,
                 reference: {
                     id: 'rh',
-                    fastaURL : 'https://prototypesite.net/rhodo/rhodo.fa',
+                    fastaURL : '//prototypesite.net/rhodo/rhodo.fa',
                     indexed : false,
                 },
                 tracks: [
                     {
                         name: 'GFF3',
                         sourceType: 'file',
-                        url: 'https://prototypesite.net/rhodo/rhodo.gff3',
+                        url: '//prototypesite.net/rhodo/rhodo.gff3',
                         displayMode: 'EXPANDED',
                         color : '#00FFFF',
                         nameField : 'ID',

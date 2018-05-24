@@ -1,6 +1,6 @@
-# PubliC Data Tab
+# Public Data Tab
 
-The Narrative "Data Slideout" supports a a "Public" tab for browsing, searching, and ultimately copying data objects contained within special "reference data" workspace.
+The Narrative "Data Slideout" supports a a "Public" tab for browsing, searching, and ultimately copying data objects contained within special "reference data" workspaces.
 
 Although all public data sources (at present) are hosted within specific workspaces, the public data browse and search tool may use the KBase Search Engine to access the data. At present only the NCBI RefSeq genomes are accessed through the search service; all others are accessed through direct workspace calls.
 
@@ -9,20 +9,10 @@ Although all public data sources (at present) are hosted within specific workspa
 All public data sources are defined in a single configuration file located within the Narrative codebase:
 
 ```
-kbase-extension/static/kbase/config/data_source_config.json
-```
-
-Now don't go looking for this file directoy in the public data tab codebase. It is actually loaded early in the Narrative loading process, in narrativeConfig.js
-
-> TODO: it may be better to just load this locally in kbaseNarrativeSidePublicTab.js.
-
-Actually the configuration is now located in:
-
-```
 kbase-extension/static/kbase/config/publicDataSources.yaml
 ```
 
-This config file is documented internally, so we won't belabor it here.
+[ document the structure and rules here ]
 
 The config file contains a section "sources" which contains one entry per data source.
 
@@ -34,7 +24,7 @@ This config file is used for the following purposes:
 
 ## Assets
 
-A data source may specify an logo to display in association with the data source. For instance, when a datasource is selected, the associated logo will be displayed to the right of the data source selector.
+A data source may specify a logo to display in association with the data source. For instance, when a data source is selected, the associated logo will be displayed to the right of the data source selector.
 
 The logos are stored in:
 

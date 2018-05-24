@@ -21,7 +21,11 @@ define([
     'use strict';
 
     var t = html.tag,
-        div = t('div');
+        div = t('div'),
+        table = t('table'),
+        tr = t('tr'),
+        td = t('td'),
+        th = t('th');
 
     function factory(config) {
         // The top level node used by this widget.
@@ -35,14 +39,21 @@ define([
 
         var model = config.model;
         var selectedJobId = config.jobId;
-        function layout() {
+
+        function batchLayout() {
             var list = div({ class: 'col-md-4', dataElement: 'kb-job-list-wrapper'}, [
                 ui.buildPanel({
                     title: 'Sub Jobs',
                     name: 'subjobs',
                     classes: [
                         'kb-panel-light'
-                    ]
+                    ],
+                    body: table({ class: 'table' }, [
+                        tr([
+                            th('Jodfs Id'),
+                            th("Stasdfstus")
+                        ])
+                    ])
                 })
             ]);
 
@@ -101,18 +112,38 @@ define([
             return div({}, [list, jobStatus]);
 
         }
+        function layout() {
+            return div({}, [
+                ui.buildPanel({
+                    title: 'Job Status',
+                    name: 'jobState',
+                    classes: [
+                        'kb-panel-light'
+                    ]
+                }),
+                ui.buildPanel({
+                    title: 'Job Log',
+                    name: 'log',
+                    classes: [
+                        'kb-panel-light'
+                    ]
+                })
+            ]);
+        }
         function getSelectedJobId (){
             return config.clickedId;
         }
 
-
-        function start(arg) {
+        function startBatch(arg){
             return Promise.try(function () {
                 container = arg.node.appendChild(document.createElement('div'));
                 ui = UI.make({
                     node: container
                 });
-                container.innerHTML = layout();
+                container.innerHTML = batchLayout();
+                var child_jobs = model.getItem('exec.jobState.child_jobs');
+
+                //display widgets
                 widgets.params = JobInputParams.make({
                     model: model
                 });
@@ -120,15 +151,20 @@ define([
                 widgets.jobState = JobStateViewer.make({
                     model: model
                 });
-                widgets.jobList = JobStateList.make({
-                    model: model
+
+                //rows as widgets to get live update
+                child_jobs.forEach(job => {
+                    widgets[job.job_id] = JobStateList.make({
+                        model: model
+                    });
                 });
-                if (selectedJobId){
+
+                if (selectedJobId) {
                     startDetails();
                 }
-                function startDetails() {
-                    //will need to change for getting arrays
-                    config.clickedId = model.getItem('exec.jobState.job_id');
+                function startDetails(jobId) {
+                    var selectedJobId = jobId ? jobId : model.getItem('exec.jobState.job_id');
+                    config.clickedId = selectedJobId
                     return Promise.all([
                         widgets.params.start({
                             node: ui.getElement('params.body'),
@@ -136,19 +172,53 @@ define([
                         }),
                         widgets.log.start({
                             node: ui.getElement('log.body'),
-                            jobId: model.getItem('exec.jobState.job_id')
+                            jobId: selectedJobId
                         }),
                         widgets.jobState.start({
                             node: ui.getElement('jobState.body'),
-                            jobId: model.getItem('exec.jobState.job_id')
+                            jobId: selectedJobId
                         })
                     ]);
                 }
+                return Promise.all(
+                    Object.keys(widgets).map((jobId) =>{
+                        var widget = widgets[jobId];
+                        widget.start({
+                            node: ui.getElement('subjobs.body'),
+                            jobId: jobId,
+                            clickFunction: startDetails
+                        })
+                    })
+                );
+            });
+        }
+        function start(arg) {
+
+            if(model.getItem('exec.jobState.child_jobs')){
+                startBatch(arg);
+            }else{
+                startSingle(arg);
+            }  
+        }
+        function startSingle(arg) {
+            return Promise.try(function () {
+                container = arg.node.appendChild(document.createElement('div'));
+                ui = UI.make({
+                    node: container
+                });
+                container.innerHTML = layout();
+                widgets.log = LogViewer.make();
+                widgets.jobState = JobStateViewer.make({
+                    model: model
+                });
                 return Promise.all([
-                    widgets.jobList.start({
-                        node: ui.getElement('subjobs.body'),
-                        jobId: model.getItem('exec.jobState.job_id'),
-                        clickFunction : startDetails
+                    widgets.log.start({
+                        node: ui.getElement('log.body'),
+                        jobId: model.getItem('exec.jobState.job_id')
+                    }),
+                    widgets.jobState.start({
+                        node: ui.getElement('jobState.body'),
+                        jobId: model.getItem('exec.jobState.job_id')
                     })
                 ]);
             });

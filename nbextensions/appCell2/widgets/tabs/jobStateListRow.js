@@ -89,8 +89,16 @@ define([
             }
             container.getElementsByTagName('tbody')[0].appendChild(row);
         }        
-        var jobStatus = jobState ? jobState.job_state : 'Determining Job State...';
-        row.innerHTML = th(jobState.job_id) + niceState(jobStatus);
+        // var jobStatus = jobState ? jobState.job_state : 'Determining Job State...';
+        row.innerHTML = th(jobState.job_id) + niceState(jobState.job_state);
+    }
+    function renderTable(){
+        return table({class: 'table'},[
+            tr([
+                th('Job Id'),
+                th("Status")
+            ])
+        ]);
     }
 
     function factory() {
@@ -194,6 +202,7 @@ define([
             return Promise.try(function() {
                 container = arg.node;
                 ui = UI.make({ node: container });
+                container.innerHTML = renderTable();
 
                 jobId = arg.jobId;
                 var clickFunction = arg.clickFunction;

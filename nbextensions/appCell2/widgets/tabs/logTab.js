@@ -47,13 +47,7 @@ define([
                     name: 'subjobs',
                     classes: [
                         'kb-panel-light'
-                    ],
-                    body: table({ class: 'table' }, [
-                        tr([
-                            th('Jodfs Id'),
-                            th("Stasdfstus")
-                        ])
-                    ])
+                    ]
                 })
             ]);
 
@@ -141,7 +135,6 @@ define([
                     node: container
                 });
                 container.innerHTML = batchLayout();
-                var child_jobs = model.getItem('exec.jobState.child_jobs');
 
                 //display widgets
                 widgets.params = JobInputParams.make({
@@ -153,11 +146,8 @@ define([
                 });
 
                 //rows as widgets to get live update
-                child_jobs.forEach(job => {
-                    widgets.child_jobs = {};
-                    widgets.child_jobs[job.job_id] = JobStateList.make({
-                        model: model
-                    });
+                widgets.stateList = JobStateList.make({
+                    model: model
                 });
 
                 if (selectedJobId) {
@@ -181,16 +171,13 @@ define([
                         })
                     ]);
                 }
-                return Promise.all(
-                    Object.keys(widgets.child_jobs).map((jobId) =>{
-                        var widget = widgets.child_jobs[jobId];
-                        widget.start({
-                            node: ui.getElement('subjobs.body'),
-                            jobId: jobId,
-                            clickFunction: startDetails
-                        })
+                return Promise.all([
+                    widgets.stateList.start({
+                        node: ui.getElement('subjobs.body'),
+                        childJobs: model.getItem('exec.jobState.child_jobs'),
+                        clickFunction: startDetails
                     })
-                );
+                ]);
             });
         }
         function start(arg) {
@@ -203,6 +190,8 @@ define([
                 job_id:  rawjobState.job_id
             })
             rawjobState.child_jobs = temp;
+            //end hack 
+
             if(model.getItem('exec.jobState.child_jobs')){
                 startBatch(arg);
             }else{

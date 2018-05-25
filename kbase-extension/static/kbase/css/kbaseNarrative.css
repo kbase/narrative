@@ -1,7 +1,8 @@
 @import url("//fonts.googleapis.com/css?family=Roboto");
 
 .kb-dropzone div#upload-message {
-    font-family: "OxygenBold", Arial, sans-serif;
+    font-family: Oxygen, Arial, sans-serif;
+    font-weight: bold;
 }
 
 .kb-data-staging-table-name {
@@ -11,7 +12,8 @@
 }
 
 .kb-data-staging-footer {
-    font-family : "OxygenBold", Arial, sans-serif;
+    font-family : Oxygen, Arial, sans-serif;
+    font-weight: bold;
     font-size : 105%;
     text-align : center;
     background-color : #EEEEEE;
@@ -20,7 +22,8 @@
 }
 
 .kb-data-staging-metadata-list {
-  font-family : 'OxygenBold';
+  font-family : Oxygen;
+  font-weight: bold;
   width : 115px;
   display : inline-block;
   font-size : 90%;
@@ -69,8 +72,9 @@
 }
 
 #kb-narr-name {
+    font-family: Oxygen;
+    font-weight: bold;
     font-style: italic;
-    font-family: 'OxygenBold';
     font-size: 130%;
     padding-bottom: 7px;
     white-space: nowrap;
@@ -84,13 +88,14 @@
 }
 
 #kb-narr-name > #save_widget {
-    font-style: normal;
-    font-family: 'OxygenBold';
+    font-family: Oxygen;
+    font-weight: bold;
     padding: 0;
 }
 
 #kb-narr-creator {
-    font-family: 'OxygenBold';
+    font-family: Oxygen;
+    font-weight: bold;
 }
 
 .kb-narr-namestamp {
@@ -182,7 +187,8 @@ nav[role="navigation"] ul li {
 nav[role="navigation"] ul li a {
     text-decoration: none;
     font-size: 1.2em;
-    font-family: 'OxygenBold';
+    font-family: Oxygen;
+    font-weight: bold;
     padding: 7px 1em;
     background-color: #5c9531;
     color: #fff;
@@ -1070,7 +1076,8 @@ div#notebook_panel {
     color: #006698;
     font-size: 120%;
     line-height: 1em;
-    font-family: "OxygenBold", Arial, sans-serif;
+    font-family: Oxygen, Arial, sans-serif;
+    font-weight: bold;
 }
 
 .panel {
@@ -1089,7 +1096,8 @@ div#notebook_panel {
 .kb-narr-side-panel .kb-title {
     padding: 10px 5px;
     font-size: 14pt;
-    font-family: "OxygenBold", Arial, sans-serif;
+    font-family: Oxygen, Arial, sans-serif;
+    font-weight: bold;
     text-transform: uppercase;
     color: #2e618d;
     /*border-bottom: 1px solid #CECECE;*/
@@ -1466,9 +1474,9 @@ div#notebook_panel {
 }
 
 .kb-cell-toolbar .title {
-    font-weight: normal;
     font-size: 120%;
-    font-family: "OxygenBold", Arial, sans-serif;
+    font-family: Oxygen, Arial, sans-serif;
+    font-weight: bold;
     color: #2e618d;
 }
 
@@ -1691,7 +1699,8 @@ div#notebook_panel {
 }
 /*** styling for the jobs manager */
 .kb-jobs-title {
-    font-family: "OxygenBold", Arial, sans-serif;
+    font-family: Oxygen, Arial, sans-serif;
+    font-weight: bold;
     color: #185A85;
     font-size: 1.2em;
 }
@@ -1706,7 +1715,8 @@ div#notebook_panel {
 }
 
 .kb-jobs-info-table th {
-    font-family: "OxygenBold", Arial, sans-serif;
+    font-family: Oxygen, Arial, sans-serif;
+    font-weight: bold;
     color: #777;
     vertical-align:top;
     padding-right: 5px;
@@ -1763,7 +1773,7 @@ div#notebook_panel {
 .kb-method-parameter-error-mssg {
    padding:5px;
    text-align:center;
-   font-family: 'OxygenBold', sans-serif;
+   font-family: Oxygen, sans-serif;
    font-weight: bold;
    font-size: 9pt;
    color:#F44336;
@@ -1772,7 +1782,8 @@ div#notebook_panel {
 
 /* not sure how to get text in these divs to valign middle... */
 .kb-method-parameter-name {
-   font-family: 'OxygenBold', sans-serif;
+   font-family: Oxygen, sans-serif;
+   font-weight: bold;
    color:#777;
    text-align:right;
    vertical-align:middle;
@@ -1848,7 +1859,8 @@ control with padding, and then scooting the icon back into its column.
 
 
 .kb-method-advanced-options-controller-inactive {
-   font-family: 'OxygenBold', sans-serif;
+   font-family: Oxygen, sans-serif;
+   font-weight: bold;
    font-style: italic;
    font-size: 10pt;
    line-height: 14px;
@@ -1856,9 +1868,10 @@ control with padding, and then scooting the icon back into its column.
    text-align: center;
 }
 .kb-method-advanced-options-controller {
-   font-family: 'OxygenBold', sans-serif;
-   cursor:pointer;
+   font-family: Oxygen, sans-serif;
+   font-weight: bold;
    font-style: italic;
+   cursor:pointer;
    font-size: 10pt;
    line-height: 14px;
    color: #0088cc;
@@ -1914,11 +1927,12 @@ control with padding, and then scooting the icon back into its column.
    line-height: 14px;
    color: #A63232;
    text-align: left;
-   pading-left:30px;
+   /* pading-left:30px; */
    margin:10px;
 }
 .kb-app-step-error-heading {
-   font-family: 'OxygenBold', sans-serif;
+   font-family: Oxygen, sans-serif;
+   font-weight: bold;
    font-size: 13pt;
    line-height: 14px;
    color: #555;
@@ -1927,7 +1941,8 @@ control with padding, and then scooting the icon back into its column.
    margin-top:20px;
 }
 .kb-app-step-error-main-heading {
-   font-family: 'OxygenBold', sans-serif;
+   font-family: Oxygen, sans-serif;
+   cursor:pointer;
    font-size: 16pt;
    line-height: 18px;
    color:#555;
@@ -2581,7 +2596,8 @@ button.kb-data-obj {
 .kb-data-list-name {
     color:#2e618d;
     font-size: 11pt;
-    font-family: 'OyxgenBold', Arial, sans-serif;
+    font-family: 'Oyxgen', Arial, sans-serif;
+    font-weight: bold;
     margin: 2px;
     cursor: pointer;
 }
@@ -2969,7 +2985,8 @@ button.kb-data-obj {
 
 
 .kb-nar-manager-titles {
-    font-family: 'OxygenBold';
+    font-family: 'Oxygen';
+    font-weight: bold;
     color:  #777;
     margin: 10px;
     margin-top: 20px;
@@ -3102,7 +3119,8 @@ button.kb-data-obj {
     /*background-color: #2196F3;
     color: #BBDEFB;*/
     color: #2196F3;
-    font-family: 'OxygenBold', Arial, sans-serif;
+    font-family: 'Oxygen', Arial, sans-serif;
+    font-weight: bold;
     font-size: 16px;
     /* font-weight: bold; */
     padding: 3px;
@@ -3130,9 +3148,9 @@ button.kb-data-obj {
 }
 /* this is the banner for readonly mode */
 .navbar-right div.label-warning {
-    font-family: 'OxygenBold', Arial, sans-serif;
+    font-family: 'Oxygen', Arial, sans-serif;
     font-size: 16px;
-    /* font-weight: bold; */
+    font-weight: bold;
 }
 
 /* Show this over the whole narrative UI until the
@@ -3159,7 +3177,8 @@ button.kb-data-obj {
 #kb-loading-blocker p {
     text-align: center;
     font-size: 24px;
-    font-family: "OxygenBold" helvetica neue;
+    font-family: Oxygen helvetica neue;
+    font-weight: bold;
 }
 
 #kb-loading-blocker .kb-loading-text {

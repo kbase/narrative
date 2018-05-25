@@ -528,6 +528,7 @@ define([
             var curState = model.getItem('user-settings.batchMode');
             var newState = !curState;
             model.setItem('user-settings.batchMode', newState);
+            evaluateAppState();
         }
 
         /*
@@ -1021,12 +1022,16 @@ define([
         function buildPython(cell, cellId, app, params) {
             var runId = new Uuid(4).format(),
                 fixedApp = fixApp(app),
+                code;
+            if (model.getItem('user-settings.batchMode')) {
+                code = PythonInterop.buildBatchAppRunner(cellId, runId, fixedApp, [params]);
+            }
+            else {
                 code = PythonInterop.buildAppRunner(cellId, runId, fixedApp, params);
-            console.log('app cell code', app);
+            }
             // TODO: do something with the runId
             cell.set_text(code);
         }
-
 
         function resetPython(cell) {
             cell.set_text('');

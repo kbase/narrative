@@ -522,6 +522,14 @@ define([
             return null;
         }
 
+        function toggleBatchMode() {
+            var btn = ui.getButton('batch-toggle');
+            btn.classList.toggle('active');
+            var curState = model.getItem('user-settings.batchMode');
+            var newState = !curState;
+            model.setItem('user-settings.batchMode', newState);
+        }
+
         /*
          * If tab not open, close any open one and open it.
          * If tab open, close it, leaving no tabs open.
@@ -566,27 +574,22 @@ define([
             tabs: {
                 configure: {
                     label: 'Configure',
-                    // icon: 'pencil',
                     widget: configureWidget()
                 },
                 viewConfigure: {
                     label: 'View Configure',
-                    // icon: 'pencil',
                     widget: viewConfigureWidget()
                 },
                 logs: {
                     label: 'Job Status',
-                    // icon: 'list',
                     widget: logTabWidget
                 },
                 results: {
                     label: 'Result',
-                    // icon: 'file',
                     widget: resultsTabWidget
                 },
                 error: {
                     label: 'Error',
-                    // icon: 'exclamation',
                     type: 'danger',
                     widget: errorTabWidget
                 }
@@ -797,6 +800,33 @@ define([
             return buttonDiv;
         }
 
+        function buildRunControlPanelBatchToggle(events) {
+            var classes = [];
+            if (model.getItem('user-settings.batchMode')) {
+                classes.push('active');
+            }
+            var btn = ui.buildButton({
+                dataElement: 'batch-toggle',
+                style: { width: '80px' },
+                label: 'Batch',
+                name: 'batch-toggle',
+                events: events,
+                type: 'default',
+                classes: classes,
+                hidden: false,
+                event: {
+                    type: 'batch-mode-toggle'
+                }
+            });
+            bus.on('batch-mode-toggle', function(message) {
+                toggleBatchMode(btn);
+            });
+            return div({
+                class: 'btn-group',
+                style: { padding: '6px' },
+            }, btn);
+        }
+
         function buildRunControlPanelDisplayButtons(events) {
             var buttons = Object.keys(controlBarTabs.tabs).map(function(key) {
                 var tab = controlBarTabs.tabs[key],
@@ -844,85 +874,74 @@ define([
         function buildRunControlPanel(events) {
             return div({ dataElement: 'run-control-panel' }, [
                 div({
-                    style: { border: '1px silver solid', height: '50px', position: 'relative' }
+                    style: { border: '1px silver solid', height: '50px', position: 'relative', display: 'flex', flexDirection: 'row' }
                 }, [
-                    div({ style: { position: 'absolute', top: '0', bottom: '0', left: '0', right: '0' } }, [
+                    div({
+                        style: {
+                            height: '50px',
+                            // width: '100px',
+                            overflow: 'hidden',
+                            textAlign: 'left',
+                            lineHeight: '50px',
+                            verticalAlign: 'middle',
+                            display: 'flex',
+                            flexDirection: 'row'
+                        }
+                    }, [
+                        buildRunControlPanelRunButtons(events),
+                        buildRunControlPanelBatchToggle(events)
+                    ]),
+                    div({
+                        dataElement: 'status',
+                        style: {
+                            // position: 'absolute',
+                            // left: '100px',
+                            // top: '0',
+                            width: '450px',
+                            height: '50px',
+                            overflow: 'hidden'
+                        }
+                    }, [
                         div({
                             style: {
-                                width: '100px',
                                 height: '50px',
-                                position: 'absolute',
-                                top: '0',
-                                left: '0'
+                                marginTop: '0px',
+                                textAlign: 'left',
+                                lineHeight: '50px',
+                                verticalAlign: 'middle'
                             }
                         }, [
-                            div({
-                                style: {
-                                    height: '50px',
-                                    width: '100px',
-                                    overflow: 'hidden',
-                                    textAlign: 'left',
-                                    lineHeight: '50px',
-                                    verticalAlign: 'middle',
-                                    textStyle: 'italic'
-                                }
-                            }, [
-                                buildRunControlPanelRunButtons(events)
+                            div([
+                                span({ dataElement: 'execMessage' })
                             ])
-                        ]),
-
+                        ])
+                    ]),
+                    div({
+                        dataElement: 'toolbar',
+                        style: {
+                            position: 'absolute',
+                            right: '0',
+                            top: '0',
+                            height: '50px'
+                        }
+                    }, [
                         div({
-                            dataElement: 'status',
                             style: {
-                                position: 'absolute',
-                                left: '100px',
-                                top: '0',
-                                width: '450px',
-                                height: '50px',
-                                overflow: 'hidden'
-                            }
-                        }, [
-                            div({
-                                style: {
-                                    height: '50px',
-                                    marginTop: '0px',
-                                    textAlign: 'left',
-                                    lineHeight: '50px',
-                                    verticalAlign: 'middle'
-                                }
-                            }, [
-                                div([
-                                    span({ dataElement: 'execMessage' })
-                                ])
-                            ])
-                        ]),
-                        div({
-                            dataElement: 'toolbar',
-                            style: {
-                                position: 'absolute',
+                                display: 'inline-block',
                                 right: '0',
-                                top: '0',
-                                height: '50px'
+                                height: '50px',
+                                lineHeight: '50px',
+                                paddingRight: '15px',
+                                verticalAlign: 'bottom'
                             }
                         }, [
                             div({
+                                class: 'btn-toolbar',
                                 style: {
                                     display: 'inline-block',
-                                    right: '0',
-                                    height: '50px',
-                                    lineHeight: '50px',
-                                    paddingRight: '15px',
                                     verticalAlign: 'bottom'
                                 }
-                            }, [
-                                div({
-                                    class: 'btn-toolbar',
-                                    style: {
-                                        display: 'inline-block',
-                                        verticalAlign: 'bottom'
-                                    }
-                                }, buildRunControlPanelDisplayButtons(events))
-                            ])
+                            }, buildRunControlPanelDisplayButtons(events))
                         ])
                     ])
                 ]),

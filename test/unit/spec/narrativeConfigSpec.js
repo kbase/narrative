@@ -1,15 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-
+/*eslint-env jasmine*/
 define ([
-    'narrativeConfig',
-    'bluebird'
+    'narrativeConfig'
 ], function(
-    Config,
-    Promise
+    Config
 ) {
     'use strict';
     describe('Tests for narrativeConfig', function() {
@@ -22,7 +15,7 @@ define ([
         });
 
         it('has a valid workspace url', function() {
-            expect(Config.config.urls.workspace).toMatch(/https\:\/\/.*kbase\.us\/services\/ws/);
+            expect(Config.config.urls.workspace).toMatch(/https:\/\/.*kbase\.us\/services\/ws/);
         });
 
         it('tries to update paths from ui-common and gets data source config', function(done) {
@@ -33,17 +26,16 @@ define ([
                 });
         });
 
-        it('updates paths and sees data sources for both example and public data', function(done) {
+        it('updates paths and sees data sources for example data', function(done) {
             Config.updateConfig()
                 .then(function(config) {
                     expect(config.exampleData).toBeDefined();
-                    expect(config.publicCategories).toBeDefined();
                     done();
                 });
         });
 
         it('can use the url method to fetch a url', function() {
-            expect(Config.url('workspace')).toMatch(/https\:\/\/.*kbase\.us\/services\/ws/);
+            expect(Config.url('workspace')).toMatch(/https:\/\/.*kbase\.us\/services\/ws/);
         });
 
         it('can use the get method to fetch tooltip info', function() {

@@ -26,6 +26,7 @@ module.exports = function (config) {
             {pattern: 'kbase-extension/static/**/*.css', included: false, served: true},
             {pattern: 'kbase-extension/static/kbase/templates/**/*.html', included: false, served: true},
             {pattern: 'kbase-extension/static/kbase/config/**/*.json', included: false, served: true},
+            {pattern: 'kbase-extension/static/kbase/config/**/*.yaml', included: false, served: true},
             {pattern: 'kbase-extension/static/**/*.js', included: false, served: true},
             {pattern: 'kbase-extension/static/**/*.gif', included: false, served: true},
             'kbase-extension/static/narrative_paths.js',

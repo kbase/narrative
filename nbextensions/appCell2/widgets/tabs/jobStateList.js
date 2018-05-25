@@ -85,7 +85,7 @@ define([
             row = document.createElement('tr');
             row.setAttribute('data-element-job-id', jobState.job_id);
             if(clickFunction){
-                row.onclick = clickFunction;
+                row.onclick = () => {clickFunction(jobState.job_id)};
             }
             container.getElementsByTagName('tbody')[0].appendChild(row);
         }        

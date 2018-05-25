@@ -154,17 +154,18 @@ define([
 
                 //rows as widgets to get live update
                 child_jobs.forEach(job => {
-                    widgets[job.job_id] = JobStateList.make({
+                    widgets.child_jobs = {};
+                    widgets.child_jobs[job.job_id] = JobStateList.make({
                         model: model
                     });
                 });
 
                 if (selectedJobId) {
-                    startDetails();
+                    startDetails(selectedJobId);
                 }
                 function startDetails(jobId) {
                     var selectedJobId = jobId ? jobId : model.getItem('exec.jobState.job_id');
-                    config.clickedId = selectedJobId
+                    config.clickedId = selectedJobId;
                     return Promise.all([
                         widgets.params.start({
                             node: ui.getElement('params.body'),
@@ -181,8 +182,8 @@ define([
                     ]);
                 }
                 return Promise.all(
-                    Object.keys(widgets).map((jobId) =>{
-                        var widget = widgets[jobId];
+                    Object.keys(widgets.child_jobs).map((jobId) =>{
+                        var widget = widgets.child_jobs[jobId];
                         widget.start({
                             node: ui.getElement('subjobs.body'),
                             jobId: jobId,
@@ -194,6 +195,14 @@ define([
         }
         function start(arg) {
 
+            //hack it too look like the other thing
+            var temp = [];
+            var rawjobState = model.getItem('exec.jobState');
+            temp.push({
+                job_state: rawjobState.job_state,
+                job_id:  rawjobState.job_id
+            })
+            rawjobState.child_jobs = temp;
             if(model.getItem('exec.jobState.child_jobs')){
                 startBatch(arg);
             }else{

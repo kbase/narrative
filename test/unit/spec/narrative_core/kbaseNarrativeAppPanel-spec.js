@@ -1,7 +1,7 @@
 /*global define*/
 /*global describe, it, expect*/
 /*global jasmine*/
-/*global beforeEach, afterEach*/
+/*global beforeEach, afterEach, spyOn*/
 /*jslint white: true*/
 define([
     'jquery',
@@ -75,8 +75,7 @@ define([
             expect(categoryList.indexOf('expression')).not.toBe(-1);
             expect(categoryList.indexOf('genome annotation')).not.toBe(-1);
 
-            //  * click input types
-            //  *      show input types accordion
+            // click input types
             $panel.find(dropdownSelector).parent().find('.dropdown-menu li:nth-child(2) a').click();
             expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('input');
             categoryList = $panel.find(appListSel + '> div.row').toArray().map(function(elem) {
@@ -87,8 +86,7 @@ define([
             expect(categoryList.indexOf('fba')).not.toBe(-1);
             expect(categoryList.indexOf('fbamodel')).not.toBe(-1);
 
-            //  * click output types
-            //  *      show output types accordion
+            // click output types
             $panel.find(dropdownSelector).parent().find('.dropdown-menu li:nth-child(3) a').click();
             expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('output');
             categoryList = $panel.find(appListSel + '> div.row').toArray().map(function(elem) {
@@ -99,8 +97,8 @@ define([
             expect(categoryList.indexOf('fbacomparison')).not.toBe(-1);
             expect(categoryList.indexOf('pangenome')).not.toBe(-1);
 
-            //  * click name a-z
-            //  *      show alphabetical names of apps
+            // click name a-z
+            // show alphabetical names of apps
             $panel.find(dropdownSelector).parent().find('.dropdown-menu li:nth-child(4) a').click();
             expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('a-z');
             var appList = $panel.find(appListSel + ' div.kb-data-list-name').toArray().map(function(item) {
@@ -109,9 +107,7 @@ define([
             // sort it, then compare to see if in same order. remember, we don't have favorites that pop to the top.
             expect(appList.sort().join('')).toEqual(appList.join(''));
 
-            //  * click name z-a
-            //  *      show reverse alphabetical names of apps
-            //  */
+            // click name z-a
             $panel.find(dropdownSelector).parent().find('.dropdown-menu li:nth-child(5) a').click();
             expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('z-a');
             appList = $panel.find(appListSel + ' div.kb-data-list-name').toArray().map(function(item) {

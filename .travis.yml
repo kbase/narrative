@@ -4,6 +4,7 @@ python:
   - "2.7"
 addons:
   firefox: "latest"
+  chrome: stable
   apt:
     packages:
       - oracle-java8-installer

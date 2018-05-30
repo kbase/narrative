@@ -1,9 +1,11 @@
-sudo: false
+dist: trusty
+sudo: required
 language: python
 python:
   - "2.7"
 addons:
   firefox: "latest"
+  chrome: stable
   apt:
     packages:
       - oracle-java8-installer

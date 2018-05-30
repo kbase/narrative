@@ -1,8 +1,4 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
+/*eslint-env jasmine*/
 define([
     'widgets/appWidgets2/input/dynamicDropdownInput',
     'base/js/namespace',
@@ -62,7 +58,7 @@ define([
                 .catch(function(error) {
                     console.error(JSON.stringify(error, null, 4));
                     console.error(error.stack);
-                    fail();
+                    done.fail();
                 })
                 .finally(function() {
                     done();

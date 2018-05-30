@@ -440,7 +440,7 @@ define([
 
         function scrollToLog($panel, target, scrollTime){
             if(target.length){
-                var scrollTime = scrollTime ? scrollTime : 500;
+                scrollTime = (scrollTime !== undefined) ? scrollTime : 500;
                 $panel.animate({
                     scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
                 }, scrollTime, function () {
@@ -477,7 +477,6 @@ define([
 
             var currentLine = currentSection ? currentSection : Number(model.getItem('currentLine')),
                 $currentSection = $('.' + String(currentLine));
-
             if (!$currentSection.is(':first-child')) {
                 var $panel = $(ui.getElements('panel')[0]),
                     target = $currentSection.prev().children().first();
@@ -737,9 +736,11 @@ define([
                 $panel = $(ui.getElements('panel')[0]);
                 var autoState = fsm.getCurrentState().state.auto;
                 if (!autoState){
-                    var target = renderLines(viewLines).hide();
+                    var target = renderLines(viewLines);
                     if(renderAbove){
-                        target.prependTo($panel).slideDown();
+                        var scrollTarget = $panel.children().first();
+                        target.prependTo($panel);
+                        scrollToLog($panel, scrollTarget, 0);
                     }else{
                         target.appendTo($panel).show();
                     }
@@ -912,7 +913,6 @@ define([
                     
                     var autoState = fsm.getCurrentState().state.auto;
                     var top = $(this).scrollTop();
-                    
                     //when not on autoplay then scrolling to top will fetch new logs
                     if (!autoState &&  top === 0) {   
                         var $panel = $(ui.getElements('panel')[0]),

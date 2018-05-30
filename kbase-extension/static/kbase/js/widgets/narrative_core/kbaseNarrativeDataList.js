@@ -517,7 +517,135 @@ define([
             this.$mainListDiv.show();
         },
 
+        fetchReportsForObjects: function (objects) {
+            var workspace = new GenericClient({
+                module: 'Workspace',
+                url: Config.url('workspace'),
+                token: this.token
+            });
+
+            var reportRegex = /^KBaseReport.Report-/;
+
+           
+            var objectRefs = objects.map(function (obj) {
+                return {
+                    ref: [obj.object_info[6], obj.object_info[0], obj.object_info[4]].join('/')
+                };
+            });
+
+            // An array parallel to the objects, containing the report ref, if any.
+            if (objects.length === 0) {
+                return objects.map(function () {
+                    return null;
+                });
+            }
+
+            return workspace.callFunc('list_referencing_objects', [
+                objectRefs
+            ])
+                .spread(function (result) {
+                    // Get list of all reports for all objects. Array mirrors objects.
+                    var referencingReports = result.reduce(function (referencingReports, referencingObjects) {
+                        // Winnow this down to just reports.
+                        var reports = referencingObjects.filter(function (referer) {
+                            return reportRegex.test(referer[2]);
+                        })
+                            .map(function (reportInfo) {
+                                return objectInfoToRef(reportInfo);
+                            });
+                        if (reports.length > 0) {
+                            referencingReports.push(reports);
+                        } else {
+                            referencingReports.push(null);
+                        }
+                        return referencingReports;
+                    }, []);
+
+                    // Generate list of unique report refs; we need this to fetch the report objects 
+                    // in order to determine if we need them or not. 
+                    var reportsToFetch = referencingReports
+                        .reduce(function (reportsToFetch, refs) {
+                            if (refs) {
+                                refs.forEach(function (ref) {
+                                    reportsToFetch[ref] = true;
+                                });
+                            }
+                            return reportsToFetch;
+                        }, {});
+            
+                    var objectsToFetch = Object.keys(reportsToFetch).map(function (reportRef) {
+                        return {
+                            ref: reportRef
+                        };
+                    });
+
+                    // If, after evaluation of the reports, we really don't have any, just 
+                    // shortcircuit with an array of nulls.
+                    if (objectsToFetch.length === 0)  {
+                        return objects.map(function () {
+                            return null;
+                        });
+                    }
+
+                    return workspace.callFunc('get_objects2', [{
+                        objects: objectsToFetch, 
+                        ignoreErrors: 0
+                    }])
+                        .spread(function (result) {
+                            // We make map of report ref -> report object info
+                            // This is how we map the report info back into the array of array of report refs.
+                            var reportMap = result.data.reduce(function (reportMap, report) {
+                                var info = ServiceUtils.objectInfoToObject(report.info);
+                                // splice this "imporved" object info back onto the report object wrapper 
+                                // (which had been returned from get_objects2)
+                                report.objectInfo = info;
+                                reportMap[info.ref] = report;
+                                return reportMap;
+                            }, {});
+
+                            // Now, finally, we shove the reports back into an array which mirrors the original object array.
+                            var objectReportsForOutput = objects.map(function (object, index) {
+                                // now get a list of qualifying reports...
+                                var objectReports = referencingReports[index];
+                                if (!objectReports) {
+                                    return null;
+                                }
+                                var inboundReports = objectReports.filter(function (reportRef) {
+                                    // NB reports in this array are just refs.
+                                    var reportObject = reportMap[reportRef];
+                                    if (!reportObject) {
+                                        console.warn('report object not found!!', reportRef, reportMap);
+                                        return false;
+                                    }
+
+                                    // here we filter for whether the object of our interest was created in the process which
+                                    // created the report. We are only interested in those.
+                                    // Note: we use the "objects_created" field in the report object itself;
+                                    //   we can also use the provenance to get at it.
+                                    var objectRef = [object.object_info[6], object.object_info[0], object.object_info[4]].join('/');
+                                    return (reportObject.data.objects_created.some(function (createdObject) {
+                                        return (createdObject.ref === objectRef);
+                                    }));
+                                });
+
+                                if (inboundReports.length > 1) {
+                                    console.error('There should only be one report referencing this objecta as a created object', object, inboundReports, objectReports);
+                                }
+
+                                if (inboundReports.length === 0) {
+                                    return null;
+                                }
+                                return inboundReports[0];
+                            });
+
+                            return objectReportsForOutput;
+                        });
+                });
+
+        },
+
         fetchWorkspaceData: function () {
+            var _this = this;
             var addObjectInfo = function (objInfo, dpInfo, reportRef) {
                 // Get the object info
                 var objId = this.itemId(objInfo); //objInfo[6] + '/' + objInfo[0]; // + '/' + objInfo[2]
@@ -591,52 +719,15 @@ define([
                 token: this.token
             });
 
-            var workspace = new GenericClient({
-                module: 'Workspace',
-                url: Config.url('workspace'),
-                token: this.token
-            });
-
-            var reportRegex = /^KBaseReport.Report-/;
-
             return narrativeService.callFunc('list_objects_with_sets', [{
                 'ws_name': this.ws_name,
                 'includeMetadata': 1
             }])
                 .spread(function (result) {
                     var objects = result.data;
-                    var objectsWithReferencingReport = [];
-                    var objectRefs = objects.map(function (obj) {
-                        return {
-                            ref: [obj.object_info[6], obj.object_info[0], obj.object_info[4]].join('/')
-                        };
-                    });
-                    // An array parallel to the objects, contiaining a boolean value indicating
-                    // the report ref, if any.
-                    if (objects.length > 0) {
-                        return workspace.callFunc('list_referencing_objects', [
-                            objectRefs
-                        ])
-                            .spread(function (result) {
-                                result.forEach(function (referers, index) {
-                                    var ref = objectRefs[index].ref;
-                                    var reports = referers.filter(function (referer) {
-                                        return reportRegex.test(referer[2]);
-                                    });
-                                    if (reports.length > 1) {
-                                        console.warn('Too many reports!', 'Ref: ' + ref);
-                                    }
-                                    if (reports.length === 0) {
-                                        objectsWithReferencingReport.push(null);
-                                    } else {
-                                        objectsWithReferencingReport.push(objectInfoToRef(reports[0]));
-                                    }
-                                });
-                                return [objects, objectsWithReferencingReport];
-                            });
-                    } else {
-                        return [objects, objectsWithReferencingReport];
-                    }                    
+
+                    var referencingReports = _this.fetchReportsForObjects(objects);
+                    return [objects, referencingReports];
                 })
                 .spread(function (objects, objectsWithReferencingReport) {
                     objects.forEach(function (obj, index) {

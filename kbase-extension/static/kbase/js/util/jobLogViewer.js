@@ -336,7 +336,6 @@ define([
         var config = config || {},
             runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({ description: 'Log Viewer Bus' }),
-            hostNode,
             container,
             jobId,
             model,
@@ -736,11 +735,12 @@ define([
                 $panel = $(ui.getElements('panel')[0]);
                 var autoState = fsm.getCurrentState().state.auto;
                 if (!autoState){
-                    var target = renderLines(viewLines);
+                    var target = renderLines(viewLines).css('font-color', 'white');
                     if(renderAbove){
                         var scrollTarget = $panel.children().first();
                         target.prependTo($panel);
                         scrollToLog($panel, scrollTarget, 0);
+                        target.css('font-color', 'black');
                     }else{
                         target.appendTo($panel).show();
                     }

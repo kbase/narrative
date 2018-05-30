@@ -80,7 +80,19 @@ echo "Building latest narrative version"
 # Build the Narrative container and tag it (as a backup)
 # Force the entrypoint to "headless-narrative" for the headless
 # narrative runner
-docker build -t $NAR_NAME:$NARRATIVE_VER .
+export NARRATIVE_VERSION_NUM=`grep '\"version\":' src/config.json.templ | awk '{print $2}' | sed 's/"//g'`
+export DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
+export COMMIT=${TRAVIS_COMMIT:-`git rev-parse --short HEAD`}
+export BRANCH=${TRAVIS_BRANCH:-`git symbolic-ref --short HEAD`}
+
+
+docker build -t $NAR_NAME:$NARRATIVE_VER \
+                --build-arg BUILD_DATE=$DATE \
+                --build-arg VCS_REF=$COMMIT \
+                --build-arg BRANCH=$BRANCH \
+                --build-arg NARRATIVE_VERSION=$NARRATIVE_VERSION_NUM \
+                --build-arg BRANCH=$BRANCH \
+                .
 docker tag $NAR_NAME:$NARRATIVE_VER $NAR_NAME:$COMMIT
 
 # Remove any provisioned, but not used, containers

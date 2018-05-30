@@ -13,6 +13,12 @@
 
 FROM kbase/narrbase:5.0dockerize
 
+# These ARGs values are passed in via the docker build command
+ARG BUILD_DATE
+ARG VCS_REF
+ARG BRANCH=develop
+ARG NARRATIVE_VERSION
+
 EXPOSE 8888
 
 # Remove Debian's older Tornado package - updated/removed in the narrbase package
@@ -75,6 +81,7 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.schema-version="1.0.0-rc1" \
       us.kbase.vcs-branch=$BRANCH \
+      us.kbase.narrative-version=$NARRATIVE_VERSION \
       maintainer="William Riehl wjriehl@lbl.gov"
 
 # ENTRYPOINT ["/usr/bin/tini", "--"]

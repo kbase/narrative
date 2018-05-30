@@ -20,7 +20,7 @@ define([
     'common/runtime',
     'common/semaphore',
     'common/utils',
-    'nbextensions/appCell2/widgets/tabs/jobLogViewer',
+    'util/jobLogViewer',
     'text!kbase/templates/job_status/status_table.html',
     'text!kbase/templates/job_status/header.html',
     'text!kbase/templates/job_status/log_panel.html',

@@ -5,6 +5,7 @@ DS=$( date +%Y%m%d%H%M )
 
 # This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
 NAR_NAME="kbase/narrative"
+NAR_VER_NAME="kbase/narrative_version"  # Image for serving up the narrative version
 HEADLESS_NAME="kbase/narrative_headless"
 NAR_BASE="kbase/narrbase"
 NAR_BASE_VER="5.0dockerize"
@@ -82,9 +83,8 @@ echo "Building latest narrative version"
 # narrative runner
 export NARRATIVE_VERSION_NUM=`grep '\"version\":' src/config.json.templ | awk '{print $2}' | sed 's/"//g'`
 export DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
-export COMMIT=${TRAVIS_COMMIT:-`git rev-parse --short HEAD`}
+export COMMIT=`git rev-parse --short HEAD`
 export BRANCH=${TRAVIS_BRANCH:-`git symbolic-ref --short HEAD`}
-
 
 docker build -t $NAR_NAME:$NARRATIVE_VER \
                 --build-arg BUILD_DATE=$DATE \
@@ -94,6 +94,15 @@ docker build -t $NAR_NAME:$NARRATIVE_VER \
                 --build-arg BRANCH=$BRANCH \
                 .
 docker tag $NAR_NAME:$NARRATIVE_VER $NAR_NAME:$COMMIT
+docker tag $NAR_NAME:$NARRATIVE_VER kbase/narrative:tmp
+docker build -t $NAR_VER_NAME:$NARRATIVE_VER \
+                --build-arg BUILD_DATE=$DATE \
+                --build-arg VCS_REF=$COMMIT \
+                --build-arg BRANCH=$BRANCH \
+                --build-arg NARRATIVE_VERSION=$NARRATIVE_VERSION_NUM \
+                --build-arg BRANCH=$BRANCH \
+                -f Dockerfile2 \
+                .
 
 # Remove any provisioned, but not used, containers
 curl -k -X DELETE https://localhost/proxy_map/provisioned || echo "Ignore Error"

@@ -103,6 +103,7 @@ docker build -t $NAR_VER_NAME:$NARRATIVE_VER \
                 --build-arg BRANCH=$BRANCH \
                 -f Dockerfile2 \
                 .
+docker tag $NAR_VER_NAME:$NARRATIVE_VER $NAR_VER_NAME:$COMMIT
 
 # Remove any provisioned, but not used, containers
 curl -k -X DELETE https://localhost/proxy_map/provisioned || echo "Ignore Error"

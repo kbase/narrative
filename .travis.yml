@@ -53,3 +53,4 @@ after_script:
   - coveralls --merge js-coverage.json
   - bash -x scripts/build_narrative_container.sh
   - IMAGE_NAME=kbase/narrative scripts/push2dockerhub.sh
+  - IMAGE_NAME=kbase/narrative_version scripts/push2dockerhub.sh

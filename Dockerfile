@@ -71,9 +71,12 @@ RUN pip install jupyter-console
 WORKDIR /tmp
 RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_profiles /tmp/narrative /kb/dev_container/narrative/kbase-extension; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
 
-# Setup the container to automatically run a script that uses the narrative_mongo profile
-# and configures the notebook server to use /narrative/{CMD} as the prefix for a reverse
-# proxy environment
+# Set a default value for the environment variable VERSION_CHECK that gets expanded in the config.json.templ
+# into the location to check for a new narrative version. Normally we would put this in the template itself
+# but since the raw template is consumed at build time as a JSON file, a template with a default string would
+# cause JSON parsing to fail - GRRRRR!!!
+ENV VERSION_CHECK /narrative_version
+
 USER root
 
 LABEL org.label-schema.build-date=$BUILD_DATE \

@@ -34,7 +34,7 @@ define ([
     DisplayUtil,
     Icon,
     kbaseDataCard,
-    BootstrapDialog
+    BootstrapDialog 
 ) {
     'use strict';
     return KBWidget({

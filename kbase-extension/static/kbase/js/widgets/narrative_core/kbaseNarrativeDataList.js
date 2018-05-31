@@ -244,7 +244,6 @@ define([
             this._super(options);
             var _this = this;
 
-            // var test = new kbaseDataCard({});
             var dataConfig = Config.get('data_panel');
             // this is the limit of the number of objects to retrieve from the ws on each pass
             // note that if there are more objects than this, then sorts/search filters may
@@ -517,136 +516,8 @@ define([
             this.$mainListDiv.show();
         },
 
-        fetchReportsForObjects: function (objects) {
-            var workspace = new GenericClient({
-                module: 'Workspace',
-                url: Config.url('workspace'),
-                token: this.token
-            });
-
-            var reportRegex = /^KBaseReport.Report-/;
-
-           
-            var objectRefs = objects.map(function (obj) {
-                return {
-                    ref: [obj.object_info[6], obj.object_info[0], obj.object_info[4]].join('/')
-                };
-            });
-
-            // An array parallel to the objects, containing the report ref, if any.
-            if (objects.length === 0) {
-                return objects.map(function () {
-                    return null;
-                });
-            }
-
-            return workspace.callFunc('list_referencing_objects', [
-                objectRefs
-            ])
-                .spread(function (result) {
-                    // Get list of all reports for all objects. Array mirrors objects.
-                    var referencingReports = result.reduce(function (referencingReports, referencingObjects) {
-                        // Winnow this down to just reports.
-                        var reports = referencingObjects.filter(function (referer) {
-                            return reportRegex.test(referer[2]);
-                        })
-                            .map(function (reportInfo) {
-                                return objectInfoToRef(reportInfo);
-                            });
-                        if (reports.length > 0) {
-                            referencingReports.push(reports);
-                        } else {
-                            referencingReports.push(null);
-                        }
-                        return referencingReports;
-                    }, []);
-
-                    // Generate list of unique report refs; we need this to fetch the report objects 
-                    // in order to determine if we need them or not. 
-                    var reportsToFetch = referencingReports
-                        .reduce(function (reportsToFetch, refs) {
-                            if (refs) {
-                                refs.forEach(function (ref) {
-                                    reportsToFetch[ref] = true;
-                                });
-                            }
-                            return reportsToFetch;
-                        }, {});
-            
-                    var objectsToFetch = Object.keys(reportsToFetch).map(function (reportRef) {
-                        return {
-                            ref: reportRef
-                        };
-                    });
-
-                    // If, after evaluation of the reports, we really don't have any, just 
-                    // shortcircuit with an array of nulls.
-                    if (objectsToFetch.length === 0)  {
-                        return objects.map(function () {
-                            return null;
-                        });
-                    }
-
-                    return workspace.callFunc('get_objects2', [{
-                        objects: objectsToFetch, 
-                        ignoreErrors: 0
-                    }])
-                        .spread(function (result) {
-                            // We make map of report ref -> report object info
-                            // This is how we map the report info back into the array of array of report refs.
-                            var reportMap = result.data.reduce(function (reportMap, report) {
-                                var info = ServiceUtils.objectInfoToObject(report.info);
-                                // splice this "imporved" object info back onto the report object wrapper 
-                                // (which had been returned from get_objects2)
-                                report.objectInfo = info;
-                                reportMap[info.ref] = report;
-                                return reportMap;
-                            }, {});
-
-                            // Now, finally, we shove the reports back into an array which mirrors the original object array.
-                            var objectReportsForOutput = objects.map(function (object, index) {
-                                // now get a list of qualifying reports...
-                                var objectReports = referencingReports[index];
-                                if (!objectReports) {
-                                    return null;
-                                }
-                                var inboundReports = objectReports.filter(function (reportRef) {
-                                    // NB reports in this array are just refs.
-                                    var reportObject = reportMap[reportRef];
-                                    if (!reportObject) {
-                                        console.warn('report object not found!!', reportRef, reportMap);
-                                        return false;
-                                    }
-
-                                    // here we filter for whether the object of our interest was created in the process which
-                                    // created the report. We are only interested in those.
-                                    // Note: we use the "objects_created" field in the report object itself;
-                                    //   we can also use the provenance to get at it.
-                                    var objectRef = [object.object_info[6], object.object_info[0], object.object_info[4]].join('/');
-                                    return (reportObject.data.objects_created.some(function (createdObject) {
-                                        return (createdObject.ref === objectRef);
-                                    }));
-                                });
-
-                                if (inboundReports.length > 1) {
-                                    console.error('There should only be one report referencing this objecta as a created object', object, inboundReports, objectReports);
-                                }
-
-                                if (inboundReports.length === 0) {
-                                    return null;
-                                }
-                                return inboundReports[0];
-                            });
-
-                            return objectReportsForOutput;
-                        });
-                });
-
-        },
-
         fetchWorkspaceData: function () {
-            var _this = this;
-            var addObjectInfo = function (objInfo, dpInfo, reportRef) {
+            var addObjectInfo = function (objInfo, dpInfo) {
                 // Get the object info
                 var objId = this.itemId(objInfo); //objInfo[6] + '/' + objInfo[0]; // + '/' + objInfo[2]
                 var fullDpReference = null;
@@ -663,8 +534,7 @@ define([
                     info: objInfo,
                     attached: false,
                     fromPalette: this.wsId !== objInfo[6],
-                    refPath: fullDpReference,
-                    reportRef: reportRef
+                    refPath: fullDpReference
                 };
                 this.keyToObjId[key] = objId;
                 this.viewOrder.push({
@@ -725,13 +595,7 @@ define([
             }])
                 .spread(function (result) {
                     var objects = result.data;
-
-                    var referencingReports = _this.fetchReportsForObjects(objects);
-                    return [objects, referencingReports];
-                })
-                .spread(function (objects, objectsWithReferencingReport) {
-                    objects.forEach(function (obj, index) {
-                        // Skip any Narrative objects.
+                    objects.forEach(function (obj) {
                         var objInfo = obj.object_info;
                         if (objInfo[2].indexOf('KBaseNarrative') === 0) {
                             if (objInfo[2].indexOf('KBaseNarrative.Narrative') === 0) {
@@ -739,8 +603,7 @@ define([
                             }
                             return;
                         }
-                        // Only adds to dataObjects, etc., if it's not already there.
-                        addObjectInfo(objInfo, obj.dp_info, objectsWithReferencingReport[index]);
+                        addObjectInfo(obj.object_info, obj.dp_info);
                         // if there's set info, update that.
                         if (obj.set_items) {
                             updateSetInfo(obj);
@@ -845,17 +708,23 @@ define([
             window.open('/#dataview/' + reportRef, '_blank');
         },
 
-        toolbarButton: function () {
+        makeToolbarButton: function (name) {
             var btnClasses = 'btn btn-xs btn-default';
             var btnCss = { 'color': '#888' };
 
-            return $('<span>')
+            var $btn = $('<span>')
                 .addClass(btnClasses)
                 .css(btnCss);
+
+            if (name) {
+                $btn.attr('data-button', name);
+            }
+
+            return $btn;
         },
 
         filterMethodInputButton: function (objData) {
-            return this.toolbarButton()
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'Show Apps with this as input',
                     container: '#' + this.mainListId,
@@ -871,7 +740,7 @@ define([
         },
 
         filterMethodOutputButton: function (objData) {
-            return this.toolbarButton()
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'Show Apps with this as output',
                     container: '#' + this.mainListId,
@@ -887,7 +756,7 @@ define([
         },
 
         openLandingPageButton: function (objData, $alertContainer) {
-            return this.toolbarButton()
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'Explore data',
                     container: '#' + this.mainListId,
@@ -905,42 +774,14 @@ define([
                 }.bind(this));
         },
 
-        openReportButton: function (objData) {
-            var $openReport = this.toolbarButton()
-                .append($('<span>').addClass('fa fa-file-text'));
-            
-            if (objData.reportRef) {
-                $openReport
-                    .tooltip({
-                        title: 'View associated report',
-                        container: '#' + this.mainListId,
-                        delay: {
-                            show: Config.get('tooltip').showDelay,
-                            hide: Config.get('tooltip').hideDelay
-                        }
-                    })
-                    .click(function (e) {
-                        e.stopPropagation();
-                        this.showReportLandingPage(objData.reportRef);
-                    }.bind(this));
-            } else {
-                $openReport
-                    .tooltip({
-                        title: 'This object has no report',
-                        container: '#' + this.mainListId,
-                        delay: {
-                            show: Config.get('tooltip').showDelay,
-                            hide: Config.get('tooltip').hideDelay
-                        }
-                    })
-                    .addClass('disabled');
-            }
+        openReportButton: function () {
+            var $openReport = this.makeToolbarButton('report');
             return $openReport;
         },
 
         openHistoryButton: function (objData, $alertContainer) {
             var _this = this;
-            return this.toolbarButton()
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'View history to revert changes',
                     container: 'body',
@@ -1031,7 +872,7 @@ define([
         },
 
         openProvenanceButton: function (objData, $alertContainer) {
-            return this.toolbarButton()
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'View data provenance and relationships',
                     container: 'body',
@@ -1050,7 +891,7 @@ define([
 
         downloadButton: function (objData, ref_path, $alertContainer) {
             var _this = this;
-            return this.toolbarButton()
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'Export / Download data',
                     container: 'body',
@@ -1081,7 +922,7 @@ define([
 
         renameButton: function (objData, $alertContainer) {
             var _this = this;
-            return this.toolbarButton()
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'Rename data',
                     container: 'body',
@@ -1165,7 +1006,7 @@ define([
 
         deleteButton: function (objData, $alertContainer) {
             var _this = this;
-            return this.toolbarButton()
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'Delete data',
                     container: 'body',
@@ -1288,6 +1129,143 @@ define([
                 }
             }
         },
+
+        getReportForObject: function (objectInfo) {
+            var narrativeService = new DynamicServiceClient({
+                module: 'NarrativeService',
+                url: Config.url('service_wizard'),
+                token: this.token
+            });
+            return narrativeService.callFunc('find_object_report', [
+                {
+                    upa: objectInfo.ref
+                }
+            ]).spread(function(result) {
+
+                if (result.report_upas.length === 0) {
+                    return [];
+                }
+
+                var objectsToFetch = result.report_upas.map(function (reportRef) {
+                    return {
+                        ref: reportRef
+                    };
+                });
+
+                // If, after evaluation of the reports, we really don't have any, just 
+                // shortcircuit with an array of nulls.
+                if (objectsToFetch.length === 0)  {
+                    return [];
+                }
+
+                var reportRef = result.object_upa;
+
+                var workspace = new GenericClient({
+                    module: 'Workspace',
+                    url: Config.url('workspace'),
+                    token: this.token
+                });
+
+                return workspace.callFunc('get_objects2', [{
+                    objects: objectsToFetch, 
+                    ignoreErrors: 0
+                }])
+                    .spread(function (result) {
+                        var objectReportsForOutput = result.data.filter(function (reportObject) {
+                            // pull out found objects which are in the list of objects created in the report.
+                            // objects_created looks like {description: .., ref: ..}
+                            return reportObject.data.objects_created.some(function (objectCreated) {
+                                return objectCreated.ref === reportRef;
+                            });
+                        })
+                            .map(function (reportObject) {
+                                return ServiceUtils.objectInfoToObject(reportObject.info);
+                            });
+
+                        // we can get multiple reports if this narrative has been copied.
+                        // If so, we only want to look at the one in the current workspace.
+                        // TODO: otherwise? is it possible to have more than one report and not have
+                        //       one in the current workspace????
+                        if (objectReportsForOutput.length > 1) {
+                            objectReportsForOutput = objectReportsForOutput.filter(function (reportInfo) {
+                                return (reportInfo.wsid === objectInfo.wsid);
+                            });
+                        }
+
+                        return objectReportsForOutput;
+                    });
+            }.bind(this));
+        },
+
+        onOpenDataListItem: function ($moreRow, objData) {
+            if ('reportRef' in objData) {
+                return;
+            }
+
+            var _this = this;
+
+            var objectInfo = objData.objectInfo;
+            // The report button needs the report to be found!
+            var $reportButton = $moreRow.find('[data-button="report"]');
+
+            $reportButton.empty().append($('<span>')
+                .addClass('fa fa-spinner fa-spin fa-fw fa-sm').css('width', '0.75em'));
+
+
+            this.getReportForObject(objectInfo)
+                .then(function (result) {
+                    if (result.length === 0) {
+                        $reportButton.addClass('disabled');
+                        $reportButton.empty().append($('<span>').addClass('fa fa-ban').css('width', '0.75em'));
+                        $reportButton
+                            .tooltip({
+                                title: 'No report associated with this object',
+                                container: '#' + _this.mainListId,
+                                delay: {
+                                    show: Config.get('tooltip').showDelay,
+                                    hide: Config.get('tooltip').hideDelay
+                                }
+                            });
+                        objData.reportRef = null;
+                        return;
+                    } else if (result.length === 1) {
+                        $reportButton.empty().append($('<span>').addClass('fa fa-file-text').css('width', '0.75em'));
+                        objData.reportRef = result[0].ref;
+                        $reportButton
+                            .tooltip({
+                                title: 'View associated report',
+                                container: '#' + _this.mainListId,
+                                delay: {
+                                    show: Config.get('tooltip').showDelay,
+                                    hide: Config.get('tooltip').hideDelay
+                                }
+                            })
+                            .click(function (e) {
+                                e.stopPropagation();
+                                if (objData.reportRef) {
+                                    _this.showReportLandingPage(objData.reportRef);
+                                }
+                            });
+                    } else {
+                        console.warn('oops, too many reports', result);
+
+                        $reportButton
+                            .tooltip({
+                                title: 'Too many reports associated with this object',
+                                container: '#' + _this.mainListId,
+                                delay: {
+                                    show: Config.get('tooltip').showDelay,
+                                    hide: Config.get('tooltip').hideDelay
+                                }
+                            });
+                        $reportButton.addClass('disabled');
+                        $reportButton.empty().append($('<span>').addClass('fa fa-ban').css('width', '0.75em'));
+                        objData.reportRef = null;
+                    }
+
+                });
+        },
+
         /**
          * This is the main function for rendering a data object
          * in the data list.
@@ -1353,6 +1331,9 @@ define([
                 moreContent: $moreContent,
                 is_set: is_set,
                 object_info: object_info,
+                onOpen: function() {
+                    _this.onOpenDataListItem($moreContent, objData);
+                }
             }]);
 
             if (objData.fromPalette) {
@@ -1984,6 +1965,10 @@ define([
         },
 
         getRichData: function (object_info, $moreRow) {
+            // spawn off expensive operations required to enable "more" functionality.
+            // e.g. the report button.
+
+            // The "Saved by" field needs to lookup that user's real name.
             var $usernameTd = $moreRow.find('.kb-data-list-username-td');
             DisplayUtil.displayRealName(object_info[5], $usernameTd);
         }

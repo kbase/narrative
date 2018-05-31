@@ -4,25 +4,25 @@
 'use strict';
 
 define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseAuthenticatedWidget',
-		'jquery-dataTables',
-		'knhx',
-		'widgetMaxWidthCorrection'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbaseAuthenticatedWidget,
-		jquery_dataTables,
-		knhx,
-		widgetMaxWidthCorrection
-	) {
+    [
+        'kbwidget',
+        'bootstrap',
+        'jquery',
+        'narrativeConfig',
+        'kbaseAuthenticatedWidget',
+        'jquery-dataTables',
+        'knhx',
+        'widgetMaxWidthCorrection'
+    ], function(
+        KBWidget,
+        bootstrap,
+        $,
+        Config,
+        kbaseAuthenticatedWidget,
+        jquery_dataTables,
+        knhx,
+        widgetMaxWidthCorrection
+    ) {
     return KBWidget({
         name: 'kbaseConditionSet',
         parent : kbaseAuthenticatedWidget,
@@ -69,9 +69,10 @@ define (
 
         loadConditionSet: function() {
             var self = this;
-            self.ws.get_objects([{ref:self.options.obj_ref}],
-                function(data) {
-                    var cs = data[0].data;
+            self.ws.get_objects2({objects: [{ref: self.options.obj_ref}]},
+                function(ret) {
+                    console.log(ret);
+                    var cs = ret.data[0].data;
                     for (var index = 0; index < cs.factors.length; ++index) {
                         // init with optional values
                         var row = {"unit": "", "unit_ont_ref": "", "unit_ont_id": ""};
@@ -151,28 +152,6 @@ define (
                             .append("<br>" + errString);
             this.$elem.empty();
             this.$elem.append($errorDiv);
-        },
-
-        buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
-            if (wsRef) {
-                obj['ref'] = wsRef;
-            } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj['wsid'] = workspaceID;
-                else
-                    obj['workspace'] = workspaceID;
-
-                // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj['objid'] = objectID;
-                else
-                    obj['name'] = objectID;
-
-                if (objectVer)
-                    obj['ver'] = objectVer;
-            }
-            return obj;
         },
 
         loading: function(doneLoading) {

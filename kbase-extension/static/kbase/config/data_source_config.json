@@ -1,7 +1,7 @@
 {
     "dev": {        
         "exampleData": {
-            "ws": "KBaseExampleData",
+            "workspaceName": "KBaseExampleData",
             "data_types": [
                 {
                     "name": [
@@ -61,7 +61,7 @@
     },
     "ci": {        
         "exampleData": {
-            "ws": "KBaseExampleData",
+            "workspaceName": "KBaseExampleData",
             "data_types": [
                 {
                     "name": [
@@ -121,7 +121,7 @@
     },
     "next": {       
         "exampleData": {
-            "ws": "KBaseExampleData",
+            "workspaceName": "KBaseExampleData",
             "data_types": [
                 {
                     "name": [
@@ -173,7 +173,7 @@
     },
     "prod": {       
         "exampleData": {
-            "ws": "KBaseExampleData",
+            "workspaceName": "KBaseExampleData",
             "data_types": [
                 {
                     "name": [
@@ -225,7 +225,7 @@
     },
     "appdev": {        
         "exampleData": {
-            "ws": "KBaseExampleData",
+            "workspaceName": "KBaseExampleData",
             "data_types": [
                 {
                     "name": [

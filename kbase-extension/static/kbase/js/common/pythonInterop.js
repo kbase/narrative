@@ -92,8 +92,8 @@ define([], function () {
         positionalArgs = positionalArgs.concat(namedArgs);
         return [
             paramSetName + ' = ' + pythonifiedParams,
-            'from biokbase.narrative.jobs.appmanager.import AppManager',
-            'AppManager().run_app_batch(' + buildNiceArgsList(positionalArgs) + ')'                
+            'from biokbase.narrative.jobs.appmanager import AppManager',
+            'AppManager().run_app_batch(' + buildNiceArgsList(positionalArgs) + ')'
         ].join('\n');
     }
 

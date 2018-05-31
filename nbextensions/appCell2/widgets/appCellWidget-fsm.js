@@ -4,7 +4,8 @@
 define([], function() {
     'use strict';
 
-    var appStates = [{
+    var appStates = [
+        {
             state: {
                 mode: 'new'
             },
@@ -129,13 +130,18 @@ define([], function() {
                 label: 'editing',
                 message: 'You may edit the parameters for this App. You must fill in all required parameters (indicated by red arrows) before you can run the App.'
             },
-            next: [{
+            next: [
+                {
                     mode: 'editing',
                     params: 'complete',
                     code: 'built'
                 },
                 {
                     mode: 'editing',
+                    params: 'incomplete'
+                },
+                {
+                    mode: 'editing-batch',
                     params: 'incomplete'
                 },
                 {
@@ -218,12 +224,243 @@ define([], function() {
                 label: 'editing',
                 message: 'You have completed the required parameters for this App; you may run it or continue to edit parameters.'
             },
-            next: [{
+            next: [
+                {
                     mode: 'editing',
                     params: 'incomplete'
                 },
                 {
+                    mode: 'editing-batch',
+                    params: 'incomplete'
+                },
+                {
                     mode: 'editing',
+                    params: 'complete',
+                    code: 'built'
+                },
+                {
+                    mode: 'execute-requested'
+                },
+                {
+                    mode: 'processing',
+                    stage: 'launched'
+                },
+                {
+                    mode: 'processing',
+                    stage: 'queued'
+                },
+                {
+                    mode: 'processing',
+                    stage: 'running'
+                },
+                {
+                    mode: 'success'
+                },
+                {
+                    mode: 'error',
+                    stage: 'launching'
+                },
+                {
+                    mode: 'error',
+                    stage: 'queued'
+                },
+                {
+                    mode: 'error',
+                    stage: 'running'
+                },
+                {
+                    mode: 'error'
+                },
+                {
+                    mode: 'internal-error'
+                }
+            ]
+        },
+        {
+            state: {
+                mode: 'editing-batch',
+                params: 'incomplete'
+            },
+            ui: {
+                tabs: {
+                    configureBatch: [{
+                        selector: {
+                            viewOnly: false
+                        },
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
+                        },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }],
+                    viewConfigure: [{
+                        selector: {
+                            viewOnly: false
+                        },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
+                        },
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }],
+                    configure: {
+                        enabled: false,
+                        hidden: true
+                    },
+                    logs: {
+                        enabled: false
+                    },
+                    results: {
+                        enabled: false
+                    },
+                    error: {
+                        enabled: false,
+                        hidden: true
+                    }
+                },
+                actionButton: {
+                    name: 'runApp',
+                    disabled: true
+                },
+                elements: {
+                    show: ['parameters-group', 'output-group'],
+                    hide: ['internal-error', 'parameters-display-group', 'exec-group']
+                },
+                appStatus: {
+                    classes: ['kb-app-status-warning'],
+                    icon: {
+                        type: 'pencil'
+                    }
+                },
+                label: 'editing',
+                message: 'You may edit the parameters for this App. You must fill in all required parameters (indicated by red arrows) before you can run the App.'
+            },
+            next: [{
+                    mode: 'editing-batch',
+                    params: 'complete',
+                    code: 'built'
+                },
+                {
+                    mode: 'editing-batch',
+                    params: 'incomplete'
+                },
+                {
+                    mode: 'editing',
+                    params: 'incomplete'
+                },
+                {
+                    mode: 'internal-error'
+                }
+            ]
+        },
+        {
+            state: {
+                mode: 'editing-batch',
+                params: 'complete',
+                code: 'built'
+            },
+            ui: {
+                tabs: {
+                    configureBatch: [{
+                        selector: {
+                            viewOnly: false
+                        },
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
+                        },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }],
+                    viewConfigure: [{
+                        selector: {
+                            viewOnly: false
+                        },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
+                        },
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }],
+                    configure: {
+                        enabled: false,
+                        hidden: true
+                    },
+                    logs: {
+                        enabled: false
+                    },
+                    results: {
+                        enabled: false
+                    },
+                    error: {
+                        enabled: false,
+                        hidden: true
+                    }
+                },
+                actionButton: {
+                    name: 'runApp',
+                    disabled: false
+                },
+                elements: {
+                    show: ['parameters-group', 'output-group'],
+                    hide: ['internal-error', 'parameters-display-group', 'exec-group']
+                },
+                appStatus: {
+                    classes: ['kb-app-status-ok'],
+                    icon: {
+                        xcolor: 'green',
+                        type: 'pencil'
+                    }
+                },
+                label: 'editing',
+                message: 'You have completed the required parameters for this App; you may run it or continue to edit parameters.'
+            },
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'incomplete'
+                },
+                {
+                    mode: 'editing-batch',
+                    params: 'incomplete'
+                },
+                {
+                    mode: 'editing-batch',
                     params: 'complete',
                     code: 'built'
                 },
@@ -1197,8 +1434,6 @@ define([], function() {
                 }
             ]
         }
-
     ];
-
     return appStates;
 });

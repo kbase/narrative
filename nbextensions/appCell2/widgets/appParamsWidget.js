@@ -48,7 +48,7 @@ define([
             container,
             ui,
             bus,
-            places,
+            places = {},
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
@@ -238,7 +238,7 @@ define([
                 var input = advancedInputs[i];
                 input.classList.remove(removeClass);
                 input.classList.add(addClass);
-                                
+
                 var actualInput = input.querySelector('[data-element="input"]');
                 if (actualInput) {
                     $(actualInput).trigger('advanced-shown.kbase');
@@ -289,18 +289,52 @@ define([
             events.attachEvents();
         }
 
-        function renderLayout() {
+        function buildBatchToggleButton(batchMode, events) {
+            var classes = [];
+            if (batchMode) {
+                classes.push('batch-active');
+            }
+            var btn = ui.buildButton({
+                dataElement: 'batch-toggle',
+                style: { width: '80px' },
+                label: 'Batch',
+                name: 'batch-toggle',
+                events: events,
+                type: 'default',
+                classes: classes,
+                hidden: false,
+                event: {
+                    type: 'batch-mode-toggle'
+                }
+            });
+            bus.on('batch-mode-toggle', function(message) {
+                paramsBus.emit('toggle-batch-mode');
+                ui.getButton('batch-toggle').classList.toggle('batch-active');
+            });
+            return div({
+                class: 'btn-group',
+                style: { padding: '3px' },
+            }, btn);
+        }
+
+        function renderLayout(batchMode) {
             var events = Events.make(),
-                content = form({ dataElement: 'input-widget-form' }, [                    
+                batchToggleBtn = buildBatchToggleButton(batchMode, events),
+                formContent = [batchToggleBtn];
+            if (batchMode) {
+                formContent.push(div('batch mode!'));
+            }
+            else {
+                formContent = formContent.concat([
                     ui.buildPanel({
                         title: span([
-                            'Input Objects', 
-                            span({ 
-                                dataElement: 'advanced-hidden-message', 
-                                style: { 
-                                    marginLeft: '6px', 
-                                    fontStyle: 'italic' 
-                                } 
+                            'Input Objects',
+                            span({
+                                dataElement: 'advanced-hidden-message',
+                                style: {
+                                    marginLeft: '6px',
+                                    fontStyle: 'italic'
+                                }
                             })]),
                         name: 'input-objects-area',
                         body: div({ dataElement: 'input-fields' }),
@@ -321,7 +355,8 @@ define([
                     })
                     // ui.makePanel('Output Report', 'output-report')
                 ]);
-
+            }
+            var content = form({ dataElement: 'input-widget-form' }, formContent);
             return {
                 content: content,
                 events: events
@@ -330,21 +365,23 @@ define([
 
         // MESSAGE HANDLERS
 
-        function doAttach(node) {
+        function doAttach(node, batchMode) {
             container = node;
             ui = UI.make({
                 node: container,
                 bus: bus
             });
-            var layout = renderLayout();
+            var layout = renderLayout(batchMode);
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
-            places = {
-                inputFields: ui.getElement('input-fields'),
-                outputFields: ui.getElement('output-fields'),
-                parameterFields: ui.getElement('parameter-fields'),
-                advancedParameterFields: ui.getElement('advanced-parameter-fields')
-            };
+            if (!batchMode) {
+                places = {
+                    inputFields: ui.getElement('input-fields'),
+                    outputFields: ui.getElement('output-fields'),
+                    parameterFields: ui.getElement('parameter-fields'),
+                    advancedParameterFields: ui.getElement('advanced-parameter-fields')
+                };
+            }
         }
 
         // EVENTS
@@ -372,6 +409,9 @@ define([
                 widgets.forEach(function (widget) {
                     widget.bus.emit('workspace-changed');
                 });
+            });
+            bus.on('toggle-batch-mode', function () {
+                alert('batch mode toggled!');
             });
         }
 
@@ -538,35 +578,46 @@ define([
             return Promise.try(function () {
                 // send parent the ready message
 
-                doAttach(arg.node);
+                paramsBus.request({}, {key: {type: 'get-batch-mode'}})
+                    .then((batchMode) => {
+                        doAttach(arg.node, batchMode);
 
-                model.setItem('appSpec', arg.appSpec);
-                model.setItem('parameters', arg.parameters);
+                        model.setItem('appSpec', arg.appSpec);
+                        model.setItem('parameters', arg.parameters);
 
-                paramsBus.on('parameter-changed', function (message) {
-                    // Also, tell each of our inputs that a param has changed.
-                    // TODO: use the new key address and subscription
-                    // mechanism to make this more efficient.
-                    widgets.forEach(function (widget) {
-                        widget.bus.send(message, {
-                            key: {
-                                type: 'parameter-changed',
-                                parameter: message.parameter
-                            }
+                        paramsBus.on('parameter-changed', function (message) {
+                            // Also, tell each of our inputs that a param has changed.
+                            // TODO: use the new key address and subscription
+                            // mechanism to make this more efficient.
+                            widgets.forEach(function (widget) {
+                                widget.bus.send(message, {
+                                    key: {
+                                        type: 'parameter-changed',
+                                        parameter: message.parameter
+                                    }
+                                });
+                                // bus.emit('parameter-changed', message);
+                            });
                         });
-                        // bus.emit('parameter-changed', message);
-                    });
-                });
-                // we then create our widgets
-                return renderParameters()
-                    .then(function () {
-                        // do something after success
-                        attachEvents();
-                    })
-                    .catch(function (err) {
-                        // do somethig with the error.
-                        console.error('ERROR in start', err);
-                    });
+
+                        var retPromise;
+                        if (batchMode) {
+                            retPromise = Promise.resolve();
+                        }
+                        else {
+                            retPromise = renderParameters();
+                        }
+                        return retPromise
+                            .then(function () {
+                                // do something after success
+                                attachEvents();
+                            })
+                            .catch(function (err) {
+                                // do somethig with the error.
+                                console.error('ERROR in start', err);
+                            });
+                        });
+
             });
         }
 

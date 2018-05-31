@@ -672,6 +672,26 @@ define([
             Object.keys(appSet).forEach(function(appId) {
                 var categoryList = [];
                 switch (style) {
+                case 'input':
+                    categoryList = appSet[appId].info.input_types.map(function(input) {
+                        if (input.indexOf('.') !== -1) {
+                            return input.split('.')[1];
+                        }
+                        else {
+                            return input;
+                        }
+                    });
+                    break;
+                case 'output':
+                    categoryList = appSet[appId].info.output_types.map(function(output) {
+                        if (output.indexOf('.') !== -1) {
+                            return output.split('.')[1];
+                        }
+                        else {
+                            return output;
+                        }
+                    });
+                    break;
                 default:
                 case 'category':
                     categoryList = appSet[appId].info.categories;
@@ -679,16 +699,6 @@ define([
                     if (activeIndex !== -1) {
                         categoryList.splice(activeIndex, 1);
                     }
-                    break;
-                case 'input':
-                    categoryList = appSet[appId].info.input_types.map(function(input) {
-                        return input.split('.')[1];
-                    });
-                    break;
-                case 'output':
-                    categoryList = appSet[appId].info.output_types.map(function(output) {
-                        return output.split('.')[1];
-                    });
                     break;
                 }
                 if (categoryList.length === 0) {

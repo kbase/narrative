@@ -86,7 +86,31 @@ class MockClients(object):
         if len(job_params) > 0:
             ret['job_params'] = job_params
         return ret
-
+    
+    def get_job_logs(self, params):
+        """
+        params: job_id, skip_lines
+        skip_lines = number of lines to skip, get all the rest
+        
+        single line: {
+            is_error 0,1
+            line: string
+        }
+        there are only 100 "log lines" in total.
+        """
+        total_lines = 100
+        skip = params.get('skip_lines', 0)
+        lines = list()
+        if skip < total_lines:
+            for i in range(total_lines-skip):
+                lines.append({
+                    "is_error": 0,
+                    "line": "This is line {}".format(i+skip)
+                })
+        return {
+            'last_line_number': max(total_lines, skip),
+            'lines': lines
+        }
 
 def get_mock_client(client_name):
     return MockClients()

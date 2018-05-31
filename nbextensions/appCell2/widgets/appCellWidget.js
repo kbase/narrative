@@ -117,36 +117,24 @@ define([
                         help: 'Run the app',
                         type: 'success',
                         classes: ['-run'],
-                        xicon: {
-                            name: 'play'
-                        },
                         label: 'Run'
                     },
                     cancel: {
                         help: 'Cancel the running app',
                         type: 'danger',
                         classes: ['-cancel'],
-                        xicon: {
-                            name: 'stop'
-                        },
                         label: 'Cancel'
                     },
                     reRunApp: {
                         help: 'Edit and re-run the app',
                         type: 'default',
                         classes: ['-rerun'],
-                        xicon: {
-                            name: 'refresh'
-                        },
                         label: 'Reset'
                     },
                     resetApp: {
                         help: 'Reset the app and return to Edit mode',
                         type: 'default',
                         classes: ['-reset'],
-                        xicon: {
-                            name: 'refresh'
-                        },
                         label: 'Reset'
                     },
                     offline: {
@@ -661,7 +649,6 @@ define([
 
             return nms.get_method_spec(appRef)
                 .then(function(data) {
-                    console.log('app cell spec', appRef, data);
                     if (!data[0]) {
                         throw new Error('App not found');
                     }
@@ -770,9 +757,6 @@ define([
 
         function buildRunControlPanelRunButtons(events) {
             var style = {};
-            // if (Jupyter.narrative.readonly) {
-            //     style.display = 'none';
-            // }
             style.padding = '6px';
             var buttonDiv = div({
                 class: 'btn-group',
@@ -1169,7 +1153,7 @@ define([
             return model.getItem('user-settings.showCodeInputArea');
         }
 
-      
+
         // WIDGETS
 
         /*
@@ -1497,7 +1481,7 @@ define([
             // the fact that the user may have opened and closed the tab...
             userSelectedTab = false;
 
-            
+
 
             cell.execute();
         }
@@ -1827,7 +1811,7 @@ define([
             // If so, is the cell still there?
             var outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']);
 
-            // If the output cell is already recorded in the app cell, and it it is in the 
+            // If the output cell is already recorded in the app cell, and it it is in the
             // narrative, do not try to inserted it.
             if (outputCellId) {
                 if (cellUtils.findById(outputCellId)) {
@@ -1858,7 +1842,7 @@ define([
             // Record the ouptput cell info by the job id.
             // This serves to "stamp" the ouput cell in to the app cell
             // TODO: this logic is probably no longer required. This used to be linked
-            // to functionality which allowed a user to re-insert an output cell if it 
+            // to functionality which allowed a user to re-insert an output cell if it
             // had been deleted. Some output cells cannot be replicated, since their output
             // is not derived from an object visible in the data panel.
             model.setItem(['output', 'byJob', jobId], {
@@ -2076,7 +2060,7 @@ define([
                     // DOM EVENTS
                     cell.element.on('toggleCodeArea.cell', function() {
                         toggleCodeInputArea(cell);
-                    });                    
+                    });
 
                     // APP CELL EVENTS
 

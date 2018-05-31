@@ -63,19 +63,7 @@
     font-weight: normal;
     font-style: normal;
 
-}
-
-@font-face {
-    font-family: 'OxygenItalic';
-    src: url('../fonts/Oxygen-Italic-webfont.eot');
-    src: url('../fonts/Oxygen-Italic-webfont.eot?#iefix') format('embedded-opentype'),
-         url('../fonts/Oxygen-Italic-webfont.woff') format('woff'),
-         url('../fonts/Oxygen-Italic-webfont.ttf') format('truetype'),
-         url('../fonts/Oxygen-Italic-webfont.svg#OxygenItalic') format('svg');
-    font-weight: normal;
-    font-style: normal;
-
-}
+} 
 
 @font-face {
     font-family: 'OxygenBold';
@@ -89,28 +77,6 @@
 
 }
 
-@font-face {
-    font-family: 'OxygenBoldItalic';
-    src: url('../fonts/Oxygen-BoldItalic-webfont.eot');
-    src: url('../fonts/Oxygen-BoldItalic-webfont.eot?#iefix') format('embedded-opentype'),
-         url('../fonts/Oxygen-BoldItalic-webfont.woff') format('woff'),
-         url('../fonts/Oxygen-BoldItalic-webfont.ttf') format('truetype'),
-         url('../fonts/Oxygen-BoldItalic-webfont.svg#OxygenBoldItalic') format('svg');
-    font-weight: normal;
-    font-style: normal;
-
-}
-@font-face {
-    font-family: 'OxygenMonoRegular';
-    src: url('../fonts/OxygenMono-Regular-webfont.eot');
-    src: url('../fonts/OxygenMono-Regular-webfont.eot?#iefix') format('embedded-opentype'),
-         url('../fonts/OxygenMono-Regular-webfont.woff') format('woff'),
-         url('../fonts/OxygenMono-Regular-webfont.ttf') format('truetype'),
-         url('../fonts/OxygenMono-Regular-webfont.svg#OxygenMonoRegular') format('svg');
-    font-weight: normal;
-    font-style: normal;
-
-}
 @font-face {
     font-family: 'RobotoBlack';
     src: url('../fonts/Roboto-Black-webfont.eot');
@@ -141,26 +107,27 @@ h3 {
 	font-weight: normal;
 	}
 h4 {
-	font: 1.15em/1.25em 'OxygenItalic', Arial, sans-serif;
+    font: 1.15em/1.25em 'Oxygen', Arial, sans-serif;
+    font-style: italic;
 	letter-spacing: .07em;
 	}
 body {
-	font: 1.375em 'OxygenRegular', Arial, sans-serif;
+	font: 1.375em 'Oxygen', Arial, sans-serif;
 	color: #333333;
 	background-color: #fff;
 	}
 strong, b {
-	font-family: 'OxygenBold';
-	font-weight: normal;
+	font-family: 'Oxygen';
+	font-weight: bold;
 	}
 em, i {
-	font-family: 'OxygenItalic';
-	font-style: normal;
+	font-family: 'Oxygen';
+	font-style: italic;
 	}
 strong em, em strong, b i, i b{
-	font-family: 'OxygenBoldItalic';
-	font-style: normal;
-	font-weight: normal;
+	font-family: 'Oxygen';
+	font-style: italic;
+	font-weight: bold;
 	}
 a {
 	color: #0088cc;
@@ -174,6 +141,6 @@ a:hover    {
 	color: #2a6496;
 	}
 pre, code {
-	font-family: 'OxygenMonoRegular', "Lucida Console", "Lucida Sans Typewriter", monospace;
+	font-family: 'OxygenMono', "Lucida Console", "Lucida Sans Typewriter", monospace;
 	font-style: normal;
 	}

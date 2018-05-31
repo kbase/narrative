@@ -5,7 +5,7 @@ define([
     'bluebird',
     'kb_common/html',
     'common/ui',
-    './jobLogViewer',
+    'util/jobLogViewer',
     './jobStateViewer'
 ], function (
     Promise,

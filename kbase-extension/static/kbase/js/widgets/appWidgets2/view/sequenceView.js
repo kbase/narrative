@@ -31,7 +31,6 @@ define([
     // Constants
     var t = html.tag,
         div = t('div'),
-        span = t('span'),
         button = t('button');
 
     function factory(config) {
@@ -63,21 +62,21 @@ define([
 
         function setModelValue(value, index) {
             return Promise.try(function() {
-                    if (index !== undefined) {
-                        if (value) {
-                            model.value[index] = value;
-                        } else {
-                            model.value.splice(index, 1);
-                        }
+                if (index !== undefined) {
+                    if (value) {
+                        model.value[index] = value;
                     } else {
-                        if (value) {
-                            model.value = value;
-                        } else {
-                            unsetModelValue();
-                        }
+                        model.value.splice(index, 1);
                     }
-                    normalizeModel();
-                })
+                } else {
+                    if (value) {
+                        model.value = value;
+                    } else {
+                        unsetModelValue();
+                    }
+                }
+                normalizeModel();
+            })
                 .then(function() {
                     return render();
                 });
@@ -85,8 +84,8 @@ define([
 
         function unsetModelValue() {
             return Promise.try(function() {
-                    model.value = [];
-                })
+                model.value = [];
+            })
                 .then(function() {
                     return render();
                 });
@@ -112,11 +111,11 @@ define([
 
         // TODO: wrap this in a new type of field control -- 
         //   specialized to be very lightweight for the sequence control.
-        function makeSingleViewControl(control, events) {
+        function makeSingleViewControl(control) {
             return resolver.loadViewControl(itemSpec)
                 .then(function(widgetFactory) {
                     // CONTROL
-                    var preButton, postButton,
+                    var postButton,
                         widgetId = html.genId(),
                         inputBus = runtime.bus().makeChannelBus({
                             description: 'Array input control'
@@ -160,16 +159,6 @@ define([
                         }
                     });
 
-                    preButton = div({
-                        class: 'input-group-addon kb-input-group-addon',
-                        dataElement: 'index-label',
-                        style: {
-                            width: '5ex',
-                            padding: '0'
-                        }
-                    }, [
-                        span({ dataElement: 'index' }, String(control.index + 1)), '.'
-                    ]);
                     postButton = div({
                         class: 'input-group-addon kb-input-group-addon',
                         style: {
@@ -256,7 +245,7 @@ define([
                         return index;
                     })
                     .catch(function(err) {
-                        console.log('ERROR!!!', err);
+                        console.error('ERROR!!!', err);
                     });
             });
         }
@@ -280,8 +269,8 @@ define([
                     return addEmptyControl();
                 }
                 return Promise.all(initialValue.map(function(value) {
-                        return addNewControl(value);
-                    }))
+                    return addNewControl(value);
+                }))
                     .then(function() {
                         autoValidate();
                     });
@@ -315,7 +304,7 @@ define([
 
                 return render(config.initialValue)
                     .then(function() {
-                        channel.on('reset-to-defaults', function(message) {
+                        channel.on('reset-to-defaults', function() {
                             resetModelValue();
                         });
                         channel.on('update', function(message) {
@@ -333,8 +322,8 @@ define([
         function stop() {
             return Promise.try(function() {
                 return Promise.all(viewModel.getItem('items').map(function(item) {
-                        return item.inputControl.instance.stop();
-                    }))
+                    return item.inputControl.instance.stop();
+                }))
                     .then(function() {
                         busConnection.stop();
                     });

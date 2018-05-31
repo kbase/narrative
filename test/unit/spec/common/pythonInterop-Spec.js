@@ -15,6 +15,15 @@ define([
             }
             expect(alive).toBeTruthy();
         });
+        it('Pythonify an undefined value fails properly', function () {
+            // expect(PythonInterop.pythonifyValue).toThrow();
+            var foo;
+            expect(function() { PythonInterop.pythonifyValue(foo); }).toThrow(new Error('Unsupported parameter type undefined'));
+        });
+        it('Pythonify a boolean value', function () {
+            expect(PythonInterop.pythonifyValue(true)).toEqual('True');
+            expect(PythonInterop.pythonifyValue(false)).toEqual('False');
+        });
         it('Pythonify a null value', function() {
             var jsValue = null,
                 pyValue = 'None';
@@ -38,6 +47,11 @@ define([
             var jsValue = 'one',
                 pyValue = '"one"';
 
+            expect(PythonInterop.pythonifyValue(jsValue)).toEqual(pyValue);
+        });
+        it('Pythonify a quoted string', function () {
+            var jsValue = 'a "quoted" string',
+                pyValue = '"a \\"quoted\\" string"';
             expect(PythonInterop.pythonifyValue(jsValue)).toEqual(pyValue);
         });
         it('Pythonify an array of ints value', function() {
@@ -107,7 +121,76 @@ define([
                        '    cell_id="my_cell_id"\n' +
                        ')';
             expect(PythonInterop.buildOutputRunner('widget', 'tag', 'my_cell_id', inputs)).toEqual(code);
-
+        });
+        it('Build app runner works', function () {
+            var cellId = 'my_cell_id',
+                runId = 'my_run_id',
+                app = {
+                    id: 'MyModule/my_app',
+                    version: 'app_version',
+                    tag: 'tag'
+                },
+                params = {
+                    arg1: 1,
+                    arg2: 'two',
+                    arg3: ['t', 'h', 'r', 'e', 'e'],
+                    arg4: {
+                        four: 4
+                    }
+                },
+                code = 'from biokbase.narrative.jobs.appmanager import AppManager\n' +
+                       'AppManager().run_app(\n' +
+                       '    "MyModule/my_app",\n' +
+                       '    {\n' +
+                       '        "arg1": 1,\n' +
+                       '        "arg2": "two",\n' +
+                       '        "arg3": ["t", "h", "r", "e", "e"],\n' +
+                       '        "arg4": {\n' + 
+                       '            "four": 4\n' +
+                       '        }\n'+
+                       '    },\n' +
+                       '    tag="tag",\n' +
+                       '    version="app_version",\n' +
+                       '    cell_id="my_cell_id",\n' +
+                       '    run_id="my_run_id"\n' +
+                       ')';
+            expect(PythonInterop.buildAppRunner(cellId, runId, app, params)).toEqual(code);
+        });
+        it('Build app runner works for a batch', function () {
+            var cellId = 'my_cell_id',
+                runId = 'my_run_id',
+                app = {
+                    id: 'MyModule/my_app',
+                    version: 'app_version',
+                    tag: 'tag'
+                },
+                params = [{
+                    arg1: 1,
+                    arg2: 'two'
+                },{
+                    arg3: ['t', 'h', 'r', 'e', 'e'],
+                    arg4: {
+                        four: 4
+                    }
+                }],
+                code = 'from biokbase.narrative.jobs.appmanager import AppManager\n' +
+                       'AppManager().run_app_batch(\n' +
+                       '    "MyModule/my_app",\n' +
+                       '    [{\n' +
+                       '        "arg1": 1,\n' +
+                       '        "arg2": "two"\n' +
+                       '    }, {\n' +
+                       '        "arg3": ["t", "h", "r", "e", "e"],\n' +
+                       '        "arg4": {\n' + 
+                       '            "four": 4\n' +
+                       '        }\n'+
+                       '    }],\n' +
+                       '    tag="tag",\n' +
+                       '    version="app_version",\n' +
+                       '    cell_id="my_cell_id",\n' +
+                       '    run_id="my_run_id"\n' +
+                       ')';
+            expect(PythonInterop.buildAppRunner(cellId, runId, app, params)).toEqual(code);
         });
     });
 

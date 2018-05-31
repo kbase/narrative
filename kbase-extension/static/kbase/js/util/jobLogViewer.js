@@ -35,308 +35,307 @@ define([
         numLines = 10,
         panelHeight = smallPanelHeight,
         appStates = [{
-                state: {
-                    mode: 'new'
-                },
-                meta: {
-                    description: 'Widget just created, do not yet know the state of the job'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
-                    }
-                },
-                next: [{
-                        mode: 'queued',
-                        auto: true
-                    },
-                    {
-                        mode: 'active',
-                        auto: true
-                    },
+            state: {
+                mode: 'new'
+            },
+            meta: {
+                description: 'Widget just created, do not yet know the state of the job'
+            },
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
+                }
+            },
+            next: [{
+                mode: 'queued',
+                auto: true
+            },
+            {
+                mode: 'active',
+                auto: true
+            },
 
-                    {
-                        mode: 'complete'
-                    },
-                    {
-                        mode: 'error'
-                    },
-                    {
-                        mode: 'canceled'
-                    },
-                    {
-                        mode: 'job-not-found'
-                    }
-                ]
+            {
+                mode: 'complete'
             },
             {
-                state: {
-                    mode: 'queued',
-                    auto: true
-                },
-                meta: {
-                    description: 'The job is queued, there are no logs yet.'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
-                    }
-                },
-                next: [{
-                        mode: 'active',
-                        auto: false
-                    },
-                    {
-                        mode: 'active',
-                        auto: true
-                    },
-                    {
-                        mode: 'complete'
-                    },
-                    {
-                        mode: 'canceled'
-                    },
-                    {
-                        mode: 'error'
-                    }
-                ],
-                on: {
-                    enter: {
-                        messages: [{
-                            emit: 'on-queued'
-                        }]
-                    },
-                    resume: {
-                        messages: [{
-                            emit: 'on-queued'
-                        }]
-                    },
-                    exit: {
-                        messages: [{
-                            emit: 'exit-queued'
-                        }]
-                    }
-                }
+                mode: 'error'
             },
             {
-                state: {
-                    mode: 'active',
-                    auto: true
-                },
-                meta: {
-                    description: 'The Job is currently active, receiving log updates automatically'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['stop'],
-                        disabled: ['play', 'top', 'back', 'forward', 'bottom']
-                    }
-                },
-                next: [{
-                        mode: 'active',
-                        auto: false
-                    },
-                    {
-                        mode: 'active',
-                        auto: true
-                    },
-                    {
-                        mode: 'complete'
-                    },
-                    {
-                        mode: 'canceled'
-                    },
-                    {
-                        mode: 'error'
-                    }
-                ],
-                on: {
-                    enter: {
-                        messages: [{
-                            emit: 'on-active'
-                        }]
-                    },
-                    resume: {
-                        messages: [{
-                            emit: 'on-active'
-                        }]
-                    },
-                    exit: {
-                        messages: [{
-                            emit: 'exit-active'
-                        }]
-                    }
-                }
+                mode: 'canceled'
             },
             {
-                state: {
-                    mode: 'active',
-                    auto: false
-                },
-                meta: {
-                    description: 'The job is currently active, no automatic updates'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['play', 'top', 'back', 'forward', 'bottom'],
-                        disabled: ['stop']
-                    }
-                },
-                next: [{
-                        mode: 'active',
-                        auto: true
-                    },
-                    {
-                        mode: 'active',
-                        auto: false
-                    },
-                    {
-                        mode: 'complete'
-                    },
-                    {
-                        mode: 'error'
-                    }
-                ],
-                on: {
-                    enter: {
-                        messages: [{
-                            emit: 'on-active-noauto'
-                        }]
-                    },
-                    resume: {
-                        messages: [{
-                            emit: 'on-active-noauto'
-                        }]
-                    },
-                    exit: {
-                        messages: [{
-                            emit: 'exit-active-noauto'
-                        }]
-                    }
-                }
-            },
-            {
-                state: {
-                    mode: 'complete'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['top', 'back',  'forward', 'bottom'],
-                        disabled: ['play', 'stop']
-                    }
-                },
-                on: {
-                    enter: {
-                        messages: [{
-                            emit: 'on-complete'
-                        }]
-                    },
-                    resume: {
-                        messages: [{
-                            emit: 'on-complete'
-                        }]
-                    },
-                    exit: {
-                        messages: [{
-                            emit: 'exit-complete'
-                        }]
-                    }
-                }
-            },
-            {
-                state: {
-                    mode: 'canceled'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['top', 'back', 'forward', 'bottom'],
-                        disabled: ['play', 'stop']
-                    }
-                },
-                on: {
-                    enter: {
-                        messages: [{
-                            emit: 'on-canceled'
-                        }]
-                    },
-                    resume: {
-                        messages: [{
-                            emit: 'on-canceled'
-                        }]
-                    },
-                    exit: {
-                        messages: [{
-                            emit: 'exit-canceled'
-                        }]
-                    }
-                }
-            },
-            {
-                state: {
-                    mode: 'error'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['top', 'back', 'forward', 'bottom'],
-                        disabled: ['play', 'stop']
-                    }
-                },
-                on: {
-                    enter: {
-                        messages: [{
-                            emit: 'on-error'
-                        }]
-                    },
-                    resume: {
-                        messages: [{
-                            emit: 'on-error'
-                        }]
-                    },
-                    exit: {
-                        messages: [{
-                            emit: 'exit-error'
-                        }]
-                    }
-                }
-            },
-            {
-                state: {
-                    mode: 'job-not-found'
-                },
-                meta: {
-                    description: 'Job status returns a job not found error'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
-                    }
-                },
-                on: {
-                    enter: {
-                        messages: [{
-                            emit: 'on-job-not-found'
-                        }]
-                    },
-                    resume: {
-                        messages: [{
-                            emit: 'on-job-not-found'
-                        }]
-                    }
-                },
-                next: [{
-                    mode: 'job-not-found'
-                }]
+                mode: 'job-not-found'
             }
+            ]
+        },
+        {
+            state: {
+                mode: 'queued',
+                auto: true
+            },
+            meta: {
+                description: 'The job is queued, there are no logs yet.'
+            },
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
+                }
+            },
+            next: [{
+                mode: 'active',
+                auto: false
+            },
+            {
+                mode: 'active',
+                auto: true
+            },
+            {
+                mode: 'complete'
+            },
+            {
+                mode: 'canceled'
+            },
+            {
+                mode: 'error'
+            }
+            ],
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-queued'
+                    }]
+                },
+                resume: {
+                    messages: [{
+                        emit: 'on-queued'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'exit-queued'
+                    }]
+                }
+            }
+        },
+        {
+            state: {
+                mode: 'active',
+                auto: true
+            },
+            meta: {
+                description: 'The Job is currently active, receiving log updates automatically'
+            },
+            ui: {
+                buttons: {
+                    enabled: ['stop'],
+                    disabled: ['play', 'top', 'back', 'forward', 'bottom']
+                }
+            },
+            next: [{
+                mode: 'active',
+                auto: false
+            },
+            {
+                mode: 'active',
+                auto: true
+            },
+            {
+                mode: 'complete'
+            },
+            {
+                mode: 'canceled'
+            },
+            {
+                mode: 'error'
+            }
+            ],
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-active'
+                    }]
+                },
+                resume: {
+                    messages: [{
+                        emit: 'on-active'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'exit-active'
+                    }]
+                }
+            }
+        },
+        {
+            state: {
+                mode: 'active',
+                auto: false
+            },
+            meta: {
+                description: 'The job is currently active, no automatic updates'
+            },
+            ui: {
+                buttons: {
+                    enabled: ['play', 'top', 'back', 'forward', 'bottom'],
+                    disabled: ['stop']
+                }
+            },
+            next: [{
+                mode: 'active',
+                auto: true
+            },
+            {
+                mode: 'active',
+                auto: false
+            },
+            {
+                mode: 'complete'
+            },
+            {
+                mode: 'error'
+            }
+            ],
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-active-noauto'
+                    }]
+                },
+                resume: {
+                    messages: [{
+                        emit: 'on-active-noauto'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'exit-active-noauto'
+                    }]
+                }
+            }
+        },
+        {
+            state: {
+                mode: 'complete'
+            },
+            ui: {
+                buttons: {
+                    enabled: ['top', 'back',  'forward', 'bottom'],
+                    disabled: ['play', 'stop']
+                }
+            },
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-complete'
+                    }]
+                },
+                resume: {
+                    messages: [{
+                        emit: 'on-complete'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'exit-complete'
+                    }]
+                }
+            }
+        },
+        {
+            state: {
+                mode: 'canceled'
+            },
+            ui: {
+                buttons: {
+                    enabled: ['top', 'back', 'forward', 'bottom'],
+                    disabled: ['play', 'stop']
+                }
+            },
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-canceled'
+                    }]
+                },
+                resume: {
+                    messages: [{
+                        emit: 'on-canceled'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'exit-canceled'
+                    }]
+                }
+            }
+        },
+        {
+            state: {
+                mode: 'error'
+            },
+            ui: {
+                buttons: {
+                    enabled: ['top', 'back', 'forward', 'bottom'],
+                    disabled: ['play', 'stop']
+                }
+            },
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-error'
+                    }]
+                },
+                resume: {
+                    messages: [{
+                        emit: 'on-error'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'exit-error'
+                    }]
+                }
+            }
+        },
+        {
+            state: {
+                mode: 'job-not-found'
+            },
+            meta: {
+                description: 'Job status returns a job not found error'
+            },
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
+                }
+            },
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-job-not-found'
+                    }]
+                },
+                resume: {
+                    messages: [{
+                        emit: 'on-job-not-found'
+                    }]
+                }
+            },
+            next: [{
+                mode: 'job-not-found'
+            }]
+        }
         ];
 
     function factory(config) {
         var config = config || {},
             runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({ description: 'Log Viewer Bus' }),
-            hostNode,
             container,
             jobId,
             model,
@@ -409,7 +408,7 @@ define([
                     first_line: firstLine,
                     num_lines: linesPerPage
                 }
-            })
+            });
         }
 
         function requestLatestJobLog() {
@@ -440,7 +439,7 @@ define([
 
         function scrollToLog($panel, target, scrollTime){
             if(target.length){
-                var scrollTime = scrollTime ? scrollTime : 500;
+                scrollTime = (scrollTime !== undefined) ? scrollTime : 500;
                 $panel.animate({
                     scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
                 }, scrollTime, function () {
@@ -477,11 +476,10 @@ define([
 
             var currentLine = currentSection ? currentSection : Number(model.getItem('currentLine')),
                 $currentSection = $('.' + String(currentLine));
-
             if (!$currentSection.is(':first-child')) {
                 var $panel = $(ui.getElements('panel')[0]),
                     target = $currentSection.prev().children().first();
-                    scrollToLog($panel, target);
+                scrollToLog($panel, target);
             } else {
                 fetchNewLogs(currentLine);
             }
@@ -604,7 +602,7 @@ define([
                         handler: doFetchNextLogChunk
                     })
                 }, [
-                        span({ class: 'fa fa-angle-down' })
+                    span({ class: 'fa fa-angle-down' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -618,7 +616,7 @@ define([
                     })
 
                 }, [
-                        span({ class: 'fa fa-angle-double-down' })
+                    span({ class: 'fa fa-angle-double-down' })
                 ]),
                 div({ dataElement: 'spinner', class: 'pull-right hidden' }, [
                     span({ class: 'fa fa-spinner fa-pulse fa-ex fa-fw' })
@@ -639,7 +637,7 @@ define([
                     ]),
                     div({ dataElement: 'panel',
                         style: {
-                            "overflow-y": 'scroll', height: panelHeight
+                            'overflow-y': 'scroll', height: panelHeight
                         } })
                 ]);
 
@@ -737,9 +735,12 @@ define([
                 $panel = $(ui.getElements('panel')[0]);
                 var autoState = fsm.getCurrentState().state.auto;
                 if (!autoState){
-                    var target = renderLines(viewLines).hide();
+                    var target = renderLines(viewLines).css('font-color', 'white');
                     if(renderAbove){
-                        target.prependTo($panel).slideDown();
+                        var scrollTarget = $panel.children().first();
+                        target.prependTo($panel);
+                        scrollToLog($panel, scrollTarget, 0);
+                        target.css('font-color', 'black');
                     }else{
                         target.appendTo($panel).show();
                     }
@@ -758,141 +759,141 @@ define([
                 mode = fsm.getCurrentState().state.mode,
                 newState;
             switch (mode) {
-                case 'new':
-                    switch (jobStatus) {
-                        case 'queued':
-                            startJobUpdates();
-                            newState = {
-                                mode: 'queued',
-                                auto: true
-                            };
-                            break;
-                        case 'in-progress':
-                            startJobUpdates();
-                            startAutoFetch();
-                            newState = {
-                                mode: 'active',
-                                auto: true
-                            };
-                            break;
-                        case 'completed':
-                            requestLatestJobLog();
-                            stopJobUpdates();
-                            newState = {
-                                mode: 'complete'
-                            };
-                            break;
-                        case 'error':
-                        case 'suspend':
-                            requestLatestJobLog();
-                            stopJobUpdates();
-                            newState = {
-                                mode: 'error'
-                            };
-                            break;
-                        case 'canceled':
-                            requestLatestJobLog();
-                            stopJobUpdates();
-                            newState = {
-                                mode: 'canceled'
-                            };
-                            break;
-                        default:
-                            stopJobUpdates();
-                            console.error('Unknown job status', jobStatus, message);
-                            throw new Error('Unknown job status ' + jobStatus);
-                    }
-                    break;
+            case 'new':
+                switch (jobStatus) {
                 case 'queued':
-                    switch (jobStatus) {
-                        case 'queued':
-                            // no change
-                            break;
-                        case 'in-progress':
-                            newState = {
-                                mode: 'active',
-                                auto: true
-                            };
-                            break;
-                            // may happen that the job state jumps over in-progress...
-                        case 'completed':
-                            newState = {
-                                mode: 'complete'
-                            };
-                            break;
-                        case 'error':
-                        case 'suspend':
-                            newState = {
-                                mode: 'error'
-                            };
-                            break;
-                        case 'canceled':
-                            newState = {
-                                mode: 'canceled'
-                            };
-                            break;
-                        default:
-                            console.error('Unknown log status', jobStatus, message);
-                            throw new Error('Unknown log status ' + jobStatus);
-                    }
+                    startJobUpdates();
+                    newState = {
+                        mode: 'queued',
+                        auto: true
+                    };
                     break;
-                case 'active':
-                    switch (jobStatus) {
-                        case 'queued':
-                            // this should not occur!
-                            break;
-                        case 'in-progress':
-                            startAutoFetch();
-                            break;
-                        case 'completed':
-                            newState = {
-                                mode: 'complete'
-                            };
-                            break;
-                        case 'error':
-                        case 'suspend':
-                            newState = {
-                                mode: 'error'
-                            };
-                            break;
-                        case 'canceled':
-                            newState = {
-                                mode: 'canceled'
-                            };
-                            break;
-                        default:
-                            console.error('Unknown log status', jobStatus, message);
-                            throw new Error('Unknown log status ' + jobStatus);
-                    }
+                case 'in-progress':
+                    startJobUpdates();
+                    startAutoFetch();
+                    newState = {
+                        mode: 'active',
+                        auto: true
+                    };
                     break;
-                case 'complete':
-                    switch (jobStatus) {
-                        case 'completed':
-                            return;
-                        default:
-                            // technically, an error, what to do?
-                            return;
-                    }
-                case 'canceled':
-                    switch (jobStatus) {
-                        case 'canceled':
-                            return;
-                        default:
-                            console.error('Unexpected log status ' + jobStatus + ' for "canceled" state');
-                            throw new Error('Unexpected log status ' + jobStatus + ' for "canceled" state');
-                    }
+                case 'completed':
+                    requestLatestJobLog();
+                    stopJobUpdates();
+                    newState = {
+                        mode: 'complete'
+                    };
+                    break;
                 case 'error':
-                    switch (jobStatus) {
-                        case 'error':
-                        case 'suspend':
-                            // nothing to do;
-                            return;
-                        default:
-                            // technically, an error, what to do?
-                            return;
-                    }
+                case 'suspend':
+                    requestLatestJobLog();
+                    stopJobUpdates();
+                    newState = {
+                        mode: 'error'
+                    };
+                    break;
+                case 'canceled':
+                    requestLatestJobLog();
+                    stopJobUpdates();
+                    newState = {
+                        mode: 'canceled'
+                    };
+                    break;
                 default:
-                    throw new Error('Mode ' + mode + ' not yet implemented');
+                    stopJobUpdates();
+                    console.error('Unknown job status', jobStatus, message);
+                    throw new Error('Unknown job status ' + jobStatus);
+                }
+                break;
+            case 'queued':
+                switch (jobStatus) {
+                case 'queued':
+                    // no change
+                    break;
+                case 'in-progress':
+                    newState = {
+                        mode: 'active',
+                        auto: true
+                    };
+                    break;
+                    // may happen that the job state jumps over in-progress...
+                case 'completed':
+                    newState = {
+                        mode: 'complete'
+                    };
+                    break;
+                case 'error':
+                case 'suspend':
+                    newState = {
+                        mode: 'error'
+                    };
+                    break;
+                case 'canceled':
+                    newState = {
+                        mode: 'canceled'
+                    };
+                    break;
+                default:
+                    console.error('Unknown log status', jobStatus, message);
+                    throw new Error('Unknown log status ' + jobStatus);
+                }
+                break;
+            case 'active':
+                switch (jobStatus) {
+                case 'queued':
+                    // this should not occur!
+                    break;
+                case 'in-progress':
+                    startAutoFetch();
+                    break;
+                case 'completed':
+                    newState = {
+                        mode: 'complete'
+                    };
+                    break;
+                case 'error':
+                case 'suspend':
+                    newState = {
+                        mode: 'error'
+                    };
+                    break;
+                case 'canceled':
+                    newState = {
+                        mode: 'canceled'
+                    };
+                    break;
+                default:
+                    console.error('Unknown log status', jobStatus, message);
+                    throw new Error('Unknown log status ' + jobStatus);
+                }
+                break;
+            case 'complete':
+                switch (jobStatus) {
+                case 'completed':
+                    return;
+                default:
+                    // technically, an error, what to do?
+                    return;
+                }
+            case 'canceled':
+                switch (jobStatus) {
+                case 'canceled':
+                    return;
+                default:
+                    console.error('Unexpected log status ' + jobStatus + ' for "canceled" state');
+                    throw new Error('Unexpected log status ' + jobStatus + ' for "canceled" state');
+                }
+            case 'error':
+                switch (jobStatus) {
+                case 'error':
+                case 'suspend':
+                    // nothing to do;
+                    return;
+                default:
+                    // technically, an error, what to do?
+                    return;
+                }
+            default:
+                throw new Error('Mode ' + mode + ' not yet implemented');
             }
             if (newState) {
                 fsm.newState(newState);
@@ -912,13 +913,12 @@ define([
                     
                     var autoState = fsm.getCurrentState().state.auto;
                     var top = $(this).scrollTop();
-                    
                     //when not on autoplay then scrolling to top will fetch new logs
                     if (!autoState &&  top === 0) {   
                         var $panel = $(ui.getElements('panel')[0]),
                             $currentSection = $panel.children(':first'), 
                             currentLine = Number($currentSection.attr('class'));
-                            fetchNewLogs(currentLine);
+                        fetchNewLogs(currentLine);
                     }
                 });
             var ev;

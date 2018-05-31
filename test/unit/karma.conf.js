@@ -7,7 +7,8 @@ module.exports = function (config) {
         frameworks: ['jasmine', 'requirejs', 'es6-shim'],
         plugins: [
             'karma-jasmine',
-            // 'karma-chrome-launcher',
+            'karma-chrome-launcher',
+            'karma-firefox-launcher',
             'karma-phantomjs-launcher',
             'karma-requirejs',
             'karma-coverage',
@@ -18,6 +19,7 @@ module.exports = function (config) {
             'kbase-extension/static/kbase/js/**/*.js': ['coverage']
         },
         files: [
+            'kbase-extension/static/narrative_paths.js',
             {pattern: 'test/unit/spec/**/*.js', included: false},
             // {pattern: 'test/unit/spec/loadingWidgetSpec.js', included: false},
             {pattern: 'node_modules/string.prototype.startswith/startswith.js', included: true},
@@ -29,7 +31,6 @@ module.exports = function (config) {
             {pattern: 'kbase-extension/static/kbase/config/**/*.yaml', included: false, served: true},
             {pattern: 'kbase-extension/static/**/*.js', included: false, served: true},
             {pattern: 'kbase-extension/static/**/*.gif', included: false, served: true},
-            'kbase-extension/static/narrative_paths.js',
             {pattern: 'test/unit/testConfig.json', included: false, served: true, nocache: true},
             {pattern: 'test/*.tok', included: false, served: true, nocache: true},
             {pattern: 'test/data/**/*', included: false, served: true},
@@ -68,7 +69,7 @@ module.exports = function (config) {
         autoWatch: false,
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: ['PhantomJS'],
+        browsers: ['ChromeHeadless'], //['PhantomJS', 'Firefox', 'ChromeHeadless'],
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
         // phantomjsLauncher: {
@@ -88,7 +89,8 @@ module.exports = function (config) {
             '/narrative/static/bidi': 'http://localhost:32323/narrative/static/bidi',
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/'
-        }
+        },
+        concurrency: Infinity
 
     });
 };

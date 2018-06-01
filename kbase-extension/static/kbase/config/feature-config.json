@@ -3,5 +3,6 @@
     "jgiPublicStaging": true,
     "advanced": false,
     "developer": false,
-    "lazyWidgetRender": true
+    "lazyWidgetRender": true,
+    "batchAppMode": true
 }

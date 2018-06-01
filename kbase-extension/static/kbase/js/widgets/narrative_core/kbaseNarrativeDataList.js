@@ -1216,7 +1216,9 @@ define([
                 .then(function (result) {
                     if (result.length === 0) {
                         $reportButton.addClass('disabled');
-                        $reportButton.empty().append($('<span>').addClass('fa fa-ban').css('width', '0.75em'));
+                        $reportButton.empty().append($('<span>')
+                            .addClass('fa fa-file-text')
+                            .css('width', '0.75em'));
                         $reportButton
                             .tooltip({
                                 title: 'No report associated with this object',
@@ -1229,7 +1231,11 @@ define([
                         objData.reportRef = null;
                         return;
                     } else if (result.length === 1) {
-                        $reportButton.empty().append($('<span>').addClass('fa fa-file-text').css('width', '0.75em'));
+                        $reportButton
+                            .empty()
+                            .append($('<span>')
+                                .addClass('fa fa-file-text')
+                                .css('width', '0.75em'));
                         objData.reportRef = result[0].ref;
                         $reportButton
                             .tooltip({

@@ -201,6 +201,19 @@ define([
                         model.setItem('paramState', message.id, message.state);
                     });
 
+                    bus.on('toggle-batch-mode', function(message) {
+                        toggleBatchMode();
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-batch-mode'
+                        },
+                        handle: function() {
+                            return model.getItem('user-settings.batchMode') || false;
+                        }
+                    });
+
                     bus.respond({
                         key: {
                             type: 'get-param-state'
@@ -338,6 +351,250 @@ define([
                             };
                         });
                 });
+        }
+
+        function loadBatchParamsWidget(arg) {
+            return pRequire(['./widgets/batchParamsWidget'])
+                .spread(function(Widget) {
+                    // TODO: widget should make own bus.
+                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for batch input widget' }),
+                        widget = Widget.make({
+                            bus: bus,
+                            workspaceInfo: workspaceInfo,
+                            initialParams: model.getItem('params')
+                        });
+
+                    bus.on('sync-params', function(message) {
+                        message.parameters.forEach(function(paramId) {
+                            bus.send({
+                                parameter: paramId,
+                                value: model.getItem(['params', message.parameter])
+                            }, {
+                                key: {
+                                    type: 'update',
+                                    parameter: message.parameter
+                                }
+                            });
+                        });
+                    });
+
+                    bus.on('parameter-sync', function(message) {
+                        var value = model.getItem(['params', message.parameter]);
+                        bus.send({
+                            //                            parameter: message.parameter,
+                            value: value
+                        }, {
+                            // This points the update back to a listener on this key
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter
+                            }
+                        });
+                    });
+
+                    bus.on('set-param-state', function(message) {
+                        model.setItem('paramState', message.id, message.state);
+                    });
+
+                    bus.on('toggle-batch-mode', function(message) {
+                        toggleBatchMode();
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-param-state'
+                        },
+                        handle: function(message) {
+                            return {
+                                state: model.getItem('paramState', message.id)
+                            };
+                        }
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-parameter'
+                        },
+                        handle: function(message) {
+                            return {
+                                value: model.getItem(['params', message.parameterName])
+                            };
+                        }
+                    });
+
+                    bus.on('parameter-changed', function(message) {
+                        // TODO: should never get these in the following states....
+
+                        var state = fsm.getCurrentState().state;
+                        if (state.mode === 'editing') {
+                            model.setItem(['params', message.parameter], message.newValue);
+                            evaluateAppState();
+                        } else {
+                            console.warn('parameter-changed event detected when not in editing mode - ignored');
+                        }
+                    });
+
+                    return widget.start({
+                        node: arg.node,
+                        appSpec: model.getItem('app.spec'),
+                        parameters: spec.getSpec().parameters
+                    })
+                        .then(function() {
+                            return {
+                                bus: bus,
+                                instance: widget
+                            };
+                        });
+                });
+        }
+
+        function loadViewBatchParamsWidget(arg) {
+            return pRequire(['./batchParamsViewWidget'])
+                .spread(function(Widget) {
+                    // TODO: widget should make own bus.
+                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for batch input view widget' }),
+                        widget = Widget.make({
+                            bus: bus,
+                            workspaceInfo: workspaceInfo,
+                            initialParams: model.getItem('params')
+                        });
+
+                    bus.on('sync-params', function(message) {
+                        message.parameters.forEach(function(paramId) {
+                            bus.send({
+                                parameter: paramId,
+                                value: model.getItem(['params', message.parameter])
+                            }, {
+                                key: {
+                                    type: 'update',
+                                    parameter: message.parameter
+                                }
+                            });
+                        });
+                    });
+
+                    bus.on('parameter-sync', function(message) {
+                        var value = model.getItem(['params', message.parameter]);
+                        bus.send({
+                            //                            parameter: message.parameter,
+                            value: value
+                        }, {
+                            // This points the update back to a listener on this key
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter
+                            }
+                        });
+                    });
+
+                    bus.on('set-param-state', function(message) {
+                        model.setItem('paramState', message.id, message.state);
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-param-state'
+                        },
+                        handle: function(message) {
+                            return {
+                                state: model.getItem('paramState', message.id)
+                            };
+                        }
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-parameter'
+                        },
+                        handle: function(message) {
+                            return {
+                                value: model.getItem(['params', message.parameterName])
+                            };
+                        }
+                    });
+
+                    bus.on('parameter-changed', function(message) {
+                        // TODO: should never get these in the following states....
+
+                        var state = fsm.getCurrentState().state;
+                        if (state.mode === 'editing') {
+                            model.setItem(['params', message.parameter], message.newValue);
+                            evaluateAppState();
+                        } else {
+                            console.warn('parameter-changed event detected when not in editing mode - ignored');
+                        }
+                    });
+
+                    return widget.start({
+                        node: arg.node,
+                        appSpec: model.getItem('app.spec'),
+                        parameters: spec.getSpec().parameters
+                    })
+                        .then(function() {
+                            return {
+                                bus: bus,
+                                instance: widget
+                            };
+                        });
+                });
+        }
+
+        function batchConfigureWidget() {
+            function factory() {
+                var container,
+                    widget;
+
+                function start(arg) {
+                    container = arg.node;
+                    return loadBatchParamsWidget({
+                        node: container
+                    }).then(function(result) {
+                        widget = result;
+                    });
+                }
+
+                function stop() {
+                    return Promise.try(() => {
+                        if (widget) {
+                            return widget.instance.stop();
+                        }
+                    })
+                }
+
+                return {
+                    start: start,
+                    stop: stop
+                };
+            }
+        }
+
+        function viewBatchConfigureWidget() {
+            function factory() {
+                var container,
+                    widget;
+
+                function start(arg) {
+                    container = arg.node;
+                    return loadViewBatchParamsWidget({
+                        node: container
+                    }).then(function(result) {
+                        widget = result;
+                    });
+                }
+
+                function stop() {
+                    return Promise.try(() => {
+                        if (widget) {
+                            return widget.instance.stop();
+                        }
+                    })
+                }
+
+                return {
+                    start: start,
+                    stop: stop
+                };
+            }
         }
 
         function configureWidget() {
@@ -522,6 +779,23 @@ define([
             return null;
         }
 
+        function toggleBatchMode() {
+            // var curState = fsm.getCurrentState();
+            // var btn = ui.getButton('batch-toggle');
+            // btn.classList.toggle('batch-active');
+            var curBatchState = model.getItem('user-settings.batchMode'),
+                newBatchMode = !curBatchState,
+                currentTabId = selectedTabId();
+            model.setItem('user-settings.batchMode', newBatchMode);
+            bus.emit('set-batch-mode', newBatchMode);
+            toggleTab('configure')
+                .then(() => {
+                    toggleTab('configure');
+                });
+            evaluateAppState();
+            // if the configure widget is selected, stop and start it.
+        }
+
         /*
          * If tab not open, close any open one and open it.
          * If tab open, close it, leaving no tabs open.
@@ -566,27 +840,30 @@ define([
             tabs: {
                 configure: {
                     label: 'Configure',
-                    // icon: 'pencil',
                     widget: configureWidget()
                 },
                 viewConfigure: {
                     label: 'View Configure',
-                    // icon: 'pencil',
                     widget: viewConfigureWidget()
+                },
+                batchConfigure: {
+                    label: 'Configure Batch',
+                    widget: batchConfigureWidget()
+                },
+                viewBatchConfigure: {
+                    label: 'View Batch Configure',
+                    widget: viewBatchConfigureWidget()
                 },
                 logs: {
                     label: 'Job Status',
-                    // icon: 'list',
                     widget: logTabWidget
                 },
                 results: {
                     label: 'Result',
-                    // icon: 'file',
                     widget: resultsTabWidget
                 },
                 error: {
                     label: 'Error',
-                    // icon: 'exclamation',
                     type: 'danger',
                     widget: errorTabWidget
                 }
@@ -844,85 +1121,73 @@ define([
         function buildRunControlPanel(events) {
             return div({ dataElement: 'run-control-panel' }, [
                 div({
-                    style: { border: '1px silver solid', height: '50px', position: 'relative' }
+                    style: { border: '1px silver solid', height: '50px', position: 'relative', display: 'flex', flexDirection: 'row' }
                 }, [
-                    div({ style: { position: 'absolute', top: '0', bottom: '0', left: '0', right: '0' } }, [
+                    div({
+                        style: {
+                            height: '50px',
+                            // width: '100px',
+                            overflow: 'hidden',
+                            textAlign: 'left',
+                            lineHeight: '50px',
+                            verticalAlign: 'middle',
+                            display: 'flex',
+                            flexDirection: 'row'
+                        }
+                    }, [
+                        buildRunControlPanelRunButtons(events)
+                    ]),
+                    div({
+                        dataElement: 'status',
+                        style: {
+                            // position: 'absolute',
+                            // left: '100px',
+                            // top: '0',
+                            width: '450px',
+                            height: '50px',
+                            overflow: 'hidden'
+                        }
+                    }, [
                         div({
                             style: {
-                                width: '100px',
                                 height: '50px',
-                                position: 'absolute',
-                                top: '0',
-                                left: '0'
+                                marginTop: '0px',
+                                textAlign: 'left',
+                                lineHeight: '50px',
+                                verticalAlign: 'middle'
                             }
                         }, [
-                            div({
-                                style: {
-                                    height: '50px',
-                                    width: '100px',
-                                    overflow: 'hidden',
-                                    textAlign: 'left',
-                                    lineHeight: '50px',
-                                    verticalAlign: 'middle',
-                                    textStyle: 'italic'
-                                }
-                            }, [
-                                buildRunControlPanelRunButtons(events)
+                            div([
+                                span({ dataElement: 'execMessage' })
                             ])
-                        ]),
-
+                        ])
+                    ]),
+                    div({
+                        dataElement: 'toolbar',
+                        style: {
+                            position: 'absolute',
+                            right: '0',
+                            top: '0',
+                            height: '50px'
+                        }
+                    }, [
                         div({
-                            dataElement: 'status',
                             style: {
-                                position: 'absolute',
-                                left: '100px',
-                                top: '0',
-                                width: '450px',
-                                height: '50px',
-                                overflow: 'hidden'
-                            }
-                        }, [
-                            div({
-                                style: {
-                                    height: '50px',
-                                    marginTop: '0px',
-                                    textAlign: 'left',
-                                    lineHeight: '50px',
-                                    verticalAlign: 'middle'
-                                }
-                            }, [
-                                div([
-                                    span({ dataElement: 'execMessage' })
-                                ])
-                            ])
-                        ]),
-                        div({
-                            dataElement: 'toolbar',
-                            style: {
-                                position: 'absolute',
+                                display: 'inline-block',
                                 right: '0',
-                                top: '0',
-                                height: '50px'
+                                height: '50px',
+                                lineHeight: '50px',
+                                paddingRight: '15px',
+                                verticalAlign: 'bottom'
                             }
                         }, [
                             div({
+                                class: 'btn-toolbar',
                                 style: {
                                     display: 'inline-block',
-                                    right: '0',
-                                    height: '50px',
-                                    lineHeight: '50px',
-                                    paddingRight: '15px',
                                     verticalAlign: 'bottom'
                                 }
-                            }, [
-                                div({
-                                    class: 'btn-toolbar',
-                                    style: {
-                                        display: 'inline-block',
-                                        verticalAlign: 'bottom'
-                                    }
-                                }, buildRunControlPanelDisplayButtons(events))
-                            ])
+                            }, buildRunControlPanelDisplayButtons(events))
                         ])
                     ])
                 ]),
@@ -1002,12 +1267,16 @@ define([
         function buildPython(cell, cellId, app, params) {
             var runId = new Uuid(4).format(),
                 fixedApp = fixApp(app),
+                code;
+            if (model.getItem('user-settings.batchMode')) {
+                code = PythonInterop.buildBatchAppRunner(cellId, runId, fixedApp, [params]);
+            }
+            else {
                 code = PythonInterop.buildAppRunner(cellId, runId, fixedApp, params);
-            console.log('app cell code', app);
+            }
             // TODO: do something with the runId
             cell.set_text(code);
         }
-
 
         function resetPython(cell) {
             cell.set_text('');

@@ -76,7 +76,6 @@ RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_pr
 # but since the raw template is consumed at build time as a JSON file, a template with a default string would
 # cause JSON parsing to fail - GRRRRR!!!
 ENV VERSION_CHECK /narrative_version
-ENV DATA_PANEL_SOURCES /data_source_config.json
 
 USER root
 

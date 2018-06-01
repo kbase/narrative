@@ -15,6 +15,8 @@ default: build-narrative-container
 build-narrative-container:
 	sh $(DOCKER_INSTALLER)
 
+docker_image: build-narrative-container
+
 install:
 	@echo "Installing local Narrative in the $(INSTALL_VENV) virtual environment"
 	bash $(INSTALLER) -v $(INSTALL_VENV)

@@ -57,7 +57,7 @@ RUN grunt minify
 
 
 # Add Tini. Tini operates as a process subreaper for jupyter. This prevents
-# kernel crashes. See Jupyter Notebook known issues here:
+# kernel crashes. See Jupyter Notebook known issues here:˜
 # http://jupyter-notebook.readthedocs.org/en/latest/public_server.html#known-issues
 # ENV TINI_VERSION v0.8.4
 # ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
@@ -76,6 +76,7 @@ RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_pr
 # but since the raw template is consumed at build time as a JSON file, a template with a default string would
 # cause JSON parsing to fail - GRRRRR!!!
 ENV VERSION_CHECK /narrative_version
+ENV DATA_PANEL_SOURCES /data_source_config.json
 
 USER root
 

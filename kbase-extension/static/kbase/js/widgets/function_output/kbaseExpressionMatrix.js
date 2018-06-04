@@ -12,7 +12,7 @@ define ([
     'kbaseTabs',
     'narrativeConfig',
     'kb_common/jsonRpc/dynamicServiceClient',
-    'ExpressionUtils-client-api',
+		'kbase-generic-client-api',
     // For effect
     'bootstrap',
     'jquery-dataTables'
@@ -24,7 +24,7 @@ define ([
     kbaseTabs,
     Config,
     DynamicServiceClient,
-    ExpressionUtilsClient,
+		GenericClient
 ) {
     'use strict';
 
@@ -71,17 +71,22 @@ define ([
                 token: auth.token
             });
 
-            this.expressionUtils = new DynamicServiceClient({
-                module: 'ExpressionUtils',
+            /*this.expressionUtils = new DynamicServiceClient({
+                module: 'ExpressionAPI',
                 url: Config.url('service_wizard'),
                 token: auth.token,
                 version : 'dev',
-            });
+            });*/
 
-            /*this.expressionUtils = new ExpressionUtils(
+            this.genericClient = new GenericClient(
+              Config.url('service_wizard'),
+              { token: auth.token, version : 'dev' }
+            );
+
+            /*this.expressionAPI = new expressionAPI(
                 Config.url('service_wizard'),
                 {'token': this.authToken()});*/
-console.log("EU IS : ", this.expressionUtils);
+console.log("EU IS : ", this.genericClient, auth.token);
             // Let's go...
             this.loadAndRender();
 
@@ -98,15 +103,20 @@ console.log("EU IS : ", this.expressionUtils);
 
             self.loading(true);
             var expressionMatrixRef = '16162/40/2';//this.options.workspaceID + '/' + this.options.expressionMatrixID;
-            /*Promise.resolve(self.expressionUtils.get_enhancedFilteredExpressionMatrix({
+            /*Promise.resolve(self.expressionAPI.get_enhancedFilteredExpressionMatrix({
                 fem_objet_ref: expressionMatrixRef
             }))*/
-            self.expressionUtils.callFunc('get_enhancedFilteredExpressionMatrix', {
-              fem_objet_ref: expressionMatrixRef
-            } )
+            console.log("CALL ONE");
+            self.genericClient.sync_call('ExpressionAPI.get_enhancedFilteredExpressionMatrix', [{
+              fem_object_ref: expressionMatrixRef
+            }] )
             .then( function (data) {
               console.log("I HAVE ME DATA : ", data);
+              self.matrixStat = data[0].enhanced_FEM.data;
+              self.render();
+              self.loading(false);
             })
+
                 /*.spread(function (data) {
                     self.matrixStat = data;
                     self.render();
@@ -116,6 +126,18 @@ console.log("EU IS : ", this.expressionUtils);
                 console.log("FAILED WITH : ", error, expressionMatrixRef);
                     self.clientError(error);
                 });
+var oldStyleRef = this.options.workspaceID + '/' + this.options.expressionMatrixID;
+console.log("OLD CALL", self.featureValues, oldStyleRef);
+            self.featureValues.callFunc('get_matrix_stat', [{
+                input_data: oldStyleRef
+            }])
+                .spread(function (data) {
+console.log("OLD LOAD DATA : ", data);
+                })
+                .catch(function(error){
+console.log("OLD CALL FAILED : ", error);
+                });
+
         },
 
         render: function() {

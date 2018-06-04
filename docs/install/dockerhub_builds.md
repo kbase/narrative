@@ -28,7 +28,9 @@ branches:
 ~~~
 If the regression tests complete, then docker images are built and pushed into Dockerhub as kbase/narrative:$TAG and kbase/narrative_version:$TAG where $TAG corresponds to the the branch ("latest" is substituted for master)
 
-These images can be built locally and run using the docker_image Make target. The narrative image can then be run locally using Docker, with the CONFIG_ENV environment variable used to tell the narrative which stanza of the config.json file to use for service endpoints. As an example, the following docker command will bring up a narrative container configured to use CI service endpoints:
+These images can be built locally and run using the docker_image Make target. The narrative image can then be run locally using Docker, with the CONFIG_ENV environment variable used to tell the narrative which stanza of the config.json file to use for service endpoints. This is implemented through a golang text/template in the src/config.json.templ file, which is rendered by the entrypoint dockerize program into src/config.json.
+
+As an example, the following docker command will bring up a narrative container configured to use CI service endpoints:
 ~~~
 docker run -it -e CONFIG_ENV=ci -e VERSION_CHECK=https://narrative.kbase.us/narrative_version -p 8888:8888 kbase/narrative:dockerize
 2018/06/01 21:46:53 Setting effective gid to 65534
@@ -53,6 +55,16 @@ At this point if you point your browser at the URL provided, you should see the 
 ![Narrative Token Dialog](../images/NarrativeTokenRequest.png)
 
 
-Enter a valid KBase auth2 token for the CI environment. If you bring up an narrative in the CI environment and use the developer Javascript console to display the contents of the document.cookie, the value assigned to kbase_session can be cut and pasted into the modal dialog to give this narrative authenticated access. In the following screenshot the string containing the token is marked up with a bright blue line to identify where you can find the token in your local environment:
+Enter a valid KBase auth2 token for the CI environment. If you bring up an narrative in the CI environment and use the developer Javascript console to display the contents of the document.cookie, the value assigned to kbase_session can be cut and pasted into the modal dialog to give this narrative authenticated access. In the following screenshot the string containing the token is blocked out with a bright blue line to identify where you can find the token in your local environment:
+
 ![Narrative Cookie Token](../images/NarrativeCookieToken.png)
 
+Once you have entered a valid token, you should be able to use the narrative in that environment.
+
+Another issue to note is that by default, when you click on a narrative to open it, the URL will be of the form localhost:8888/narrative/*notebooks*/ws.####.obj.1 (see the example in the URL bar of the screenshot below)
+
+![Narrative URL Example](../images/NarrativeURLExample.png)
+
+The "/notebooks/" component in the path will cause problems with using the notebook, and it is best to connect to the Jupyter server using a path without the "/notebooks/" component, in this example screenshot we change it from *http://localhost:8888/narrative/notebooks/ws.12202.obj.1* to *http://localhost:8888/narrative/ws.12202.obj.1*
+
+![Shortened Narrative URL Example](../images/NarrativeURLExampleShortened.png)

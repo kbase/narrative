@@ -185,7 +185,6 @@ class AppManager(object):
 
         # This is what calls the function in the back end - Module.method
         # This isn't the same as the app spec id.
-        function_name = service_name + '.' + service_method
         job_meta = {'tag': tag}
         if cell_id is not None:
             job_meta['cell_id'] = cell_id
@@ -194,8 +193,8 @@ class AppManager(object):
 
         # Now put these all together in a way that can be sent to the batch processing app.
         batch_params = {
-            "app_id": app_id,
-            "method": function_name,
+            "module_name": service_name,
+            "method_name": service_method,
             "service_ver": service_ver,
             "wsid": ws_id,
             "meta": job_meta,

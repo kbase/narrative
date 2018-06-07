@@ -151,9 +151,11 @@ define([
                     model: model
                 });
 
-                if (selectedJobId) {
-                    startDetails(selectedJobId);
-                }
+                if (!selectedJobId) {
+                    selectedJobId = model.getItem('exec.jobState.child_jobs')[0];
+                } 
+                startDetails(selectedJobId);
+
                 function startDetails(jobId) {
                     var selectedJobId = jobId ? jobId : model.getItem('exec.jobState.job_id');
                     config.clickedId = selectedJobId;

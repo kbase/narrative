@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white: true*/
 /**
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @author Bill Riehl <wjriehl@lbl.gov>
@@ -7,34 +5,28 @@
  */
 define ([
     'kbwidget',
-    'bootstrap',
     'jquery',
     'underscore',
     'bluebird',
     'narrativeConfig',
     'kbaseAuthenticatedWidget',
-    'kbaseNarrative',
     'kbase-generic-client-api',
     'base/js/namespace',
     'util/display',
-    'util/icon',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
-    'util/bootstrapDialog'
+    
+    'bootstrap',
 ], function (
     KBWidget,
-    bootstrap,
     $,
     _,
     Promise,
     Config,
     kbaseAuthenticatedWidget,
-    kbaseNarrative,
     GenericClient,
     Jupyter,
     DisplayUtil,
-    Icon,
-    kbaseDataCard,
-    BootstrapDialog
+    kbaseDataCard
 ) {
     'use strict';
     return KBWidget({
@@ -109,7 +101,7 @@ define ([
                 Promise.resolve(this.serviceClient.sync_call(
                     'NarrativeService.list_objects_with_sets',
                     [{
-                        ws_name: this.dataConfig.ws
+                        ws_name: this.dataConfig.workspaceName
                     }]
                 ))
                     .then(function(infoList){
@@ -181,12 +173,12 @@ define ([
                     showTypeDiv[typeInfo.name[k]] = false;
                 }
             }
-            var $tc = $('<div>')
+            $tc = $('<div>')
                 .append($('<div>').css({'margin':'15px'})
                     .append($('<div>').css({'margin':'4px','margin-top':'15px','color':'#555','font-size':'large','font-weight':'bold'})
                         .append('Other Examples'))
                     .append($('<div>').css({'margin':'4px','color':'#555'})
-                        .append('Assorted data types used in more advanced analyses')));
+                        .append('Assorted data types used in other analyses')));
             typeDivs['other.types'] = $tc;
 
             var hasOthers = false;
@@ -198,7 +190,7 @@ define ([
                     if (a.info[1].toUpperCase() < b.info[1].toUpperCase()) return 1;
                     return 0;
                 });
-            for (var k=0; k<self.objectList.length; k++) {
+            for (k=0; k<self.objectList.length; k++) {
                 var obj = self.objectList[k];
                 var typeName='';
                 if (obj.info[2]==='TranscriptomeHack') {
@@ -216,10 +208,10 @@ define ([
                 }
             }
 
-            for(var t=0; t<this.dataConfig.data_types.length; t++) {
+            for(t=0; t<this.dataConfig.data_types.length; t++) {
                 var typeNames = this.dataConfig.data_types[t].name;
                 var showDiv = false;
-                for(var k=0; k<typeNames.length; k++) {
+                for(k=0; k<typeNames.length; k++) {
                     if(showTypeDiv[typeNames[k]]) {
                         showDiv = true;
                     }
@@ -280,7 +272,7 @@ define ([
             return this;
         },
 
-        loggedOutCallback: function(event) {
+        loggedOutCallback: function() {
             this.isLoggedIn = false;
             return this;
         },

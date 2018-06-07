@@ -317,46 +317,11 @@ define([
             }, btn);
         }
 
-        function renderLayout(batchMode) {
+        function renderLayout() {
             var events = Events.make(),
                 batchToggleBtn = buildBatchToggleButton(batchMode, events),
-                formContent = [batchToggleBtn];
-            if (batchMode) {
-                formContent.push(div('batch mode!'));
-            }
-            else {
-                formContent = formContent.concat([
-                    ui.buildPanel({
-                        title: span([
-                            'Input Objects',
-                            span({
-                                dataElement: 'advanced-hidden-message',
-                                style: {
-                                    marginLeft: '6px',
-                                    fontStyle: 'italic'
-                                }
-                            })]),
-                        name: 'input-objects-area',
-                        body: div({ dataElement: 'input-fields' }),
-                        classes: ['kb-panel-light']
-                    }),
-                    // ui.makePanel('Input Objects', 'input-fields'),
-                    ui.buildPanel({
-                        title: span(['Parameters', span({ dataElement: 'advanced-hidden-message', style: { marginLeft: '6px', fontStyle: 'italic' } })]),
-                        name: 'parameters-area',
-                        body: div({ dataElement: 'parameter-fields' }),
-                        classes: ['kb-panel-light']
-                    }),
-                    ui.buildPanel({
-                        title: 'Output Objects',
-                        name: 'output-objects-area',
-                        body: div({ dataElement: 'output-fields' }),
-                        classes: ['kb-panel-light']
-                    })
-                    // ui.makePanel('Output Report', 'output-report')
-                ]);
-            }
-            var content = form({ dataElement: 'input-widget-form' }, formContent);
+                formContent = [batchToggleBtn, div('batch mode!')],
+                content = form({ dataElement: 'input-widget-form' }, formContent);
             return {
                 content: content,
                 events: events
@@ -371,17 +336,17 @@ define([
                 node: container,
                 bus: bus
             });
-            var layout = renderLayout(batchMode);
+            var layout = renderLayout();
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
-            if (!batchMode) {
-                places = {
-                    inputFields: ui.getElement('input-fields'),
-                    outputFields: ui.getElement('output-fields'),
-                    parameterFields: ui.getElement('parameter-fields'),
-                    advancedParameterFields: ui.getElement('advanced-parameter-fields')
-                };
-            }
+            // if (!batchMode) {
+            //     places = {
+            //         inputFields: ui.getElement('input-fields'),
+            //         outputFields: ui.getElement('output-fields'),
+            //         parameterFields: ui.getElement('parameter-fields'),
+            //         advancedParameterFields: ui.getElement('advanced-parameter-fields')
+            //     };
+            // }
         }
 
         // EVENTS
@@ -575,54 +540,40 @@ define([
         }
 
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 // send parent the ready message
 
-                paramsBus.request({}, {key: {type: 'get-batch-mode'}})
-                    .then((batchMode) => {
-                        doAttach(arg.node, batchMode);
+                doAttach(arg.node, batchMode);
 
-                        model.setItem('appSpec', arg.appSpec);
-                        model.setItem('parameters', arg.parameters);
+                model.setItem('appSpec', arg.appSpec);
+                model.setItem('parameters', arg.parameters);
 
-                        paramsBus.on('parameter-changed', function (message) {
-                            // Also, tell each of our inputs that a param has changed.
-                            // TODO: use the new key address and subscription
-                            // mechanism to make this more efficient.
-                            widgets.forEach(function (widget) {
-                                widget.bus.send(message, {
-                                    key: {
-                                        type: 'parameter-changed',
-                                        parameter: message.parameter
-                                    }
-                                });
-                                // bus.emit('parameter-changed', message);
-                            });
+                paramsBus.on('parameter-changed', function (message) {
+                    // Also, tell each of our inputs that a param has changed.
+                    // TODO: use the new key address and subscription
+                    // mechanism to make this more efficient.
+                    widgets.forEach(function (widget) {
+                        widget.bus.send(message, {
+                            key: {
+                                type: 'parameter-changed',
+                                parameter: message.parameter
+                            }
                         });
+                        // bus.emit('parameter-changed', message);
+                    });
+                });
 
-                        var retPromise;
-                        if (batchMode) {
-                            retPromise = Promise.resolve();
-                        }
-                        else {
-                            retPromise = renderParameters();
-                        }
-                        return retPromise
-                            .then(function () {
-                                // do something after success
-                                attachEvents();
-                            })
-                            .catch(function (err) {
-                                // do somethig with the error.
-                                console.error('ERROR in start', err);
-                            });
-                        });
-
+                return Promise.try(() => {
+                    attachEvents();
+                })
+                    .catch((err) => {
+                        console.error('ERROR in start', err);
+                    });
             });
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 // really unhook things here.
             });
         }

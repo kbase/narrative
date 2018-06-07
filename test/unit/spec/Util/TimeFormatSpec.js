@@ -115,7 +115,7 @@ define ([
             expect(tsDiv.is('span')).toBe(true);
 
             var title = tsDiv.attr('title');
-            expect(new Date(title).toUTCString()).toBe(new Date(reformattedString).toUTCString());
+            expect(new Date(title).toUTCString()).toBe(new Date(testISOTime).toUTCString());
             // expect(tsDiv.attr('title')).toBe(reformattedString);
         });
 
@@ -130,8 +130,9 @@ define ([
 
         it('reformatISOTimeString should work with a good ISO string', function() {
             var newTimeStr = TF.reformatISOTimeString(testISOTime);
+            // expect(newTimeStr).toEqual(reformattedString);
             expect(new Date(newTimeStr).toUTCString())
-                  .toBe(new Date(reformattedString).toUTCString());
+                  .toBe(new Date(testISOTime).toUTCString());
         });
 
         it('reformatISOTimeString should not reformat a bad timestamp', function() {
@@ -143,7 +144,7 @@ define ([
         it('reformatDate should reformat a date object into a good string', function() {
             var d = new Date(testISOTime);
             var retDate = TF.reformatDate(d);
-            expect(new Date(retDate).toUTCString()).toBe(new Date(reformattedString).toUTCString());
+            expect(new Date(retDate).toUTCString()).toBe(new Date(testISOTime).toUTCString());
         });
 
         it('reformatDate should return the same input with a bad date', function() {

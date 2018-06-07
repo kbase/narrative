@@ -1,67 +1,53 @@
-/*global define*/
-/*jslint white: true*/
 /**
- * "Import" tab on data side panel.
+ * "Public Data" tab on data side panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
 define ([
     'kbwidget',
-    'bootstrap',
-    'handlebars',
     'jquery',
-    'bluebird',
     'numeral',
     'narrativeConfig',
     'kbaseAuthenticatedWidget',
     'base/js/namespace',
     'kb_common/jsonRpc/dynamicServiceClient',
     'kb_common/jsonRpc/genericClient',
+    'kb_common/html',
     'util/icon',
-    'util/string',
-    'util/bootstrapDialog',
-    'common/kbaseSearchEngine',
-    'common/runtime',
-    'text!kbase/templates/data_slideout/object_row.html',
-    'text!kbase/templates/data_slideout/action_button_partial.html',
-    'text!kbase/templates/data_slideout/jgi_data_policy.html',
-    'text!kbase/templates/data_slideout/data_policy_panel.html'
+    'widgets/narrative_core/publicDataSources/workspaceDataSource',
+    'widgets/narrative_core/publicDataSources/searchDataSource',
+    'yaml!kbase/config/publicDataSources.yaml',
+
+    'bootstrap'
 ], function (
     KBWidget,
-    bootstrap,
-    Handlebars,
     $,
-    Promise,
     numeral,
     Config,
     kbaseAuthenticatedWidget,
     Jupyter,
     DynamicServiceClient,
     ServiceClient,
+    html,
     Icon,
-    StringUtil,
-    BootstrapDialog,
-    KBaseSearchEngine,
-    Runtime,
-    StagingRowHtml,
-    ActionButtonHtml,
-    JGIDataPolicyHtml,
-    DataPolicyPanelHtml
+    WorkspaceDataSource,
+    SearchDataSource,
+    DataSourceConfig
 ) {
     'use strict';
 
     function formatValue(value) {
         if (typeof value === 'undefined' || 
             (typeof value === 'string' && value.length === 0)) {
-            return '-';
+            return '<span style="color: #AAA; font-weight: normal; font-style: italic">n/a</span>';
         } else {
             return String(value);
         }
     }
     function formatItem(item) {
         return [
-            item.label, 
-            ':&nbsp;',
+            '<span style="color: #AAA; font-weight: normal; font-style: italic">' + item.label + ':</span>', 
+            '&nbsp;',
             formatValue(item.value)
         ].join('');
     }
@@ -80,23 +66,63 @@ define ([
             if (item.value instanceof Array) {
                 value = item.value.map(function (item) {
                     return formatItem(item);
-                }).join('; ');
+                }).join('&nbsp;&nbsp;&nbsp;');
             } else {
                 value = formatValue(item.value);
             }
 
             $row = $('<tr>')
+                .css('margin-bottom', '2px')
                 .append($('<td>')
+                    .css('width', '7em')
+                    .css('font-weight', 'normal')
                     .css('font-style', 'italic')
                     .css('padding-right', '4px')
                     .css('color', '#AAA')
+                    .css('vertical-align', 'top')
+                    .css('padding-bottom', '2px')
                     .text(item.label))
-                .append($('<td>').html(value));
+                .append($('<td>')
+                    // .css('font-weight', 'bold')
+                    .css('vertical-align', 'top')
+                    .css('padding-bottom', '2px')
+                    .html(value));
 
             $table.append($row);
         });
         return $table;
     }
+
+    // function metadataToRaggedTable(metadata) {
+    //     var $table = $('<div>')
+    //         .css('padding-bottom', '2px')
+    //         .css('font-size', '100%');
+
+    //     metadata.forEach(function (item) {
+    //         var $row;
+    //         var value;
+    //         if (item.value instanceof Array) {
+    //             value = item.value.map(function (item) {
+    //                 return formatItem(item);
+    //             }).join('&nbsp;&nbsp;&nbsp;');
+    //         } else {
+    //             value = formatValue(item.value);
+    //         }
+
+    //         $row = $('<div>')
+    //             .append($('<span>')
+    //                 .css('font-style', 'italic')
+    //                 .css('padding-right', '4px')
+    //                 .css('color', '#AAA')
+    //                 .text(item.label))
+    //             .append($('<span>')
+    //                 .css('font-weight', 'bold')
+    //                 .html(value));
+
+    //         $table.append($row);
+    //     });
+    //     return $table;
+    // }
 
     function renderTotals(found, total) {
         var $totals = $('<span>').addClass('kb-data-list-type');
@@ -105,14 +131,15 @@ define ([
                 .append($('<span>None available</span>'));
         } else if (found === 0) {
             $totals
-                .append($('<span>').css('font-weight', 'bold').text('None found out of '))
-                .append($('<span>').text(numeral(total).format('0,0')))
+                .append($('<span>').css('font-weight', 'bold').text('None'))
+                .append($('<span>').text(' found out of '))
+                .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
                 .append($('<span>').text(' available'));
         } else if (total > found) {
             $totals
                 .append($('<span>').css('font-weight', 'bold').text(numeral(found).format('0,0')))
                 .append($('<span>').text(' found out of '))
-                .append($('<span>').text(numeral(total).format('0,0')))
+                .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
                 .append($('<span>').text(' available'));
                 
         } else {
@@ -162,6 +189,20 @@ define ([
         }
         return null;
     }
+    var dataSourceTypes = {
+        search: {
+            serviceDependencies: {
+                KBaseSearchEngine: 'KBaseSearchEngine'
+            },
+            baseObject: SearchDataSource
+        },
+        workspace: {
+            serviceDependencies: {
+                ServiceWizard: 'service_wizard'
+            },
+            baseObject: WorkspaceDataSource
+        }
+    };
 
     return KBWidget({
         name: 'kbaseNarrativeSidePublicTab',
@@ -171,16 +212,16 @@ define ([
             $importStatus:$('<div>'),
             addToNarrativeButton: null,
             selectedItems: null,
-            lp_url: Config.url('landing_pages'),
+            landingPageURL: Config.url('landing_pages'),
+            provenanceViewerBaseURL: Config.url('provenance_view'),
             ws_name: null
         },
         token: null,
         wsName: null,
         searchUrlPrefix: Config.url('search'),
         loadingImage: Config.get('loading_gif'),
-        wsUrl: Config.url('workspace'),
+        workspaceUrl: Config.url('workspace'),
         workspace: null,
-        jgiGateway: null,
         narrativeService: null,
         mainListPanelHeight: '535px',
         maxNameLength: 60,
@@ -191,9 +232,8 @@ define ([
         currentQuery: null,
         currentPage: null,
         totalAvailable: null,
-        totalResults: null,
+        currentFilteredlResults: null,
         itemsPerPage: 20,
-        maxAutoCopyCount: 5,
         narrativeObjects: {},
         narrativeObjectsClean: null,
 
@@ -203,29 +243,24 @@ define ([
             this.data_icons = Config.get('icons').data;
             this.icon_colors = Config.get('icons').colors;
             this.wsName = Jupyter.narrative.getWorkspaceName();
-            this.categoryDescr = Config.get('publicCategories');
-            if (!this.categoryDescr) {
-                this.categoryDescr = {};
-            }
-            if (Config.get('features').jgiPublicStaging) {
-                this.categoryDescr['jgi_gateway'] = {
-                    name: 'JGI Public Data (TEST)',
-                    type: null,
-                    ws: null,
-                    search: false,
-                    source: 'jgi_gateway'
-                };
-            }
-            if (this.categoryDescr)
-                this.categories = Object.keys(this.categoryDescr);
+            // this.categoryDescr = Config.get('publicCategories');
+            this.dataSourceConfigs = DataSourceConfig.sources;
+            // if (!this.dataSourceConfig) {
+            //     this.categoryDescr = {};
+            // }
+            // this.categories = DataSourceConfig.sources.map(function (source) {
+            //     return source.id;
+            // });
 
-            Handlebars.registerPartial('actionPartial', ActionButtonHtml);
-            this.stagingRowTmpl = Handlebars.compile(StagingRowHtml);
 
-            $(document).on('dataUpdated.Narrative', function () {
-                this.loadObjects();
-            }.bind(this));
-
+            // Cause the search to be re-run whenever the data state for this 
+            // narrative changes.
+            // TODO: disabled. since this is public data, the state of this narrative
+            // should not affect any of the browser/searches!
+            // $(document).on('dataUpdated.Narrative', function () {
+            //     this.loadObjects();
+            // }.bind(this));
+            
             this.loadObjects();
 
             return this;
@@ -240,23 +275,20 @@ define ([
         },
 
         render: function() {
-            if ((!this.token) || (!this.wsName))
+            if ((!this.token) || (!this.wsName)) {
                 return;
+            }
             this.infoPanel = $('<div>');
             this.dataPolicyPanel = $('<div>');
             this.$elem.empty()
                 .append(this.infoPanel)
                 .append(this.dataPolicyPanel);
-            if (!this.categories) {
-                this.showError('Unable to load public data configuration! Please refresh your page to try again. If this continues to happen, please <a href="https://kbase.us/contact-us/">click here</a> to contact KBase with the problem.');
-                return;
-            }
 
-            this.jgiGatewayClient = new DynamicServiceClient({
-                module: 'jgi_gateway',
-                url: Config.url('service_wizard'), 
-                token: this.token
-            });
+            // if (!this.categories) {
+            //     this.showError('Unable to load public data configuration! Please refresh your page to try again. If this continues to happen, please <a href="https://kbase.us/contact-us/">click here</a> to contact KBase with the problem.');
+            //     return;
+            // }
+
             this.narrativeService = new DynamicServiceClient({
                 module: 'NarrativeService',
                 url: Config.url('service_wizard'), 
@@ -268,23 +300,48 @@ define ([
                 token: this.token
             });
 
-            var mrg = {margin: '10px 0px 10px 0px'};
-            var $typeInput = $('<select class="form-control">').css(mrg);
-            for (var catPos in this.categories) {
-                var cat = this.categories[catPos];
-                var catName = this.categoryDescr[cat].name;
-                $typeInput.append('<option value="'+cat+'">'+catName+'</option>');
-            }
+            var margin = {margin: '10px 0px 10px 0px'};
+            var $typeInput = $('<select class="form-control">')
+                .css(margin);
 
-            var typeFilter = $('<div class="col-sm-3">').append($typeInput);
+            this.dataSourceConfigs.forEach(function (config, index) {
+                $typeInput.append('<option value="' + String(index) + '">' + config.name + '</option>');
+            });
+
+            // for (var catPos in this.categories) {
+            //     var cat = this.categories[catPos];
+            //     var catName = this.dataSourceConfigs[cat].name;
+            //     $typeInput.append('<option value="'+cat+'">'+catName+'</option>');
+            // }
+
+            var $dataSourceLogo = $('<span>')
+                .addClass('input-group-addon')
+                .css('width', '40px')
+                .css('border', 'none')
+                .css('padding', '0 4px')
+                .css('border', 'none')
+                .css('border-radius', '0')
+                .css('background-color', 'transparent');
+            this.$dataSourceLogo = $dataSourceLogo;
+
+            var $inputGroup = $('<div>')
+                .addClass('input-group')
+                .css('width', '100%');
+
+            var typeFilter = $('<div class="col-sm-4">')
+                .append($inputGroup
+                    .append($typeInput)
+                    .append($dataSourceLogo));
+
             var $filterInput = $('<input type="text" class="form-control" placeholder="Filter data...">');
-            var $filterInputField = $('<div class="input-group">').css(mrg)
+            var $filterInputField = $('<div class="input-group">')
+                .css(margin)
                 .append($filterInput)
                 .append($('<div class="input-group-addon btn btn-default">')
                     .append($('<span class="fa fa-search">'))
                     .css('padding', '4px 8px')
                     .click(function () {
-                        this.searchAndRender($typeInput.val(), $filterInput.val());
+                        $filterInput.change();
                     }.bind(this)))
                 .append($('<div class="input-group-addon btn btn-default">')
                     .append($('<span class="fa fa-times">'))
@@ -295,20 +352,21 @@ define ([
                         $filterInput.change();
                     }));
 
+
             /*
                 search and render when the type dropdown changes.
             */
             $typeInput.change(function() {
-                this.searchAndRender($typeInput.val(), $filterInput.val());
-                /** HACK TO SHOW DATA POLICY **/
-                if (!this.agreeDataPolicy && $typeInput.val() === 'jgi_gateway') {
-                    this.dataPolicyPanel.show();
-                    this.showDataPolicy();
+                var newDataSourceID = parseInt($typeInput.val());
+                var dataSource = this.dataSourceConfigs[newDataSourceID];
+                this.$dataSourceLogo.empty();
+                if (dataSource) {
+                    if (dataSource.logoUrl) {
+                        this.$dataSourceLogo.append($('<img>')
+                            .attr('src', dataSource.logoUrl));
+                    }
                 }
-                else {
-                    this.dataPolicyPanel.hide();
-                }
-                /** END DATA POLICY HACK **/
+                this.searchAndRender(newDataSourceID, $filterInput.val());
             }.bind(this));
 
             /*
@@ -317,11 +375,12 @@ define ([
             var inputFieldLastValue = null;
             $filterInput.change(function() {
                 inputFieldLastValue = $filterInput.val();
-                inputFieldState();
-                this.searchAndRender($typeInput.val(), $filterInput.val());
+                renderInputFieldState();
+                var dataSourceID = parseInt($typeInput.val());
+                this.searchAndRender(dataSourceID, $filterInput.val());
             }.bind(this));
 
-            function inputFieldState() {
+            function renderInputFieldState() {
                 if ($filterInput.val() === '') {
                     $filterInput.css('background-color', 'transparent');
                     return;
@@ -333,10 +392,16 @@ define ([
                 }            
             }
 
-            $filterInput.keyup(function () {
-                inputFieldState();
-            });
+            // function inputFieldDirty() {
+            //     if (inputFieldLastValue !== $filterInput.val()) {
+            //         return true;
+            //     } 
+            //     return false;
+            // }
 
+            $filterInput.keyup(function () {
+                renderInputFieldState();
+            });
 
             /*
                 search and render for every keystroke!
@@ -345,27 +410,46 @@ define ([
             //     this.searchAndRender(typeInput.val(), filterInput.val());
             // }.bind(this));
 
-            var searchFilter = $('<div class="col-sm-9">').append($filterInputField);
+            var searchFilter = $('<div class="col-sm-8">').append($filterInputField);
 
-            var header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'}).append(typeFilter).append(searchFilter);
+            var header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'})
+                .append(typeFilter)
+                .append(searchFilter);
             this.$elem.append(header);
             this.totalPanel = $('<div>').css({'margin': '0px 0px 0px 10px'});
             this.$elem.append(this.totalPanel);
 
-            var self = this;
-            this.resultPanel = $('<div>')
-                .css({'overflow-x' : 'hidden', 'overflow-y':'auto', 'height':this.mainListPanelHeight })
-                .on('scroll', function() {
-                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
-                        self.renderMore(false);
+            this.resultPanel = $('<div>');
+
+            this.resultsFooterMessage = $('<div>');
+
+            this.resultFooter = $('<div>')
+                // .css('border', '1px red solid')
+                .css('background-color', 'rgba(200,200,200,0.5')
+                .css('padding', '6px')
+                .css('font-style', 'italic')
+                .css('text-align', 'center')
+                .append(this.resultsFooterMessage);              
+
+            this.resultArea = $('<div>')
+                .css('overflow-x', 'hidden')
+                .css('overflow-y', 'auto')
+                .css('height', this.mainListPanelHeight)
+                .on('scroll', function(e) {
+                    if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight) {
+                        this.renderMore();
                     }
-                });
-            this.$elem.append(this.resultPanel);
-            this.searchAndRender($typeInput.val(), $filterInput.val());
+                }.bind(this))
+                .append(this.resultPanel)
+                .append(this.resultFooter);
+
+            this.$elem.append(this.resultArea);
+            var dataSourceID = parseInt($typeInput.val(), 10);
+            this.searchAndRender(dataSourceID, $filterInput.val());
             return this;
         },
 
-        searchAndRender: function(category, query) {
+        searchAndRender: function(category, query) { 
             if (query) {
                 query = query.trim();
                 if (query.length == 0) {
@@ -384,13 +468,9 @@ define ([
             }
 
             // Duplicate queries are suppressed.
-            if (self.currentQuery && self.currentQuery === query && category === self.currentCategory) {
+            if (this.currentQuery && this.currentQuery === query && category === this.currentCategory) {
                 return;
             }
-
-            // Reset the ui.
-            this.totalPanel.empty();
-            this.resultPanel.empty();
 
             // Reset the query data structures.
             this.objectList = [];
@@ -398,558 +478,191 @@ define ([
             this.currentQuery = query;
             this.currentPage = 0;
             this.totalAvailable = null;
-            this.totalResults = null;
+            this.currentFilteredlResults = null;
 
+            return this.renderInitial();
+        },
+
+        renderTotalsPanel: function () {
+            var $totals = renderTotals(this.currentFilteredResults, this.totalAvailable);                    
+            this.totalPanel.html($totals);
+        },
+
+        renderInitial: function() {
             // Get and render the first batch of data.
             // Note that the loading ui is only displayed on the initial load.
-            this.totalPanel.append($('<span>').addClass('kb-data-list-type').append('<img src="'+this.loadingImage+'"/> searching...'));
-            this.renderMore(true);
+            // Reset the ui.
+            this.totalPanel.empty();
+            this.resultPanel.empty();
+            this.resultsFooterMessage.empty();
+            this.totalPanel
+                .append($('<span>')
+                    .addClass('kb-data-list-type')
+                    .append('<img src="'+this.loadingImage+'"/> searching...'));
+
+            this.hideError();
+            this.currentPage = 1;
+
+            return this.renderFromDataSource(this.currentCategory, true);
         },
 
-        renderFromWorkspace: function(cat) {
-            if (this.currentPage > 0) {
-                return;
-            }
-            this.currentPage++;
-            var type = cat.type;
-            var ws = cat.ws;
-            var that = this;
+        renderMore: function() {
+            this.hideError();
 
-            var thisQuery = this.currentQuery;
-            this.narrativeService.callFunc('list_objects_with_sets', [{
-                ws_name: ws,
-                types: [type]
-            }])
-                .spread(function(data) {
-                    data = data.data;
-                    if (thisQuery !== this.currentQuery)
-                        return;
-                    var query = this.currentQuery.replace(/[*]/g,' ').trim().toLowerCase();
-                    for (var i=0; i<data.length; i++) {
-                        var info = data[i].object_info;
-                        // object_info:
-                        // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                        // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                        // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                        // [9] : int size // [10] : usermeta meta
-                        var name = info[1];
-                        var id = info[0];
-                        var metadata = [];
-                        var objectMeta = info[10] || {};
-                        if (this.currentCategory === 'plant_gnms') {
-                            if (objectMeta.Name) {
-                                metadata.push({
-                                    label: 'ID',
-                                    value: objectMeta.Name
-                                });
-                            }
-                            metadata.push({
-                                label: 'Source',
-                                value: objectMeta.Source
-                            }, {
-                                label: 'Genes',
-                                value: objectMeta['Number features']
-                            });
-                        }
-                        if(query) {
-                            if (name.toLowerCase().indexOf(query) == -1)
-                                continue;
-                        }
-                        this.objectList.push({
-                            $div: null,
-                            info: info,
-                            id: id,
-                            name: name,
-                            objectName: name,
-                            metadata: metadata,
-                            ws: cat.ws,
-                            type: cat.type,
-                            attached: false
-                        });
-                        this.attachRow(this.objectList.length - 1);
-                    }
-                    // 
-                    var totalAvailable = data.length;
-                    that.totalResults = this.objectList.length;
-
-                    var $totals = renderTotals(that.totalResults, totalAvailable);                    
-                    this.totalPanel.html($totals);
-                    
-                }.bind(this))
-                .catch(function(error) {
-                    console.error(error);
-                    var $total = $('<span class="kb-data-list-type">');
-                    if (error.error && error.error.message.match(/^No workspace with name/)) {
-                        $total.html('Error: Data source unavailable');
-                    } else {
-                        $total.html('Error fetching object info');
-                    }
-                    this.totalPanel.html($total);
-                    // this.totalPanel.empty();
-                    // this.totalPanel.append($('<span>').addClass('kb-data-list-type')
-                    //     .append('Total results: 0'));
-                }.bind(this));
-        },
-        
-        objectGuidToRef: function (guid) {
-            var m = guid.match(/^WS:(\d+)\/(\d+)\/(\d+)$/);
-            var objectRef = m.slice(1, 4).join('/');
-            return {
-                workspaceId: parseInt(m[1]),
-                objectId: parseInt(m[2]),
-                version: parseInt(m[3]),
-                ref: objectRef,
-                dataviewId: objectRef
-            };
-        },
-
-        formatInt: function (value, format, defaultValue) {
-            if (typeof value === 'undefined' || value === null) {
-                return defaultValue;
-            }
-            // return String(value);
-            return numeral(value).format(format);
-        },
-
-        parseGenomeIndexV1: function (item) {
-            return {
-                genome_id: item.data.id,
-                genome_source: item.data.source,
-                genome_source_id: item.data.source_id,
-                scientific_name: item.data.scientific_name,
-                domain: item.data.domain,
-                num_contigs: item.data.num_contigs,
-                num_cds: item.data.cdss,
-                num_features: item.data.features,
-                ws_ref: this.objectGuidToRef(item.guid).ref,
-                workspace_name: null,
-                object_name: item.object_name
-            };
-        },
-
-        parseGenomeIndexV2: function (item) {
-            return {
-                genome_id: item.data.id,
-                genome_source: item.data.source,
-                genome_source_id: item.data.source_id,
-                scientific_name: item.data.scientific_name,
-                domain: item.data.domain,
-                num_contigs: item.data.num_contigs,
-                num_cds: item.data.cdss,
-                num_features: item.data.feature_counts,
-                ws_ref: this.objectGuidToRef(item.guid).ref,
-                workspace_name: null,
-                object_name: item.object_name
-            };
-        },
-
-        parseGenomeSearchResultItem: function (item) {
-            // get the type and version
-            var indexType = item.type.toLowerCase();
-            var indexTypeVersion = item.type_ver;
-
-            if (indexType !== 'genome') {
-                throw new Error('Item is not a genome: ' + indexType);
-            }
-
-            switch (indexTypeVersion) {
-            case 1:
-                return this.parseGenomeIndexV1(item);
-            case 2:
-                return this.parseGenomeIndexV2(item);
-            default:
-                throw new Error('Unsupported genome index version: ' + indexTypeVersion);
-            }
-        },
-
-        // nb: the data source is derived from the dropdown the user used to select
-        // the public data source.
-
-        /*
-            Execute a search query, update the query results data structures,
-            and update the ui.
-            All in one!
-
-            Supports query cancellation or suppression logic in this way:
-
-            If it is an initial query it is expected to populate an empty display, 
-            so any pending queries are canceled.
-
-            If it is not an initial query, it is due to paging/scrolling, and we need
-            to abandon a new query if one is already pending. Otherwise we may end up 
-        */
-        renderFromSearch: function(dataSource, initial) {
-            var that = this;
-
-            if (typeof this.renderFromSearchState === 'undefined') {
-                this.renderFromSearchState = {
-                    lastSearchAt: null,
-                    inProgress: false,
-                    lastQuery: null,
-                    currentQueryState: null
-                };
-            }
-
-            if (this.renderFromSearchState.currentQueryState) {
-                if (initial) {
-                    this.renderFromSearchState.currentQueryState.promise.cancel();
-                    this.renderFromSearchState.currentQueryState.canceled = true;
-                } else {
+            // suss out whether we really need more...
+            if (this.currentPage !== null && this.currentFilteredResults !== null) {
+                var maxPage = Math.ceil(this.currentFilteredResults / this.itemsPerPage);
+                if (this.currentPage >= maxPage) {                    
                     return;
                 }
             }
 
+            this.currentPage += 1;
 
-            this.currentPage++;
+            return this.renderFromDataSource(this.currentCategory, false);
+        },
 
-            // Prepare the query and page.
-            var query;
-            if (this.currentQuery === '*') {
-                query = null;
+        fetchFromDataSource: function(dataSource) {
+            var _this = this;
+           
+            var query = {
+                input: _this.currentQuery,
+                page: _this.currentPage,
+            };
+
+            return dataSource.search(query);   
+        },
+
+        getDataSource: function (dataSourceID) {
+            var dataSource;
+            var dataSourceConfig = this.dataSourceConfigs[dataSourceID];
+            if (this.currentDataSource && this.currentDataSource.config === dataSourceConfig) {
+                dataSource = this.currentDataSource;
             } else {
-                // strip off "*" suffix if it was added by the code which 
-                // calls this method.
-                query = this.currentQuery.split(/[ ]+/)
-                    .map(function (term) {
-                        if (term.charAt(term.length-1) === '*') {
-                            return term.slice(0, -1);
+                var dataSourceType = dataSourceTypes[dataSourceConfig.sourceType];
+               
+                var urls = Object.keys(dataSourceType.serviceDependencies).reduce(function (urls, key) {
+                    var configKey = dataSourceType.serviceDependencies[key];
+                    urls[key] = Config.url(configKey);
+                    return urls;
+                }, {});
+                dataSource = Object.create(dataSourceType.baseObject).init({
+                    config: dataSourceConfig,
+                    urls: urls,
+                    token: this.token,
+                    pageSize: this.itemsPerPage
+                });
+                this.currentDataSource = dataSource;
+            }
+            return dataSource;
+        },
+
+        renderFromDataSource: function(dataSourceID, initial) {
+            var _this = this;
+            var dataSource = this.getDataSource(dataSourceID);
+            _this.resultsFooterMessage.html(html.loading('fetching another ' + this.itemsPerPage));
+            this.fetchFromDataSource(dataSource, initial)
+                .then(function (result) {
+                    // a null result means that the search was not run for some
+                    // reason -- most likely it was canceled due to overlapping
+                    // queries.
+                    if (result) {
+                        // _this.removeLastRowPlaceholder();
+                        if (initial) {
+                            _this.totalPanel.empty();
+                            _this.resultPanel.empty();
+                            _this.resultsFooterMessage.empty();                
+                        }
+                        result.forEach(function (item, index) {
+                            _this.addRow(dataSource, item, index);
+                        });
+                        // _this.addLastRowPlaceholder();
+
+                        _this.totalAvailable = dataSource.availableDataCount;
+                        _this.currentFilteredResults = dataSource.filteredDataCount;
+
+                        var message;
+                        if (dataSource.fetchedDataCount === dataSource.filteredDataCount) {
+                            message = 'all ' + _this.currentFilteredResults + ' fetched';
                         } else {
-                            return term;
-                        } 
-                    }).join(' ');
-            }
-
-            var page;
-            if (this.currentPage) {
-                page = this.currentPage - 1;
-            } else {
-                page = 0;
-            }
-
-            /*
-            It is expected that a search data source specifies the 
-            source id - the source id as specified in the object and propogated to the search index
-            source label - the display name for the source
-            type - kbase type for the refdata index; indexes are homogeneous
-
-            note that the source id id is used to query search; if it spans indexes then the indexes 
-            need to intersect on the fields used in the query/render method.
-
-            */
-            var now = new Date().getTime();
-
-            if (this.renderFromSearchState.lastQuery !== query) {
-                this.renderFromSearchState.lastQuery = query;
-            }
-            this.renderFromSearchState.lastSearchAt = now;
-
-            var queryState = {
-                query: query,
-                page: page,
-                started: now,
-                promise: null,
-                canceled: false
-            };
-
-            this.renderFromSearchState.currentQueryState = queryState;
-
-            var searchCall = (function (dataSource, query, page, itemsPerPage, token) {
-                
-                var searchApi = KBaseSearchEngine.make({
-                    url: Config.url('KBaseSearchEngine'),
-                    token: token
-                });
-
-                // add debouncing here. it may not be appropriate for the general purpose 
-                // search input.
-                var methods = {
-                    refseq: function () {
-                        return searchApi.referenceGenomeSearch({
-                            source: dataSource.source,
-                            pageSize: itemsPerPage,
-                            query: query,
-                            page: page
-                        });
-                    }
-                };
-                return methods[dataSource.source];
-            }(dataSource, query, page, this.itemsPerPage, this.token));
-
-            queryState.promise = searchCall()
-                .then(function(result) {
-                    if (queryState.canceled) {
-                        console.warn('query canceled');
-                        return;
-                    }
-
-                    that.totalAvailable = result.totalAvailable;
-                    that.totalResults = result.result.total;
-                    result.result.objects.forEach(function (item) {
-                        // This call givs us a normalized genome result object.
-                        // In porting this over, we are preserving the field names.
-                        var genomeRecord = that.parseGenomeSearchResultItem(item);
-
-                        var id = genomeRecord.genome_id;
-                        var genome_source_id = '';
-                        if (genomeRecord.genome_source_id) {
-                            genome_source_id = String(genomeRecord.genome_source_id);
+                            message = 'fetched ' + result.length + ' of ' + _this.currentFilteredResults;
                         }
-                        var name = genomeRecord.scientific_name;
-                        var domain = genomeRecord.domain;
-                        var ws_ref = null;
-                        if (genomeRecord.ws_ref) {
-                            ws_ref = genomeRecord.ws_ref;
-                        }
-                        var ws_name = dataSource.ws;
-                        if(genomeRecord.workspace_name) {
-                            ws_name = genomeRecord.workspace_name;
-                        }
+                        _this.resultsFooterMessage.text(message);
 
-                        // This creates the generic object results list item.
-                        that.objectList.push({
-                            $div: null,
-                            info: null,
-                            id: id,
-                            name: name,
-                            objectName: genomeRecord.object_name, 
-                            // This is a problem, because ordering of the fields is in no way
-                            // guaranteed.
-                            metadata: [
-                                {
-                                    label: 'Domain',
-                                    value: domain
-                                },
-                                // original one
-                                // {
-                                //     label: 'Source',
-                                //     value: id + ' (' + source + ') ' + genome_source_id
-                                // },
-                                // but doesn't this make more sense?
-                                {   
-                                    label: 'KBase ID',
-                                    value: id
-                                },
-                                {
-                                    label: dataSource.sourceLabel + ' ID',
-                                    value: genome_source_id
-                                },
-                                {
-                                    label: 'Stats',
-                                    value:  [
-                                        {
-                                            label: 'Contigs',
-                                            value: that.formatInt(genomeRecord.num_contigs, '0,0', 'n/a')
-                                        },
-                                        {
-                                            label: 'Features',
-                                            value: that.formatInt(genomeRecord.num_features, '0,0', 'n/a')
-                                        }
-                                    ]
-                                }
-                                
-                            ],
-                            ws: ws_name,
-                            type: dataSource.type,
-                            attached: false,
-                            ws_ref: ws_ref
-                        });
-                        that.attachRow(that.objectList.length - 1);
-                    });
-
-                    var $totals = renderTotals(that.totalResults, that.totalAvailable);
-                    that.totalPanel.html($totals);
-
-                    that.renderFromSearchState.currentQueryState = null;
-                })
-                .catch(function (error) {
-                    console.error(error);
-                    if (that.objectList.length == 0) {
-                        that.totalPanel.empty();
-                        that.totalPanel.append($('<span>    ').addClass('kb-data-list-type')
-                            .append('Total results: 0'));
+                        _this.renderTotalsPanel();
                     }
+
+                    _this.currentDataSource = dataSource;
                 });
         },
 
-        searchInService: function(query, page, service) {
-            if (service === 'jgi_gateway') {
-                return this.jgiGateway.callFunc('search_jgi',[{
-                    search_string: query,
-                    limit: this.itemsPerPage,
-                    page: page-1
-                }])
-                    .spread(function(results) {
-                        return {
-                            query: query,
-                            results: results
-                        };
-                    });
-            }
+        // attachRow: function(dataSource, index, toStaging) {
+        //     var obj = this.objectList[index];
+        //     if (obj.attached) {
+        //         return;
+        //     }
+        //     if (obj.$div) {
+        //         this.resultPanel.append(obj.$div);
+        //     } else {
+        //         obj.$div = toStaging ? this.renderStagingObjectRowDiv(obj) : this.renderObjectRow(dataSource, obj);
+        //         this.resultPanel.append(obj.$div);
+        //     }
+        //     obj.attached = true;
+        //     this.n_objs_rendered++;
+        // },
+
+        clearRows: function () {
+            this.resultPanel.empty();
         },
 
-        stageFile: function(source, id) {
-            return function() {
-                if (source === 'jgi') {
-                    return this.jgiGateway.callFunc('stage_objects',[{ 
-                        ids: [id] 
-                    }]);
-                }
-            }.bind(this);
-        },
-
-        renderFromService: function(cat) {
-            this.currentServiceQuery = this.currentQuery;
-            this.currentPage++;
-            this.searchInService(this.currentServiceQuery, this.currentPage, cat.source)
-                .then(function(results) {
-                    if (results.query !== this.currentQuery) {
-                        return;
-                    }
-                    var items = results.results[0];
-
-                    for (var i=0; i<items.hits.length; i++) {
-                        var hit = items.hits[i];
-                        this.objectList.push({
-                            $div: null,
-                            info: null,
-                            id: hit._id,
-                            name: hit._source.file_name,
-                            ws: null,
-                            type: 'JGI.File',
-                            attached: false,
-                            copyAction: this.stageFile('jgi', hit._id),
-                            hitMetadata: hit._source.metadata,
-                            metadata: [
-                                {
-                                    label: 'File Id',
-                                    value: hit._id
-                                },
-                                {
-                                    label: 'File Type',
-                                    value: hit._source.file_type[0]
-                                },
-                                {
-                                    label: 'Project Id',
-                                    value: hit._source.metadata.sequencing_project_id
-                                }
-                            ]
-                        });
-                        this.attachRow(this.objectList.length - 1, true);
-                    }
-                    this.totalPanel.empty();
-                    this.totalPanel.append($('<span>').addClass('kb-data-list-type')
-                        .append('Results: ' + this.objectList.length + ' of ' + items.total));
-                }.bind(this))
-                .catch(function(error) {
-                    console.error(error);
-                    this.showError('Unable to retrieve public data.');
-                    this.totalPanel.empty();
-                }.bind(this));
-        },
-
-        showDataPolicy: function() {
-            var showPolicyModal = function() {
-                var policyDialog = new BootstrapDialog({
-                    title: 'JGI Data Usage and Download Policy (October 1, 2013)',
-                    body: JGIDataPolicyHtml,
-                    closeButton: true,
-                    enterToTrigger: true,
-                    buttons: [$('<button class="kb-primary-btn">OK</button>').click(function() {
-                        policyDialog.hide();
-                    })]
-                });
-                policyDialog.getElement().one('hidden.bs.modal', function() {
-                    policyDialog.destroy();
-                });
-                policyDialog.show();
-            };
-
-            var $dataPolicyAlert = $(Handlebars.compile(DataPolicyPanelHtml)());
-            $dataPolicyAlert.find('#view_policy_btn')
-                .click(function() {
-                    showPolicyModal();
-                });
-            $dataPolicyAlert.find('#agree_policy_btn')
-                .click(function() {
-                    this.agreeDataPolicy = true;
-                    $dataPolicyAlert.slideUp();
-                }.bind(this));
-
-            this.dataPolicyPanel.empty().append($dataPolicyAlert);
-        },
-
-        renderMore: function(initial) {
-            this.hideError();
-            var cat = this.categoryDescr[this.currentCategory];
-            if (!cat.search && cat.ws) {
-                this.renderFromWorkspace(cat);
-            } else if (cat.search) {
-                this.renderFromSearch(cat, initial);
-            } else {
-                this.renderFromService(cat);
-            }
-        },
-
-        attachRow: function(index, toStaging) {
-            var obj = this.objectList[index];
-            if (obj.attached) {
-                return;
-            }
-            if (obj.$div) {
-                this.resultPanel.append(obj.$div);
-            } else {
-                obj.$div = toStaging ? this.renderStagingObjectRowDiv(obj) : this.renderObjectRowDiv(obj);
-                this.resultPanel.append(obj.$div);
-            }
-            obj.attached = true;
-            this.n_objs_rendered++;
+        addRow: function(dataSource, row) {
+            var $row = this.renderObjectRow(dataSource, row);
+            this.resultPanel.append($row);
         },
 
         escapeSearchQuery: function(str) {
             return str.replace(/[%]/g, '').replace(/[:"\\]/g, '\\$&');
         },
 
-        renderObjectRowDiv: function(object) {
+        /*
+        renderObjectRow
+        */
+        renderObjectRow: function(dataSource, object) {
             var self = this;
-            var type_tokens = object.type.split('.');
-            var type = type_tokens[1].split('-')[0];
+            var type = object.type.split('.')[1].split('-')[0];
             var copyText = ' Add';
-
-            var $addDiv =
-                $('<div>').append(
-                    $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
-                        .append($('<span>').addClass('fa fa-chevron-circle-left')).append(copyText)
-                        .on('click',function() { // probably should move action outside of render func, but oh well
-                            $(this).attr('disabled', 'disabled');
-                            $(this).html('<img src="'+self.loadingImage+'">');
-
-                            var thisBtn = this;
-                            var targetName = object.name;
-                            if (!isNaN(targetName)) {
-                                targetName = self.categoryDescr[self.currentCategory].type.split('.')[1] + ' ' + targetName;
-                            }
-                            targetName = targetName.replace(/[^a-zA-Z0-9|.-_]/g,'_');
-                            self.copy(object, targetName, thisBtn);
-                        }));
 
             var shortName = object.name;
             var isShortened=false;
             if (shortName.length>this.maxNameLength) {
-                shortName = shortName.substring(0,this.maxNameLength-3)+'...';
+                shortName = shortName.substring(0,this.maxNameLength-3)+'…';
                 isShortened=true;
             }
-            var landingPageLink = this.options.lp_url + object.ws + '/' + object.id;
-            var provenanceLink = '/#objgraphview/'+object.ws+'/'+object.id;
-            if(object['ws_ref']) {
-                landingPageLink = this.options.lp_url + object.ws_ref;
-                provenanceLink = '/#objgraphview/' + object.ws_ref;
-            }
+
+            // TODO: more failsafe method for building these urls.
+            // e.g. not clear wht the form of the config url is:
+            // path or url?
+            // terminal / or not?
+            // absolute or relative (initial /)
+            var objectRef = object.workspaceReference.ref;
+            var landingPageLink = this.options.landingPageURL + objectRef;
+            var provenanceLink = [this.options.provenanceViewerBaseURL, objectRef].join('/');
+
             var $name = $('<span>')
                 .addClass('kb-data-list-name')
                 .append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
-            if (isShortened) { $name.tooltip({title:object.name, placement:'bottom'}); }
+            if (isShortened) { 
+                $name.tooltip({title:object.name, placement:'bottom'}); 
+            }
 
-            var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
+            // Mouseover toolbar
+            var $btnToolbar = $('<span>')
+                .addClass('btn-toolbar')
+                .css('position', 'absolute')
+                .css('right', '6px')
+                .css('top', '0')
+                .attr('role', 'toolbar')
+                .hide();
             var btnClasses = 'btn btn-xs btn-default';
             var css = {'color':'#888'};
             var $openLandingPage = $('<span>')
@@ -970,35 +683,107 @@ define ([
                     e.stopPropagation();
                     window.open(provenanceLink);
                 });
-            $btnToolbar.append($openLandingPage).append($openProvenance);
+            $btnToolbar
+                .append($openLandingPage)
+                .append($openProvenance);
 
-            var titleElement = $('<div>').css({'xmargin':'10px'}).append($btnToolbar.hide()).append($name);
+            // var $topTable = $('<div>')
+            //     // set background to white looks better on DnD
+            //     .css({'width':'100%','background':'#fff'})
+            //     .append($('<tr>')
+            //         .append($('<td>')
+            //             .css({'width':'90px'})
+            //             .append($addDiv.hide()))
 
+            //         .append($('<td>')
+            //             .css('width', '50px')
+            //             .css('vertical-align', 'middle')
+            //             .css('border-right', '1px rgba(200,200,200,0.6) solid')
+            //             .append($logo))
+                        
+            //         .append($('<td>')
+            //             .css('padding-left', '4px')
+            //             .css('padding-right', '15px')
+            //             .append($titleElement)
+            //             .append($bodyElement)));
+
+            // Action Column
+
+            var $addDiv =
+                $('<div>').append(
+                    $('<button>')
+                        .addClass('kb-primary-btn')
+                        .css({'white-space':'nowrap', padding: '10px 15px'})
+                        .append($('<span>')
+                            .addClass('fa fa-chevron-circle-left'))
+                        .append(copyText)
+                        .on('click',function() { // probably should move action outside of render func, but oh well
+                            $(this).attr('disabled', 'disabled');
+                            $(this).html('<img src="'+self.loadingImage+'">');
+
+                            var thisBtn = this;
+                            var targetName = object.name;
+                            if (!isNaN(targetName)) {
+                                targetName = self.dataSourceConfigs[self.currentCategory].type.split('.')[1] + ' ' + targetName;
+                            }
+                            targetName = targetName.replace(/[^a-zA-Z0-9|.-_]/g,'_');
+                            self.copy(object, targetName, thisBtn);
+                        }));
+
+            var $actionColumn = $('<div>')
+                .css('flex', '0 0 90px')
+                .css('display', 'flex')
+                .css('align-items', 'center')
+                .css('vertical-align', 'middle')
+                .append($addDiv.hide());
+
+            // Icon Column
+            var $logo = $('<span>');
+            // if (dataSource.config.logoUrl) {
+            //     $logo
+            //         .append($('<img>')
+            //             .attr('src', dataSource.config.logoUrl)
+            //             .css('height', '32px'));                
+            // } else {
+            Icon.buildDataIcon($logo, type);
+            // }
+            var $iconColumn = $('<div>')
+                .css('flex', '0 0 50px')
+                .css('display', 'flex')
+                .css('align-items', 'center')
+                .css('border-right', '1px rgba(200,200,200,0.6) solid')
+                .css('vertical-align', 'middle')
+                .append($logo);
+
+            // Main Column
+            var $titleElement = $('<div>')
+                .css('position', 'relative')
+                .append($btnToolbar.hide())
+                .append($name);
+
+            var $bodyElement;
             if (object.metadata && object.metadata.length) {
-                titleElement.append(metadataToTable(object.metadata));
+                $bodyElement  = metadataToTable(object.metadata);
             } else {
-                titleElement.append('<br>').append('&nbsp;');
+                $bodyElement = null;
             }
 
-            // Set data icon
-            var $logo = $('<span>');
-            Icon.buildDataIcon($logo, type);
-            var $topTable = $('<table>')
-                // set background to white looks better on DnD
-                .css({'width':'100%','background':'#fff'})
-                .append($('<tr>')
-                    .append($('<td>')
-                        .css({'width':'90px'})
-                        .append($addDiv.hide()))
-                    .append($('<td>')
-                        .css({'width':'50px'})
-                        .append($logo))
-                    .append($('<td>')
-                        .append(titleElement)));
+            var $resultColumn = $('<div>')
+                .css('flex', '1 1 0px')
+                .css('padding-left', '4px')
+                .css('padding-right', '15px')
+                // .css('border-top', '1px rgba(200,200,200,0.6) solid')
+                .append($titleElement)
+                .append($bodyElement);
+
             var $row = $('<div>')
-                .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
-                .append($('<div>').addClass('kb-data-list-obj-row-main')
-                    .append($topTable))
+                .css('margin', '2px')
+                .css('padding', '4px')
+                .css('display', 'flex')
+                .css('flex-direction', 'row')
+                // .css('border-top', '1px rgba(200,200,200,0.6) solid')
+                // .append($('<div>').addClass('kb-data-list-obj-row-main')
+                //     .append($topTable))
                 // show/hide ellipses on hover, show extra info on click
                 .mouseenter(function(){
                     $addDiv.show();
@@ -1007,66 +792,20 @@ define ([
                 .mouseleave(function(){
                     $addDiv.hide();
                     $btnToolbar.hide();
-                });
+                })
+                .append($actionColumn)
+                .append($iconColumn)
+                .append($resultColumn);
 
-            var $rowWithHr = $('<div>')
-                .append($('<hr>')
-                    .addClass('kb-data-list-row-hr')
-                    .css({'margin-left':'155px'}))
+            var $divider = $('<hr>')
+                .addClass('kb-data-list-row-hr')
+                .css('width', '100%');
+            var $rowContainer = $('<div>')
+                .append($divider)
                 .append($row);
-            return $rowWithHr;
+
+            return $rowContainer;
         },
-
-        renderStagingObjectRowDiv: function(object) {
-            // basic rendering
-            var $row = $(this.stagingRowTmpl({
-                displayName: object.name,
-                objModDate: object.modDate,
-                simpleMetadata: object.metadata,
-                buttonIcon: 'fa-chevron-circle-right',
-                buttonAction: 'Stage',
-                actionLeft: false,
-                detailedMetadata: object.hitMetadata
-            }));
-            Icon.buildDataIcon($row.find('#icon'), 'file');
-
-            // event binding
-            $row.mouseenter(function() {
-                $row.find('#action-button-div').show();
-                $row.find('.btn-toolbar').show();
-                $row.find('#meta-toggle').show();
-            })
-                .mouseleave(function() {
-                    $row.find('#action-button-div').hide();
-                    $row.find('.btn-toolbar').hide();
-                    $row.find('#meta-toggle').hide();
-                });
-
-            $row.find('#more-metadata').empty().html('<pre>' + StringUtil.prettyPrintJSON(object.hitMetadata) + '</pre>');
-            $row.find('#meta-toggle button').click(function() {
-                $row.find('#more-metadata').slideToggle();
-            });
-
-            var self = this;
-            $row.find('#action-button-div button').click(function() {
-                if (!self.agreeDataPolicy) {
-                    alert('You must agree to the JGI Data Policy before copying.');
-                    return;
-                }
-                $(this).attr('disabled', 'disabled');
-                $(this).html('<img src="' + Config.get('loading_gif') + '">');
-
-                object.copyAction().then(function() {
-                    $(this).html('Copied!');
-                }.bind(this))
-                    .catch(function(error) {
-                        console.error(error);
-                        $(this).html('Error!');
-                    }.bind(this));
-            });
-            return $row;
-        },
-
 
         /*
             TODO: rethink the logic here.
@@ -1127,7 +866,7 @@ define ([
 
         copyFinal: function(object, targetName, thisBtn) {
             return this.narrativeService.callFunc('copy_object', [{
-                ref: object.ws + '/' + object.id,
+                ref: object.workspaceReference.ref,
                 target_ws_name: this.wsName,
                 target_name: targetName
             }])

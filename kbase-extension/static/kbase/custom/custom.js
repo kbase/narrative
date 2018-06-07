@@ -93,6 +93,8 @@
  */
 define([
     'jquery',
+    'handlebars',
+    'numeral',
     'base/js/namespace',
     'kbaseNarrative',
     'base/js/security',
@@ -115,6 +117,8 @@ define([
     'narrative_paths'
 ], function (
     $,
+    Handlebars,
+    numeral,
     Jupyter,
     Narrative,
     security,
@@ -134,6 +138,70 @@ define([
     html
 ) {
     'use strict';
+
+    // Handlebars global configuration. Since these changes affect all usage of handlebars
+    // in this app, they should be performed just once.
+    Handlebars.registerHelper('numeral', function(value, format, defaultValue, options) {
+        // This bit is required since Handlebars sends 'options' as the final argument.
+        if (!options) {
+            options = defaultValue;
+            defaultValue = undefined;
+        }
+        var missing = false;
+        if (typeof value === 'string') {
+            if (value.trim().length === 0) {
+                missing = true;
+            }
+        } else if (typeof value !== 'number') {
+            missing = true;
+        }
+        var numeralValue = numeral(value);
+        if (isNaN(numeralValue)) {
+            missing = true;
+        }
+        if (missing) {
+            return defaultValue || 'n/a';
+        }
+        try {
+            return numeralValue.format(format);
+        } catch (ex) {
+            return '** ER: ' + ex.message + '**';
+        }
+    });
+
+    Handlebars.registerHelper('lineage', function(value, startAt, startAfter) {
+        if (!value || value.length === 0) {
+            return 'n/a';
+        }
+        var delimiter;
+        if (value.indexOf(';') >= 0) {
+            delimiter = ';';
+        } else {
+            delimiter = ',';
+        }
+        var lineage = value.split(delimiter)
+            .map(function (item) {
+                return item.trim();
+            });
+        var start;
+        if (startAt) {
+            start = lineage.indexOf(startAt);
+            if (start >= 0) {
+                lineage = lineage.slice(start);
+            }
+        } else if (startAfter) {
+            start = lineage.indexOf(startAfter);
+            if (start >= 0) {
+                lineage = lineage.slice(start + 1);
+            }
+        }
+        return new Handlebars.SafeString(lineage
+            .map(function (item) {
+                return Handlebars.Utils.escapeExpression(item.trim());
+            })
+            .join(' <span style="color: #AAA"> &gt; </span>'));
+    });
+
 
     var t = html.tag,
         span = t('span');

@@ -15,7 +15,8 @@ define([
     'util/icon',
     'kbase-client-api',
     'kb_service/client/workspace',
-    'kbase-generic-client-api',
+    'kb_common/jsonRpc/genericClient',
+    'kb_common/jsonRpc/dynamicServiceClient',
     'kbaseAuthenticatedWidget',
     'kbaseNarrativeDownloadPanel',
     'common/runtime',
@@ -41,6 +42,7 @@ define([
     kbase_client_api,
     Workspace,
     GenericClient,
+    DynamicServiceClient,
     kbaseAuthenticatedWidget,
     kbaseNarrativeDownloadPanel,
     Runtime,
@@ -52,6 +54,11 @@ define([
     kbaseDataCard
 ) {
     'use strict';
+
+    function objectInfoToRef(info) {
+        return [info[6], info[0], info[4]].join('/');
+    }
+
     return KBWidget({
         name: 'kbaseNarrativeDataList',
         parent: kbaseAuthenticatedWidget,
@@ -88,8 +95,8 @@ define([
         objData: {}, // old style - type_name : info
         downloadSpecCache: { tag: 'dev' },
         controlClickHnd: {}, // click handlers for control buttons
-        my_user_id: null,
-        serviceClient: null,
+        token: null,
+        my_username: null,
         sortOrder: -1,  // order for sorting the list. 1 = increasing, -1 = decreasing
 
         objectRowTmpl: Handlebars.compile(ObjectRowHtml),
@@ -132,7 +139,7 @@ define([
         },
 
         writingLock: false,
-        refreshwritingLock:null,
+        refreshwritingLock: null,
 
         /**
          * Test if given object is a set.
@@ -191,7 +198,7 @@ define([
             if (!_.has(this.setItems, item_id)) {
                 return [];
             }
-            var self = this;
+            var _this = this;
             // Construct return value, which is one
             // map for each of the Sets.
             return _.map(
@@ -199,8 +206,8 @@ define([
                 function (key) {
                     return {
                         item_id: key,
-                        expanded: self.setInfo[key].expanded,
-                        div: self.setInfo[key].div
+                        expanded: _this.setInfo[key].expanded,
+                        div: _this.setInfo[key].div
                     };
                 }
             );
@@ -235,9 +242,8 @@ define([
          */
         init: function (options) {
             this._super(options);
-            var self = this;
+            var _this = this;
 
-            // var test = new kbaseDataCard({});
             var dataConfig = Config.get('data_panel');
             // this is the limit of the number of objects to retrieve from the ws on each pass
             // note that if there are more objects than this, then sorts/search filters may
@@ -274,15 +280,15 @@ define([
                 .css({ 'overflow-x': 'hidden', 'overflow-y': 'auto', 'height': this.mainListPanelHeight })
                 .on('scroll', function () {
                     if ($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
-                        self.renderMore();
+                        _this.renderMore();
                     }
                 });
 
             this.$addDataButton = $('<span>').addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
                 .css({ 'position': 'absolute', bottom: '15px', right: '25px', 'z-index': '5' })
                 .click(function () {
-                    self.trigger('hideGalleryPanelOverlay.Narrative');
-                    self.trigger('toggleSidePanelOverlay.Narrative', self.options.parentControlPanel.$overlayPanel);
+                    _this.trigger('hideGalleryPanelOverlay.Narrative');
+                    _this.trigger('toggleSidePanelOverlay.Narrative', _this.options.parentControlPanel.$overlayPanel);
                 });
             var $mainListDivContainer = $('<div>').css({ 'position': 'relative' })
                 .append(this.loadingDiv.div)
@@ -291,15 +297,16 @@ define([
             this.$elem.append($mainListDivContainer);
 
             if (this._attributes.auth) {
+                this.token = this._attributes.auth.token;
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
             }
 
             // listener for refresh
             $(document).on('updateDataList.Narrative', function () {
-                self.refresh();
+                _this.refresh();
             });
 
-            // self.initDataListSets();
+            // _this.initDataListSets();
 
             if (this.options.ws_name) {
                 this.ws_name = this.options.ws_name;
@@ -328,9 +335,10 @@ define([
          * @private
          */
         loggedInCallback: function (event, auth) {
+            this.token = auth.token;
             this.ws = new Workspace(this.options.ws_url, auth);
-            this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
-            this.my_user_id = auth.user_id;
+            // this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
+            this.my_username = auth.user_id;
             this.isLoggedIn = true;
             this.writingLock = false;
             this.refresh();
@@ -344,9 +352,10 @@ define([
          * @private
          */
         loggedOutCallback: function () {
+            this.token = null;
             this.ws = null;
             this.isLoggedIn = false;
-            this.my_user_id = null;
+            this.my_username = null;
             return this;
         },
 
@@ -365,7 +374,7 @@ define([
             if(this.writingLock) {
                 return;
             }
-            // Set the refresh timer on the first refresh. From  here, it'll refresh itself
+            // Set the refresh timer on the first refresh. From  here, it'll refresh it_this
             // every this.options.refresh_interval (30000) ms
             if (this.refreshTimer === null) {
                 this.refreshTimer = setInterval(function () {
@@ -434,6 +443,7 @@ define([
                         // items in the dataObjects collection
                         var dataObject = this.dataObjects[objId];
                         var info = this.createInfoObject(dataObject.info);
+                        dataObject.objectInfo = info;
                         info.dataPaletteRef = dataObject.refPath;
                         return info;
                     }.bind(this));
@@ -573,34 +583,32 @@ define([
                 }.bind(this));
             }.bind(this);
 
-            return Promise.resolve(
-                this.serviceClient.sync_call(
-                    'NarrativeService.list_objects_with_sets', [{
-                        'ws_name': this.ws_name,
-                        'includeMetadata': 1
-                    }]
-                )
-            )
-                .then(function (result) {
-                    result = result[0]['data'];
+            var narrativeService = new DynamicServiceClient({
+                module: 'NarrativeService',
+                url: Config.url('service_wizard'),
+                token: this.token
+            });
 
-                    for (var i = 0; i < result.length; i++) {
-                        var obj = result[i];
-                        // Skip any Narrative objects.
+            return narrativeService.callFunc('list_objects_with_sets', [{
+                'ws_name': this.ws_name,
+                'includeMetadata': 1
+            }])
+                .spread(function (result) {
+                    var objects = result.data;
+                    objects.forEach(function (obj) {
                         var objInfo = obj.object_info;
                         if (objInfo[2].indexOf('KBaseNarrative') === 0) {
                             if (objInfo[2].indexOf('KBaseNarrative.Narrative') === 0) {
                                 Jupyter.narrative.checkDocumentVersion(objInfo);
                             }
-                            continue;
+                            return;
                         }
-                        // Only adds to dataObjects, etc., if it's not already there.
-                        addObjectInfo(objInfo, obj.dp_info);
+                        addObjectInfo(obj.object_info, obj.dp_info);
                         // if there's set info, update that.
                         if (obj.set_items) {
                             updateSetInfo(obj);
                         }
-                    }
+                    });
                 }.bind(this))
                 .catch(function (error) {
                     this.showBlockingError('Sorry, an error occurred while fetching your data.', error);
@@ -685,26 +693,38 @@ define([
         selectedObject: null,
 
         setSelected: function ($selectedRow, object_info) {
-            var self = this;
-            if (self.$currentSelectedRow) {
-                self.$currentSelectedRow.removeClass('kb-data-list-obj-row-selected');
+            var _this = this;
+            if (_this.$currentSelectedRow) {
+                _this.$currentSelectedRow.removeClass('kb-data-list-obj-row-selected');
             }
-            if (object_info[0] === self.selectedObject) {
-                self.$currentSelectedRow = null;
-                self.selectedObject = null;
-                self.trigger('removeFilterMethods.Narrative');
+            if (object_info[0] === _this.selectedObject) {
+                _this.$currentSelectedRow = null;
+                _this.selectedObject = null;
+                _this.trigger('removeFilterMethods.Narrative');
             }
         },
 
-        addDataControls: function (object_info, $alertContainer, fromPalette, ref_path) {
-            var self = this;
-            var $btnToolbar = $('<span>')
-                .addClass('btn-group');
+        showReportLandingPage: function (reportRef) {
+            window.open('/#dataview/' + reportRef, '_blank');
+        },
 
+        makeToolbarButton: function (name) {
             var btnClasses = 'btn btn-xs btn-default';
-            var css = { 'color': '#888' };
+            var btnCss = { 'color': '#888' };
 
-            var $filterMethodInput = $('<span>')
+            var $btn = $('<span>')
+                .addClass(btnClasses)
+                .css(btnCss);
+
+            if (name) {
+                $btn.attr('data-button', name);
+            }
+
+            return $btn;
+        },
+
+        filterMethodInputButton: function (objData) {
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'Show Apps with this as input',
                     container: '#' + this.mainListId,
@@ -713,13 +733,14 @@ define([
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
-                .addClass(btnClasses)
-                .append($('<span>').addClass('fa fa-sign-in').css(css))
+                .append($('<span>').addClass('fa fa-sign-in'))
                 .click(function () {
-                    this.trigger('filterMethods.Narrative', 'input:' + object_info[2].split('-')[0]);
+                    this.trigger('filterMethods.Narrative', 'input:' + objData.objectInfo.type.split('-')[0]);
                 }.bind(this));
+        },
 
-            var $filterMethodOutput = $('<span>')
+        filterMethodOutputButton: function (objData) {
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'Show Apps with this as output',
                     container: '#' + this.mainListId,
@@ -728,13 +749,14 @@ define([
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
-                .addClass(btnClasses)
-                .append($('<span>').addClass('fa fa-sign-out').css(css))
+                .append($('<span>').addClass('fa fa-sign-out'))
                 .click(function () {
-                    this.trigger('filterMethods.Narrative', 'output:' + object_info[2].split('-')[0]);
+                    this.trigger('filterMethods.Narrative', 'output:' + objData.objectInfo.type.split('-')[0]);
                 }.bind(this));
+        },
 
-            var $openLandingPage = $('<span>')
+        openLandingPageButton: function (objData, $alertContainer) {
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'Explore data',
                     container: '#' + this.mainListId,
@@ -743,18 +765,23 @@ define([
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
-                .addClass(btnClasses)
-                .append($('<span>').addClass('fa fa-binoculars').css(css))
+                .append($('<span>').addClass('fa fa-binoculars'))
                 .click(function (e) {
                     e.stopPropagation();
                     $alertContainer.empty();
-                    // var typeTokens = object_info[2].split('-')[0].split('.');
-                    var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
-                    window.open(landingPageLink);
-                });
+                    var landingPageLink = this.options.lp_url + objData.objectInfo.ref;
+                    window.open(landingPageLink, '_blank');
+                }.bind(this));
+        },
 
-            var $openHistory = $('<span>')
-                .addClass(btnClasses).css(css)
+        openReportButton: function () {
+            var $openReport = this.makeToolbarButton('report');
+            return $openReport;
+        },
+
+        openHistoryButton: function (objData, $alertContainer) {
+            var _this = this;
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'View history to revert changes',
                     container: 'body',
@@ -763,13 +790,13 @@ define([
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
-                .append($('<span>').addClass('fa fa-history').css(css))
+                .append($('<span>').addClass('fa fa-history'))
                 .click(function (e) {
                     e.stopPropagation();
                     $alertContainer.empty();
 
-                    if (self.ws_name && self.ws) {
-                        self.ws.get_object_history({ ref: object_info[6] + '/' + object_info[0] },
+                    if (_this.ws_name && _this.ws) {
+                        _this.ws.get_object_history({ ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id },
                             function (history) {
                                 $alertContainer.append($('<div>')
                                     .append($('<button>').addClass('kb-data-list-cancel-btn')
@@ -804,10 +831,10 @@ define([
                                                 }
                                             })
                                                 .click(function () {
-                                                    self.ws.revert_object(revertRefLocal,
+                                                    _this.ws.revert_object(revertRefLocal,
                                                         function () {
-                                                            self.writingLock = false;
-                                                            self.refresh();
+                                                            _this.writingLock = false;
+                                                            _this.refresh();
                                                         },
                                                         function (error) {
                                                             console.error(error);
@@ -841,12 +868,11 @@ define([
                                 $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
                             });
                     }
-
-
                 });
+        },
 
-            var $openProvenance = $('<span>')
-                .addClass(btnClasses).css(css)
+        openProvenanceButton: function (objData, $alertContainer) {
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'View data provenance and relationships',
                     container: 'body',
@@ -855,14 +881,17 @@ define([
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
-                .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
+                .append($('<span>').addClass('fa fa-sitemap fa-rotate-90'))
                 .click(function (e) {
                     e.stopPropagation();
                     $alertContainer.empty();
-                    window.open('/#objgraphview/' + object_info[7] + '/' + object_info[1]);
+                    window.open('/#objgraphview/' + objData.objectInfo.ref);
                 });
-            var $download = $('<span>')
-                .addClass(btnClasses).css(css)
+        },
+
+        downloadButton: function (objData, ref_path, $alertContainer) {
+            var _this = this;
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'Export / Download data',
                     container: 'body',
@@ -871,27 +900,29 @@ define([
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
-                .append($('<span>').addClass('fa fa-download').css(css))
+                .append($('<span>').addClass('fa fa-download'))
                 .click(function (e) {
                     e.stopPropagation();
                     $alertContainer.empty();
-                    var type = object_info[2].split('-')[0];
-                    var wsId = object_info[7];
-                    var objId = object_info[1];
-                    var objRef = fromPalette ? ref_path : (wsId + '/' + objId);
+                    var type = objData.objectInfo.type.split('-')[0];
+                    var wsId = objData.objectInfo.wsid;
+                    var objId = objData.objectInfo.id;
+                    var objRef = objData.fromPalette ? ref_path : (wsId + '/' + objId);
                     var downloadPanel = $('<div>');
                     $alertContainer.append(downloadPanel);
                     new kbaseNarrativeDownloadPanel(downloadPanel, {
-                        token: self._attributes.auth.token,
+                        token: _this._attributes.auth.token,
                         type: type,
                         objId: objId,
                         ref: objRef,
-                        downloadSpecCache: self.downloadSpecCache
+                        downloadSpecCache: _this.downloadSpecCache
                     });
                 });
+        },
 
-            var $rename = $('<span>')
-                .addClass(btnClasses).css(css)
+        renameButton: function (objData, $alertContainer) {
+            var _this = this;
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'Rename data',
                     container: 'body',
@@ -900,7 +931,7 @@ define([
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
-                .append($('<span>').addClass('fa fa-font').css(css))
+                .append($('<span>').addClass('fa fa-font'))
                 .click(function (e) {
                     e.stopPropagation();
                     $alertContainer.empty();
@@ -915,20 +946,20 @@ define([
 
                     //lock on refresh expires after 15 min
                     var releaseLock = function(){
-                        if(self.refreshwritingLock !== null) {
-                            clearTimeout(self.refreshwritingLock);
+                        if(_this.refreshwritingLock !== null) {
+                            clearTimeout(_this.refreshwritingLock);
                         }
 
-                        self.refreshwritingLock = setTimeout(function () {
-                            self.writingLock = false;
+                        _this.refreshwritingLock = setTimeout(function () {
+                            _this.writingLock = false;
                         }, 900000);
                     };
                     var $newNameInput = $('<input type="text">')
                         .addClass('form-control')
-                        .val(object_info[1])
+                        .val(objData.objectInfo.name)
                         .on('focus', function () {
                             if (Jupyter && Jupyter.narrative) {
-                                self.writingLock = true;
+                                _this.writingLock = true;
                                 Jupyter.narrative.disableKeyboardManager();
                             }
                         })
@@ -948,14 +979,14 @@ define([
                             .append('Rename')
                             .click(function () {
 
-                                if (self.ws_name && self.ws) {
-                                    self.ws.rename_object({
-                                        obj: { ref: object_info[6] + '/' + object_info[0] },
+                                if (_this.ws_name && _this.ws) {
+                                    _this.ws.rename_object({
+                                        obj: { ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id },
                                         new_name: $newNameInput.val()
                                     },
                                     function () {
-                                        self.writingLock = false;
-                                        self.refresh();
+                                        _this.writingLock = false;
+                                        _this.refresh();
                                     },
                                     function (error) {
                                         console.error(error);
@@ -967,12 +998,15 @@ define([
                         .append($('<button>').addClass('kb-data-list-cancel-btn')
                             .append('Cancel')
                             .click(function () {
-                                self.writingLock = false;
+                                _this.writingLock = false;
                                 $alertContainer.empty();
                             })));
                 });
-            var $delete = $('<span>')
-                .addClass(btnClasses).css(css)
+        },
+
+        deleteButton: function (objData, $alertContainer) {
+            var _this = this;
+            return this.makeToolbarButton()
                 .tooltip({
                     title: 'Delete data',
                     container: 'body',
@@ -981,7 +1015,7 @@ define([
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
-                .append($('<span>').addClass('fa fa-trash-o').css(css))
+                .append($('<span>').addClass('fa fa-trash-o'))
                 .click(function (e) {
                     e.stopPropagation();
                     $alertContainer.empty();
@@ -1000,17 +1034,17 @@ define([
                         .append($('<button>').addClass('kb-data-list-btn')
                             .append('Delete')
                             .click(function () {
-                                if (self.ws_name && self.ws) {
-                                    self.ws.rename_object({
-                                        obj: { ref: object_info[6] + '/' + object_info[0] },
-                                        new_name: object_info[1].split('-deleted-')[0] + '-deleted-' + (new Date()).getTime()
+                                if (_this.ws_name && _this.ws) {
+                                    _this.ws.rename_object({
+                                        obj: { ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id },
+                                        new_name: objData.objectInfo.name.split('-deleted-')[0] + '-deleted-' + (new Date()).getTime()
                                     },
                                     function () {
-                                        self.ws.delete_objects([{ ref: object_info[6] + '/' + object_info[0] }],
+                                        _this.ws.delete_objects([{ ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id }],
                                             function () {
-                                                $(document).trigger('deleteDataList.Narrative', object_info[1]);
-                                                self.writingLock = false;
-                                                self.refresh();
+                                                $(document).trigger('deleteDataList.Narrative', objData.objectInfo.name);
+                                                _this.writingLock = false;
+                                                _this.refresh();
 
                                             },
                                             function (error) {
@@ -1033,16 +1067,35 @@ define([
                                 $alertContainer.empty();
                             })));
                 });
+        },
+
+        addDataControls: function (objData, $alertContainer, ref_path) {
+            var $filterMethodInput = this.filterMethodInputButton(objData);
+            var $filterMethodOutput = this.filterMethodOutputButton(objData);
+            var $openLandingPage = this.openLandingPageButton(objData, $alertContainer);
+            var $openReport = this.openReportButton(objData); 
+            var $openHistory = this.openHistoryButton(objData, $alertContainer);
+            var $openProvenance = this.openProvenanceButton(objData, $alertContainer);
+            var $download = this.downloadButton(objData, ref_path, $alertContainer);
+            var $rename = this.renameButton(objData, $alertContainer);
+            var $delete = this.deleteButton(objData, $alertContainer);
+
+            var $btnToolbar = $('<span>')
+                .addClass('btn-group');
 
             $btnToolbar.append($filterMethodInput)
                 .append($filterMethodOutput)
-                .append($openLandingPage);
-            if (!Jupyter.narrative.readonly && !fromPalette) {
+                .append($openLandingPage)
+                .append($openReport);
+
+            if (!Jupyter.narrative.readonly && !objData.fromPalette) {
                 $btnToolbar.append($openHistory);
             }
+
             $btnToolbar.append($openProvenance)
                 .append($download);
-            if (!Jupyter.narrative.readonly && !fromPalette) {
+
+            if (!Jupyter.narrative.readonly && !objData.fromPalette) {
                 $btnToolbar.append($rename)
                     .append($delete);
             }
@@ -1076,12 +1129,149 @@ define([
                 }
             }
         },
+
+        getReportForObject: function (objectInfo) {
+            var narrativeService = new DynamicServiceClient({
+                module: 'NarrativeService',
+                url: Config.url('service_wizard'),
+                token: this.token
+            });
+            return narrativeService.callFunc('find_object_report', [
+                {
+                    upa: objectInfo.ref
+                }
+            ]).spread(function(result) {
+
+                if (result.report_upas.length === 0) {
+                    return [];
+                }
+
+                var objectsToFetch = result.report_upas.map(function (reportRef) {
+                    return {
+                        ref: reportRef
+                    };
+                });
+
+                // If, after evaluation of the reports, we really don't have any, just 
+                // shortcircuit with an array of nulls.
+                if (objectsToFetch.length === 0)  {
+                    return [];
+                }
+
+                var reportRef = result.object_upa;
+
+                var workspace = new GenericClient({
+                    module: 'Workspace',
+                    url: Config.url('workspace'),
+                    token: this.token
+                });
+
+                return workspace.callFunc('get_objects2', [{
+                    objects: objectsToFetch, 
+                    ignoreErrors: 0
+                }])
+                    .spread(function (result) {
+                        var objectReportsForOutput = result.data.filter(function (reportObject) {
+                            // pull out found objects which are in the list of objects created in the report.
+                            // objects_created looks like {description: .., ref: ..}
+                            return reportObject.data.objects_created.some(function (objectCreated) {
+                                return objectCreated.ref === reportRef;
+                            });
+                        })
+                            .map(function (reportObject) {
+                                return ServiceUtils.objectInfoToObject(reportObject.info);
+                            });
+
+                        // we can get multiple reports if this narrative has been copied.
+                        // If so, we only want to look at the one in the current workspace.
+                        // TODO: otherwise? is it possible to have more than one report and not have
+                        //       one in the current workspace????
+                        if (objectReportsForOutput.length > 1) {
+                            objectReportsForOutput = objectReportsForOutput.filter(function (reportInfo) {
+                                return (reportInfo.wsid === objectInfo.wsid);
+                            });
+                        }
+
+                        return objectReportsForOutput;
+                    });
+            }.bind(this));
+        },
+
+        onOpenDataListItem: function ($moreRow, objData) {
+            if ('reportRef' in objData) {
+                return;
+            }
+
+            var _this = this;
+
+            var objectInfo = objData.objectInfo;
+            // The report button needs the report to be found!
+            var $reportButton = $moreRow.find('[data-button="report"]');
+
+            $reportButton.empty().append($('<span>')
+                .addClass('fa fa-spinner fa-spin fa-fw fa-sm').css('width', '0.75em'));
+
+
+            this.getReportForObject(objectInfo)
+                .then(function (result) {
+                    if (result.length === 0) {
+                        $reportButton.addClass('disabled');
+                        $reportButton.empty().append($('<span>').addClass('fa fa-ban').css('width', '0.75em'));
+                        $reportButton
+                            .tooltip({
+                                title: 'No report associated with this object',
+                                container: '#' + _this.mainListId,
+                                delay: {
+                                    show: Config.get('tooltip').showDelay,
+                                    hide: Config.get('tooltip').hideDelay
+                                }
+                            });
+                        objData.reportRef = null;
+                        return;
+                    } else if (result.length === 1) {
+                        $reportButton.empty().append($('<span>').addClass('fa fa-file-text').css('width', '0.75em'));
+                        objData.reportRef = result[0].ref;
+                        $reportButton
+                            .tooltip({
+                                title: 'View associated report',
+                                container: '#' + _this.mainListId,
+                                delay: {
+                                    show: Config.get('tooltip').showDelay,
+                                    hide: Config.get('tooltip').hideDelay
+                                }
+                            })
+                            .click(function (e) {
+                                e.stopPropagation();
+                                if (objData.reportRef) {
+                                    _this.showReportLandingPage(objData.reportRef);
+                                }
+                            });
+                    } else {
+                        console.warn('oops, too many reports', result);
+
+                        $reportButton
+                            .tooltip({
+                                title: 'Too many reports associated with this object',
+                                container: '#' + _this.mainListId,
+                                delay: {
+                                    show: Config.get('tooltip').showDelay,
+                                    hide: Config.get('tooltip').hideDelay
+                                }
+                            });
+                        $reportButton.addClass('disabled');
+                        $reportButton.empty().append($('<span>').addClass('fa fa-ban').css('width', '0.75em'));
+                        objData.reportRef = null;
+                    }
+
+                });
+        },
+
         /**
          * This is the main function for rendering a data object
          * in the data list.
          */
         renderObjectRowDiv: function (objId) {
-            var self = this;
+            var _this = this;
             var objData = this.dataObjects[objId];
             var object_info = objData.info;
             var ref_path = objData.refPath;
@@ -1098,7 +1288,7 @@ define([
             var is_set = this.isASet(object_info);
 
             var author = ' ';
-            if (object_info[5] !== self.my_user_id) {
+            if (object_info[5] !== _this.my_username) {
                 author = ' by ' + object_info[5];
             }
 
@@ -1126,7 +1316,7 @@ define([
                 '<a href="/#spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
 
             var $moreContent = $('<div>').addClass('kb-data-list-more-div')
-                .append(self.addDataControls(object_info, $alertDiv, objData.fromPalette, ref_path)).append($alertDiv)
+                .append(_this.addDataControls(objData, $alertDiv, ref_path)).append($alertDiv)
                 .append(
                     $('<table style="width:100%;">')
                         .append('<tr><th>Permanent Id</th><td>' + object_info[6] + '/' + object_info[0] + '/' + object_info[4] + '</td></tr>')
@@ -1141,6 +1331,9 @@ define([
                 moreContent: $moreContent,
                 is_set: is_set,
                 object_info: object_info,
+                onOpen: function() {
+                    _this.onOpenDataListItem($moreContent, objData);
+                }
             }]);
 
             if (objData.fromPalette) {
@@ -1165,21 +1358,21 @@ define([
 
             $card.find('.narrative-card-logo , .kb-data-list-name').click(function (e) {
                 e.stopPropagation();
-                self.insertViewer(object_key);
+                _this.insertViewer(object_key);
             });
 
             $card.find('.narrative-card-row-main').click(function () {
                 var $node = $(this.parentElement).find('.narrative-card-row-more');
-                if (self.selectedObject === object_info[0] && $node.is(':visible')) {
+                if (_this.selectedObject === object_info[0] && $node.is(':visible')) {
                     // assume selection handling occurs before this is called
                     // so if we are now selected and the moreContent is visible, leave it...
                     return;
                 }
 
                 if ($node.is(':visible')) {
-                    self.writingLock = false;
+                    _this.writingLock = false;
                 } else {
-                    self.getRichData(object_info, $node);
+                    _this.getRichData(object_info, $node);
                 }
             });
 
@@ -1194,7 +1387,7 @@ define([
 
         addDropZone: function (container, targetCell, isBelow) {
             var targetDiv = document.createElement('div'),
-                self = this;
+                _this = this;
 
             targetDiv.classList.add('kb-data-list-drag-target');
             targetDiv.innerHTML = '<i>drop data object here</i>';
@@ -1222,8 +1415,8 @@ define([
                     return;
                 }
                 var data = JSON.parse(e.dataTransfer.getData('info')),
-                    obj = self.dataObjects[self.keyToObjId[data.key]],
-                    info = self.createInfoObject(obj.info, obj.refPath),
+                    obj = _this.dataObjects[_this.keyToObjId[data.key]],
+                    info = _this.createInfoObject(obj.info, obj.refPath),
                     cell, cellIndex, placement;
 
                 if (e.target.getAttribute('cellIs') === 'below') {
@@ -1262,7 +1455,7 @@ define([
                     key: key
                 },
                 dataString = JSON.stringify(data),
-                self = this;
+                _this = this;
 
             node.setAttribute('draggable', true);
 
@@ -1274,9 +1467,9 @@ define([
                 var targetCells = document.querySelectorAll('#notebook-container .cell');
                 var container = document.querySelector('#notebook-container');
                 for (var i = 0; i < targetCells.length; i += 1) {
-                    self.addDropZone(container, targetCells.item(i));
+                    _this.addDropZone(container, targetCells.item(i));
                     if (i === targetCells.length - 1) {
-                        self.addDropZone(container, targetCells.item(i), true);
+                        _this.addDropZone(container, targetCells.item(i), true);
                     }
                 }
             });
@@ -1405,13 +1598,13 @@ define([
         },
 
         renderController: function () {
-            var self = this;
+            var _this = this;
 
             var $upOrDown = $('<button class="btn btn-default btn-sm" type="button">').css({ 'margin-left': '5px' })
                 .append('<span class="fa fa-sort-amount-asc" style="color:#777" aria-hidden="true" />')
                 .on('click', function () {
-                    self.reverseData();
-                    self.sortOrder *= -1;
+                    _this.reverseData();
+                    _this.sortOrder *= -1;
                     var $icon = $upOrDown.find('.fa');
                     if ($icon.is('.fa-sort-amount-desc,.fa-sort-amount-asc')) {
                         $icon.toggleClass('fa-sort-amount-desc fa-sort-amount-asc');
@@ -1432,34 +1625,34 @@ define([
                 .append($('<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'))
                 .append('date')
                 .on('click', function () {
-                    self.sortData(function (a, b) {
-                        return self.sortOrder * self.dataObjects[a.objId].info[3]
-                            .localeCompare(self.dataObjects[b.objId].info[3]);
+                    _this.sortData(function (a, b) {
+                        return _this.sortOrder * _this.dataObjects[a.objId].info[3]
+                            .localeCompare(_this.dataObjects[b.objId].info[3]);
                     });
-                    setSortIcon(self.sortOrder > 0 ? 'fa-sort-amount-desc' : 'fa-sort-amount-asc');
+                    setSortIcon(_this.sortOrder > 0 ? 'fa-sort-amount-desc' : 'fa-sort-amount-asc');
                 });
 
             var $byName = $('<label class="btn btn-default">')
                 .append($('<input type="radio" name="options" id="option2" autocomplete="off">'))
                 .append('name')
                 .on('click', function () {
-                    self.sortData(function (a, b) {
-                        return -1 * self.sortOrder * self.dataObjects[a.objId].info[1].toUpperCase()
-                            .localeCompare(self.dataObjects[b.objId].info[1].toUpperCase());
+                    _this.sortData(function (a, b) {
+                        return -1 * _this.sortOrder * _this.dataObjects[a.objId].info[1].toUpperCase()
+                            .localeCompare(_this.dataObjects[b.objId].info[1].toUpperCase());
                     });
-                    setSortIcon(self.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
+                    setSortIcon(_this.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
                 });
 
             var $byType = $('<label class="btn btn-default">')
                 .append($('<input type="radio" name="options" id="option3" autocomplete="off">'))
                 .append('type')
                 .on('click', function () {
-                    self.sortData(function (a, b) {
-                        var aType = self.dataObjects[a.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
-                        var bType = self.dataObjects[b.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
-                        return -1 * self.sortOrder * aType.localeCompare(bType);
+                    _this.sortData(function (a, b) {
+                        var aType = _this.dataObjects[a.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
+                        var bType = _this.dataObjects[b.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
+                        return -1 * _this.sortOrder * aType.localeCompare(bType);
                     });
-                    setSortIcon(self.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
+                    setSortIcon(_this.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
                 });
 
 
@@ -1471,7 +1664,7 @@ define([
                 .append($byType);
 
             /** Set view mode toggle */
-            self.viewModeDisableHnd = {};
+            _this.viewModeDisableHnd = {};
             var $viewMode = $('<span>')
                 .addClass('btn btn-xs btn-default kb-data-list-ctl')
                 .attr('id', 'kb-data-list-hierctl')
@@ -1485,24 +1678,24 @@ define([
                 })
                 .append('<span class="fa fa-copy"></span>')
                 .on('click', function () {
-                    self.setViewMode = !self.setViewMode;
-                    if (self.setViewMode) {
+                    _this.setViewMode = !_this.setViewMode;
+                    if (_this.setViewMode) {
                         $('#kb-data-list-hierctl').attr('enabled', '1');
                     } else {
                         $('#kb-data-list-hierctl').removeAttr('enabled');
                     }
-                    self.renderList();
+                    _this.renderList();
                 });
 
             // Search control
-            self.controlClickHnd.search = function () {
-                if (!self.$searchDiv.is(':visible')) {
-                    self.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
-                    self.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
-                    self.$searchDiv.show({ effect: 'blind', duration: 'fast' });
-                    self.bsSearch.focus();
+            _this.controlClickHnd.search = function () {
+                if (!_this.$searchDiv.is(':visible')) {
+                    _this.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
+                    _this.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
+                    _this.$searchDiv.show({ effect: 'blind', duration: 'fast' });
+                    _this.bsSearch.focus();
                 } else {
-                    self.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
+                    _this.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
                 }
             };
 
@@ -1518,16 +1711,16 @@ define([
                     }
                 })
                 .append('<span class="fa fa-search"></span>')
-                .on('click', self.controlClickHnd.search);
+                .on('click', _this.controlClickHnd.search);
 
             // Sort control
-            self.controlClickHnd.sort = function () {
-                if (!self.$sortByDiv.is(':visible')) {
-                    self.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
-                    self.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
-                    self.$sortByDiv.show({ effect: 'blind', duration: 'fast' });
+            _this.controlClickHnd.sort = function () {
+                if (!_this.$sortByDiv.is(':visible')) {
+                    _this.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
+                    _this.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
+                    _this.$sortByDiv.show({ effect: 'blind', duration: 'fast' });
                 } else {
-                    self.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
+                    _this.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
                 }
             };
             var $openSort = $('<span>')
@@ -1542,16 +1735,16 @@ define([
                     }
                 })
                 .append('<span class="fa fa-sort-amount-asc"></span>')
-                .on('click', self.controlClickHnd.sort);
+                .on('click', _this.controlClickHnd.sort);
 
             // Filter control
-            self.controlClickHnd.filter = function () {
-                if (!self.$filterTypeDiv.is(':visible')) {
-                    self.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
-                    self.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
-                    self.$filterTypeDiv.show({ effect: 'blind', duration: 'fast' });
+            _this.controlClickHnd.filter = function () {
+                if (!_this.$filterTypeDiv.is(':visible')) {
+                    _this.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
+                    _this.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
+                    _this.$filterTypeDiv.show({ effect: 'blind', duration: 'fast' });
                 } else {
-                    self.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
+                    _this.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
                 }
             };
             var $openFilter = $('<span>')
@@ -1566,7 +1759,7 @@ define([
                     }
                 })
                 .append('<span class="fa fa-filter"></span>')
-                .on('click', self.controlClickHnd.filter);
+                .on('click', _this.controlClickHnd.filter);
 
             // Refresh control
             var $refreshBtn = $('<span>')
@@ -1582,46 +1775,46 @@ define([
                 .append('<span class="fa fa-refresh"></span>')
                 .on('click', function () {
                     this.writingLock = false;
-                    self.refresh();
+                    _this.refresh();
                 });
-            self.$searchDiv = $('<div>');
-            self.bsSearch = new BootstrapSearch(self.$searchDiv, {
+            _this.$searchDiv = $('<div>');
+            _this.bsSearch = new BootstrapSearch(_this.$searchDiv, {
                 inputFunction: function() {
-                    self.search();
+                    _this.search();
                 },
                 placeholder: 'Search in your data'
             });
 
-            self.$sortByDiv = $('<div>').css('text-align', 'center')
+            _this.$sortByDiv = $('<div>').css('text-align', 'center')
                 .append('<small>sort by: </small>')
                 .append($sortByGroup)
                 .append($upOrDown);
 
-            self.$filterTypeSelect = $('<select>').addClass('form-control')
+            _this.$filterTypeSelect = $('<select>').addClass('form-control')
                 .css('margin', 'inherit')
                 .append($('<option value="">'))
                 .change(function () {
-                    self.selectedType = 'filterTypeSelect';
+                    _this.selectedType = 'filterTypeSelect';
                     var optionSelected = $(this).find('option:selected');
                     var typeSelected = optionSelected.val();
 
                     // whenever we change the type filter, we need to clear the current match
                     // so that the complete filter can rerun
-                    self.currentMatch = self.viewOrder;
+                    _this.currentMatch = _this.viewOrder;
 
-                    self.filterByType(typeSelected);
+                    _this.filterByType(typeSelected);
                 });
 
-            self.$filterTypeDiv = $('<div>')
-                .append(self.$filterTypeSelect);
+            _this.$filterTypeDiv = $('<div>')
+                .append(_this.$filterTypeSelect);
 
             var $header = $('<div>');
-            if (self.options.parentControlPanel) {
-                self.options.parentControlPanel.addButtonToControlPanel($viewMode);
-                self.options.parentControlPanel.addButtonToControlPanel($openSearch);
-                self.options.parentControlPanel.addButtonToControlPanel($openSort);
-                self.options.parentControlPanel.addButtonToControlPanel($openFilter);
-                self.options.parentControlPanel.addButtonToControlPanel($refreshBtn);
+            if (_this.options.parentControlPanel) {
+                _this.options.parentControlPanel.addButtonToControlPanel($viewMode);
+                _this.options.parentControlPanel.addButtonToControlPanel($openSearch);
+                _this.options.parentControlPanel.addButtonToControlPanel($openSort);
+                _this.options.parentControlPanel.addButtonToControlPanel($openFilter);
+                _this.options.parentControlPanel.addButtonToControlPanel($refreshBtn);
             } else {
                 $header.addClass('row').css({ 'margin': '5px' })
                     .append($('<div>').addClass('col-xs-12').css({ 'margin': '0px', 'padding': '0px', 'text-align': 'right' })
@@ -1632,16 +1825,16 @@ define([
             }
 
 
-            self.$sortByDiv.hide();
-            self.$searchDiv.hide();
-            self.$filterTypeDiv.hide();
+            _this.$sortByDiv.hide();
+            _this.$searchDiv.hide();
+            _this.$filterTypeDiv.hide();
 
             var $filterDiv = $('<div>')
-                .append(self.$sortByDiv)
-                .append(self.$searchDiv)
-                .append(self.$filterTypeDiv);
+                .append(_this.$sortByDiv)
+                .append(_this.$searchDiv)
+                .append(_this.$filterTypeDiv);
 
-            self.$controllerDiv.append($header).append($filterDiv);
+            _this.$controllerDiv.append($header).append($filterDiv);
         },
         /**
          * Populates the filter set of available types.
@@ -1772,6 +1965,10 @@ define([
         },
 
         getRichData: function (object_info, $moreRow) {
+            // spawn off expensive operations required to enable "more" functionality.
+            // e.g. the report button.
+
+            // The "Saved by" field needs to lookup that user's real name.
             var $usernameTd = $moreRow.find('.kb-data-list-username-td');
             DisplayUtil.displayRealName(object_info[5], $usernameTd);
         }

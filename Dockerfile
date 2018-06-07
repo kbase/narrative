@@ -18,11 +18,14 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG BRANCH=develop
 ARG NARRATIVE_VERSION
+ARG SKIP_MINIFY
 
 EXPOSE 8888
 
 # Remove Debian's older Tornado package - updated/removed in the narrbase package
 #RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y python-tornado
+
+RUN echo Skip=$SKIP_MINIFY
 
 # install pyopenssl cryptography idna and requests is the same as installing
 # requests[security]
@@ -49,12 +52,11 @@ RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-update-config -f src/
 # Install Javascript dependencies
 RUN npm install && bower install --allow-root --config.interactive=false
 
-# Compile Javascript down into an itty-bitty ball.
+# Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
 # (commented out for now)
 # RUN cd kbase-extension/
 # src/notebook/ipython_profiles/profile_narrative/kbase_templates && npm install && grunt build
-RUN grunt minify
-
+RUN [ -n "$SKIP_MINIFY" ] || grunt minify
 
 # Add Tini. Tini operates as a process subreaper for jupyter. This prevents
 # kernel crashes. See Jupyter Notebook known issues here:˜

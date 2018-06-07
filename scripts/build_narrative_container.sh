@@ -9,7 +9,11 @@ NAR_VER_NAME="kbase/narrative_version"  # Image for serving up the narrative ver
 HEADLESS_NAME="kbase/narrative_headless"
 NAR_BASE="kbase/narrbase"
 NAR_BASE_VER="5.0dockerize"
-NARRATIVE_VER="dockerize"
+
+# Get the current branch, so that we can tag images to branch
+BRANCH=${TRAVIS_BRANCH:-`git symbolic-ref --short HEAD`}
+# Use the branch unless we aere given am explicit DOCKER_TAG
+NARRATIVE_VER=${DOCKER_TAG:-$BRANCH}
 COMMIT=`git rev-parse --short HEAD`
 
 #NAR_PREREQ="kbase/narrprereq"
@@ -83,8 +87,6 @@ echo "Building latest narrative version"
 # narrative runner
 export NARRATIVE_VERSION_NUM=`grep '\"version\":' src/config.json.templ | awk '{print $2}' | sed 's/"//g'`
 export DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
-export COMMIT=`git rev-parse --short HEAD`
-export BRANCH=${TRAVIS_BRANCH:-`git symbolic-ref --short HEAD`}
 
 docker build -t $NAR_NAME:$NARRATIVE_VER \
                 --build-arg BUILD_DATE=$DATE \
@@ -92,8 +94,12 @@ docker build -t $NAR_NAME:$NARRATIVE_VER \
                 --build-arg BRANCH=$BRANCH \
                 --build-arg NARRATIVE_VERSION=$NARRATIVE_VERSION_NUM \
                 --build-arg BRANCH=$BRANCH \
+                --build-arg SKIP_MINIFY=$SKIP_MINIFY \
                 .
 docker tag $NAR_NAME:$NARRATIVE_VER $NAR_NAME:$COMMIT
+
+# Give the image a fixed name because dockfile FROM fields cannot take a variable/argument
+# and we're using the output from the previous build in this 2nd container
 docker tag $NAR_NAME:$NARRATIVE_VER kbase/narrative:tmp
 docker build -t $NAR_VER_NAME:$NARRATIVE_VER \
                 --build-arg BUILD_DATE=$DATE \
@@ -104,6 +110,7 @@ docker build -t $NAR_VER_NAME:$NARRATIVE_VER \
                 -f Dockerfile2 \
                 .
 docker tag $NAR_VER_NAME:$NARRATIVE_VER $NAR_VER_NAME:$COMMIT
+docker rmi kbase/narrative:tmp
 
 # Remove any provisioned, but not used, containers
 curl -k -X DELETE https://localhost/proxy_map/provisioned || echo "Ignore Error"

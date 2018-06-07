@@ -8,7 +8,8 @@ define([
     'util/jobLogViewer',
     './jobStateViewer',
     './jobStateList',
-    './jobInputParams'
+    './jobInputParams',
+    'css!kbase/css/batchMode'
 ], function (
     Promise,
     html,
@@ -41,7 +42,7 @@ define([
         var selectedJobId = config.jobId;
 
         function batchLayout() {
-            var list = div({ class: 'col-md-4', dataElement: 'kb-job-list-wrapper'}, [
+            var list = div({ class: 'col-md-4 batch-mode-col', dataElement: 'kb-job-list-wrapper'}, [
                 ui.buildPanel({
                     title: 'Sub Jobs',
                     name: 'subjobs',
@@ -51,7 +52,7 @@ define([
                 })
             ]);
 
-            var jobStatus = div({ class: 'col-md-8',  dataElement: 'kb-job-status-wrapper' },[
+            var jobStatus = div({ class: 'col-md-8 batch-mode-col',  dataElement: 'kb-job-status-wrapper' },[
                 ui.buildCollapsiblePanel({
                     title: 'Job Params',
                     name: 'job-params-section-toggle',

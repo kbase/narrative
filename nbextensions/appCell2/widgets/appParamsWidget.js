@@ -15,7 +15,8 @@ define([
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
 
-    'common/runtime'
+    'common/runtime',
+    'narrativeConfig'
     // All the input widgets
 
 ], function (
@@ -29,7 +30,8 @@ define([
     RowWidget,
     FieldWidget,
     ParamResolver,
-    Runtime
+    Runtime,
+    Config
 
     // Input widgets
 ) {
@@ -319,8 +321,8 @@ define([
 
         function renderLayout(batchMode) {
             var events = Events.make(),
-                batchToggleBtn = buildBatchToggleButton(batchMode, events),
-                formContent = [batchToggleBtn];
+                batchToggleBtn = Config.get('features').batchAppMode ? buildBatchToggleButton(batchMode, events) : null,
+                formContent = batchToggleBtn ? [batchToggleBtn] : [];
             if (batchMode) {
                 formContent.push(div('batch mode!'));
             }

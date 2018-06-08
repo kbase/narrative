@@ -56,7 +56,7 @@ class WidgetManager(object):
     _version_tags = ["release", "beta", "dev"]
     _cell_id_prefix = "kb-vis-"
     _default_input_widget = "kbaseNarrativeDefaultInput"
-    _default_output_widget = "kbaseNarrativeDefaultOutput"
+    _default_output_widget = "kbaseDefaultNarrativeOutput"
 
     def __init__(self):
         self._sm = SpecManager()
@@ -567,7 +567,9 @@ class WidgetManager(object):
             All objects are related to their viewers by an app. This is the tag for that app's
             release state (should be one of release, beta, or dev)
         """
-        widget_name = 'kbaseNarrativeError'  # default, expecting things to bomb.
+        widget_name = 'kbaseNarrativeError'             # default, expecting things to bomb.
+        default_widget = 'kbaseDefaultObjectView'
+        widget_name = default_widget
         widget_data = dict()
         upas = dict()
         info_tuple = clients.get('workspace').get_object_info_new({'objects': [{'ref': upa}],
@@ -584,6 +586,7 @@ class WidgetManager(object):
                     "traceback": "Can't find type spec info for type {}".format(bare_type)
                 }
             }
+            upas = {'upas': [upa]}
         else:
             app_id = type_spec['view_method_ids'][0]
             app_spec = None
@@ -613,9 +616,9 @@ class WidgetManager(object):
 
                 (input_params, ws_refs) = validate_parameters(app_id, tag,
                                                               spec_params, input_params)
-                (output_widget, output) = map_outputs_from_state([], input_params, app_spec)
-                widget_name = app_spec['widgets']['output']
-                widget_data = output
+                (widget_name, widget_data) = map_outputs_from_state([], input_params, app_spec)
+                # widget_name = app_spec['widgets']['output']
+                # widget_data = output
 
                 # Figure out params for upas.
                 for mapping in app_spec.get('behavior', {}).get('output_mapping', []):

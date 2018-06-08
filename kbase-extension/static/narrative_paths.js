@@ -189,6 +189,7 @@ require.config({
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
+        kbaseDefaultObjectView: 'kbase/js/widgets/function_output/kbaseDefaultObjectView',
         kbaseBinnedContigs: 'kbase/js/widgets/function_output/kbaseBinnedContigs',
         'kbaseReadsViewer': 'kbase/js/widgets/function_output/kbaseReadsViewer',
         'kbaseReadsSetView': 'kbase/js/widgets/function_output/kbaseReadsSetView',

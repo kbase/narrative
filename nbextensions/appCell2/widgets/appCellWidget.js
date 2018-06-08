@@ -210,7 +210,8 @@ define([
                             type: 'get-batch-mode'
                         },
                         handle: function() {
-                            return model.getItem('user-settings.batchMode') || false;
+                            var canDoBatch = Config.get('features').batchAppMode;
+                            return canDoBatch && (model.getItem('user-settings.batchMode') || false);
                         }
                     });
 
@@ -780,6 +781,9 @@ define([
         }
 
         function toggleBatchMode() {
+            if (!Config.get('features').batchAppMode) {
+                return;
+            }
             // var curState = fsm.getCurrentState();
             // var btn = ui.getButton('batch-toggle');
             // btn.classList.toggle('batch-active');
@@ -1268,7 +1272,7 @@ define([
             var runId = new Uuid(4).format(),
                 fixedApp = fixApp(app),
                 code;
-            if (model.getItem('user-settings.batchMode')) {
+            if (model.getItem('user-settings.batchMode') && Config.get('features').batchAppMode) {
                 code = PythonInterop.buildBatchAppRunner(cellId, runId, fixedApp, [params]);
             }
             else {

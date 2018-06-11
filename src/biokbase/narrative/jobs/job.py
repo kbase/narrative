@@ -7,6 +7,7 @@ from biokbase.narrative.app_util import (
 import json
 import uuid
 from jinja2 import Template
+from pprint import pprint
 
 """
 KBase job class
@@ -73,22 +74,22 @@ class Job(object):
                    tag=tag,
                    app_version=job_info.get('service_ver', None),
                    cell_id=cell_id,
+                   run_id=run_id,
                    token_id=token_id)
 
     def info(self):
         spec = self.app_spec()
-        print "App name (id): {}".format(spec['info']['name'], self.app_id)
-        print "Version: {}".format(spec['info']['ver'])
+        print("App name (id): {}".format(spec['info']['name'], self.app_id))
+        print("Version: {}".format(spec['info']['ver']))
 
         try:
             state = self.state()
-            print "Status: {}".format(state['job_state'])
+            print("Status: {}".format(state['job_state']))
             # inputs = map_inputs_from_state(state, spec)
-            print "Inputs:\n------"
-            for p in self.inputs[0]:
-                print "{}: {}".format(p, self.inputs[0][p])
+            print("Inputs:\n------")
+            pprint(self.inputs)
         except:
-            print "Unable to retrieve current running state!"
+            print("Unable to retrieve current running state!")
 
     def app_spec(self):
         return SpecManager().get_spec(self.app_id, self.tag)
@@ -121,7 +122,7 @@ class Job(object):
         if self._last_state is not None and self._last_state.get('finished', 0) == 1:
             return self._last_state
         try:
-            state = clients.get("job_service").check_job(self.job_id)
+            state = clients.get("job_service_mock").check_job(self.job_id)
             if 'cancelled' in state:
                 state[u'canceled'] = state.get('cancelled', 0)
                 del state['cancelled']

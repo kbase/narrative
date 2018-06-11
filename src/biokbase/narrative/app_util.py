@@ -25,6 +25,17 @@ def check_tag(tag, raise_exception=False):
         return tag_exists
 
 
+def strict_system_variable(var):
+    """
+    Returns a system variable.
+    If that variable isn't defined, or anything else happens, raises an exception.
+    """
+    result = system_variable(var)
+    if result is None:
+        raise ValueError('Unable to retrieve system variable: "{}"'.format(var))
+    return result
+
+
 def system_variable(var):
     """
     Returns a KBase system variable. Just a little wrapper.

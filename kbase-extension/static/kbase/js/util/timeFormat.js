@@ -305,14 +305,14 @@ define([], function() {
     // * drop " ago" from the end.
 
     function getShortTimeStampStr (objInfoTimeStamp, alwaysExact) {
-      var longTimeStampStr = getTimeStampStr(objInfoTimeStamp, alwaysExact);
-      longTimeStampStr = longTimeStampStr.replace(/month/, 'mon');
-      longTimeStampStr = longTimeStampStr.replace(/hour/, 'hr');
-      longTimeStampStr = longTimeStampStr.replace(/minute/, 'min');
-      longTimeStampStr = longTimeStampStr.replace(/second/, 'sec');
-      longTimeStampStr = longTimeStampStr.replace(/\s*ago\s*/, '');
+        var longTimeStampStr = getTimeStampStr(objInfoTimeStamp, alwaysExact);
+        longTimeStampStr = longTimeStampStr.replace(/month/, 'mon');
+        longTimeStampStr = longTimeStampStr.replace(/hour/, 'hr');
+        longTimeStampStr = longTimeStampStr.replace(/minute/, 'min');
+        longTimeStampStr = longTimeStampStr.replace(/second/, 'sec');
+        longTimeStampStr = longTimeStampStr.replace(/\s*ago\s*/, '');
 
-      return longTimeStampStr;
+        return longTimeStampStr;
     }
 
     /**
@@ -336,6 +336,9 @@ define([], function() {
      * @return {string} a human readable timestamp
      */
     function readableTimestamp (timestamp) {
+        if (!timestamp) {
+            timestamp = 0;
+        }
         var format = function (x) {
             if (x < 10)
                 x = '0' + x;

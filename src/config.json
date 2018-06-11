@@ -16,6 +16,7 @@
         "job_service": "https://appdev.kbase.us/services/njs_wrapper",
         "KBaseSearchEngine": "https://appdev.kbase.us/services/searchapi",
         "landing_pages": "/#dataview/",
+        "provenance_view": "/#objgraphview",
         "log_proxy_host": "172.17.42.1",
         "log_proxy_port": 32001,
         "log_host": "https://elasticsearch2.chicago.kbase.us",
@@ -64,6 +65,7 @@
         "job_service": "https://ci.kbase.us/services/njs_wrapper",
         "KBaseSearchEngine": "https://ci.kbase.us/services/searchapi",
         "landing_pages": "/#dataview/",
+        "provenance_view": "/#objgraphview",
         "log_host": "https://elasticsearch2.chicago.kbase.us",
         "log_port": 9000,
         "log_proxy_host": "172.17.0.1",
@@ -120,6 +122,7 @@
         "job_service": "https://ci.kbase.us/services/njs_wrapper",
         "KBaseSearchEngine": "https://ci.kbase.us/services/searchapi",
         "landing_pages": "/#dataview/",
+        "provenance_view": "/#objgraphview",
         "log_host": null,
         "log_port": null,
         "log_proxy_host": "172.17.0.1",
@@ -169,6 +172,7 @@
         "job_service": "https://next.kbase.us/services/njs_wrapper",
         "KBaseSearchEngine": "https://next.kbase.us/services/searchapi",
         "landing_pages": "/#dataview/",
+        "provenance_view": "/#objgraphview",
         "log_proxy_host": "172.17.42.1",
         "log_proxy_port": 32001,
         "log_host": "https://elasticsearch2.chicago.kbase.us",
@@ -214,6 +218,7 @@
         "job_service": "https://kbase.us/services/njs_wrapper",
         "KBaseSearchEngine": "https://kbase.us/services/searchapi",
         "landing_pages": "/#dataview/",
+        "provenance_view": "/#objgraphview",
         "log_proxy_host": "172.17.42.1",
         "log_proxy_port": 32001,
         "log_host": "https://elasticsearch2.chicago.kbase.us",
@@ -248,5 +253,5 @@
         "showDelay": 750
     },
     "use_local_widgets": true,
-    "version": "3.7.2"
+    "version": "3.8.0"
 }

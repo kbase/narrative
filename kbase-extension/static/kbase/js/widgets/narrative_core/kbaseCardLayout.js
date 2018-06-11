@@ -82,7 +82,6 @@ define ([
             })
             .click(function () {
                 $moreContent.slideToggle('fast');
-                console.log('here12', options);
                 if (options.onOpen) {
                     try {
                         options.onOpen();

@@ -33,7 +33,7 @@ Run the installation script with the virtual env activate:
 $ scripts/install_narrative.sh
 ```
 
-You can run the tests with `make test` to make sure you installation looks okay:
+You can run the tests with `make test` to make sure your installation works:
 
 ```sh
 (kbase-narrative)

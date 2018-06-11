@@ -125,7 +125,7 @@ console "Install: complete log in: $logfile"
 
 # Setup virtualenv
 # ----------------
-if [ "x$VIRTUAL_ENV" = x ] && [ ! $no_venv -eq 1 ]
+if [ "x$CONDA_DEFAULT_ENV" = x ] && [ "x$VIRTUAL_ENV" = x ] && [ ! $no_venv -eq 1 ]
 then
   console 'ERROR: No Python virtual environment detected! Please activate one first.
   The easiest way to use virtual environments is with the virtualenvwrapper package. See:

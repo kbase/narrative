@@ -186,13 +186,13 @@ define([
         function start(arg) {
 
             //hack it too look like the other thing
-            var temp = [];
-            var rawjobState = model.getItem('exec.jobState');
-            temp.push({
-                job_state: rawjobState.job_state,
-                job_id:  rawjobState.job_id
-            })
-            rawjobState.child_jobs = temp;
+            // var temp = [];
+            // var rawjobState = model.getItem('exec.jobState');
+            // temp.push({
+            //     job_state: rawjobState.job_state,
+            //     job_id:  rawjobState.job_id
+            // })
+            // rawjobState.child_jobs = temp;
             //end hack 
 
             if(model.getItem('exec.jobState.child_jobs')){

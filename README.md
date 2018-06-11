@@ -15,24 +15,48 @@ The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.or
 
 This document contains links to various documentation in the [docs](docs) directory, with a brief description of each.
 
-## Local Installation (for developers)
-Short version:
-Requires the following:
-* Python 2.7+ (working on updating to Python 3...)
-* Node.js v6 LTS (needed for npm)
-* Bower
+## Development
 
-```
-git clone https://github.com/kbase/narrative
-cd narrative
-./scripts/install_narrative.sh -v narr-venv
-source narr-venv/bin/activate
-kbase-narrative
+### Installation
+
+Set up a virtual environment with [Conda](https://conda.io):
+
+```sh
+$ conda env create -f environment.yaml
+$ source activate kbase-narrative
 ```
 
-Long version:
+Run the installation script with the virtual env activate:
 
-[Local Narrative setup/deployment](docs/install/local_install.md)
+```sh
+(kbase-narrative)
+$ scripts/install_narrative.sh
+```
+
+You can run the tests with `make test` to make sure you installation looks okay:
+
+```sh
+(kbase-narrative)
+$ make test
+```
+
+Run the server
+
+```sh
+(kbase-narrative)
+$ kbase-narrative
+```
+
+### Updating code
+
+When you update any code in `/src`, you need to rebuild the code and restart the Jupyter kernel:
+
+You can run `scripts/install_narrative.sh -u` to rebuild code updates only.
+
+```sh
+(kbase-narrative)
+$ ./scripts/install_narrative.sh -u
+```
 
 ## Server installation (for administrators)
 

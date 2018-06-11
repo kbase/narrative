@@ -4,5 +4,5 @@
     "advanced": false,
     "developer": false,
     "lazyWidgetRender": true,
-    "batchAppMode": false
+    "batchAppMode": true
 }

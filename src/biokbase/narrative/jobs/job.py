@@ -151,6 +151,9 @@ class Job(object):
             return "Job is incomplete! It has status '{}'".format(state['job_state'])
 
     def get_viewer_params(self, state):
+        """
+        Maps job state 'result' onto the inputs for a viewer.
+        """
         if state is None or state['job_state'] != 'completed':
             return None
         (output_widget, widget_params) = self._get_output_info(state)

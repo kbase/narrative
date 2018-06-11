@@ -1,6 +1,7 @@
 *.DS_Store
 *.pyc
 /bin
+kbase-extension/migrated
 kbase-extension/static/kbase/config/config.json
 kbase-extension/ipython/profile_default/history.sqlite
 kbase-extension/history.sqlite
@@ -30,6 +31,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+package-lock.json
 .Python
 env/
 build/
@@ -59,6 +61,7 @@ pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 /coverage/
+/cover/
 htmlcov/
 .tox/
 .coverage

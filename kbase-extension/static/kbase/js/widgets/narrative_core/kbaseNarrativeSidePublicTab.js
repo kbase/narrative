@@ -150,6 +150,15 @@ define ([
         return $totals;
     }
 
+    /*
+    getNextAutoSuffix
+    For a given object target name, and a set of objects, and a suffix generated
+    by a previous failed attempt to save the object, return either:
+    - null if the target name is not found in the object set
+    - 1 if the target name was found, but no target names with a suffix
+    - the greatest of the failed suffix passed in or the greatest suffix in the data 
+      set, incremented by one.
+    */
     function getNextAutoSuffix(targetName, narrativeObjects, nextSuffix) {
         var targetNameRe = new RegExp('^' + targetName + '$');
         var correctedTargetNameRe = new RegExp('^' + targetName + '_([\\d]+)$');
@@ -168,7 +177,7 @@ define ([
                 return;
             }
         });
-       
+
         // The suffix logic is careflly crafted to accomodate retry (via nextSuffix)
         // and automatic next suffix via the max suffix determined above.
         if (maxSuffix) {
@@ -243,25 +252,10 @@ define ([
             this.data_icons = Config.get('icons').data;
             this.icon_colors = Config.get('icons').colors;
             this.wsName = Jupyter.narrative.getWorkspaceName();
-            // this.categoryDescr = Config.get('publicCategories');
+
             this.dataSourceConfigs = DataSourceConfig.sources;
-            // if (!this.dataSourceConfig) {
-            //     this.categoryDescr = {};
-            // }
-            // this.categories = DataSourceConfig.sources.map(function (source) {
-            //     return source.id;
-            // });
-
-
-            // Cause the search to be re-run whenever the data state for this 
-            // narrative changes.
-            // TODO: disabled. since this is public data, the state of this narrative
-            // should not affect any of the browser/searches!
-            // $(document).on('dataUpdated.Narrative', function () {
-            //     this.loadObjects();
-            // }.bind(this));
             
-            this.loadObjects();
+            this.loaded = false;            
 
             return this;
         },
@@ -278,16 +272,24 @@ define ([
             if ((!this.token) || (!this.wsName)) {
                 return;
             }
+            
+            // load data the first render.
+            if (!this.loaded) {
+                this.loadObjects();
+                this.loaded = true;
+                $(document).on('dataUpdated.Narrative', function() {
+                    $(document).trigger('dataLoadedQuery.Narrative', [null, this.IGNORE_VERSION, function(objects) {
+                        this.narrativeObjects = objects;
+                        this.narrativeObjectsClean = true;
+                    }.bind(this)]);
+                }.bind(this));
+            }
+
             this.infoPanel = $('<div>');
             this.dataPolicyPanel = $('<div>');
             this.$elem.empty()
                 .append(this.infoPanel)
                 .append(this.dataPolicyPanel);
-
-            // if (!this.categories) {
-            //     this.showError('Unable to load public data configuration! Please refresh your page to try again. If this continues to happen, please <a href="https://kbase.us/contact-us/">click here</a> to contact KBase with the problem.');
-            //     return;
-            // }
 
             this.narrativeService = new DynamicServiceClient({
                 module: 'NarrativeService',
@@ -351,7 +353,6 @@ define ([
                         inputFieldLastValue = '';
                         $filterInput.change();
                     }));
-
 
             /*
                 search and render when the type dropdown changes.
@@ -424,7 +425,6 @@ define ([
             this.resultsFooterMessage = $('<div>');
 
             this.resultFooter = $('<div>')
-                // .css('border', '1px red solid')
                 .css('background-color', 'rgba(200,200,200,0.5')
                 .css('padding', '6px')
                 .css('font-style', 'italic')
@@ -721,13 +721,20 @@ define ([
                             $(this).attr('disabled', 'disabled');
                             $(this).html('<img src="'+self.loadingImage+'">');
 
-                            var thisBtn = this;
                             var targetName = object.name;
-                            if (!isNaN(targetName)) {
-                                targetName = self.dataSourceConfigs[self.currentCategory].type.split('.')[1] + ' ' + targetName;
+
+                            // object name cannot start with digits.
+                            if (/^[\d]/.test(targetName)) {
+                                targetName = targetName.replace(/^[\d]+/,'_');
                             }
-                            targetName = targetName.replace(/[^a-zA-Z0-9|.-_]/g,'_');
-                            self.copy(object, targetName, thisBtn);
+
+                            // to avoid weird object names, replace entities with underscores.
+                            targetName = targetName.replace(/&[^;]*;/g,'_');
+
+                            // replace characters which are invalid for a workspace object name with underscores.
+                            targetName = targetName.replace(/[^a-zA-Z0-9.\-_]/g,'_');
+
+                            self.copy(object, targetName, this);
                         }));
 
             var $actionColumn = $('<div>')
@@ -818,13 +825,20 @@ define ([
             that is the only possible error.
         */
 
-        copy: function(object, targetName, thisBtn, nextSuffix) {
+        copy: function(object, targetName, thisBtn, nextSuffix, tries) {
+            if (tries > 10) {
+                throw new Error('Too many rename tries (10)');
+            }
+
             var type = 'KBaseGenomes.Genome';
 
             // Determine whether the targetName already exists, or if 
             // copies exist and if so the maximum suffix.
             // This relies upon the narrativeObjects being updated from the data list.
 
+            // If there are other objects in this narrative, we need to first attempt to
+            // see if other objects with this name exist, and if so, obtain a suffix which
+            // may ensure this is a unique object name.
             var suffix;
             if (this.narrativeObjects[type]) {
                 suffix = getNextAutoSuffix(targetName, this.narrativeObjects[type], nextSuffix);
@@ -853,10 +867,10 @@ define ([
                     // If an object already exists with this name, the attempt again,
                     // incrementing the suffix by 1. NB this will loop until a unique
                     // filename is found.
-                    if (infos[0] === null) {
-                        return this.copyFinal(object, correctedTargetName, thisBtn);
+                    if (infos[0] !== null) {
+                        return this.copy(object, targetName, thisBtn, suffix ? suffix + 1 : 1, tries ? tries + 1 : 1);
                     }
-                    return this.copy(object, targetName, thisBtn, suffix + 1);
+                    return this.copyFinal(object, correctedTargetName, thisBtn);
                 }.bind(this))
                 .catch(function(error) {
                     console.error('Error getting object info for copy', error);
@@ -887,6 +901,7 @@ define ([
                         this.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Unknown error!'));
                     }
                     console.error(error);
+                    this.showError(error);
                 }.bind(this));
         },
 

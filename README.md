@@ -33,30 +33,41 @@ Run the installation script with the virtual env activate:
 $ scripts/install_narrative.sh
 ```
 
-You can run the tests with `make test` to make sure your installation works:
-
-```sh
-(kbase-narrative)
-$ make test
-```
-
-Run the server
+Run the server with:
 
 ```sh
 (kbase-narrative)
 $ kbase-narrative
 ```
 
+> **Note**: When you first open the Jupyter dashboard in the browser, you will be prompted for an authentication token. You will need to get an agent token for your user (a dev token does not work here). Ask a current dev to help set this up for you.
+
+### Testing
+
+First, set up some configuration files:
+
+1. Open `./test/unit/testConfig.json` and set the fields to your own KBase username.
+2. Create a `./test/username.tok` file that contains your agent token (ask a current dev how to find this).
+3. Open up `./src/biokbase/narrative/tests/test.cfg` and update the `test_user` fields to match your username and token file path.
+
+Run the tests with `make test` with the virtual env activated:
+
+```sh
+$ source activate kbase-narrative
+$ make test
+```
 ### Updating code
 
 When you update any code in `/src`, you need to rebuild the code and restart the Jupyter kernel:
 
-You can run `scripts/install_narrative.sh -u` to rebuild code updates only.
+You can run `scripts/install_narrative.sh -u` to rebuild for code updates only.
 
 ```sh
 (kbase-narrative)
 $ ./scripts/install_narrative.sh -u
 ```
+
+After running the above script, restart the Jupyter kernel (top-right of any narrative) in the "kernel" dropdown.
 
 ## Server installation (for administrators)
 

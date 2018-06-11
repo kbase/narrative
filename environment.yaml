@@ -1,0 +1,25 @@
+# This is a Conda environment configuration
+# Load it with `conda create env -f environment.yaml`
+name: kbase-narrative
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - ca-certificates=2018.4.16=0
+  - certifi=2018.4.16=py27_0
+  - nodejs=9.11.1=0
+  - openssl=1.0.2o=0
+  - libedit=3.1.20170329=h6b74fdf_2
+  - libffi=3.2.1=hd88cf55_4
+  - libgcc=7.2.0=h69d50b8_2
+  - libgcc-ng=7.2.0=hdf63c60_3
+  - libstdcxx-ng=7.2.0=hdf63c60_3
+  - ncurses=6.1=hf484d3e_0
+  - pip=10.0.1=py27_0
+  - python=2.7.15=h1571d57_0
+  - readline=7.0=ha6073c6_4
+  - setuptools=39.2.0=py27_0
+  - sqlite=3.23.1=he433501_0
+  - tk=8.6.7=hc745277_3
+  - wheel=0.31.1=py27_0
+  - zlib=1.2.11=ha838bed_2

@@ -19,6 +19,7 @@ install.log
 nbproject
 static/dist
 my_narrative_env/
+test/*.tok
 
 # From https://github.com/github/gitignore/blob/master/Python.gitignore
 

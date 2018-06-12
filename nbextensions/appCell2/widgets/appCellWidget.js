@@ -684,7 +684,6 @@ define([
         function startTab(tabId) {
             var selectedTab = controlBarTabs.tabs[tabId];
             if (selectedTab.widgetModule) {
-                debugger;
                 return loadWidget(selectedTab.widgetModule)
                     .then(function(Widget) {
                         controlBarTabs.selectedTab = {

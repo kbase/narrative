@@ -1,0 +1,11 @@
+# This is a Conda environment configuration
+# Load it with `conda create env -f environment.yaml`
+name: kbase-narrative
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - nodejs=9.11.1=0
+  - pip=10.0.1=py27_0
+  - python=2.7.15=h1571d57_0
+  - setuptools=39.2.0=py27_0

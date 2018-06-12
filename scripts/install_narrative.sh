@@ -67,27 +67,7 @@ function usage () {
     printf "usage: $0 [options]\n"
     printf "options:\n"
     printf "  {-h | --help} \n\tShow these help options.\n"
-    printf "  {-v | --virtualenv} install_path\n\tSelect a virtualenv path to use if one is not activated.\n\t"
-    printf "If the virtualenv does not yet exist, the script will attempt\n\tto make one for you with default options.\n"
-}
-
-function make_activate_venv () {
-    VENV_DIR=$1
-
-    if [ -z $VENV_DIR ]; then
-        printf "A path is needed to create a virtual environment\n"
-        usage
-        exit 1
-    fi
-
-    # if the path $1 doesn't exist, use virtualenv to make that venv
-    if [ ! -d $VENV_DIR ]; then
-        virtualenv $VENV_DIR
-    fi
-
-    # if it does, assume we can activate with $1/bin/activate
-    source $VENV_DIR/bin/activate
-    echo $VIRTUAL_ENV
+    printf "  {--no_venv} \n\tDo not check for a virtual env.\n"
 }
 
 # Arg parsing
@@ -106,10 +86,6 @@ while [ $# -gt 0 ]; do
             no_venv=1
             shift
             ;;
-        -v | --virtualenv)
-            make_activate_venv $2
-            shift 2
-            ;;
         -u | --update)
             update_only=1
             shift
@@ -125,12 +101,11 @@ console "Install: complete log in: $logfile"
 
 # Setup virtualenv
 # ----------------
-if [ "x$VIRTUAL_ENV" = x ] && [ ! $no_venv -eq 1 ]
+if [ "x$CONDA_DEFAULT_ENV" = x ] && [ "x$VIRTUAL_ENV" = x ] && [ ! $no_venv -eq 1 ]
 then
   console 'ERROR: No Python virtual environment detected! Please activate one first.
-  The easiest way to use virtual environments is with the virtualenvwrapper package. See:
-  https://virtualenvwrapper.readthedocs.org/en/latest/install.html#basic-installation'
-  console 'You can also run this with the -v {some name} to create a virtual environment'
+  Create one with: conda env create -f environment.yaml
+  Activate it with: source activate kbase-narrative'
   exit 1
 fi
 

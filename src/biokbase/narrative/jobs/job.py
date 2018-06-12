@@ -77,6 +77,21 @@ class Job(object):
                    run_id=run_id,
                    token_id=token_id)
 
+    @classmethod
+    def map_viewer_params(Job, job_state, job_inputs, app_id, app_tag):
+        # get app spec.
+        if job_state is None or job_state['job_state'] != 'completed':
+            return None
+
+        spec = SpecManager().get_spec(app_id, app_tag)
+        (output_widget, widget_params) = map_outputs_from_state(job_state, map_inputs_from_job(job_inputs, spec), spec)
+        return {
+            'name': output_widget,
+            'tag': app_tag,
+            'params': widget_params
+        }
+
+
     def info(self):
         spec = self.app_spec()
         print("App name (id): {}".format(spec['info']['name'], self.app_id))

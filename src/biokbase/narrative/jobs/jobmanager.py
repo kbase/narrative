@@ -304,10 +304,10 @@ class JobManager(object):
                 'owner': None
             }
 
-        try:
-            app_spec = job.app_spec()
-        except Exception as e:
-            kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
+        # try:
+        #     app_spec = job.app_spec()
+        # except Exception as e:
+        #     kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
 
         if state is None:
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': 'Unable to get job state for job {}'.format(job.job_id)})
@@ -375,11 +375,42 @@ class JobManager(object):
         if 'canceling' in self._running_jobs[job.job_id]:
             state['job_state'] = 'canceling'
 
+        state.update({'child_jobs': self._child_job_states(state.get('sub_jobs', []))})
         return {'state': state,
                 'spec': app_spec,
                 'widget_info': widget_info,
                 'owner': job.owner,
                 'listener_count': self._running_jobs[job.job_id]['refresh']}
+
+    def _child_job_states(self, sub_job_list):
+        """
+        Fetches state for all jobs in the list. These are expected to be child jobs, with no actual Job object associated.
+        So if they're done, we need to do the output mapping out of band.
+        But the check_jobs call with params will return the app id. So that helps.
+        """
+        if not sub_job_list:
+            return []
+
+        sub_job_list = sorted(sub_job_list)
+        job_info = clients.get('job_service').check_jobs({'job_ids': sub_job_list, 'with_job_params': 1})
+        child_job_states = list()
+
+        for job_id in sub_job_list:
+            params = job_info['job_params'][job_id]
+            # if it's error, get the error.
+            if job_id in job_info['check_error']:
+                error = job_info['check_error'][job_id]
+                error.update({'job_id': job_id})
+                child_job_states.append(error)
+                continue
+            # if it's done, get the output mapping.
+            state = job_info['job_states'][job_id]
+            if state.get('finished', 0) == 1:
+                widget_info = Job.map_viewer_params(state, params['params'], params['method'].replace('.', '/'), params.get('meta', {}).get('tag', 'release'))
+                state.update({'widget_info': widget_info})
+            child_job_states.append(state)
+        return child_job_states
+
 
     def _construct_job_status_set(self, job_ids):
         job_states = self._get_all_job_states(job_ids)

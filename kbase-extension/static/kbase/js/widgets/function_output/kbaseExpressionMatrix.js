@@ -106,12 +106,12 @@ console.log("EU IS : ", this.genericClient, auth.token);
             /*Promise.resolve(self.expressionAPI.get_enhancedFilteredExpressionMatrix({
                 fem_objet_ref: expressionMatrixRef
             }))*/
-            console.log("CALL ONE");
+            console.log("CALL ONE AGAINST ", expressionMatrixRef);
             self.genericClient.sync_call('ExpressionAPI.get_enhancedFilteredExpressionMatrix', [{
               fem_object_ref: expressionMatrixRef
             }] )
             .then( function (data) {
-              console.log("I HAVE ME DATA : ", data);
+              console.log("I HAVE ME DATA : ", expressionMatrixRef, data);
               self.matrixStat = data[0].enhanced_FEM.data;
               self.render();
               self.loading(false);
@@ -127,7 +127,8 @@ console.log("EU IS : ", this.genericClient, auth.token);
                     self.clientError(error);
                 });
 var oldStyleRef = this.options.workspaceID + '/' + this.options.expressionMatrixID;
-console.log("OLD CALL", self.featureValues, oldStyleRef);
+oldStyleRef = '16162/40/2';
+/*console.log("OLD CALL", self.featureValues, oldStyleRef);
             self.featureValues.callFunc('get_matrix_stat', [{
                 input_data: oldStyleRef
             }])
@@ -136,6 +137,17 @@ console.log("OLD LOAD DATA : ", data);
                 })
                 .catch(function(error){
 console.log("OLD CALL FAILED : ", error);
+                });*/
+
+console.log("GC OLD CALL", self.featureValues, oldStyleRef);
+            self.genericClient.sync_call('KBaseFeatureValues.get_matrix_stat', [{
+                input_data: oldStyleRef
+            }])
+                .spread(function (data) {
+console.log("GC OLD LOAD DATA : ", data);
+                })
+                .catch(function(error){
+console.log("GC OLD CALL FAILED : ", error);
                 });
 
         },

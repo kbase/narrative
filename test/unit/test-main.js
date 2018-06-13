@@ -55,6 +55,10 @@ requirejs.config({
     deps: tests,
 
     shim: {
+        jquery: {
+            deps: [],
+            exports: 'jquery'
+        },
         bootstraptour: {
             deps: ['bootstrap'],
             exports: 'Tour'

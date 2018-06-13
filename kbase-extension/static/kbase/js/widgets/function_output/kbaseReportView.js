@@ -712,7 +712,6 @@ define([
                                 //readonly: true
                         }
                     }, report.text_message);
-
                     ui.setContent('summary-section',
                         ui.buildCollapsiblePanel({
                             title: 'Summary',

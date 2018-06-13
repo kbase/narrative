@@ -26,16 +26,16 @@
  */
 
 define ([
-    'bootstrap',
     'util/icon',
     'bluebird',
     'util/bootstrapDialog',
     'util/timeFormat',
     'kbase/js/widgets/narrative_core/kbaseCardLayout',
     'narrativeConfig',
-    'jquery'
+    'jquery',
+
+    'bootstrap'
 ], function(
-    bootstrap,
     Icon,
     Promise,
     BootstrapDialog,
@@ -118,7 +118,7 @@ define ([
 
         //create card
         var actionButtonClick = function (e) {
-            if(!entry.ws_name){
+            if (!entry.ws_name) {
                 return;
             }
             e.stopPropagation();
@@ -192,14 +192,15 @@ define ([
             logo: $logo,
             title: $title,
             subcontent: $subcontent,
-            moreContent : entry.moreContent
+            moreContent : entry.moreContent,
+            onOpen: entry.onOpen
         };
 
         var $card = new kbaseCardLayout(layout);
 
         var $renderedActionButton = $card.find('.narrative-card-action-button');
         $renderedActionButton.addClass(function () {
-            return object_info[1].split('.').join('\.');
+            return object_info[1].split('.').join('.');
         })
             .hide();
 

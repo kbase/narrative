@@ -17,80 +17,86 @@
  *      }
 */
 
-define (
-    [
-        'bootstrap',
-        'jquery'
-    ], function(
-        bootstrap,
-        $
-    ) {
-        function KbaseCardLayout(options) {
-        
-            //partitions
-            var $card = $('<div>').addClass('narrative-card-row');
-            var $mainContent = $('<div>').addClass('narrative-card-row-main');
-            var $moreContent = $('<div>').addClass('narrative-card-row-more').hide();
-            var $info = $('<div>').addClass('kb-data-list-info');
+define ([
+    'jquery',
+
+    'bootstrap'
+], function(
+    $
+) {
+    'use strict';
+    function KbaseCardLayout(options) {
+        //partitions
+        var $card = $('<div>').addClass('narrative-card-row');
+        var $mainContent = $('<div>').addClass('narrative-card-row-main');
+        var $moreContent = $('<div>').addClass('narrative-card-row-more').hide();
+        var $info = $('<div>').addClass('kb-data-list-info');
             
-            var $toggleAdvancedViewBtn =$('<div>');
+        var $toggleAdvancedViewBtn =$('<div>');
 
-            //if have sub content, add toggle    
-            if(options.moreContent) {
-                $moreContent.append(options.moreContent);
-                $toggleAdvancedViewBtn
-                    .hide()
-                    .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
-                        .append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
-            }
-            var $actionButtonWrapper = $('<div>')
-                .addClass('narrative-card-action-button-wrapper');
-
-            var $actionButton = $('<button>')
-                .addClass('kb-primary-btn')
-                .addClass('narrative-card-action-button')
-                .append($('<span>').addClass('fa fa-chevron-circle-left'))
-                .append($('<div>').append(options.actionButtonText).addClass('narrative-card-action-button-name'));
-                
-            $actionButtonWrapper.append($actionButton);
-
-            var $logo = options.logo.addClass('narrative-card-logo');
-            var $title = options.title;
-            var $subcontent = options.subcontent;
-
-            $info.append($title)
-                .append($subcontent);
-            
-            if(options.actionButtonClick){
-                $actionButtonWrapper.click(options.actionButtonClick);
-            }
-            if(options.actionButtonText) {
-                $mainContent.append($actionButtonWrapper);
-            }
-          
-            $mainContent.append($logo)
-                .append($info)
-                .append($('<div>').addClass('narrative-card-ellipsis')
-                    .append($toggleAdvancedViewBtn))
-                .mouseenter(function () {
-                    $toggleAdvancedViewBtn.show();
-                    $actionButton.show();
-                })
-                .mouseleave(function () {
-                    $toggleAdvancedViewBtn.hide();
-                    $actionButton.hide();
-
-                })
-                .click(function () {
-                    $moreContent.slideToggle('fast');
-                });
-                
-            $card.append($mainContent);
-            if(options.moreContent) {
-                $card.append($moreContent);
-            }    
-
-            return $card;
+        //if have sub content, add toggle    
+        if (options.moreContent) {
+            $moreContent.append(options.moreContent);
+            $toggleAdvancedViewBtn
+                .hide()
+                .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
+                    .append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
         }
-        return KbaseCardLayout;  //end init
-    });
+        var $actionButtonWrapper = $('<div>')
+            .addClass('narrative-card-action-button-wrapper');
+
+        var $actionButton = $('<button>')
+            .addClass('kb-primary-btn')
+            .addClass('narrative-card-action-button')
+            .append($('<span>').addClass('fa fa-chevron-circle-left'))
+            .append($('<div>').append(options.actionButtonText).addClass('narrative-card-action-button-name'));
+                
+        $actionButtonWrapper.append($actionButton);
+
+        var $logo = options.logo.addClass('narrative-card-logo');
+        var $title = options.title;
+        var $subcontent = options.subcontent;
+
+        $info.append($title)
+            .append($subcontent);
+            
+        if (options.actionButtonClick){
+            $actionButtonWrapper.click(options.actionButtonClick);
+        }
+        if (options.actionButtonText) {
+            $mainContent.append($actionButtonWrapper);
+        }
+          
+        $mainContent.append($logo)
+            .append($info)
+            .append($('<div>').addClass('narrative-card-ellipsis')
+                .append($toggleAdvancedViewBtn))
+            .mouseenter(function () {
+                $toggleAdvancedViewBtn.show();
+                $actionButton.show();
+            })
+            .mouseleave(function () {
+                $toggleAdvancedViewBtn.hide();
+                $actionButton.hide();
+
+            })
+            .click(function () {
+                $moreContent.slideToggle('fast');
+                if (options.onOpen) {
+                    try {
+                        options.onOpen();
+                    } catch (ex) {
+                        console.error('Error calling onOpen', ex);
+                    }
+                }
+            });
+                
+        $card.append($mainContent);
+        if (options.moreContent) {
+            $card.append($moreContent);
+        }    
+
+        return $card;
+    }
+    return KbaseCardLayout;  
+});

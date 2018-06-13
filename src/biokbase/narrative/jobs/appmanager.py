@@ -123,7 +123,7 @@ class AppManager(object):
         try:
             if params is None:
                 params = list()
-            return self._run_batch_app_internal(app_id, params, tag, version,
+            return self._run_app_batch_internal(app_id, params, tag, version,
                                                 cell_id, run_id, dry_run)
         except Exception as e:
             e_type = type(e).__name__
@@ -150,7 +150,7 @@ class AppManager(object):
                   e_trace)
             return
 
-    def _run_batch_app_internal(self, app_id, params, tag, version, cell_id, run_id, dry_run):
+    def _run_app_batch_internal(self, app_id, params, tag, version, cell_id, run_id, dry_run):
         batch_method = "kb_BatchApp.run_batch"
         batch_app_id = "kb_BatchApp/run_batch"
         batch_method_ver = "dev"
@@ -185,7 +185,6 @@ class AppManager(object):
 
         # This is what calls the function in the back end - Module.method
         # This isn't the same as the app spec id.
-        function_name = service_name + '.' + service_method
         job_meta = {'tag': tag}
         if cell_id is not None:
             job_meta['cell_id'] = cell_id
@@ -194,12 +193,12 @@ class AppManager(object):
 
         # Now put these all together in a way that can be sent to the batch processing app.
         batch_params = {
-            "app_id": app_id,
-            "method": function_name,
+            "module_name": service_name,
+            "method_name": service_method,
             "service_ver": service_ver,
             "wsid": ws_id,
             "meta": job_meta,
-            "params": [{
+            "batch_params": [{
                 "params": batch_run_inputs[i],
                 "source_ws_objects": batch_ws_upas[i]
             } for i in range(len(batch_run_inputs))],

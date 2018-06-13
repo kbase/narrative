@@ -3,6 +3,17 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
 
+### Version 3.8.0
+- Generalized updates to support viewing the new version of the genome data type.
+- SCT-500 - Fix DomainAnnotation viewer widget.
+- SCT-380 - Updates to the RNA-Seq Volcano plot viewer.
+- KBASE-1916 - Fix data type descriptions in the Example tab of the data slideout.
+- SCT-923 - Improve Mycocosm public data search.
+- SCT-930 - Add a "show report" button to objects in the data panel.
+- Reformat and generalize the job logs for both the App Cell and standalone job log viewer widget.
+- Migrate unit tests to use HeadlessChrome and (optionally) Firefox.
+- Refactor Public Data in the Data Slideout to make use of the new KBase Search API.
+
 ### Version 3.7.2
 - SCT-908 - Fix formatting issues with heatmaps.
 - SCT-875 - Accept poorly formatted input data into the RNA-Seq data heatmap viewers.

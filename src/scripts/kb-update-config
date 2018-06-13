@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """
 Update narrative/src/config.json to contain a git hash and timestamp of the 
 commit from which we're deploying.
@@ -13,7 +13,7 @@ import subprocess
 import sys
 import argparse
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
-default_cfg_file = 'config.json'
+default_cfg_file = 'config.json.templ'
 
 def main(args):
     try:
@@ -36,8 +36,9 @@ def main(args):
             raise Exception('Unknown environment: "' + args.env + '"\nAllowed environments: ci, next, prod, appdev')
 
         if args.vb > 0:
-            print("Setting environment to " + args.env)
-        config['config'] = args.env
+            print("WARNING: IGNORING environment setting of " + args.env + "! Environment set via runtime env var CONFIG_ENV")
+        # The config value is now updated via environment variable passed to dockerize
+        # config['config'] = args.env
 
         args.dev_mode = args.dev_mode.lower()
         if args.vb > 0:

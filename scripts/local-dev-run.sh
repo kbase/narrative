@@ -10,7 +10,7 @@ if [ -z $env ]; then
 fi
 docker run \
 	--dns=8.8.8.8 \
-	-e "ENVIRON=${env}" \
+	-e "CONFIG_ENV=${env}" \
 	--network=kbase-dev \
 	--name=narrative  \
 	--mount type=bind,src=${root}/${static_dir},dst=${container_root}/${static_dir} \

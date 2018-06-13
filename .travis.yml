@@ -3,6 +3,8 @@ sudo: required
 language: python
 python:
   - "2.7"
+services:
+  - docker
 addons:
   firefox: "latest"
   chrome: stable
@@ -10,7 +12,11 @@ addons:
     packages:
       - oracle-java8-installer
 env:
-  - TRAVIS_NODE_VERSION="6.6.0"
+  global:
+    - TRAVIS_NODE_VERSION="6.6.0"
+    - secure: "JPdkdywgQbUUixuDuATMXZHWpWImziRoGKd1tCjYd3+0lamLBlldmjhsZ+Bp7ZabKg2ExQZareGDp34cJdOwWBGb2gg0/emjy4UkWkbDH28zyoWNK1SFp6OTY8AeY/icPXKw3MBgKoXG+hemfcxhYc8rUNgUt7V2fA0JSAkCi4w="
+    - secure: "BrGlbfGLxZYCynh7LeIFyQeiTx4YX6fdMYK2UceVLoAFjOml9mvtJY5i4Oafc2iBDPQ0wAP/eIzZOTcddwc+12o1S0EAq3zZb5z+MOwRKjsiC+BGUXNzAGLaeJqFTC5Sn+vvqsaDGaR3jrdQ8APUL7XapuLUAkof7vqc1SPsn3I="
+
 cache:
   directories:
     - kbase-extension/static/ext_components
@@ -22,6 +28,7 @@ branches:
     - develop
     - master
     - travis-firefox
+    - dockerize
 
 before_install:
   - pip install virtualenv coveralls
@@ -39,8 +46,13 @@ before_script:
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3 # give xvfb some time to start
 
-script: make build-travis-narrative && make test
+script:
+  - make build-travis-narrative
+  - make test
 
 after_script:
   - coveralls-lcov -v -n js-coverage/lcov/lcov.info > js-coverage.json
   - coveralls --merge js-coverage.json
+  - bash -x scripts/build_narrative_container.sh
+  - IMAGE_NAME=kbase/narrative scripts/push2dockerhub.sh
+  - IMAGE_NAME=kbase/narrative_version scripts/push2dockerhub.sh

@@ -1,0 +1,2 @@
+elasticsearch>=5.0.0,<6.0.0
+nodejs>6.0,<8.0

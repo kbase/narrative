@@ -137,7 +137,7 @@ class Job(object):
         if self._last_state is not None and self._last_state.get('finished', 0) == 1:
             return self._last_state
         try:
-            state = clients.get("job_service_mock").check_job(self.job_id)
+            state = clients.get("job_service").check_job(self.job_id)
             if 'cancelled' in state:
                 state[u'canceled'] = state.get('cancelled', 0)
                 del state['cancelled']

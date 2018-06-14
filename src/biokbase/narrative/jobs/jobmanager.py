@@ -86,7 +86,7 @@ class JobManager(object):
             raise new_e
 
         job_ids = [j[0] for j in nar_jobs]
-        job_states = clients.get('job_service_mock').check_jobs({
+        job_states = clients.get('job_service').check_jobs({
             'job_ids': job_ids, 'with_job_params': 1
         })
         job_param_info = job_states.get('job_params', {})
@@ -740,7 +740,7 @@ class JobManager(object):
                 jobs_to_lookup.append(job_id)
         # 3. Lookup those jobs what need it. Cache 'em as we go, if finished.
         try:
-            fetched_states = clients.get('job_service_mock').check_jobs({'job_ids': jobs_to_lookup})
+            fetched_states = clients.get('job_service').check_jobs({'job_ids': jobs_to_lookup})
         except Exception as e:
             kblogging.log_event(self._log, 'get_all_job_states_error', {'err': str(e)})
             return {}

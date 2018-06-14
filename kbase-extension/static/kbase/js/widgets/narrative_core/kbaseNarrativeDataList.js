@@ -374,7 +374,7 @@ define([
             if(this.writingLock) {
                 return;
             }
-            // Set the refresh timer on the first refresh. From  here, it'll refresh it_this
+            // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
             if (this.refreshTimer === null) {
                 this.refreshTimer = setInterval(function () {

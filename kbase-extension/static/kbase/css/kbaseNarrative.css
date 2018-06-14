@@ -74,7 +74,6 @@
 #kb-narr-name {
     font-family: Oxygen;
     font-weight: bold;
-    font-style: italic;
     font-size: 130%;
     padding-bottom: 7px;
     white-space: nowrap;
@@ -3177,7 +3176,6 @@ button.kb-data-obj {
 #kb-loading-blocker p {
     text-align: center;
     font-size: 24px;
-    font-family: Oxygen helvetica neue;
     font-weight: bold;
 }
 

@@ -243,9 +243,6 @@ define([
 
         function parameterInfoLittleTip(spec) {
             return spec.data.type;
-            //var mult = (spec.multipleItems() ? '[]' : ''),
-            //    type = spec.dataType();
-            //return mult + type;
         }
 
 
@@ -258,7 +255,6 @@ define([
             }
 
             return div([
-                // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
                 div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
                     alignRight: true,
                     tabs: [{
@@ -380,27 +376,7 @@ define([
                                     width: '3px'
                                 }
                             })
-                        ]),
-                        /*div({
-                            class: 'input-group-addon kb-input-group-addon',
-                            style: {
-                                width: '30px',
-                                padding: '0'
-                            }
-                        }, [
-                            div({ dataElement: 'info' }, button({
-                                class: 'btn btn-link btn-xs',
-                                type: 'button',
-                                tabindex: '-1',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function () {
-                                        places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
-                                        // ui.getElement('big-tip').classList.toggle('hidden');
-                                    }
-                                })
-                            }, span({ class: 'fa fa-info-circle' })))
-                        ])*/
+                        ])
                     ])
                 ]),
                 div({
@@ -504,12 +480,6 @@ define([
                                 break;
                         }
                     });
-                    // bus.on('touched', function (message) {
-                    //     places.feedback.style.backgroundColor = 'yellow';
-                    // });
-                    // bus.on('changed', function () {
-                    //     places.feedback.style.backgroundColor = '';
-                    // });
                     bus.on('enable', function(message) {
                         doEnable();
                     });

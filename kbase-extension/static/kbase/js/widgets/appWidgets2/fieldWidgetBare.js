@@ -250,9 +250,6 @@ define([
 
         function parameterInfoLittleTip(spec) {
             return spec.data.type;
-            //var mult = (spec.multipleItems() ? '[]' : ''),
-            //    type = spec.dataType();
-            //return mult + type;
         }
 
 
@@ -265,7 +262,6 @@ define([
             }
 
             return div([
-                // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
                 div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
                     alignRight: true,
                     tabs: [{
@@ -450,12 +446,6 @@ define([
                             break;
                         }
                     });
-                    // bus.on('touched', function (message) {
-                    //     places.feedback.style.backgroundColor = 'yellow';
-                    // });
-                    // bus.on('changed', function () {
-                    //     places.feedback.style.backgroundColor = '';
-                    // });
                     bus.on('enable', function (message) {
                         doEnable();
                     });

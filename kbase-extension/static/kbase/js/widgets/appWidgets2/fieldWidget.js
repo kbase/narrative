@@ -81,7 +81,6 @@ define([
             }).make();
         }
 
-        // options.isOutputName = spec.text_options && spec.text_options.is_output_name;
         options.enabled = true;
         options.classes = classSets.standard;
 
@@ -177,7 +176,6 @@ define([
         function feedbackOk() {
             places.$feedbackIndicator
                 .removeClass()
-                // .addClass('kb-app-parameter-accepted-glyph fa fa-check')
                 .prop('title', 'input is ok')
                 .show();
         }
@@ -262,9 +260,6 @@ define([
 
         function parameterInfoLittleTip(spec) {
             return spec.dataType();
-            //var mult = (spec.multipleItems() ? '[]' : ''),
-            //    type = spec.dataType();
-            //return mult + type;
         }
 
 
@@ -277,7 +272,6 @@ define([
             }
 
             return div([
-                // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
                 div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
                     alignRight: true,
                     tabs: [{
@@ -304,11 +298,6 @@ define([
                 }))
             ]);
         }
-        //        function renderLabelTip() {
-        //            return div([
-        //                div({dataElement: 'little-tip', style: {display: 'none'}}, parameterInfoLittleTip(spec))
-        //            ]);
-        //        }
 
         function render(events) {
             var placeholder = '',
@@ -349,22 +338,7 @@ define([
                         div({ dataElement: 'input-control' }),
                         div({ class: 'input-group-addon kb-input-group-addon kb-app-field-feedback', dataElement: 'feedback', style: { width: '30px', padding: '0' } }, [
                             div({ dataElement: 'indicator' })
-                        ]), /*
-                        div({ class: 'input-group-addon kb-input-group-addon', style: { width: '30px', padding: '0' } }, [
-                            div({ dataElement: 'info' }, button({
-                                    class: 'btn btn-link btn-xs',
-                                    type: 'button',
-                                    id: events.addEvent({
-                                        type: 'click',
-                                        handler: function() {
-                                            var bigTip = container.querySelector('[data-element="big-tip"]');
-                                            bigTip.classList.toggle('hidden');
-                                        }
-                                    })
-                                },
-                                span({ class: 'fa fa-info-circle' })
-                            ))
-                        ])*/
+                        ])
                     ])
                 ]),
                 div({ class: 'message-panel hidden', dataElement: 'message-panel' }, [
@@ -483,7 +457,6 @@ define([
         }
 
         return {
-            // init: init,
             attach: attach,
             start: start,
             run: run

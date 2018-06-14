@@ -11,7 +11,6 @@
  */
 define([
     'bluebird',
-    'jquery',
     'google-code-prettify/prettify',
     'kb_common/html',
     'common/events',
@@ -21,7 +20,6 @@ define([
     'css!google-code-prettify/prettify.css'
 ], function(
     Promise,
-    $,
     PR,
     html,
     Events,
@@ -29,6 +27,7 @@ define([
     Props,
     ErrorControlFactory) {
     'use strict';
+
     var t = html.tag,
         div = t('div'),
         span = t('span'),
@@ -39,7 +38,6 @@ define([
         th = t('th'),
         td = t('td'),
         pre = t('pre'),
-        textarea = t('textarea'),
         classSets = {
             standard: {
                 nameColClass: 'col-md-2',
@@ -52,7 +50,6 @@ define([
                 hintColClass: 'col-md-12'
             }
         };
-
 
     function factory(config) {
         var ui,
@@ -126,11 +123,9 @@ define([
                 message: error.message,
                 id: error.id
             });
-            places.$messagePanel
-                .removeClass('hidden');
-            places.$message
-                .html(component.content)
-                .addClass('-error');
+            places.messagePanel.classList.remove('hidden');
+            places.message.innerHTML = component.content;
+            places.message.classList.add('-error');
             component.events.attachEvents(document.body);
         }
 
@@ -141,60 +136,46 @@ define([
                 message: warning.message,
                 id: warning.id
             });
-            places.$messagePanel
-                .removeClass('hidden');
-            places.$message
-                .html(component.content)
-                .addClass('-warning');
+            places.messagePanel.classList.remove('hidden');
+            places.message.innerHTML = component.content;
+            places.message.classList.add('-warning');
             component.events.attachEvents(document.body);
         }
 
 
         function clearError() {
-            places.$field
-                .removeClass('-error')
-                .removeClass('-warning');
-            places.$message
-                .removeClass('-error')
-                .removeClass('-warning')
-                .html('');
-            places.$messagePanel
-                .addClass('hidden');
+            places.field.classList.remove('-error');
+            places.field.classList.remove('-warning');
+            places.message.remove('-error');
+            places.message.remove('-warning');
+            places.message.innerHTML = '';
+            places.messagePanel.classList.add('hidden');
         }
 
         function hideError() {
-            places.$field.removeClass('-error');
-            places.$messagePanel.addClass('hidden');
-            places.$feedbackIndicator.removeClass();
+            places.field.classList.remove('-error');
+            places.messagePanel.classList.add('hidden');
+            places.feedbackIndicator.classes = '';
         }
 
         function feedbackNone() {
-            places.$feedbackIndicator
-                .removeClass()
-                .hide();
+            places.feedbackIndicator.classes = '';
+            places.feedbackIndicator.classList.add('hidden');
         }
 
         function feedbackOk() {
-            places.$feedbackIndicator
-                .removeClass()
-                // .addClass('kb-app-parameter-accepted-glyph fa fa-check')
-                .prop('title', 'input is ok')
-                .show();
+            places.feedbackIndicator.classes = '';
+            places.feedbackIndicator.setAttribute('title', 'input is ok');
+            places.feedbackIndicator.classList.remove('hidden');
         }
 
-        function feedbackRequired(row) {
-            places.$feedbackIndicator
-                .removeClass()
-                .addClass('kb-app-parameter-required-glyph fa fa-arrow-left')
-                .prop('title', 'required field')
-                .show();
+        function feedbackRequired() {
+            places.feedbackIndicator.classes = 'kb-app-parameter-required-glyph fa fa-arrow-left';
+            places.feedbackIndicator.setAttribute('title', 'required field');
         }
 
         function feedbackError(row) {
-            places.$feedbackIndicator
-                .removeClass()
-                .addClass('kb-app-parameter-required-glyph fa fa-ban')
-                .show();
+            places.feedbackIndicator.classes = 'kb-app-parameter-required-glyph fa fa-ban';
         }
 
         function rawSpec(spec) {
@@ -304,21 +285,9 @@ define([
                 }))
             ]);
         }
-        //        function renderLabelTip() {
-        //            return div([
-        //                div({dataElement: 'little-tip', style: {display: 'none'}}, parameterInfoLittleTip(spec))
-        //            ]);
-        //        }
 
         function render(events) {
-            var placeholder = '',
-                fieldContainer,
-                feedbackTip, nameCol, inputCol, hintCol;
-
-            // PLACHOLDER (todo: put it somewhere!)
-            if (spec.text_options && spec.text_options.placeholder) {
-                placeholder = spec.text_options.placeholder.replace(/(\r\n|\n|\r)/gm, '');
-            }
+            var feedbackTip;
 
             // FEEDBACK
             if (spec.required()) {
@@ -331,8 +300,6 @@ define([
 
             var infoId = html.genId();
 
-            console.log('HERE, really?');
-
             var advanced;
             if (spec.spec.advanced) {
                 advanced = 'advanced-parameter-hidden';
@@ -340,16 +307,49 @@ define([
                 advanced = '';
             }
 
-            var content = div({ class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: { marginTop: '8px' }, id: fieldId }, [
+            var infoTipText;
+            if (spec.ui.description && spec.ui.hint !== spec.ui.description) {
+                infoTipText = spec.ui.description;
+            } else {
+                infoTipText = spec.ui.hint || spec.ui.description;
+            }
+
+            var content = div({
+                class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '),
+                dataAdvancedParameter: spec.isAdvanced && spec.isAdvanced(),
+                style: {
+                    marginTop: '8px'
+                },
+                id: fieldId
+            }, [
                 div({ class: 'form-group kb-app-parameter-input field-panel', dataElement: 'field-panel', style: { marginBottom: '0' } }, [
-                    label({ class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label' }, [
-                        spec.label() || spec.id()
-                    ]),
-                    div({ class: 'input-group col-md-9', style: { xwidth: '100%' } }, [
-                        div({ dataElement: 'input-control' }),
-                        div({ class: 'input-group-addon kb-input-group-addon kb-app-field-feedback', dataElement: 'feedback', style: { width: '30px', padding: '0' } }, [
-                            div({ dataElement: 'indicator' })
-                        ]), /*
+                    label({
+                        class: 'xcontrol-label kb-app-parameter-name control-label',
+                        title: infoTipText,
+                        style: {cursor: 'help'},
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: function () {
+                                places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
+                            }
+                        })
+                    }, [
+                        spec.ui.label || spec.ui.id
+                    ])
+                ]),
+                div({ class: 'input-group col-md-10', style: { xwidth: '100%' } }, [
+                    div({ dataElement: 'input-control' }),
+                    div({
+                        class: 'input-group-addon kb-input-group-addon kb-app-field-feedback',
+                        dataElement: 'feedback',
+                        style: {
+                            width: '30px',
+                            padding: '0'
+                        }
+                    }, [
+                        div({ dataElement: 'indicator' })
+                    ])
+                    /*,
                         div({ class: 'input-group-addon kb-input-group-addon', style: { width: '30px', padding: '0' } }, [
                             div({ dataElement: 'info' }, button({
                                     class: 'btn btn-link btn-xs',
@@ -357,68 +357,66 @@ define([
                                     id: events.addEvent({
                                         type: 'click',
                                         handler: function() {
-                                            var bigTip = container.querySelector('[data-element="big-tip"]');
-                                            bigTip.classList.toggle('hidden');
+                                            ui.getElement('big-tip').classList.toggle('hidden');
                                         }
                                     })
                                 },
                                 span({ class: 'fa fa-info-circle' })
                             ))
-                        ])*/
-                    ])
+                        ]*/
                 ]),
-                div({ class: 'message-panel hidden', dataElement: 'message-panel' }, [
-                    div({ class: 'col-md-3' }),
-                    div({ class: 'col-md-9' }, div({
-                        class: 'message',
-                        dataElement: 'message'
-                    }))
-                ]),
+                div(
+                    {
+                        class: 'message-panel hidden',
+                        dataElement: 'message-panel'
+                    }, [
+                        div({ class: 'col-md-3' }),
+                        div({ class: 'col-md-9' },
+                            div({
+                                class: 'message',
+                                dataElement: 'message'
+                            })
+                        )
+                    ]
+                ),
                 div({ class: 'info-panel row', dataElement: 'info-panel' }, [
                     div({ class: 'col-md-12' }, div({ id: infoId }, [
                         renderInfoTip()
                     ]))
-
                 ])
             ]);
-
             return content;
         }
 
         // LIFECYCLE
 
         function attach(node) {
-            return Promise.try(function() {
-                var events = Events.make(),
-                    $container;
-                container = node;
-                container.innerHTML = render(events);
-                events.attachEvents(container);
-                ui = UI.make({ node: container });
-                // TODO: use the pattern in which the redner returns an object,
-                // which includes events and other functions to be run after
-                // content is added to the dom.
-                PR.prettyPrint(null, container);
+            var events = Events.make();
 
-                // create the "places" shortcuts.
-                $container = $(container);
-                places = {
-                    $field: $container.find('#' + fieldId),
-                    $fieldPanel: $container.find('[data-element="field-panel"]'),
-                    $input: $container.find('[data-element="input"]'),
-                    $message: $container.find('[data-element="message"]'),
-                    $messagePanel: $container.find('[data-element="message-panel"]'),
-                    $feedback: $container.find('[data-element="feedback"]'),
-                    $feedbackIndicator: $container.find('[data-element="feedback"][data-element="indicator"]'),
-                    $removalButton: $container.find('[data-element="removal-button"]')
-                };
-                if (inputControl.attach) {
-                    return inputControl.attach($container.find('[data-element="input-control"]').get(0));
-                }
-            });
+            container = node;
+            container.innerHTML = render(events);
+            events.attachEvents(container);
+            ui = UI.make({ node: container });
+            // TODO: use the pattern in which the redner returns an object,
+            // which includes events and other functions to be run after
+            // content is added to the dom.
+            PR.prettyPrint(null, container);
+
+            places = {
+                field: document.getElementById(fieldId),
+                message: ui.getElement('message'),
+                messagePanel: ui.getElement('message-panel'),
+                feedback: ui.getElement('feedback'),
+                feedbackIndicator: ui.getElement('feedback.indicator'),
+                removalButton: ui.getElement('removal-button')
+            };
+            if (inputControl.attach) {
+                return inputControl.attach(ui.getElement('input-control'));
+            }
         }
 
-        function start() {
+        function start(arg) {
+            attach(arg.node);
             return Promise.try(function() {
                 bus.on('validation', function(message) {
                     switch (message.diagnosis) {
@@ -453,15 +451,13 @@ define([
                     }
                 });
                 bus.on('touched', function(message) {
-                    places.$feedback.css('background-color', 'yellow');
-                    // console.log('FIELD detected touched');
+                    places.feedback.style.backgroundColor = 'yellow';
                 });
                 bus.on('changed', function() {
-                    places.$feedback.css('background-color', '');
-                })
+                    places.feedback.style.backgroundColor = '';
+                });
                 bus.on('saved', function(message) {
                     console.log('FIELD detected saved');
-
                 });
                 if (inputControl.start) {
                     return inputControl.start()
@@ -474,19 +470,15 @@ define([
             });
         }
 
-        function run(params) {
+        function stop() {
             return Promise.try(function() {
-                if (inputControl.run) {
-                    return inputControl.run(params);
-                }
+                return null;
             });
         }
 
         return {
-            // init: init,
-            attach: attach,
             start: start,
-            run: run
+            stop: stop
         };
     }
 

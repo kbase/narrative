@@ -85,20 +85,16 @@ define([
 
         function doEnable() {
             if (!enabled) {
-                // do something...
                 var mask = ui.getElement('field-mask');
                 mask.classList.add('hidden');
-
                 enabled = true;
             }
         }
 
         function doDisable() {
             if (enabled) {
-                // do something
                 var mask = ui.getElement('field-mask');
                 mask.classList.remove('hidden');
-
                 enabled = false;
             }
         }
@@ -114,6 +110,9 @@ define([
             var events = Events.make(),
                 content = div({
                     class: 'alert alert-' + messageDef.type,
+                    style: {
+                        marginBottom: '0'
+                    },
                     role: 'alert'
                 }, [
                     span({ style: { fontWeight: 'bold' } }, messageDef.title),
@@ -163,6 +162,7 @@ define([
             component.events.attachEvents(document.body);
         }
 
+
         function clearError() {
             places.field.classList.remove('-error');
             places.field.classList.remove('-warning');
@@ -179,31 +179,23 @@ define([
         }
 
         function feedbackNone() {
-            if (places.feedbackIndicator) {
-                places.feedbackIndicator.className = '';
-                places.feedbackIndicator.classList.add('hidden');
-            }
+            places.feedbackIndicator.className = '';
+            places.feedbackIndicator.classList.add('hidden');
         }
 
         function feedbackOk() {
-            if (places.feedbackIndicator) {
-                places.feedbackIndicator.className = '';
-                places.feedbackIndicator.setAttribute('title', 'input is ok');
-                places.feedbackIndicator.classList.remove('hidden');
-            }
+            places.feedbackIndicator.className = '';
+            places.feedbackIndicator.setAttribute('title', 'input is ok');
+            places.feedbackIndicator.classList.remove('hidden');
         }
 
         function feedbackRequired() {
-            if (places.feedbackIndicator) {
-                places.feedbackIndicator.className = 'kb-app-parameter-required-glyph fa fa-arrow-left';
-                places.feedbackIndicator.setAttribute('title', 'required field');
-            }
+            places.feedbackIndicator.className = 'kb-app-parameter-right-error-bar';
+            places.feedbackIndicator.setAttribute('title', 'required field');
         }
 
         function feedbackError() {
-            if (places.feedbackIndicator) {
-                places.feedbackIndicator.className = 'kb-app-parameter-required-glyph fa fa-ban';
-            }
+            places.feedbackIndicator.className = 'kb-app-parameter-right-error-bar';
         }
 
         function rawSpec(spec) {
@@ -235,7 +227,6 @@ define([
             return table({ class: 'table table-striped' }, [
                 tr([th('Required'), td(spec.data.constraints.required ? 'yes' : 'no')]),
                 tr([th('Data type'), td(spec.data.type)]),
-                // tr([th('Field type'), td(spec.spec.field_type)]),
                 tr([th('Multiple values?'), td(spec.multipleItems ? 'yes' : 'no')]),
                 (function () {
                     return tr([th('Default value'), td(spec.data.defaultValue)]);
@@ -247,14 +238,6 @@ define([
                 }())
             ].concat(parameterInfoTypeRules(spec)));
         }
-
-        function parameterInfoLittleTip(spec) {
-            return spec.data.type;
-            //var mult = (spec.multipleItems() ? '[]' : ''),
-            //    type = spec.dataType();
-            //return mult + type;
-        }
-
 
         function renderInfoTip() {
             var infoTipText;
@@ -268,26 +251,27 @@ define([
                 // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
                 div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
                     alignRight: true,
-                    tabs: [{
-                        label: 'Description',
-                        name: 'description',
-                        content: div({ style: { padding: '0px' } }, infoTipText)
-                    },
-                    {
-                        label: 'About',
-                        name: 'about',
-                        content: parameterInfoContent(spec)
-                    },
-                    {
-                        label: 'Rules',
-                        name: 'rules',
-                        content: parameterInfoRules(spec)
-                    },
-                    {
-                        label: 'Spec',
-                        name: 'spec',
-                        content: rawSpec(spec)
-                    }
+                    tabs: [ // 
+                        {
+                            label: 'Description',
+                            name: 'description',
+                            content: div({ style: { padding: '0px' } }, infoTipText)
+                        },
+                        {
+                            label: 'About',
+                            name: 'about',
+                            content: parameterInfoContent(spec)
+                        },
+                        {
+                            label: 'Rules',
+                            name: 'rules',
+                            content: parameterInfoRules(spec)
+                        },
+                        {
+                            label: 'Spec',
+                            name: 'spec',
+                            content: rawSpec(spec)
+                        }
                     ]
                 }))
             ]);
@@ -314,8 +298,15 @@ define([
             } else {
                 advanced = '';
             }
+            var infoTipText;
+            if (spec.ui.description && spec.ui.hint !== spec.ui.description) {
+                infoTipText = spec.ui.description;
+            } else {
+                infoTipText = spec.ui.hint || spec.ui.description;
+            }
+
             var content = div({
-                class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '),
+                class: ['form-horizontal', 'xkb-app-parameter-row', 'parameter-panel', advanced].join(' '),
                 dataAdvancedParameter: spec.ui.advanced,
                 id: fieldId,
                 style: { position: 'relative' }
@@ -342,12 +333,74 @@ define([
                         marginBottom: '0'
                     }
                 }, [
-                    
-                    div({ class: 'input-group col-md-12' }, [
+                    (function () {
+                        if (config.showLabel === false) {
+                            return '';
+                        }
+                        return div({class: 'col-md-3' }, [
+                            label({
+                                    class: 'xcontrol-label kb-app-parameter-name control-label',
+                                    title: infoTipText,
+                                    style: {cursor: 'help'},
+                                    id: events.addEvent({
+                                        type: 'click',
+                                            handler: function () {
+                                                places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
+                                            }
+                                        })
+                                },
+                                [
+                                    spec.ui.label || spec.ui.id
+                                ])
+                        ]);
+                    }()),
+                    div({ class: ['input-group', config.showLabel == false ? 'col-md-12' : 'col-md-9'].join(' ') }, [
                         div({
                             id: ids.inputControl,
                             dataElement: 'input-control'
-                        })
+                        }),
+                        div({
+                            id: ids.feedback,
+                            class: 'input-group-addon kb-input-group-addon kb-app-field-feedback',
+                            dataElement: 'feedback',
+                            style: {
+                                width: '3px',
+                                height: '100%',
+                                'margin-left': '4px'
+                            }
+                        } , [
+                            div({
+                                id: ids.feedbackIndicator,
+                                dataElement: 'indicator',
+                                style: {
+                                    width: '3px'
+                                }
+                            })
+                        ]),
+                        /* (function () {
+                            if (config.showInfo === false) {
+                                return '';
+                            }
+                            return div({
+                                class: 'input-group-addon kb-input-group-addon',
+                                style: {
+                                    width: '30px',
+                                    padding: '0'
+                                }
+                            }, [
+                                div({ dataElement: 'info' }, button({
+                                    class: 'btn btn-link btn-xs',
+                                    type: 'button',
+                                    tabindex: '-1',
+                                    id: events.addEvent({
+                                        type: 'click',
+                                        handler: function () {
+                                            places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
+                                        }
+                                    })
+                                }, span({ class: 'fa fa-info-circle' })))
+                            ]);
+                        }()) */
                     ])
                 ]),
                 div({
@@ -355,8 +408,8 @@ define([
                     class: 'message-panel hidden',
                     dataElement: 'message-panel'
                 }, [
-                    div({ class: 'col-md-3' }),
-                    div({ class: 'col-md-9' }, [
+                    div({ class: config.showLabel == false ? '' : 'col-md-3' }),
+                    div({ class: config.showLabel == false ? 'col-md-12' : 'col-md-9' }, [
                         div({
                             id: ids.message,
                             class: 'message',
@@ -364,15 +417,22 @@ define([
                         })
                     ])
                 ]),
-                div({
-                    id: ids.infoPanel,
-                    class: 'info-panel row',
-                    dataElement: 'info-panel'
-                }, [
-                    div({ class: 'col-md-12' }, div({ id: infoId }, [
-                        renderInfoTip()
-                    ]))
-                ])
+                (function () {
+                    if (!config.showInfo) {
+                        return '';
+                    }
+
+                    return div({
+                        id: ids.infoPanel,
+                        class: 'info-panel row',
+                        dataElement: 'info-panel'
+                    }, [
+                        div({ class: 'col-md-12' }, div({ id: infoId }, [
+                            renderInfoTip()
+                        ]))
+
+                    ]);
+                }())
             ]);
 
             return {
@@ -465,14 +525,14 @@ define([
 
                     if (inputControl.start) {
                         return inputControl.start({
-                            node: places.inputControl
-                        })
-                        .then(function () {
-                            // TODO: get rid of this pattern
-                            bus.emit('run', {
                                 node: places.inputControl
+                            })
+                            .then(function () {
+                                // TODO: get rid of this pattern
+                                bus.emit('run', {
+                                    node: places.inputControl
+                                });
                             });
-                        });
                     }
                 });
         }

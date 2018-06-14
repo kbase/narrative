@@ -907,7 +907,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             else:
                 try:
                     spec.validate(spec, val)
-                except trt.TraitError, err:
+                except trt.TraitError as err:
                     raise ServiceMethodParameterError(self, "Argument type error: {}".format(err))
 
     def estimated_runtime(self, params=()):

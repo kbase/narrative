@@ -1,21 +1,17 @@
 nose>=1.1.2
 pyzmq>=2.2
-python-qt
 pygments>=1.6
-tornado==5.0.0
 pycrypto>=2.6
 rsa>=3.1.2
 pyasn1>=0.1.7
 httplib2>=0.8
-requests==2.3.0
+requests>=2.3.0
 pyyaml>=3.10
 jinja2>=2.7.1
 python-dateutil>=2.2
-paramiko==1.12.2
+paramiko>=1.12.2
 thrift>=0.9.2
-dateutils
 pymongo>=2.7
-sympy
 setuptools>=0.8
 semantic_version>=2.3
 terminado
@@ -24,9 +20,6 @@ jsonschema
 pexpect
 pickleshare
 simplegeneric
-# qgrid
-bokeh
 markupsafe
-plotly
 mock
 coverage

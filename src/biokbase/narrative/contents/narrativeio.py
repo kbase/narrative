@@ -77,7 +77,7 @@ class KBaseWSManagerMixin(object):
     def test_connection(self):
         try:
             self.ws_client().ver()
-        except Exception, e:
+        except Exception as e:
             raise HTTPError(500, u'Unable to connect to workspace service at {}: {}'.format(self.ws_uri, e))
 
     def ws_client(self):
@@ -99,7 +99,7 @@ class KBaseWSManagerMixin(object):
         try:
             ws_info = self.ws_client().get_workspace_info({'id': wsid})
             return ws_info[1]
-        except ServerError, err:
+        except ServerError as err:
             raise self._ws_err_to_perm_err(err)
 
     def _parse_obj_ref(self, obj_ref):
@@ -157,7 +157,7 @@ class KBaseWSManagerMixin(object):
                 })
                 if nar_data:
                     return {'info': nar_data[0]}
-        except ServerError, err:
+        except ServerError as err:
             raise self._ws_err_to_perm_err(err)
 
     def write_narrative(self, obj_ref, nb, cur_user):
@@ -228,7 +228,7 @@ class KBaseWSManagerMixin(object):
                 u'narrative_nice_name': nb[u'metadata'][u'name']
             }
             self.ws_client().alter_workspace_metadata({u'wsi': {u'id': ws_id}, u'new':updated_metadata})
-        except ServerError, err:
+        except ServerError as err:
             pass
 #            raise self._ws_err_to_perm_err(err)
         except Exception as e:
@@ -244,7 +244,7 @@ class KBaseWSManagerMixin(object):
                 'provenance': [{
                     'service': u'narrative',
                     'description': u'Saved by KBase Narrative Interface',
-                    'service_ver': unicode(biokbase.narrative.version())
+                    'service_ver': str(biokbase.narrative.version())
                 }]
             }
             # no non-strings allowed in metadata!
@@ -273,7 +273,7 @@ class KBaseWSManagerMixin(object):
                 ws_save_obj['meta'].pop('job_ids')
             # clear out anything from metadata that doesn't have a string value
             # This flushes things from IPython that we don't need as KBase object metadata
-            ws_save_obj['meta'] = {key: value for key, value in ws_save_obj['meta'].items() if isinstance(value, str) or isinstance(value, unicode)}
+            ws_save_obj['meta'] = {key: value for key, value in ws_save_obj['meta'].items() if isinstance(value, str)}
 
             ws_save_obj['meta'] = self._process_cell_usage(nb, ws_save_obj['meta'])
 
@@ -283,7 +283,7 @@ class KBaseWSManagerMixin(object):
 
             return (nb, obj_info[6], obj_info[0], obj_info[4])
 
-        except ServerError, err:
+        except ServerError as err:
             raise self._ws_err_to_perm_err(err)
         except Exception as e:
             raise HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
@@ -376,7 +376,7 @@ class KBaseWSManagerMixin(object):
         # But we do need the totals anyway, in case we blow over the max metadata size.
 
         # final pass - trim out methods and apps if cell_kvp_size > total allowable size
-        kvp_size = lambda(x): sum([len(k) + len(unicode(x[k])) for k in x])
+        kvp_size = lambda x: sum([len(k) + len(str(x[k])) for k in x])
 
         metadata_size = kvp_size(metadata)
         method_size = kvp_size(method_info)
@@ -390,7 +390,7 @@ class KBaseWSManagerMixin(object):
             # if we can make it under the limit by removing all methods, then we can likely
             # do so by removing some. So pop them out one at a time, and keep track of the lengths chopped.
             # otherwise, remove them all.
-            if total_size - method_size + len(meth_overflow_key) + len(unicode(num_methods)) < MAX_METADATA_SIZE_BYTES:
+            if total_size - method_size + len(meth_overflow_key) + len(str(num_methods)) < MAX_METADATA_SIZE_BYTES:
                 # filter them.
                 method_info = _filter_app_methods(total_size, meth_overflow_key, method_info)
             else:
@@ -404,7 +404,7 @@ class KBaseWSManagerMixin(object):
             app_overflow_key = u'app.overflow'
 
             # same for apps now.
-            if total_size - app_size + len(app_overflow_key) + len(unicode(num_apps)) < MAX_METADATA_SIZE_BYTES:
+            if total_size - app_size + len(app_overflow_key) + len(str(num_apps)) < MAX_METADATA_SIZE_BYTES:
                 app_info = _filter_app_methods(total_size, app_overflow_key, app_info)
             else:
                 app_info = Counter({app_overflow_key : num_apps})
@@ -423,10 +423,10 @@ class KBaseWSManagerMixin(object):
     def _filter_app_methods(self, total_len, overflow_key, filter_dict):
         overflow_count = 0
         overflow_key_size = len(overflow_key)
-        while total_len + overflow_key_size + len(unicode(overflow_count)) > MAX_METADATA_SIZE_BYTES:
+        while total_len + overflow_key_size + len(str(overflow_count)) > MAX_METADATA_SIZE_BYTES:
             key, val = filter_dict.popitem()
             overflow_count += val
-            total_len = total_len - len(key) - len(unicode(val))
+            total_len = total_len - len(key) - len(str(val))
         filter_dict[overflow_key] = overflow_count
         return filter_dict
 
@@ -482,7 +482,7 @@ class KBaseWSManagerMixin(object):
         try:
             ws = self.ws_client()
             res = ws.list_objects(list_obj_params)
-        except ServerError, err:
+        except ServerError as err:
             raise self._ws_err_to_perm_err(err)
         my_narratives = [dict(zip(list_objects_fields, obj)) for obj in res]
         for nar in my_narratives:
@@ -514,7 +514,7 @@ class KBaseWSManagerMixin(object):
         perms = {}
         try:
             perms = self.ws_client().get_permissions({'id': ws_id})
-        except ServerError, err:
+        except ServerError as err:
             raise self._ws_err_to_perm_err(err)
         if user is not None:
             if perms.has_key(user):

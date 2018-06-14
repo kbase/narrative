@@ -52,9 +52,9 @@ class ServiceConfig(object):
                 return self.CheckResult(service, url, t1 - t0)
             else:
                 return self.CheckResult(service, url, -1, r.status_code, r.reason)
-        except Exception, e:
-            return self.CheckResult(service, url,  -1, 0, e)
-    
+        except Exception as e:
+            return self.CheckResult(service, url, -1, 0, e)
+
     def __str__(self):
         s = "Mode '{}':\n".format(self. mode)
         for k in sorted(self.conf.keys()):

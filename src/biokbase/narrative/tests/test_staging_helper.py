@@ -32,24 +32,24 @@ class StagingHelperTest(unittest.TestCase):
 
     def mock_fetch_url(end_point, values=None, headers=None, method='GET'):
         if 'list' in end_point:
-            print 'mocking __fetch_url list endpoint'
+            print('mocking __fetch_url list endpoint')
             return '[{"path": "tgu/test_file_1", "isFolder": false},\
                      {"path": "tgu/test_dir", "isFolder": true},\
                      {"path": "tgu/test_dir/test_file_2", "isFolder": false}]'
         elif 'jgi-metadata' in end_point:
-            print 'mocking __fetch_url jgi-metadata endpoint'
+            print('mocking __fetch_url jgi-metadata endpoint')
             return '{"file_name": "test_file", "file_status": "BACKUP_COMPLETE"}'
         elif 'metadata' in end_point:
-            print 'mocking __fetch_url metadata endpoint'
+            print('mocking __fetch_url metadata endpoint')
             return '{"head": "head_line", "tail": "tail_line", "lineCount": 10}'
         elif 'search' in end_point:
-            print 'mocking __fetch_url search endpoint'
+            print('mocking __fetch_url search endpoint')
             return '[{"isFolder": false, "mtime": 1515526154896, "name": "LMS-PROC-315.pdf"}]'
         elif 'delete' in end_point:
-            print 'mocking __fetch_url delete endpoint'
+            print('mocking __fetch_url delete endpoint')
             return "successfully deleted tgu2/test.pdf"
         elif 'mv' in end_point:
-            print 'mocking __fetch_url mv endpoint'
+            print('mocking __fetch_url mv endpoint')
             return "successfully moved tgu2/test.pdf to tgu2/test_1.pdf"
 
     @patch.object(Helper, '_Helper__fetch_url', side_effect=mock_fetch_url)

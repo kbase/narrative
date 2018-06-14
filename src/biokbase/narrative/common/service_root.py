@@ -14,7 +14,7 @@ from biokbase.narrative.services import *
 # SERVICE_JSON_SCHEMA_FILE = "services_schema.json"
 
 class Generator:
-    """Generate a file with JSON Schema (or optionally just JSON) 
+    """Generate a file with JSON Schema (or optionally just JSON)
     representing all Service definitions
     """
 
@@ -61,7 +61,7 @@ class Generator:
                 self._log.critical("Error while trying to write output: {}".format(e.strerror))
                 return 1
         else:
-            print all_services
+            print(all_services)
 
         return 0
 

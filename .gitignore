@@ -17,7 +17,8 @@ install.log
 .projectKnowledge
 nbproject
 static/dist
-my_narrative_env/
+my_narrative_venv/
+narrative_venv/
 
 # From https://github.com/github/gitignore/blob/master/Python.gitignore
 

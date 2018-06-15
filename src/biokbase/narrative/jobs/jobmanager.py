@@ -411,7 +411,6 @@ class JobManager(object):
             child_job_states.append(state)
         return child_job_states
 
-
     def _construct_job_status_set(self, job_ids):
         job_states = self._get_all_job_states(job_ids)
 

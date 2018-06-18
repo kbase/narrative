@@ -36,7 +36,12 @@
     "bower": "*",
     "install": "^1.0.4",
     "kbase-ui-plugin-catalog": "^1.2.0",
-    "bootstrap": "3.3.7"
+    "bootstrap": "3.3.7",
+    "pdfmake": "^0.1.36",
+    "datatables.net-bs": "^2.1.1",
+    "datatables.net-buttons-bs": "^1.4.2",
+    "datatables.net-select-bs": "^1.2.3",
+    "jszip": "^3.1.5"
   },
   "resolutions": {
     "kbase-common-js": "^2.5.0",

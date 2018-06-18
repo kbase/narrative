@@ -25,11 +25,11 @@ function KBaseBiochem_CompoundSet(tabwidget) {
 
     this.CompoundTab = function (info) {
         var cpd = this.cpdhash[info.id];
-        console.log('info', cpd)
+        //console.log('info', cpd)
 
         var output = [{
             "label": "Compound",
-            "data": cpd.id,
+            "data": cpd.id
         }, {
         "label": "Image",
             "data": cpd.img
@@ -52,22 +52,32 @@ function KBaseBiochem_CompoundSet(tabwidget) {
             "label": "SMILES",
             "data": cpd.smiles
         }, {
-            "label": "Concentration",
-            "data": cpd.concentration
+            "label": "Similar Compounds",
+            "data": ""
         }];
         if (cpd.smiles) {
-		    var p = self.tabwidget.kbapi('biochem', 'depict_compounds', {structures: [cpd.smiles]
+            return self.tabwidget.kbapi('biochem', 'depict_compounds', {
+                structures: [cpd.smiles]
+            }).then(function (data) {
+                output[1] = {
+                    "label": "Image",
+                    "data": data[0]
+                };
+                return output;
+            });
+		}
+
+		/*var p2 = self.tabwidget.kbapi('biochem', 'similarity_search', {query: [cpd.smiles]
 		    }).then(function(data) {
-                    output[1] = {
-						"label": "Image",
-						"data": data[0]
+		            console.log(data);
+                    output[-1] = {
+						"label": "Similar Compounds",
+						"data": data
 					};
 					return output;
-                });
-            return p;
-		}
+                });*/
 		return output;
-    }
+    };
 
     this.tabList = [{
         "key": "overview",

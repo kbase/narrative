@@ -76,18 +76,18 @@ define (
                     console.log(ret);
                     var cs = ret.data[0].data;
                     var rows = [];
-                    var cols = [{title: "Sample ID"}, {title: "Subset Label"}];
+                    var cols = [{title: "Sample ID"}];
                     cs.factors.forEach(function(factor){
                         cols.push({title: factor.factor});
                     });
                     for (var _id in cs.conditions) {
                         if (cs.conditions.hasOwnProperty(_id)) {
-                            rows.push([_id, ""].concat(cs.conditions[_id]))
+                            rows.push([_id].concat(cs.conditions[_id]))
                         }
                     }
+                    self.$mainPanel.show();
                     self.renderConditionTable(rows, cols);
                     self.loading(true);
-                    self.$mainPanel.show();
                 },
                 function(error) {
                     self.loading(true);
@@ -95,8 +95,6 @@ define (
 
                 });
         },
-        conditionTableData: [], // list for datatables
-
         $conditionTableDiv : null,
         renderConditionTable: function(rows, cols) {
             var self = this;
@@ -108,25 +106,23 @@ define (
 
             self.$conditionTableDiv.empty();
 
-            var $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
+            var $tbl = $('<table>')
                             .addClass("table table-bordered table-striped");
             self.$conditionTableDiv.append($tbl);
-
-            var sDom = "Bft<ip>";
-            if(self.conditionTableData.length<=10) sDom = "Bft<i>";
 
             var tblSettings = {
                 scrollX: true,
                 scrollY: "300px",
                 scrollCollapse: true,
                 paging: false,
-                dom: sDom,
+                dom: "Bft<ip>",
                 buttons: ['colvis', 'copy', 'csv', 'print'],
                 order: [[0, "asc"]],
                 columns: cols,
                 data: rows
                 };
             var ConditionsTable = $tbl.DataTable(tblSettings);
+            //ConditionsTable.draw();
         },
 
         renderError: function(error) {

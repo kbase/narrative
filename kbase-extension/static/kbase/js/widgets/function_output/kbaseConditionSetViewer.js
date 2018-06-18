@@ -14,6 +14,8 @@ define (
         'datatables.net-buttons',
         'datatables.net-buttons-bs',
         'datatables.net-buttons-html5',
+        'datatables.net-buttons-colvis',
+        'datatables.net-buttons-print',
         'knhx',
         'widgetMaxWidthCorrection'
     ], function(
@@ -119,7 +121,7 @@ define (
                 scrollCollapse: true,
                 paging: false,
                 dom: sDom,
-                buttons: ['copy', 'csv'], //, 'excel', 'pdf'],
+                buttons: ['colvis', 'copy', 'csv', 'print'],
                 order: [[0, "asc"]],
                 columns: cols,
                 data: rows

@@ -79,6 +79,9 @@ RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_pr
 # cause JSON parsing to fail - GRRRRR!!!
 ENV VERSION_CHECK /narrative_version
 
+# Set the default environment to be CI, can be overriden by passing new CONFIG_ENV setting at container start
+ENV CONFIG_ENV ci
+
 USER root
 
 LABEL org.label-schema.build-date=$BUILD_DATE \

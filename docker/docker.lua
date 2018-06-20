@@ -10,6 +10,18 @@
 local M = {}
 local Spore = require('Spore')
 local json = require('json')
+local os = require("os")
+local narrEnvVars = os.getenv("NARR_ENV_VARS")
+
+-- Define a clientEnv variable that is passed as environment to the containers being
+-- started. The granularity of this kind of sucks, but it is only a stopgap until we
+-- eliminate this code from KBase.
+local clientEnv
+if narrEnvVars == nil then
+	clientEnv = json.util.null
+else
+	clientEnv = json.decode( narrEnvVars)
+end
 
 -- For creating new containers the config object must contain certain fields
 -- Example config contains:
@@ -26,7 +38,7 @@ local function config()
 		    Tty = false,
 		    OpenStdin = false,
 		    StdinOnce = false,
-		    Env = json.util.null,
+		    Env = clientEnv,
 		    Cmd = {'/bin/bash'},
 		    Dns = json.util.null,
 		    Image = "base",

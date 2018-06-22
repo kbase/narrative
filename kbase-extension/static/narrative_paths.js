@@ -81,6 +81,7 @@ require.config({
         'TaxonAPI-client-api': 'kbase/js/api/TaxonAPIClient',
         'GenomeSearchUtil-client-api': 'kbase/js/api/GenomeSearchUtilClient',
         'SetAPI-client-api': 'kbase/js/api/SetAPIClient',
+        'ExpressionUtils-client-api': 'kbase/js/api/ExpressionUtilsClient',
         'Taxonomy-client-api': 'kbase/js/api/TaxonomyAPIClient',
         'RestAPIClient' : 'kbase/js/api/RestAPIClient',
         'StagingServiceClient' : 'kbase/js/api/StagingServiceClient',

@@ -69,6 +69,10 @@ define([
             userId = runtime.userId(),
             eventListeners = [];
 
+        /**
+         * This function takes a nested return and returns a flat key-value pairing for use with
+         * handlebar replacement for example {"foo":{"bar": "meh"}} becomes {"foo.bar": "meh"}
+         */
         var flattenObject = function(ob) {
             var toReturn = {};
             for (var i in ob) {
@@ -170,7 +174,7 @@ define([
         }
 
         function genericClientCall(call_params) {
-            var swUrl = runtime.config('services.workspace.url').replace('ws', 'service_wizard'),
+            var swUrl = runtime.config('services.service_wizard.url'),
             genericClient = new GenericClient(swUrl, {
                 token: runtime.authToken()
             });
@@ -198,8 +202,8 @@ define([
                         return results;
                     });
             } else if (dataSource === 'search') {
-                if (call_params.constructor === Array){
-                    call_params = call_params[0]
+                if (Array.isArray(call_params)){
+                    call_params = call_params[0];
                 }
                 return Promise.resolve(searchClient.search_objects(call_params))
                     .then(function (results) {
@@ -207,15 +211,17 @@ define([
                             obj = flattenObject(obj);
                             obj.id = obj.guid;
                             obj.text = obj[dd_options.selection_id];
-                            results.objects[index] = obj});
+                            results.objects[index] = obj;
+                        });
                         return results.objects;
                     });
             } else {
                 return Promise.resolve(genericClientCall(call_params))
                     .then(function (results) {
                         if (results[0][0]) {
-                            return results[0]
-                        } return []
+                            return results[0];
+                        }
+                        return [];
                     });
             }
         }
@@ -272,9 +278,9 @@ define([
                 var formatted_string;
                 if (dd_options.description_template) {
                     // use slice to avoid modifying global description_template
-                    formatted_string = dd_options.description_template.slice().replace(/{{(.+?)}}/g, replacer)
+                    formatted_string = dd_options.description_template.slice().replace(/{{(.+?)}}/g, replacer);
                 } else {
-                    formatted_string = JSON.stringify(ret_obj)
+                    formatted_string = JSON.stringify(ret_obj);
                 }
                 return  $('<div style="display:block; height:20px">').append(formatted_string);
             }
@@ -297,7 +303,7 @@ define([
                     templateResult: formatObjectDisplay,
                     templateSelection: function(object) {
                         if (dd_options.selection_id) {
-                            return object[dd_options.selection_id]
+                            return object[dd_options.selection_id];
                         }
                         if (!object.id) {
                             return object.text;

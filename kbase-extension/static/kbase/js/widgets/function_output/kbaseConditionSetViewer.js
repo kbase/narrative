@@ -75,16 +75,13 @@ define (
                 function(ret) {
                     console.log(ret);
                     var cs = ret.data[0].data;
-                    var rows = [];
                     var cols = [{title: "Sample ID"}];
                     cs.factors.forEach(function(factor){
                         cols.push({title: factor.factor});
                     });
-                    for (var _id in cs.conditions) {
-                        if (cs.conditions.hasOwnProperty(_id)) {
-                            rows.push([_id].concat(cs.conditions[_id]))
-                        }
-                    }
+                    var rows = Object.keys(cs.conditions).map(function(_id) {
+                        return [_id].concat(cs.conditions[_id]);
+                    });
                     self.$mainPanel.show();
                     self.renderConditionTable(rows, cols);
                     self.loading(true);

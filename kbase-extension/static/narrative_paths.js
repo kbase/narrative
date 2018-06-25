@@ -92,6 +92,7 @@ require.config({
         'Taxonomy-client-api': 'kbase/js/api/TaxonomyAPIClient',
         'RestAPIClient' : 'kbase/js/api/RestAPIClient',
         'StagingServiceClient' : 'kbase/js/api/StagingServiceClient',
+        'KBaseSearchEngineClient': 'kbase/js/api/KBaseSearchEngineClient',
 
         'njs-wrapper-client-api': 'kbase/js/api/NarrativeJobServiceWrapper',
         kbaseNarrativeJobStatus: 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',

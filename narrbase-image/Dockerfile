@@ -1,24 +1,39 @@
-FROM kbase/narrprereq:1.3
-MAINTAINER William Riehl wjriehl@lbl.gov
+FROM kbase/kb_python:latest 
 
 ENV JUPYTER_VERSION 5.4.1
 ENV IPYWIDGETS_VERSION 7.1.2
 
 RUN mkdir -p /kb/installers
 
-# Download Jupyter Notebook
-ADD https://github.com/jupyter/notebook/archive/${JUPYTER_VERSION}.tar.gz /kb/installers/jupyter_notebook/notebook-${JUPYTER_VERSION}.tar.gz
+# Install Base libraries, Node, R and Jupyter Notebook and ipywidgets from distinct channels
+ADD ./conda-requirements /root/conda
+RUN conda update -n base conda && \
+    conda install --file /root/conda/base && \
+    conda install -c etetoolkit ete3 && \
+    conda install -c anaconda-platform --file /root/conda/base.anaconda-platform && \
+    conda install -c javascript --file /root/conda/base.javascript && \
+    conda install -c wakari --file /root/conda/base.wakari && \
+    conda install --file /root/conda/biokbase-requirements.txt && \
+    conda install -c r r-base && \
+    conda install -c conda-forge --file /root/conda/r.conda-forge && \
+    conda install -c r --file /root/conda/r.r 
 
-RUN \
-    curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash - && \
-    apt-get install -y nodejs && \
-    pip install --upgrade pip && \
-    pip install setuptools==33.1.1  # https://github.com/pypa/setuptools/issues/942
+# Install misc R packages not available on Coda
+ADD ./r-packages-postconda.R /root/r-packages.R
+RUN apt-get install -y gfortran && \
+    R --vanilla < /root/r-packages.R
 
-# Install Jupyter Notebook
-RUN cd /kb/installers/jupyter_notebook && tar -xvf notebook-${JUPYTER_VERSION}.tar.gz && cd notebook-${JUPYTER_VERSION} && pip install --pre -e .
+RUN conda install tornado=4.5.3 && \
+    conda install -c anaconda notebook=${JUPYTER_VERSION} && \
+    conda update six && \
+    conda install ipywidgets==${IPYWIDGETS_VERSION} && \
+    jupyter nbextension enable --py widgetsnbextension 
 
-# Install IPywidgets
-RUN pip install --upgrade six
-RUN pip install ipywidgets==${IPYWIDGETS_VERSION}
-RUN jupyter nbextension enable --py widgetsnbextension
+# The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
+# the end
+LABEL org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.vcs-url="https://github.com/kbase/narrative.git" \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.schema-version="1.0.0-rc1" \
+      us.kbase.vcs-branch=$BRANCH \
+      maintainer="William Riehl wjriehl@lbl.gov"

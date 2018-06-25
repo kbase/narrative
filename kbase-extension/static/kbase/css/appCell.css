@@ -351,6 +351,17 @@ warning: orange
 
 */
 
+.btn.batch-active {
+    box-shadow: inset 0 3px 7px rgba(0, 0, 0, 0.125);
+    -webkit-box-shadow: inset 0 3px 7px rgba(0, 0, 0, 0.125);
+    background-color: #EEE;
+    border-color: #adadad;
+}
+
+.btn.batch-active:hover {
+    background-color: #CCC;
+}
+
 .btn.kb-app-cell-btn {
     color: rgb(33, 150, 243);
     background-color: #FFF;
@@ -377,7 +388,6 @@ warning: orange
     color: #FFF;
     background-color: rgb(33, 150, 243);
 }
-
 
 /* Hovering over an active cell is different, it tries to make the tab look
    disassociated but using a gray background so it doesnt look like an inactive

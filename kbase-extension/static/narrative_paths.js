@@ -81,6 +81,7 @@ require.config({
         'TaxonAPI-client-api': 'kbase/js/api/TaxonAPIClient',
         'GenomeSearchUtil-client-api': 'kbase/js/api/GenomeSearchUtilClient',
         'SetAPI-client-api': 'kbase/js/api/SetAPIClient',
+        'ExpressionUtils-client-api': 'kbase/js/api/ExpressionUtilsClient',
         'Taxonomy-client-api': 'kbase/js/api/TaxonomyAPIClient',
         'RestAPIClient' : 'kbase/js/api/RestAPIClient',
         'StagingServiceClient' : 'kbase/js/api/StagingServiceClient',
@@ -270,7 +271,7 @@ require.config({
         'AnnotationSetTable': 'kbase/js/widgets/function_output/kbaseAnnotationSetTable',
         'AbundanceDataView': 'kbase/js/widgets/function_output/kbaseAbundanceDataView',
         'RankAbundancePlot': 'kbase/js/widgets/function_output/kbaseRankAbundancePlot',
-
+        'kbaseConditionSetViewer': 'kbase/js/widgets/function_output/kbaseConditionSetViewer',
         'kbaseFeatureSet': 'kbase/js/widgets/function_output/kbaseFeatureSet',
 
         'kbaseExpressionMatrix': 'kbase/js/widgets/function_output/kbaseExpressionMatrix',

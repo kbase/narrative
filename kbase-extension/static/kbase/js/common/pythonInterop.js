@@ -76,6 +76,27 @@ define([], function () {
         return '\n' + indent + args.join(',\n' + indent) + '\n';
     }
 
+    function buildBatchAppRunner(cellId, runId, app, params) {
+        var paramSetName = 'batch_params',
+            pythonifiedParams = pythonifyValue(params, { autoIndent: true }),
+            positionalArgs = [
+                pythonifyValue(app.id),
+                paramSetName
+            ],
+            namedArgs = objectToNamedArgs({
+                tag: app.tag,
+                version: app.version,
+                cell_id: cellId,
+                run_id: runId
+            });
+        positionalArgs = positionalArgs.concat(namedArgs);
+        return [
+            paramSetName + ' = ' + pythonifiedParams,
+            'from biokbase.narrative.jobs.appmanager import AppManager',
+            'AppManager().run_app_batch(' + buildNiceArgsList(positionalArgs) + ')'
+        ].join('\n');
+    }
+
     function buildAppRunner(cellId, runId, app, params) {
         var positionalArgs = [
                 pythonifyValue(app.id),
@@ -217,6 +238,7 @@ define([], function () {
         objectToNamedArgs: objectToNamedArgs,
         pythonifyValue: pythonifyValue,
         buildAppRunner: buildAppRunner,
+        buildBatchAppRunner: buildBatchAppRunner,
         buildEditorRunner: buildEditorRunner,
         buildViewRunner: buildViewRunner,
         buildAdvancedViewRunner: buildAdvancedViewRunner,

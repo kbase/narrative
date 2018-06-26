@@ -111,7 +111,7 @@ define (
                 scrollX: true,
                 scrollCollapse: true,
                 paging: true,
-                dom: "Bft<ip>",
+                dom: "<'row'<'col-sm-6'B><'col-sm-6'f>>t<'row'<'col-sm-6'i><'col-sm-6'p>>",
                 buttons: ['colvis', 'copy', 'csv', 'print'],
                 order: [[0, "asc"]],
                 columns: cols,

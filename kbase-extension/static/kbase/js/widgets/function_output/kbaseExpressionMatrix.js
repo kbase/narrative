@@ -15,7 +15,11 @@ define ([
     'bluebird',
     // For effect
     'bootstrap',
-    'jquery-dataTables'
+    'jquery-dataTables',
+    'datatables.net-buttons',
+    'datatables.net-buttons-bs',
+    'datatables.net-buttons-html5',
+    'datatables.net-buttons-print'
 ], function(
     Uuid,
     $,
@@ -179,8 +183,9 @@ define ([
                 </table>')
                 .appendTo($tabConditions)
                 .dataTable( {
-                    'sDom': 'lftip',
+                    'dom': '<\'row\'<\'col-sm-6\'B><\'col-sm-6\'f>>t<\'row\'<\'col-sm-4\'i><\'col-sm-8\'lp>>',
                     'aaData': self.buildConditionsTableData(),
+                    'buttons': ['copy', 'csv', 'print'],
                     'aoColumns': [
                         { sTitle: 'Condition ID', mData:'name' },
                         { sTitle: 'Min', mData:'min' },
@@ -247,9 +252,10 @@ define ([
                 </table>')
                 .appendTo($tabGenes)
                 .dataTable({
-                    sDom: 'lftip',
+                    dom: '<\'row\'<\'col-sm-6\'B><\'col-sm-6\'f>>t<\'row\'<\'col-sm-4\'i><\'col-sm-8\'lp>>',
                     aaData: self.buildGenesTableData(),
-                    aoColumns: featureTableColumns
+                    aoColumns: featureTableColumns,
+                    buttons: ['copy', 'csv', 'print']
                 });
         },
 

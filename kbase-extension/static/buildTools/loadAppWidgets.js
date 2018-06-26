@@ -3,7 +3,6 @@ define([
     'widgets/appWidgets2/errorControl',
     'widgets/appWidgets2/fieldWidget',
     'widgets/appWidgets2/fieldWidgetCompact',
-    'widgets/appWidgets2/fieldWidgetFull',
     'widgets/appWidgets2/fieldWidgetMicro',
     'widgets/appWidgets2/inputUtils',
     'widgets/appWidgets2/parameterSpec',

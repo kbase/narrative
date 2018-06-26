@@ -50,7 +50,7 @@ WORKDIR /kb/dev_container/narrative
 RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version
 
 # Install Javascript dependencies
-RUN npm install && bower install --allow-root --config.interactive=false
+RUN npm install && ./node_modules/.bin/bower install --allow-root --config.interactive=false
 
 # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
 # (commented out for now)

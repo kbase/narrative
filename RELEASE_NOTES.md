@@ -17,6 +17,7 @@ This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
 - SCT-901 - enhance expression matrix viewer.
 - Add ConditionSet viewer.
 - SCT-1082 - fix regressions in Public Data tab.
+- Fix regression in feature set viewer caused by SCT-762.
 
 ### Version 3.7.2
 - SCT-908 - Fix formatting issues with heatmaps.

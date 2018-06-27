@@ -2,13 +2,11 @@ define([
     'bluebird',
     'common/runtime',
     'common/ui',
-    'common/format',
     'kb_common/html'
 ], function(
     Promise,
     Runtime,
     UI,
-    format,
     html
 ) {
     'use strict';
@@ -88,7 +86,7 @@ define([
                 row.onclick = () => {clickFunction(jobState.job_id)};
             }
             container.appendChild(row);
-        }        
+        }
         var jobStatus = jobState ? jobState.job_state : 'Determining Job State...';
         row.innerHTML = th(jobState.job_id) + niceState(jobStatus);
     }
@@ -98,7 +96,8 @@ define([
             jobState = null,
             runtime = Runtime.make(),
             listeningForJob = false,
-            jobId;
+            jobId,
+            parentJobId;
 
 
         function startJobUpdates() {
@@ -106,7 +105,7 @@ define([
                 return;
             }
             runtime.bus().emit('request-job-update', {
-                jobId: jobId
+                jobId: parentJobId
             });
             listeningForJob = true;
         }
@@ -114,7 +113,7 @@ define([
         function stopJobUpdates() {
             if (listeningForJob) {
                 runtime.bus().emit('request-job-completion', {
-                    jobId: jobId
+                    jobId: parentJobId
                 });
                 listeningForJob = false;
             }
@@ -128,7 +127,14 @@ define([
         }
 
         function handleJobStatusUpdate(message) {
-            jobState = message.jobState;
+            if ('child_jobs' in message.jobState) {
+                message.jobState.child_jobs.forEach((childState) => {
+                    if (childState.job_id === jobId) {
+                        jobState = childState;
+                    }
+                });
+            }
+            // jobState = message.jobState;
             switch (jobState.job_state) {
             case 'queued':
             case 'in-progress':
@@ -152,7 +158,7 @@ define([
         function listenForJobStatus() {
             var ev = runtime.bus().listen({
                 channel: {
-                    jobId: jobId
+                    jobId: parentJobId //jobId
                 },
                 key: {
                     type: 'job-status'
@@ -163,7 +169,7 @@ define([
 
             ev = runtime.bus().listen({
                 channel: {
-                    jobId: jobId
+                    jobId: parentJobId //jobId
                 },
                 key: {
                     type: 'job-canceled'
@@ -176,7 +182,7 @@ define([
 
             ev = runtime.bus().listen({
                 channel: {
-                    jobId: jobId
+                    jobId: parentJobId //jobId
                 },
                 key: {
                     type: 'job-does-not-exist'
@@ -196,6 +202,7 @@ define([
                 ui = UI.make({ node: container });
 
                 jobId = arg.jobId;
+                parentJobId = arg.parentJobId;
                 var clickFunction = arg.clickFunction;
                 listeners.push(runtime.bus().on('clock-tick', function() {
                     updateRowStatus(ui, jobState, container, clickFunction);
@@ -203,7 +210,7 @@ define([
 
                 listenForJobStatus();
                 runtime.bus().emit('request-job-status', {
-                    jobId: jobId
+                    jobId: parentJobId
                 });
 
                 listeningForJob = true;

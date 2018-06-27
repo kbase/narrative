@@ -25,11 +25,11 @@ define([
         th = t('th');
 
 
-    function renderTable(){
-        return table({class: 'table'},[
+    function renderTable() {
+        return table({class: 'table'}, [
             tr([
                 th('Job Id'),
-                th("Status")
+                th('Status')
             ])
         ]);
     }
@@ -38,30 +38,33 @@ define([
         var container, ui, listeners = [],
             runtime = Runtime.make(),
             widgets = {},
-            model = config.model;
+            model = config.model,
+            parentJobId;
 
         function start(arg) {
             return Promise.try(function() {
                 container = arg.node;
                 ui = UI.make({ node: container });
                 container.innerHTML = renderTable();
+                parentJobId = arg.parentJobId;
 
                 arg.childJobs.forEach((job) => {
                     var jobId = job.job_id;
                     widgets[jobId] = JobStateListRow.make({
                         model:model
-                    })
-                })
+                    });
+                });
                 var clickFunction = arg.clickFunction;
                 return Promise.all([
                     Object.keys(widgets).forEach((jobId) => {
                         widgets[jobId].start({
                             node: container.getElementsByTagName('tbody')[0],
                             jobId: jobId,
+                            parentJobId: parentJobId,
                             clickFunction: arg.clickFunction
-                        })
+                        });
                     })
-                ])
+                ]);
             });
         }
 

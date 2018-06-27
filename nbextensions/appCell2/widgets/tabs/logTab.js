@@ -31,10 +31,10 @@ define([
     function factory(config) {
         // The top level node used by this widget.
         var container;
-            
+
         // The handy UI module interface to this container.
         var ui;
-            
+
         // A cheap widget collection.
         var widgets = {};
 
@@ -151,10 +151,13 @@ define([
                     model: model
                 });
 
-                if (!selectedJobId) {
-                    selectedJobId = model.getItem('exec.jobState.child_jobs')[0];
-                } 
-                startDetails(selectedJobId.job_id);
+                selectedJobId = model.getItem('exec.jobState.child_jobs')[0].job_id;
+                startDetails(selectedJobId);
+
+                // if (!selectedJobId) {
+                //     selectedJobId = model.getItem('exec.jobState.child_jobs')[0];
+                // }
+                // startDetails(selectedJobId.job_id);
 
                 function startDetails(jobId) {
                     var selectedJobId = jobId ? jobId : model.getItem('exec.jobState.job_id');
@@ -178,7 +181,8 @@ define([
                     widgets.stateList.start({
                         node: ui.getElement('subjobs.body'),
                         childJobs: model.getItem('exec.jobState.child_jobs'),
-                        clickFunction: startDetails
+                        clickFunction: startDetails,
+                        parentJobId: model.getItem('exec.jobState.job_id')
                     })
                 ]);
             });
@@ -193,13 +197,13 @@ define([
             //     job_id:  rawjobState.job_id
             // })
             // rawjobState.child_jobs = temp;
-            //end hack 
+            //end hack
 
             if(model.getItem('exec.jobState.child_jobs')){
                 startBatch(arg);
             }else{
                 startSingle(arg);
-            }  
+            }
         }
         function startSingle(arg) {
             return Promise.try(function () {

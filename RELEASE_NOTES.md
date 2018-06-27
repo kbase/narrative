@@ -13,6 +13,10 @@ This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
 - Reformat and generalize the job logs for both the App Cell and standalone job log viewer widget.
 - Migrate unit tests to use HeadlessChrome and (optionally) Firefox.
 - Refactor Public Data in the Data Slideout to make use of the new KBase Search API.
+- Display a warning if a typed object has no viewer associated with it.
+- SCT-901 - enhance expression matrix viewer.
+- Add ConditionSet viewer.
+- SCT-1082 - fix regressions in Public Data tab.
 
 ### Version 3.7.2
 - SCT-908 - Fix formatting issues with heatmaps.

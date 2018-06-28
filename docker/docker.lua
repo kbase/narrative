@@ -11,6 +11,7 @@ local M = {}
 local Spore = require('Spore')
 local json = require('json')
 local os = require("os")
+local p = require('pl.pretty')
 local narrEnvVars = os.getenv("NARR_ENV_VARS")
 
 -- Define a clientEnv variable that is passed as environment to the containers being
@@ -21,6 +22,7 @@ if narrEnvVars == nil then
 	clientEnv = json.util.null
 else
 	clientEnv = json.decode( narrEnvVars)
+	ngx.log(ngx.INFO,string.format("Setting narrative container environment to: %s", narrEnvVars)
 end
 
 -- For creating new containers the config object must contain certain fields
@@ -39,7 +41,6 @@ local function config()
 		    OpenStdin = false,
 		    StdinOnce = false,
 		    Env = clientEnv,
-		    Cmd = {'/bin/bash'},
 		    Dns = json.util.null,
 		    Image = "base",
 		    Volumes = {},

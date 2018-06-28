@@ -22,7 +22,7 @@ if narrEnvVars == nil then
 	clientEnv = json.util.null
 else
 	clientEnv = json.decode( narrEnvVars)
-	ngx.log(ngx.INFO,string.format("Setting narrative container environment to: %s", narrEnvVars)
+	ngx.log(ngx.INFO,string.format("Setting narrative container environment to: %s", narrEnvVars))
 end
 
 -- For creating new containers the config object must contain certain fields

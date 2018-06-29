@@ -585,6 +585,8 @@ class WidgetManager(object):
                 }
             }
         else:
+            if not type_spec.get('view_method_ids'):
+                return "No viewer found for objects of type {}".format(bare_type)
             app_id = type_spec['view_method_ids'][0]
             app_spec = None
             try:

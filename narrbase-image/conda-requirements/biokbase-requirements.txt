@@ -1,5 +1,4 @@
 bokeh
-dateutils
 decorator
 jsonschema
 markupsafe

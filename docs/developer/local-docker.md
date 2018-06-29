@@ -8,15 +8,8 @@ It is useful to run the Narrative within a local docker container. E.g. this mak
 
 The following changes are required:
 
-- omit the line `RUN grunt minify` from /Dockerfile
-
-- build the image manually. 
-
-    The makefile has a tag of 1.0.3, we don't need that, so just use a more convenient "dev" tag for local usage.
-
-    ```bash
-    docker build -t kbase/narrative:dev .
-    ```
+- Build the docker image using the make target "dev_image", this builds the docker image without the "grunt minify" step.
+  The image will be tagged kbase/narrative:dev instead of the current git branch
 
 - start the container using the `scripts/local-dev-run.sh` script. 
 
@@ -26,7 +19,7 @@ The following changes are required:
     env=ci bash scripts/local-dev-run.sh
     ```
 
-    where env sets the ENVIRON environment variable for the Docker container; ci is the environment in which you are working (needs to be same as the ui is running on.)
+    where env sets the CONFIG_ENV environment variable for the Docker container; ci is the environment in which you are working (needs to be same as the ui is running on.)
 
     - uses the config set $env; makes it easy to test different environments alongside ui
     - uses kbase-dev network; allows interoperation with the kbase-ui proxier 

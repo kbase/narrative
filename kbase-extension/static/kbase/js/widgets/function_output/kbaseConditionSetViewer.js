@@ -11,6 +11,11 @@ define (
         'narrativeConfig',
         'kbaseAuthenticatedWidget',
         'jquery-dataTables',
+        'datatables.net-buttons',
+        'datatables.net-buttons-bs',
+        'datatables.net-buttons-html5',
+        'datatables.net-buttons-colvis',
+        'datatables.net-buttons-print',
         'knhx',
         'widgetMaxWidthCorrection'
     ], function(
@@ -18,10 +23,7 @@ define (
         bootstrap,
         $,
         Config,
-        kbaseAuthenticatedWidget,
-        jquery_dataTables,
-        knhx,
-        widgetMaxWidthCorrection
+        kbaseAuthenticatedWidget
     ) {
     return KBWidget({
         name: 'kbaseConditionSet',
@@ -73,18 +75,16 @@ define (
                 function(ret) {
                     console.log(ret);
                     var cs = ret.data[0].data;
-                    for (var index = 0; index < cs.factors.length; ++index) {
-                        // init with optional values
-                        var row = {"unit": "", "unit_ont_ref": "", "unit_ont_id": ""};
-                        for (var key in cs.conditions){
-                            row[key] = cs.conditions[key][index]
-                        }
-                        self.conditionTableData.push(Object.assign(row, cs.factors[index]));
-                    }
-                    self.conditions = cs.conditions;
-                    self.renderConditionTable();
-                    self.loading(true);
+                    var cols = [{title: "Sample ID"}];
+                    cs.factors.forEach(function(factor){
+                        cols.push({title: factor.factor});
+                    });
+                    var rows = Object.keys(cs.conditions).map(function(_id) {
+                        return [_id].concat(cs.conditions[_id]);
+                    });
                     self.$mainPanel.show();
+                    self.renderConditionTable(rows, cols);
+                    self.loading(true);
                 },
                 function(error) {
                     self.loading(true);
@@ -92,10 +92,8 @@ define (
 
                 });
         },
-        conditionTableData: [], // list for datatables
-
         $conditionTableDiv : null,
-        renderConditionTable: function() {
+        renderConditionTable: function(rows, cols) {
             var self = this;
 
             if(!self.$conditionTableDiv) {
@@ -105,38 +103,22 @@ define (
 
             self.$conditionTableDiv.empty();
 
-            var $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
+            var $tbl = $('<table>')
                             .addClass("table table-bordered table-striped");
             self.$conditionTableDiv.append($tbl);
 
-            var sDom = "ft<ip>";
-            if(self.conditionTableData.length<=10) sDom = "ft<i>";
-
             var tblSettings = {
-                "sPaginationType": "full_numbers",
-                "iDisplayLength": 10,
-                "sDom": sDom,
-                "aaSorting": [[0, "asc"]],
-                "aoColumns": [
-                    {sTitle: "Factor", mData: "factor"},
-                    {sTitle: "Ontology Ref", mData: "factor_ont_ref"},
-                    {sTitle: "Ontology ID", mData: "factor_ont_id"},
-                    {sTitle: "Unit", mData: "unit"},
-                    {sTitle: "Unit Ontology Ref", mData: "unit_ont_ref"},
-                    {sTitle: "Unit Ontology ID", mData: "unit_ont_id"}
-                ],
-                "aaData": [],
-                "oLanguage": {
-                    "sSearch": "Search Factors:",
-                    "sEmptyTable": "This FeatureSet is empty"
-                }
+                scrollX: true,
+                scrollCollapse: true,
+                paging: true,
+                dom: "<'row'<'col-sm-6'B><'col-sm-6'f>>t<'row'<'col-sm-6'i><'col-sm-6'p>>",
+                buttons: ['colvis', 'copy', 'csv', 'print'],
+                order: [[0, "asc"]],
+                columns: cols,
+                data: rows
                 };
-            for (var key in self.conditions){
-                tblSettings['aoColumns'].push(
-                    {sTitle: key, mData: key})
-            }
-            var ConditionsTable = $tbl.dataTable(tblSettings);
-            ConditionsTable.fnAddData(self.conditionTableData);
+            var ConditionsTable = $tbl.DataTable(tblSettings);
+            //ConditionsTable.draw();
         },
 
         renderError: function(error) {

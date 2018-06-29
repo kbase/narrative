@@ -443,11 +443,13 @@ define([
             d.log_q_value = 'MIN';
           }
           else {
-            d.log_q_value = - Math.log10(parseFloat(d.q_value));
+            d.log_q_value = - Math.log10(parseFloat(d.q_value)).toFixed(2);
             if (d.log_q_value < min_log_q_value) {
               min_log_q_value = d.log_q_value;
             }
           }
+
+          d.log2fc_f = d.log2fc_f.toFixed(2);
         });
 
         data.forEach( function(d) {

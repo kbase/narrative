@@ -10,12 +10,25 @@
 local M = {}
 local Spore = require('Spore')
 local json = require('json')
+local os = require("os")
+local p = require('pl.pretty')
+local narrEnvVars = os.getenv("NARR_ENV_VARS")
+
+-- Define a clientEnv variable that is passed as environment to the containers being
+-- started. The granularity of this kind of sucks, but it is only a stopgap until we
+-- eliminate this code from KBase.
+local clientEnv
+if narrEnvVars == nil then
+	clientEnv = json.util.null
+else
+	clientEnv = json.decode( narrEnvVars)
+	ngx.log(ngx.INFO,string.format("Setting narrative container environment to: %s", narrEnvVars))
+end
 
 -- For creating new containers the config object must contain certain fields
 -- Example config contains:
 local function config()
    local config = { Hostname = "",
-		    User = "nobody",
 		    Memory = 0,
 		    MemorySwap = 0,
 		    AttachStdin = false,
@@ -26,8 +39,7 @@ local function config()
 		    Tty = false,
 		    OpenStdin = false,
 		    StdinOnce = false,
-		    Env = json.util.null,
-		    Cmd = {'/bin/bash'},
+		    Env = clientEnv,
 		    Dns = json.util.null,
 		    Image = "base",
 		    Volumes = {},

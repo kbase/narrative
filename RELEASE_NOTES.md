@@ -13,6 +13,11 @@ This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
 - Reformat and generalize the job logs for both the App Cell and standalone job log viewer widget.
 - Migrate unit tests to use HeadlessChrome and (optionally) Firefox.
 - Refactor Public Data in the Data Slideout to make use of the new KBase Search API.
+- Display a warning if a typed object has no viewer associated with it.
+- SCT-901 - enhance expression matrix viewer.
+- Add ConditionSet viewer.
+- SCT-1082 - fix regressions in Public Data tab.
+- Fix regression in feature set viewer caused by SCT-762.
 
 ### Version 3.7.2
 - SCT-908 - Fix formatting issues with heatmaps.
@@ -27,9 +32,11 @@ This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
     - Due to the nature of the Search API, this also changes the interface to require the user to press "enter" to do a search, instead of as-you-type.
     - Changes the layout of the retrieved items from searching.
 - SCT-804 - General updates to fix a compilation problem with FeatureValues data widgets.
-
+- SCT-698 - Redo the narrative build so that it uses Conda for installs of R, Python and Jupyter. This updates
+    the versions to current levels, fixing numpy and pandas incompatibilities
 ### Version 3.7.1
-- SCT-793 - Fix version of upstream dependency "file-saver" to 1.3.4; an upstream update had broken and taken down the Pangenome viewer and others.
+- SCT-793, SCT-496 - Fix version of upstream dependency "file-saver" to 1.3.4; an upstream update had broken and taken down the Pangenome viewer and others.
+- SCT-104 Convert the narrative container to new CI/CD model based on dockerize+environment variables for startup config
 
 ### Version 3.7.0
 - Update Jupyter Notebook to 5.4.1 with a few KBase adjustments

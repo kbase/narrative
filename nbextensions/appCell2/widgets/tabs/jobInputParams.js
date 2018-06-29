@@ -33,41 +33,77 @@ define([
                 row = document.createElement('tr');
                 row.setAttribute('data-element-job-id', key);
                 container.getElementsByTagName('tbody')[0].appendChild(row);
-            }        
+            }
             row.innerHTML = td(key) + td(params[key]);
         })
     }
-    function renderTable(){
+
+    function renderTable() {
         return table({class: 'table'},[
             tr([
                 th('Input'),
-                th("Value")
+                th('Value')
             ])
         ]);
     }
 
     function factory() {
         var container, ui,
-            listeningForJob = false,
-            params;
+            params,
+            paramsListener = null,
+            jobId,
+            runtime = Runtime.make();
+
+        function startParamsListener() {
+            paramsListener = runtime.bus().listen({
+                channel: {
+                    jobId: jobId
+                },
+                key: {
+                    type: 'job-info'
+                },
+                handle: (message) => {
+                    updateRowStatus(ui, message.params, container);
+                }
+            });
+        }
 
         function start(arg) {
             return Promise.try(function() {
+                if (container) {    // delete existing stuff.
+                    detach();
+                }
                 container = arg.node;
+                jobId = arg.jobId;
                 ui = UI.make({ node: container });
                 container.innerHTML = renderTable();
 
+                startParamsListener();
+                runtime.bus().emit('request-job-info', {
+                    jobId: jobId,
+                    parentJobId: arg.parentJobId
+                });
                 params = arg.params;
-                updateRowStatus(ui, params, container, listeningForJob);
+                updateRowStatus(ui, params, container);
             });
         }
 
         function stop() {
+            if (paramsListener) {
+                runtime.bus().removeListener(paramsListener);
+            }
+            paramsListener = null;
+        }
+
+        function detach() {
+            stop();
+            container.innerHTML = '';
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
+            detach: detach
         };
     }
 

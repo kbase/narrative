@@ -5,6 +5,7 @@ define([
     'bluebird',
     'kb_common/html',
     'common/ui',
+    'common/runtime',
     'util/jobLogViewer',
     './jobStateViewer',
     './jobStateList',
@@ -14,6 +15,7 @@ define([
     Promise,
     html,
     UI,
+    Runtime,
     LogViewer,
     JobStateViewer,
     JobStateList,
@@ -37,6 +39,8 @@ define([
 
         // A cheap widget collection.
         var widgets = {};
+
+        var queueListener;
 
         var model = config.model;
         var selectedJobId = config.jobId;
@@ -105,9 +109,17 @@ define([
                 })
             ]);
             return div({}, [list, jobStatus]);
-
         }
-        function layout() {
+
+        function queueLayout() {
+            return div({
+                dataElement: 'kb-job-status-wrapper'
+            }, [
+                'This job is currently queued for execution and will start running soon.'
+            ]);
+        }
+
+        function singleLayout() {
             return div({}, [
                 ui.buildPanel({
                     title: 'Job Status',
@@ -125,16 +137,13 @@ define([
                 })
             ]);
         }
+
         function getSelectedJobId (){
             return config.clickedId;
         }
 
         function startBatch(arg){
             return Promise.try(function () {
-                container = arg.node.appendChild(document.createElement('div'));
-                ui = UI.make({
-                    node: container
-                });
                 container.innerHTML = batchLayout();
 
                 //display widgets
@@ -151,13 +160,11 @@ define([
                     model: model
                 });
 
-                selectedJobId = model.getItem('exec.jobState.child_jobs')[0].job_id;
+                let childJobs = model.getItem('exec.jobState.child_jobs');
+                if (childJobs.length > 0) {
+                    selectedJobId = childJobs.job_id;
+                }
                 startDetails(selectedJobId);
-
-                // if (!selectedJobId) {
-                //     selectedJobId = model.getItem('exec.jobState.child_jobs')[0];
-                // }
-                // startDetails(selectedJobId.job_id);
 
                 function startDetails(jobId) {
                     var selectedJobId = jobId ? jobId : model.getItem('exec.jobState.job_id');
@@ -165,15 +172,18 @@ define([
                     return Promise.all([
                         widgets.params.start({
                             node: ui.getElement('params.body'),
-                            params: model.getItem('params')
+                            jobId: selectedJobId,
+                            parentJobId: model.getItem('exec.jobState.job_id')
                         }),
                         widgets.log.start({
                             node: ui.getElement('log.body'),
-                            jobId: selectedJobId
+                            jobId: selectedJobId,
+                            parentJobId: model.getItem('exec.jobState.job_id')
                         }),
                         widgets.jobState.start({
                             node: ui.getElement('jobState.body'),
-                            jobId: selectedJobId
+                            jobId: selectedJobId,
+                            parentJobId: model.getItem('exec.jobState.job_id')
                         })
                     ]);
                 }
@@ -187,8 +197,8 @@ define([
                 ]);
             });
         }
-        function start(arg) {
 
+        function start(arg) {
             //hack it too look like the other thing
             // var temp = [];
             // var rawjobState = model.getItem('exec.jobState');
@@ -199,19 +209,47 @@ define([
             // rawjobState.child_jobs = temp;
             //end hack
 
-            if(model.getItem('exec.jobState.child_jobs')){
+            container = arg.node.appendChild(document.createElement('div'));
+            ui = UI.make({
+                node: container
+            });
+
+            if (model.getItem('exec.jobState.job_state') === 'queued') {
+                container.innerHTML = queueLayout();
+                queueListener = Runtime.make().bus().listen({
+                    channel: {
+                        jobId: model.getItem('exec.jobState.job_id')
+                    },
+                    key: {
+                        type: 'job-status'
+                    },
+                    handle: (message) => {
+                        if (message.jobState.job_state !== 'queued') {
+                            container.innerHTML = '';
+                            Runtime.make().bus().removeListener(queueListener);
+                            startNonQueued(arg);
+                        }
+                    }
+                });
+            }
+            else {
+                startNonQueued(arg);
+            }
+        }
+
+        function startNonQueued(arg) {
+            let childJobs = model.getItem('exec.jobState.child_jobs');
+            if ((childJobs && childJobs.length > 0) || model.getItem('user-settings.batchMode')) {
                 startBatch(arg);
-            }else{
+            }
+            else {
                 startSingle(arg);
             }
         }
+
         function startSingle(arg) {
             return Promise.try(function () {
-                container = arg.node.appendChild(document.createElement('div'));
-                ui = UI.make({
-                    node: container
-                });
-                container.innerHTML = layout();
+                container.innerHTML = singleLayout();
                 widgets.log = LogViewer.make();
                 widgets.jobState = JobStateViewer.make({
                     model: model

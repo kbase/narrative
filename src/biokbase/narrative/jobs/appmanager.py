@@ -186,7 +186,10 @@ class AppManager(object):
 
         # This is what calls the function in the back end - Module.method
         # This isn't the same as the app spec id.
-        job_meta = {'tag': batch_method_tag}
+        job_meta = {
+            'tag': batch_method_tag,
+            'batch_app': app_id
+        }
         if cell_id is not None:
             job_meta['cell_id'] = cell_id
         if run_id is not None:

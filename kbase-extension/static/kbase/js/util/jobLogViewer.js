@@ -444,7 +444,7 @@ define([
                     scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
                 }, scrollTime, function () {
                     currentSection = target.parent().attr('class');
-                });  
+                });
             }else{
                 fetchNewLogs(Number(model.getItem('currentLine')));
             }
@@ -463,10 +463,10 @@ define([
             } else {
                 var $panel = $(ui.getElements('panel')[0]),
                     target = $panel.children().first().children().first();
-                
+
                 scrollToLog($panel, target);
 
-            } 
+            }
         }
 
 
@@ -910,13 +910,13 @@ define([
             var $panel = $(ui.getElements('panel')[0])
                 .on('scroll', function () {
                     //at begining
-                    
+
                     var autoState = fsm.getCurrentState().state.auto;
                     var top = $(this).scrollTop();
                     //when not on autoplay then scrolling to top will fetch new logs
-                    if (!autoState &&  top === 0) {   
+                    if (!autoState &&  top === 0) {
                         var $panel = $(ui.getElements('panel')[0]),
-                            $currentSection = $panel.children(':first'), 
+                            $currentSection = $panel.children(':first'),
                             currentLine = Number($currentSection.attr('class'));
                         fetchNewLogs(currentLine);
                     }
@@ -957,7 +957,7 @@ define([
                             }
                         }
                         model.setItem('lastLine', lastLine);
-                        
+
                     }
                     if (looping) {
                         scheduleNextRequest();
@@ -966,7 +966,7 @@ define([
             });
             externalEventListeners.push(ev);
 
-            // An error may encountered during the job fetch on the back end. It is 
+            // An error may encountered during the job fetch on the back end. It is
             // reported as a job-comm-error, but translated by the jobs panel as a job-log-deleted
             // TODO: we may want to rethink this. It might be beneficial to emit this as the
             // original error, and let the widget sort it out? Or perhaps on the back end
@@ -1139,8 +1139,12 @@ define([
         function stop() {
             stopEventListeners();
             stopJobUpdates();
-            bus.stop();
-            fsm.stop();
+            if (bus) {
+                bus.stop();
+            }
+            if (fsm) {
+                fsm.stop();
+            }
         }
 
         // MAIN

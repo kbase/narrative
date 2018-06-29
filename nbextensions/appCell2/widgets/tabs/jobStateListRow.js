@@ -73,32 +73,27 @@ define([
         }, label);
     }
 
-    function updateRowStatus(ui, jobState, container, clickFunction) {
-        if(!jobState){
-            return;
-        }
-        var selector = '[data-element-job-id="' + jobState.job_id + '"]';
-        var row = container.querySelector(selector);
-        if(row === null){
-            row = document.createElement('tr');
-            row.setAttribute('data-element-job-id', jobState.job_id);
-            if(clickFunction){
-                row.onclick = () => {clickFunction(jobState.job_id)};
-            }
-            container.appendChild(row);
-        }
-        var jobStatus = jobState ? jobState.job_state : 'Determining Job State...';
-        row.innerHTML = th(jobState.job_id) + niceState(jobStatus);
-    }
-
     function factory() {
         var container, ui, listeners = [],
             jobState = null,
             runtime = Runtime.make(),
             listeningForJob = false,
             jobId,
-            parentJobId;
+            parentJobId,
+            clickFunction;
 
+        function updateRowStatus() {
+            var selector = '[data-element-job-id="' + jobState.job_id + '"]';
+            var row = container.querySelector(selector);
+            if (row === null) {
+                row = document.createElement('tr');
+                row.setAttribute('data-element-job-id', jobState.job_id);
+                row.onclick = () => { clickFunction(jobState.job_id); };
+                container.appendChild(row);
+            }
+            var jobStatus = jobState ? jobState.job_state : 'Determining job state...';
+            row.innerHTML = th(jobState.job_id) + niceState(jobStatus);
+        }
 
         function startJobUpdates() {
             if (listeningForJob) {
@@ -131,6 +126,7 @@ define([
                 message.jobState.child_jobs.forEach((childState) => {
                     if (childState.job_id === jobId) {
                         jobState = childState;
+                        updateRowStatus();
                     }
                 });
             }
@@ -203,10 +199,10 @@ define([
 
                 jobId = arg.jobId;
                 parentJobId = arg.parentJobId;
-                var clickFunction = arg.clickFunction;
-                listeners.push(runtime.bus().on('clock-tick', function() {
-                    updateRowStatus(ui, jobState, container, clickFunction);
-                }));
+                clickFunction = arg.clickFunction;
+                // listeners.push(runtime.bus().on('clock-tick', function() {
+                //     updateRowStatus(ui, jobState, container, clickFunction);
+                // }));
 
                 listenForJobStatus();
                 runtime.bus().emit('request-job-status', {

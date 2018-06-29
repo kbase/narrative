@@ -51,10 +51,9 @@ define([
                 arg.childJobs.forEach((job) => {
                     var jobId = job.job_id;
                     widgets[jobId] = JobStateListRow.make({
-                        model:model
+                        model: model
                     });
                 });
-                var clickFunction = arg.clickFunction;
                 return Promise.all([
                     Object.keys(widgets).forEach((jobId) => {
                         widgets[jobId].start({

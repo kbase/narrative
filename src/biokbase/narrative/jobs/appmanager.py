@@ -188,7 +188,8 @@ class AppManager(object):
         # This isn't the same as the app spec id.
         job_meta = {
             'tag': batch_method_tag,
-            'batch_app': app_id
+            'batch_app': app_id,
+            'batch_tag': tag
         }
         if cell_id is not None:
             job_meta['cell_id'] = cell_id
@@ -252,14 +253,15 @@ class AppManager(object):
             raise transform_job_exception(e)
 
         new_job = Job(job_id,
-                      batch_method,
+                      batch_app_id,
                       batch_params,
                       system_variable('user_id'),
                       tag=batch_method_tag,
                       app_version=batch_method_ver,
                       cell_id=cell_id,
                       run_id=run_id,
-                      token_id=agent_token['id'])
+                      token_id=agent_token['id'],
+                      meta=job_meta)
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',

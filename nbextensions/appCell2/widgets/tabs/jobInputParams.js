@@ -23,9 +23,11 @@ define([
         th = t('th');
 
     function updateRowStatus(ui, params, container) {
-        if (!params){
+        if (!params) {
             return;
         }
+
+
         Object.keys(params).forEach((key) => {
             var selector = '[data-element-job-id="' + key + '"]';
             var row = container.querySelector(selector);
@@ -63,7 +65,7 @@ define([
                     type: 'job-info'
                 },
                 handle: (message) => {
-                    updateRowStatus(ui, message.params, container);
+                    updateRowStatus(ui, message.jobInfo.job_params[0], container);
                 }
             });
         }

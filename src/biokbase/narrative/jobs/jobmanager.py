@@ -107,7 +107,8 @@ class JobManager(object):
                                          tag=job_meta.get('tag', 'release'),
                                          cell_id=job_meta.get('cell_id', None),
                                          run_id=job_meta.get('run_id', None),
-                                         token_id=job_meta.get('token_id', None))
+                                         token_id=job_meta.get('token_id', None),
+                                         meta=job_meta)
 
                     # Note that when jobs for this narrative are initially loaded,
                     # they are set to not be refreshed. Rather, if a client requests
@@ -198,7 +199,8 @@ class JobManager(object):
                                      tag=job_meta.get('tag', 'release'),
                                      cell_id=job_meta.get('cell_id', None),
                                      run_id=job_meta.get('run_id', None),
-                                     token_id=job_meta.get('token_id', None))
+                                     token_id=job_meta.get('token_id', None),
+                                     meta=job_meta)
 
                 # Note that when jobs for this narrative are initially loaded,
                 # they are set to not be refreshed. Rather, if a client requests
@@ -464,11 +466,17 @@ class JobManager(object):
         if parent_job_id not in self._running_jobs:
             raise ValueError('Parent job id {} not found, cannot validate child job {}.'.format(parent_job_id, child_job_id))
         if child_job_id not in self._running_jobs:
-            parent_state = self.get_job(parent_job_id).state()
+            parent_job = self.get_job(parent_job_id)
+            parent_state = parent_job.state()
             if child_job_id not in parent_state.get('sub_jobs', []):
                 raise ValueError('Child job id {} is not a child of parent job {}'.format(child_job_id, parent_job_id))
             else:
                 self._create_jobs([child_job_id])
+                # injects its app id and version
+                child_job = self.get_job(child_job_id)
+                child_job.app_id = parent_job.meta.get('batch_app')
+                child_job.tag = parent_job.meta.get('batch_tag', 'release')
+
 
     def _lookup_job_status(self, job_id, parent_job_id=None):
         """

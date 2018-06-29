@@ -1011,9 +1011,11 @@ define([
         }
 
         function stopEventListeners() {
-            externalEventListeners.forEach(function(ev) {
-                runtime.bus().removeListener(ev);
-            });
+            if (externalEventListeners) {
+                externalEventListeners.forEach(function(ev) {
+                    runtime.bus().removeListener(ev);
+                });
+            }
         }
 
         // LIFECYCLE API
@@ -1116,6 +1118,7 @@ define([
         }
 
         function start(arg) {
+            detach();  // if we're alive, remove ourselves before restarting
             var hostNode = arg.node;
             container = hostNode.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
@@ -1147,6 +1150,13 @@ define([
             }
         }
 
+        function detach() {
+            stop();
+            if (container) {
+                container.innerHTML = '';
+            }
+        }
+
         // MAIN
         model = Props.make({
             data: {
@@ -1167,7 +1177,8 @@ define([
         return Object.freeze({
             start: start,
             stop: stop,
-            bus: bus
+            bus: bus,
+            detach: detach
         });
     }
 

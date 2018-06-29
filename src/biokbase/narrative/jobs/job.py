@@ -27,7 +27,7 @@ class Job(object):
     _last_state = None
 
     def __init__(self, job_id, app_id, inputs, owner, tag='release', app_version=None,
-                 cell_id=None, run_id=None, token_id=None):
+                 cell_id=None, run_id=None, token_id=None, meta=dict()):
         """
         Initializes a new Job with a given id, app id, and app app_version.
         The app_id and app_version should both align with what's available in
@@ -42,10 +42,11 @@ class Job(object):
         self.inputs = inputs
         self.owner = owner
         self.token_id = token_id
+        self.meta = meta
 
     @classmethod
     def from_state(Job, job_id, job_info, owner, app_id, tag='release',
-                   cell_id=None, run_id=None, token_id=None):
+                   cell_id=None, run_id=None, token_id=None, meta=dict()):
         """
         Parameters:
         -----------
@@ -75,7 +76,8 @@ class Job(object):
                    app_version=job_info.get('service_ver', None),
                    cell_id=cell_id,
                    run_id=run_id,
-                   token_id=token_id)
+                   token_id=token_id,
+                   meta=meta)
 
     @classmethod
     def map_viewer_params(Job, job_state, job_inputs, app_id, app_tag):

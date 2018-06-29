@@ -175,6 +175,7 @@ define([
                             jobId: selectedJobId,
                             parentJobId: model.getItem('exec.jobState.job_id')
                         }),
+                        widgets.log.detach(),
                         widgets.log.start({
                             node: ui.getElement('log.body'),
                             jobId: selectedJobId,

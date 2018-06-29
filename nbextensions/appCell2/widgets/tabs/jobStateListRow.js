@@ -88,7 +88,10 @@ define([
             if (row === null) {
                 row = document.createElement('tr');
                 row.setAttribute('data-element-job-id', jobState.job_id);
-                row.onclick = () => { clickFunction(jobState.job_id); };
+                row.classList.add('job-info');
+                row.onclick = () => {
+                    clickFunction(row, jobState.job_id);
+                };
                 container.appendChild(row);
             }
             var jobStatus = jobState ? jobState.job_state : 'Determining job state...';

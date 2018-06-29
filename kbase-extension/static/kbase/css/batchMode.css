@@ -2,3 +2,11 @@
     padding: 5px 10px;
     overflow: auto;
 }
+
+.job-info {
+    cursor: pointer;
+}
+
+.job-info.job-selected {
+    background-color: #eee;
+}

@@ -60,7 +60,17 @@ define([
                             node: container.getElementsByTagName('tbody')[0],
                             jobId: jobId,
                             parentJobId: parentJobId,
-                            clickFunction: arg.clickFunction
+                            clickFunction: function(jobRow, jobId) {
+                                // clear all 'selected' from all rows.
+                                console.log(container.getElementsByTagName('tr'));
+                                Array.from(container.getElementsByTagName('tr')).forEach((elem) => {
+                                    console.log(elem);
+                                    elem.classList.remove('job-selected');
+                                });
+                                // // add 'selected' to the clicked one.
+                                jobRow.classList.add('job-selected');
+                                arg.clickFunction(jobId);
+                            }
                         });
                     })
                 ]);

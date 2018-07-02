@@ -303,7 +303,7 @@ define([
                         }
                     });
                     $('td:eq(4)', nRow).find('select').select2({
-                        placeholder: 'Select a format'
+                        placeholder: 'Select format'
                     });
                     $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', function(e) {
                         var importType = $(e.currentTarget).prevAll('#import-type').val();

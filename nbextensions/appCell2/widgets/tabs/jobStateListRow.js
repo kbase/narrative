@@ -75,27 +75,29 @@ define([
 
     function factory() {
         var container, ui, listeners = [],
-            jobState = null,
             runtime = Runtime.make(),
             listeningForJob = false,
+            jobNumber,
             jobId,
             parentJobId,
             clickFunction;
 
-        function updateRowStatus() {
-            var selector = '[data-element-job-id="' + jobState.job_id + '"]';
+        function updateRowStatus(jobStatus) {
+            var selector = '[data-element-job-id="' + jobNumber + '"]';
             var row = container.querySelector(selector);
             if (row === null) {
                 row = document.createElement('tr');
-                row.setAttribute('data-element-job-id', jobState.job_id);
+                row.setAttribute('data-element-job-id', jobNumber);
                 row.classList.add('job-info');
                 row.onclick = () => {
-                    clickFunction(row, jobState.job_id);
+                    if (jobId) {
+                        clickFunction(row, jobId);
+                    }
                 };
                 container.appendChild(row);
             }
-            var jobStatus = jobState ? jobState.job_state : 'Determining job state...';
-            row.innerHTML = th(jobState.job_id) + niceState(jobStatus);
+            jobStatus = jobStatus ? jobStatus : 'Job still pending.';
+            row.innerHTML = th('Job ' + jobNumber) + niceState(jobStatus);
         }
 
         function startJobUpdates() {
@@ -119,45 +121,48 @@ define([
 
         function handleJobDoesNotExistUpdate(message) {
             stopJobUpdates();
-            jobState = {
-                job_state: 'does_not_exist'
-            };
         }
 
         function handleJobStatusUpdate(message) {
-            if ('child_jobs' in message.jobState) {
-                message.jobState.child_jobs.forEach((childState) => {
-                    if (childState.job_id === jobId) {
-                        jobState = childState;
-                        updateRowStatus();
-                    }
-                });
+            // get the actual job state (whole job, incl parent info)
+            var jobState = message.jobState;
+            // jobNumber is the index on child_jobs for this widget.
+            // if child_jobs doesn't have that index, then there's no job yet.
+            // so... just not started yet.
+            if (!jobState.child_jobs || jobState.child_jobs.length < jobNumber) {
+                updateRowStatus();
             }
-            // jobState = message.jobState;
-            switch (jobState.job_state) {
-            case 'queued':
-            case 'in-progress':
-                startJobUpdates();
-                break;
-            case 'completed':
-                stopJobUpdates();
-                break;
-            case 'error':
-            case 'suspend':
-            case 'canceled':
-                stopJobUpdates();
-                break;
-            default:
-                stopJobUpdates();
-                console.error('Unknown job status', jobState.job_state, message);
-                throw new Error('Unknown job status ' + jobState.job_state);
+            else {
+                var state = jobState.child_jobs[jobNumber];
+                if (!jobId) {
+                    jobId = state.job_id;
+                }
+                switch (state.job_state) {
+                    case 'queued':
+                    case 'in-progress':
+                        startJobUpdates();
+                        break;
+                    case 'completed':
+                        stopJobUpdates();
+                        break;
+                    case 'error':
+                    case 'suspend':
+                    case 'canceled':
+                        stopJobUpdates();
+                        break;
+                    default:
+                        stopJobUpdates();
+                        console.error('Unknown job status', jobState.job_state, message);
+                        throw new Error('Unknown job status ' + jobState.job_state);
+                    }
+                updateRowStatus(state.job_state);
             }
         }
 
         function listenForJobStatus() {
             var ev = runtime.bus().listen({
                 channel: {
-                    jobId: parentJobId //jobId
+                    jobId: parentJobId
                 },
                 key: {
                     type: 'job-status'
@@ -168,7 +173,7 @@ define([
 
             ev = runtime.bus().listen({
                 channel: {
-                    jobId: parentJobId //jobId
+                    jobId: parentJobId
                 },
                 key: {
                     type: 'job-canceled'
@@ -181,7 +186,7 @@ define([
 
             ev = runtime.bus().listen({
                 channel: {
-                    jobId: parentJobId //jobId
+                    jobId: parentJobId
                 },
                 key: {
                     type: 'job-does-not-exist'
@@ -200,18 +205,17 @@ define([
                 container = arg.node;
                 ui = UI.make({ node: container });
 
-                jobId = arg.jobId;
-                parentJobId = arg.parentJobId;
-                clickFunction = arg.clickFunction;
-                // listeners.push(runtime.bus().on('clock-tick', function() {
-                //     updateRowStatus(ui, jobState, container, clickFunction);
-                // }));
+                jobId = arg.jobId;                  // id of child job
+                jobNumber = arg.jobNumber;          // index of child job
+                parentJobId = arg.parentJobId;      // as it says...
+                clickFunction = arg.clickFunction;  // called on click (after some ui junk)
 
-                listenForJobStatus();
-                runtime.bus().emit('request-job-status', {
-                    jobId: parentJobId
-                });
-
+                if (jobId) {
+                    listenForJobStatus();
+                    runtime.bus().emit('request-job-status', {
+                        jobId: jobId
+                    });
+                }
                 listeningForJob = true;
 
             });
@@ -220,13 +224,21 @@ define([
         function stop() {
             return Promise.try(function() {
                 stopListeningForJobStatus();
-                // runtime.bus().removeListeners(listeners);
+            });
+        }
+
+        function setJobId(newId) {
+            stop()
+            .then(() => {
+                jobId = newId;
+                listenForJobStatus();
             });
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
+            setJobId: setJobId
         };
     }
 

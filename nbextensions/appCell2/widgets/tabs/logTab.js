@@ -46,7 +46,7 @@ define([
         var selectedJobId = config.jobId;
 
         function batchLayout() {
-            var list = div({ class: 'col-md-4 batch-mode-col', dataElement: 'kb-job-list-wrapper'}, [
+            var list = div({ class: 'col-md-4 batch-mode-col', dataElement: 'kb-job-list-wrapper' }, [
                 ui.buildPanel({
                     title: 'Sub Jobs',
                     name: 'subjobs',
@@ -192,7 +192,8 @@ define([
                         node: ui.getElement('subjobs.body'),
                         childJobs: model.getItem('exec.jobState.child_jobs'),
                         clickFunction: startDetails,
-                        parentJobId: model.getItem('exec.jobState.job_id')
+                        parentJobId: model.getItem('exec.jobState.job_id'),
+                        batchSize: model.getItem('exec.jobState.batch_size')
                     })
                 ]);
             });

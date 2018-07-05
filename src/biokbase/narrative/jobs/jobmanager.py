@@ -410,6 +410,8 @@ class JobManager(object):
             state['job_state'] = 'canceling'
 
         state.update({'child_jobs': self._child_job_states(state.get('sub_jobs', []))})
+        if 'batch_size' in job.meta:
+            state.update({'batch_size': job.meta['batch_size']})
         return {'state': state,
                 'spec': app_spec,
                 'widget_info': widget_info,

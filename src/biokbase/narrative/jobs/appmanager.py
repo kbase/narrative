@@ -189,7 +189,8 @@ class AppManager(object):
         job_meta = {
             'tag': batch_method_tag,
             'batch_app': app_id,
-            'batch_tag': tag
+            'batch_tag': tag,
+            'batch_size': len(params)
         }
         if cell_id is not None:
             job_meta['cell_id'] = cell_id

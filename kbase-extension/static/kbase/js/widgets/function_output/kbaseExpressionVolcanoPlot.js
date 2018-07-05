@@ -449,7 +449,9 @@ define([
             }
           }
 
-          d.log2fc_f = d.log2fc_f.toFixed(2);
+          if (!!d.log2fc_f) {
+            d.log2fc_f = d.log2fc_f.toFixed(2);
+          }
         });
 
         data.forEach( function(d) {

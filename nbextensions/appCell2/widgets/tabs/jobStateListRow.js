@@ -97,7 +97,11 @@ define([
                 container.appendChild(row);
             }
             jobStatus = jobStatus ? jobStatus : 'Job still pending.';
-            row.innerHTML = th('Job ' + jobNumber) + niceState(jobStatus);
+            var jobIdDiv = '';
+            if (jobId) {
+                jobIdDiv = div({'style': 'font-size:8pt; color:gray'}, [jobId]);
+            }
+            row.innerHTML = th({}, [div('Job ' + jobNumber), jobIdDiv]) + niceState(jobStatus);
         }
 
         function startJobUpdates() {
@@ -210,12 +214,10 @@ define([
                 parentJobId = arg.parentJobId;      // as it says...
                 clickFunction = arg.clickFunction;  // called on click (after some ui junk)
 
-                if (jobId) {
-                    listenForJobStatus();
-                    runtime.bus().emit('request-job-status', {
-                        jobId: jobId
-                    });
-                }
+                listenForJobStatus();
+                runtime.bus().emit('request-job-status', {
+                    jobId: parentJobId
+                });
                 listeningForJob = true;
 
             });

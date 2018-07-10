@@ -13,12 +13,9 @@ define([
 
     var t = html.tag,
         div = t('div'),
-        p = t('p'),
-        span = t('span'),
-        table = t('table'),
-        tr = t('tr'),
         td = t('td'),
-        th = t('th');
+        th = t('th'),
+        span = t('span');
 
     function niceState(jobState) {
         var label, icon, color;
@@ -56,7 +53,7 @@ define([
         case 'does_not_exist':
             label = 'does not exist';
             icon = 'fa fa-question';
-            color: 'orange';
+            color = 'orange';
             break;
         default:
             label = jobState;
@@ -69,8 +66,12 @@ define([
                 color: color,
                 fontWeight: 'bold'
             },
-            class: icon
-        }, label);
+        }, [
+            span({
+                class: icon
+            }),
+            ' ' + label
+        ]);
     }
 
     function factory() {
@@ -83,25 +84,12 @@ define([
             clickFunction;
 
         function updateRowStatus(jobStatus) {
-            var selector = '[data-element-job-id="' + jobNumber + '"]';
-            var row = container.querySelector(selector);
-            if (row === null) {
-                row = document.createElement('tr');
-                row.setAttribute('data-element-job-id', jobNumber);
-                row.classList.add('job-info');
-                row.onclick = () => {
-                    if (jobId) {
-                        clickFunction(row, jobId);
-                    }
-                };
-                container.appendChild(row);
-            }
             jobStatus = jobStatus ? jobStatus : 'Job still pending.';
             var jobIdDiv = '';
             if (jobId) {
                 jobIdDiv = div({'style': 'font-size:8pt; color:gray'}, [jobId]);
             }
-            row.innerHTML = th({}, [div('Job ' + jobNumber), jobIdDiv]) + niceState(jobStatus);
+            container.innerHTML = th({}, [div('Job ' + (jobNumber+1)), jobIdDiv]) + niceState(jobStatus);
         }
 
         function startJobUpdates() {
@@ -121,6 +109,7 @@ define([
                 });
                 listeningForJob = false;
             }
+            stopListeningForJobStatus();
         }
 
         function handleJobDoesNotExistUpdate(message) {
@@ -206,7 +195,12 @@ define([
 
         function start(arg) {
             return Promise.try(function() {
-                container = arg.node;
+                container = arg.node;               // this is the row (tr) that this renders
+                container.onclick = () => {
+                    if (jobId) {
+                        clickFunction(container, jobId);
+                    }
+                };
                 ui = UI.make({ node: container });
 
                 jobId = arg.jobId;                  // id of child job

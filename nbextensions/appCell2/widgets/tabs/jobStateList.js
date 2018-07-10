@@ -43,6 +43,15 @@ define([
             parentListener,
             allocatedJobWidgets = 0;
 
+        function createTableRow(id) {
+            var table = container.getElementsByTagName('tbody')[0];
+            var newRow = document.createElement('tr');
+            newRow.setAttribute('data-element-job-id', id);
+            newRow.classList.add('job-info');
+            table.appendChild(newRow);
+            return newRow;
+        }
+
         function start(arg) {
             return Promise.try(function() {
                 container = arg.node;
@@ -114,7 +123,9 @@ define([
         /**
          * Creates a job state widget and puts it in the widgets object, keyed by the index.
          * This assumes that all child job states will always be returned in the same order
-         * on each state lookup, with new ones added to the end of the list.
+         * on each state lookup, with new ones added to the end of the list. This also adds
+         * to the bottom of the job state list table.
+         *
          * Each job state widget knows which child job index its in, so it can look up its
          * state as well.
          * @param {int} jobNumber
@@ -125,7 +136,7 @@ define([
                 model: model
             });
             widgets[jobNumber].start({
-                node: container.getElementsByTagName('tbody')[0],
+                node: createTableRow(jobNumber), // container.getElementsByTagName('tbody')[0],
                 jobNumber: jobNumber,
                 jobId: jobId,
                 parentJobId: parentJobId,

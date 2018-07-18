@@ -1,6 +1,6 @@
-FROM kbase/kb_python:latest 
+FROM kbase/kb_python:latest
 
-ENV JUPYTER_VERSION 5.4.1
+ENV JUPYTER_VERSION 5.6.0
 ENV IPYWIDGETS_VERSION 7.1.2
 
 RUN mkdir -p /kb/installers
@@ -16,7 +16,7 @@ RUN conda update -n base conda && \
     conda install --file /root/conda/biokbase-requirements.txt && \
     conda install -c r r-base && \
     conda install -c conda-forge --file /root/conda/r.conda-forge && \
-    conda install -c r --file /root/conda/r.r 
+    conda install -c r --file /root/conda/r.r
 
 # Install misc R packages not available on Coda
 ADD ./r-packages-postconda.R /root/r-packages.R
@@ -27,7 +27,7 @@ RUN conda install tornado=4.5.3 && \
     conda install -c anaconda notebook=${JUPYTER_VERSION} && \
     conda update six && \
     conda install ipywidgets==${IPYWIDGETS_VERSION} && \
-    jupyter nbextension enable --py widgetsnbextension 
+    jupyter nbextension enable --py widgetsnbextension
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
 # the end

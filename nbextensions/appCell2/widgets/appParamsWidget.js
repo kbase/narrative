@@ -291,40 +291,15 @@ define([
             events.attachEvents();
         }
 
-        function buildBatchToggleButton(batchMode, events) {
-            var classes = [];
-            if (batchMode) {
-                classes.push('batch-active');
-            }
-            var btn = ui.buildButton({
-                dataElement: 'batch-toggle',
-                style: { width: '80px' },
-                label: 'Batch',
-                name: 'batch-toggle',
-                events: events,
-                type: 'default',
-                classes: classes,
-                hidden: false,
-                event: {
-                    type: 'batch-mode-toggle'
-                }
-            });
-            bus.on('batch-mode-toggle', function(message) {
-                paramsBus.emit('toggle-batch-mode');
-                ui.getButton('batch-toggle').classList.toggle('batch-active');
-            });
-            return div({
-                class: 'btn-group',
-                style: { padding: '3px' },
-            }, btn);
+        function renderBatchModeMessage() {
+            return div('batch mode!');
         }
 
         function renderLayout(batchMode) {
             var events = Events.make(),
-                batchToggleBtn = Config.get('features').batchAppMode ? buildBatchToggleButton(batchMode, events) : null,
-                formContent = batchToggleBtn ? [batchToggleBtn] : [];
+                formContent = [];
             if (batchMode) {
-                formContent.push(div('batch mode!'));
+                formContent.push(renderBatchModeMessage());
             }
             else {
                 formContent = formContent.concat([

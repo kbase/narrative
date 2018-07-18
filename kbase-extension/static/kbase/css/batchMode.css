@@ -1,4 +1,4 @@
-.batch-mode-col{
+.batch-mode-col {
     padding: 5px 10px;
     overflow: auto;
 }
@@ -9,4 +9,14 @@
 
 .job-info.job-selected {
     background-color: #eee;
+}
+
+.batch-mode-list {
+    max-height: 1000px;
+    overflow: auto;
+}
+
+.batch-input-panel {
+    max-height: 300px;
+    overflow: auto;
 }

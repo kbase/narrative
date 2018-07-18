@@ -264,6 +264,28 @@ define([
                 });
             }
 
+            if (cell.toggleBatch) {
+                menuItems.push({
+                    name: 'batch',
+                    label: 'Toggle Batch',
+                    icon: {
+                        type: 'table',
+                        color: 'black'
+                    },
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: () => {
+                            cell.toggleBatch();
+                            // var currentBatch = cell.metadata.kbase.appCell['user-settings'].batchMode;
+                            // if (currentBatch === undefined || currentBatch === null) {
+                            //     currentBatch = false;
+                            // }
+                            // cell.metadata.kbase.appCell['user-settings'].batchMode = !currentBatch;
+                        }
+                    })
+                });
+            }
+
             if (!readOnly) {
                 if (menuItems.length > 0) {
                     menuItems.push({

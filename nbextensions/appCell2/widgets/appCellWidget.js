@@ -795,7 +795,13 @@ define([
             // btn.classList.toggle('batch-active');
             var curBatchState = model.getItem('user-settings.batchMode'),
                 newBatchMode = !curBatchState,
-                currentTabId = selectedTabId();
+                currentTabId = selectedTabId(),
+                runState = fsm.getCurrentState();
+            if (runState.state.mode !== 'editing') {
+                // TODO: should make a popup with warning, continuing = resetting, etc.
+                // for now, just ignore.
+                return;
+            }
             model.setItem('user-settings.batchMode', newBatchMode);
             bus.emit('set-batch-mode', newBatchMode);
             toggleTab('configure')
@@ -2372,6 +2378,10 @@ define([
 
                     busEventManager.add(parentBus.on('reset-to-defaults', function() {
                         bus.emit('reset-to-defaults');
+                    }));
+
+                    busEventManager.add(parentBus.on('toggle-batch-mode', () => {
+                        toggleBatchMode();
                     }));
 
                     // TODO: only turn this on when we need it!

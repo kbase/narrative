@@ -27,11 +27,10 @@ define([
             return;
         }
 
-
         Object.keys(params).forEach((key) => {
             var selector = '[data-element-job-id="' + key + '"]';
             var row = container.querySelector(selector);
-            if(row === null){
+            if (row === null) {
                 row = document.createElement('tr');
                 row.setAttribute('data-element-job-id', key);
                 container.getElementsByTagName('tbody')[0].appendChild(row);
@@ -41,7 +40,7 @@ define([
     }
 
     function renderTable() {
-        return table({class: 'table'},[
+        return table({class: 'table'}, [
             tr([
                 th('Input'),
                 th('Value')
@@ -76,6 +75,7 @@ define([
                     detach();
                 }
                 container = arg.node;
+                container.classList.add('batch-input-panel')
                 jobId = arg.jobId;
                 ui = UI.make({ node: container });
                 container.innerHTML = renderTable();

@@ -55,6 +55,7 @@ define([
         function start(arg) {
             return Promise.try(function() {
                 container = arg.node;
+                container.classList.add('batch-mode-list');
                 ui = UI.make({ node: container });
                 container.innerHTML = renderTable();
                 parentJobId = arg.parentJobId;
@@ -73,24 +74,6 @@ define([
                         }
                         createJobStateWidget(i, jobId, arg.clickFunction);  // can make null ones. these need to be updated.
                     }
-                    // Object.keys(widgets).forEach((jobId) => {
-                    //     widgets[jobId].start({
-                    //         node: container.getElementsByTagName('tbody')[0],
-                    //         jobId: jobId,
-                    //         parentJobId: parentJobId,
-                    //         clickFunction: function(jobRow, jobId) {
-                    //             // clear all 'selected' from all rows.
-                    //             console.log(container.getElementsByTagName('tr'));
-                    //             Array.from(container.getElementsByTagName('tr')).forEach((elem) => {
-                    //                 console.log(elem);
-                    //                 elem.classList.remove('job-selected');
-                    //             });
-                    //             // // add 'selected' to the clicked one.
-                    //             jobRow.classList.add('job-selected');
-                    //             arg.clickFunction(jobId);
-                    //         }
-                    //     });
-                    // })
                 })
                 .then(() => { startParentListener() });
             });

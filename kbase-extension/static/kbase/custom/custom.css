@@ -377,3 +377,25 @@ p {
 .prompt {
     display: none !important;
 }
+
+/*
+ * Jupyter 5.6.0 introduced a "run this cell" button that appears on mouseover.
+ * Cool though this is, it's a problem on app cells.
+ * This hunk of CSS should remove it until we can better work it in to our design.
+ */
+div.code_cell:hover .run_this_cell {
+    visibility: hidden !important;
+}
+
+div.code_cell:hover div.input_prompt.run_this_cell {
+    visibility: hidden !important;
+}
+
+div.code_cell div.input_prompt {
+    min-width: 0;
+}
+
+.run_this_cell {
+    padding: 0 !important;
+    width: 0 !important;
+}

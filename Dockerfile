@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM kbase/narrbase:5.0dockerize
+FROM kbase/narrbase:5.1dockerize
 
 # These ARGs values are passed in via the docker build command
 ARG BUILD_DATE

@@ -11,7 +11,6 @@ jsonschema
 markdown
 networkx
 nose
-paramiko=1.12.2
 pexpect
 pip
 plotly

@@ -8,9 +8,6 @@ services:
 addons:
   firefox: "latest"
   chrome: stable
-  apt:
-    packages:
-      - oracle-java8-installer
 env:
   global:
     - TRAVIS_NODE_VERSION="6.6.0"
@@ -28,7 +25,7 @@ branches:
     - develop
     - master
     - travis-firefox
-    - dockerize
+    - staging
 
 before_install:
   - pip install virtualenv coveralls

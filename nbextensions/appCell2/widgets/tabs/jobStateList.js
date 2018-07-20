@@ -60,19 +60,21 @@ define([
                 container.innerHTML = renderTable();
                 parentJobId = arg.parentJobId;
 
-                arg.childJobs.forEach((job) => {
-                    var jobId = job.job_id;
-                    widgets[jobId] = JobStateListRow.make({
-                        model: model
-                    });
-                });
+                // arg.childJobs.forEach((job, idx) => {
+                //     var jobId = job.job_id;
+                //     widgets[jobId] = JobStateListRow.make({
+                //         model: model
+                //     });
+                // });
                 return Promise.try(() => {
                     for (var i=0; i<arg.batchSize; i++) {
-                        var jobId = null;
+                        var jobId = null,
+                            initialState = null;
                         if (i < arg.childJobs.length) {
                             jobId = arg.childJobs[i].job_id;
+                            initialState = arg.childJobs[i].job_state;
                         }
-                        createJobStateWidget(i, jobId, arg.clickFunction);  // can make null ones. these need to be updated.
+                        createJobStateWidget(i, jobId, initialState, arg.clickFunction);  // can make null ones. these need to be updated.
                     }
                 })
                 .then(() => { startParentListener() });
@@ -91,15 +93,22 @@ define([
             });
         }
 
+        /**
+         * Pass the job state to all row widgets, if it exists.
+         * @param {Object} message
+         */
         function handleJobStatusUpdate(message) {
             if (message.jobState.child_jobs) {
-                var numChildren = message.jobState.child_jobs.length;
-                var diffChildren = numChildren - widgets.length;
-                if (diffChildren > 0) {
-                    for (var i = widgets.length; i < widgets.length + numChildren; i++) {
-                        createJobStateWidget(i, message.jobState.child_jobs[i].job_id);
-                    }
-                }
+                // var numChildren = message.jobState.child_jobs.length;
+                // var diffChildren = numChildren - widgets.length;
+                // if (diffChildren > 0) {
+                //     for (var i = widgets.length; i < widgets.length + numChildren; i++) {
+                //         createJobStateWidget(i, message.jobState.child_jobs[i].job_id);
+                //     }
+                // }
+                message.jobState.child_jobs.forEach((state, idx) => {
+                    widgets[idx].updateState(state);
+                });
             }
         }
 
@@ -109,20 +118,20 @@ define([
          * on each state lookup, with new ones added to the end of the list. This also adds
          * to the bottom of the job state list table.
          *
-         * Each job state widget knows which child job index its in, so it can look up its
+         * Each job state widget knows which child job index it's in, so it can look up its
          * state as well.
          * @param {int} jobNumber
          * @param {string} jobId
          */
-        function createJobStateWidget(jobNumber, jobId, clickFunction) {
+        function createJobStateWidget(jobNumber, jobId, initialState, clickFunction) {
             widgets[jobNumber] = JobStateListRow.make({
                 model: model
             });
             widgets[jobNumber].start({
-                node: createTableRow(jobNumber), // container.getElementsByTagName('tbody')[0],
+                node: createTableRow(jobNumber),
                 jobNumber: jobNumber,
                 jobId: jobId,
-                parentJobId: parentJobId,
+                initialState: initialState,
                 clickFunction: function(jobRow, jobId) {
                     Array.from(container.getElementsByTagName('tr')).forEach((elem) => {
                         elem.classList.remove('job-selected');

@@ -75,7 +75,7 @@ define([
                     detach();
                 }
                 container = arg.node;
-                container.classList.add('batch-input-panel')
+                container.classList.add('batch-input-panel');
                 jobId = arg.jobId;
                 ui = UI.make({ node: container });
                 container.innerHTML = renderTable();

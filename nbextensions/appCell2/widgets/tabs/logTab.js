@@ -138,12 +138,12 @@ define([
             ]);
         }
 
-        function getSelectedJobId () {
+        function getSelectedJobId() {
             return config.clickedId;
         }
 
-        function startBatch(arg){
-            return Promise.try(function () {
+        function startBatch(arg) {
+            return Promise.try(function() {
                 container.innerHTML = batchLayout();
 
                 //display widgets

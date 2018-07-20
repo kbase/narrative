@@ -40,7 +40,8 @@ define([
     var t = html.tag,
         form = t('form'),
         span = t('span'),
-        div = t('div');
+        div = t('div'),
+        b = t('b');
 
     function factory(config) {
         var runtime = Runtime.make(),
@@ -292,7 +293,20 @@ define([
         }
 
         function renderBatchModeMessage() {
-            return div('batch mode!');
+            return ui.buildPanel({
+                title: span('Batch Mode'),
+                name: 'batch-mode-doc',
+                body: div({
+                    style: 'margin-left: 3ex'
+                }, [
+                    div('This App is set to Batch mode. To configure this app, you\'ll need to set the list of parameters manually.'),
+                    div('The easiest way to do this is to configure a single run app, toggle into Batch mode, then use the "Show code" menu option to review currently set inputs for this app.'),
+                    div('Then, just add another parameter dictionary to the batch_params list for each App run you want to do.<br>'),
+                    div('Once your batch is configured, press the "Run" button as usual.'),
+                    div({style: 'margin-top: 1ex'}, ['Tutorials, documentation, and API details to help you craft a set of App parameters can be found <a href="//kbase.us" target="api_doc">here</a>.'])
+                ]),
+                classes: ['kb-panel-light']
+            });
         }
 
         function renderLayout(batchMode) {

@@ -329,6 +329,16 @@ define([
                         }
                     });
 
+                    bus.respond({
+                        key: {
+                            type: 'get-batch-mode'
+                        },
+                        handle: function() {
+                            var canDoBatch = Config.get('features').batchAppMode;
+                            return canDoBatch && (model.getItem('user-settings.batchMode') || false);
+                        }
+                    });
+
                     bus.on('parameter-changed', function(message) {
                         // TODO: should never get these in the following states....
 

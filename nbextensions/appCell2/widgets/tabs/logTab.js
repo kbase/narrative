@@ -47,13 +47,6 @@ define([
 
         function batchLayout() {
             var list = div({ class: 'col-md-4 batch-mode-col', dataElement: 'kb-job-list-wrapper' }, [
-                // ui.buildPanel({
-                //     title: 'Parent Job',
-                //     name: 'parentjob',
-                //     classes: [
-                //         'kb-panel-light'
-                //     ]
-                // }),
                 ui.buildPanel({
                     title: 'Job Batch',
                     name: 'subjobs',
@@ -183,11 +176,11 @@ define([
                             parentJobId: model.getItem('exec.jobState.job_id'),
                             isParentJob: isParentJob
                         }),
-                        // widgets.log.start({
-                        //     node: ui.getElement('log.body'),
-                        //     jobId: selectedJobId,
-                        //     parentJobId: model.getItem('exec.jobState.job_id')
-                        // }),
+                        widgets.log.start({
+                            node: ui.getElement('log.body'),
+                            jobId: selectedJobId,
+                            parentJobId: model.getItem('exec.jobState.job_id')
+                        }),
                         widgets.jobState.start({
                             node: ui.getElement('jobState.body'),
                             jobId: selectedJobId,

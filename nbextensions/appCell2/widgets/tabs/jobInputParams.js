@@ -44,7 +44,12 @@ define([
                 return;
             }
             if (isParentJob) {
-                container.innerHTML = "I'm a parent job. You don't want to see that. Click one of the others.";
+                if (params.batch_params && params.batch_params.length) {
+                    container.innerHTML = 'This batch job has ' + params.batch_params.length + ' child jobs. Please click one of those on the left for details';
+                }
+                else {
+                    container.innerHTML = 'Please click one of the child jobs for details.';
+                }
             }
             else {
                 Object.keys(params).forEach((key) => {

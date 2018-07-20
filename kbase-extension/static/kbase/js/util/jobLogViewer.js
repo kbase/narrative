@@ -344,7 +344,8 @@ define([
             loopFrequency = 5000,
             looping = false,
             stopped = false,
-            listeningForJob = false;
+            listeningForJob = false,
+            requestLoop = null;
 
         // VIEW ACTIONS
 
@@ -352,7 +353,7 @@ define([
             if (!looping) {
                 return;
             }
-            window.setTimeout(function() {
+            requestLoop = window.setTimeout(function() {
                 if (!looping) {
                     return;
                 }
@@ -1142,12 +1143,17 @@ define([
         function stop() {
             stopEventListeners();
             stopJobUpdates();
+            stopAutoFetch();
+            if (requestLoop) {
+                clearTimeout(requestLoop);
+            }
             if (bus) {
                 bus.stop();
             }
             if (fsm) {
                 fsm.stop();
             }
+            stopped = false;
         }
 
         function detach() {

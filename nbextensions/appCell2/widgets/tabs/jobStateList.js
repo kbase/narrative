@@ -22,15 +22,13 @@ define([
         table = t('table'),
         tr = t('tr'),
         td = t('td'),
-        th = t('th');
+        th = t('th'),
+        tbody = t('tbody');
 
 
     function renderTable() {
         return table({class: 'table'}, [
-            tr([
-                th('Job Id'),
-                th('Status')
-            ])
+            tbody()
         ]);
     }
 
@@ -40,8 +38,7 @@ define([
             widgets = {},
             model = config.model,
             parentJobId,
-            parentListener,
-            allocatedJobWidgets = 0;
+            parentListener;
 
         function createTableRow(id) {
             var table = container.getElementsByTagName('tbody')[0];
@@ -60,13 +57,10 @@ define([
                 container.innerHTML = renderTable();
                 parentJobId = arg.parentJobId;
 
-                // arg.childJobs.forEach((job, idx) => {
-                //     var jobId = job.job_id;
-                //     widgets[jobId] = JobStateListRow.make({
-                //         model: model
-                //     });
-                // });
                 return Promise.try(() => {
+                    createJobStateWidget('parent', parentJobId, model.getItem('exec.jobState.job_state'), arg.clickFunction, true);
+                    container.getElementsByTagName('tr')[0].classList.add('job-selected'); // start with the parent selected
+
                     for (var i=0; i<arg.batchSize; i++) {
                         var jobId = null,
                             initialState = null;
@@ -99,13 +93,6 @@ define([
          */
         function handleJobStatusUpdate(message) {
             if (message.jobState.child_jobs) {
-                // var numChildren = message.jobState.child_jobs.length;
-                // var diffChildren = numChildren - widgets.length;
-                // if (diffChildren > 0) {
-                //     for (var i = widgets.length; i < widgets.length + numChildren; i++) {
-                //         createJobStateWidget(i, message.jobState.child_jobs[i].job_id);
-                //     }
-                // }
                 message.jobState.child_jobs.forEach((state, idx) => {
                     widgets[idx].updateState(state);
                 });
@@ -123,22 +110,23 @@ define([
          * @param {int} jobNumber
          * @param {string} jobId
          */
-        function createJobStateWidget(jobNumber, jobId, initialState, clickFunction) {
+        function createJobStateWidget(jobNumber, jobId, initialState, clickFunction, isParentJob) {
             widgets[jobNumber] = JobStateListRow.make({
                 model: model
             });
             widgets[jobNumber].start({
                 node: createTableRow(jobNumber),
-                jobNumber: jobNumber,
+                name: isParentJob ? 'Parent Job' : 'Child Job ' + (jobNumber+1),
                 jobId: jobId,
                 initialState: initialState,
-                clickFunction: function(jobRow, jobId) {
+                isParentJob: isParentJob ? true : false,
+                clickFunction: function(jobRow, jobId, isParentJob) {
                     Array.from(container.getElementsByTagName('tr')).forEach((elem) => {
                         elem.classList.remove('job-selected');
                     });
                     if (jobId) {
                         jobRow.classList.add('job-selected');
-                        clickFunction(jobId);
+                        clickFunction(jobId, isParentJob);
                     }
                 }
             });

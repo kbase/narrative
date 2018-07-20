@@ -75,9 +75,10 @@ define([
     function factory() {
         var container,
             ui,
-            jobNumber,
+            name,
             jobId,
-            clickFunction;
+            clickFunction,
+            isParentJob;
 
         function updateRowStatus(jobStatus) {
             jobStatus = jobStatus ? jobStatus : 'Job still pending.';
@@ -85,27 +86,24 @@ define([
             if (jobId) {
                 jobIdDiv = div({'style': 'font-size:8pt; color:gray'}, [jobId]);
             }
-            container.innerHTML = th({}, [div('Job ' + (jobNumber+1)), jobIdDiv]) + niceState(jobStatus);
+            container.innerHTML = th({}, [div(isParentJob ? name.toUpperCase() : name), jobIdDiv]) + niceState(jobStatus);
         }
-
 
         function start(arg) {
             return Promise.try(function() {
                 container = arg.node;               // this is the row (tr) that this renders
                 container.onclick = () => {
                     if (jobId) {
-                        clickFunction(container, jobId);
+                        clickFunction(container, jobId, isParentJob);
                     }
                 };
                 ui = UI.make({ node: container });
 
                 jobId = arg.jobId;                  // id of child job
-                jobNumber = arg.jobNumber;          // index of child job
-                let initialState = arg.initialState;
+                name = arg.name;
+                isParentJob = arg.isParentJob;
                 clickFunction = arg.clickFunction;  // called on click (after some ui junk)
-                updateRowStatus(initialState);
-
-
+                updateRowStatus(arg.initialState);
             });
         }
 

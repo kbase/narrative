@@ -22,23 +22,6 @@ define([
         td = t('td'),
         th = t('th');
 
-    function updateRowStatus(ui, params, container) {
-        if (!params) {
-            return;
-        }
-
-        Object.keys(params).forEach((key) => {
-            var selector = '[data-element-job-id="' + key + '"]';
-            var row = container.querySelector(selector);
-            if (row === null) {
-                row = document.createElement('tr');
-                row.setAttribute('data-element-job-id', key);
-                container.getElementsByTagName('tbody')[0].appendChild(row);
-            }
-            row.innerHTML = td(key) + td(params[key]);
-        })
-    }
-
     function renderTable() {
         return table({class: 'table'}, [
             tr([
@@ -53,7 +36,29 @@ define([
             params,
             paramsListener = null,
             jobId,
-            runtime = Runtime.make();
+            runtime = Runtime.make(),
+            isParentJob;
+
+        function updateRowStatus(ui, params, container) {
+            if (!params) {
+                return;
+            }
+            if (isParentJob) {
+                container.innerHTML = "I'm a parent job. You don't want to see that. Click one of the others.";
+            }
+            else {
+                Object.keys(params).forEach((key) => {
+                    var selector = '[data-element-job-id="' + key + '"]';
+                    var row = container.querySelector(selector);
+                    if (row === null) {
+                        row = document.createElement('tr');
+                        row.setAttribute('data-element-job-id', key);
+                        container.getElementsByTagName('tbody')[0].appendChild(row);
+                    }
+                    row.innerHTML = td(key) + td(params[key]);
+                });
+            }
+        }
 
         function startParamsListener() {
             paramsListener = runtime.bus().listen({
@@ -79,6 +84,7 @@ define([
                 jobId = arg.jobId;
                 ui = UI.make({ node: container });
                 container.innerHTML = renderTable();
+                isParentJob = arg.isParentJob;
 
                 startParamsListener();
                 runtime.bus().emit('request-job-info', {

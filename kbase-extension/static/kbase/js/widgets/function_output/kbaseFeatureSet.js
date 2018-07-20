@@ -13,17 +13,13 @@ define (
 		'jquery-dataTables',
 		'knhx',
 		'widgetMaxWidthCorrection',
-		'kbase-generic-client-api'
+        'GenomeSearchUtil-client-api'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
-		kbaseAuthenticatedWidget,
-		jquery_dataTables,
-		knhx,
-		widgetMaxWidthCorrection,
-		GenericClient
+		kbaseAuthenticatedWidget
 	) {
     return KBWidget({
         name: 'kbaseFeatureSet',

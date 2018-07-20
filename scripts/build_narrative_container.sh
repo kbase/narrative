@@ -8,7 +8,7 @@ NAR_NAME="kbase/narrative"
 NAR_VER_NAME="kbase/narrative_version"  # Image for serving up the narrative version
 HEADLESS_NAME="kbase/narrative_headless"
 NAR_BASE="kbase/narrbase"
-NAR_BASE_VER="5.0dockerize"
+NAR_BASE_VER="5.1dockerize"
 
 # Get the current branch, so that we can tag images to branch
 BRANCH=${TRAVIS_BRANCH:-`git symbolic-ref --short HEAD`}

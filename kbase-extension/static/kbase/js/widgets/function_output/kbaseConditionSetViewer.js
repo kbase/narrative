@@ -109,10 +109,9 @@ define (
 
             var tblSettings = {
                 scrollX: true,
-                scrollY: "300px",
                 scrollCollapse: true,
-                paging: false,
-                dom: "Bft<ip>",
+                paging: true,
+                dom: "<'row'<'col-sm-6'B><'col-sm-6'f>>t<'row'<'col-sm-6'i><'col-sm-6'p>>",
                 buttons: ['colvis', 'copy', 'csv', 'print'],
                 order: [[0, "asc"]],
                 columns: cols,

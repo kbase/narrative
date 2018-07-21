@@ -1111,9 +1111,6 @@ define([
 
         function stopJobUpdates() {
             if (listeningForJob) {
-                runtime.bus().emit('request-job-completion', {
-                    jobId: jobId
-                });
                 listeningForJob = false;
             }
         }

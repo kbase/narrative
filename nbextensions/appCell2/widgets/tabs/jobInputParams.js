@@ -40,16 +40,16 @@ define([
             isParentJob;
 
         function updateRowStatus(ui, params, container) {
-            if (!params) {
-                return;
-            }
             if (isParentJob) {
-                if (params.batch_params && params.batch_params.length) {
+                if (params && params.batch_params && params.batch_params.length) {
                     container.innerHTML = 'This batch job has ' + params.batch_params.length + ' child jobs. Please click one of those on the left for details';
                 }
                 else {
                     container.innerHTML = 'Please click one of the child jobs for details.';
                 }
+            }
+            if (!params) {
+                return;
             }
             else {
                 Object.keys(params).forEach((key) => {

@@ -8,6 +8,7 @@ define([
     'common/utils',
     'util/bootstrapDialog',
     'kbase/js/widgets/appInfoPanel',
+    'narrativeConfig',
     'custom/custom'
 ], function(
     $,
@@ -16,7 +17,8 @@ define([
     Jupyter,
     utils,
     BootstrapDialog,
-    AppInfoPanel
+    AppInfoPanel,
+    Config
 ) {
     'use strict';
 
@@ -264,7 +266,7 @@ define([
                 });
             }
 
-            if (cell.toggleBatch) {
+            if (cell.toggleBatch && Config.get('features').batchAppMode) {
                 menuItems.push({
                     name: 'batch',
                     label: 'Toggle Batch',

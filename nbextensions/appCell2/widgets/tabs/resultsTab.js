@@ -3,147 +3,225 @@
 
 define([
     'bluebird',
-    'jquery',
+    'uuid',
     'common/ui',
-    'common/runtime',
-    'common/events',
-    'kb_service/client/narrativeMethodStore',
     'kb_common/html',
-    'kbaseReportView'
-], function (Promise, $, UI, Runtime, Events, NarrativeMethodStore, html, KBaseReportView) {
+    './jobStateList',
+    './resultsViewer'
+], function (
+    Promise,
+    Uuid,
+    UI,
+    html,
+    JobStateList,
+    JobResult
+) {
     'use strict';
     var t = html.tag,
-        div = t('div'),
-        p = t('p'),
-        a = t('a'),
-        span = t('span');
+        div = t('div');
 
     function factory(config) {
         var container,
             model = config.model,
             ui,
-            runtime,
-            nms;
+            jobList,
+            resultsViewer;
+
         function start(arg) {
-            return Promise.try(function () {
-                container = arg.node;
-                model = arg.model;
-                ui = UI.make({node: container}),
-                runtime = Runtime.make(),
-                nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'));
+            container = arg.node;
+            model = arg.model;
+            ui = UI.make({ node: container });
 
-                var result = model.getItem('exec.outputWidgetInfo');
-                var jobState = model.getItem('exec.jobState');
-                var finishDate = new Date(jobState.finish_time);
-
-                var layout = div([
-                    ui.buildCollapsiblePanel({
-                        title: 'Results',
-                        name: 'results',
-                        hidden: true,
-                        type: 'default',
-                        classes: ['kb-panel-container']
-                    }),
-                    div({dataElement: 'report'}),
-                    div({dataElement: 'next-steps'})
-                ]);
-                container.innerHTML = layout;
-
-                ui.setContent('summary.body', p([
-                    'Finished on ',
-                    finishDate.toLocaleDateString(),
-                    ' at ',
-                    finishDate.toLocaleTimeString()
-                ].join('')));
-
-                // If there's a "report_ref" key in the results, load and show the report.
-                // console.log('SHOWING RESULTS', result);
-                if (result.params.report_name) {
-                    // do report widget.
-                    renderReportView(result.params);
-                } else {
-                    ui.getElement('results').classList.remove('hidden');
-                    ui.setContent('results.body', ui.buildPresentableJson(result));
-                }
-
-                // Look up this app's info to get it's suggested next steps.
-                return nms.get_method_full_info({
-                    ids: [model.getItem('app.id')],
-                    tag: model.getItem('app.tag')
-                });
-            })
-            .then(function(appInfo) {
-                // If there are suggested next apps (er, methods), they'll be listed
-                // by app id. Look them up!
-                var suggestions = appInfo[0].suggestions || {};
-                var tag = model.getItem('app.tag');
-                if (suggestions.next_methods) {
-                    return nms.get_method_spec({
-                        ids: suggestions.next_methods,
-                        tag: tag
-                    });
-                }
-            })
-            .then(function(nextApps) {
-                renderNextApps(nextApps);
-            });
-        }
-
-        function renderReportView(params) {
-            params = JSON.parse(JSON.stringify(params));
-            // Override the option to show created objects listed in the report
-            // object. For some reason this single option defaults to false!
-            params.showCreatedObjects = true;
-            ui.setContent('report', div({dataElement: 'report-widget'}));
-            new KBaseReportView($(ui.getElement('report-widget')), params);
-        }
-
-        function renderNextApps(apps) {
-            apps = apps || [];
-            var events = Events.make();
-            var appList = div([
-                'No suggestions available! ',
-                a({ href:'https://kbase.us/contact-us/', target: '_blank' }, 'Contact us'),
-                ' if you would like to add one.'
-            ]);
-            // filter out legacy apps with no module name
-            apps = apps.filter(function(app) {
-                return app.info.module_name;
-            });
-            // If there are no next apps to suggest, don't even show the Suggested Next Steps panel
-            if (apps.length > 0) {
-                appList = apps.map(function(app, index) {
-                    return div([
-                        a({
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: function () {
-                                    $(document).trigger('methodClicked.Narrative', [app, 'dev']);
-                                }
-                            })},
-                            app.info.name
-                        ),
-                        span(' - ' + app.info.module_name)
-                    ]);
-                }).join('\n');
-                ui.setContent('next-steps',
-                    ui.buildCollapsiblePanel({
-                        title: 'Suggested Next Steps',
-                        name: 'next-steps-toggle',
-                        hidden: false,
-                        type: 'default',
-                        classes: ['kb-panel-container'],
-                        body: appList
-                    })
-                );
-                events.attachEvents(container);
+            var jobState = model.getItem('exec.jobState');
+            if (jobState.child_jobs && jobState.child_jobs.length) {
+                return startBatch(jobState);
+            }
+            else {
+                return startSingle(jobState);
             }
         }
 
-        function stop() {
-            return Promise.try(function () {
-                container.innerHTML = 'Bye from results';
+        function batchLayout() {
+            var list = div({ class: 'col-md-3 batch-mode-col', dataElement: 'kb-job-list-wrapper' }, [
+                ui.buildPanel({
+                    title: 'Job Batch',
+                    name: 'subjobs',
+                    classes: [
+                        'kb-panel-light'
+                    ]
+                })
+            ]);
+
+            var jobStatus = div({ class: 'col-md-9 batch-mode-col',  dataElement: 'kb-job-status-wrapper' }, [
+                ui.buildCollapsiblePanel({
+                    title: 'Result',
+                    name: 'job-result',
+                    hidden: false,
+                    type: 'default',
+                    classes: ['kb-panel-container'],
+                    body: div({}, [
+                        ui.buildPanel({
+                            name: 'child-result',
+                            classes: [
+                                'kb-panel-light'
+                            ]
+                        })
+                    ])
+                })
+            ]);
+            return div({}, [list, jobStatus]);
+        }
+
+        function renderError(jobState, errorNode) {
+            function convertJobError(errorInfo) {
+                var errorId = new Uuid(4).format(),
+                    errorType, errorMessage, errorDetail;
+                if (errorInfo.error) {
+                    // Classic KBase rpc error message
+                    errorType = errorInfo.name;
+                    errorMessage = errorInfo.message;
+                    errorDetail = errorInfo.error;
+                } else if (errorInfo.name) {
+                    errorType = 'unknown';
+                    errorMessage = errorInfo.name + ' (code: ' + String(errorInfo.code) + ')';
+                    errorDetail = 'This error occurred during execution of the app job.';
+                } else {
+                    errorType = 'unknown';
+                    errorMessage = 'Unknown error (check console for ' + errorId + ')';
+                    errorDetail = 'There is no further information about this error';
+                }
+
+                return {
+                    location: 'job execution',
+                    type: errorType,
+                    message: errorMessage,
+                    detail: errorDetail
+                };
+            }
+
+            function renderErrorLayout() {
+                return div([
+                    div({
+                        style: {
+                            fontWeight: 'bold',
+                            color: 'red',
+                            borderBottom: '1px solid eee',
+                            marginBottom: '1em'
+                        }
+                    }, [
+                        'An error occurred in this job!'
+                    ]),
+                    div({ style: { fontWeight: 'bold' } }, [
+                        'Type'
+                    ]),
+                    div({ dataElement: 'type' }),
+                    div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
+                        'Message'
+                    ]),
+                    div({ dataElement: 'message' }),
+                    div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
+                        'Detail'
+                    ]),
+                    div({
+                        dataElement: 'detail',
+                        style: {
+                            border: '0px silver solid',
+                            padding: '4px',
+                            wordBreak: 'break-word'
+                        }
+                    })
+                ]);
+            }
+
+            var viewModel = convertJobError(jobState.error);
+
+            errorNode.innerHTML = renderErrorLayout();
+            var errorUi = UI.make({ node: errorNode });
+            errorUi.updateFromViewModel(viewModel);
+        }
+
+        function startBatch(jobState) {
+            // gonna have to listen to job state somewhere. maybe here?
+            // and have a control for stopping the listener
+            return Promise.try(() => {
+                var layout = batchLayout();
+                container.innerHTML = layout;
+
+                jobList = JobStateList.make({ model: model });
+                resultsViewer = JobResult.make({ model: model });
+                startResults({
+                    jobId: model.getItem('exec.jobState.job_id'),
+                    isParentJob: true
+                });
+
+                function startResults(arg) {
+                    var jobId = arg.jobId,
+                        selectedJobId = jobId ? jobId : model.getItem('exec.jobState.job_id'),
+                        jobState;
+
+                    if (Number.isInteger(arg.jobIndex)) {
+                        jobState = model.getItem('exec.jobState.child_jobs')[arg.jobIndex];
+                    }
+                    else if (arg.isParentJob) {
+                        jobState = model.getItem('exec.jobState');
+                    }
+                    return Promise.try(() => {
+                        // branch based on jobState.
+                        // If there's an error, we should show the error widget instead.
+                        let resultNode = ui.getElement('child-result.body');
+                        switch(jobState.job_state) {
+                            case 'completed':
+                                return resultsViewer.start({
+                                    node: resultNode,
+                                    jobId: selectedJobId,
+                                    isParentJob: arg.isParentJob,
+                                    jobState: jobState
+                                });
+                            case 'error':
+                            case 'suspend':
+                                renderError(jobState, resultNode);
+                                break;
+                            case 'canceled':
+                                resultNode.innerHTML = 'Job was stopped before it finished. Nothing to see here.';
+                                break;
+                            default:
+                                resultNode.innerHTML = 'Not done running. Be patient, grasshopper.';
+                                break;
+                        }
+                    });
+                }
+
+                jobList.start({
+                    node: ui.getElement('subjobs.body'),
+                    childJobs: model.getItem('exec.jobState.child_jobs'),
+                    clickFunction: startResults,
+                    parentJobId: model.getItem('exec.jobState.job_id'),
+                    batchSize: model.getItem('exec.jobState.batch_size')
+                });
             });
+        }
+
+        function startSingle(jobState) {
+            return Promise.try(function () {
+                resultsViewer = JobResult.make({ model: model });
+                return resultsViewer.start({
+                    node: container,
+                    jobId: jobState.job_id,
+                    jobState: jobState,
+                    isParentJob: true
+                });
+            });
+        }
+
+        function stop() {
+            var stopProms = [];
+            if (jobList) {
+                stopProms.push(jobList.stop());
+            }
+            if (resultsViewer) {
+                stopProms.push(resultsViewer.stop());
+            }
+            return Promise.all(stopProms);
         }
 
         return {

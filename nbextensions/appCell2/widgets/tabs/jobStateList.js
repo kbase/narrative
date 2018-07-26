@@ -61,7 +61,7 @@ define([
                     createJobStateWidget('parent', parentJobId, model.getItem('exec.jobState.job_state'), arg.clickFunction, true);
                     container.getElementsByTagName('tr')[0].classList.add('job-selected'); // start with the parent selected
 
-                    for (var i=0; i<arg.batchSize; i++) {
+                    for (var i=0; i<Math.max(arg.batchSize, arg.childJobs.length); i++) {
                         var jobId = null,
                             initialState = null;
                         if (i < arg.childJobs.length) {
@@ -107,16 +107,16 @@ define([
          *
          * Each job state widget knows which child job index it's in, so it can look up its
          * state as well.
-         * @param {int} jobNumber
+         * @param {int} jobIndex
          * @param {string} jobId
          */
-        function createJobStateWidget(jobNumber, jobId, initialState, clickFunction, isParentJob) {
-            widgets[jobNumber] = JobStateListRow.make({
+        function createJobStateWidget(jobIndex, jobId, initialState, clickFunction, isParentJob) {
+            widgets[jobIndex] = JobStateListRow.make({
                 model: model
             });
-            widgets[jobNumber].start({
-                node: createTableRow(jobNumber),
-                name: isParentJob ? 'Parent Job' : 'Child Job ' + (jobNumber+1),
+            widgets[jobIndex].start({
+                node: createTableRow(jobIndex),
+                name: isParentJob ? 'Parent Job' : 'Child Job ' + (jobIndex+1),
                 jobId: jobId,
                 initialState: initialState,
                 isParentJob: isParentJob ? true : false,
@@ -126,7 +126,11 @@ define([
                     });
                     if (jobId) {
                         jobRow.classList.add('job-selected');
-                        clickFunction(jobId, isParentJob);
+                        clickFunction({
+                            jobId: jobId,
+                            isParentJob: isParentJob,
+                            jobIndex: jobIndex
+                        });
                     }
                 }
             });

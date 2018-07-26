@@ -48,7 +48,7 @@ define([
             container,
             ui,
             bus,
-            places,
+            places = {},
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
@@ -260,9 +260,29 @@ define([
             events.attachEvents();
         }
 
-        function renderLayout() {
+        function renderBatchModeMessage() {
+            return ui.buildPanel({
+                title: span('Batch Mode'),
+                name: 'batch-mode-doc',
+                body: div({
+                    style: 'margin-left: 3ex'
+                }, [
+                    div('This App is running in Batch mode. To view this app\'s currently running configuration, use the "Show code" menu option to see a list of parameters for each app run.'),
+                    div('Also, the "Job Status" tab will show the inputs for each job.'),
+                    div({style: 'margin-top: 1ex'}, ['Tutorials and documentation about batch mode can be found <a href="//kbase.us" target="api_doc">here</a>.'])
+                ]),
+                classes: ['kb-panel-light']
+            });
+        }
+
+        function renderLayout(batchMode) {
             var events = Events.make(),
-                content = form({ dataElement: 'input-widget-form' }, [
+                formContent = [];
+            if (batchMode) {
+                formContent.push(renderBatchModeMessage());
+            }
+            else {
+                formContent = formContent.concat([
                     ui.buildPanel({
                         title: span(['Input Objects', span({ dataElement: 'advanced-hidden-message', style: { marginLeft: '6px', fontStyle: 'italic' } })]),
                         name: 'input-objects-area',
@@ -284,7 +304,8 @@ define([
                     })
                     // ui.makePanel('Output Report', 'output-report')
                 ]);
-
+            }
+            var content = form({ dataElement: 'input-widget-form' }, formContent);
             return {
                 content: content,
                 events: events
@@ -293,21 +314,23 @@ define([
 
         // MESSAGE HANDLERS
 
-        function doAttach(node) {
+        function doAttach(node, batchMode) {
             container = node;
             ui = UI.make({
                 node: container,
                 bus: bus
             });
-            var layout = renderLayout();
+            var layout = renderLayout(batchMode);
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
-            places = {
-                inputFields: ui.getElement('input-fields'),
-                outputFields: ui.getElement('output-fields'),
-                parameterFields: ui.getElement('parameter-fields'),
-                advancedParameterFields: ui.getElement('advanced-parameter-fields')
-            };
+            if (!batchMode) {
+                places = {
+                    inputFields: ui.getElement('input-fields'),
+                    outputFields: ui.getElement('output-fields'),
+                    parameterFields: ui.getElement('parameter-fields'),
+                    advancedParameterFields: ui.getElement('advanced-parameter-fields')
+                };
+            }
         }
 
         // EVENTS
@@ -496,36 +519,46 @@ define([
             return Promise.try(function() {
                 // send parent the ready message
 
-                doAttach(arg.node);
+                paramsBus.request({}, {key: {type: 'get-batch-mode'}})
+                    .then((batchMode) => {
+                        doAttach(arg.node, batchMode);
 
-                model.setItem('appSpec', arg.appSpec);
-                model.setItem('parameters', arg.parameters);
+                        model.setItem('appSpec', arg.appSpec);
+                        model.setItem('parameters', arg.parameters);
 
-                paramsBus.on('parameter-changed', function(message) {
-                    // Also, tell each of our inputs that a param has changed.
-                    // TODO: use the new key address and subscription
-                    // mechanism to make this more efficient.
-                    widgets.forEach(function(widget) {
-                        widget.bus.send(message, {
-                            key: {
-                                type: 'parameter-changed',
-                                parameter: message.parameter
-                            }
+                        paramsBus.on('parameter-changed', function(message) {
+                            // Also, tell each of our inputs that a param has changed.
+                            // TODO: use the new key address and subscription
+                            // mechanism to make this more efficient.
+                            widgets.forEach(function(widget) {
+                                widget.bus.send(message, {
+                                    key: {
+                                        type: 'parameter-changed',
+                                        parameter: message.parameter
+                                    }
+                                });
+                                // bus.emit('parameter-changed', message);
+                            });
                         });
-                        // bus.emit('parameter-changed', message);
+                        // we then create our widgets
+                        var retPromise;
+                        if (batchMode) {
+                            retPromise = Promise.resolve();
+                        }
+                        else {
+                            retPromise = renderParameters();
+                        }
+                        return retPromise
+                            .then(function () {
+                                // do something after success
+                                attachEvents();
+                            })
+                            .catch(function (err) {
+                                // do somethig with the error.
+                                console.error('ERROR in start', err);
+                            });
                     });
                 });
-                // we then create our widgets
-                return renderParameters()
-                    .then(function() {
-                        // do something after success
-                        attachEvents();
-                    })
-                    .catch(function(err) {
-                        // do somethig with the error.
-                        console.error('ERROR in start', err);
-                    });
-            });
         }
 
         function stop() {

@@ -154,6 +154,7 @@ class AppManager(object):
         batch_method = "kb_BatchApp.run_batch"
         batch_app_id = "kb_BatchApp/run_batch"
         batch_method_ver = "dev"
+        batch_method_tag = "dev"
         ws_id = strict_system_variable('workspace_id')
         spec = self._get_validated_app_spec(app_id, tag, True, version=version)
 
@@ -185,7 +186,12 @@ class AppManager(object):
 
         # This is what calls the function in the back end - Module.method
         # This isn't the same as the app spec id.
-        job_meta = {'tag': tag}
+        job_meta = {
+            'tag': batch_method_tag,
+            'batch_app': app_id,
+            'batch_tag': tag,
+            'batch_size': len(params)
+        }
         if cell_id is not None:
             job_meta['cell_id'] = cell_id
         if run_id is not None:
@@ -233,7 +239,7 @@ class AppManager(object):
         # Log that we're trying to run a job...
         log_info = {
             'app_id': app_id,
-            'tag': tag,
+            'tag': batch_method_tag,
             'version': service_ver,
             'username': system_variable('user_id'),
             'wsid': ws_id
@@ -248,14 +254,15 @@ class AppManager(object):
             raise transform_job_exception(e)
 
         new_job = Job(job_id,
-                      batch_method,
+                      batch_app_id,
                       batch_params,
                       system_variable('user_id'),
-                      tag=tag,
+                      tag=batch_method_tag,
                       app_version=batch_method_ver,
                       cell_id=cell_id,
                       run_id=run_id,
-                      token_id=agent_token['id'])
+                      token_id=agent_token['id'],
+                      meta=job_meta)
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',

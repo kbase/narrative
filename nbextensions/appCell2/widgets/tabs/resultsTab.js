@@ -37,13 +37,6 @@ define([
                 var finishDate = new Date(jobState.finish_time);
 
                 var layout = div([
-                    // ui.buildCollapsiblePanel({
-                    //     title: 'Status',
-                    //     name: 'summary',
-                    //     hidden: false,
-                    //     type: 'default',
-                    //     classes: ['kb-panel-container']
-                    // }),
                     ui.buildCollapsiblePanel({
                         title: 'Results',
                         name: 'results',
@@ -98,7 +91,7 @@ define([
 
         function renderReportView(params) {
             params = JSON.parse(JSON.stringify(params));
-            // Override the option to show created objects listed in the report 
+            // Override the option to show created objects listed in the report
             // object. For some reason this single option defaults to false!
             params.showCreatedObjects = true;
             ui.setContent('report', div({dataElement: 'report-widget'}));

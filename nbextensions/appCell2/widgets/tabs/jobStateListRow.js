@@ -1,26 +1,19 @@
 define([
     'bluebird',
-    'common/runtime',
     'common/ui',
-    'common/format',
     'kb_common/html'
 ], function(
     Promise,
-    Runtime,
     UI,
-    format,
     html
 ) {
     'use strict';
 
     var t = html.tag,
         div = t('div'),
-        p = t('p'),
-        span = t('span'),
-        table = t('table'),
-        tr = t('tr'),
         td = t('td'),
-        th = t('th');
+        th = t('th'),
+        span = t('span');
 
     function niceState(jobState) {
         var label, icon, color;
@@ -58,7 +51,7 @@ define([
         case 'does_not_exist':
             label = 'does not exist';
             icon = 'fa fa-question';
-            color: 'orange';
+            color = 'orange';
             break;
         default:
             label = jobState;
@@ -71,156 +64,64 @@ define([
                 color: color,
                 fontWeight: 'bold'
             },
-            class: icon
-        }, label);
-    }
-
-    function updateRowStatus(ui, jobState, container, clickFunction) {
-        if(!jobState){
-            return;
-        }
-        var selector = '[data-element-job-id="' + jobState.job_id + '"]';
-        var row = container.querySelector(selector);
-        if(row === null){
-            row = document.createElement('tr');
-            row.setAttribute('data-element-job-id', jobState.job_id);
-            if(clickFunction){
-                row.onclick = () => {clickFunction(jobState.job_id)};
-            }
-            container.appendChild(row);
-        }        
-        var jobStatus = jobState ? jobState.job_state : 'Determining Job State...';
-        row.innerHTML = th(jobState.job_id) + niceState(jobStatus);
+        }, [
+            span({
+                class: icon
+            }),
+            ' ' + label
+        ]);
     }
 
     function factory() {
-        var container, ui, listeners = [],
-            jobState = null,
-            runtime = Runtime.make(),
-            listeningForJob = false,
-            jobId;
+        var container,
+            ui,
+            name,
+            jobId,
+            clickFunction,
+            isParentJob;
 
-
-        function startJobUpdates() {
-            if (listeningForJob) {
-                return;
+        function updateRowStatus(jobStatus) {
+            jobStatus = jobStatus ? jobStatus : 'Job still pending.';
+            var jobIdDiv = '';
+            if (jobId) {
+                jobIdDiv = div({'style': 'font-size:8pt; color:gray'}, [jobId]);
             }
-            runtime.bus().emit('request-job-update', {
-                jobId: jobId
-            });
-            listeningForJob = true;
-        }
-
-        function stopJobUpdates() {
-            if (listeningForJob) {
-                runtime.bus().emit('request-job-completion', {
-                    jobId: jobId
-                });
-                listeningForJob = false;
-            }
-        }
-
-        function handleJobDoesNotExistUpdate(message) {
-            stopJobUpdates();
-            jobState = {
-                job_state: 'does_not_exist'
-            };
-        }
-
-        function handleJobStatusUpdate(message) {
-            jobState = message.jobState;
-            switch (jobState.job_state) {
-            case 'queued':
-            case 'in-progress':
-                startJobUpdates();
-                break;
-            case 'completed':
-                stopJobUpdates();
-                break;
-            case 'error':
-            case 'suspend':
-            case 'canceled':
-                stopJobUpdates();
-                break;
-            default:
-                stopJobUpdates();
-                console.error('Unknown job status', jobState.job_state, message);
-                throw new Error('Unknown job status ' + jobState.job_state);
-            }
-        }
-
-        function listenForJobStatus() {
-            var ev = runtime.bus().listen({
-                channel: {
-                    jobId: jobId
-                },
-                key: {
-                    type: 'job-status'
-                },
-                handle: handleJobStatusUpdate
-            });
-            listeners.push(ev);
-
-            ev = runtime.bus().listen({
-                channel: {
-                    jobId: jobId
-                },
-                key: {
-                    type: 'job-canceled'
-                },
-                handle: function() {
-                    console.warn('job cancelled');
-                }
-            });
-            listeners.push(ev);
-
-            ev = runtime.bus().listen({
-                channel: {
-                    jobId: jobId
-                },
-                key: {
-                    type: 'job-does-not-exist'
-                },
-                handle: handleJobDoesNotExistUpdate
-            });
-            listeners.push(ev);
-        }
-
-        function stopListeningForJobStatus() {
-            runtime.bus().removeListeners(listeners);
+            container.innerHTML = th({}, [div(isParentJob ? name.toUpperCase() : name), jobIdDiv]) + niceState(jobStatus);
         }
 
         function start(arg) {
             return Promise.try(function() {
-                container = arg.node;
+                container = arg.node;               // this is the row (tr) that this renders
+                container.onclick = () => {
+                    if (jobId) {
+                        clickFunction(container, jobId, isParentJob);
+                    }
+                };
                 ui = UI.make({ node: container });
 
-                jobId = arg.jobId;
-                var clickFunction = arg.clickFunction;
-                listeners.push(runtime.bus().on('clock-tick', function() {
-                    updateRowStatus(ui, jobState, container, clickFunction);
-                }));
-
-                listenForJobStatus();
-                runtime.bus().emit('request-job-status', {
-                    jobId: jobId
-                });
-
-                listeningForJob = true;
-
+                jobId = arg.jobId;                  // id of child job
+                name = arg.name;
+                isParentJob = arg.isParentJob;
+                clickFunction = arg.clickFunction;  // called on click (after some ui junk)
+                updateRowStatus(arg.initialState);
             });
         }
 
         function stop() {
-            return Promise.try(function() {
-                stopListeningForJobStatus();
-                // runtime.bus().removeListeners(listeners);
-            });
+        }
+
+        function updateState(newState) {
+            if (!jobId) {
+                jobId = newState.job_id;
+            }
+            let status = newState.job_state ? newState.job_state : null;
+            updateRowStatus(status);
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
+            updateState: updateState
         };
     }
 

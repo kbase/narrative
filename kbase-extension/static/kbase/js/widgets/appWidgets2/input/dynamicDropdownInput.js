@@ -219,6 +219,14 @@ define([
                 return Promise.resolve(genericClientCall(call_params))
                     .then(function (results) {
                         if (results[0][0]) {
+                            results[0].forEach(function(obj, index) {
+                                obj = flattenObject(obj);
+                                if (!"id" in obj) {
+                                    obj.id = index;
+                                }
+                                obj.text = obj[dd_options.selection_id];
+                                results[0][index] = obj;
+                            });
                             return results[0];
                         }
                         return [];
@@ -259,7 +267,9 @@ define([
          text: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
          */
         function formatObjectDisplay(ret_obj) {
-            if (dataSource === 'ftp_staging') {
+            if (!ret_obj.id) {
+                return '';
+            } else if (dataSource === 'ftp_staging') {
                 if (!ret_obj.id) {
                     return $('<div style="display:block; height:20px">').append(ret_obj.text);
                 }
@@ -286,6 +296,19 @@ define([
             }
         }
 
+        function selectionTemplate(object) {
+            if (dd_options.description_template) {
+                return formatObjectDisplay(object);
+            }
+            if (dd_options.selection_id) {
+                return object[dd_options.selection_id];
+            }
+            if (!object.id) {
+                return object.text;
+            }
+            return object.id;
+        }
+
         /*
          * Creates the markup
          * Places it into the dom node
@@ -301,15 +324,7 @@ define([
 
                 $(ui.getElement('input-container.input')).select2({
                     templateResult: formatObjectDisplay,
-                    templateSelection: function(object) {
-                        if (dd_options.selection_id) {
-                            return object[dd_options.selection_id];
-                        }
-                        if (!object.id) {
-                            return object.text;
-                        }
-                        return object.id;
-                    },
+                    templateSelection: selectionTemplate,
                     ajax: {
                         delay: 250,
                         transport: function(params, success, failure) {

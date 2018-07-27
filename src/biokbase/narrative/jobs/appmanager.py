@@ -198,7 +198,7 @@ class AppManager(object):
             job_meta['run_id'] = run_id
 
         # Now put these all together in a way that can be sent to the batch processing app.
-        batch_params = {
+        batch_params = [{
             "module_name": service_name,
             "method_name": service_method,
             "service_ver": service_ver,
@@ -208,7 +208,7 @@ class AppManager(object):
                 "params": batch_run_inputs[i],
                 "source_ws_objects": batch_ws_upas[i]
             } for i in range(len(batch_run_inputs))],
-        }
+        }]
 
         # We're now almost ready to run the job. Last, we need an agent token.
         try:
@@ -224,7 +224,7 @@ class AppManager(object):
         job_runner_inputs = {
             'method': batch_method,
             'service_ver': batch_method_ver,
-            'params': [batch_params],
+            'params': batch_params,
             'app_id': batch_app_id,
             'wsid': ws_id,
             'meta': job_meta

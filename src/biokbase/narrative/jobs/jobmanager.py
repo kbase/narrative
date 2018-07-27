@@ -409,7 +409,13 @@ class JobManager(object):
         if 'canceling' in self._running_jobs[job.job_id]:
             state['job_state'] = 'canceling'
 
-        state.update({'child_jobs': self._child_job_states(state.get('sub_jobs', []))})
+        state.update({
+            'child_jobs': self._child_job_states(
+                state.get('sub_jobs', []),
+                job.meta.get('batch_app'),
+                job.meta.get('batch_tag')
+            )
+        })
         if 'batch_size' in job.meta:
             state.update({'batch_size': job.meta['batch_size']})
         return {'state': state,
@@ -418,11 +424,17 @@ class JobManager(object):
                 'owner': job.owner,
                 'listener_count': self._running_jobs[job.job_id]['refresh']}
 
-    def _child_job_states(self, sub_job_list):
+    def _child_job_states(self, sub_job_list, app_id, app_tag):
         """
         Fetches state for all jobs in the list. These are expected to be child jobs, with no actual Job object associated.
         So if they're done, we need to do the output mapping out of band.
         But the check_jobs call with params will return the app id. So that helps.
+
+        app_id = the id of the app that all the child jobs are running (format: module/method, like "MEGAHIT/run_megahit")
+        app_tag = one of "release", "beta", "dev"
+        (the above two aren't stored with the subjob metadata, and won't until we back some more on KBParallel - I want to
+        lobby for pushing toward just starting everything up at once from here and letting HTCondor deal with allocation)
+        sub_job_list = list of ids of jobs to look up
         """
         if not sub_job_list:
             return []
@@ -442,7 +454,15 @@ class JobManager(object):
             # if it's done, get the output mapping.
             state = job_info['job_states'][job_id]
             if state.get('finished', 0) == 1:
-                widget_info = Job.map_viewer_params(state, params['params'], params['method'].replace('.', '/'), params.get('meta', {}).get('tag', 'release'))
+                try:
+                    widget_info = Job.map_viewer_params(
+                        state,
+                        params['params'],
+                        app_id,
+                        app_tag
+                    )
+                except ValueError:
+                    widget_info = {}
                 state.update({'widget_info': widget_info})
             child_job_states.append(state)
         return child_job_states

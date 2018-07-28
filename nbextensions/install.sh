@@ -31,6 +31,3 @@ jupyter nbextension enable advancedViewCell/main --sys-prefix
 
 jupyter nbextension install ${dir}/codeCell --symlink --sys-prefix
 jupyter nbextension enable codeCell/main --sys-prefix
-
-jupyter nbextension enable --py --sys-prefix widgetsnbextension
-jupyter nbextension enable --py --sys-prefix clustergrammer_widget

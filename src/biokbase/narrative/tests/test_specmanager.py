@@ -8,12 +8,16 @@ from narrative_mock.mockclients import get_mock_client
 
 class SpecManagerTestCase(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
-        self.sm = SpecManager()
-        self.good_app_id = 'NarrativeTest/test_input_params'
-        self.good_tag = 'dev'
-        self.bad_app_id = 'NotARealApp'
-        self.bad_tag = 'NotARealTag'
+    def setUpClass(cls):
+        cls.sm = SpecManager()
+        cls.good_app_id = 'NarrativeTest/test_input_params'
+        cls.good_tag = 'dev'
+        cls.bad_app_id = 'NotARealApp'
+        cls.bad_tag = 'NotARealTag'
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.sm.reload()
 
     def test_apps_present(self):
         # on startup, should have app_specs
@@ -35,10 +39,11 @@ class SpecManagerTestCase(unittest.TestCase):
 
     @mock.patch('biokbase.narrative.jobs.specmanager.clients.get', get_mock_client)
     def test_get_type_spec(self):
-        self.assertIn("view_method_ids", self.sm.get_type_spec("KBaseFBA.FBA").keys())
-        self.assertIn("view_method_ids", self.sm.get_type_spec("KBaseFBA.NU_FBA").keys())
+        self.sm.reload()
+        self.assertIn("export_functions", self.sm.get_type_spec("KBaseFBA.FBA").keys())
+        self.assertIn("export_functions", self.sm.get_type_spec("KBaseFBA.NU_FBA").keys())
         with self.assertRaisesRegexp(ValueError, "Unknown type"):
-            self.assertIn("view_method_ids", self.sm.get_type_spec("KBaseExpression.NU_FBA").keys())
+            self.assertIn("export_functions", self.sm.get_type_spec("KBaseExpression.NU_FBA").keys())
 
 
 if __name__ == "__main__":

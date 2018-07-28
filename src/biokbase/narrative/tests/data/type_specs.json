@@ -768,6 +768,7 @@
             "TSV": "FBAFileUtil/export_fba_as_tsv_file",
             "EXCEL": "FBAFileUtil/export_fba_as_excel_file"
         },
+        "view_method_ids": ["NarrativeViewers/view_fba_result_details"],
         "description": "<p>This type describes flux balance analysis.</p>\\n",
         "type_name": "KBaseFBA.FBA",
         "tooltip": "FBA object",

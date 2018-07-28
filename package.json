@@ -7,10 +7,11 @@
   "devDependencies": {
     "bower": "1.8.4",
     "geckodriver": "1.6.1",
-    "grunt": "1.0.1",
+    "grunt": "^1.0.3",
     "grunt-cli": "1.2.0",
     "grunt-contrib-copy": "1.0.0",
     "grunt-contrib-requirejs": "1.0.0",
+    "grunt-contrib-uglify-es": "^3.3.0",
     "grunt-coveralls": "1.0.1",
     "grunt-filerev": "2.3.1",
     "grunt-jasmine-nodejs": "^1.6.1",
@@ -18,18 +19,18 @@
     "grunt-regex-replace": "0.3.0",
     "jasmine-core": "2.4.1",
     "jasmine-jquery": "2.1.1",
-    "karma": "^2.0.2",
+    "karma": "^2.0.5",
     "karma-chrome-launcher": "^2.2.0",
-    "karma-coverage": "1.1.1",
+    "karma-coverage": "^1.1.2",
     "karma-firefox-launcher": "^1.1.0",
     "karma-jasmine": "1.0.2",
     "karma-mocha-reporter": "^2.2.5",
-    "karma-phantomjs-launcher": "1.0.1",
+    "karma-phantomjs-launcher": "^1.0.4",
     "karma-requirejs": "1.1.0",
     "karma-safari-launcher": "1.0.0",
     "phantomjs-prebuilt": "2.1.16",
     "requirejs": "2.2.0",
-    "selenium-standalone": "6.0.1",
+    "selenium-standalone": "^6.15.1",
     "selenium-webdriver": "^3.6.0",
     "string.prototype.endswith": "^0.2.0",
     "string.prototype.startswith": "^0.2.0"
@@ -40,6 +41,7 @@
     "build": "grunt build"
   },
   "dependencies": {
-    "karma-es6-shim": "^1.0.0"
+    "karma-es6-shim": "^1.0.0",
+    "npm": "^6.2.0"
   }
 }

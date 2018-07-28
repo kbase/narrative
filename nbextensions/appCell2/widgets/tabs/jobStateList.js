@@ -121,7 +121,7 @@ define([
                 initialState: initialState,
                 isParentJob: isParentJob ? true : false,
                 clickFunction: function(jobRow, jobId, isParentJob) {
-                    Array.from(container.getElementsByTagName('tr')).forEach((elem) => {
+                    Array.from(container.getElementsByClassName('job-selected')).forEach((elem) => {
                         elem.classList.remove('job-selected');
                     });
                     if (jobId) {

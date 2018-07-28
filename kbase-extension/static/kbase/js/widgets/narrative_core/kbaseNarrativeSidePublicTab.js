@@ -429,7 +429,7 @@ define ([
                 .css('padding', '6px')
                 .css('font-style', 'italic')
                 .css('text-align', 'center')
-                .append(this.resultsFooterMessage);              
+                .append(this.resultsFooterMessage);
 
             this.resultArea = $('<div>')
                 .css('overflow-x', 'hidden')
@@ -447,6 +447,14 @@ define ([
             var dataSourceID = parseInt($typeInput.val(), 10);
             this.searchAndRender(dataSourceID, $filterInput.val());
             return this;
+        },
+
+        hideResultFooter: function () {
+            this.resultFooter.addClass('hide');
+        },
+
+        showResultFooter: function () {
+            this.resultFooter.removeClass('hide');
         },
 
         searchAndRender: function(category, query) { 
@@ -501,9 +509,17 @@ define ([
                     .append('<img src="'+this.loadingImage+'"/> searching...'));
 
             this.hideError();
+            this.showResultFooter();
             this.currentPage = 1;
 
             return this.renderFromDataSource(this.currentCategory, true);
+        },
+
+        renderError: function () {
+            this.totalPanel.empty();
+            this.hideResultFooter();
+            this.resultsFooterMessage.empty();
+            this.totalPanel.html('<div class="alert alert-danger">Sorry, an error occurred executing this search!</div>');
         },
 
         renderMore: function() {
@@ -560,7 +576,7 @@ define ([
         renderFromDataSource: function(dataSourceID, initial) {
             var _this = this;
             var dataSource = this.getDataSource(dataSourceID);
-            _this.resultsFooterMessage.html(html.loading('fetching another ' + this.itemsPerPage));
+            this.resultsFooterMessage.html(html.loading('fetching another ' + this.itemsPerPage));
             this.fetchFromDataSource(dataSource, initial)
                 .then(function (result) {
                     // a null result means that the search was not run for some
@@ -582,10 +598,16 @@ define ([
                         _this.currentFilteredResults = dataSource.filteredDataCount;
 
                         var message;
-                        if (dataSource.fetchedDataCount === dataSource.filteredDataCount) {
-                            message = 'all ' + _this.currentFilteredResults + ' fetched';
+                        if (dataSource.filteredDataCount) {
+                            if (dataSource.fetchedDataCount === dataSource.filteredDataCount) {
+                                message = 'all ' + _this.currentFilteredResults + ' fetched';
+                            } else {
+                                message = 'fetched ' + result.length + ' of ' + _this.currentFilteredResults;
+                            }
+                            _this.showResultFooter();
                         } else {
-                            message = 'fetched ' + result.length + ' of ' + _this.currentFilteredResults;
+                            message = '';
+                            _this.hideResultFooter();
                         }
                         _this.resultsFooterMessage.text(message);
 
@@ -593,6 +615,11 @@ define ([
                     }
 
                     _this.currentDataSource = dataSource;
+                })
+                .catch(function (err) {
+                    console.error('Error rendering from data source', dataSource, err);
+                    _this.showError(err);
+                    _this.renderError();
                 });
         },
 
@@ -906,11 +933,18 @@ define ([
         },
 
         showError: function(error) {
-            var errorMsg = error;
-            if (error.error && error.error.message)
+            var errorMsg;
+            if (error.error && error.error.message) {
+                // handle errors thrown by kbase service clients
                 errorMsg = error.error.message;
+            } else if (error.message) {
+                // standard error objects
+                errorMsg = error.message;
+            } else {
+                errorMsg = error;
+            }
             this.infoPanel.empty();
-            this.infoPanel.append('<div class="alert alert-danger">Error: '+errorMsg+'</span>');
+            this.infoPanel.append('<div class="alert alert-danger">Error: ' + errorMsg + '</span>');
         },
 
         hideError: function() {

@@ -548,7 +548,7 @@ define([
             var content = div([
                 p([
                     'Deleting this cell will remove the editor from the Narrative, ',
-                    'but will not delete the associated Reads Sets, which will still be avaiable ',
+                    'but will not delete the associated Reads Sets, which will still be available ',
                     'in the data panel.'
                 ]),
                 p('Continue to delete this cell?')

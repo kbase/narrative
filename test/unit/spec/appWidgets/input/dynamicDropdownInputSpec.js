@@ -21,6 +21,10 @@ define([
                     constraints: {
                         required: false
                     }
+
+                },
+                original: {
+                    dynamic_dropdown_options: {}
                 }
             },
             channelName: 'foo'

@@ -26,7 +26,10 @@ class SpecManager(object):
 
         return self.app_specs[tag][app_id]
 
-    def get_type_spec(self, type_id, raise_exception=True):
+    def get_type_spec(self, type_id, raise_exception=True, allow_module_match=True):
+        # if we can't find a full match for a type, try to match just the module
+        if (type_id not in self.type_specs) and allow_module_match:
+            type_id = type_id.split(".")[0]
         if (type_id not in self.type_specs) and raise_exception:
             raise ValueError('Unknown type id "{}"'.format(type_id))
         return self.type_specs.get(type_id)

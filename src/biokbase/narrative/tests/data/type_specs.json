@@ -776,5 +776,22 @@
         "icon": {
             "url": "img?type_name=KBaseFBA.FBA&image_name=none"
         }
+    },
+    "KBaseFBA": {
+        "import_method_ids": [],
+        "subtitle": "FBA module",
+        "name": "FBA objects",
+        "export_functions": {
+            "TSV": "FBAFileUtil/export_fba_as_tsv_file",
+            "EXCEL": "FBAFileUtil/export_fba_as_excel_file"
+        },
+        "view_method_ids": ["NarrativeViewers/view_fba_result_details"],
+        "description": "<p>This type describes flux balance analysis.</p>\\n",
+        "type_name": "KBaseFBA",
+        "tooltip": "FBA types",
+        "landing_page_url_prefix": "ws/fbas",
+        "icon": {
+            "url": "img?type_name=KBaseFBA.FBA&image_name=none"
+        }
     }
 }]

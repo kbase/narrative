@@ -69,11 +69,18 @@ def _get_categories(ids, conditionset_ref=None, mapping=None, whitelist=()):
     condition_data = ws.get_objects2({'objects': [{'ref': conditionset_ref}]})['data'][0]['data']
 
     if not mapping:
-        mapping = {x:x for x in ids}
+        mapping = {x: x for x in ids}
     whitelist = set(whitelist)
 
     for _id in ids:
-        condition_values = condition_data['conditions'][mapping[_id]]
+        try:
+            condition_values = condition_data['conditions'][mapping[_id]]
+        except KeyError:
+            if _id not in mapping:
+                raise ValueError("Row or column id {} is not in the provided mapping".format(_id))
+            raise ValueError("ConditionSet {} has no condition {} which corresponds to row or "
+                             "column id {} in the provided object.".format(conditionset_ref,
+                                                                           mapping[_id], _id))
         cats = [_id]
         for i, val in enumerate(condition_values):
             cat_name = condition_data['factors'][i]['factor']

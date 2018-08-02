@@ -577,6 +577,7 @@ class WidgetManager(object):
         info_tuple = clients.get('workspace').get_object_info_new({'objects': [{'ref': upa}],
                                                                    'includeMetadata': 1})[0]
         bare_type = info_tuple[2].split('-')[0]
+        type_module = bare_type.split(".")[0]
 
         type_spec = self._sm.get_type_spec(bare_type, raise_exception=False)
 
@@ -613,7 +614,7 @@ class WidgetManager(object):
                 obj_param_value = upa if (is_ref_path or is_external) else info_tuple[1]
                 upa_params = list()
                 for param in spec_params:
-                    if any(t == bare_type for t in param['allowed_types']):
+                    if any((t == bare_type or t == type_module) for t in param['allowed_types']):
                         input_params[param['id']] = obj_param_value
                         upa_params.append(param['id'])
 

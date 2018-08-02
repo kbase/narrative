@@ -1,10 +1,8 @@
 define([
     'bluebird',
-    'common/ui',
     'kb_common/html'
 ], function(
     Promise,
-    UI,
     html
 ) {
     'use strict';
@@ -74,7 +72,6 @@ define([
 
     function factory() {
         var container,
-            ui,
             name,
             jobId,
             clickFunction,
@@ -83,9 +80,6 @@ define([
         function updateRowStatus(jobStatus) {
             jobStatus = jobStatus ? jobStatus : 'Job still pending.';
             var jobIdDiv = '';
-            if (jobId) {
-                jobIdDiv = div({'style': 'font-size:8pt; color:gray'}, [jobId]);
-            }
             container.innerHTML = th({}, [div(isParentJob ? name.toUpperCase() : name), jobIdDiv]) + niceState(jobStatus);
         }
 
@@ -97,7 +91,6 @@ define([
                         clickFunction(container, jobId, isParentJob);
                     }
                 };
-                ui = UI.make({ node: container });
 
                 jobId = arg.jobId;                  // id of child job
                 name = arg.name;

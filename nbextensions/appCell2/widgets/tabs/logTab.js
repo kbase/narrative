@@ -46,7 +46,7 @@ define([
         var selectedJobId = config.jobId;
 
         function batchLayout() {
-            var list = div({ class: 'col-md-4 batch-mode-col', dataElement: 'kb-job-list-wrapper' }, [
+            var list = div({ class: 'col-md-3 batch-mode-col', dataElement: 'kb-job-list-wrapper' }, [
                 ui.buildPanel({
                     title: 'Job Batch',
                     name: 'subjobs',
@@ -56,7 +56,7 @@ define([
                 })
             ]);
 
-            var jobStatus = div({ class: 'col-md-8 batch-mode-col',  dataElement: 'kb-job-status-wrapper' },[
+            var jobStatus = div({ class: 'col-md-9 batch-mode-col',  dataElement: 'kb-job-status-wrapper' },[
                 ui.buildCollapsiblePanel({
                     title: 'Job Params',
                     name: 'job-params-section-toggle',
@@ -164,17 +164,20 @@ define([
                 if (childJobs.length > 0) {
                     selectedJobId = childJobs.job_id;
                 }
-                startDetails(selectedJobId, true);
+                startDetails({
+                    jobId: selectedJobId,
+                    isParentJob: true
+                });
 
-                function startDetails(jobId, isParentJob) {
-                    var selectedJobId = jobId ? jobId : model.getItem('exec.jobState.job_id');
+                function startDetails(arg) { //jobId, isParentJob) {
+                    var selectedJobId = arg.jobId ? arg.jobId : model.getItem('exec.jobState.job_id');
                     config.clickedId = selectedJobId;
                     return Promise.all([
                         widgets.params.start({
                             node: ui.getElement('params.body'),
                             jobId: selectedJobId,
                             parentJobId: model.getItem('exec.jobState.job_id'),
-                            isParentJob: isParentJob
+                            isParentJob: arg.isParentJob
                         }),
                         widgets.log.start({
                             node: ui.getElement('log.body'),

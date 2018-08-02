@@ -1722,6 +1722,15 @@ define([
                 case 'job_started':
                     return { mode: 'processing', stage: 'running' };
                 case 'in-progress':
+                    // see if any subjobs are done, if so, set the stage to 'partial-complete'
+                    if (jobState.child_jobs && jobState.child_jobs.length) {
+                        let childDone = jobState.child_jobs.some((childState) => {
+                            return ['completed', 'canceled', 'suspend', 'error'].indexOf(childState.job_state) !== -1;
+                        });
+                        if (childDone) {
+                            return { mode: 'processing', stage: 'partial-complete' };
+                        }
+                    }
                     return { mode: 'processing', stage: 'running' };
                 case 'completed':
                     stopListeningForJobMessages();

@@ -254,6 +254,10 @@ define([], function() {
                     stage: 'running'
                 },
                 {
+                    mode: 'processing',
+                    stage: 'partial-complete'
+                },
+                {
                     mode: 'success'
                 },
                 {
@@ -480,6 +484,10 @@ define([], function() {
                     stage: 'running'
                 },
                 {
+                    mode: 'processing',
+                    stage: 'partial-complete'
+                },
+                {
                     mode: 'success'
                 },
                 {
@@ -671,6 +679,10 @@ define([], function() {
                     stage: 'running'
                 },
                 {
+                    mode: 'processing',
+                    stage: 'partial-complete'
+                },
+                {
                     mode: 'canceled'
                 },
                 {
@@ -758,6 +770,10 @@ define([], function() {
             next: [{
                     mode: 'processing',
                     stage: 'running'
+                },
+                {
+                    mode: 'processing',
+                    stage: 'partial-complete'
                 },
                 {
                     mode: 'processing',
@@ -859,9 +875,14 @@ define([], function() {
                     }]
                 }
             },
-            next: [{
+            next: [
+                {
                     mode: 'processing',
                     stage: 'running'
+                },
+                {
+                    mode: 'processing',
+                    stage: 'partial-complete'
                 },
 
                 {
@@ -890,7 +911,96 @@ define([], function() {
                 }
             ]
         },
+        {
+            state: {
+                mode: 'processing',
+                stage: 'partial-complete'
+            },
+            ui: {
+                tabs: {
+                    configure: {
+                        enabled: false,
+                        hidden: true
+                    },
+                    viewConfigure: {
+                        enabled: true
+                    },
+                    logs: {
+                        enabled: true
+                    },
+                    results: {
+                        enabled: true
+                    },
+                    error: {
+                        enabled: false,
+                        hidden: true
+                    }
+                },
+                actionButton: {
+                    name: 'cancel'
+                },
+                elements: {
+                    show: ['parameters-display-group', 'exec-group', 'output-group'],
+                    hide: ['parameters-group']
+                },
+                appStatus: {
+                    classes: ['kb-app-status-ok'],
+                    icon: {
+                        type: 'bolt'
+                    }
+                },
+                label: 'running',
+                message: 'The App is now running.'
+            },
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'start-running'
+                    }]
+                },
+                resume: {
+                    messages: [{
+                        emit: 'start-running'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'stop-running'
+                    }]
+                }
+            },
+            next: [
+                {
+                    mode: 'processing',
+                    stage: 'partial-complete'
+                },
 
+                {
+                    mode: 'canceled'
+                },
+                {
+                    mode: 'canceling'
+                },
+                {
+                    mode: 'success'
+                },
+                {
+                    mode: 'error'
+                },
+                {
+                    mode: 'error',
+                    stage: 'running'
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built'
+                },
+                {
+                    mode: 'internal-error'
+                }
+            ]
+        },
         {
             state: {
                 mode: 'canceling'
@@ -1312,7 +1422,8 @@ define([], function() {
                     }]
                 }
             },
-            next: [{
+            next: [
+                {
                     mode: 'error',
                     stage: 'running'
                 },

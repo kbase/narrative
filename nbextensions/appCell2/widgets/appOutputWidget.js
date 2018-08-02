@@ -73,7 +73,7 @@ define([
                         li('Remove this output record'),
                         li('Reset the app to edit mode')
                     ]),
-                    p('Note: This action is not reversable.'),
+                    p('Note: This action is not reversible.'),
                     p('Data produced in this output will remain in your narrative, and may be found in the Data panel.'),
                     p('Are you sure you want to remove the output cell?')
                 ]);
@@ -84,7 +84,7 @@ define([
                         li('Remove the output cell from the Narrative'),
                         li('Remove this output record'),
                     ]),
-                    p('Note: This action is not reversable.'),
+                    p('Note: This action is not reversible.'),
                     p('Data produced in this output will remain in your narrative, and may be found in the Data panel.'),
                     p('Are you sure you want to remove the output cell?')
                 ]);

@@ -53,7 +53,7 @@ define([
             bus = runtime.bus().connect(),
             channel = bus.channel(config.channelName),
             ui,
-            dd_options = spec.original.dynamic_dropdown_options,
+            dd_options = spec.original.dynamic_dropdown_options || {},
             dataSource = dd_options.data_source || 'ftp_staging',
             model = {
                 value: undefined
@@ -184,8 +184,6 @@ define([
 
         function fetchData(searchTerm) {
             searchTerm = searchTerm || '';
-            var call_params = JSON.stringify(dd_options.service_params).replace("{{dynamic_dropdown_input}}", searchTerm);
-            call_params =  JSON.parse(call_params);
 
             if (dataSource === 'ftp_staging') {
                 return Promise.resolve(stagingService.search({query: searchTerm}))
@@ -201,36 +199,40 @@ define([
                         });
                         return results;
                     });
-            } else if (dataSource === 'search') {
-                if (Array.isArray(call_params)){
-                    call_params = call_params[0];
-                }
-                return Promise.resolve(searchClient.search_objects(call_params))
-                    .then(function (results) {
-                        results.objects.forEach(function(obj, index) {
-                            obj = flattenObject(obj);
-                            obj.id = obj.guid;
-                            obj.text = obj[dd_options.selection_id];
-                            results.objects[index] = obj;
-                        });
-                        return results.objects;
-                    });
             } else {
-                return Promise.resolve(genericClientCall(call_params))
-                    .then(function (results) {
-                        if (results[0][0]) {
-                            results[0].forEach(function(obj, index) {
+                var call_params = JSON.stringify(dd_options.service_params).replace("{{dynamic_dropdown_input}}", searchTerm);
+                call_params =  JSON.parse(call_params);
+                if (dataSource === 'search') {
+                    if (Array.isArray(call_params)){
+                        call_params = call_params[0];
+                    }
+                    return Promise.resolve(searchClient.search_objects(call_params))
+                        .then(function (results) {
+                            results.objects.forEach(function(obj, index) {
                                 obj = flattenObject(obj);
-                                if (!"id" in obj) {
-                                    obj.id = index;
-                                }
+                                obj.id = obj.guid;
                                 obj.text = obj[dd_options.selection_id];
-                                results[0][index] = obj;
+                                results.objects[index] = obj;
                             });
-                            return results[0];
-                        }
-                        return [];
-                    });
+                            return results.objects;
+                        });
+                } else {
+                    return Promise.resolve(genericClientCall(call_params))
+                        .then(function (results) {
+                            if (results[0][0]) {
+                                results[0].forEach(function(obj, index) {
+                                    obj = flattenObject(obj);
+                                    if (!"id" in obj) {
+                                        obj.id = index;
+                                    }
+                                    obj.text = obj[dd_options.selection_id];
+                                    results[0][index] = obj;
+                                });
+                                return results[0];
+                            }
+                            return [];
+                        });
+                }
             }
         }
 

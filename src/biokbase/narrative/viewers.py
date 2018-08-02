@@ -3,8 +3,6 @@ import pandas as pd
 
 import biokbase.narrative.clients as clients
 
-ws = clients.get('workspace')
-
 
 def view_as_clustergrammer(ws_ref, col_categories=(), row_categories=(), normalize_on=None):
     """
@@ -35,6 +33,7 @@ def view_as_clustergrammer(ws_ref, col_categories=(), row_categories=(), normali
 
 def _get_df(ws_ref, col_categories, row_categories):
     """Gets a dataframe from the WS object"""
+    ws = clients.get('workspace')
     generic_data = ws.get_objects2({'objects': [{'ref': ws_ref}]})['data'][0]['data']
     if not _is_compatible_matrix(generic_data):
         raise ValueError("{} is not a compatible data type for this viewer. Data type must "
@@ -66,6 +65,7 @@ def _get_categories(ids, conditionset_ref=None, mapping=None, whitelist=()):
     if not conditionset_ref:
         return ids
     cat_list = []
+    ws = clients.get('workspace')
     condition_data = ws.get_objects2({'objects': [{'ref': conditionset_ref}]})['data'][0]['data']
 
     if not mapping:

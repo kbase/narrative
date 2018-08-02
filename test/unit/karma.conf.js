@@ -91,6 +91,9 @@ module.exports = function (config) {
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/'
         },
+        client: {
+          requireJsShowNoTimestampsError: '^(?!.*(^/narrative/static/))'
+        },
         concurrency: Infinity
 
     });

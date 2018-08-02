@@ -517,7 +517,7 @@ define([], function() {
             doc: [
                 'This state is entered when the cell is first executing, and before the back end has received the code and begun processing it.',
                 'It is necessary to allow the UI to immediately switch to running mode, as there can be significant latency between ',
-                'executing code and receiving the first message that it is being considered for excecution.'
+                'executing code and receiving the first message that it is being considered for execution.'
             ],
             ui: {
                 tabs: {

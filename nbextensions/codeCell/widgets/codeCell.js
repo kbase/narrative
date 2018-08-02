@@ -39,7 +39,7 @@ define([
         function doDeleteCell() {
             var content = div([
                 p([
-                    'Deleting this cell will remove the code and any generated code ouput.',
+                    'Deleting this cell will remove the code and any generated code output.',
                 ]),
                 p('Continue to delete this code cell?')
             ]);

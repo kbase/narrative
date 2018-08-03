@@ -10,11 +10,16 @@ define ([
     'kbwidget',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
-    'narrativeConfig',    
-    'kb_common/jsonRpc/dynamicServiceClient',
+    'narrativeConfig',
+		'kbase-generic-client-api',
+    'bluebird',
     // For effect
     'bootstrap',
-    'jquery-dataTables'
+    'jquery-dataTables',
+    'datatables.net-buttons',
+    'datatables.net-buttons-bs',
+    'datatables.net-buttons-html5',
+    'datatables.net-buttons-print'
 ], function(
     Uuid,
     $,
@@ -22,7 +27,8 @@ define ([
     kbaseAuthenticatedWidget,
     kbaseTabs,
     Config,
-    DynamicServiceClient
+    GenericClient,
+    Promise
 ) {
     'use strict';
 
@@ -63,11 +69,10 @@ define ([
                 return this;
             }
 
-            this.featureValues = new DynamicServiceClient({
-                module: 'KBaseFeatureValues',
-                url: Config.url('service_wizard'),
-                token: auth.token
-            });
+            this.genericClient = new GenericClient(
+              Config.url('service_wizard'),
+              { token: auth.token }
+            );
 
             // Let's go...
             this.loadAndRender();
@@ -84,18 +89,49 @@ define ([
             var self = this;
 
             self.loading(true);
-            var expressionMatrixRef = this.options.workspaceID + '/' + this.options.expressionMatrixID;
-            self.featureValues.callFunc('get_matrix_stat', [{
+            var expressionMatrixRef = this.options.upas.expressionMatrixID;
+
+            // this is the "old" method that loads up the Conditions table and some of the values in the Overview table
+            var get_matrix_stat_promise = self.genericClient.sync_call('KBaseFeatureValues.get_matrix_stat', [{
                 input_data: expressionMatrixRef
-            }])
-                .spread(function (data) {
-                    self.matrixStat = data;
-                    self.render();
-                    self.loading(false);
+            }]);
+
+            // this is the "new" method that loads an enhanced filter expression matrix, with an enhanced feature table that also
+            // contains q-value and fold change columns. Unfortunately, at the time that this widget went out, the service was fairly
+            // twitchy and prone to falling over - there were auth token issues that were resolved, but 502 bad gateway errors are
+            // still cropping up fairly often, which diminishes user experience.
+            //
+            // so there are a couple of bandaids in here to fall back on the old table data if this widget is deployed and the expression api
+            // service goes down.
+            var enhancedFilter_promise = self.genericClient.sync_call('ExpressionAPI.get_enhancedFilteredExpressionMatrix', [{
+              fem_object_ref: expressionMatrixRef
+            }] );
+
+            // first thing we do is our old get_matrix_stat call, which we need for the conditions table.
+            get_matrix_stat_promise
+              .then( function (res) {
+
+                self.matrixStat     = res[0];
+                // the number of features was defined in the old method call.
+
+                self.numFeatures = self.matrixStat.mtx_descriptor.rows_count;
+
+                // now we see if our expression api enhanced filter call works. If it did, then we keep a
+                // record of that object and update our numFeatures. That number *should* always be the same, but better
+                // safe than sorry
+                enhancedFilter_promise.then(function(res) {
+                  self.enhancedFeatures = res[0].enhanced_FEM.data;
+                  self.numFeatures      = self.enhancedFeatures.values.length;
                 })
-                .catch(function(error){
-                    self.clientError(error);
-                });
+                // once we've checked that enhancedFilter_promise, then no matter what we render our widget and flag that we're no longer loading
+                .finally( function() {
+                  self.render();
+                  self.loading(false);
+                })
+              })
+              .catch(function(error){
+                self.clientError(error);
+              });
         },
 
         render: function() {
@@ -103,6 +139,7 @@ define ([
             var pref = this.pref;
             var container = this.$elem;
             var matrixStat = this.matrixStat;
+            var enhancedFeatures = this.enhancedFeatures;
 
             ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
             container.empty();
@@ -120,7 +157,7 @@ define ([
                 .append(self.makeRow('Genome', $('<span />').append(matrixStat.mtx_descriptor.genome_name).css('font-style', 'italic')))
                 .append(self.makeRow('Description', matrixStat.mtx_descriptor.description))
                 .append(self.makeRow('# Conditions', matrixStat.mtx_descriptor.columns_count))
-                .append(self.makeRow('# Features', matrixStat.mtx_descriptor.rows_count))
+                .append(self.makeRow('# Features', self.numFeatures))
                 .append(self.makeRow('Scale', matrixStat.mtx_descriptor.scale))
                 .append(self.makeRow('Value type', matrixStat.mtx_descriptor.type))
                 .append(self.makeRow('Row normalization', matrixStat.mtx_descriptor.row_normalization))
@@ -146,8 +183,9 @@ define ([
                 </table>')
                 .appendTo($tabConditions)
                 .dataTable( {
-                    'sDom': 'lftip',
+                    'dom': '<\'row\'<\'col-sm-6\'B><\'col-sm-6\'f>>t<\'row\'<\'col-sm-4\'i><\'col-sm-8\'lp>>',
                     'aaData': self.buildConditionsTableData(),
+                    'buttons': ['copy', 'csv', 'print'],
                     'aoColumns': [
                         { sTitle: 'Condition ID', mData:'name' },
                         { sTitle: 'Min', mData:'min' },
@@ -171,22 +209,53 @@ define ([
                 $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated across all conditions for the feature</div>')
             );
 
+            /* XXX - due to the notes up above about the ExpressionAPI sometimes failing, we keep track of what the old columns were in the table, as well as
+                     the new columns from the new method. Then a smidge later, we look to see if we have an enhancedFeatures object. If we do, then we use
+                     the new columns, and if not then we fall back to the old columns, since we're using the old method.
+            */
+            var oldFeatureTableColumns =
+              [
+                  { sTitle: 'Feature ID', mData: 'id'},
+                  { sTitle: 'Function', mData: 'function'},
+                  { sTitle: 'Min', mData:'min' },
+                  { sTitle: 'Max', mData:'max' },
+                  { sTitle: 'Average', mData:'avg' },
+                  { sTitle: 'Std. Dev.', mData:'std'},
+                  { sTitle: 'Missing Values?', mData:'missing_values' },
+                  { sTitle: 'Fold Change', mData:'fold-change' },
+                  { sTitle: 'Q Value', mData:'q-value' },
+              ]
+            ;
+
+            var newFeatureTableColumns =
+              [
+                  { sTitle: 'Feature ID', mData: 'id'},
+                  { sTitle: 'Function', mData: 'description'},
+                  { sTitle: 'Min', mData:'min' },
+                  { sTitle: 'Max', mData:'max' },
+                  { sTitle: 'Average', mData:'mean' },
+                  { sTitle: 'Std. Dev.', mData:'std_dev'},
+                  { sTitle: 'Missing Values?', mData:'is_missing_values' },
+                  { sTitle: 'Fold Change', mData:'fold-change' },
+                  { sTitle: 'Q Value', mData:'q-value' },
+              ]
+            ;
+
+            var featureTableColumns = self.enhancedFeatures
+              ? newFeatureTableColumns
+              : oldFeatureTableColumns;
+
+
+
             $('<table id="'+pref+'genes-table" \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
                 </table>')
                 .appendTo($tabGenes)
                 .dataTable({
-                    sDom: 'lftip',
+                    dom: '<\'row\'<\'col-sm-6\'B><\'col-sm-6\'f>>t<\'row\'<\'col-sm-4\'i><\'col-sm-8\'lp>>',
                     aaData: self.buildGenesTableData(),
-                    aoColumns: [
-                        { sTitle: 'Feature ID', mData: 'id'},
-                        { sTitle: 'Function', mData: 'function'},
-                        { sTitle: 'Min', mData:'min' },
-                        { sTitle: 'Max', mData:'max' },
-                        { sTitle: 'Average', mData:'avg' },
-                        { sTitle: 'Std. Dev.', mData:'std'},
-                        { sTitle: 'Missing Values?', mData:'missing_values' }
-                    ]
+                    aoColumns: featureTableColumns,
+                    buttons: ['copy', 'csv', 'print']
                 });
         },
 
@@ -211,6 +280,55 @@ define ([
         },
 
         buildGenesTableData: function(){
+
+            var enhancedFeatures = this.enhancedFeatures;
+
+            /* XXX - finally in here, we look to see if we have our enhancedFeatures object. If we don't then we're going to bow out
+                     and fall back to 'oldBuildGenesTableData', which was the old method accessing the old data, just renamed. If we
+                     *do* have data, then we just continue on and build our table.
+            */
+            if (enhancedFeatures === undefined) {
+              return this.oldBuildGenesTableData();
+            }
+
+            var tableData = [];
+
+            var key_to_idx_map = [];
+            for (var i = 0; i < enhancedFeatures.col_ids.length; i++) {
+              key_to_idx_map[ enhancedFeatures.col_ids[i] ] = i;
+            };
+
+            for (var i = 0; i < enhancedFeatures.values.length; i++) {
+
+              var fold_change = enhancedFeatures.values[i][ key_to_idx_map['fold-change'] ];
+              if ($.isNumeric(fold_change)) {
+                fold_change = fold_change.toFixed(2);
+              }
+              var q_value = enhancedFeatures.values[i][ key_to_idx_map['q-value'] ];
+              if ($.isNumeric(q_value)) {
+                q_value = q_value.toFixed(2);
+              }
+
+              tableData.push(
+                {
+                  index             : i,
+                  id                : enhancedFeatures.row_ids[i],
+                  description       : enhancedFeatures.values[i][ key_to_idx_map['description'] ],
+                  min               : enhancedFeatures.values[i][ key_to_idx_map['min'] ].toFixed(2),
+                  max               : enhancedFeatures.values[i][ key_to_idx_map['max'] ].toFixed(2),
+                  mean              : enhancedFeatures.values[i][ key_to_idx_map['mean'] ].toFixed(2),
+                  std_dev           : enhancedFeatures.values[i][ key_to_idx_map['std_dev'] ].toFixed(2),
+                  is_missing_values : enhancedFeatures.values[i][ key_to_idx_map['is_missing_values'] ],
+                  'fold-change'     : fold_change,
+                  'q-value'         : q_value,
+                }
+              )
+            };
+
+            return tableData;
+        },
+
+        oldBuildGenesTableData: function(){
             var matrixStat = this.matrixStat;
             var tableData = [];
 
@@ -228,7 +346,9 @@ define ([
                         max: stat.max ? stat.max.toFixed(2) : null,
                         avg: stat.avg ? stat.avg.toFixed(2) : null,
                         std: stat.std ? stat.std.toFixed(2) : null,
-                        missing_values: stat.missing_values ? 'Yes' : 'No'
+                        missing_values: stat.missing_values ? 'Yes' : 'No',
+                    'fold-change' : 'enhanced features not available right now',
+                    'q-value' : 'enhanced features not available right now',
                     }
                 );
             }
@@ -299,7 +419,7 @@ define ([
 
         clientError: function(error){
             this.loading(false);
-            // TODO: Don't know that this is a service error; should 
+            // TODO: Don't know that this is a service error; should
             // inspect the error object.
             this.showMessage(error.message);
         }

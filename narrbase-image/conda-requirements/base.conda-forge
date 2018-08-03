@@ -1,0 +1,9 @@
+rsa>=3.1.2
+poster
+python-oauth2
+flup
+httplib2
+requests-oauthlib
+pika
+matplotlib
+dateutils

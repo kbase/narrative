@@ -15,6 +15,12 @@ default: build-narrative-container
 build-narrative-container:
 	sh $(DOCKER_INSTALLER)
 
+docker_image: build-narrative-container
+
+# Per PR #1328, adding an option to skip minification
+dev_image:
+	SKIP_MINIFY=1 DOCKER_TAG=dev sh $(DOCKER_INSTALLER)
+
 install:
 	@echo "Installing local Narrative in the $(INSTALL_VENV) virtual environment"
 	bash $(INSTALLER) -v $(INSTALL_VENV)
@@ -26,6 +32,7 @@ build-travis-narrative:
 	npm install && \
 	bash $(INSTALLER) --no-venv --travis && \
 	grunt minify && \
+	sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/" && \
 	jupyter notebook --version
 
 test: test-backend test-frontend-unit test-frontend-e2e

@@ -40,7 +40,7 @@ define([
             var content = div([
                 p([
                     'Deleting this cell will remove the data visualization, ',
-                    'but will not delete the data object, which will still be avaiable ',
+                    'but will not delete the data object, which will still be available ',
                     'in the data panel.'
                 ]),
                 p(['Parent cell id is ', parentCellId]),

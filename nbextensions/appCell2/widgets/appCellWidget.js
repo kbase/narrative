@@ -104,6 +104,7 @@ define([
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000,
             controlBarTabs = {},
+            selectedJobId,
             readOnly = false,
             viewOnly = false,
             kernelReady = null,
@@ -210,7 +211,8 @@ define([
                             type: 'get-batch-mode'
                         },
                         handle: function() {
-                            return model.getItem('user-settings.batchMode') || false;
+                            var canDoBatch = Config.get('features').batchAppMode;
+                            return canDoBatch && (model.getItem('user-settings.batchMode') || false);
                         }
                     });
 
@@ -324,6 +326,16 @@ define([
                             return {
                                 value: model.getItem(['params', message.parameterName])
                             };
+                        }
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-batch-mode'
+                        },
+                        handle: function() {
+                            var canDoBatch = Config.get('features').batchAppMode;
+                            return canDoBatch && (model.getItem('user-settings.batchMode') || false);
                         }
                     });
 
@@ -681,7 +693,6 @@ define([
 
         function startTab(tabId) {
             var selectedTab = controlBarTabs.tabs[tabId];
-
             if (selectedTab.widgetModule) {
                 return loadWidget(selectedTab.widgetModule)
                     .then(function(Widget) {
@@ -694,16 +705,19 @@ define([
 
                         var node = document.createElement('div');
                         ui.getElement('run-control-panel.tab-pane.widget').appendChild(node);
-
                         return controlBarTabs.selectedTab.widget.start({
-                            node: node
+                            node: node,
+                            jobId: selectedJobId
                         });
                     });
             }
+
             controlBarTabs.selectedTab = {
                 id: tabId,
                 widget: selectedTab.widget.make({
-                    model: model
+                    model: model,
+                    jobId: selectedJobId
+
                 })
             };
 
@@ -720,12 +734,15 @@ define([
 
         function stopTab() {
             ui.deactivateButton(controlBarTabs.selectedTab.id);
-
+            if (controlBarTabs.selectedTab.widget.getSelectedJobId){
+                selectedJobId = controlBarTabs.selectedTab.widget.getSelectedJobId();
+            }
             return controlBarTabs.selectedTab.widget.stop()
                 .catch(function(err) {
                     console.error('ERROR stopping', err);
                 })
                 .finally(function() {
+                    config;
                     var widgetNode = ui.getElement('run-control-panel.tab-pane.widget');
                     if (widgetNode.firstChild) {
                         widgetNode.removeChild(widgetNode.firstChild);
@@ -780,12 +797,21 @@ define([
         }
 
         function toggleBatchMode() {
+            if (!Config.get('features').batchAppMode) {
+                return;
+            }
             // var curState = fsm.getCurrentState();
             // var btn = ui.getButton('batch-toggle');
             // btn.classList.toggle('batch-active');
             var curBatchState = model.getItem('user-settings.batchMode'),
                 newBatchMode = !curBatchState,
-                currentTabId = selectedTabId();
+                currentTabId = selectedTabId(),
+                runState = fsm.getCurrentState();
+            if (runState.state.mode !== 'editing') {
+                // TODO: should make a popup with warning, continuing = resetting, etc.
+                // for now, just ignore.
+                return;
+            }
             model.setItem('user-settings.batchMode', newBatchMode);
             bus.emit('set-batch-mode', newBatchMode);
             toggleTab('configure')
@@ -833,7 +859,6 @@ define([
                     userSelectedTab = true;
                 });
         }
-
 
         controlBarTabs = {
             selectedTab: null,
@@ -1268,7 +1293,7 @@ define([
             var runId = new Uuid(4).format(),
                 fixedApp = fixApp(app),
                 code;
-            if (model.getItem('user-settings.batchMode')) {
+            if (model.getItem('user-settings.batchMode') && Config.get('features').batchAppMode) {
                 code = PythonInterop.buildBatchAppRunner(cellId, runId, fixedApp, [params]);
             }
             else {
@@ -1697,6 +1722,15 @@ define([
                 case 'job_started':
                     return { mode: 'processing', stage: 'running' };
                 case 'in-progress':
+                    // see if any subjobs are done, if so, set the stage to 'partial-complete'
+                    if (jobState.child_jobs && jobState.child_jobs.length) {
+                        let childDone = jobState.child_jobs.some((childState) => {
+                            return ['completed', 'canceled', 'suspend', 'error'].indexOf(childState.job_state) !== -1;
+                        });
+                        if (childDone) {
+                            return { mode: 'processing', stage: 'partial-complete' };
+                        }
+                    }
                     return { mode: 'processing', stage: 'running' };
                 case 'completed':
                     stopListeningForJobMessages();
@@ -2363,6 +2397,10 @@ define([
 
                     busEventManager.add(parentBus.on('reset-to-defaults', function() {
                         bus.emit('reset-to-defaults');
+                    }));
+
+                    busEventManager.add(parentBus.on('toggle-batch-mode', () => {
+                        toggleBatchMode();
                     }));
 
                     // TODO: only turn this on when we need it!

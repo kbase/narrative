@@ -344,7 +344,8 @@ define([
             loopFrequency = 5000,
             looping = false,
             stopped = false,
-            listeningForJob = false;
+            listeningForJob = false,
+            requestLoop = null;
 
         // VIEW ACTIONS
 
@@ -352,7 +353,7 @@ define([
             if (!looping) {
                 return;
             }
-            window.setTimeout(function() {
+            requestLoop = window.setTimeout(function() {
                 if (!looping) {
                     return;
                 }
@@ -444,7 +445,7 @@ define([
                     scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
                 }, scrollTime, function () {
                     currentSection = target.parent().attr('class');
-                });  
+                });
             }else{
                 fetchNewLogs(Number(model.getItem('currentLine')));
             }
@@ -463,10 +464,10 @@ define([
             } else {
                 var $panel = $(ui.getElements('panel')[0]),
                     target = $panel.children().first().children().first();
-                
+
                 scrollToLog($panel, target);
 
-            } 
+            }
         }
 
 
@@ -910,13 +911,13 @@ define([
             var $panel = $(ui.getElements('panel')[0])
                 .on('scroll', function () {
                     //at begining
-                    
+
                     var autoState = fsm.getCurrentState().state.auto;
                     var top = $(this).scrollTop();
                     //when not on autoplay then scrolling to top will fetch new logs
-                    if (!autoState &&  top === 0) {   
+                    if (!autoState &&  top === 0) {
                         var $panel = $(ui.getElements('panel')[0]),
-                            $currentSection = $panel.children(':first'), 
+                            $currentSection = $panel.children(':first'),
                             currentLine = Number($currentSection.attr('class'));
                         fetchNewLogs(currentLine);
                     }
@@ -957,7 +958,7 @@ define([
                             }
                         }
                         model.setItem('lastLine', lastLine);
-                        
+
                     }
                     if (looping) {
                         scheduleNextRequest();
@@ -966,7 +967,7 @@ define([
             });
             externalEventListeners.push(ev);
 
-            // An error may encountered during the job fetch on the back end. It is 
+            // An error may encountered during the job fetch on the back end. It is
             // reported as a job-comm-error, but translated by the jobs panel as a job-log-deleted
             // TODO: we may want to rethink this. It might be beneficial to emit this as the
             // original error, and let the widget sort it out? Or perhaps on the back end
@@ -1011,9 +1012,11 @@ define([
         }
 
         function stopEventListeners() {
-            externalEventListeners.forEach(function(ev) {
-                runtime.bus().removeListener(ev);
-            });
+            if (externalEventListeners) {
+                externalEventListeners.forEach(function(ev) {
+                    runtime.bus().removeListener(ev);
+                });
+            }
         }
 
         // LIFECYCLE API
@@ -1108,14 +1111,12 @@ define([
 
         function stopJobUpdates() {
             if (listeningForJob) {
-                runtime.bus().emit('request-job-completion', {
-                    jobId: jobId
-                });
                 listeningForJob = false;
             }
         }
 
         function start(arg) {
+            detach();  // if we're alive, remove ourselves before restarting
             var hostNode = arg.node;
             container = hostNode.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
@@ -1139,8 +1140,24 @@ define([
         function stop() {
             stopEventListeners();
             stopJobUpdates();
-            bus.stop();
-            fsm.stop();
+            stopAutoFetch();
+            if (requestLoop) {
+                clearTimeout(requestLoop);
+            }
+            if (bus) {
+                bus.stop();
+            }
+            if (fsm) {
+                fsm.stop();
+            }
+            stopped = false;
+        }
+
+        function detach() {
+            stop();
+            if (container) {
+                container.innerHTML = '';
+            }
         }
 
         // MAIN
@@ -1163,7 +1180,8 @@ define([
         return Object.freeze({
             start: start,
             stop: stop,
-            bus: bus
+            bus: bus,
+            detach: detach
         });
     }
 

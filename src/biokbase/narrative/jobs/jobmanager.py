@@ -86,7 +86,7 @@ class JobManager(object):
             raise new_e
 
         job_ids = [j[0] for j in nar_jobs]
-        job_states = clients.get('job_service_mock').check_jobs({
+        job_states = clients.get('job_service').check_jobs({
             'job_ids': job_ids, 'with_job_params': 1
         })
         job_param_info = job_states.get('job_params', {})
@@ -107,7 +107,8 @@ class JobManager(object):
                                          tag=job_meta.get('tag', 'release'),
                                          cell_id=job_meta.get('cell_id', None),
                                          run_id=job_meta.get('run_id', None),
-                                         token_id=job_meta.get('token_id', None))
+                                         token_id=job_meta.get('token_id', None),
+                                         meta=job_meta)
 
                     # Note that when jobs for this narrative are initially loaded,
                     # they are set to not be refreshed. Rather, if a client requests
@@ -176,6 +177,39 @@ class JobManager(object):
             self._lookup_job_status_loop()
         else:
             self._lookup_all_job_status()
+
+    def _create_jobs(self, job_ids):
+        """
+        TODO: error handling
+        Makes a bunch of Job objects from job_ids.
+        Initially used to make Child jobs from some parent, but will eventually be adapted to all jobs on startup.
+        Just slaps them all into _running_jobs
+        """
+        job_states = clients.get('job_service').check_jobs({'job_ids': job_ids, 'with_job_params': 1})
+        for job_id in job_ids:
+            ujs_info = clients.get('user_and_job_state').get_job_info2(job_id)
+
+            if job_id in job_ids and job_id not in self._running_jobs:
+                job_info = job_states.get('job_params', {}).get(job_id, {})
+                job_meta = ujs_info[10]
+                job = Job.from_state(job_id,                                     # the id
+                                     job_info,                                   # params, etc.
+                                     ujs_info[2],                                # owner id
+                                     app_id=job_info.get('app_id', job_info.get('method')),
+                                     tag=job_meta.get('tag', 'release'),
+                                     cell_id=job_meta.get('cell_id', None),
+                                     run_id=job_meta.get('run_id', None),
+                                     token_id=job_meta.get('token_id', None),
+                                     meta=job_meta)
+
+                # Note that when jobs for this narrative are initially loaded,
+                # they are set to not be refreshed. Rather, if a client requests
+                # updates via the start_job_update message, the refresh flag will
+                # be set to True.
+                self._running_jobs[job_id] = {
+                    'refresh': 0,
+                    'job': job
+                }
 
     def list_jobs(self):
         """
@@ -304,10 +338,10 @@ class JobManager(object):
                 'owner': None
             }
 
-        try:
-            app_spec = job.app_spec()
-        except Exception as e:
-            kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
+        # try:
+        #     app_spec = job.app_spec()
+        # except Exception as e:
+        #     kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
 
         if state is None:
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': 'Unable to get job state for job {}'.format(job.job_id)})
@@ -375,11 +409,63 @@ class JobManager(object):
         if 'canceling' in self._running_jobs[job.job_id]:
             state['job_state'] = 'canceling'
 
+        state.update({
+            'child_jobs': self._child_job_states(
+                state.get('sub_jobs', []),
+                job.meta.get('batch_app'),
+                job.meta.get('batch_tag')
+            )
+        })
+        if 'batch_size' in job.meta:
+            state.update({'batch_size': job.meta['batch_size']})
         return {'state': state,
                 'spec': app_spec,
                 'widget_info': widget_info,
                 'owner': job.owner,
                 'listener_count': self._running_jobs[job.job_id]['refresh']}
+
+    def _child_job_states(self, sub_job_list, app_id, app_tag):
+        """
+        Fetches state for all jobs in the list. These are expected to be child jobs, with no actual Job object associated.
+        So if they're done, we need to do the output mapping out of band.
+        But the check_jobs call with params will return the app id. So that helps.
+
+        app_id = the id of the app that all the child jobs are running (format: module/method, like "MEGAHIT/run_megahit")
+        app_tag = one of "release", "beta", "dev"
+        (the above two aren't stored with the subjob metadata, and won't until we back some more on KBParallel - I want to
+        lobby for pushing toward just starting everything up at once from here and letting HTCondor deal with allocation)
+        sub_job_list = list of ids of jobs to look up
+        """
+        if not sub_job_list:
+            return []
+
+        sub_job_list = sorted(sub_job_list)
+        job_info = clients.get('job_service').check_jobs({'job_ids': sub_job_list, 'with_job_params': 1})
+        child_job_states = list()
+
+        for job_id in sub_job_list:
+            params = job_info['job_params'][job_id]
+            # if it's error, get the error.
+            if job_id in job_info['check_error']:
+                error = job_info['check_error'][job_id]
+                error.update({'job_id': job_id})
+                child_job_states.append(error)
+                continue
+            # if it's done, get the output mapping.
+            state = job_info['job_states'][job_id]
+            if state.get('finished', 0) == 1:
+                try:
+                    widget_info = Job.map_viewer_params(
+                        state,
+                        params['params'],
+                        app_id,
+                        app_tag
+                    )
+                except ValueError:
+                    widget_info = {}
+                state.update({'widget_info': widget_info})
+            child_job_states.append(state)
+        return child_job_states
 
     def _construct_job_status_set(self, job_ids):
         job_states = self._get_all_job_states(job_ids)
@@ -392,17 +478,44 @@ class JobManager(object):
             status_set[job_id] = self._construct_job_status(job, job_states.get(job_id, None))
         return status_set
 
-    def _lookup_job_status(self, job_id):
+    def _verify_job_parentage(self, parent_job_id, child_job_id):
+        """
+        Validate job relationships.
+        1. Make sure parent exists, and the child id is in its list of sub jobs.
+        2. If child doesn't exist, create it and add it to the list.
+        If parent doesn't exist, or child isn't an actual child, raise an exception
+        """
+        if parent_job_id not in self._running_jobs:
+            raise ValueError('Parent job id {} not found, cannot validate child job {}.'.format(parent_job_id, child_job_id))
+        if child_job_id not in self._running_jobs:
+            parent_job = self.get_job(parent_job_id)
+            parent_state = parent_job.state()
+            if child_job_id not in parent_state.get('sub_jobs', []):
+                raise ValueError('Child job id {} is not a child of parent job {}'.format(child_job_id, parent_job_id))
+            else:
+                self._create_jobs([child_job_id])
+                # injects its app id and version
+                child_job = self.get_job(child_job_id)
+                child_job.app_id = parent_job.meta.get('batch_app')
+                child_job.tag = parent_job.meta.get('batch_tag', 'release')
+
+
+    def _lookup_job_status(self, job_id, parent_job_id=None):
         """
         Will raise a ValueError if job_id doesn't exist.
         Sends the status over the comm channel as the usual job_status message.
         """
+
+        # if parent_job is real, and job_id (the child) is not, just add it to the
+        # list of running jobs and work as normal.
+        if parent_job_id is not None:
+            self._verify_job_parentage(parent_job_id, job_id)
         job = self._running_jobs.get(job_id, {}).get('job', None)
         state = self._get_job_state(job_id)
         status = self._construct_job_status(job, state)
         self._send_comm_message('job_status', status)
 
-    def _lookup_job_info(self, job_id):
+    def _lookup_job_info(self, job_id, parent_job_id=None):
         """
         Will raise a ValueError if job_id doesn't exist.
         Sends the info over the comm channel as this packet:
@@ -413,6 +526,10 @@ class JobManager(object):
             job_params: dictionary
         }
         """
+        # if parent_job is real, and job_id (the child) is not, just add it to the
+        # list of running jobs and work as normal.
+        if parent_job_id is not None:
+            self._verify_job_parentage(parent_job_id, job_id)
         job = self.get_job(job_id)
         info = {
             'app_id': job.app_id,
@@ -528,25 +645,32 @@ class JobManager(object):
         if 'request_type' in msg['content']['data']:
             r_type = msg['content']['data']['request_type']
             job_id = msg['content']['data'].get('job_id', None)
-            if job_id is not None and job_id not in self._running_jobs:
+            parent_job_id = msg['content']['data'].get('parent_job_id', None)
+            if job_id is not None and job_id not in self._running_jobs and not parent_job_id:
                 # If it's not a real job, just silently ignore the request.
-                # Maybe return an error? Yeah. Let's do that.
-                # self._send_comm_message('job_comm_error', {'job_id': job_id, 'message': 'Unknown job id', 'request_type': r_type})
+                # Unless it has a parent job id, then its a child job, so things get muddled. If there's 100+ child jobs,
+                # then this might get tricky to look up all of them. Let it pass through and fail if it's not real.
+                #
                 # TODO: perhaps we should implement request/response here. All we really need is to thread a message
                 # id through
                 self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'request_type': r_type})
                 return
+            elif parent_job_id is not None:
+                try:
+                    self._verify_job_parentage(parent_job_id, job_id)
+                except ValueError as e:
+                    self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'parent_job_id': parent_job_id, 'request_type': r_type})
 
             if r_type == 'all_status':
                 self._lookup_all_job_status(ignore_refresh_flag=True)
 
             elif r_type == 'job_status':
                 if job_id is not None:
-                    self._lookup_job_status(job_id)
+                    self._lookup_job_status(job_id, parent_job_id=parent_job_id)
 
             elif r_type == 'job_info':
                 if job_id is not None:
-                    self._lookup_job_info(job_id)
+                    self._lookup_job_info(job_id, parent_job_id=parent_job_id)
 
             elif r_type == 'stop_update_loop':
                 self.cancel_job_lookup_loop()
@@ -567,14 +691,14 @@ class JobManager(object):
             elif r_type == 'delete_job':
                 if job_id is not None:
                     try:
-                        self.delete_job(job_id)
+                        self.delete_job(job_id, parent_job_id=parent_job_id)
                     except Exception as e:
                         self._send_comm_message('job_comm_error', {'message': str(e), 'request_type': r_type, 'job_id': job_id})
 
             elif r_type == 'cancel_job':
                 if job_id is not None:
                     try:
-                        self.cancel_job(job_id)
+                        self.cancel_job(job_id, parent_job_id=parent_job_id)
                     except Exception as e:
                         self._send_comm_message('job_comm_error', {'message': str(e), 'request_type': r_type, 'job_id': job_id})
 
@@ -582,7 +706,7 @@ class JobManager(object):
                 if job_id is not None:
                     first_line = msg['content']['data'].get('first_line', 0)
                     num_lines = msg['content']['data'].get('num_lines', None)
-                    self._get_job_logs(job_id, first_line=first_line, num_lines=num_lines)
+                    self._get_job_logs(job_id, parent_job_id=parent_job_id, first_line=first_line, num_lines=num_lines)
                 else:
                     raise ValueError('Need a job id to fetch jobs!')
 
@@ -590,7 +714,7 @@ class JobManager(object):
                 if job_id is not None:
                     num_lines = msg['content']['data'].get('num_lines', None)
                     try:
-                        self._get_latest_job_logs(job_id, num_lines=num_lines)
+                        self._get_latest_job_logs(job_id, parent_job_id=parent_job_id, num_lines=num_lines)
                     except Exception as e:
                         self._send_comm_message('job_comm_error', {
                             'job_id': job_id,
@@ -603,7 +727,7 @@ class JobManager(object):
                 self._send_comm_message('job_comm_error', {'message': 'Unknown message', 'request_type': r_type})
                 raise ValueError('Unknown KBaseJobs message "{}"'.format(r_type))
 
-    def _get_latest_job_logs(self, job_id, num_lines=None):
+    def _get_latest_job_logs(self, job_id, parent_job_id=None, num_lines=None):
         job = self.get_job(job_id)
         if job is None:
             raise ValueError('job "{}" not found while fetching logs!'.format(job_id))
@@ -621,7 +745,10 @@ class JobManager(object):
             'lines': logs,
             'latest': True})
 
-    def _get_job_logs(self, job_id, first_line=0, num_lines=None):
+    def _get_job_logs(self, job_id, parent_job_id=None, first_line=0, num_lines=None):
+        # if parent_job is real, and job_id (the child) is not, just add it to the
+        # list of running jobs and work as normal.
+
         job = self.get_job(job_id)
         if job is None:
             raise ValueError('job "{}" not found!'.format(job_id))
@@ -629,7 +756,7 @@ class JobManager(object):
         (max_lines, log_slice) = job.log(first_line=first_line, num_lines=num_lines)
         self._send_comm_message('job_logs', {'job_id': job_id, 'first': first_line, 'max_lines': max_lines, 'lines': log_slice, 'latest': False})
 
-    def delete_job(self, job_id):
+    def delete_job(self, job_id, parent_job_id=None):
         """
         If the job_id doesn't exist, raises a ValueError.
         Attempts to delete a job, and cancels it first. If the job cannot be canceled,
@@ -638,13 +765,13 @@ class JobManager(object):
         """
         if job_id is None:
             raise ValueError('Job id required for deletion!')
-        if job_id not in self._running_jobs:
+        if not parent_job_id and job_id not in self._running_jobs:
             self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'source': 'delete_job'})
             return
             # raise ValueError('Attempting to cancel a Job that does not exist!')
 
         try:
-            self.cancel_job(job_id)
+            self.cancel_job(job_id, parent_job_id=parent_job_id)
         except Exception:
             raise
 
@@ -653,12 +780,13 @@ class JobManager(object):
         except Exception:
             raise
 
-        del self._running_jobs[job_id]
+        if job_id in self._running_jobs:
+            del self._running_jobs[job_id]
         if job_id in self._completed_job_states:
             del self._completed_job_states[job_id]
         self._send_comm_message('job_deleted', {'job_id': job_id})
 
-    def cancel_job(self, job_id):
+    def cancel_job(self, job_id, parent_job_id=None):
         """
         Cancels a running job, placing it in a canceled state.
         Does NOT delete the job.
@@ -667,12 +795,12 @@ class JobManager(object):
 
         if job_id is None:
             raise ValueError('Job id required for cancellation!')
-        if job_id not in self._running_jobs:
+        if not parent_job_id and job_id not in self._running_jobs:
             self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'source': 'cancel_job'})
             return
 
         try:
-            state = self._get_job_state(job_id)
+            state = self._get_job_state(job_id, parent_job_id=parent_job_id)
             if state.get('canceled', 0) == 1 or state.get('finished', 0) == 1:
                 # It's already finished, don't try to cancel it again.
                 return
@@ -681,9 +809,10 @@ class JobManager(object):
 
         # Stop updating the job status while we try to cancel.
         # Also, set it to have a special state of 'canceling' while we're doing the cancel
-        is_refreshing = self._running_jobs[job_id].get('refresh', 0)
-        self._running_jobs[job_id]['refresh'] = 0
-        self._running_jobs[job_id]['canceling'] = True
+        if not parent_job_id:
+            is_refreshing = self._running_jobs[job_id].get('refresh', 0)
+            self._running_jobs[job_id]['refresh'] = 0
+            self._running_jobs[job_id]['canceling'] = True
         try:
             clients.get('job_service').cancel_job({'job_id': job_id})
         except Exception as e:
@@ -700,11 +829,12 @@ class JobManager(object):
             self._send_comm_message('job_comm_error', error)
             raise(e)
         finally:
-            self._running_jobs[job_id]['refresh'] = is_refreshing
-            del self._running_jobs[job_id]['canceling']
+            if not parent_job_id:
+                self._running_jobs[job_id]['refresh'] = is_refreshing
+                del self._running_jobs[job_id]['canceling']
 
         # Rather than a separate message, how about triggering a job-status message:
-        self._lookup_job_status(job_id)
+        self._lookup_job_status(job_id, parent_job_id=parent_job_id)
 
     def _send_comm_message(self, msg_type, content):
         """
@@ -740,7 +870,7 @@ class JobManager(object):
                 jobs_to_lookup.append(job_id)
         # 3. Lookup those jobs what need it. Cache 'em as we go, if finished.
         try:
-            fetched_states = clients.get('job_service_mock').check_jobs({'job_ids': jobs_to_lookup})
+            fetched_states = clients.get('job_service').check_jobs({'job_ids': jobs_to_lookup})
         except Exception as e:
             kblogging.log_event(self._log, 'get_all_job_states_error', {'err': str(e)})
             return {}
@@ -761,7 +891,9 @@ class JobManager(object):
 
         return job_states
 
-    def _get_job_state(self, job_id):
+    def _get_job_state(self, job_id, parent_job_id=None):
+        if parent_job_id is not None:
+            self._verify_job_parentage(parent_job_id, job_id)
         if job_id is None or job_id not in self._running_jobs:
             raise ValueError('job_id {} not found'.format(job_id))
         if job_id in self._completed_job_states:

@@ -7,7 +7,8 @@ from biokbase.narrative.upa import (
     external_tag,
     serialize,
     deserialize,
-    serialize_external
+    serialize_external,
+    is_ref
 )
 import os
 
@@ -82,6 +83,26 @@ class UpaApiTestCase(unittest.TestCase):
             "[1]2/23/4",
             "[1]2/3/4;5/6/7"
         ]
+
+        self.good_refs = [
+            "1/2",
+            "foo/2",
+            "1/bar",
+            "foo/bar",
+            "1/2/3",
+            "foo/2/3",
+            "1/bar/3",
+            "foo/bar/3",
+            "foo/bar/3;1/2/3"
+        ]
+
+        self.bad_refs = [
+            "foo",
+            "1",
+            "1/2/3/4"
+            "1;2"
+        ]
+
         for bad_upa in self.bad_upas:
             self.bad_serials.append(external_tag + bad_upa)
 
@@ -145,6 +166,18 @@ class UpaApiTestCase(unittest.TestCase):
         finally:
             if tmp is not None:
                 os.environ['KB_WORKSPACE_ID'] = tmp
+
+    def test_is_ref(self):
+        """
+        Explicitly test the is_ref function.
+        UPAs should pass, as well as shorter ws_name/obj_name, ws_id/obj_name, ws_id/obj_id references.
+        """
+        for ref in self.good_refs:
+            self.assertTrue(is_ref(ref))
+
+        for ref in self.bad_refs:
+            self.assertFalse(is_ref(ref))
+
 
 if __name__ == '__main__':
     unittest.main()

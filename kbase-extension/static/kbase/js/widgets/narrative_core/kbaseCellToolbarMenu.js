@@ -8,6 +8,7 @@ define([
     'common/utils',
     'util/bootstrapDialog',
     'kbase/js/widgets/appInfoPanel',
+    'narrativeConfig',
     'custom/custom'
 ], function(
     $,
@@ -16,7 +17,8 @@ define([
     Jupyter,
     utils,
     BootstrapDialog,
-    AppInfoPanel
+    AppInfoPanel,
+    Config
 ) {
     'use strict';
 
@@ -259,6 +261,28 @@ define([
                         type: 'click',
                         handler: function() {
                             cell.showInfo();
+                        }
+                    })
+                });
+            }
+
+            if (cell.toggleBatch && Config.get('features').batchAppMode) {
+                menuItems.push({
+                    name: 'batch',
+                    label: 'Toggle Batch',
+                    icon: {
+                        type: 'table',
+                        color: 'black'
+                    },
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: () => {
+                            cell.toggleBatch();
+                            // var currentBatch = cell.metadata.kbase.appCell['user-settings'].batchMode;
+                            // if (currentBatch === undefined || currentBatch === null) {
+                            //     currentBatch = false;
+                            // }
+                            // cell.metadata.kbase.appCell['user-settings'].batchMode = !currentBatch;
                         }
                     })
                 });

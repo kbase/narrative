@@ -36,10 +36,6 @@ define([
         return cell.metadata.kbase[group][name];
     }
 
-    // function makeKBaseMenux(div, cell) {
-    //     new KBaseNarrativeCellMenu(div, { cell: cell });
-    // }
-    //
     function makeKBaseMenu($toolbarNode, cell) {
         var kbaseMenu = KBaseMenu.make();
         kbaseMenu.register_callback($toolbarNode, cell);
@@ -58,7 +54,6 @@ define([
     }
 
     var register = function (notebook) {
-        // celltoolbar.CellToolbar.register_callback('kbase.menu', makeKBaseMenux);
         celltoolbar.CellToolbar.register_callback('kbase-status', status);
         celltoolbar.CellToolbar.register_callback('kbase-job-status', jobStatus);
         celltoolbar.CellToolbar.register_callback('kbase-menu', makeKBaseMenu);

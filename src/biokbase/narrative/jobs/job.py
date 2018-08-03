@@ -27,7 +27,7 @@ class Job(object):
     _last_state = None
 
     def __init__(self, job_id, app_id, inputs, owner, tag='release', app_version=None,
-                 cell_id=None, run_id=None, token_id=None):
+                 cell_id=None, run_id=None, token_id=None, meta=dict()):
         """
         Initializes a new Job with a given id, app id, and app app_version.
         The app_id and app_version should both align with what's available in
@@ -42,10 +42,11 @@ class Job(object):
         self.inputs = inputs
         self.owner = owner
         self.token_id = token_id
+        self.meta = meta
 
     @classmethod
     def from_state(Job, job_id, job_info, owner, app_id, tag='release',
-                   cell_id=None, run_id=None, token_id=None):
+                   cell_id=None, run_id=None, token_id=None, meta=dict()):
         """
         Parameters:
         -----------
@@ -75,7 +76,23 @@ class Job(object):
                    app_version=job_info.get('service_ver', None),
                    cell_id=cell_id,
                    run_id=run_id,
-                   token_id=token_id)
+                   token_id=token_id,
+                   meta=meta)
+
+    @classmethod
+    def map_viewer_params(Job, job_state, job_inputs, app_id, app_tag):
+        # get app spec.
+        if job_state is None or job_state['job_state'] != 'completed':
+            return None
+
+        spec = SpecManager().get_spec(app_id, app_tag)
+        (output_widget, widget_params) = map_outputs_from_state(job_state, map_inputs_from_job(job_inputs, spec), spec)
+        return {
+            'name': output_widget,
+            'tag': app_tag,
+            'params': widget_params
+        }
+
 
     def info(self):
         spec = self.app_spec()
@@ -122,7 +139,7 @@ class Job(object):
         if self._last_state is not None and self._last_state.get('finished', 0) == 1:
             return self._last_state
         try:
-            state = clients.get("job_service_mock").check_job(self.job_id)
+            state = clients.get("job_service").check_job(self.job_id)
             if 'cancelled' in state:
                 state[u'canceled'] = state.get('cancelled', 0)
                 del state['cancelled']
@@ -151,6 +168,9 @@ class Job(object):
             return "Job is incomplete! It has status '{}'".format(state['job_state'])
 
     def get_viewer_params(self, state):
+        """
+        Maps job state 'result' onto the inputs for a viewer.
+        """
         if state is None or state['job_state'] != 'completed':
             return None
         (output_widget, widget_params) = self._get_output_info(state)

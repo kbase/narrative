@@ -1,0 +1,22 @@
+.batch-mode-col {
+    padding: 5px 10px;
+    overflow: auto;
+}
+
+.job-info {
+    cursor: pointer;
+}
+
+.job-info.job-selected {
+    background-color: #eee;
+}
+
+.batch-mode-list {
+    max-height: 860px;
+    overflow: auto;
+}
+
+.batch-input-panel {
+    max-height: 300px;
+    overflow: auto;
+}

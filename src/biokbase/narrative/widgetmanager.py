@@ -247,7 +247,8 @@ class WidgetManager(object):
         params = self.widget_info[tag][widget_name]["params"]
         print(widget_name)
         for p in params:
-            if not params[p].get("is_constant", False):
+            is_const = params[p].get("is_constant", False)
+            if not is_const or "allowed_values" in params[p]:
                 p_def = "%s - %s" % (p, params[p]["param_type"])
                 if "allowed_types" in params[p]:
                     p_def = p_def + " - is a workspace object where the type is one of: %s" % (json.dumps(params[p]["allowed_types"]))
@@ -386,6 +387,8 @@ class WidgetManager(object):
 
         This applies for lists, too. If, above, the value for the "name" parameter was a list of
         strings, this would treat all of those as objects, and try to return a list of UPAs instead.
+
+
         """
         param_to_context = self.widget_param_map.get(widget_name, {})
         obj_names = list()  # list of tuples - first = param id, second = object name
@@ -444,10 +447,11 @@ class WidgetManager(object):
                 info_params.append({"ref": "{}/{}".format(ws, name)})
                 lookup_params.append(param)
 
-        ws_client = clients.get('workspace')
-        ws_info = ws_client.get_object_info3({'objects': info_params})
-        for (idx, path) in enumerate(ws_info['paths']):
-            upas[lookup_params[idx]] = ';'.join(path)
+        if (len(lookup_params)):
+            ws_client = clients.get('workspace')
+            ws_info = ws_client.get_object_info3({'objects': info_params})
+            for (idx, path) in enumerate(ws_info['paths']):
+                upas[lookup_params[idx]] = ';'.join(path)
 
         # obj_refs and obj_names are done. Do the list versions now.
         lookup_params = list()
@@ -575,6 +579,7 @@ class WidgetManager(object):
         info_tuple = clients.get('workspace').get_object_info_new({'objects': [{'ref': upa}],
                                                                    'includeMetadata': 1})[0]
         bare_type = info_tuple[2].split('-')[0]
+        type_module = bare_type.split(".")[0]
 
         type_spec = self._sm.get_type_spec(bare_type, raise_exception=False)
 
@@ -588,6 +593,8 @@ class WidgetManager(object):
             }
             upas = {'upas': [upa]}
         else:
+            if not type_spec.get('view_method_ids'):
+                return "No viewer found for objects of type {}".format(bare_type)
             app_id = type_spec['view_method_ids'][0]
             app_spec = None
             try:
@@ -610,7 +617,7 @@ class WidgetManager(object):
                 obj_param_value = upa if (is_ref_path or is_external) else info_tuple[1]
                 upa_params = list()
                 for param in spec_params:
-                    if any(t == bare_type for t in param['allowed_types']):
+                    if any((t == bare_type or t == type_module) for t in param['allowed_types']):
                         input_params[param['id']] = obj_param_value
                         upa_params.append(param['id'])
 

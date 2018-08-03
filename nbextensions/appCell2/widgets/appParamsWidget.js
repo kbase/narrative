@@ -15,7 +15,8 @@ define([
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
 
-    'common/runtime'
+    'common/runtime',
+    'narrativeConfig'
     // All the input widgets
 
 ], function (
@@ -29,7 +30,8 @@ define([
     RowWidget,
     FieldWidget,
     ParamResolver,
-    Runtime
+    Runtime,
+    Config
 
     // Input widgets
 ) {
@@ -38,7 +40,8 @@ define([
     var t = html.tag,
         form = t('form'),
         span = t('span'),
-        div = t('div');
+        div = t('div'),
+        b = t('b');
 
     function factory(config) {
         var runtime = Runtime.make(),
@@ -289,40 +292,28 @@ define([
             events.attachEvents();
         }
 
-        function buildBatchToggleButton(batchMode, events) {
-            var classes = [];
-            if (batchMode) {
-                classes.push('batch-active');
-            }
-            var btn = ui.buildButton({
-                dataElement: 'batch-toggle',
-                style: { width: '80px' },
-                label: 'Batch',
-                name: 'batch-toggle',
-                events: events,
-                type: 'default',
-                classes: classes,
-                hidden: false,
-                event: {
-                    type: 'batch-mode-toggle'
-                }
+        function renderBatchModeMessage() {
+            return ui.buildPanel({
+                title: span('Batch Mode'),
+                name: 'batch-mode-doc',
+                body: div({
+                    style: 'margin-left: 3ex'
+                }, [
+                    div('This App is set to Batch mode. To configure this app, you\'ll need to set the list of parameters manually.'),
+                    div('The easiest way to do this is to configure a single run app, toggle into Batch mode, then use the "Show code" menu option to review currently set inputs for this app.'),
+                    div('Then, just add another parameter dictionary to the batch_params list for each App run you want to do.<br>'),
+                    div('Once your batch is configured, press the "Run" button as usual.'),
+                    div({style: 'margin-top: 1ex'}, ['Tutorials, documentation, and API details to help you craft a set of App parameters can be found <a href="//kbase.us" target="api_doc">here</a>.'])
+                ]),
+                classes: ['kb-panel-light']
             });
-            bus.on('batch-mode-toggle', function(message) {
-                paramsBus.emit('toggle-batch-mode');
-                ui.getButton('batch-toggle').classList.toggle('batch-active');
-            });
-            return div({
-                class: 'btn-group',
-                style: { padding: '3px' },
-            }, btn);
         }
 
         function renderLayout(batchMode) {
             var events = Events.make(),
-                batchToggleBtn = buildBatchToggleButton(batchMode, events),
-                formContent = [batchToggleBtn];
+                formContent = [];
             if (batchMode) {
-                formContent.push(div('batch mode!'));
+                formContent.push(renderBatchModeMessage());
             }
             else {
                 formContent = formContent.concat([

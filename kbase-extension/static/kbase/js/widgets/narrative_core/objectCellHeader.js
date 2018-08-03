@@ -60,6 +60,7 @@ define([
                 else if (Array.isArray(upa)) {
                     upa.forEach(function(subUpa) {
                         self.options.upas[subUpa] = {};
+                        self.objectInfo[subUpa] = {};
                     });
                 }
             });

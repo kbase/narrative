@@ -572,7 +572,7 @@ class WidgetManager(object):
             release state (should be one of release, beta, or dev)
         """
         widget_name = 'kbaseNarrativeError'             # default, expecting things to bomb.
-        default_widget = 'kbaseDefaultObjectView'
+        default_widget = 'widgets/function_output/kbaseDefaultObjectView'
         widget_name = default_widget
         widget_data = dict()
         upas = dict()

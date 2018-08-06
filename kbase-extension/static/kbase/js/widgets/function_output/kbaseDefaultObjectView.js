@@ -94,7 +94,7 @@ define([
                 }, [
                     'Objects of type ',
                     b(objInfo.typeModule + '.' + objInfo.typeName),
-                    'don\'t have a view associated with them',
+                    ' don\'t have a view associated with them',
                     '<br>',
                     'High level object information is below.'
                 ]),

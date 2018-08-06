@@ -591,7 +591,7 @@ class WidgetManager(object):
                     "traceback": "Can't find type spec info for type {}".format(bare_type)
                 }
             }
-            upas = {'upas': [upa]}
+            upas['upas'] = [upa]  # doompety-doo
         else:
             if not type_spec.get('view_method_ids'):
                 return "No viewer found for objects of type {}".format(bare_type)

@@ -24,10 +24,8 @@ define([
         beforeEach(() => {
             jasmine.Ajax.install();
             $div = $('<div>');
-            if (TestUtil.getAuthToken()) {
-                Jupyter.narrative = new Narrative();
-                Jupyter.narrative.getAuthToken = () => { return TestUtil.getAuthToken(); };
-            }
+            Jupyter.narrative = new Narrative();
+            Jupyter.narrative.getAuthToken = () => { return 'NotARealToken!' };
         });
 
         afterEach(() => {

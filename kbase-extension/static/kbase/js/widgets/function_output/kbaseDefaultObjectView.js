@@ -32,7 +32,6 @@ define([
 
         init: function(options) {
             this._super(options);
-            console.error('OPTIONS: ' + JSON.stringify(options));
             this.token = Runtime.make().authToken();
             this.render(this.options.upas.upas);
             return this;

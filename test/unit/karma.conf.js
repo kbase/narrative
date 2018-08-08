@@ -20,8 +20,8 @@ module.exports = function (config) {
         },
         files: [
             'kbase-extension/static/narrative_paths.js',
-            // {pattern: 'test/unit/spec/**/*.js', included: false},
-            {pattern: 'test/unit/spec/function_output/kbaseDefaultObjectView-spec.js', included: false},
+            {pattern: 'test/unit/spec/**/*.js', included: false},
+            // {pattern: 'test/unit/spec/function_output/kbaseDefaultObjectView-spec.js', included: false},
             {pattern: 'node_modules/string.prototype.startswith/startswith.js', included: true},
             {pattern: 'node_modules/string.prototype.endswith/endswith.js', included: true},
             {pattern: 'node_modules/jasmine-ajax/lib/mock-ajax.js', included: true},

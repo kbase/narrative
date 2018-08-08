@@ -6,6 +6,7 @@ define([
     'narrativeConfig',
     'kb_service/utils',
     'kb_common/html',
+    'kbaseTabs',
     'kbase-client-api'
 ], function (
     Promise,
@@ -14,7 +15,8 @@ define([
     kbaseAuthenticatedWidget,
     Config,
     ServiceUtils,
-    html
+    html,
+    KBaseTabs
 ) {
     'use strict';
     return KBWidget({
@@ -43,16 +45,60 @@ define([
             }
             else {
                 htmlProm = this.fetchObjectInfo(upas)
-                    .then((objectInfo) => {
-                        let renderedObjects = objectInfo.infos.map((info) => {
-                            return this.renderObjectInfo(ServiceUtils.objectInfoToObject(info));
+                    .then((objectList) => {
+                        let objectInfos = objectList.infos.map((info) => {
+                            return ServiceUtils.objectInfoToObject(info);
+                        }),
+                            renderedObjects = [],
+                            renderedMetadata = [];
+                        objectInfos.forEach((info) => {
+                            renderedObjects.push(this.renderObjectInfo(info));
+                            renderedMetadata.push(this.renderObjectMeta(info.metadata));
                         });
-                        return renderedObjects.join();
+
+                        let $tabDiv = $('<div>'),
+                            $tabWidget = new KBaseTabs($tabDiv, {
+                                tabs: [{
+                                    tab: 'Overview',
+                                    content: $('<div>').append(renderedObjects.join())
+                                }, {
+                                    tab: 'Metadata',
+                                    content: $('<div>').append(renderedMetadata.join())
+                                }]
+                            });
+                        return $tabDiv;
+                        // return $('<div>').append(this.renderWarningAlert()).append($tabDiv);
                     });
             }
             htmlProm.then((html) => {
                 this.$elem.append(html);
             });
+        },
+
+        renderObjectMeta: function(meta) {
+            if (!meta || Object.keys(meta).length === 0) {
+                return 'No metadata found for this object.';
+            }
+            let t = html.tag,
+                div = t('div'),
+                table = t('table'),
+                tr = t('tr'),
+                td = t('td'),
+                th = t('th'),
+                metaTableRows = Object.keys(meta).map((key) => {
+                    return tr([
+                        td(key),
+                        td(meta[key])
+                    ]);
+                }),
+                metaTable = table({
+                    class: 'table table-bordered table-striped'
+                }, [
+                    th('Key'),
+                    th('Value')
+                ].concat(metaTableRows)
+                );
+            return metaTable;
         },
 
         /**
@@ -79,6 +125,19 @@ define([
             }));
         },
 
+        renderWarningAlert: function(objType) {
+            let t = html.tag,
+                div = t('div'),
+                b = t('b');
+            return div({
+                style: {
+                    padding: '5px'
+                }
+            }, [
+                'Objects of this type don\'t have a viewer associated with them. Showing default information.',
+            ]);
+        },
+
         /**
          * Takes in the result of a successful get_object_info3 call and renders the thing.
          */
@@ -89,15 +148,7 @@ define([
                 b = t('b'),
                 i = t('i'),
                 a = t('a'),
-                message = div({
-                    class: 'alert alert-warning'
-                }, [
-                    'Objects of type ',
-                    b(objInfo.typeModule + '.' + objInfo.typeName),
-                    ' don\'t have a view associated with them.',
-                    '<br>',
-                    'High level object information is below.'
-                ]),
+                message = this.renderWarningAlert(),
                 infoDiv = div({
                     style: {
                         marginTop: '5px',
@@ -197,7 +248,7 @@ define([
 
 
             return div([
-                div(message),
+                message,
                 infoDiv
             ]);
         },

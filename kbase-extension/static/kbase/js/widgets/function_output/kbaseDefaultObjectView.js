@@ -33,7 +33,8 @@ define([
         init: function(options) {
             this._super(options);
             this.token = Runtime.make().authToken();
-            return this.render(this.options.upas.upas);
+            this.render(this.options.upas.upas);
+            return this;
         },
 
         /**
@@ -52,11 +53,12 @@ define([
             else {
                 htmlProm = this.fetchObjectInfo(upas)
                     .then((objectList) => {
-                        let objectInfos = objectList.infos.map((info) => {
-                            return ServiceUtils.objectInfoToObject(info);
-                        }),
-                            renderedObjects = [],
-                            renderedMetadata = [];
+                        let renderedObjects = [],
+                            renderedMetadata = [],
+                            objectInfos = objectList.infos.map((info) => {
+                                return ServiceUtils.objectInfoToObject(info);
+                            });
+
                         objectInfos.forEach((info) => {
                             renderedObjects.push(this.renderObjectInfo(info));
                             renderedMetadata.push(this.renderObjectMeta(info.metadata));
@@ -73,11 +75,10 @@ define([
                                 }]
                             });
                         return $tabDiv;
-                        // return $('<div>').append(this.renderWarningAlert()).append($tabDiv);
                     });
             }
             return htmlProm.then((html) => {
-                this.$elem.append(html);
+                this.$elem.empty().append(html);
             });
         },
 

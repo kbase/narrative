@@ -7,12 +7,14 @@ define([
     'jquery',
     'widgets/function_output/kbaseDefaultObjectView',
     'testUtil',
+    'common/runtime',
     'base/js/namespace',
     'kbaseNarrative'
 ], (
     $,
     KBaseDefaultObjectView,
     TestUtil,
+    Runtime,
     Jupyter,
     Narrative
 ) => {
@@ -24,17 +26,7 @@ define([
             $div = $('<div>');
             if (TestUtil.getAuthToken()) {
                 Jupyter.narrative = new Narrative();
-                Jupyter.narrative.authToken = TestUtil.getAuthToken();
-                // Jupyter.narrative.userId = TestUtil.getUserId();
-                // Jupyter.narrative.sidePanel = {
-                //     '$dataWidget': {
-                //         '$overlayPanel': {}
-                //     }
-                // };
-                // stagingViewer = new StagingAreaViewer($targetNode, {
-                //     path: startingPath,
-                //     updatePathFn: updatePathFn
-                // });
+                Jupyter.narrative.getAuthToken = () => { return TestUtil.getAuthToken(); };
             }
         });
 
@@ -43,10 +35,14 @@ define([
             $div.remove();
         });
 
-        it('Should load properly when no upas given', () => {
+        it('Should load properly when no upas given', (done) => {
             TestUtil.pendingIfNoToken();
             let w = new KBaseDefaultObjectView($div);
-            expect($div.html()).toContainText('No objects to display!');
+            w.render()
+                .then(() => {
+                    expect($div.html()).toContain('No objects to display!');
+                    done();
+                });
         });
 
         it('Should load properly when not logged in', () => {

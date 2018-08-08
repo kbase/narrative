@@ -75,6 +75,7 @@ define('testUtil', [
             require(['text!' + tokenFile],
                 function(loadedToken) {
                     token = loadedToken.trim();
+                    console.warn('Loaded token file ' + tokenFile);
                     resolve(token);
                 },
                 function() {

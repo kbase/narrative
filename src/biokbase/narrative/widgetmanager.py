@@ -571,9 +571,7 @@ class WidgetManager(object):
             All objects are related to their viewers by an app. This is the tag for that app's
             release state (should be one of release, beta, or dev)
         """
-        widget_name = 'kbaseNarrativeError'             # default, expecting things to bomb.
-        default_widget = 'widgets/function_output/kbaseDefaultObjectView'
-        widget_name = default_widget
+        widget_name = 'widgets/function_output/kbaseDefaultObjectView'   # set as default, overridden below
         widget_data = dict()
         upas = dict()
         info_tuple = clients.get('workspace').get_object_info_new({'objects': [{'ref': upa}],
@@ -617,15 +615,13 @@ class WidgetManager(object):
                 obj_param_value = upa if (is_ref_path or is_external) else info_tuple[1]
                 upa_params = list()
                 for param in spec_params:
-                    if any((t == bare_type or t == type_module) for t in param['allowed_types']):
+                    if param.get('allowed_types') is None or any((t == bare_type or t == type_module) for t in param.get('allowed_types', [])):
                         input_params[param['id']] = obj_param_value
                         upa_params.append(param['id'])
 
                 (input_params, ws_refs) = validate_parameters(app_id, tag,
                                                               spec_params, input_params)
                 (widget_name, widget_data) = map_outputs_from_state([], input_params, app_spec)
-                # widget_name = app_spec['widgets']['output']
-                # widget_data = output
 
                 # Figure out params for upas.
                 for mapping in app_spec.get('behavior', {}).get('output_mapping', []):

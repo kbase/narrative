@@ -7,6 +7,7 @@ define([
     'kb_service/utils',
     'kb_common/html',
     'kbaseTabs',
+    'common/runtime',
     'kbase-client-api'
 ], function (
     Promise,
@@ -16,18 +17,23 @@ define([
     Config,
     ServiceUtils,
     html,
-    KBaseTabs
+    KBaseTabs,
+    Runtime
 ) {
     'use strict';
     return KBWidget({
         name: 'kbaseDefaultObjectView',
         parent: kbaseAuthenticatedWidget,
         options: {
-            upas: []
+            upas: {
+                upas: []
+            }
         },
 
         init: function(options) {
             this._super(options);
+            this.token = Runtime.make().authToken();
+            return this.render(this.options.upas.upas);
         },
 
         /**
@@ -70,7 +76,7 @@ define([
                         // return $('<div>').append(this.renderWarningAlert()).append($tabDiv);
                     });
             }
-            htmlProm.then((html) => {
+            return htmlProm.then((html) => {
                 this.$elem.append(html);
             });
         },
@@ -107,7 +113,22 @@ define([
          */
         renderMessage: function(msg, isError) {
             return Promise.try(() => {
-                return 'msg';
+                let divAtts = {
+                    style: {
+                        padding: '5px'
+                    }
+                },
+                t = html.tag,
+                div = t('div');
+                if (isError) {
+                    divAtts = {
+                        class: 'alert alert-danger'
+                    }
+                }
+                return div(
+                    divAtts,
+                    [msg]
+                );
             });
         },
 
@@ -246,23 +267,10 @@ define([
                     ]),
                 ]);
 
-
             return div([
                 message,
                 infoDiv
             ]);
         },
-
-        loggedInCallback: function(event, auth) {
-            this.token = auth.token;
-            this.render(this.options.upas.upas);
-            return this;
-        },
-
-        loggedOutCallback: function(event, auth) {
-            this.token = null;
-            this.render();
-            return this;
-        }
     });
 });

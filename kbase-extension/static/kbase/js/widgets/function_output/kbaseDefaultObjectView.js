@@ -32,6 +32,7 @@ define([
 
         init: function(options) {
             this._super(options);
+            console.error('OPTIONS: ' + JSON.stringify(options));
             this.token = Runtime.make().authToken();
             this.render(this.options.upas.upas);
             return this;
@@ -75,6 +76,10 @@ define([
                                 }]
                             });
                         return $tabDiv;
+                    })
+                    .catch((error) => {
+                        console.error(JSON.stringify(error));
+                        return this.renderMessage('Unable to retrieve object information for ' + JSON.stringify(upas), true);
                     });
             }
             return htmlProm.then((html) => {

@@ -367,13 +367,31 @@ define([
         }
 
         function render(cell) {
+            // span({
+            //     class: 'fa fa-exclamation-triangle',
+            //     style: {
+            //         color: '#f4c242',
+            //         paddingLeft: '5px'
+            //     }
+            // })
             var events = Events.make({ node: container }),
                 buttons = [
                     div({ class: 'buttons pull-right' }, [
                         span({ class: 'kb-func-timestamp' }),
                         span({ class: 'fa fa-circle-o-notch fa-spin', style: { color: 'rgb(42, 121, 191)', display: 'none' } }),
                         span({ class: 'fa fa-exclamation-triangle', style: { color: 'rgb(255, 0, 0)', display: 'none' } }),
-
+                        (!utils.getCellMeta(cell, 'kbase.appCell.outdated', false) ? null : button({
+                            type: 'button',
+                            class: 'btn btn-default btn-xs',
+                            dataToggle: 'tooltip',
+                            dataPlacement: 'bottom',
+                            title: true,
+                            dataOriginalTitle: 'outdated, yo.',
+                            id: events.addEvent({ type: 'click', handler: function() {alert('out of date');} }),
+                            style: { color: '#f4c242' }
+                        }, [
+                            span({ class: 'fa fa-exclamation-triangle fa-lg' })
+                        ])),
                         (readOnly ? null : button({
                             type: 'button',
                             class: 'btn btn-default btn-xs',
@@ -394,7 +412,7 @@ define([
                             dataOriginalTitle: 'Move Cell Down',
                             id: events.addEvent({ type: 'click', handler: doMoveCellDown })
                         }, [
-                            span({ class: 'fa fa-arrow-down fa-lg', style: 'xfont-size: 18px' })
+                            span({ class: 'fa fa-arrow-down fa-lg' })
                         ])),
                         renderOptions(cell, events),
                         (function() {
@@ -447,8 +465,27 @@ define([
                                     buildIcon(cell)
                                 ]),
                                 div({ style: { flexGrow: '1' } }, [
-                                    div({ dataElement: 'title', class: 'title', style: { lineHeight: '20px', height: '20px', marginTop: '8px', overflow: 'hidden' } }, [getCellTitle(cell)]),
-                                    div({ dataElement: 'subtitle', class: 'subtitle', style: { lineHeight: '20px', height: '20px', overflow: 'hidden' } }, [getCellSubtitle(cell)])
+                                    div({
+                                        dataElement: 'title',
+                                        class: 'title',
+                                        style: {
+                                            lineHeight: '20px',
+                                            height: '20px',
+                                            marginTop: '8px',
+                                            overflow: 'hidden'
+                                        }
+                                    }, [
+                                        getCellTitle(cell)
+                                    ]),
+                                    div({
+                                        dataElement: 'subtitle',
+                                        class: 'subtitle',
+                                        style: {
+                                            lineHeight: '20px',
+                                            height: '20px',
+                                            overflow: 'hidden'
+                                        }
+                                    }, [getCellSubtitle(cell)])
                                 ])
                             ])
                         ]),

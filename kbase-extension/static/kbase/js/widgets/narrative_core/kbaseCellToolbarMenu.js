@@ -367,31 +367,13 @@ define([
         }
 
         function render(cell) {
-            // span({
-            //     class: 'fa fa-exclamation-triangle',
-            //     style: {
-            //         color: '#f4c242',
-            //         paddingLeft: '5px'
-            //     }
-            // })
             var events = Events.make({ node: container }),
                 buttons = [
                     div({ class: 'buttons pull-right' }, [
                         span({ class: 'kb-func-timestamp' }),
                         span({ class: 'fa fa-circle-o-notch fa-spin', style: { color: 'rgb(42, 121, 191)', display: 'none' } }),
                         span({ class: 'fa fa-exclamation-triangle', style: { color: 'rgb(255, 0, 0)', display: 'none' } }),
-                        (!utils.getCellMeta(cell, 'kbase.appCell.outdated', false) ? null : button({
-                            type: 'button',
-                            class: 'btn btn-default btn-xs',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'bottom',
-                            title: true,
-                            dataOriginalTitle: 'outdated, yo.',
-                            id: events.addEvent({ type: 'click', handler: function() {alert('out of date');} }),
-                            style: { color: '#f4c242' }
-                        }, [
-                            span({ class: 'fa fa-exclamation-triangle fa-lg' })
-                        ])),
+                        // getOutdatedWarning(cell),
                         (readOnly ? null : button({
                             type: 'button',
                             class: 'btn btn-default btn-xs',
@@ -475,7 +457,9 @@ define([
                                             overflow: 'hidden'
                                         }
                                     }, [
-                                        getCellTitle(cell)
+                                        getOutdatedWarning(cell),
+                                        getCellTitle(cell),
+                                        // getOutdatedWarning(cell)
                                     ]),
                                     div({
                                         dataElement: 'subtitle',
@@ -501,6 +485,33 @@ define([
             };
         }
 
+        function getOutdatedWarning(cell) {
+            if (utils.getCellMeta(cell, 'kbase.appCell.outdated', false)) {
+                return a({
+                    tabindex: '0',
+                    type: 'button',
+                    class: 'btn btn-default btn-xs',
+                    dataContainer: 'body',
+                    container: 'body',
+                    dataToggle: 'popover',
+                    dataPlacement: 'bottom',
+                    dataTrigger: 'focus',
+                    role: 'button',
+                    title: 'New version available',
+                    dataContent: 'This app has a newer version available! ' +
+                                 'There\'s probably nothing wrong with this version, ' +
+                                 'but the new one may include new features. Add a new "' +
+                                 utils.getCellMeta(cell, 'kbase.appCell.newAppName') +
+                                 '" app cell for the update.',
+                    style: { color: '#f79b22' }
+                }, [
+                    span({ class: 'fa fa-exclamation-triangle fa-lg' })
+                ]);
+            } else {
+                return '';
+            }
+        }
+
         function callback(toolbarDiv, parentCell) {
             try {
                 container = toolbarDiv[0];
@@ -508,6 +519,7 @@ define([
                 var rendered = render(parentCell);
                 container.innerHTML = rendered.content;
                 $(container).find('button').tooltip();
+                $(container).find('[data-toggle="popover"]').popover();
                 rendered.events.attachEvents();
 
                 // try this...

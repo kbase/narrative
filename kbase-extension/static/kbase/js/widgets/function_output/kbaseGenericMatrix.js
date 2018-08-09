@@ -1,6 +1,5 @@
 /**
- * Output widget to vizualize ExpressionMatrix object.
- * Pavel Novichkov <psnovichkov@lbl.gov>
+ * Output widget to vizualize GenericMatrix object.
  * @public
  */
 
@@ -11,8 +10,7 @@ define ([
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'narrativeConfig',
-		'kbase-generic-client-api',
-    'bluebird',
+    'kbase-generic-client-api',
     // For effect
     'bootstrap',
     'jquery-dataTables',
@@ -27,8 +25,7 @@ define ([
     kbaseAuthenticatedWidget,
     kbaseTabs,
     Config,
-    GenericClient,
-    Promise
+    GenericClient
 ) {
     'use strict';
 
@@ -53,7 +50,7 @@ define ([
 
         init: function(options) {
             this._super(options);
-            this.pref = this.uuid();
+            this.pref = new Uuid(4).format();
             // Create a message pane
             this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
             this.$elem.append(this.$messagePane);
@@ -64,8 +61,8 @@ define ([
         loggedInCallback: function(event, auth) {
 
             // error if not properly initialized
-            if (this.options.matrixID == null) {
-                this.showMessage('[Error] Couldn\'t retrieve expression matrix.');
+            if (this.options.upas.matrixID == null) {
+                this.showMessage('[Error] Couldn\'t retrieve the matrix.');
                 return this;
             }
 
@@ -91,12 +88,10 @@ define ([
             self.loading(true);
             var matrixRef = this.options.upas.matrixID;
 
-            // this is the "old" method that loads up the Conditions table and some of the values in the Overview table
             var get_matrix_stat_promise = self.genericClient.sync_call('KBaseFeatureValues.get_matrix_stat', [{
                 input_data: matrixRef
             }]);
 
-            // first thing we do is our old get_matrix_stat call, which we need for the conditions table.
             get_matrix_stat_promise
               .then( function (res) {
                 self.matrixStat = res[0];
@@ -152,16 +147,16 @@ define ([
                 </table>')
                 .appendTo($tabColumns)
                 .dataTable( {
-                    'dom': '<\'row\'<\'col-sm-6\'B><\'col-sm-6\'f>>t<\'row\'<\'col-sm-4\'i><\'col-sm-8\'lp>>',
+                    'dom': "<'row'<'col-sm-6'B><'col-sm-6'f>>t<'row'<'col-sm-4'i><'col-sm-8'lp>>",
                     'data': self.buildColumnTableData(),
                     'buttons': ['copy', 'csv', 'print'],
                     'columns': [
-                        { sTitle: 'Column ID', mData:'name' },
-                        { sTitle: 'Min', mData:'min' },
-                        { sTitle: 'Max', mData:'max' },
-                        { sTitle: 'Average', mData:'avg' },
-                        { sTitle: 'Std. Dev.', mData:'std'},
-                        { sTitle: 'Missing Values?',  mData:'missing_values' }
+                        { title: 'Column ID', data:'name' },
+                        { title: 'Min', data:'min' },
+                        { title: 'Max', data:'max' },
+                        { title: 'Average', data:'avg' },
+                        { title: 'Std. Dev.', data:'std'},
+                        { title: 'Missing Values?',  data:'missing_values' }
                     ]
                 } );
 
@@ -179,15 +174,15 @@ define ([
                 </table>')
                 .appendTo($tabRows)
                 .dataTable({
-                    dom: '<\'row\'<\'col-sm-6\'B><\'col-sm-6\'f>>t<\'row\'<\'col-sm-4\'i><\'col-sm-8\'lp>>',
+                    dom: "<'row'<'col-sm-6'B><'col-sm-6'f>>t<'row'<'col-sm-4'i><'col-sm-8'lp>>",
                     data: self.buildRowTableData(),
                     columns: [
-                        { sTitle: 'Row ID', mData: 'id'},
-                        { sTitle: 'Min', mData:'min' },
-                        { sTitle: 'Max', mData:'max' },
-                        { sTitle: 'Average', mData:'avg' },
-                        { sTitle: 'Std. Dev.', mData:'std'},
-                        { sTitle: 'Missing Values?', mData:'missing_values' }
+                        { title: 'Row ID', data: 'id'},
+                        { title: 'Min', data:'min' },
+                        { title: 'Max', data:'max' },
+                        { title: 'Average', data:'avg' },
+                        { title: 'Std. Dev.', data:'std'},
+                        { title: 'Missing Values?', data:'missing_values' }
                         ],
                     buttons: ['copy', 'csv', 'print']
                 });
@@ -242,15 +237,6 @@ define ([
             return $row;
         },
 
-        getData: function() {
-            return {
-                type: 'ExpressionMatrix',
-                id: this.options.matrixID,
-                workspace: this.options.workspaceID,
-                title: 'Expression Matrix'
-            };
-        },
-
         loading: function(isLoading) {
             if (isLoading) {
                 this.showMessage('<img src=\'' + this.options.loadingImage + '\'/>');
@@ -269,32 +255,6 @@ define ([
         hideMessage: function() {
             this.$messagePane.hide();
             this.$messagePane.empty();
-        },
-
-        uuid: function() {
-            return new Uuid(4).format();
-        },
-
-        buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
-            if (wsRef) {
-                obj.ref = wsRef;
-            } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj.wsid = workspaceID;
-                else
-                    obj.workspace = workspaceID;
-
-                // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj.objid = objectID;
-                else
-                    obj.name = objectID;
-
-                if (objectVer)
-                    obj.ver = objectVer;
-            }
-            return obj;
         },
 
         clientError: function(error){

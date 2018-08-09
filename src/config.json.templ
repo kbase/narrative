@@ -150,7 +150,7 @@
         "workspace": "https://ci.kbase.us/services/ws", 
         "ws_browser": "https://narrative.kbase.us/#ws"
     }, 
-    "dev_mode": true, 
+    "dev_mode": {{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }},
     "git_commit_hash": "72d46bb", 
     "git_commit_time": "Wed Jun 13 11:19:31 2018 -0700", 
     "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif", 

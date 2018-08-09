@@ -102,24 +102,11 @@ define([
             // TODO: spec at the top level should be a struct...
             // return;
             var validationMap = {};
-            var output_values = new Set();
             spec.parameters.layout.forEach(function(id) {
                 var fieldValue = model[id];
                 var fieldSpec = spec.parameters.specs[id];
                 // return validateField(fieldValue, fieldSpec);
                 validationMap[id] = validationResolver.validate(fieldValue, fieldSpec);
-                if (fieldSpec.ui.class === 'output') {
-                    if (output_values.has(fieldValue)){
-                        validationMap[id] = {
-                            isValid: false,
-                            messageId: "obj-duplicate-name",
-                            errorMessage: "This value duplicates an existing output object name",
-                            shortMessage: "",
-                            diagnosis: "invalid"
-                        }
-                    }
-                    output_values.add(fieldValue);
-                }
             });
             return Promise.props(validationMap);
         }

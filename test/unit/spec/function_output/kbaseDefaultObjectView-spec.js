@@ -212,5 +212,25 @@ define([
                     done();
                 });
         });
+
+        it('Should fail to load with an error message if there\'s a problem', (done) => {
+            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+                status: 500,
+                statusText: 'success',
+                contentType: 'application/json',
+                responseHeaders: '',
+                responseText: JSON.stringify({
+                    error: 'ERROR! OMG!'
+                })
+            });
+
+            let w = new KBaseDefaultObjectView($div, {upas: {upas: ['nope']}});
+            w.render(['nope'])
+                .then(() => {
+                    expect($div.html()).toContain('Unable to retrieve object information');
+                    expect($div.find('.alert.alert-danger').length).toEqual(1);
+                    done();
+                });
+        });
     });
 });

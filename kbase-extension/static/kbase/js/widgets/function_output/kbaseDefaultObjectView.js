@@ -77,7 +77,6 @@ define([
                         return $tabDiv;
                     })
                     .catch((error) => {
-                        console.error(JSON.stringify(error));
                         return this.renderMessage('Unable to retrieve object information for ' + JSON.stringify(upas), true);
                     });
             }

@@ -34,7 +34,6 @@ define([
         });
 
         it('Should load properly when no upas given', (done) => {
-            TestUtil.pendingIfNoToken();
             let w = new KBaseDefaultObjectView($div);
             w.render()
                 .then(() => {
@@ -44,9 +43,7 @@ define([
         });
 
         it('Should load properly when not logged in', (done) => {
-            if (TestUtil.getAuthToken()) {
-                Jupyter.narrative.getAuthToken = () => { return null; }
-            }
+            Jupyter.narrative.getAuthToken = () => { return null; }
             let w = new KBaseDefaultObjectView($div);
             w.render()
                 .then(() => {

@@ -1058,13 +1058,10 @@ define([
         }
 
         function buildRunControlPanelRunButtons(events) {
-            var style = {};
-            style.padding = '6px';
-            var buttonDiv = div({
-                class: 'btn-group',
-                style: style
-            },
-            Object.keys(actionButtons.availableButtons).map(function(key) {
+            var style = {
+                padding: '6px'
+            };
+            var buttonList = Object.keys(actionButtons.availableButtons).map(function(key) {
                 var button = actionButtons.availableButtons[key],
                     classes = [].concat(button.classes),
                     icon;
@@ -1094,8 +1091,12 @@ define([
                     icon: icon,
                     label: button.label
                 });
-            })
-            );
+            });
+
+            var buttonDiv = div({
+                class: 'btn-group',
+                style: style
+            }, buttonList);
             return buttonDiv;
         }
 
@@ -1140,7 +1141,29 @@ define([
                 var tab = message.data.tab;
                 toggleTab(tab);
             });
-            return buttons;
+
+            var outdatedBtn = a({
+                tabindex: '0',
+                type: 'button',
+                class: 'btn hidden',
+                dataContainer: 'body',
+                container: 'body',
+                dataToggle: 'popover',
+                dataPlacement: 'bottom',
+                dataTrigger: 'focus',
+                dataElement: 'outdated',
+                role: 'button',
+                title: 'New version available',
+                style: {
+                    color: '#f79b22',
+                    padding: '6px 0 0 0'
+                }
+            }, span({
+                class: 'fa fa-exclamation-triangle fa-2x'
+            }));
+            buttons.unshift(outdatedBtn);
+
+                return buttons;
         }
 
         function buildRunControlPanel(events) {
@@ -1237,16 +1260,6 @@ define([
                     }, [
                         div({ dataElement: 'widget', style: { display: 'block', width: '100%' } }, [
                             div({ class: 'container-fluid' }, [
-                                div({
-                                    class: 'kb-app-warning alert alert-warning hidden',
-                                    dataElement: 'outdated',
-                                    role: 'alert'
-                                }, [
-                                    span({ style: { 'font-weight': 'bold' } }, 'Warning'),
-                                    ': this app appears to be out of date. Running it may cause undesired results. Add a new "',
-                                    span({ style: { 'font-weight': 'bold' }, dataElement: 'new-app-name' }),
-                                    '" App for the most recent version.'
-                                ]),
                                 buildRunControlPanel(events)
                             ])
                         ])
@@ -1458,8 +1471,14 @@ define([
             showFsmBar();
             var state = fsm.getCurrentState();
             if (!viewOnly && model.getItem('outdated')) {
-                ui.setContent('outdated.new-app-name', model.getItem('newAppName', model.getItem('app.spec.info.name')));
-                ui.showElement('outdated');
+                var outdatedBtn = ui.getElement('outdated');
+                outdatedBtn.setAttribute('data-content',
+                    'This app has a newer version available! ' +
+                    'There\'s probably nothing wrong with this version, ' +
+                    'but the new one may include new features. Add a new "' +
+                    model.getItem('newAppName') +
+                    '" app cell for the update.');
+                // outdatedBtn.classList.remove('hidden');
             }
 
             var indicatorNode = ui.getElement('run-control-panel.status.indicator');
@@ -1816,6 +1835,7 @@ define([
                 var layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
+                $(container).find('[data-toggle="popover"]').popover();
                 return null;
             });
         }

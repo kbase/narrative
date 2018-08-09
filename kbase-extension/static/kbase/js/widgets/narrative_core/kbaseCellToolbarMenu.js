@@ -373,7 +373,7 @@ define([
                         span({ class: 'kb-func-timestamp' }),
                         span({ class: 'fa fa-circle-o-notch fa-spin', style: { color: 'rgb(42, 121, 191)', display: 'none' } }),
                         span({ class: 'fa fa-exclamation-triangle', style: { color: 'rgb(255, 0, 0)', display: 'none' } }),
-
+                        // getOutdatedWarning(cell),
                         (readOnly ? null : button({
                             type: 'button',
                             class: 'btn btn-default btn-xs',
@@ -394,7 +394,7 @@ define([
                             dataOriginalTitle: 'Move Cell Down',
                             id: events.addEvent({ type: 'click', handler: doMoveCellDown })
                         }, [
-                            span({ class: 'fa fa-arrow-down fa-lg', style: 'xfont-size: 18px' })
+                            span({ class: 'fa fa-arrow-down fa-lg' })
                         ])),
                         renderOptions(cell, events),
                         (function() {
@@ -447,8 +447,29 @@ define([
                                     buildIcon(cell)
                                 ]),
                                 div({ style: { flexGrow: '1' } }, [
-                                    div({ dataElement: 'title', class: 'title', style: { lineHeight: '20px', height: '20px', marginTop: '8px', overflow: 'hidden' } }, [getCellTitle(cell)]),
-                                    div({ dataElement: 'subtitle', class: 'subtitle', style: { lineHeight: '20px', height: '20px', overflow: 'hidden' } }, [getCellSubtitle(cell)])
+                                    div({
+                                        dataElement: 'title',
+                                        class: 'title',
+                                        style: {
+                                            lineHeight: '20px',
+                                            height: '20px',
+                                            marginTop: '8px',
+                                            overflow: 'hidden'
+                                        }
+                                    }, [
+                                        getOutdatedWarning(cell),
+                                        getCellTitle(cell),
+                                        // getOutdatedWarning(cell)
+                                    ]),
+                                    div({
+                                        dataElement: 'subtitle',
+                                        class: 'subtitle',
+                                        style: {
+                                            lineHeight: '20px',
+                                            height: '20px',
+                                            overflow: 'hidden'
+                                        }
+                                    }, [getCellSubtitle(cell)])
                                 ])
                             ])
                         ]),
@@ -464,6 +485,33 @@ define([
             };
         }
 
+        function getOutdatedWarning(cell) {
+            if (utils.getCellMeta(cell, 'kbase.appCell.outdated', false)) {
+                return a({
+                    tabindex: '0',
+                    type: 'button',
+                    class: 'btn btn-default btn-xs',
+                    dataContainer: 'body',
+                    container: 'body',
+                    dataToggle: 'popover',
+                    dataPlacement: 'bottom',
+                    dataTrigger: 'focus',
+                    role: 'button',
+                    title: 'New version available',
+                    dataContent: 'This app has a newer version available! ' +
+                                 'There\'s probably nothing wrong with this version, ' +
+                                 'but the new one may include new features. Add a new "' +
+                                 utils.getCellMeta(cell, 'kbase.appCell.newAppName') +
+                                 '" app cell for the update.',
+                    style: { color: '#f79b22' }
+                }, [
+                    span({ class: 'fa fa-exclamation-triangle fa-lg' })
+                ]);
+            } else {
+                return '';
+            }
+        }
+
         function callback(toolbarDiv, parentCell) {
             try {
                 container = toolbarDiv[0];
@@ -471,6 +519,7 @@ define([
                 var rendered = render(parentCell);
                 container.innerHTML = rendered.content;
                 $(container).find('button').tooltip();
+                $(container).find('[data-toggle="popover"]').popover();
                 rendered.events.attachEvents();
 
                 // try this...

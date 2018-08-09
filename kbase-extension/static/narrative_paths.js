@@ -246,6 +246,7 @@ require.config({
         'kbaseHomologySearch': 'kbase/js/widgets/function_input/kbaseHomologySearch',
         'kbaseModal': 'kbase/js/widgets/narrative_core/kbaseModal',
         'kbaseGenericSetViewer': 'kbase/js/widgets/function_output/kbaseGenericSetViewer',
+        'kbaseGenericMatrix': 'kbase/js/widgets/function_output/kbaseGenericMatrix',
 
         // another implementation of kbaseTabs needed for kbaseTabTable
         'kbaseTabTableTabs': 'kbase/js/widgets/function_output/modeling/kbaseTabs',

@@ -106,16 +106,22 @@ def list_objects(obj_type=None, name=None, fuzzy_name=True):
         })
     return obj_list
 
-def list_files(name=None, fuzzy_name=True):
+def list_files(name=None):
     """
-    Returns a list of all files in the user's staging area. If fuzzy_name is set to True, it uses the name string as a search.
+    Returns a list of all files in the user's staging area. It uses the 'name' as a case-insensitive
+    search string to filter the files. E.g., looking for files named "foo" will return files named
+    "Foo.txt", "FOO", "myfoobar", etc.
     If name is None, returns all files.
     This simply returns a list of strings, where each string is the file path that the App can use.
     """
     staging = StagingHelper()
     files = staging.list()
-
-
+    if not name:
+        return files
+    filter_files = list()
+    name = name.lower()
+    filter_files = [f for f in files if name in f.lower()]
+    return filter_files
 
 def generate_input_batch(app, tag='release', **kwargs):
     """

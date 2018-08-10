@@ -2,22 +2,26 @@
 Tests for the app_util module
 """
 import unittest
-import biokbase.auth
-from biokbase.narrative.app_util import (
-    check_tag,
-    system_variable,
-    get_result_sub_path,
-    map_inputs_from_job,
-    map_outputs_from_state
-)
 from narrative_mock.mockclients import get_mock_client
 import os
 import mock
 import util
+from biokbase.narrative.jobs.batch import (
+    list_objects,
+    list_files
+)
+from pprint import pprint
 
 class BatchTestCase(unittest.TestCase):
+
+    @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
     def test_list_objects(self):
-        pass
+        obj_type = "Module1.Type1"
+        req_keys = ['type', 'name', 'upa']
+        objs = list_objects(obj_type=obj_type)
+        self.assertEqual(len(objs), 1)
+        self.assertTrue(objs[0]['type'].startswith(obj_type))
+        [self.assertIn(k, objs[0]) for k in req_keys]
 
     def test_list_objects_no_permission(self):
         pass

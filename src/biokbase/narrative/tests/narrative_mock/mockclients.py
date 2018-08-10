@@ -4,6 +4,24 @@ from ..util import TestConfig
 class MockClients(object):
     """
     Mock KBase service clients as needed for Narrative backend tests.
+    Use this with the Python mock library to mock the biokbase.narrative.clients.get call
+    as a test function decorator, like this:
+
+    <top of file>
+    from mockclients import get_mock_client
+
+    class MyTestCase(unittest.TestCase):
+        @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
+        def test_my_function(self):
+            ... test code that calls out to AppManager ...
+
+    This case will monkeypatch the clients.get call that the appmanager uses to return
+    an instance of get_mock_client, which is, in turn, this class. Any client call that
+    the appmanager uses will go through here, so be sure that it's mocked in this class.
+    This really only works because each client has different function names to call, so
+    these all return different things. If you have something that overlaps, you might need
+    to make another class. That'll mean either changing get_mock_client to return a new
+    client in some cases, or doing interesting things with your duplicate function.
 
     These are specially put together to handle common use cases, and in some cases, expected test
     inputs (e.g. special workspace names)
@@ -86,12 +104,12 @@ class MockClients(object):
         if len(job_params) > 0:
             ret['job_params'] = job_params
         return ret
-    
+
     def get_job_logs(self, params):
         """
         params: job_id, skip_lines
         skip_lines = number of lines to skip, get all the rest
-        
+
         single line: {
             is_error 0,1
             line: string
@@ -111,6 +129,78 @@ class MockClients(object):
             'last_line_number': max(total_lines, skip),
             'lines': lines
         }
+
+    # ----- Service Wizard functions -----
+    def sync_call(self, call, params):
+        if call == "NarrativeService.list_objects_with_sets":
+            return self._mock_ns_list_objects_with_sets(params)
+
+    def _mock_ns_list_objects_with_sets(self, params):
+        """
+        Always returns the same several objects. Should be enough to
+        cover all data cases.
+        """
+        params = params[0]
+        user_id = "some_user"
+        ws_name = "some_workspace"
+        ws_id = 1
+        types = params.get('types', [])
+        with_meta = True if params.get('includeMetadata') else False
+        if params.get('ws_name'):
+            ws_name = params['ws_name']
+        if params.get('ws_id'):
+            ws_id = params['ws_id']
+        if params.get('workspaces'):
+            ws_name = params['workspaces'][0]
+        dp_id = 999
+        dp_ref = "{}/{}".format(ws_id, dp_id)
+
+        data = {
+            'data': [{
+                'object_info': [
+                    1, 'obj1', 'Module1.Type1-1.0', '2018-08-10T16:47:36+0000', 2, user_id, ws_id, ws_name, "checksum", 12345, None
+                ]
+            }, {
+                'object_info': [
+                    2, 'obj2', 'Module2.Type2-1.0', '2018-08-10T16:47:36+0000', 3, user_id, ws_id, ws_name, "checksum", 12345, None
+                ]
+            }, {
+                'object_info': [
+                    3, 'obj3', 'Module3.Type3-1.0', '2018-08-10T16:47:36+0000', 4, user_id, ws_id, ws_name, "checksum", 12345, None
+                ]
+            }, {
+                'object_info': [
+                    4, 'obj4', 'Module4.Type4-1.0', '2018-08-10T16:47:36+0000', 5, user_id, ws_id, ws_name, "checksum", 12345, None
+                ],
+                'dp_info': {
+                    'ref': dp_ref,
+                    'refs': [dp_ref]
+                }
+            }, {
+                'object_info': [
+                    5, 'obj5', 'Module5.Type5-1.0', '2018-08-10T16:47:36+0000', 6, user_id, ws_id, ws_name, "checksum", 12345, None
+                ],
+                'dp_info': {
+                    'ref': dp_ref,
+                    'refs': [dp_ref]
+                }
+            }],
+            'data_palette_refs': {
+                str(ws_id) : dp_ref
+            }
+        }
+        # filter on type
+        if types:
+            # kinda ew, but kinda pretty, too.
+            # check if any member of types is the start of any object_info type, pass the filter if so
+            data['data'] = list(filter(lambda x: any([x['object_info'][2].lower().startswith(t.lower()) for t in types]), data['data']))
+        if with_meta:
+            # fake, uniform metadata. fun!
+            for d in data['data']:
+                d['object_info'][10] = {'key1': 'value1', 'key2': 'value2'}
+        return [data]
+
+
 
 def get_mock_client(client_name):
     return MockClients()

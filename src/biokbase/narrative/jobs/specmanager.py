@@ -23,7 +23,6 @@ class SpecManager(object):
 
     def get_spec(self, app_id, tag='release'):
         self.check_app(app_id, tag, raise_exception=True)
-
         return self.app_specs[tag][app_id]
 
     def get_type_spec(self, type_id, raise_exception=True, allow_module_match=True):
@@ -41,7 +40,6 @@ class SpecManager(object):
         client = clients.get('narrative_method_store')
         for tag in app_version_tags:
             specs = client.list_methods_spec({'tag': tag})
-
             spec_dict = dict()
             for spec in specs:
                 spec_dict[spec['info']['id']] = spec

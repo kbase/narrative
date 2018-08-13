@@ -4,7 +4,7 @@ A module for managing apps, specs, requirements, and for starting jobs.
 import biokbase.auth as auth
 from job import Job
 from jobmanager import JobManager
-from specmanager import SpecManager
+import specmanager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager
 from biokbase.narrative.app_util import (
@@ -50,7 +50,7 @@ class AppManager(object):
 
     __MAX_TOKEN_NAME_LEN = 30
 
-    spec_manager = SpecManager()
+    spec_manager = specmanager.SpecManager()
     _log = kblogging.get_logger(__name__)
     _comm = None
     viewer_count = 1
@@ -190,7 +190,7 @@ class AppManager(object):
             'tag': batch_method_tag,
             'batch_app': app_id,
             'batch_tag': tag,
-            'batch_size': len(params)
+            'batch_size': len(params),
         }
         if cell_id is not None:
             job_meta['cell_id'] = cell_id

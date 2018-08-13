@@ -2,7 +2,7 @@
 A collection of helpful utilities for running batches of jobs.
 """
 from biokbase.narrative.staging.helper import Helper as StagingHelper
-from specmanager import SpecManager
+import specmanager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import (
     system_variable
@@ -25,8 +25,8 @@ def get_input_scaffold(app, tag='release', use_defaults=False):
     tag - the release state of the app. one of ["release", "beta", "dev"] (default "release")
     use_defaults - if True, include the default value for parameters that have one. (default False)
     """
-    sm = SpecManager()
-    spec = sm.get_spec(app, tag=tag)
+    sm = specmanager.SpecManager()
+    spec = sm.get_spec(app, tag=tag)  # will raise an exception if it's not found.
     spec_params = sm.app_params(spec)
     spec_params_dict = dict()
     grouped_params = set()  # set of param ids that are used in groups.

@@ -2,7 +2,7 @@
 Tests for the app manager.
 """
 from biokbase.narrative.jobs.appmanager import AppManager
-from biokbase.narrative.jobs.specmanager import SpecManager
+import biokbase.narrative.jobs.specmanager as specmanager
 import biokbase.narrative.app_util as app_util
 from biokbase.narrative.jobs.job import Job
 from IPython.display import HTML
@@ -250,18 +250,23 @@ class AppManagerTestCase(unittest.TestCase):
                                                 tag="dev",
                                                 version="1.0.0"))
 
+    @mock.patch('biokbase.narrative.jobs.appmanager.specmanager.clients.get', get_mock_client)
     def test_app_description(self):
         desc = self.am.app_description(self.good_app_id, tag=self.good_tag)
         self.assertIsInstance(desc, HTML)
 
+    @mock.patch('biokbase.narrative.jobs.appmanager.specmanager.clients.get', get_mock_client)
     def test_app_description_bad_tag(self):
         with self.assertRaises(ValueError):
             self.am.app_description(self.good_app_id, tag=self.bad_tag)
 
+    @mock.patch('biokbase.narrative.jobs.appmanager.specmanager.clients.get', get_mock_client)
     def test_app_description_bad_name(self):
         with self.assertRaises(ValueError):
             self.am.app_description(self.bad_app_id)
 
+    @mock.patch('biokbase.narrative.jobs.appmanager.specmanager.clients.get', get_mock_client)
+    @mock.patch('biokbase.narrative.jobs.specmanager.clients.get', get_mock_client)
     def test_validate_params(self):
         inputs = {
             "reads_tuple": [
@@ -285,20 +290,24 @@ class AppManagerTestCase(unittest.TestCase):
         }
         app_id = "NarrativeTest/test_create_set"
         tag = "dev"
-        prev_ws_id = os.environ.get('KB_WORKSPACE_ID', None)
+        prev_ws_id = os.environ.get('KB_WORKSPACE_ID')
         os.environ['KB_WORKSPACE_ID'] = self.public_ws
-        sm = SpecManager()
+        sm = specmanager.SpecManager()
         spec = sm.get_spec(app_id, tag=tag)
         (params, ws_inputs) = app_util.validate_parameters(app_id, tag, sm.app_params(spec), inputs)
         self.assertDictEqual(params, inputs)
-        self.assertIn('11635/9/1', ws_inputs)
-        self.assertIn('11635/10/1', ws_inputs)
+        self.assertIn('12345/8/1', ws_inputs)
+        self.assertIn('12345/7/1', ws_inputs)
         if prev_ws_id is None:
             del(os.environ['KB_WORKSPACE_ID'])
         else:
             os.environ['KB_WORKSPACE_ID'] = prev_ws_id
 
+    @mock.patch('biokbase.narrative.jobs.appmanager.specmanager.clients.get', get_mock_client)
+    @mock.patch('biokbase.narrative.jobs.specmanager.clients.get', get_mock_client)
+    @mock.patch('biokbase.narrative.clients.get', get_mock_client)
     def test_input_mapping(self):
+        self.maxDiff = None
         inputs = {
             "reads_tuple": [
                 {
@@ -324,8 +333,7 @@ class AppManagerTestCase(unittest.TestCase):
         ws_name = self.public_ws
         prev_ws_id = os.environ.get('KB_WORKSPACE_ID', None)
         os.environ['KB_WORKSPACE_ID'] = ws_name
-        from biokbase.narrative.jobs.specmanager import SpecManager
-        sm = SpecManager()
+        sm = specmanager.SpecManager()
         spec = sm.get_spec(app_id, tag=tag)
         spec_params = sm.app_params(spec)
         spec_params_map = dict(
@@ -343,11 +351,11 @@ class AppManagerTestCase(unittest.TestCase):
                 u'items': [{
                     u'label': 'reads file 1',
                     u'metadata': {'key1': 'value1'},
-                    u'ref': '11635/9/1'
+                    u'ref': '12345/7/1'
                 }, {
                     u'label': 'reads file 2',
                     u'metadata': {'key2': 'value2'},
-                    u'ref': '11635/10/1'
+                    u'ref': '12345/8/1'
                 }],
                 u'description': 'New Reads Set'
             },
@@ -356,12 +364,13 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertDictEqual(expected[0], mapped_inputs[0])
         ref_path = ws_name + '/MyReadsSet; ' + ws_name + "/rhodobacterium.art.q10.PE.reads"
         ret = app_util.transform_param_value("resolved-ref", ref_path, None)
-        self.assertEqual(ret, "wjriehl:1475006266615/MyReadsSet;11635/10/1")
+        self.assertEqual(ret, ws_name + '/MyReadsSet;18836/5/1')
         if prev_ws_id is None:
             del(os.environ['KB_WORKSPACE_ID'])
         else:
             os.environ['KB_WORKSPACE_ID'] = prev_ws_id
 
+    @mock.patch('biokbase.narrative.jobs.appmanager.specmanager.clients.get', get_mock_client)
     def test_generate_input(self):
         prefix = 'pre'
         suffix = 'suf'

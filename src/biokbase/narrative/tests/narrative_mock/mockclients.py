@@ -50,6 +50,10 @@ class MockClients(object):
     def list_categories(self, params):
         return self.config.load_json_file(self.config.get('specs', 'type_specs_file'))
 
+    def get_method_full_info(self, params):
+        return self.config.load_json_file(self.config.get('specs', 'app_infos_file'))
+
+
     # ----- Workspace functions -----
 
     def get_workspace_info(self, params):
@@ -59,6 +63,46 @@ class MockClients(object):
             raise Exception('not found')
 
     def get_object_info_new(self, params):
+        """
+        Returns a (more or less) random object.
+        But we introspect the params a little bit to return something crafted to the test.
+        Add more to this if it's helpful.
+        """
+        random_obj_info = [5, u'Sbicolor2', u'KBaseGenomes.Genome-12.3', u'2017-03-31T23:42:59+0000', 1,
+            u'wjriehl', 18836, u'wjriehl:1490995018528', u'278abf8f0dbf8ab5ce349598a8674a6e', 109180038, None]
+
+        obj_info = random_obj_info
+        infos = []
+        for obj_ident in params.get('objects', [{'name': 'Sbicolor2', 'workspace': 'whatever'}]):
+            if obj_ident.get('name') == 'rhodobacterium.art.q20.int.PE.reads':
+                infos.append([7,
+                    u'rhodobacterium.art.q20.int.PE.reads',
+                    u'KBaseFile.PairedEndLibrary-2.1',
+                    u'2018-06-26T19:31:41+0000',
+                    1,
+                    u'wjriehl',
+                    12345,
+                    u'random_workspace',
+                    u'a20f2df66f973de41b84164f2c2bedd3',
+                    765,
+                    None])
+            elif obj_ident.get('name') == 'rhodobacterium.art.q10.PE.reads':
+                infos.append([8,
+                    u'rhodobacterium.art.q10.PE.reads',
+                    u'KBaseFile.PairedEndLibrary-2.1',
+                    u'2018-08-13T23:13:09+0000',
+                    1,
+                    u'wjriehl',
+                    12345,
+                    u'random_workspace',
+                    u'9f014a3c08368537a40fa2e4b90f9cab',
+                    757,
+                    None])
+            else:
+                infos.append(random_obj_info)
+        return infos
+
+
         infos = [[5, u'Sbicolor2', u'KBaseGenomes.Genome-12.3', u'2017-03-31T23:42:59+0000', 1,
                   u'wjriehl', 18836, u'wjriehl:1490995018528', u'278abf8f0dbf8ab5ce349598a8674a6e',
                   109180038, None]]

@@ -7,6 +7,7 @@ import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import (
     system_variable
 )
+import re
 
 def get_input_scaffold(app, tag='release', use_defaults=False):
     """
@@ -79,6 +80,16 @@ def list_objects(obj_type=None, name=None, fuzzy_name=True):
         'ws_name': ws_name
     }
     if obj_type is not None:
+        # matches:
+        # foo.bar
+        # foo.bar-1.0
+        # doesn't match:
+        # foo
+        # foo.bar-
+        # foobar-
+        # foo.bar-1.2.0
+        if not re.match(r"[A-Za-z]+\.[A-Za-z]+(-\d+\.\d+)?$", obj_type):
+            raise ValueError('{} is not a valid type. Valid types are of the format "Module.Type" or "Module.Type-Version"'.format(obj_type))
         service_params['types'] = [obj_type]
     all_obj = service.sync_call('NarrativeService.list_objects_with_sets', [service_params])[0]
     obj_list = list()

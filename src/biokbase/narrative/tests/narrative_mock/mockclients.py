@@ -162,27 +162,27 @@ class MockClients(object):
                 ]
             }, {
                 'object_info': [
-                    1, 'obj1', 'Module1.Type1-1.0', '2018-08-10T16:47:36+0000', 2, user_id, ws_id, ws_name, "checksum", 12345, None
+                    1, 'obj1', 'ModuleA.TypeA-1.0', '2018-08-10T16:47:36+0000', 2, user_id, ws_id, ws_name, "checksum", 12345, None
                 ]
             }, {
                 'object_info': [
-                    7, 'obj7', 'Module1.Type1-1.0', '2018-08-10T16:47:36+0000', 2, user_id, ws_id, ws_name, "checksum", 12345, None
+                    7, 'obj7', 'ModuleA.TypeA-1.0', '2018-08-10T16:47:36+0000', 2, user_id, ws_id, ws_name, "checksum", 12345, None
                 ]
             }, {
                 'object_info': [
-                    8, 'obj8', 'Module1.Type1-1.0', '2018-08-10T16:47:36+0000', 2, user_id, ws_id, ws_name, "checksum", 12345, None
+                    8, 'obj8', 'ModuleA.TypeA-1.0', '2018-08-10T16:47:36+0000', 2, user_id, ws_id, ws_name, "checksum", 12345, None
                 ]
             }, {
                 'object_info': [
-                    9, 'obj9', 'Module2.Type2-1.0', '2018-08-10T16:47:36+0000', 3, user_id, ws_id, ws_name, "checksum", 12345, None
+                    9, 'obj9', 'ModuleB.TypeB-1.0', '2018-08-10T16:47:36+0000', 3, user_id, ws_id, ws_name, "checksum", 12345, None
                 ]
             }, {
                 'object_info': [
-                    3, 'obj3', 'Module3.Type3-1.0', '2018-08-10T16:47:36+0000', 4, user_id, ws_id, ws_name, "checksum", 12345, None
+                    3, 'obj3', 'ModuleC.TypeC-1.0', '2018-08-10T16:47:36+0000', 4, user_id, ws_id, ws_name, "checksum", 12345, None
                 ]
             }, {
                 'object_info': [
-                    4, 'obj4', 'Module4.Type4-1.0', '2018-08-10T16:47:36+0000', 5, user_id, ws_id, ws_name, "checksum", 12345, None
+                    4, 'obj4', 'ModuleD.TypeD-1.0', '2018-08-10T16:47:36+0000', 5, user_id, ws_id, ws_name, "checksum", 12345, None
                 ],
                 'dp_info': {
                     'ref': dp_ref,

@@ -23,10 +23,10 @@ class BatchTestCase(unittest.TestCase):
             'type': None,
             'count': 7
         }, {
-            'type': "Module1.Type1",
+            'type': "ModuleA.TypeA",
             'count': 3
         }, {
-            'type': 'Module2.Type2',
+            'type': 'ModuleB.TypeB',
             'count': 1
         }, {
             'type': None,
@@ -38,7 +38,7 @@ class BatchTestCase(unittest.TestCase):
             'name': 'blah',
             'count': 0
         }, {
-            'type': 'NotAType',
+            'type': 'NotAModule.NotAType',
             'count': 0
         }, {
             'type': None,
@@ -56,7 +56,9 @@ class BatchTestCase(unittest.TestCase):
                 [self.assertIn(k, o) for k in req_keys]
 
     def test_list_objects_bad_type(self):
-        pass
+        with self.assertRaises(ValueError) as e:
+            list_objects(obj_type="NotAType")
+        self.assertIn("is not a valid type.", str(e.exception))
 
     def test_get_input_scaffold(self):
         # Do standard, group params, lists, etc.

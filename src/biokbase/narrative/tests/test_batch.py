@@ -16,12 +16,41 @@ class BatchTestCase(unittest.TestCase):
 
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
     def test_list_objects(self):
-        obj_type = "Module1.Type1"
+        test_inputs = [{
+            'type': None,
+            'count': 7
+        }, {
+            'type': "Module1.Type1",
+            'count': 3
+        }, {
+            'type': 'Module2.Type2',
+            'count': 1
+        }, {
+            'type': None,
+            'name': 'obj',
+            'fuzzy_name': True,
+            'count': 7
+        }, {
+            'type': None,
+            'name': 'blah',
+            'count': 0
+        }, {
+            'type': 'NotAType',
+            'count': 0
+        }, {
+            'type': None,
+            'name': 'obj',
+            'count': 0,
+            'fuzzy_name': False
+        }]
         req_keys = ['type', 'name', 'upa']
-        objs = list_objects(obj_type=obj_type)
-        self.assertEqual(len(objs), 1)
-        self.assertTrue(objs[0]['type'].startswith(obj_type))
-        [self.assertIn(k, objs[0]) for k in req_keys]
+        for t in test_inputs:
+            objs = list_objects(obj_type=t.get('type'), name=t.get('name'), fuzzy_name=t.get('fuzzy_name', True))
+            self.assertEqual(len(objs), t['count'])
+            for o in objs:
+                if t.get('type'):
+                    self.assertTrue(o['type'].startswith(t.get('type')))
+                [self.assertIn(k, o) for k in req_keys]
 
     def test_list_objects_no_permission(self):
         pass

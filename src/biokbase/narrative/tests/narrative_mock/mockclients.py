@@ -158,11 +158,23 @@ class MockClients(object):
         data = {
             'data': [{
                 'object_info': [
+                    6, 'NarrativeObj', 'KBaseNarrative.Narrative-4.0', '2018-08-10T16:45:12+0000', 1, user_id, ws_id, ws_name, "checksum", 12345, None
+                ]
+            }, {
+                'object_info': [
                     1, 'obj1', 'Module1.Type1-1.0', '2018-08-10T16:47:36+0000', 2, user_id, ws_id, ws_name, "checksum", 12345, None
                 ]
             }, {
                 'object_info': [
-                    2, 'obj2', 'Module2.Type2-1.0', '2018-08-10T16:47:36+0000', 3, user_id, ws_id, ws_name, "checksum", 12345, None
+                    7, 'obj7', 'Module1.Type1-1.0', '2018-08-10T16:47:36+0000', 2, user_id, ws_id, ws_name, "checksum", 12345, None
+                ]
+            }, {
+                'object_info': [
+                    8, 'obj8', 'Module1.Type1-1.0', '2018-08-10T16:47:36+0000', 2, user_id, ws_id, ws_name, "checksum", 12345, None
+                ]
+            }, {
+                'object_info': [
+                    9, 'obj9', 'Module2.Type2-1.0', '2018-08-10T16:47:36+0000', 3, user_id, ws_id, ws_name, "checksum", 12345, None
                 ]
             }, {
                 'object_info': [

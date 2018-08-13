@@ -213,6 +213,22 @@ class MockClients(object):
         return [data]
 
 
-
 def get_mock_client(client_name):
     return MockClients()
+
+class MockStagingHelper():
+    def list(self):
+        """
+        Mock the call to the staging service to get the "user's" files.
+        This returns a total of 7 files, 6 of while have "file" in the name,
+        and 3 are paths.
+        """
+        return [
+            'file1',
+            'file2',
+            'file3',
+            'path1/file1',
+            'path2/file2',
+            'omg/this/is/a/long/path/to/a/file',
+            'filterme'
+        ]

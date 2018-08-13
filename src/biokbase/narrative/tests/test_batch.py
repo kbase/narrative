@@ -2,7 +2,10 @@
 Tests for the app_util module
 """
 import unittest
-from narrative_mock.mockclients import get_mock_client
+from narrative_mock.mockclients import (
+    get_mock_client,
+    MockStagingHelper
+)
 import os
 import mock
 import util
@@ -52,16 +55,7 @@ class BatchTestCase(unittest.TestCase):
                     self.assertTrue(o['type'].startswith(t.get('type')))
                 [self.assertIn(k, o) for k in req_keys]
 
-    def test_list_objects_no_permission(self):
-        pass
-
     def test_list_objects_bad_type(self):
-        pass
-
-    def test_list_objects_type(self):
-        pass
-
-    def test_list_objects_name(self):
         pass
 
     def test_get_input_scaffold(self):
@@ -78,10 +72,18 @@ class BatchTestCase(unittest.TestCase):
         # Do standard, group params, lists, etc.
         pass
 
+    @mock.patch('biokbase.narrative.jobs.batch.StagingHelper', MockStagingHelper)
     def test_list_files(self):
-        pass
-
-    def test_list_files_filter(self):
-        # include returning no results
-        pass
-
+        name_filters = [{
+            'name': None,
+            'count': 7
+        }, {
+            'name': 'file',
+            'count': 6
+        }, {
+            'name': 'no_way_this_exists_as_a_file_anywhere',
+            'count': 0
+        }]
+        for f in name_filters:
+            files = list_files(name=f.get('name'))
+            self.assertEqual(len(files), f.get('count'))

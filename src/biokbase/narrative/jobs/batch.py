@@ -8,6 +8,7 @@ from biokbase.narrative.app_util import (
     system_variable
 )
 import re
+from decimal import Decimal
 
 def get_input_scaffold(app, tag='release', use_defaults=False):
     """
@@ -251,38 +252,43 @@ def generate_input_batch(app, tag='release', **kwargs):
             input_errors.append('Input values for {} appear to be malformatted.'.format(k))
     return list()
 
-    def _is_singleton(input_value, param_info):
-        """
-        Returns True if the given input value is a singleton of that parameter. E.g., if it's a
-        single string or number for a text parameter, or a list of strings/numbers if the parameter
-        allows multiples, or it's a dict if the parameter is a group param.
-        """
-        return False
+def _is_singleton(input_value, param_info):
+    """
+    Returns True if the given input value is a singleton of that parameter. E.g., if it's a
+    single string or number for a text parameter, or a list of strings/numbers if the parameter
+    allows multiples, or it's a dict if the parameter is a group param.
+    """
+    return False
 
-    def _generate_vals(t):
-        """
-        Interpolates values from a 3-tuple (min, interval, max)
-        E.g. (0, 5, 20) would return [0, 5, 10, 15, 20]
-        (0, 5, 19) would return [0, 5, 10, 15]
-        (100, -5, 80) would return [100, 95, 90, 85, 80]
-        ...etc.
-        If the values are non-numeric, raises an exception.
-        If they don't make numeric sense, like (0, -5, 20) where the max will never be
-        reached, raises an exception.
-        If it's not a 3-tuple, raises an exception.
-        """
-        if len(t) != 3:
-            raise ValueError('The input tuple must have 3 values')
-        for v in t:
-            try:
-                float(v)
-            except:
-                raise ValueError('The input tuple must be entirely numeric')
-        if t[1] == 0:
-            raise ValueError('The interval value must not be 0')
-        if (t[0] < t[2] and t[1] < 0) or (t[0] > t[2] and t[1] > 0):
-            raise ValueError('The maximum value of this tuple will never be reached based on the interval value')
-        vals = [t[0]]
-        while vals[-1] < t[2] and vals[-1] + t[1] <= t[2]:
-            vals.append(vals[-1] + t[1])
-        return vals
+def _generate_vals(t):
+    """
+    Interpolates values from a 3-tuple (min, interval, max)
+    E.g. (0, 5, 20) would return [0, 5, 10, 15, 20]
+    (0, 5, 19) would return [0, 5, 10, 15]
+    (100, -5, 80) would return [100, 95, 90, 85, 80]
+    ...etc.
+    If the values are non-numeric, raises an exception.
+    If they don't make numeric sense, like (0, -5, 20) where the max will never be
+    reached, raises an exception.
+    If it's not a 3-tuple, raises an exception.
+    """
+    if len(t) != 3:
+        raise ValueError('The input tuple must have 3 values')
+    try:
+        # deals with floating point errors
+        start = Decimal(str(t[0]))
+        interval = Decimal(str(t[1]))
+        target = Decimal(str(t[2]))
+    except:
+        raise ValueError('The input tuple must be entirely numeric')
+    if interval == 0:
+        raise ValueError('The interval value must not be 0')
+    if (start < target and interval < 0) or (start > target and interval > 0):
+        raise ValueError('The maximum value of this tuple will never be reached based on the interval value')
+    vals = [start]
+
+    while (vals[-1] < target and vals[-1] + interval <= target) or \
+          (vals[-1] > target and vals[-1] + interval >= target):
+        vals.append(vals[-1] + interval)
+    # turn them back into floats at the end.
+    return [float(v) for v in vals]

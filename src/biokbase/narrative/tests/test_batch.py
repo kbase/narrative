@@ -12,7 +12,8 @@ import util
 from biokbase.narrative.jobs.batch import (
     list_objects,
     list_files,
-    get_input_scaffold
+    get_input_scaffold,
+    _generate_vals
 )
 import biokbase.narrative.jobs.specmanager
 from pprint import pprint
@@ -147,3 +148,51 @@ class BatchTestCase(unittest.TestCase):
         for f in name_filters:
             files = list_files(name=f.get('name'))
             self.assertEqual(len(files), f.get('count'))
+
+    def test__generate_vals(self):
+        good_inputs = [{
+            'tuple': (0, 5, 20),
+            'vals': [0, 5, 10, 15, 20]
+        }, {
+            'tuple': (5, 10, 50),
+            'vals': [5, 15, 25, 35, 45]
+        }, {
+            'tuple': (10, -1, 5),
+            'vals': [10, 9, 8, 7, 6, 5]
+        }, {
+            'tuple': (1, 0.1, 2),
+            'vals': [1.00, 1.10, 1.20, 1.30, 1.40, 1.50, 1.60, 1.70, 1.80, 1.90, 2.00],
+            'is_float': True
+        }, {
+            'tuple': (-10, 1, -5),
+            'vals': [-10, -9, -8, -7, -6, -5]
+        }, {
+            'tuple': (-1, -1, -5),
+            'vals': [-1, -2, -3, -4, -5]
+        }]
+        for i in good_inputs:
+            ret_val = _generate_vals(i['tuple'])
+            if 'is_float' in i:
+                ret_val = [round(x, 2) for x in ret_val]
+            self.assertEqual(ret_val, i['vals'])
+
+        unreachable_inputs = [
+            (-1, -1, 5),
+            (0, -1, 10),
+            (-20, 5, -30),
+            (10, -1, 20)
+        ]
+        for t in unreachable_inputs:
+            with self.assertRaises(ValueError) as e:
+                _generate_vals(t)
+            self.assertIn('The maximum value of this tuple will never be reached based on the interval value', str(e.exception))
+        with self.assertRaises(ValueError) as e:
+            _generate_vals(('a', -1, 1))
+        self.assertIn('The input tuple must be entirely numeric', str(e.exception))
+        with self.assertRaises(ValueError) as e:
+            _generate_vals((10, 0, 1))
+        self.assertIn('The interval value must not be 0', str(e.exception))
+
+
+    def test__is_singleton(self):
+        pass

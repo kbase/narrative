@@ -13,7 +13,8 @@ from biokbase.narrative.jobs.batch import (
     list_objects,
     list_files,
     get_input_scaffold,
-    _generate_vals
+    _generate_vals,
+    _is_singleton
 )
 import biokbase.narrative.jobs.specmanager
 from pprint import pprint
@@ -193,6 +194,35 @@ class BatchTestCase(unittest.TestCase):
             _generate_vals((10, 0, 1))
         self.assertIn('The interval value must not be 0', str(e.exception))
 
-
     def test__is_singleton(self):
-        pass
+        scalar_param = {
+            "allow_multiple": 0,
+            "id": "scalar_param",
+            "is_group": False,
+            "is_output": 0,
+            "type": "int"
+        }
+        self.assertTrue(_is_singleton(1, scalar_param))
+        self.assertTrue(_is_singleton("foo", scalar_param))
+        self.assertFalse(_is_singleton([1, 2, 3], scalar_param))
+        self.assertFalse(_is_singleton([1], scalar_param))
+
+        group_param = {
+            "allow_multiple": 0,
+            "id": "group_param",
+            "is_group": True,
+            "parameter_ids": ["first", "second"],
+            "type": "group"
+        }
+        self.assertTrue(_is_singleton({"first": 1, "second": 2}, group_param))
+        self.assertFalse(_is_singleton([{"first": 1, "second": 2}], group_param))
+
+        list_param = {
+            "allow_multiple": 1,
+            "id": "list_param",
+            "is_group": False,
+            "type": "int"
+        }
+        self.assertTrue(_is_singleton(['foo'], list_param))
+        self.assertFalse(_is_singleton([['a', 'b'], ['c', 'd']], list_param))
+        self.assertFalse(_is_singleton([['a']], list_param))

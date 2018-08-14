@@ -257,8 +257,21 @@ def _is_singleton(input_value, param_info):
     Returns True if the given input value is a singleton of that parameter. E.g., if it's a
     single string or number for a text parameter, or a list of strings/numbers if the parameter
     allows multiples, or it's a dict if the parameter is a group param.
+
+    That is, if the input parameter is treated as a list by the app, and a list of strings is
+    given as the value to iterate over, that's still a "singleton". For example, if the input_type
+    is a list of reads to assemble together, and the goal is to build a batch run with several
+    lists, that should be a list of lists.
+
+    Doesn't do any validation or anything. Shouldn't raise any errors. It just checks
+    whether we have a list / dict / (int or str) where allow_multiple=True.
     """
-    return False
+    if input_value and isinstance(input_value, list):
+        if not param_info.get("allow_multiple", False):
+            return False
+        elif isinstance(input_value[0], list):
+            return False
+    return True
 
 def _generate_vals(t):
     """

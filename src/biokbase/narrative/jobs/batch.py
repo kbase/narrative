@@ -10,6 +10,8 @@ from biokbase.narrative.app_util import (
 import re
 from decimal import Decimal
 from itertools import product
+from pprint import pprint
+from copy import deepcopy
 
 def get_input_scaffold(app, tag='release', use_defaults=False):
     """
@@ -46,15 +48,16 @@ def _index_spec_params(spec_params):
     This gets returned as a tuple (indexed params, group param ids)
     """
     spec_params_dict = dict()
-    grouped_params = set()
+    grouped_parents = dict()
     for p in spec_params:
         spec_params_dict[p['id']] = p
         # groupify the parameters - identify params that are part of groups, and don't include
         # them in the list separately.
-        if p.get('parameter_ids'):
-            grouped_params.update(p.get('parameter_ids'))
-    return (spec_params_dict, grouped_params)
-
+        children = p.get('parameter_ids')
+        if children:
+            for child in children:
+                grouped_parents[child] = p['id']
+    return (spec_params_dict, grouped_parents)
 
 def _make_scaffold_input(param, params_dict, use_defaults):
     """
@@ -232,7 +235,7 @@ def generate_input_batch(app, tag='release', **kwargs):
     spec = sm.get_spec(app, tag=tag)
     spec_params = sm.app_params(spec)
     (spec_params_dict, grouped_params) = _index_spec_params(spec_params)
-
+    pprint(grouped_params)
     # Initial checking, make sure all kwargs exist as params.
     input_errors = list()         # errors that occur while parsing inputs
     input_vals = dict()
@@ -259,9 +262,13 @@ def generate_input_batch(app, tag='release', **kwargs):
     param_ids = input_vals.keys()
     product_inputs = [input_vals[k] for k in param_ids]
     for p in product(*product_inputs):
-        next_input = input_scaffold.copy()
+        print(p)
+        next_input = deepcopy(input_scaffold)
         for idx, name in enumerate(param_ids):
-            next_input[name] = p[idx]
+            if name in grouped_params:
+                next_input[grouped_params[name]][name] = p[idx]
+            else:
+                next_input[name] = p[idx]
         batch_inputs.append(next_input)
     return batch_inputs
 

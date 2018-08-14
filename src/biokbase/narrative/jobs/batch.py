@@ -9,6 +9,7 @@ from biokbase.narrative.app_util import (
 )
 import re
 from decimal import Decimal
+from itertools import product
 
 def get_input_scaffold(app, tag='release', use_defaults=False):
     """
@@ -227,7 +228,6 @@ def generate_input_batch(app, tag='release', **kwargs):
     output object name strings will have their formatting validated (e.g. no spaces are allowed in workspace
     object names)
     """
-    # this is gonna be recursive as it can be.
     sm = specmanager.SpecManager()
     spec = sm.get_spec(app, tag=tag)
     spec_params = sm.app_params(spec)
@@ -239,18 +239,31 @@ def generate_input_batch(app, tag='release', **kwargs):
     for k, v in kwargs.iteritems():
         if k not in spec_params_dict:
             input_errors.append("{} is not a parameter".format(k))
-        if _is_singleton(v, spec_params_dict[k]):
+        if isinstance(v, tuple):
+            # if it's a tuple, unravel it to generate values.
+            input_vals[k] = _generate_vals(v)
+        elif _is_singleton(v, spec_params_dict[k]):
             # if it's a singleton, wrap it as a list.
             # lists can be singletons, too, if that parameter has allow_multiple == True.
             input_vals[k] = [v]
-        elif isinstance(v, tuple):
-            # if it's a tuple, unravel it to generate values.
-            input_vals[k] = _generate_vals(v)
-        elif isinstance(v, list):
-            input_vals[k] = v
         else:
-            input_errors.append('Input values for {} appear to be malformatted.'.format(k))
-    return list()
+            input_vals[k] = v
+    if input_errors:
+        for e in input_errors:
+            print("Error in input: {}".format(e))
+        raise ValueError("Errors found in your inputs! See above for details.")
+
+    # makes the scaffold that we're going to adjust for each iteration
+    input_scaffold = get_input_scaffold(app, tag=tag, use_defaults=True)
+    batch_inputs = list()
+    param_ids = input_vals.keys()
+    product_inputs = [input_vals[k] for k in param_ids]
+    for p in product(*product_inputs):
+        next_input = input_scaffold.copy()
+        for idx, name in enumerate(param_ids):
+            next_input[name] = p[idx]
+        batch_inputs.append(next_input)
+    return batch_inputs
 
 def _is_singleton(input_value, param_info):
     """

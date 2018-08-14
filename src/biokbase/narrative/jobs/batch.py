@@ -28,20 +28,31 @@ def get_input_scaffold(app, tag='release', use_defaults=False):
     sm = specmanager.SpecManager()
     spec = sm.get_spec(app, tag=tag)  # will raise an exception if it's not found.
     spec_params = sm.app_params(spec)
-    spec_params_dict = dict()
-    grouped_params = set()  # set of param ids that are used in groups.
-    for p in spec_params:
-        spec_params_dict[p['id']] = p
-        # groupify the parameters - identify params that are part of groups, and don't include
-        # them in the list separately.
-        if p.get('parameter_ids'):
-            grouped_params.update(p.get('parameter_ids'))
+    (spec_params_dict, grouped_params) = _index_spec_params(spec_params)
 
     input_scaffold = dict()
     for p in spec_params:
         if p['id'] not in grouped_params:
             input_scaffold[p['id']] = _make_scaffold_input(p, spec_params_dict, use_defaults)
     return input_scaffold
+
+def _index_spec_params(spec_params):
+    """
+    Makes an index of the spec parameters. It dict-ifies the list of spec params
+    provided by the SpecManager, and also returns the set of param ids that are
+    used in groups.
+    This gets returned as a tuple (indexed params, group param ids)
+    """
+    spec_params_dict = dict()
+    grouped_params = set()
+    for p in spec_params:
+        spec_params_dict[p['id']] = p
+        # groupify the parameters - identify params that are part of groups, and don't include
+        # them in the list separately.
+        if p.get('parameter_ids'):
+            grouped_params.update(p.get('parameter_ids'))
+    return (spec_params_dict, grouped_params)
+
 
 def _make_scaffold_input(param, params_dict, use_defaults):
     """
@@ -136,36 +147,88 @@ def list_files(name=None):
 
 def generate_input_batch(app, tag='release', **kwargs):
     """
-    This will be tricky.
-    It should take in the app and version, and a set/list/whatever of inputs and make a range of those.
-    The inputs should range from a list, or tuple, or something else in order to make a matrix from.
-    It should then return the list of dictionaries for batch inputs.
-    Example, the MEGAHIT inputs are a simple dictionary. They have a single read library as input,
-    a string output for the name of the contigs, and a few advanced parameters for controlling the process,
-    including a min_contig_len.
-    If I want to run a batch over several min_contig_len values, and several read libraries, with different
-    output values, how do I do that?
-    I would want to give the following:
-    1. a list of the read library refs to use
-    2. Either a list of min_contig_length values or a way to represent a range
-    3. Either a list of all the outputs, a way to generate those based on inputs, or just let the app decide
-       some unique output name for each run.
-    Sooo... how to do this.
-    I think the following.
-    1. It's easy to fetch the app info, make a scaffold, etc. (Got that scaffold function up there ^^^).
-    let each element of kwargs be one key in the app structure. In this example, we have:
-    min_contig_len - int > 0
-    output_contigset_name - string, output object name
-    read_library_ref - UPA of read library
+    This takes in an app, tag, and set of loosely-defined kwargs to build a batch of app runs.
+    app is the app id, in the format "Module/method", e.g.("MEGAHIT/run_megahit")
+    tag should be one of 'dev', 'beta', or 'release'
 
-    The input kwargs would look like:
-    read_libary_ref = [list of ref strings]
-    output_contigset_name - either leave blank and let the function generate them, or give a list of names, OR a template? something like:
-        "MEGAHIT.contigs_{read_library_ref}_{min_contig_len}" ?
-    min_contig_len =
-        * either a single value (apply to all)
-        * or a list of values
-        * or a 3-tuple - (min, interval, max) - as a generator. (maybe make a Python generator?) e.g.: (0, 5, 20) would turn into a list [0, 5, 10, 15, 20]
-    the rest of the inputs would then be the default values.
+    The rest is where it gets tricky.
+
+    kwargs is, as usual for Python, a set of keys and values. In this case, the keys are the app parameter ids
+    as defined by the app spec, and the values are a range of values for each parameter.
+
+    These sets of ranges are then shuffled together in such a way that all permutations define different
+    runs of the app.
+
+    Effectively, each value of the kwargs is expected to be a list. Parameters that are defined by
+    the spec to be lists (the "allow_multiple" flag is truthy) are expected to be lists of lists.
+
+    For example, the MEGAHIT inputs are a simple dictionary with several keys. For this example, they have
+    "read_library_ref", "min_contig_len", and "output_assembly" as keys, all of which are expected to have
+    a single value. So a normal set of inputs for a single run might look like this:
+    {
+        "read_library_ref": "1/2/1",
+        "min_contig_len": 500,
+        "output_assembly": "assembled_reads"
+    }
+
+    The goal in building a batch of MEGAHIT runs is to assemble multiple read libraries into their successive
+    assemblies, possibly over a range of minimum contig lengths to select the best assembly. So I might have
+    the following in kwargs:
+    read_library_ref = ["1/2/1", "1/3/1", "1/4/1"]
+    min_contig_len = [500, 1000]
+
+    output_assembly gets tricky, since that's the output. We know it's the output from the spec as well, so
+    we can know what to do with it. The options are to let this function pick a random name appended to
+    the default output name of "MEGAHIT.contigs", or a list of strings (one for each run), or to create a
+    template that will have either a random number appended (the run index) or some combination of values
+    from the inputs. This would be a Jinja2-based template, something like:
+    "MEGAHIT.contigs_{{read_library_ref}}_{{min_contig_len}}"
+
+    In the end, this should form a list of 6 app runs:
+    [{
+        "read_library_ref": "1/2/1",
+        "min_contig_len": 500,
+        "output_assembly": "MEGAHIT.contigs1"
+    },{
+        "read_library_ref": "1/2/1",
+        "min_contig_len": 1000,
+        "output_assembly": "MEGAHIT.contigs2"
+    },{
+        "read_library_ref": "1/3/1",
+        "min_contig_len": 500,
+        "output_assembly": "MEGAHIT.contigs3"
+    },{
+        "read_library_ref": "1/3/1",
+        "min_contig_len": 1000,
+        "output_assembly": "MEGAHIT.contigs4"
+    },{
+        "read_library_ref": "1/4/1",
+        "min_contig_len": 500,
+        "output_assembly": "MEGAHIT.contigs5"
+    },{
+        "read_library_ref": "1/4/1",
+        "min_contig_len": 1000,
+        "output_assembly": "MEGAHIT.contigs6"
+    }]
+
+    which is what gets returned.
+
+    Any input not specified in kwargs is left as default as described in the spec, or None if there is no
+    description.
+
+    So, again, the optional values for each kwarg are:
+    * a single value (applied to all runs)
+    * a list of values (used to build a set of runs)
+    * for numeric values, a 3-tuple - (min, interval, max) - to be used as a generator
+
+    Very little validation will be done here for the various values. Values expected by the spec to be
+    numbers of some range will be checked, UPAs will be validated to be formatted correctly, and
+    output object name strings will have their formatting validated (e.g. no spaces are allowed in workspace
+    object names)
     """
+    # this is gonna be recursive as it can be.
+    sm = specmanager.SpecManager()
+    spec = sm.get_spec(app, tag=tag)
+    spec_params = sm.app_params(spec)
+    (spec_params_dict, grouped_params) = _index_spec_params(spec_params)
     return list()

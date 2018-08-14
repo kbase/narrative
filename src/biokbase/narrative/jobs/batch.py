@@ -231,4 +231,58 @@ def generate_input_batch(app, tag='release', **kwargs):
     spec = sm.get_spec(app, tag=tag)
     spec_params = sm.app_params(spec)
     (spec_params_dict, grouped_params) = _index_spec_params(spec_params)
+
+    # Initial checking, make sure all kwargs exist as params.
+    input_errors = list()         # errors that occur while parsing inputs
+    input_vals = dict()
+    for k, v in kwargs.iteritems():
+        if k not in spec_params_dict:
+            input_errors.append("{} is not a parameter".format(k))
+        if _is_singleton(v, spec_params_dict[k]):
+            # if it's a singleton, wrap it as a list.
+            # lists can be singletons, too, if that parameter has allow_multiple == True.
+            input_vals[k] = [v]
+        elif isinstance(v, tuple):
+            # if it's a tuple, unravel it to generate values.
+            input_vals[k] = _generate_vals(v)
+        elif isinstance(v, list):
+            input_vals[k] = v
+        else:
+            input_errors.append('Input values for {} appear to be malformatted.'.format(k))
     return list()
+
+    def _is_singleton(input_value, param_info):
+        """
+        Returns True if the given input value is a singleton of that parameter. E.g., if it's a
+        single string or number for a text parameter, or a list of strings/numbers if the parameter
+        allows multiples, or it's a dict if the parameter is a group param.
+        """
+        return False
+
+    def _generate_vals(t):
+        """
+        Interpolates values from a 3-tuple (min, interval, max)
+        E.g. (0, 5, 20) would return [0, 5, 10, 15, 20]
+        (0, 5, 19) would return [0, 5, 10, 15]
+        (100, -5, 80) would return [100, 95, 90, 85, 80]
+        ...etc.
+        If the values are non-numeric, raises an exception.
+        If they don't make numeric sense, like (0, -5, 20) where the max will never be
+        reached, raises an exception.
+        If it's not a 3-tuple, raises an exception.
+        """
+        if len(t) != 3:
+            raise ValueError('The input tuple must have 3 values')
+        for v in t:
+            try:
+                float(v)
+            except:
+                raise ValueError('The input tuple must be entirely numeric')
+        if t[1] == 0:
+            raise ValueError('The interval value must not be 0')
+        if (t[0] < t[2] and t[1] < 0) or (t[0] > t[2] and t[1] > 0):
+            raise ValueError('The maximum value of this tuple will never be reached based on the interval value')
+        vals = [t[0]]
+        while vals[-1] < t[2] and vals[-1] + t[1] <= t[2]:
+            vals.append(vals[-1] + t[1])
+        return vals

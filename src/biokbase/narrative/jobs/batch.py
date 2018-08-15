@@ -10,8 +10,11 @@ from biokbase.narrative.app_util import (
 import re
 from decimal import Decimal
 from itertools import product
-from pprint import pprint
 from copy import deepcopy
+from string import (
+    Formatter,
+    Template
+)
 
 def get_input_scaffold(app, tag='release', use_defaults=False):
     """
@@ -186,8 +189,8 @@ def generate_input_batch(app, tag='release', **kwargs):
     we can know what to do with it. The options are to let this function pick a random name appended to
     the default output name of "MEGAHIT.contigs", or a list of strings (one for each run), or to create a
     template that will have either a random number appended (the run index) or some combination of values
-    from the inputs. This would be a Jinja2-based template, something like:
-    "MEGAHIT.contigs_{{read_library_ref}}_{{min_contig_len}}"
+    from the inputs. This would be a Python-based template, something like:
+    "MEGAHIT.contigs_${read_library_ref}_${min_contig_len}"
 
     In the end, this should form a list of 6 app runs:
     [{
@@ -226,6 +229,16 @@ def generate_input_batch(app, tag='release', **kwargs):
     * a list of values (used to build a set of runs)
     * for numeric values, a 3-tuple - (min, interval, max) - to be used as a generator
 
+    For output parameters (as identified by the app spec), acceptable values are:
+    * a list of strings, the length of the total number of batches created. If this is off (e.g., 10
+      values are given, but only 8 batches are made), then a ValueError will be raised.
+    * a templated string like this: my_output_{{some_param}}
+        * the template values are all parameter ids or:
+        * a special template {{run_number}} is allowed, which is an integer for which run
+          of the batch this is
+    * nothing. If nothing, then the default output value will be used with {{run_number}} appended
+      to the end. If there is no default output value, then a ValueError will be raised.
+
     Very little validation will be done here for the various values. Values expected by the spec to be
     numbers of some range will be checked, UPAs will be validated to be formatted correctly, and
     output object name strings will have their formatting validated (e.g. no spaces are allowed in workspace
@@ -235,14 +248,17 @@ def generate_input_batch(app, tag='release', **kwargs):
     spec = sm.get_spec(app, tag=tag)
     spec_params = sm.app_params(spec)
     (spec_params_dict, grouped_params) = _index_spec_params(spec_params)
-    pprint(grouped_params)
+
     # Initial checking, make sure all kwargs exist as params.
     input_errors = list()         # errors that occur while parsing inputs
     input_vals = dict()
+    output_vals = dict()
     for k, v in kwargs.iteritems():
         if k not in spec_params_dict:
             input_errors.append("{} is not a parameter".format(k))
-        if isinstance(v, tuple):
+        if spec_params_dict[k].get('is_output'):
+            output_vals[k] = v
+        elif isinstance(v, tuple):
             # if it's a tuple, unravel it to generate values.
             input_vals[k] = _generate_vals(v)
         elif _is_singleton(v, spec_params_dict[k]):
@@ -261,16 +277,84 @@ def generate_input_batch(app, tag='release', **kwargs):
     batch_inputs = list()
     param_ids = input_vals.keys()
     product_inputs = [input_vals[k] for k in param_ids]
+    batch_size = reduce(lambda x, y: x*y, [len(p) for p in product_inputs])
+    # prepare output values
+    output_vals = _prepare_output_vals(output_vals, spec_params_dict, batch_size)
+
+    batch_count = 0
     for p in product(*product_inputs):
-        print(p)
         next_input = deepcopy(input_scaffold)
         for idx, name in enumerate(param_ids):
             if name in grouped_params:
                 next_input[grouped_params[name]][name] = p[idx]
             else:
                 next_input[name] = p[idx]
+        # handle output params
+        for out_key, out_val in output_vals.iteritems():
+            if isinstance(out_val, list):
+                next_input[out_key] = out_val[batch_count]
+            else:
+                t = Template(out_val)
+                sub_dict = {
+                    'run_number': batch_count
+                }
+                sub_dict.update(_flatten_params(next_input))
+                next_input[out_key] = t.substitute(sub_dict)
         batch_inputs.append(next_input)
+        batch_count = batch_count + 1
     return batch_inputs
+
+def _flatten_params(d):
+    """
+    Flattens a dict of params such that any group params are at the highest level, and all
+    values are strings that are appropriate for naming files.
+
+    Group params are only one level deep, right?
+    """
+    flat = dict()
+    for k, v in d.iteritems():
+        if isinstance(v, dict):
+            flat.update(_flatten_params(v))
+        elif isinstance(v, list):
+            # clean up lists to be acceptable output names
+            # e.g. goes from [1, 2, 3] to '1_2_3'
+            trim_list = str(v)
+            trim_list = re.sub('[\[\]\s\']', '', trim_list) # remove [, ], spaces and quotes
+            trim_list = re.sub('[^A-Za-z0-9|._-]', '_', trim_list) # turn unacceptable characters into underscores
+            flat[k] = trim_list
+        else:
+            flat[k] = re.sub('[^A-Za-z0-9|._-]', '_', str(v)) # turn unacceptable characters into underscores
+    return flat
+
+def _prepare_output_vals(output_vals, spec_params_dict, batch_size):
+    """
+    output_vals - dict with outputs set up from user input
+    spec_params - dict with info about all parameters in the spec
+
+    This validates output values that are present.
+    * If it's a list, make sure it's the right length
+    * If it's a template, make sure the keys are present
+    * If we're missing an output value, make sure there's a default in the spec, and templatize it
+    If anything fails, raises a ValueError.
+    """
+    for p_id, p in spec_params_dict.iteritems():
+        if p_id in output_vals:
+            val = output_vals[p_id]
+            if isinstance(val, list) and len(val) != batch_size:
+                raise ValueError("The output parameter {} must have {} values if it's a list".format(p_id, batch_size))
+            else:
+                # check keys in the string
+                for i in Formatter().parse(val):
+                    field = i[1]
+                    if field and field not in spec_params_dict and field != 'run_number':
+                        raise ValueError("Output template field {} doesn't match a paramter id or 'run_number'".format(field))
+        else:
+            if p.get('is_output'):
+                if not p['default']:
+                    raise ValueError('No output template provided parameter "{}", and no default value found!'.format(p_id))
+                else:
+                    output_vals[p_id] = p['default'] + "${run_number}"
+    return output_vals
 
 def _is_singleton(input_value, param_info):
     """

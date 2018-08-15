@@ -29,4 +29,5 @@ markupsafe
 plotly
 mock
 coverage
+pandas>=0.23.3
 clustergrammer-widget>=1.13.3

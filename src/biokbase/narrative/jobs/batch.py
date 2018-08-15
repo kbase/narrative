@@ -246,17 +246,18 @@ def generate_input_batch(app, tag='release', **kwargs):
     """
     sm = specmanager.SpecManager()
     spec = sm.get_spec(app, tag=tag)
+    if not kwargs:
+        raise ValueError("No inputs were given! If you just want to build an empty input set, try get_input_scaffold.")
     spec_params = sm.app_params(spec)
     (spec_params_dict, grouped_params) = _index_spec_params(spec_params)
 
     # Initial checking, make sure all kwargs exist as params.
-    input_errors = list()         # errors that occur while parsing inputs
     input_vals = dict()
     output_vals = dict()
     for k, v in kwargs.iteritems():
         if k not in spec_params_dict:
-            input_errors.append("{} is not a parameter".format(k))
-        if spec_params_dict[k].get('is_output'):
+            raise ValueError("{} is not a parameter".format(k))
+        elif spec_params_dict[k].get('is_output'):
             output_vals[k] = v
         elif isinstance(v, tuple):
             # if it's a tuple, unravel it to generate values.
@@ -267,10 +268,6 @@ def generate_input_batch(app, tag='release', **kwargs):
             input_vals[k] = [v]
         else:
             input_vals[k] = v
-    if input_errors:
-        for e in input_errors:
-            print("Error in input: {}".format(e))
-        raise ValueError("Errors found in your inputs! See above for details.")
 
     # makes the scaffold that we're going to adjust for each iteration
     input_scaffold = get_input_scaffold(app, tag=tag, use_defaults=True)
@@ -286,7 +283,11 @@ def generate_input_batch(app, tag='release', **kwargs):
         next_input = deepcopy(input_scaffold)
         for idx, name in enumerate(param_ids):
             if name in grouped_params:
-                next_input[grouped_params[name]][name] = p[idx]
+                # if it's a list, use the 0th element.
+                if isinstance(next_input[grouped_params[name]], list):
+                    next_input[grouped_params[name]][0][name] = p[idx]
+                else:
+                    next_input[grouped_params[name]][name] = p[idx]
             else:
                 next_input[name] = p[idx]
         # handle output params
@@ -337,24 +338,26 @@ def _prepare_output_vals(output_vals, spec_params_dict, batch_size):
     * If we're missing an output value, make sure there's a default in the spec, and templatize it
     If anything fails, raises a ValueError.
     """
+    parsed_out_vals = deepcopy(output_vals)  # avoid side effects
     for p_id, p in spec_params_dict.iteritems():
-        if p_id in output_vals:
-            val = output_vals[p_id]
-            if isinstance(val, list) and len(val) != batch_size:
-                raise ValueError("The output parameter {} must have {} values if it's a list".format(p_id, batch_size))
-            else:
+        val = output_vals.get(p_id)
+        if val:
+            if isinstance(val, list):
+                if len(val) != batch_size:
+                    raise ValueError("The output parameter {} must have {} values if it's a list".format(p_id, batch_size))
+            elif val is not None:
                 # check keys in the string
                 for i in Formatter().parse(val):
                     field = i[1]
                     if field and field not in spec_params_dict and field != 'run_number':
-                        raise ValueError("Output template field {} doesn't match a paramter id or 'run_number'".format(field))
+                        raise ValueError("Output template field {} doesn't match a parameter id or 'run_number'".format(field))
         else:
             if p.get('is_output'):
                 if not p['default']:
-                    raise ValueError('No output template provided parameter "{}", and no default value found!'.format(p_id))
+                    raise ValueError('No output template provided for parameter "{}" and no default value found!'.format(p_id))
                 else:
-                    output_vals[p_id] = p['default'] + "${run_number}"
-    return output_vals
+                    parsed_out_vals[p_id] = p['default'] + "${run_number}"
+    return parsed_out_vals
 
 def _is_singleton(input_value, param_info):
     """

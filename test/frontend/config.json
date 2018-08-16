@@ -1,0 +1,33 @@
+{
+    "users": {
+        "userA": {
+            "id": "thomasoniii",
+            "tokenFile": "./thomason.tok",
+            "token" : "GQMIVPAOVOWGQJ6AXF2XHPKWLLWNWUZE"
+        },
+        "userB": {
+            "id": "thomasoniii2",
+            "tokenFile": "./thomasoniii2.tok",
+            "token" : "YJN43XJRZSJUBB7S4JDLMVTDEFXFF3K3"
+        }
+    },
+    "host": "ci.kbase.us",
+    "protocol" : "https://",
+
+    "widgets": {
+        "kbaseGenomeView": {
+            "dataSelector": ".icon-genome",
+            "widgetSelector": ".tabbable",
+            "testFile": "widgets/kbaseGenomeView.js",
+            "publicData": "31082/46/1",
+            "type" : "genome",
+            "testFile" : "./widget-tests/genomeViewTest.js"
+        },
+        "kbaseGenomeAnnotationAssembly": {
+            "dataSelector": ".fa-stack-1x",
+            "widgetSelector": ".tabbable",
+            "publicData": "31082/40/2",
+            "type" : "assembly"
+        }
+    }
+}

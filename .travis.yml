@@ -28,7 +28,7 @@ branches:
     - staging
 
 before_install:
-  - pip install virtualenv coveralls
+  - pip install virtualenv coveralls scikit-learn[alldeps] pandas
   - gem install coveralls-lcov
   - nvm install $TRAVIS_NODE_VERSION
   - npm install -g bower

@@ -10,6 +10,7 @@ Tests for the viewer module
 """
 __author__ = 'James Jeffryes <jjeffryes@mcs.anl.gov>'
 
+@unittest.skip("Skipping clustergrammer-based tests")
 class ViewersTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

@@ -29,5 +29,15 @@ Rough spots:
   * It calls the services directly and not via a client, for simplicity's sake in the node
     environment and for fear of creating yet another dynamic library. It might be nice
     to standardize it.
+  * No dependencies are specified anywhere. You'll want to ensure that the following packages
+    are installed:
+      puppeteer
+      axios
+      minimist
+      mocha
+
+      (util and fs should be there already)
   * Jim, of course, is leaving. So you're on your own. :-)
     (Okay, that's not entirely try. Feel free to pester me about it and I'll help as I can)
+  * There's a minor inefficiency in that puppeteer will spin up new browser instances for each
+    widget tested. That may or may not actually be desirable.

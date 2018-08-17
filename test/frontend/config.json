@@ -1,14 +1,14 @@
 {
     "users": {
         "userA": {
-            "id": "thomasoniii",
-            "tokenFile": "./thomason.tok",
-            "token" : "GQMIVPAOVOWGQJ6AXF2XHPKWLLWNWUZE"
+            "id": "USERA_ID",
+            "tokenFile": "./PATH_TO_USER_A_TOKEN",
+            "token" : "USERA_TOKEN_GOES_HERE"
         },
         "userB": {
-            "id": "thomasoniii2",
-            "tokenFile": "./thomasoniii2.tok",
-            "token" : "YJN43XJRZSJUBB7S4JDLMVTDEFXFF3K3"
+            "id": "USERB_ID",
+            "tokenFile": "./PATH_TO_USER_B_TOKEN",
+            "token" : "USERB_TOKEN_GOES_HERE"
         }
     },
     "host": "ci.kbase.us",

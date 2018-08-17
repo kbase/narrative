@@ -29,4 +29,3 @@ markupsafe
 plotly
 mock
 coverage
-clustergrammer-widget>=1.13.3

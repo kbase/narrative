@@ -1,6 +1,6 @@
 from __future__ import print_function
 import unittest
-from biokbase.narrative import viewers
+# from biokbase.narrative import viewers
 import biokbase.auth
 import util
 

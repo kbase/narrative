@@ -1073,7 +1073,7 @@ define([
             var $filterMethodInput = this.filterMethodInputButton(objData);
             var $filterMethodOutput = this.filterMethodOutputButton(objData);
             var $openLandingPage = this.openLandingPageButton(objData, $alertContainer);
-            var $openReport = this.openReportButton(objData); 
+            var $openReport = this.openReportButton(objData);
             var $openHistory = this.openHistoryButton(objData, $alertContainer);
             var $openProvenance = this.openProvenanceButton(objData, $alertContainer);
             var $download = this.downloadButton(objData, ref_path, $alertContainer);
@@ -1152,7 +1152,7 @@ define([
                     };
                 });
 
-                // If, after evaluation of the reports, we really don't have any, just 
+                // If, after evaluation of the reports, we really don't have any, just
                 // shortcircuit with an array of nulls.
                 if (objectsToFetch.length === 0)  {
                     return [];
@@ -1167,7 +1167,7 @@ define([
                 });
 
                 return workspace.callFunc('get_objects2', [{
-                    objects: objectsToFetch, 
+                    objects: objectsToFetch,
                     ignoreErrors: 0
                 }])
                     .spread(function (result) {
@@ -1816,7 +1816,9 @@ define([
 
             var $header = $('<div>');
             if (_this.options.parentControlPanel) {
-                _this.options.parentControlPanel.addButtonToControlPanel($viewMode);
+                if (Config.get('features').hierarchicalDataView) {
+                    _this.options.parentControlPanel.addButtonToControlPanel($viewMode);
+                }
                 _this.options.parentControlPanel.addButtonToControlPanel($openSearch);
                 _this.options.parentControlPanel.addButtonToControlPanel($openSort);
                 _this.options.parentControlPanel.addButtonToControlPanel($openFilter);
@@ -1824,7 +1826,7 @@ define([
             } else {
                 $header.addClass('row').css({ 'margin': '5px' })
                     .append($('<div>').addClass('col-xs-12').css({ 'margin': '0px', 'padding': '0px', 'text-align': 'right' })
-                        .append($viewMode)
+                        .append(Config.get('features').hierarchicalDataView ? $viewMode : '')
                         .append($openSearch)
                         .append($openSort)
                         .append($openFilter));

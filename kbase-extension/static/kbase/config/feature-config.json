@@ -4,5 +4,6 @@
     "advanced": false,
     "developer": false,
     "lazyWidgetRender": true,
-    "batchAppMode": true
+    "batchAppMode": true,
+    "hierarchicalDataView": false
 }

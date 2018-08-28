@@ -1,6 +1,6 @@
 from __future__ import print_function
 import unittest
-from biokbase.narrative import viewers
+# from biokbase.narrative import viewers
 import biokbase.auth
 import util
 
@@ -10,6 +10,7 @@ Tests for the viewer module
 """
 __author__ = 'James Jeffryes <jjeffryes@mcs.anl.gov>'
 
+@unittest.skip("Skipping clustergrammer-based tests")
 class ViewersTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

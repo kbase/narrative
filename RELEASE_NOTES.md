@@ -1,7 +1,18 @@
 ### OVERVIEW
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
+This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
+
+### Version 3.8.1
+- SCT-1261 - Changed the 'outdated app' warning to a small icon with a popover text.
+- SCT-886 - Added a default viewer for typed objects that don't have an actual viewer associated with them.
+- Added a test-mode viewer for a new matrix type.
+- SCT-1253 - fixed bugs in how assembly and reads typed objects get viewed - their numbers of reads weren't being presented properly.
+- SCT-1210 - Module-level (not just type) spec files are available for determining object viewers.
+- SCT-1234 - Introduces the clustergrammer Jupyter Notebook widget.
+- SCT-1206 - fixes a cell error that can occur if an app doesn't produce any output objects (including reports).
+- Introduces a new build and deployment strategy.
+- Updates the versions of numpy and pandas so they should work again.
 
 ### Version 3.8.0
 - Generalized updates to support viewing the new version of the genome data type.

@@ -8,6 +8,13 @@ from biokbase.narrative.app_util import (
     system_variable
 )
 import re
+from decimal import Decimal
+from itertools import product
+from copy import deepcopy
+from string import (
+    Formatter,
+    Template
+)
 
 def get_input_scaffold(app, tag='release', use_defaults=False):
     """
@@ -28,20 +35,32 @@ def get_input_scaffold(app, tag='release', use_defaults=False):
     sm = specmanager.SpecManager()
     spec = sm.get_spec(app, tag=tag)  # will raise an exception if it's not found.
     spec_params = sm.app_params(spec)
-    spec_params_dict = dict()
-    grouped_params = set()  # set of param ids that are used in groups.
-    for p in spec_params:
-        spec_params_dict[p['id']] = p
-        # groupify the parameters - identify params that are part of groups, and don't include
-        # them in the list separately.
-        if p.get('parameter_ids'):
-            grouped_params.update(p.get('parameter_ids'))
+    (spec_params_dict, grouped_params) = _index_spec_params(spec_params)
 
     input_scaffold = dict()
     for p in spec_params:
         if p['id'] not in grouped_params:
             input_scaffold[p['id']] = _make_scaffold_input(p, spec_params_dict, use_defaults)
     return input_scaffold
+
+def _index_spec_params(spec_params):
+    """
+    Makes an index of the spec parameters. It dict-ifies the list of spec params
+    provided by the SpecManager, and also returns the set of param ids that are
+    used in groups.
+    This gets returned as a tuple (indexed params, group param ids)
+    """
+    spec_params_dict = dict()
+    grouped_parents = dict()
+    for p in spec_params:
+        spec_params_dict[p['id']] = p
+        # groupify the parameters - identify params that are part of groups, and don't include
+        # them in the list separately.
+        children = p.get('parameter_ids')
+        if children:
+            for child in children:
+                grouped_parents[child] = p['id']
+    return (spec_params_dict, grouped_parents)
 
 def _make_scaffold_input(param, params_dict, use_defaults):
     """
@@ -136,36 +155,260 @@ def list_files(name=None):
 
 def generate_input_batch(app, tag='release', **kwargs):
     """
-    This will be tricky.
-    It should take in the app and version, and a set/list/whatever of inputs and make a range of those.
-    The inputs should range from a list, or tuple, or something else in order to make a matrix from.
-    It should then return the list of dictionaries for batch inputs.
-    Example, the MEGAHIT inputs are a simple dictionary. They have a single read library as input,
-    a string output for the name of the contigs, and a few advanced parameters for controlling the process,
-    including a min_contig_len.
-    If I want to run a batch over several min_contig_len values, and several read libraries, with different
-    output values, how do I do that?
-    I would want to give the following:
-    1. a list of the read library refs to use
-    2. Either a list of min_contig_length values or a way to represent a range
-    3. Either a list of all the outputs, a way to generate those based on inputs, or just let the app decide
-       some unique output name for each run.
-    Sooo... how to do this.
-    I think the following.
-    1. It's easy to fetch the app info, make a scaffold, etc. (Got that scaffold function up there ^^^).
-    let each element of kwargs be one key in the app structure. In this example, we have:
-    min_contig_len - int > 0
-    output_contigset_name - string, output object name
-    read_library_ref - UPA of read library
+    This takes in an app, tag, and set of loosely-defined kwargs to build a batch of app runs.
+    app is the app id, in the format "Module/method", e.g.("MEGAHIT/run_megahit")
+    tag should be one of 'dev', 'beta', or 'release'
 
-    The input kwargs would look like:
-    read_libary_ref = [list of ref strings]
-    output_contigset_name - either leave blank and let the function generate them, or give a list of names, OR a template? something like:
-        "MEGAHIT.contigs_{read_library_ref}_{min_contig_len}" ?
-    min_contig_len =
-        * either a single value (apply to all)
-        * or a list of values
-        * or a 3-tuple - (min, interval, max) - as a generator. (maybe make a Python generator?) e.g.: (0, 5, 20) would turn into a list [0, 5, 10, 15, 20]
-    the rest of the inputs would then be the default values.
+    The rest is where it gets tricky.
+
+    kwargs is, as usual for Python, a set of keys and values. In this case, the keys are the app parameter ids
+    as defined by the app spec, and the values are a range of values for each parameter.
+
+    These sets of ranges are then shuffled together in such a way that all permutations define different
+    runs of the app.
+
+    Effectively, each value of the kwargs is expected to be a list. Parameters that are defined by
+    the spec to be lists (the "allow_multiple" flag is truthy) are expected to be lists of lists.
+
+    For example, the MEGAHIT inputs are a simple dictionary with several keys. For this example, they have
+    "read_library_ref", "min_contig_len", and "output_assembly" as keys, all of which are expected to have
+    a single value. So a normal set of inputs for a single run might look like this:
+    {
+        "read_library_ref": "1/2/1",
+        "min_contig_len": 500,
+        "output_assembly": "assembled_reads"
+    }
+
+    The goal in building a batch of MEGAHIT runs is to assemble multiple read libraries into their successive
+    assemblies, possibly over a range of minimum contig lengths to select the best assembly. So I might have
+    the following in kwargs:
+    read_library_ref = ["1/2/1", "1/3/1", "1/4/1"]
+    min_contig_len = [500, 1000]
+
+    output_assembly gets tricky, since that's the output. We know it's the output from the spec as well, so
+    we can know what to do with it. The options are to let this function pick a random name appended to
+    the default output name of "MEGAHIT.contigs", or a list of strings (one for each run), or to create a
+    template that will have either a random number appended (the run index) or some combination of values
+    from the inputs. This would be a Python-based template, something like:
+    "MEGAHIT.contigs_${read_library_ref}_${min_contig_len}"
+
+    In the end, this should form a list of 6 app runs:
+    [{
+        "read_library_ref": "1/2/1",
+        "min_contig_len": 500,
+        "output_assembly": "MEGAHIT.contigs1"
+    },{
+        "read_library_ref": "1/2/1",
+        "min_contig_len": 1000,
+        "output_assembly": "MEGAHIT.contigs2"
+    },{
+        "read_library_ref": "1/3/1",
+        "min_contig_len": 500,
+        "output_assembly": "MEGAHIT.contigs3"
+    },{
+        "read_library_ref": "1/3/1",
+        "min_contig_len": 1000,
+        "output_assembly": "MEGAHIT.contigs4"
+    },{
+        "read_library_ref": "1/4/1",
+        "min_contig_len": 500,
+        "output_assembly": "MEGAHIT.contigs5"
+    },{
+        "read_library_ref": "1/4/1",
+        "min_contig_len": 1000,
+        "output_assembly": "MEGAHIT.contigs6"
+    }]
+
+    which is what gets returned.
+
+    Any input not specified in kwargs is left as default as described in the spec, or None if there is no
+    description.
+
+    So, again, the optional values for each kwarg are:
+    * a single value (applied to all runs)
+    * a list of values (used to build a set of runs)
+    * for numeric values, a 3-tuple - (min, interval, max) - to be used as a generator
+
+    For output parameters (as identified by the app spec), acceptable values are:
+    * a list of strings, the length of the total number of batches created. If this is off (e.g., 10
+      values are given, but only 8 batches are made), then a ValueError will be raised.
+    * a templated string like this: my_output_{{some_param}}
+        * the template values are all parameter ids or:
+        * a special template {{run_number}} is allowed, which is an integer for which run
+          of the batch this is
+    * nothing. If nothing, then the default output value will be used with {{run_number}} appended
+      to the end. If there is no default output value, then a ValueError will be raised.
+
+    Very little validation will be done here for the various values. Values expected by the spec to be
+    numbers of some range will be checked, UPAs will be validated to be formatted correctly, and
+    output object name strings will have their formatting validated (e.g. no spaces are allowed in workspace
+    object names)
     """
-    return list()
+    sm = specmanager.SpecManager()
+    spec = sm.get_spec(app, tag=tag)
+    if not kwargs:
+        raise ValueError("No inputs were given! If you just want to build an empty input set, try get_input_scaffold.")
+    spec_params = sm.app_params(spec)
+    (spec_params_dict, grouped_params) = _index_spec_params(spec_params)
+
+    # Initial checking, make sure all kwargs exist as params.
+    input_vals = dict()
+    output_vals = dict()
+    for k, v in kwargs.iteritems():
+        if k not in spec_params_dict:
+            raise ValueError("{} is not a parameter".format(k))
+        elif spec_params_dict[k].get('is_output'):
+            output_vals[k] = v
+        elif isinstance(v, tuple):
+            # if it's a tuple, unravel it to generate values.
+            input_vals[k] = _generate_vals(v)
+        elif _is_singleton(v, spec_params_dict[k]):
+            # if it's a singleton, wrap it as a list.
+            # lists can be singletons, too, if that parameter has allow_multiple == True.
+            input_vals[k] = [v]
+        else:
+            input_vals[k] = v
+
+    # makes the scaffold that we're going to adjust for each iteration
+    input_scaffold = get_input_scaffold(app, tag=tag, use_defaults=True)
+    batch_inputs = list()
+    param_ids = input_vals.keys()
+    product_inputs = [input_vals[k] for k in param_ids]
+    batch_size = reduce(lambda x, y: x*y, [len(p) for p in product_inputs])
+    # prepare output values
+    output_vals = _prepare_output_vals(output_vals, spec_params_dict, batch_size)
+
+    batch_count = 0
+    for p in product(*product_inputs):
+        next_input = deepcopy(input_scaffold)
+        for idx, name in enumerate(param_ids):
+            if name in grouped_params:
+                # if it's a list, use the 0th element.
+                if isinstance(next_input[grouped_params[name]], list):
+                    next_input[grouped_params[name]][0][name] = p[idx]
+                else:
+                    next_input[grouped_params[name]][name] = p[idx]
+            else:
+                next_input[name] = p[idx]
+        # handle output params
+        for out_key, out_val in output_vals.iteritems():
+            if isinstance(out_val, list):
+                next_input[out_key] = out_val[batch_count]
+            else:
+                t = Template(out_val)
+                sub_dict = {
+                    'run_number': batch_count
+                }
+                sub_dict.update(_flatten_params(next_input))
+                next_input[out_key] = t.substitute(sub_dict)
+        batch_inputs.append(next_input)
+        batch_count = batch_count + 1
+    return batch_inputs
+
+def _flatten_params(d):
+    """
+    Flattens a dict of params such that any group params are at the highest level, and all
+    values are strings that are appropriate for naming files.
+
+    Group params are only one level deep, right?
+    """
+    flat = dict()
+    for k, v in d.iteritems():
+        if isinstance(v, dict):
+            flat.update(_flatten_params(v))
+        elif isinstance(v, list):
+            # clean up lists to be acceptable output names
+            # e.g. goes from [1, 2, 3] to '1_2_3'
+            trim_list = str(v)
+            trim_list = re.sub('[\[\]\s\']', '', trim_list) # remove [, ], spaces and quotes
+            trim_list = re.sub('[^A-Za-z0-9|._-]', '_', trim_list) # turn unacceptable characters into underscores
+            flat[k] = trim_list
+        else:
+            flat[k] = re.sub('[^A-Za-z0-9|._-]', '_', str(v)) # turn unacceptable characters into underscores
+    return flat
+
+def _prepare_output_vals(output_vals, spec_params_dict, batch_size):
+    """
+    output_vals - dict with outputs set up from user input
+    spec_params - dict with info about all parameters in the spec
+
+    This validates output values that are present.
+    * If it's a list, make sure it's the right length
+    * If it's a template, make sure the keys are present
+    * If we're missing an output value, make sure there's a default in the spec, and templatize it
+    If anything fails, raises a ValueError.
+    """
+    parsed_out_vals = deepcopy(output_vals)  # avoid side effects
+    for p_id, p in spec_params_dict.iteritems():
+        val = output_vals.get(p_id)
+        if val:
+            if isinstance(val, list):
+                if len(val) != batch_size:
+                    raise ValueError("The output parameter {} must have {} values if it's a list".format(p_id, batch_size))
+            elif val is not None:
+                # check keys in the string
+                for i in Formatter().parse(val):
+                    field = i[1]
+                    if field and field not in spec_params_dict and field != 'run_number':
+                        raise ValueError("Output template field {} doesn't match a parameter id or 'run_number'".format(field))
+        else:
+            if p.get('is_output'):
+                if not p['default']:
+                    raise ValueError('No output template provided for parameter "{}" and no default value found!'.format(p_id))
+                else:
+                    parsed_out_vals[p_id] = p['default'] + "${run_number}"
+    return parsed_out_vals
+
+def _is_singleton(input_value, param_info):
+    """
+    Returns True if the given input value is a singleton of that parameter. E.g., if it's a
+    single string or number for a text parameter, or a list of strings/numbers if the parameter
+    allows multiples, or it's a dict if the parameter is a group param.
+
+    That is, if the input parameter is treated as a list by the app, and a list of strings is
+    given as the value to iterate over, that's still a "singleton". For example, if the input_type
+    is a list of reads to assemble together, and the goal is to build a batch run with several
+    lists, that should be a list of lists.
+
+    Doesn't do any validation or anything. Shouldn't raise any errors. It just checks
+    whether we have a list / dict / (int or str) where allow_multiple=True.
+    """
+    if input_value and isinstance(input_value, list):
+        if not param_info.get("allow_multiple", False):
+            return False
+        elif isinstance(input_value[0], list):
+            return False
+    return True
+
+def _generate_vals(t):
+    """
+    Interpolates values from a 3-tuple (min, interval, max)
+    E.g. (0, 5, 20) would return [0, 5, 10, 15, 20]
+    (0, 5, 19) would return [0, 5, 10, 15]
+    (100, -5, 80) would return [100, 95, 90, 85, 80]
+    ...etc.
+    If the values are non-numeric, raises an exception.
+    If they don't make numeric sense, like (0, -5, 20) where the max will never be
+    reached, raises an exception.
+    If it's not a 3-tuple, raises an exception.
+    """
+    if len(t) != 3:
+        raise ValueError('The input tuple must have 3 values')
+    try:
+        # deals with floating point errors
+        start = Decimal(str(t[0]))
+        interval = Decimal(str(t[1]))
+        target = Decimal(str(t[2]))
+    except:
+        raise ValueError('The input tuple must be entirely numeric')
+    if interval == 0:
+        raise ValueError('The interval value must not be 0')
+    if (start < target and interval < 0) or (start > target and interval > 0):
+        raise ValueError('The maximum value of this tuple will never be reached based on the interval value')
+    vals = [start]
+
+    while (vals[-1] < target and vals[-1] + interval <= target) or \
+          (vals[-1] > target and vals[-1] + interval >= target):
+        vals.append(vals[-1] + interval)
+    # turn them back into floats at the end.
+    return [float(v) for v in vals]

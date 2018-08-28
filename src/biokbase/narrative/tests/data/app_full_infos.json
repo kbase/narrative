@@ -1,0 +1,24 @@
+[{
+    "ver": "0.0.1",
+    "name": "Test Input Parameters",
+    "subtitle": "Used for testing that input parameters are properly validated.",
+    "namespace": "NarrativeTest",
+    "app_type": "app",
+    "suggestions": {
+        "next_methods": [],
+        "related_methods": [],
+        "related_apps": [],
+        "next_apps": []
+    },
+    "tooltip": "Used for testing that input parameters are properly validated.",
+    "git_commit_hash": "daaf0bd2a797f60c85dfbfe3a0b4e7568037e763",
+    "contact": "help@kbase.us",
+    "publications": [],
+    "authors": ["wjriehl"],
+    "module_name": "NarrativeTest",
+    "technical_description": "",
+    "screenshots": [],
+    "id": "NarrativeTest/test_input_params",
+    "categories": ["active"],
+    "description": "<p>This is a tiny method intended for just automated testing that parameters of different forms validate (or not) as expected.</p><p>It still runs, though! All it does is make a copy of a genome. Kinda boring, yes, but it's mainly for testing and validation.</p>"
+}]

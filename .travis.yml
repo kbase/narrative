@@ -37,6 +37,7 @@ before_install:
 
 install:
   - pip install -r src/requirements.txt
+  - pip install --no-dependencies clustergrammer_widget
 
 before_script:
   - "export DISPLAY=:99.0"

@@ -13,9 +13,9 @@ if [ "$pyver" != "$pipver" ]; then
 else
 	announce "Install dependencies"
 	pip install -r requirements.txt || abort
-	# We install clustergrammer_widget specially here so that it does not
+	# We install clustergrammer_widget and sklearn specially here so that it does not
 	# clobber dependencies in the base conda image
-	pip install --no-dependencies clustergrammer_widget
+	pip install --no-dependencies sklearn clustergrammer_widget
 	announce "Run setup.py"
 	python setup.py install || abort
 fi

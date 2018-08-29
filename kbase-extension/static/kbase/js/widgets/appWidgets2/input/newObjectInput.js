@@ -107,13 +107,11 @@ define([
                 return validateUniqueOutput(rawValue)
                     .then((isUnique) => {
                         if (!isUnique) {
-                            return Promise.try(() => {
-                                return {
-                                    isValid: false,
-                                    diagnosis: 'invalid',
-                                    errorMessage: 'Every output object from a single app run must have a unique name.'
-                                };
-                            });
+                            return {
+                                isValid: false,
+                                diagnosis: 'invalid',
+                                errorMessage: 'Every output object from a single app run must have a unique name.'
+                            };
                         }
                         else {
                             let validationOptions = {

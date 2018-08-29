@@ -70,7 +70,7 @@ define([
         }
 
         /*
-         * A workspace ref, but using names ... 
+         * A workspace ref, but using names ...
          */
         function validateWorkspaceObjectNameRef(value, options) {
             var parsedValue,
@@ -189,60 +189,60 @@ define([
                 messageId, shortMessage, errorMessage, diagnosis = 'valid';
 
             return Promise.try(function() {
-                    if (typeof value !== 'string') {
-                        diagnosis = 'invalid';
-                        errorMessage = 'value must be a string in workspace object name format';
-                    } else {
-                        parsedValue = value.trim();
-                        if (!parsedValue) {
-                            if (options.required) {
-                                messageId = 'required-missing';
-                                diagnosis = 'required-missing';
-                                errorMessage = 'value is required';
-                            } else {
-                                diagnosis = 'optional-empty';
-                            }
-                        } else if (/\s/.test(parsedValue)) {
-                            messageId = 'obj-name-no-spaces';
-                            diagnosis = 'invalid';
-                            errorMessage = 'an object name may not contain a space';
-                        } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
-                            messageId = 'obj-name-not-integer';
-                            diagnosis = 'invalid';
-                            errorMessage = 'an object name may not be in the form of an integer';
-                        } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
-                            messageId = 'obj-name-invalid-characters';
-                            diagnosis = 'invalid';
-                            errorMessage = 'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
-                        } else if (parsedValue.length > 255) {
-                            messageId = 'obj-name-too-long';
-                            diagnosis = 'invalid';
-                            errorMessage = 'an object name may not exceed 255 characters in length';
-                        } else if (options.shouldNotExist) {
-                            return getObjectInfo(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
-                                .then(function(objectInfo) {
-                                    if (objectInfo) {
-                                        var type = objectInfo.typeModule + '.' + objectInfo.typeName,
-                                            matchingType = options.types.some(function(typeId) {
-                                                if (typeId === type) {
-                                                    return true;
-                                                }
-                                                return false;
-                                            });
-                                        if (!matchingType) {
-                                            messageId = 'obj-overwrite-diff-type';
-                                            errorMessage = 'an object already exists with this name and is not of the same type';
-                                            diagnosis = 'invalid';
-                                        } else {
-                                            messageId = 'obj-overwrite-warning';
-                                            shortMessage = 'an object already exists with this name';
-                                            diagnosis = 'suspect';
-                                        }
-                                    }
-                                });
+                if (typeof value !== 'string') {
+                    diagnosis = 'invalid';
+                    errorMessage = 'value must be a string in workspace object name format';
+                } else {
+                    parsedValue = value.trim();
+                    if (!parsedValue) {
+                        if (options.required) {
+                            messageId = 'required-missing';
+                            diagnosis = 'required-missing';
+                            errorMessage = 'value is required';
+                        } else {
+                            diagnosis = 'optional-empty';
                         }
+                    } else if (/\s/.test(parsedValue)) {
+                        messageId = 'obj-name-no-spaces';
+                        diagnosis = 'invalid';
+                        errorMessage = 'an object name may not contain a space';
+                    } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
+                        messageId = 'obj-name-not-integer';
+                        diagnosis = 'invalid';
+                        errorMessage = 'an object name may not be in the form of an integer';
+                    } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
+                        messageId = 'obj-name-invalid-characters';
+                        diagnosis = 'invalid';
+                        errorMessage = 'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
+                    } else if (parsedValue.length > 255) {
+                        messageId = 'obj-name-too-long';
+                        diagnosis = 'invalid';
+                        errorMessage = 'an object name may not exceed 255 characters in length';
+                    } else if (options.shouldNotExist) {
+                        return getObjectInfo(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
+                            .then(function(objectInfo) {
+                                if (objectInfo) {
+                                    var type = objectInfo.typeModule + '.' + objectInfo.typeName,
+                                        matchingType = options.types.some(function(typeId) {
+                                            if (typeId === type) {
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+                                    if (!matchingType) {
+                                        messageId = 'obj-overwrite-diff-type';
+                                        errorMessage = 'an object already exists with this name and is not of the same type';
+                                        diagnosis = 'invalid';
+                                    } else {
+                                        messageId = 'obj-overwrite-warning';
+                                        shortMessage = 'an object already exists with this name';
+                                        diagnosis = 'suspect';
+                                    }
+                                }
+                            });
                     }
-                })
+                }
+            })
                 .then(function() {
                     return {
                         isValid: errorMessage ? false : true,
@@ -275,7 +275,7 @@ define([
                                 diagnosis = 'optional-empty';
                             }
                         } else {
-                            // TODO: validate each object name and report errors...                        
+                            // TODO: validate each object name and report errors...
                         }
                     }
                 })

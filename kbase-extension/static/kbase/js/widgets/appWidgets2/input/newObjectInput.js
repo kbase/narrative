@@ -28,13 +28,15 @@ define([
                 value: undefined
             },
             dom,
-            runtime = Runtime.make();
+            runtime = Runtime.make(),
+            otherOutputParams = config.closeParameters.filter((value) => {
+                return value !== spec.id;
+            });
 
         // Validate configuration.
         // Nothing to do...
 
         options.enabled = true;
-
 
         /*
          * If the parameter is optional, and is empty, return null.
@@ -51,12 +53,12 @@ define([
 
         function setModelValue(value) {
             return Promise.try(function() {
-                    if (model.value !== value) {
-                        model.value = value;
-                        return true;
-                    }
-                    return false;
-                })
+                if (model.value !== value) {
+                    model.value = value;
+                    return true;
+                }
+                return false;
+            })
                 .then(function(changed) {
                     render();
                 });
@@ -64,8 +66,8 @@ define([
 
         function unsetModelValue() {
             return Promise.try(function() {
-                    model.value = undefined;
-                })
+                model.value = undefined;
+            })
                 .then(function(changed) {
                     render();
                 });
@@ -80,49 +82,65 @@ define([
         }
 
         /*
-         *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
          * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         *
-         *
          */
 
         function validate() {
-            return Promise.try(function() {
-                    if (!options.enabled) {
-                        return {
-                            isValid: true,
-                            validated: false,
-                            diagnosis: 'disabled'
-                        };
-                    }
-
-                    var rawValue = getInputValue(),
-                        validationOptions = {
-                            required: spec.data.constraints.required,
-                            shouldNotExist: true,
-                            workspaceId: workspaceId,
-                            types: spec.data.constraints.types,
-                            authToken: runtime.authToken(),
-                            workspaceServiceUrl: runtime.config('services.workspace.url')
-                        };
-
-                    return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
-                })
-                .then(function(validationResult) {
-                    // TODO: should pass the validation object through untouched...
-                    return validationResult;
-                    //                    return {
-                    //                        isValid: validationResult.isValid,
-                    //                        validated: true,
-                    //                        diagnosis: validationResult.diagnosis,
-                    //                        errorMessage: validationResult.errorMessage,
-                    //                        shortMessage: validationResult.shortMessage,
-                    //                        value: validationResult.parsedValue
-                    //                    };
+            if (!options.enabled) {
+                return Promise.try(() => {
+                    return {
+                        isValid: true,
+                        validated: false,
+                        diagnosis: 'disabled'
+                    };
                 });
+            }
+            else {
+                var rawValue = getInputValue();
+                return validateUniqueOutput(rawValue)
+                    .then((isUnique) => {
+                        if (!isUnique) {
+                            return Promise.try(() => {
+                                return {
+                                    isValid: false,
+                                    diagnosis: 'invalid',
+                                    errorMessage: 'Every output object from a single app run must have a unique name.'
+                                };
+                            });
+                        }
+                        else {
+                            let validationOptions = {
+                                required: spec.data.constraints.required,
+                                shouldNotExist: true,
+                                workspaceId: workspaceId,
+                                types: spec.data.constraints.types,
+                                authToken: runtime.authToken(),
+                                workspaceServiceUrl: runtime.config('services.workspace.url')
+                            };
+                            return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                        }
+                    })
+                    .then(function(validationResult) {
+                        return validationResult;
+                    });
+            }
+        }
+
+        /* Validate that this is a unique value among all output parameters */
+        function validateUniqueOutput(rawValue) {
+            return bus.request({
+                parameterNames: otherOutputParams
+            }, {
+                key: {
+                    type: 'get-parameters'
+                }
+            }).then((paramValues) => {
+                let duplicates = Object.values(paramValues).filter(value => rawValue === value && !!value);
+                return !Boolean(duplicates.length);
+            });
         }
 
         var autoChangeTimer;
@@ -197,12 +215,12 @@ define([
 
         function render() {
             Promise.try(function() {
-                    var events = Events.make(),
-                        inputControl = makeInputControl(model.value, events, bus);
+                var events = Events.make(),
+                    inputControl = makeInputControl(model.value, events, bus);
 
-                    dom.setContent('input-container', inputControl);
-                    events.attachEvents(container);
-                })
+                dom.setContent('input-container', inputControl);
+                events.attachEvents(container);
+            })
                 .then(function() {
                     return autoValidate();
                 });
@@ -258,22 +276,6 @@ define([
                     bus.on('refresh', function() {
 
                     });
-                    // bus.on('workspace-changed', function (message) {
-                    //     console.log('workspace updated!!!');
-                    // });
-
-                    //runtime.bus().receive({
-                    //    test: function (message) {
-                    //        return (message.type === 'workspace-updated');
-                    //    },
-                    //    handle: function (message) {
-                    //        console.log('received here too...');
-                    //    }
-                    //});
-
-                    //runtime.bus().on('workspace-updated', function () {
-                    //    console.log('received here too...');
-                    //})
                     bus.emit('sync');
                 });
             });

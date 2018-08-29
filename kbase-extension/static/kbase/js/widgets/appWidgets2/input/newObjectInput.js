@@ -48,7 +48,11 @@ define([
          */
 
         function getInputValue() {
-            return dom.getElement('input-container.input').value;
+            let val = dom.getElement('input-container.input').value;
+            // if (!val) {
+            //     return null;  // empty strings should -> null, otherwise it throws off validation.
+            // }
+            return val;
         }
 
         function setModelValue(value) {
@@ -173,13 +177,14 @@ define([
                 handler: function() {
                     validate()
                         .then(function(result) {
-                            if (result.isValid) {
+                            if (result.isValid || result.diagnosis === 'required-missing') {
                                 bus.emit('changed', {
                                     newValue: result.parsedValue
                                 });
-                            } else if (result.diagnosis === 'required-missing') {
+                            } else if (result.diagnosis === 'invalid') {
                                 bus.emit('changed', {
-                                    newValue: result.parsedValue
+                                    newValue: result.parsedValue,
+                                    isError: true
                                 });
                             }
                             bus.emit('validation', result);

@@ -123,7 +123,8 @@ define([
                     fieldWidget.bus.on('changed', function (message) {
                         paramsBus.send({
                             parameter: parameterSpec.id,
-                            newValue: message.newValue
+                            newValue: message.newValue,
+                            isError: message.isError
                         }, {
                             key: {
                                 type: 'parameter-changed',
@@ -133,7 +134,8 @@ define([
 
                         paramsBus.emit('parameter-changed', {
                             parameter: parameterSpec.id,
-                            newValue: message.newValue
+                            newValue: message.newValue,
+                            isError: message.isError
                         });
                     });
 

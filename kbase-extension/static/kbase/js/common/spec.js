@@ -87,17 +87,6 @@ define([
             return moduleName;
         }
 
-        // function validateField(fieldValue, fieldSpec) {
-        //     return new Promise(function(resolve, reject) {
-        //         require(['../widgets/appWidgets2/validators/' + getValidatorModule(fieldSpec)], function(validator) {
-        //             resolve(validator.applyConstraints(fieldValue, fieldSpec.data.constraints))
-        //         }, function(err) {
-        //             reject(err);
-        //         });
-        //     });
-        // }
-
-
         function validateModel(model) {
             // TODO: spec at the top level should be a struct...
             // return;
@@ -105,7 +94,6 @@ define([
             spec.parameters.layout.forEach(function(id) {
                 var fieldValue = model[id];
                 var fieldSpec = spec.parameters.specs[id];
-                // return validateField(fieldValue, fieldSpec);
                 validationMap[id] = validationResolver.validate(fieldValue, fieldSpec);
             });
             return Promise.props(validationMap);

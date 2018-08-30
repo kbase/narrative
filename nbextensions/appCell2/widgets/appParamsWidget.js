@@ -96,9 +96,14 @@ define([
         /*
         The field widget is a generic wrapper around the input. It serves the following purposes:
         - intercepts messages in order to display status.
+        appSpec - specifies the whole app
+        parameterSpec - just the segment of the appSpec that specifies this individual parameter
+        value - the initial value of this field
+        closeParameters - a list of "close" parameters, which might be context-dependent. E.g. for an output
+            field, this would be the list of all parameters meant to be output objects, so their names can
+            be cross-validated for uniqueness (optional)
         */
-
-        function makeFieldWidget(appSpec, parameterSpec, value) {
+        function makeFieldWidget(appSpec, parameterSpec, value, closeParameters) {
             return paramResolver.loadInputControl(parameterSpec)
                 .then(function (inputWidget) {
                     var fieldWidget = FieldWidget.make({
@@ -110,14 +115,16 @@ define([
                         parameterSpec: parameterSpec,
                         workspaceId: workspaceInfo.id,
                         referenceType: 'name',
-                        paramsChannelName: paramsBus.channelName
+                        paramsChannelName: paramsBus.channelName,
+                        closeParameters: closeParameters
                     });
 
                     // Forward all changed parameters to the controller. That is our main job!
                     fieldWidget.bus.on('changed', function (message) {
                         paramsBus.send({
                             parameter: parameterSpec.id,
-                            newValue: message.newValue
+                            newValue: message.newValue,
+                            isError: message.isError
                         }, {
                             key: {
                                 type: 'parameter-changed',
@@ -127,7 +134,8 @@ define([
 
                         paramsBus.emit('parameter-changed', {
                             parameter: parameterSpec.id,
-                            newValue: message.newValue
+                            newValue: message.newValue,
+                            isError: message.isError
                         });
                     });
 
@@ -202,6 +210,41 @@ define([
                                 });
                             } else {
                                 return null;
+                            }
+                        }
+                    });
+
+                    fieldWidget.bus.respond({
+                        key: {
+                            type: 'get-parameters'
+                        },
+                        handle: (message) => {
+                            if (message.parameterNames) {
+                                return Promise.all(
+                                    message.parameterNames.map((paramName) => {
+                                        return paramsBus.request({
+                                            parameterName: paramName
+                                        }, {
+                                            key: {
+                                                type: 'get-parameter'
+                                            }
+                                        })
+                                        .then((value) => {
+                                            let returnVal = {};
+                                            returnVal[paramName] = value.value;
+                                            return returnVal;
+                                        });
+                                    })
+                                )
+                                    .then((results) => {
+                                        let combined = {};
+                                        results.forEach((res) => {
+                                            Object.keys(res).forEach((key) => {
+                                                combined[key] = res[key];
+                                            })
+                                        });
+                                        return combined;
+                                    });
                             }
                         }
                     });
@@ -511,7 +554,7 @@ define([
                             return Promise.all(outputParams.layout.map(function (parameterId) {
                                 var spec = outputParams.paramMap[parameterId];
                                 try {
-                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id])
+                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id], outputParams.layout)
                                         .then(function (widget) {
                                             widgets.push(widget);
 

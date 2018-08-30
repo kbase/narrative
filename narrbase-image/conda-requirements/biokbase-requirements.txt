@@ -9,3 +9,6 @@ setuptools>=0.8
 simplegeneric
 sympy
 terminado
+numpy
+scipy
+scikit-learn

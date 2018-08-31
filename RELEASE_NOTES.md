@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
 
+### Version 3.8.2
+- Add the clustergrammer_widget
+- SCT-1219 - Fix the app cell so it shows an error if an app has multiple outputs, and they're given the same name.
+- Add numpy, scipy, scikit-learn to the base Docker image
+
 ### Version 3.8.1
 - SCT-1261 - Changed the 'outdated app' warning to a small icon with a popover text.
 - SCT-886 - Added a default viewer for typed objects that don't have an actual viewer associated with them.

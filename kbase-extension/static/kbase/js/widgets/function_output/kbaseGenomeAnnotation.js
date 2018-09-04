@@ -70,8 +70,8 @@ define ([
             } else {
                 errorMessage = JSON.stringify(err.error);
             }
-        } else { 
-            errorMessage = err.message; 
+        } else {
+            errorMessage = err.message;
         }
         return $('<div>')
             .addClass('alert alert-danger')
@@ -199,7 +199,7 @@ define ([
                      of concept. This wiring ensures the "genome browser", such that it is, is only on CI, even if the widget
                      goes out by accident. Clean this up when it actually works. */
 
-            var on_ci = Config.config.deploy.environment === 'ci';
+            var on_ci = Config.get('environment') === 'ci';
             if (on_ci) {
                 names.push('Genome Browser');
                 ids.push('genome_browser');
@@ -550,13 +550,13 @@ define ([
                     start=0;
                     search($input.val(), start, limit, sort_by)
                         .then(function (result) {
-                            if (isLastQuery(result)) { 
-                                renderResult($table, result); 
+                            if (isLastQuery(result)) {
+                                renderResult($table, result);
                             }
                             inFlight=false;
                             start=0;
                         })
-                        .catch(function () { 
+                        .catch(function () {
                             inFlight=false;
                         });
                 };
@@ -723,8 +723,8 @@ define ([
             var genome_ref = params['ref'];
 
             var contigClick = null;
-            if (params['contigClick']) { 
-                contigClick = params['contigClick']; 
+            if (params['contigClick']) {
+                contigClick = params['contigClick'];
             }
 
             // setup some defaults and variables (should be moved to class variables)
@@ -1028,7 +1028,7 @@ define ([
         // showError will display an error as the only rendered element of this widget.
         showError: function(err) {
             this.$elem.empty();
-            // This wrapper is required because the output widget displays a "Details..." button 
+            // This wrapper is required because the output widget displays a "Details..." button
             // with float right; without clearing this button will reside inside the error
             // display area.
             var $errorBox = $('<div>')
@@ -1037,7 +1037,7 @@ define ([
             this.$elem.append($errorBox);
         },
 
-        render: function() {           
+        render: function() {
             var self = this;
             var pref = StringUtil.uuid();
 
@@ -1208,7 +1208,7 @@ define ([
                         ready(self.normalizeGenomeDataFromQuery(data['genomes'][0], genome_ref, ready));
                     })
                     .catch(function (err) {
-                        console.error(err);                        
+                        console.error(err);
                         container.empty();
                         container.append(buildError(err));
                     });
@@ -1496,8 +1496,8 @@ define ([
                             .append('<i class="fa fa-caret-left" aria-hidden="true">')
                             .append(' back 20kb')
                             .on('click', function() {
-                                if (start-twentyKb < 0) { 
-                                    return; 
+                                if (start-twentyKb < 0) {
+                                    return;
                                 }
                                 $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                                 start = start - twentyKb;
@@ -1509,12 +1509,12 @@ define ([
                             .append('forward 20kb ')
                             .append('<i class="fa fa-caret-right" aria-hidden="true">')
                             .on('click', function() {
-                                if (start+twentyKb>contig_length) { 
-                                    return; 
+                                if (start+twentyKb>contig_length) {
+                                    return;
                                 }
                                 $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
-                                if (start+twentyKb>contig_length) { 
-                                    return; 
+                                if (start+twentyKb>contig_length) {
+                                    return;
                                 }
                                 start = start + twentyKb;
                                 length = twentyKb;
@@ -1856,7 +1856,7 @@ define ([
                         $protLen.empty();
                         $protSeq.empty();
                         $dnaLen.empty();
-                        $dnaSeq.empty();                       
+                        $dnaSeq.empty();
                         $protSeq.append(buildError(err));
                     });
 
@@ -2000,7 +2000,7 @@ define ([
             if (!this.state.isOk()) {
                 var errorMessage = 'Widget is in invalid state -- cannot render: ' + this.state.info().message;
                 console.error(errorMessage);
-                this.showError(errorMessage);                
+                this.showError(errorMessage);
                 return;
             }
             this.token = null;

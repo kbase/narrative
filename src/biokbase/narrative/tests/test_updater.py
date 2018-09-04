@@ -71,7 +71,7 @@ class UpdaterTestCase(unittest.TestCase):
         for cell in nar['cells']:
             self.validate_cell(cell)
         self.validate_metadata(nar['metadata'])
-        return True;
+        return True
 
     def validate_metadata(self, meta):
         req_keys = ['description', 'data_dependencies', 'creator', 'format', 'name', 'type', 'ws_name', 'kbase']

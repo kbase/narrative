@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM kbase/narrbase:5.1dockerize
+FROM kbase/narrbase:5.2
 
 # These ARGs values are passed in via the docker build command
 ARG BUILD_DATE
@@ -29,7 +29,7 @@ RUN echo Skip=$SKIP_MINIFY
 
 # install pyopenssl cryptography idna and requests is the same as installing
 # requests[security]
-RUN conda install -c conda-forge  ndg-httpsclient pyasn1 pyopenssl cryptography idna requests \
+RUN conda install -c conda-forge ndg-httpsclient pyasn1 pyopenssl cryptography idna requests \
           beautifulsoup4 html5lib
 # TEMPORARY!
 # Update bs4 and pandas to resolve inability to run them

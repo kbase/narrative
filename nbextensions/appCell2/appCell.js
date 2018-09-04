@@ -54,7 +54,9 @@ define([
         var cell = config.cell,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
-            spec;
+            spec,
+            appCellWidget,
+            cellBus;
 
         function specializeCell() {
             cell.minimize = function() {
@@ -105,6 +107,11 @@ define([
                     tag: app.tag
                 });
             };
+            cell.toggleBatch = function() {
+                cellBus.emit('toggle-batch-mode');
+                // var isBatch = utils.getCellMeta(cell, 'kbase.appCell.user-settings.batchMode');
+                // utils.setCellMeta(cell, 'kbase.appCell.user-settings.batchMode', !isBatch, true);
+            };
         }
 
         function setupCell() {
@@ -133,17 +140,17 @@ define([
 
                 // TODO: the code cell input widget should instantiate its state
                 // from the cell!!!!
-                var cellBus = runtime.bus().makeChannelBus({
+                cellBus = runtime.bus().makeChannelBus({
                         description: 'Parent comm for The Cell Bus'
-                    }),
-                    appCellWidget = AppCellWidget.make({
-                        bus: cellBus,
-                        cell: cell,
-                        runtime: runtime,
-                        workspaceInfo: workspaceInfo
-                    }),
-                    dom = Dom.make({ node: cell.input[0] }),
+                    });
+                var dom = Dom.make({ node: cell.input[0] }),
                     kbaseNode = dom.createNode(div({ dataSubareaType: 'app-cell-input' }));
+                appCellWidget = AppCellWidget.make({
+                    bus: cellBus,
+                    cell: cell,
+                    runtime: runtime,
+                    workspaceInfo: workspaceInfo
+                });
                 // inserting after, with raw dom, means telling the parent node
                 // to insert a node before the node following the one we are
                 // referencing. If there is no next sibling, the null value
@@ -162,7 +169,6 @@ define([
                 jupyter.disableKeyListenersForCell(cell);
 
                 cell.kbase.node = kbaseNode;
-                // cell.kbase.$node = $(kbaseNode);
 
                 return appCellWidget.init()
                     .then(function() {

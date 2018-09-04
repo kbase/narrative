@@ -13,6 +13,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-coveralls');
     grunt.loadNpmTasks('grunt-jasmine-nodejs');
+    grunt.loadNpmTasks('grunt-contrib-uglify-es');
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -31,10 +32,10 @@ module.exports = function(grunt) {
                     ],
                     mainConfigFile: 'kbase-extension/static/narrative_paths.js',
                     findNestedDependencies: true,
-                    // optimize: 'uglify2',
+                    optimize: 'none',
                     generateSourceMaps: true,
                     preserveLicenseComments: false,
-                    out: 'kbase-extension/static/kbase-narrative-min.js',
+                    out: 'kbase-extension/static/kbase-narrative.js',
                     paths: {
                         jqueryui: 'empty:',
                         bootstrap: 'empty:',
@@ -60,6 +61,17 @@ module.exports = function(grunt) {
                         console.log(output);
                         done();
                     }
+                }
+            }
+        },
+
+        uglify: {
+            dist: {
+                options: {
+                    sourceMap: true
+                },
+                files: {
+                    'kbase-extension/static/kbase-narrative-min.js': ['kbase-extension/static/kbase-narrative.js']
                 }
             }
         },
@@ -180,6 +192,7 @@ module.exports = function(grunt) {
 
     grunt.registerTask('minify', [
         'requirejs',
+        'uglify',
         'regex-replace'
     ]);
 

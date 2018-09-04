@@ -86,11 +86,24 @@ define (
                 return total;
             }
             else {
-                return (val || 0).toLocaleString('en-US', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 3
-                });
+              return val;
             }
+        },
+
+        /* originally, value_for_wedge returned a formatted value. But that would cause concatenation errors (e.g. "1" + "1" = "11" instead of "2"),
+           so it's now refactored out into a separate method. Now if you want the pretty formatted, just wrap it:
+
+           this.formatted( this.value_for_wedge( some_value ) );
+
+           NOTE - the original value_for_wedge method there exists so as to handle the carving and drawing of the secondary donut chart around the pie chart,
+           neither of which are actually visible or live in this method since no data could be produced for them. You can uncomment the lines around 309 and 509
+           to bring the chart back, but the bits may have rotted by this point.
+        */
+        formatted : function(val) {
+          return (val || 0).toLocaleString('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 3
+          });
         },
 
         label_for_key : function(key, val) {
@@ -99,7 +112,7 @@ define (
                 label = label.replace(/ ([a-z])/, function up (l) { return ' ' + l.toUpperCase()});
 
             if (val != undefined) {
-                label = label + ' : ' + this.value_for_wedge(val);
+                label = label + ' : ' + this.formatted( this.value_for_wedge(val) );
             }
 
             return label;
@@ -125,7 +138,10 @@ define (
 
             this.setValueForKey('dataset', newDataset);
 
-            alignment_stats['total_reads'] = this.value_for_wedge(alignment_stats['mapped_reads']) + this.value_for_wedge(alignment_stats['unmapped_reads']);
+            alignment_stats['total_reads'] = this.formatted(
+                this.value_for_wedge(alignment_stats['mapped_reads'])
+              + this.value_for_wedge(alignment_stats['unmapped_reads'])
+            );
 
             if (this.data('container')) {
 
@@ -142,7 +158,7 @@ define (
                     var value = newDataset[key];
                     if (key.match(/^alignment_stats/)) {
                       key = key.replace(/^alignment_stats./, '');
-                      value = this.value_for_wedge(alignment_stats[key]);
+                      value = this.formatted( this.value_for_wedge(alignment_stats[key]) );
                     }
 
 
@@ -193,7 +209,7 @@ define (
 
                     pieData.push(
                         {
-                            value   : this.value_for_wedge(alignment_stats[wedge]),
+                            value   : this.formatted( this.value_for_wedge(alignment_stats[wedge]) ),
                             label   : this.label_for_key(wedge, alignment_stats[wedge]),
                             color   : gradients[i % gradients.length][1]
                         }
@@ -229,7 +245,7 @@ define (
                 for (var wIdx = 0; wIdx < this.options.pieWedges.length; wIdx++) {
 
                     var wedge       = this.options.pieWedges[wIdx];
-                    var wedgeValue  = this.value_for_wedge(alignment_stats[wedge]);
+                    var wedgeValue  = this.formatted( this.value_for_wedge(alignment_stats[wedge]) );
 
                     if ( $.isPlainObject(alignment_stats[wedge]) ) {
 
@@ -263,7 +279,7 @@ define (
                         wedgeOffset += wedgeValue;
                         donutData.push(
                             {
-                                value   : wedgeValue / wedgeTotal,
+                                value   : this.formatted( wedgeValue / wedgeTotal ),
                                 label   : '',
                                 color   : 'white',
                                 gap     : true,

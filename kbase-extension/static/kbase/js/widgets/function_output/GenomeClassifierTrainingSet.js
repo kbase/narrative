@@ -28,7 +28,7 @@ define ([
     'use strict';
 
     return KBWidget({
-        name: 'kbaseGenericMatrix',
+        name: 'GenomeClassifierTrainingSet',
         parent : kbaseAuthenticatedWidget,
         version: '1.0.2',
         options: {

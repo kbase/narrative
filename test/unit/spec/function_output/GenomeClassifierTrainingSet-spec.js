@@ -71,38 +71,36 @@ define([
                 responseHeaders: '',
                 responseText: JSON.stringify({
                     version: '1.1',
-                    result: [{data: [{data: trainingsetdata}]
+                    result: [{
+                        data: [{data: trainingsetdata}]
                     }]
                 })
             });
-            let w = new GenomeClassifierTrainingSet($div, {upas: {upas: ['1/1/1']}});
+            let w = new GenomeClassifierTrainingSet($div, {upas: {upas: ['fake']}});
             w.trainingSetData = trainingsetdata;
-            w.render()
-                .then(() => {
-                    // simple string matching
-                    [
-                        'Overview',
-                        'Training Set'
-                    ].forEach((str) => {
-                        expect($div.html()).toContain(str);
-                    });
-                    // more complex structure matching
-                    let tabs = $div.find('.tabbable');
-                    expect(tabs).not.toBeNull();
-                    let tabsContent = $div.find('.tab-pane');
-                    expect(tabsContent.length).toEqual(2);
-                    [
-                        'Training Set Name',
-                        'my_name',
-                        'Number of genomes',
-                        '3',
-                    ].forEach((str) => {
-                        expect($(tabsContent[0]).html()).toContain(str);
-                    });
-                    expect($(tabsContent[1]).html()).toContain('Acetivibrio_ethanolgignens');
-                    expect($(tabsContent[1]).html()).not.toContain('<table>');
-                    done();
-                });
+            w.render();
+            [
+                'Overview',
+                'Training Set'
+            ].forEach((str) => {
+                expect($div.html()).toContain(str);
+            });
+            // more complex structure matching
+            let tabs = $div.find('.tabbable');
+            expect(tabs).not.toBeNull();
+            let tabsContent = $div.find('.tab-pane');
+            expect(tabsContent.length).toEqual(2);
+            [
+                'Training Set Name',
+                'my_name',
+                'Number of genomes',
+                '3',
+            ].forEach((str) => {
+                expect($(tabsContent[0]).html()).toContain(str);
+            });
+            expect($(tabsContent[1]).html()).toContain('Acetivibrio_ethanolgignens');
+            expect($(tabsContent[1]).html()).not.toContain('<table>');
+            done();
         });
     })
 })

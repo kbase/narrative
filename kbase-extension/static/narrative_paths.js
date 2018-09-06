@@ -336,7 +336,8 @@ require.config({
 
         'kbaseRESKESearchResultDemo': 'kbase/js/widgets/function_output/kbaseRESKESearchResultDemo',
         'kbaseDifferentialExpressionMatrixSetViewer': 'kbase/js/widgets/function_output/kbaseDifferentialExpressionMatrixSetViewer',
-
+        'GenomeClassifierTrainingSet': 'kbase/js/widgets/function_output/GenomeClassifierTrainingSet',
+        'GenomeCategorizer': 'kbase/js/widgets/function_output/GenomeCategorizer',
 
         /***
          * END CUSTOM OUTPUT WIDGETS

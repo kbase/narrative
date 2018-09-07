@@ -10,5 +10,6 @@ CFGDIR=$JUPYTER_CONFIG_DIR/static/kbase
 
 source $e/activate
 
-sed <$NARRATIVE_DIR/src/config.json.templ >$JUPYTER_CONFIG_DIR/static/kbase/config/config.json "s/{{ .Env.CONFIG_ENV }}/dev/"
+cp $NARRATIVE_DIR/src/config.json $JUPYTER_CONFIG_DIR/static/kbase/config/config.json
+
 jupyter notebook --NotebookApp.base_url=/narrative "$@"

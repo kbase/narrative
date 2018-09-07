@@ -86,7 +86,7 @@ def _get_categories(ids, conditionset_ref=None, mapping=None, whitelist=()):
             cat_name = condition_data['factors'][i]['factor']
             if whitelist and cat_name not in whitelist:
                 continue
-            cats.append("{}:{}".format(cat_name, val))
+            cats.append("{}: {}".format(cat_name, val))
         cat_list.append(tuple(cats))
     return cat_list
 

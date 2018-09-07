@@ -26,6 +26,10 @@ console "Installing biokbase modules"
 cd $NARRATIVE_ROOT_DIR/src
 console "Running local 'setup.py'"
 ${PYTHON} setup.py install
+console "installing sklearn & clustergrammer_widget'"
+# We install clustergrammer_widget and sklearn specially here so that it does not
+# clobber dependencies in the base conda image
+pip install --no-dependencies sklearn clustergrammer_widget
 console "Done installing biokbase."
 cd $NARRATIVE_ROOT_DIR
 
@@ -110,5 +114,6 @@ jupyter nbextension install $(pwd)/codeCell --symlink --sys-prefix
 jupyter nbextension enable codeCell/main --sys-prefix
 
 jupyter nbextension enable --py --sys-prefix widgetsnbextension
+jupyter nbextension enable --py --sys-prefix clustergrammer_widget
 
 console "Done installing nbextension"

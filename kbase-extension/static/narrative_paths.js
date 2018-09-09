@@ -200,13 +200,13 @@ require.config({
          ***/
         kbaseDefaultObjectView: 'kbase/js/widgets/function_output/kbaseDefaultObjectView',
         kbaseBinnedContigs: 'kbase/js/widgets/function_output/kbaseBinnedContigs',
+        kbaseAlignment: 'kbase/js/widgets/function_output/kbaseAlignment',
         'kbaseReadsViewer': 'kbase/js/widgets/function_output/kbaseReadsViewer',
         'kbaseReadsSetView': 'kbase/js/widgets/function_output/kbaseReadsSetView',
         'kbaseMatrix2DAbstract': 'kbase/js/widgets/function_output/kbaseMatrix2DAbstract',
         'kbaseGrowthMatrixAbstract': 'kbase/js/widgets/function_output/kbaseGrowthMatrixAbstract',
         'kbaseGrowthMatrix': 'kbase/js/widgets/function_output/kbaseGrowthMatrix',
         'kbaseGrowthCurves': 'kbase/js/widgets/function_output/kbaseGrowthCurves',
-
 
         'kbaseGrowthParametersAbstract': 'kbase/js/widgets/function_output/kbaseGrowthParametersAbstract',
         'kbaseGrowthParameters': 'kbase/js/widgets/function_output/kbaseGrowthParameters',

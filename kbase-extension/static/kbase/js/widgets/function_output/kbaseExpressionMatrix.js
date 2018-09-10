@@ -184,7 +184,7 @@ define ([
                 .appendTo($tabConditions)
                 .dataTable( {
                     'dom': '<\'row\'<\'col-sm-6\'B><\'col-sm-6\'f>>t<\'row\'<\'col-sm-4\'i><\'col-sm-8\'lp>>',
-                    'aaData': self.buildConditionsTableData(),
+                    'data': self.buildConditionsTableData(),
                     'buttons': ['copy', 'csv', 'print'],
                     'columns': [
                         { sTitle: 'Condition ID', mData:'name' },
@@ -253,8 +253,8 @@ define ([
                 .appendTo($tabGenes)
                 .dataTable({
                     dom: '<\'row\'<\'col-sm-6\'B><\'col-sm-6\'f>>t<\'row\'<\'col-sm-4\'i><\'col-sm-8\'lp>>',
-                    aaData: self.buildGenesTableData(),
-                    aoColumns: featureTableColumns,
+                    data: self.buildGenesTableData(),
+                    columns: featureTableColumns,
                     buttons: ['copy', 'csv', 'print']
                 });
         },

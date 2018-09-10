@@ -269,10 +269,10 @@ define ([
                     index: desc.index,
                     id: desc.id,
                     name: desc.name,
-                    min: typeof stat.min.toFixed === "function" ? stat.min.toFixed(2) : stat.min,
-                    max: typeof stat.max.toFixed === "function" ? stat.max.toFixed(2) : stat.max,
-                    avg: typeof stat.avg.toFixed === "function" ? stat.avg.toFixed(2) : stat.avg,
-                    std: typeof stat.std.toFixed === "function" ? stat.std.toFixed(2) : stat.avg,
+                    min: $.isNumeric(stat.min) ? stat.min.toFixed(2) : null,
+                    max: $.isNumeric(stat.max) ? stat.max.toFixed(2) : null,
+                    avg: $.isNumeric(stat.avg) ? stat.avg.toFixed(2) : null,
+                    std: $.isNumeric(stat.std) ? stat.std.toFixed(2) : null,
                     missing_values: stat.missing_values ? 'Yes' : 'No'
                 });
             }

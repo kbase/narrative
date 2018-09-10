@@ -118,7 +118,7 @@ define ([
                     objData.alignment_stats.mapped_reads,
                     objData.alignment_stats.total_reads)))
                 .append(self.makeRow('Multiple Alignments', self.formatPercentage(
-                    objData.alignment_stats.multiple_aligments,
+                    objData.alignment_stats.multiple_alignments,
                     objData.alignment_stats.mapped_reads)))
                 .append(self.makeRow('Singletons', self.formatPercentage(
                     objData.alignment_stats.singletons,

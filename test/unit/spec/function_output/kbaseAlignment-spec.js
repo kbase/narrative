@@ -85,7 +85,7 @@ define([
             let tabs = $div.find('.tabbable');
             expect(tabs).not.toBeNull();
             let tabsContent = $div.find('.tab-pane');
-            expect(tabsContent.length).toEqual(2);
+            expect(tabsContent.length).toEqual(1);
             [
                 'Aligned Using',
                 'tophat2',

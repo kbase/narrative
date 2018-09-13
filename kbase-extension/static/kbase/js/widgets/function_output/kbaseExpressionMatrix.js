@@ -184,9 +184,9 @@ define ([
                 .appendTo($tabConditions)
                 .dataTable( {
                     'dom': '<\'row\'<\'col-sm-6\'B><\'col-sm-6\'f>>t<\'row\'<\'col-sm-4\'i><\'col-sm-8\'lp>>',
-                    'aaData': self.buildConditionsTableData(),
+                    'data': self.buildConditionsTableData(),
                     'buttons': ['copy', 'csv', 'print'],
-                    'aoColumns': [
+                    'columns': [
                         { sTitle: 'Condition ID', mData:'name' },
                         { sTitle: 'Min', mData:'min' },
                         { sTitle: 'Max', mData:'max' },
@@ -223,7 +223,7 @@ define ([
                   { sTitle: 'Std. Dev.', mData:'std'},
                   { sTitle: 'Missing Values?', mData:'missing_values' },
                   { sTitle: 'Fold Change', mData:'fold-change' },
-                  { sTitle: 'Q Value', mData:'q-value' },
+                  { sTitle: 'Q Value', mData:'q-value' }
               ]
             ;
 
@@ -237,7 +237,7 @@ define ([
                   { sTitle: 'Std. Dev.', mData:'std_dev'},
                   { sTitle: 'Missing Values?', mData:'is_missing_values' },
                   { sTitle: 'Fold Change', mData:'fold-change' },
-                  { sTitle: 'Q Value', mData:'q-value' },
+                  { sTitle: 'Q Value', mData:'q-value' }
               ]
             ;
 
@@ -253,8 +253,8 @@ define ([
                 .appendTo($tabGenes)
                 .dataTable({
                     dom: '<\'row\'<\'col-sm-6\'B><\'col-sm-6\'f>>t<\'row\'<\'col-sm-4\'i><\'col-sm-8\'lp>>',
-                    aaData: self.buildGenesTableData(),
-                    aoColumns: featureTableColumns,
+                    data: self.buildGenesTableData(),
+                    columns: featureTableColumns,
                     buttons: ['copy', 'csv', 'print']
                 });
         },
@@ -269,10 +269,10 @@ define ([
                     index: desc.index,
                     id: desc.id,
                     name: desc.name,
-                    min: stat.min ? stat.min.toFixed(2) : null,
-                    max: stat.max ? stat.max.toFixed(2) : null,
-                    avg: stat.avg ? stat.avg.toFixed(2) : null,
-                    std: stat.std ? stat.std.toFixed(2) : null,
+                    min: $.isNumeric(stat.min) ? stat.min.toFixed(2) : null,
+                    max: $.isNumeric(stat.max) ? stat.max.toFixed(2) : null,
+                    avg: $.isNumeric(stat.avg) ? stat.avg.toFixed(2) : null,
+                    std: $.isNumeric(stat.std) ? stat.std.toFixed(2) : null,
                     missing_values: stat.missing_values ? 'Yes' : 'No'
                 });
             }
@@ -296,7 +296,7 @@ define ([
             var key_to_idx_map = [];
             for (var i = 0; i < enhancedFeatures.col_ids.length; i++) {
               key_to_idx_map[ enhancedFeatures.col_ids[i] ] = i;
-            };
+            }
 
             for (var i = 0; i < enhancedFeatures.values.length; i++) {
 
@@ -320,7 +320,7 @@ define ([
                   std_dev           : enhancedFeatures.values[i][ key_to_idx_map['std_dev'] ].toFixed(2),
                   is_missing_values : enhancedFeatures.values[i][ key_to_idx_map['is_missing_values'] ],
                   'fold-change'     : fold_change,
-                  'q-value'         : q_value,
+                  'q-value'         : q_value
                 }
               )
             };
@@ -342,13 +342,13 @@ define ([
                         id: desc.id,
                         name: desc.name,
                         function : desc.properties.function || '-',
-                        min: stat.min ? stat.min.toFixed(2) : null,
-                        max: stat.max ? stat.max.toFixed(2) : null,
-                        avg: stat.avg ? stat.avg.toFixed(2) : null,
-                        std: stat.std ? stat.std.toFixed(2) : null,
+                        min: $.isNumeric(stat.min) ? stat.min.toFixed(2) : null,
+                        max: $.isNumeric(stat.max) ? stat.max.toFixed(2) : null,
+                        avg: $.isNumeric(stat.avg) ? stat.avg.toFixed(2) : null,
+                        std: $.isNumeric(stat.std) ? stat.std.toFixed(2) : null,
                         missing_values: stat.missing_values ? 'Yes' : 'No',
-                    'fold-change' : 'enhanced features not available right now',
-                    'q-value' : 'enhanced features not available right now',
+                        'fold-change' : 'enhanced features not available right now',
+                        'q-value' : 'enhanced features not available right now'
                     }
                 );
             }

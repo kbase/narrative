@@ -198,10 +198,10 @@ define ([
                     index: desc.index,
                     id: desc.id,
                     name: desc.name,
-                    min: stat.min ? stat.min.toFixed(2) : null,
-                    max: stat.max ? stat.max.toFixed(2) : null,
-                    avg: stat.avg ? stat.avg.toFixed(2) : null,
-                    std: stat.std ? stat.std.toFixed(2) : null,
+                    min: $.isNumeric(stat.min) ? stat.min.toFixed(2) : null,
+                    max: $.isNumeric(stat.max) ? stat.max.toFixed(2) : null,
+                    avg: $.isNumeric(stat.avg) ? stat.avg.toFixed(2) : null,
+                    std: $.isNumeric(stat.std) ? stat.std.toFixed(2) : null,
                     missing_values: stat.missing_values ? 'Yes' : 'No'
                 });
             }
@@ -219,10 +219,10 @@ define ([
                         index: desc.index,
                         id: desc.id,
                         name: desc.name,
-                        min: stat.min ? stat.min.toFixed(2) : null,
-                        max: stat.max ? stat.max.toFixed(2) : null,
-                        avg: stat.avg ? stat.avg.toFixed(2) : null,
-                        std: stat.std ? stat.std.toFixed(2) : null,
+                        min: $.isNumeric(stat.min) ? stat.min.toFixed(2) : null,
+                        max: $.isNumeric(stat.max) ? stat.max.toFixed(2) : null,
+                        avg: $.isNumeric(stat.avg) ? stat.avg.toFixed(2) : null,
+                        std: $.isNumeric(stat.std) ? stat.std.toFixed(2) : null,
                         missing_values: stat.missing_values ? 'Yes' : 'No'
                     }
                 );

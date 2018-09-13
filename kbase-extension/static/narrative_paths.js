@@ -310,6 +310,8 @@ require.config({
         'kbaseLineSerieschart': 'kbase/js/widgets/vis/kbaseLineSerieschart',
         'kbasePiechart': 'kbase/js/widgets/vis/kbasePiechart',
         'kbaseTreechart': 'kbase/js/widgets/vis/kbaseTreechart',
+        'kbaseRNASeqPie': 'kbase/js/widgets/function_output/kbaseAlignment',
+        'kbaseRNASeqPieNew': 'kbase/js/widgets/function_output/kbaseAlignment',
         'kbaseRNASeqAnalysis': 'kbase/js/widgets/function_output/rna-seq/kbaseRNASeqAnalysis',
         'kbaseRNASeqAnalysisNew': 'kbase/js/widgets/function_output/rna-seq/kbaseRNASeqAnalysisNew',
         'kbaseRNASeqSample': 'kbase/js/widgets/function_output/rna-seq/kbaseRNASeqSample',

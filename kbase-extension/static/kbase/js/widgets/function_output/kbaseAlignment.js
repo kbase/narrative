@@ -32,7 +32,7 @@ define ([
         parent : kbaseAuthenticatedWidget,
         version: '1.0.2',
         options: {
-            objID: null,
+            output: null,
             workspaceID: null,
             loadingImage: Config.get('loading_gif')
         },
@@ -54,7 +54,7 @@ define ([
         loggedInCallback: function(event, auth) {
 
             // error if not properly initialized
-            if (this.options.upas.objID == null) {
+            if (this.options.upas.output == null) {
                 this.showMessage('[Error] Couldn\'t retrieve the object.');
                 return this;
             }
@@ -76,7 +76,7 @@ define ([
             self.loading(true);
 
             self.wsClient.get_objects(
-                [{ref: this.options.upas.objID}]
+                [{ref: this.options.upas.output}]
             ).then( function (res) {
                 self.objData = res[0]['data'];
                 self.objData.alignment_stats['total_reads'] =

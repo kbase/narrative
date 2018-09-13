@@ -22,9 +22,6 @@ def main(args):
             print("Opening config file")
         cfg_text = open(args.cfg_file).read()
 
-        # cfg_json = open(args.cfg_file).read()
-        # config = json.loads(cfg_json)
-
         if args.vb > 0:
             print("Getting git commit info")
         hash_time = subprocess.check_output('git log --pretty="%h,%ad" -n 1', shell=True)
@@ -34,9 +31,6 @@ def main(args):
         cfg_text = re.sub(r'"git_commit_hash":\s*.*,', '"git_commit_hash": "{}",'.format(hash_time[0]), cfg_text)
         cfg_text = re.sub(r'"git_commit_time":\s*.*,', '"git_commit_time": "{}",'.format(hash_time[1]), cfg_text)
 
-        # config['git_commit_hash'] = hash_time[0]
-        # config['git_commit_time'] = hash_time[1]
-
         args.env = args.env.lower()
         if args.vb > 0:
             print("Checking valid environment '" + args.env + "'")
@@ -45,23 +39,10 @@ def main(args):
 
         if args.vb > 0:
             print("WARNING: IGNORING environment setting of " + args.env + "! Environment set via runtime env var CONFIG_ENV")
-        # The config value is now updated via environment variable passed to dockerize
-        # config['config'] = args.env
-
-        args.dev_mode = args.dev_mode.lower()
-        # if args.vb > 0:
-        print("WARNING: IGNORING dev_mode setting! This is now set based on the environment at load time.")
-            # print("Setting developer mode to " + args.dev_mode)
-        # if args.dev_mode == "true":
-        #     config['dev_mode'] = True
-        # elif args.dev_mode == "false":
-        #     config['dev_mode'] = False
-        # else:
-        #     raise Exception('Unknown developer mode: "' + args.dev_mode + '"\nAllowed modes are true or false')
+            print("WARNING: IGNORING dev_mode setting! This is now set based on the environment at load time.")
 
         if args.vb > 0:
             print("Writing updated config file")
-        # cfg_json = json.dumps(config, sort_keys=True, indent=4)
         outfile = open(args.cfg_file, 'w')
         outfile.write(cfg_text)
         outfile.close()
@@ -70,8 +51,8 @@ def main(args):
             if args.vb > 0:
                 print("Writing updated version check file for browser access")
             mini_cfg = {
-                'version' : re.search(r'"version":\s*"(.*)"', cfg_text).groups()[0], #config.get('version', None),
-                'git_hash' : hash_time[0] #config.get('git_commit_hash', None)
+                'version' : re.search(r'"version":\s*"(.*)"', cfg_text).groups()[0],
+                'git_hash' : hash_time[0]
             }
             outfile = open(args.opt_out, 'w')
             outfile.write(json.dumps(mini_cfg, separators=(',',':')))

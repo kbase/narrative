@@ -65,8 +65,14 @@ echo "Checking for base image v$NAR_BASE_VER"
 docker images |grep "^$NAR_BASE "|grep " $NAR_BASE_VER " > /dev/null
 
 if [ $? -eq 1 ] ; then
-  echo "Base image not found! Building..."
+  echo "Base image $NAR_BASE:$NAR_BASE_VER not found! Checking Dockerhub..."
+  docker pull $NAR_BASE:$NAR_BASE_VER
+fi
+
+if [ $? -eq 1 ] ; then
+  echo "Base image not found on Dockerhub either! Building..."
   docker build -t $NAR_BASE:$NAR_BASE_VER narrbase-image/
+  echo "Done. Recommend pushing this back to Dockerhub."
 fi
 
 echo "Building latest narrative version"

@@ -8,19 +8,32 @@ Fixes workspace info to do the following.
 Note that while this fetches the Narrative object, it doesn't modify it in any way.
 """
 from biokbase.workspace.client import Workspace
+import biokbase.workspace.baseclient as baseclient
 
-ws_url = "https://ci.kbase.us/services/workspace"
+MAX_WS_ID = 45000  # make this somewhat reasonable. I think the max ws in prod is +/- 40000
 
-def fix_workspace_info(ws_id, token, verbose=False):
+def fix_all_workspace_info(ws_url, token):
+    """
+    Iterates over all workspaces available at the ws_url endpoint, using the given admin token,
+    and applies _fix_single_workspace_info to each.
+    """
+    ws = Workspace(url=ws_url, token=token)
+    for ws_id in range(MAX_WS_ID):
+        try:
+            _fix_single_workspace_info(ws_id, ws, verbose=True)
+        except baseclient.ServerError as e:
+            if "No workspace with id" in str(e):
+                print("WS:{} does not exist")
+
+def _fix_single_workspace_info(ws_id, ws, verbose=False):
     """
     ws_id = id of the workspace to update.
-    token = auth token of the user who owns the workspace.
+    ws = an authenticated workspace client.
     """
-    assert(token is not None)
+    assert(ws is not None)
     assert(str(ws_id).isdigit())
 
     new_meta = dict()
-    ws = Workspace(url=ws_url, token=token)
 
     if verbose:
         print("Checking workspace {}".format(ws_id))
@@ -29,7 +42,7 @@ def fix_workspace_info(ws_id, token, verbose=False):
     narr_obj_list = ws.list_objects({'ids': [ws_id], 'type': 'KBaseNarrative.Narrative'})
     if len(narr_obj_list) != 1:
         if verbose:
-            print("\tFound {} Narratives! Skipping this workspace".format(len(narr_obj_list)))
+            print("WS:{} Found {} Narratives! Skipping this workspace".format(ws_id, len(narr_obj_list)))
         return
     narr_info = narr_obj_list[0]
     narr_obj_id = narr_info[0]
@@ -44,7 +57,7 @@ def fix_workspace_info(ws_id, token, verbose=False):
     if str(narr_obj_id) != ws_meta.get('narrative'):
         new_meta['narrative'] = str(narr_obj_id)
         if verbose:
-            print("\tUpdating id from {} -> {}".format(ws_meta.get('narrative'), narr_obj_id))
+            print("WS:{} Updating id from {} -> {}".format(ws_id, ws_meta.get('narrative'), narr_obj_id))
 
     # 2. Test "is_temporary" key.
     # Should be true if there's only a single narrative version, and it's name is Untitled, and it only has a single markdown cell.
@@ -57,7 +70,7 @@ def fix_workspace_info(ws_id, token, verbose=False):
         # make sure it should be temporary.
         if narr_info[4] > 1 or narr_name != 'Untitled':
             if verbose:
-                print("\tNarrative is named {} and has {} versions - marking not temporary".format(narr_name, narr_info[4]))
+                print("WS:{} Narrative is named {} and has {} versions - marking not temporary".format(ws_id, narr_name, narr_info[4]))
             new_meta['is_temporary'] = 'false'
         # get list of cells
         # if it's really REALLY old, it has a 'worksheets' field. Removed in Jupyter notebook format 4.
@@ -67,7 +80,7 @@ def fix_workspace_info(ws_id, token, verbose=False):
             cells = narr_obj['data']['cells']
         if len(cells) > 1 or cells[0]['cell_type'] != 'markdown':
             if verbose:
-                print("\tNarrative has {} cells and the first is type {} - marking not temporary".format(len(cells), cells[0]['cell_type']))
+                print("WS:{} Narrative has {} cells and the first is type {} - marking not temporary".format(ws_id, len(cells), cells[0]['cell_type']))
             new_meta['is_temporary'] = 'false'
 
     # 3. Test "narrative_nice_name" key
@@ -75,11 +88,14 @@ def fix_workspace_info(ws_id, token, verbose=False):
     if (current_name is None and current_temp == 'false') or current_name != narr_name:
         new_meta['narrative_nice_name'] = narr_name
         if verbose:
-            print("\tUpdating 'narrative_nice_name' from {} -> {}".format(current_name, narr_name))
+            print("WS:{} Updating 'narrative_nice_name' from {} -> {}".format(ws_id, current_name, narr_name))
 
     # 4. Add the total cell count while we're at it.
     new_meta['cell_count'] = str(len(cells))
     if verbose:
-        print("\tAdding cell_count of {}".format(str(len(cells))))
+        print("WS:{} Adding cell_count of {}".format(ws_id, str(len(cells))))
+
+    # 5. Finally, add the searchtags field to metadata.
+    new_meta['searchtags'] = 'narrative'
 
     ws.alter_workspace_metadata({'wsi': {'id': ws_id}, 'new': new_meta})

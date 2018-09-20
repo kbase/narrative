@@ -1,10 +1,10 @@
 """
 Fixes workspace info to do the following.
 1. Make sure the "narrative" metadata field contains an int that points to the narrative.
-1. Make sure the "narrative_nice_name" metadata field is correct.
-2. Make sure the "is_temporary" metadata field exists and is correct.
-3. Adds a count of the number of narrative cells.
-4. Does nothing at all if there's > 1 narrative in the workspace.
+2. Make sure the "narrative_nice_name" metadata field is correct.
+3. Make sure the "is_temporary" metadata field exists and is correct.
+4. Adds a count of the number of narrative cells.
+5. Does nothing at all if there's > 1 narrative in the workspace.
 Note that while this fetches the Narrative object, it doesn't modify it in any way.
 """
 from biokbase.workspace.client import Workspace

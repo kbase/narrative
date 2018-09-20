@@ -36,7 +36,7 @@ def _fix_single_workspace_info(ws_id, ws, verbose=False):
     new_meta = dict()
 
     if verbose:
-        print("Checking workspace {}".format(ws_id))
+        print("WS:{} Checking workspace {}".format(ws_id, ws_id))
 
     # test if there's exactly 1 Narrative object in the workspace
     narr_obj_list = ws.list_objects({'ids': [ws_id], 'type': 'KBaseNarrative.Narrative'})

@@ -71,11 +71,11 @@ def fix_workspace_info(ws_id, token, verbose=False):
             new_meta['is_temporary'] = 'false'
 
     # 3. Test "narrative_nice_name" key
-    meta_name = ws_meta.get('narrative_nice_name')
-    if (meta_name is None and current_temp == 'false') or meta_name != narr_name:
+    current_name = ws_meta.get('narrative_nice_name')
+    if (current_name is None and current_temp == 'false') or current_name != narr_name:
         new_meta['narrative_nice_name'] = narr_name
         if verbose:
-            print("\tUpdating 'narrative_nice_name' from {} -> {}".format(meta_name, narr_name))
+            print("\tUpdating 'narrative_nice_name' from {} -> {}".format(current_name, narr_name))
 
     # 4. Add the total cell count while we're at it.
     new_meta['cell_count'] = str(len(cells))

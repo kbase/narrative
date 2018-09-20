@@ -26,7 +26,7 @@ def fix_workspace_info(ws_id, token, verbose=False):
         print("Checking workspace {}".format(ws_id))
 
     # test if there's exactly 1 Narrative object in the workspace
-    narr_obj_list = ws.list_objects({'ids': [ws_id]})
+    narr_obj_list = ws.list_objects({'ids': [ws_id], 'type': 'KBaseNarrative.Narrative'})
     if len(narr_obj_list) != 1:
         if verbose:
             print("\tFound {} Narratives! Skipping this workspace".format(len(narr_obj_list)))

@@ -495,8 +495,7 @@ define([
                                         });
                                     }
 
-                                    var iDisplayLength = 5;
-                                    var sDom = 'ft<ip>';
+                                    var numPerPage = 5;
                                     var objTableId = self.uuid();
 
                                     ui.setContent('created-objects',
@@ -512,7 +511,7 @@ define([
 
                                     var $tblDiv = $('#' + objTableId);
 
-                                    if (displayData.length <= iDisplayLength) {
+                                    if (displayData.length <= numPerPage) {
                                         var $objTable = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">');
 
                                         displayData.sort(function(a, b) {
@@ -536,54 +535,29 @@ define([
                                             .addClass('table table-bordered table-striped');
                                         $tblDiv.append($tbl);
 
-                                        var sDom = 'ft<ip>';
-
                                         var tblSettings = {
-                                            'sPaginationType': 'full_numbers',
-                                            'iDisplayLength': iDisplayLength,
-                                            'sDom': sDom,
-                                            'aaSorting': [
+                                            'paginationType': 'full_numbers',
+                                            'displayLength': numPerPage,
+                                            'dom': 'ft<ip>',
+                                            'sorting': [
                                                 [0, 'asc']
                                             ],
-                                            'aoColumns': [
-                                                { sTitle: '<b>Created Object Name</b>', mData: 'name', sWidth: '30%' },
-                                                { sTitle: '<b>Type</b>', mData: 'type', sWidth: '20%' },
-                                                { sTitle: '<b>Description</b>', mData: 'description' }
+                                            'columns': [
+                                                { title: '<b>Created Object Name</b>', data: 'name', width: '30%' },
+                                                { title: '<b>Type</b>', data: 'type', width: '20%' },
+                                                { title: '<b>Description</b>', data: 'description' }
                                             ],
-                                            'aaData': [],
-                                            'oLanguage': {
-                                                'sSearch': 'Search: ',
-                                                'sEmptyTable': 'No created objects.'
+                                            'data': [],
+                                            'language': {
+                                                'search': 'Search: ',
+                                                'emptyTable': 'No created objects.'
                                             }
                                         };
                                         var objTable = $tbl.dataTable(tblSettings);
                                         objTable.fnAddData(displayData);
+                                        reportRowEvents();
+                                        objTable.on( 'draw.dt',  function() {reportRowEvents()});
 
-
-                                        var $objTable = $('<table ' +
-                                                'class="table table-bordered table-striped" style="width:100%;margin-left:0px; margin-right:0px;">' +
-                                                '</table>')
-                                            .dataTable({
-                                                'sPaginationType': 'full_numbers',
-                                                'sDom': sDom,
-                                                'iDisplayLength': iDisplayLength,
-                                                'aaSorting': [
-                                                    [0, 'asc'],
-                                                    [1, 'asc']
-                                                ],
-                                                'aaData': displayData,
-                                                'aoColumns': [
-                                                    { sTitle: 'Created Object Name', mData: 'name', sWidth: '20%' },
-                                                    { sTitle: 'Type', mData: 'type', sWidth: '20%' },
-                                                    { sTitle: 'Description', mData: 'description' }
-                                                ],
-                                                'oLanguage': {
-                                                    'sEmptyTable': 'No objects specified!',
-                                                    'sSearch': 'Search Created Objects: '
-                                                },
-                                                'fnDrawCallback': reportRowEvents
-                                            });
-                                        //$tblDiv.append($objTable)
                                     }
 
                                 }

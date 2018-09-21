@@ -164,8 +164,6 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
 
         # Now, reset our permission on that workspace.
         if current_admin_perm != 'a':
-            if current_admin_perm is None:
-                current_admin_perm = 'n'
             ws.administer({
                 'command': 'setPermissions',
                 'params': {

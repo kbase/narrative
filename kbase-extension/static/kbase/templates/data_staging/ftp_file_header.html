@@ -1,12 +1,14 @@
 <div class="row" style="margin-bottom: 5px">
     <div class="pull-left">
+        {{#if userInfo.globusLinked}}
         <div class="globus_div">
             Or upload to this staging area by using
-            <a href="https://www.globus.org/app/transfer?destination_id=3aca022a-5e5b-11e6-8309-22000b97daec&destination_path=%2F"
+            <a href="https://www.globus.org/app/transfer?destination_id=3aca022a-5e5b-11e6-8309-22000b97daec&destination_path=%2F{{userInfo.user}}"
                target="_blank" class="globus_link">
                 <i class="fa fa-cloud-upload"></i> Globus Online
             </a>
         </div>
+        {{/if}}
         <div class="web_upload_div">
             Or click <a id="web-upload" style="cursor:pointer">here</a> to use an App to upload from a public URL.
         </div>

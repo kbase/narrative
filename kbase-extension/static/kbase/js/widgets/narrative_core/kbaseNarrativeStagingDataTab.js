@@ -1,16 +1,16 @@
 define([
     'jquery',
-    'bluebird',
-    'dropzone',
     'kbwidget',
+    'narrativeConfig',
+    'api/auth',
     'kbase/js/widgets/narrative_core/upload/fileUploadWidget',
     'kbase/js/widgets/narrative_core/upload/stagingAreaViewer',
     'base/js/namespace'
 ], function(
     $,
-    Promise,
-    Dropzone,
     KBWidget,
+    Config,
+    Auth,
     FileUploadWidget,
     StagingAreaViewer,
     Jupyter
@@ -24,16 +24,30 @@ define([
             this._super(options);
             this.path = '/';
 
-            this.render();
+            let auth = Auth.make({url: Config.url('auth')});
+            auth.getCurrentProfile(auth.getAuthToken())
+            .then(info => {
+                this.render({
+                    user: info.user,
+                    globusLinked: info.idents && info.idents.some(ident => ident.provider.toLocaleLowerCase() === 'globus')
+                });
+            })
+            .catch((err) => {
+                console.error('An error occurred while determining whether the user account is linked to Globus. Continuing without links.');
+                this.render({
+                    user: Jupyter.narrative.userId,
+                    globusLinked: false
+                });
+            });
             return this;
         },
 
         activate : function() {
-          this.stagingAreaViewer.activate();
+            this.stagingAreaViewer.activate();
         },
 
         deactivate : function() {
-          this.stagingAreaViewer.deactivate();
+            this.stagingAreaViewer.deactivate();
         },
 
         updatePath: function(newPath) {
@@ -42,7 +56,7 @@ define([
             this.stagingAreaViewer.setPath(newPath);
         },
 
-        render: function() {
+        render: function(userInfo) {
             var $mainElem = $('<div>')
                 .css({
                     'height': '604px',
@@ -58,6 +72,7 @@ define([
 
             this.uploadWidget = new FileUploadWidget($dropzoneElem, {
                 path: this.path,
+                userInfo: userInfo,
                 userId: Jupyter.narrative.userId
             });
             this.uploadWidget.dropzone.on('complete', function() {
@@ -66,7 +81,8 @@ define([
 
             this.stagingAreaViewer = new StagingAreaViewer(this.$myFiles, {
                 path: this.path,
-                updatePathFn: this.updatePath.bind(this)
+                updatePathFn: this.updatePath.bind(this),
+                userInfo: userInfo
             });
 
             this.updateView();

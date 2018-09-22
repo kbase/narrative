@@ -82,7 +82,23 @@ define ([
             expect(stagingViewer).not.toBeNull();
         });
 
+        it('Should render properly with a Globus linked account', () => {
+            let $node = $('<div>'),
+                linkedStagingViewer = new StagingAreaViewer($node, {
+                    path: startingPath,
+                    updatePathFn: updatePathFn,
+                    userInfo: {
+                        user: fakeUser,
+                        globusLinked: true
+                    }
+                });
+            linkedStagingViewer.render();
+            expect($node.html()).toContain('Or upload to this staging area by using');
+            expect($node.html()).toContain('https://www.globus.org/app/transfer?destination_id=3aca022a-5e5b-11e6-8309-22000b97daec&amp;destination_path=%2F' + fakeUser);
+        });
+
         it('Should render properly without a Globus linked account', () => {
+            expect($targetNode.html()).not.toContain('Or upload to this staging area by using');
         });
 
         it('Should start a help tour', function() {

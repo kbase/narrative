@@ -22,7 +22,7 @@ module.exports = function (config) {
             'kbase-extension/static/narrative_paths.js',
             {pattern: 'test/unit/spec/**/*.js', included: false},
             // {pattern: 'test/unit/spec/narrative_core/kbaseNarrativeStagingDataTab-spec.js', included: false},
-            // {pattern: 'test/unit/spec/narrative_core/upload/stagingAreaViewer-spec.js', included: false},
+            // {pattern: 'test/unit/spec/narrative_core/upload/fileUploadWidget-spec.js', included: false},
             {pattern: 'node_modules/string.prototype.startswith/startswith.js', included: true},
             {pattern: 'node_modules/string.prototype.endswith/endswith.js', included: true},
             {pattern: 'node_modules/jasmine-ajax/lib/mock-ajax.js', included: true},

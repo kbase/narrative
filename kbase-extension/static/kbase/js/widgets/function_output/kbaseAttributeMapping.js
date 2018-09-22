@@ -26,7 +26,7 @@ define (
         kbaseAuthenticatedWidget
     ) {
     return KBWidget({
-        name: 'kbaseConditionSet',
+        name: 'kbaseAttributeMapping',
         parent : kbaseAuthenticatedWidget,
         version: '0.0.1',
         options: {
@@ -47,44 +47,31 @@ define (
             this.$elem.append(this.$mainPanel);
 
             if (!this.options.obj_ref) {
-                this.renderError("No ConditionSet to render!");
-            } else if (!this.options.kbCache && !this.authToken()) {
-                this.renderError("No cache given, and not logged in!");
+                this.renderError("No object to render!");
             } else {
                 this.token = this.authToken();
-                this.render();
+                this.renderAndLoad();
             }
 
             return this;
         },
 
-        render: function() {
+        renderAndLoad: function() {
             this.ws = new Workspace(this.options.wsURL, {token: this.token});
             this.loading(false);
             this.$mainPanel.hide();
             this.$mainPanel.empty();
-            this.loadConditionSet();
+            this.loadData();
         },
+        objData: {},
 
-        conditions: {},
-        factors: {},
-
-        loadConditionSet: function() {
+        loadData: function() {
             var self = this;
             self.ws.get_objects2({objects: [{ref: self.options.obj_ref}]},
                 function(ret) {
                     console.log(ret);
-                    var cs = ret.data[0].data;
-                    var cols = [{title: "Sample ID"}];
-                    cs.factors.forEach(function(factor){
-                        cols.push({title: factor.factor});
-                    });
-                    var rows = Object.keys(cs.conditions).map(function(_id) {
-                        return [_id].concat(cs.conditions[_id]);
-                    });
-                    self.$mainPanel.show();
-                    self.renderConditionTable(rows, cols);
-                    self.loading(true);
+                    this.objData = ret.data[0].data;
+
                 },
                 function(error) {
                     self.loading(true);
@@ -92,20 +79,50 @@ define (
 
                 });
         },
-        $conditionTableDiv : null,
-        renderConditionTable: function(rows, cols) {
+        parseObj: function() {
             var self = this;
-
-            if(!self.$conditionTableDiv) {
-                self.$conditionTableDiv = $('<div>').css({'margin':'5px'});
-                self.$mainPanel.append(self.$conditionTableDiv);
+            var ws_obj = self.objData;
+            var cols = [{title: "ID"}];
+            var rows;
+            // Back compatible with ConditionSets
+            if (typeof ws_obj.factors !== 'undefined') {
+                ws_obj.factors.forEach(function(factor){
+                    cols.push({title: factor.factor});
+                });
+            } else if (typeof ws_obj.attributes !== 'undefined') {
+                ws_obj.attributes.forEach(function(attributes){
+                    cols.push({title: attributes.attribute});
+                });
             }
 
-            self.$conditionTableDiv.empty();
+            // Back compatible with ConditionSets
+            if (typeof ws_obj.conditions !== 'undefined') {
+                rows = Object.keys(ws_obj.conditions).map(function (_id) {
+                    return [_id].concat(ws_obj.conditions[_id]);
+                });
+            } else if (typeof ws_obj.instances !== 'undefined') {
+                rows = Object.keys(ws_obj.instances).map(function (_id) {
+                    return [_id].concat(ws_obj.instances[_id]);
+                });
+            }
+            self.$mainPanel.show();
+            self.renderTable(rows, cols);
+            self.loading(true);
+        },
 
-            var $tbl = $('<table>')
-                            .addClass("table table-bordered table-striped");
-            self.$conditionTableDiv.append($tbl);
+        $tableDiv : null,
+        renderTable: function(rows, cols) {
+            var self = this;
+
+            if(!self.$tableDiv) {
+                self.$tableDiv = $('<div>').css({'margin':'5px'});
+                self.$mainPanel.append(self.$tableDiv);
+            }
+
+            self.$tableDiv.empty();
+
+            var $tbl = $('<table>').addClass("table table-bordered table-striped");
+            self.$tableDiv.append($tbl);
 
             var tblSettings = {
                 scrollX: true,

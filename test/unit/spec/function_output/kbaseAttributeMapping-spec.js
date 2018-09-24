@@ -107,8 +107,6 @@ define([
                 })
             });
             let w = new kbaseAttributeMapping($div, {upas: {obj_ref: 'fake'}});
-            w.objData = attributeMappingData;
-            w.parseObj();
             [
                 'Time series design',
                 'Treatment with Sirolimus',
@@ -194,8 +192,6 @@ define([
                 })
             });
             let w = new kbaseAttributeMapping($div, {upas: {obj_ref: 'fake'}});
-            w.objData = conditionSetData;
-            w.parseObj();
             [
                 'Time series design',
                 'Treatment with Sirolimus',

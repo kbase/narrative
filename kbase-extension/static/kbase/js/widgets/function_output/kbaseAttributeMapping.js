@@ -63,15 +63,13 @@ define (
             this.$mainPanel.empty();
             this.loadData();
         },
-        objData: {},
 
         loadData: function() {
             var self = this;
             self.ws.get_objects2({objects: [{ref: self.options.obj_ref}]},
                 function(ret) {
                     console.log(ret);
-                    this.objData = ret.data[0].data;
-
+                    self.parseObj(ret.data[0].data);
                 },
                 function(error) {
                     self.loading(true);
@@ -79,9 +77,8 @@ define (
 
                 });
         },
-        parseObj: function() {
+        parseObj: function(ws_obj) {
             var self = this;
-            var ws_obj = self.objData;
             var cols = [{title: "ID"}];
             var rows;
             // Back compatible with ConditionSets
@@ -106,6 +103,7 @@ define (
                 });
             }
             self.$mainPanel.show();
+            console.log(rows,cols);
             self.renderTable(rows, cols);
             self.loading(true);
         },

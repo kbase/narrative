@@ -101,7 +101,6 @@ define([
     }.bind(this));
 
     this.ajax = function ajax(args) {
-
       var deferred = $.Deferred();
 
       var beforeSend = function (xhr) {

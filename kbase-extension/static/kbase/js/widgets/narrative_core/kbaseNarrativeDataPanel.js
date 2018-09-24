@@ -579,7 +579,7 @@ define([
             this.publicTab = new kbaseNarrativeSidePublicTab(publicPanel, {$importStatus: importStatus, ws_name: this.ws_name});
             this.exampleTab = new kbaseNarrativeExampleDataTab(examplePanel, {$importStatus: importStatus, ws_name: this.ws_name});
             if (Config.get('features').stagingDataViewer) {
-                this.stagingTab = new kbaseNarrativeStagingDataTab(stagingPanel);
+                this.stagingTab = new kbaseNarrativeStagingDataTab(stagingPanel).render();
             }
 
             // It is silly to invoke a new object for each widget

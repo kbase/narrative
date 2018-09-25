@@ -7,6 +7,7 @@ Fixes workspace info to do the following.
 5. Does nothing at all if there's > 1 narrative in the workspace.
 Note that while this fetches the Narrative object, it doesn't modify it in any way.
 """
+import sys
 import requests
 import argparse
 import json
@@ -134,44 +135,44 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
     _admin_update_metadata(ws, admin_id, ws_id, new_meta)
 
 
-    def _admin_update_metadata(ws, admin_id, ws_id, new_meta):
-        """
-        ws = workspace client with admin rights
-        admin_id = username of the admin who's token was used to set up the ws client.
-        ws_id = the workspace to tweak
-        new_meta = the new metadata to set
-        """
+def _admin_update_metadata(ws, admin_id, ws_id, new_meta):
+    """
+    ws = workspace client with admin rights
+    admin_id = username of the admin who's token was used to set up the ws client.
+    ws_id = the workspace to tweak
+    new_meta = the new metadata to set
+    """
 
-        # Now we can update the metadata. This is a little tricky from
-        # If we don't have permission to write to the workspace, grab it.
-        perms = ws.administer({
-            'command': 'getPermissionsMass',
-            'params': {'workspaces': [{'id': ws_id}]}
-        })['perms'][0]
-        current_admin_perm = perms.get(admin_id, 'n')
-        if current_admin_perm != 'a':
-            # add the admin_id as an admin on that workspace.
-            ws.administer({
-                'command': 'setPermissions',
-                'params': {
-                    'id': ws_id,
-                    'new_permission': 'a',
-                    'users': [admin_id]
-                }
-            })
-        # Now that we added ourself as an admin on that workspace, we can just use the usual call to update the metadata
-        ws.alter_workspace_metadata({'wsi': {'id': ws_id}, 'new': new_meta})
+    # Now we can update the metadata. This is a little tricky from
+    # If we don't have permission to write to the workspace, grab it.
+    perms = ws.administer({
+        'command': 'getPermissionsMass',
+        'params': {'workspaces': [{'id': ws_id}]}
+    })['perms'][0]
+    current_admin_perm = perms.get(admin_id, 'n')
+    if current_admin_perm != 'a':
+        # add the admin_id as an admin on that workspace.
+        ws.administer({
+            'command': 'setPermissions',
+            'params': {
+                'id': ws_id,
+                'new_permission': 'a',
+                'users': [admin_id]
+            }
+        })
+    # Now that we added ourself as an admin on that workspace, we can just use the usual call to update the metadata
+    ws.alter_workspace_metadata({'wsi': {'id': ws_id}, 'new': new_meta})
 
-        # Now, reset our permission on that workspace.
-        if current_admin_perm != 'a':
-            ws.administer({
-                'command': 'setPermissions',
-                'params': {
-                    'id': ws_id,
-                    'new_permission': current_admin_perm,
-                    'users': [admin_id]
-                }
-            })
+    # Now, reset our permission on that workspace.
+    if current_admin_perm != 'a':
+        ws.administer({
+            'command': 'setPermissions',
+            'params': {
+                'id': ws_id,
+                'new_permission': current_admin_perm,
+                'users': [admin_id]
+            }
+        })
 
 def _get_user_id(auth_url, token):
     """
@@ -179,22 +180,30 @@ def _get_user_id(auth_url, token):
     about the user who created the token.
     """
     token_api_url = auth_url + "/api/V2/token"
-    headers = {"Authorization": token}
+    headers = { "Authorization": token }
     r = requests.get(token_api_url, headers=headers)
     if r.status_code != requests.codes.ok:
         r.raise_for_status()
     auth_info = json.loads(r.content)
     return auth_info['user']
 
-def parse_args():
+def parse_args(args):
     p = argparse.ArgumentParser(description=__doc__.strip())
     p.add_argument("-t", "--token", dest="token", default=None, help="Auth token for workspace admin")
     p.add_argument("-w", "--ws_url", dest="ws_url", default=None, help="Workspace service endpoint")
     p.add_argument("-a", "--auth_url", dest="auth_url", default=None, help="Auth service endpoint")
-
-    args = p.parse_args()
+    args = p.parse_args(args)
+    if args.ws_url is None:
+        raise ValueError("ws_url - the Workspace service endpoint - is required!")
+    if args.auth_url is None:
+        raise ValueError("auth_url - the Auth service endpoint - is required!")
+    if args.token is None:
+        raise ValueError("token - a valid Workspace admin auth token - is required!")
     return args
 
+def main(args):
+    args = parse_args(args)
+    return fix_all_workspace_info(args.ws_url, args.auth_url, args.token)
+
 if __name__ == "__main__":
-    args = parse_args()
-    fix_all_workspace_info(args.ws_url, args.auth_url, args.token)
+    sys.exit(main(sys.argv[1:]))

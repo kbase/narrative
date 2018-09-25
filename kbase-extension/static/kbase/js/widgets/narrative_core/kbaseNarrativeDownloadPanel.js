@@ -57,8 +57,6 @@ define (
             this.type = this.options.type;
             this.objId = this.options.objId;
             this.ref = this.options.ref;
-            console.log(options);
-            console.log(this);
             if (!this.objId) {
                 var refPathItems = this.ref.split(';');
                 this.objId = refPathItems[refPathItems.length - 1].trim().split('/')[1];
@@ -68,7 +66,6 @@ define (
                     (objectinfo) => {
                 this.objId = objectinfo.infos[0][1];
                 this.ref = this.ref.split("/").slice(0, -1).join("/") + "/" + this.objId;
-                console.log("ref" + this.ref);
             }
                 );
             this.downloadSpecCache = options['downloadSpecCache'];

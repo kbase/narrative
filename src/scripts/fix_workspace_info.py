@@ -134,7 +134,6 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
     # ...and update the metadata
     _admin_update_metadata(ws, admin_id, ws_id, new_meta)
 
-
 def _admin_update_metadata(ws, admin_id, ws_id, new_meta):
     """
     ws = workspace client with admin rights

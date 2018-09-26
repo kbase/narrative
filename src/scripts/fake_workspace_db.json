@@ -1,0 +1,107 @@
+{
+    "1": {
+        "objects": {},
+        "ws_info": [1, "user1:narrative_1", "user1", "timestamp", 1, "a", "n", "unlocked", {}],
+        "perms": { "user1": "a" }
+    },
+    "2": {
+        "objects": {
+            "1": {
+                "info": [1, "Narrative.2", "KBaseNarrative.Narrative-1.0", "timestamp", 45, "user2", 2, "user2:narrative_2", "hash", 12345, null],
+                "data": {
+                    "metadata": {
+                        "name": "Test"
+                    },
+                    "cells": [{
+                        "cell_type": "code"
+                    }]
+                }
+            }
+        },
+        "ws_info": [2, "user2:narrative_2", "user2", "timestamp", 5, "a", "n", "unlocked", {
+            "is_temporary": "false",
+            "narrative": "1",
+            "narrative_nice_name": "Test"
+        }],
+        "perms": { "user2": "a" }
+    },
+    "3": {
+        "objects": {
+            "1": {
+                "info": [1, "Narrative.3", "KBaseNarrative.Narrative-1.0", "timestamp", 45, "user3", 3, "user3:narrative_3", "hash", 12345, null],
+                "data": {
+                    "metadata": {
+                        "name": "Test3"
+                    },
+                    "cells": [{
+                        "cell_type": "code"
+                    }, {
+                        "cell_type": "markdown"
+                    }]
+                }
+            }
+        },
+        "ws_info": [3, "user3:narrative_3", "user3", "timestamp", 5, "a", "n", "unlocked", {
+            "is_temporary": "true",
+            "narrative": "1",
+            "narrative_nice_name": "Narrative.3"
+        }],
+        "perms": {
+            "user3": "a",
+            "fakeadmin": "r"
+        }
+    },
+    "4": {
+        "objects": {
+            "1": {
+                "info": [1, "Narrative.4", "KBaseNarrative.Narrative-1.0", "timestamp", 45, "user4", 4, "user4:narrative_4", "hash", 12345, null],
+                "data": {
+                    "metadata": {
+                        "name": "Test4"
+                    },
+                    "cells": [{
+                        "cell_type": "markdown"
+                    }]
+                }
+            }
+        },
+        "ws_info": [4, "user4:narrative_4", "user4", "timestamp", 5, "a", "n", "unlocked", {
+            "is_temporary": "false",
+            "narrative": "1",
+            "narrative_nice_name": "Test4"
+        }],
+        "perms": { "user4": "a", "fakeadmin": "a" }
+    },
+    "5": {
+        "objects": {
+            "1": {
+                "info": [1, "Narrative.5", "KBaseNarrative.Narrative-1.0", "timestamp", 45, "user5", 5, "user5:narrative_5", "hash", 12345, null],
+                "data": {
+                    "metadata": {
+                        "name": "Test5"
+                    },
+                    "cells": [{
+                        "cell_type": "markdown"
+                    }]
+                }
+            },
+            "2": {
+                "info": [2, "Narrative.5-2", "KBaseNarrative.Narrative-1.0", "timestamp", 45, "user5", 5, "user5:narrative_5", "hash", 12345, null],
+                "data": {
+                    "metadata": {
+                        "name": "Test5-2"
+                    },
+                    "cells": [{
+                        "cell_type": "markdown"
+                    }]
+                }
+            }
+        },
+        "ws_info": [5, "user5:narrative_5", "user5", "timestamp", 5, "a", "n", "unlocked", {
+            "is_temporary": "false",
+            "narrative": "1",
+            "narrative_nice_name": "Test5"
+        }],
+        "perms": { "user5": "a" }
+    }
+}

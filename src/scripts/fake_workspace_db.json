@@ -103,5 +103,26 @@
             "narrative_nice_name": "Test5"
         }],
         "perms": { "user5": "a" }
+    },
+    "6": {
+        "objects": {
+            "3": {
+                "info": [3, "Narrative.6", "KBaseNarrative.Narrative-1.0", "timestamp", 65, "user6", 6, "user6:narrative_6", "hash", 12365, null],
+                "data": {
+                    "metadata": {
+                        "name": "Test6"
+                    },
+                    "cells": [{
+                        "cell_type": "markdown"
+                    }]
+                }
+            }
+        },
+        "ws_info": [6, "user6:narrative_6", "user6", "timestamp", 5, "a", "n", "unlocked", {
+            "is_temporary": "false",
+            "narrative": "Narrative.6",
+            "narrative_nice_name": "Test6"
+        }],
+        "perms": { "user4": "a" }
     }
 }

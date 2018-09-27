@@ -164,3 +164,4 @@ class TestWSInfoFix(unittest.TestCase):
     def test_fix_all_workspace_info(self, ws_mock, request_mock):
         fix_workspace_info.Workspace = MockWorkspace
         fix_workspace_info.fix_all_workspace_info('fake_ws', 'fake_auth', 'good_token')
+        # TODO: add actual tests for results of "database"

@@ -1,13 +1,26 @@
 import unittest
 import mock
 import json
-import fix_workspace_info as fix_ws
+from . import fix_workspace_info
 from biokbase.workspace.baseclient import ServerError
 
 FAKE_ADMIN_ID = "fakeadmin"
 FAKE_WS_FILE = "fake_workspace_db.json"
 
-class MockWorkspace(object):
+def mocked_requests_get(*args, **kwargs):
+    class MockResponse:
+        def __init__(self, data, status_code):
+            self.status_code = status_code
+            self.content = data
+
+    if args[0].endswith('/api/V2/token') and 'Authorization' in kwargs['headers']:
+        tok = kwargs['headers']['Authorization']
+        if 'good' in tok:
+            return MockResponse(json.dumps({'user': FAKE_ADMIN_ID}), 200)
+        else:
+            return MockResponse('Bad!', 401)
+
+class MockWorkspace:
     """
     Some rules for the mock, for each "workspace" by workspace id.
     ws1 - 0 narratives, no metadata
@@ -36,7 +49,7 @@ class MockWorkspace(object):
         return fake_ws_db
 
     def _check_ws_id(self, ws_id):
-        if ws_id > self.max_ws_id:
+        if str(ws_id) not in self.fake_ws_db:
             raise ServerError('JSONRPCError', -32500, 'No workspace with id {} exists'.format(ws_id))
 
     def administer(self, params):
@@ -59,7 +72,7 @@ class MockWorkspace(object):
             obj_ref = cmd_params['objects'][0]['ref']
             (ws_id, obj_id) = obj_ref.split('/')
             self._check_ws_id(ws_id)
-            return {'data': [self.fake_ws_db[str()]]}
+            return {'data': [self.fake_ws_db[str(ws_id)]['objects'][str(obj_id)] ]}
 
         elif cmd == 'getPermissionsMass':
             # again, we know there's only one being checked
@@ -106,13 +119,13 @@ class TestWSInfoFix(unittest.TestCase):
             [['-t', token, '-w', ws_url], "auth_url - the Auth service endpoint - is required!"]
         ]
         for input_args in good_args_set:
-            args = fix_ws.parse_args(input_args)
+            args = fix_workspace_info.parse_args(input_args)
             self.assertEqual(args.token, token)
             self.assertEqual(args.auth_url, auth_url)
             self.assertEqual(args.ws_url, ws_url)
         for bad_args in bad_args_set:
             with self.assertRaises(ValueError) as e:
-                fix_ws.parse_args(bad_args[0])
+                fix_workspace_info.parse_args(bad_args[0])
             self.assertIn(bad_args[1], str(e.exception))
 
     def test__admin_update_metadata(self):
@@ -120,7 +133,7 @@ class TestWSInfoFix(unittest.TestCase):
         new_meta = {'foo': 'bar'}
 
         ws_id = 1
-        fix_ws._admin_update_metadata(ws, FAKE_ADMIN_ID, ws_id, new_meta)
+        fix_workspace_info._admin_update_metadata(ws, FAKE_ADMIN_ID, ws_id, new_meta)
         self.assertEqual(ws.fake_ws_db[str(ws_id)]["ws_info"][8]['foo'], 'bar')
         self.assertNotIn(FAKE_ADMIN_ID, ws.administer({
             'command': 'getPermissionsMass',
@@ -130,7 +143,7 @@ class TestWSInfoFix(unittest.TestCase):
         })['perms'][0])
 
         ws_id = 3
-        fix_ws._admin_update_metadata(ws, FAKE_ADMIN_ID, ws_id, new_meta)
+        fix_workspace_info._admin_update_metadata(ws, FAKE_ADMIN_ID, ws_id, new_meta)
         self.assertEqual(ws.fake_ws_db[str(ws_id)]["ws_info"][8]['foo'], 'bar')
         self.assertEqual(ws.administer({
             'command': 'getPermissionsMass',
@@ -138,3 +151,16 @@ class TestWSInfoFix(unittest.TestCase):
                 'workspaces': [{'id': ws_id}]
             }
         })['perms'][0].get(FAKE_ADMIN_ID), 'r')
+
+    @mock.patch('scripts.fix_workspace_info.requests.get', side_effect=mocked_requests_get)
+    def test__get_user_id(self, request_mock):
+        userid = fix_workspace_info._get_user_id('some_endpoint', 'goodtoken')
+        self.assertEqual(userid, FAKE_ADMIN_ID)
+        with self.assertRaises(Exception):
+            fix_workspace_info._get_user_id('some_endpoint', 'badtoken')
+
+    @mock.patch('scripts.fix_workspace_info.requests.get', side_effect=mocked_requests_get)
+    @mock.patch('scripts.fix_workspace_info.Workspace')
+    def test_fix_all_workspace_info(self, ws_mock, request_mock):
+        fix_workspace_info.Workspace = MockWorkspace
+        fix_workspace_info.fix_all_workspace_info('fake_ws', 'fake_auth', 'good_token')

@@ -14,7 +14,7 @@ import json
 from biokbase.workspace.client import Workspace
 import biokbase.workspace.baseclient as baseclient
 
-MAX_WS_ID = 45000  # make this somewhat reasonable. I think the max ws in prod is +/- 40000
+MAX_WS_ID = 10 #45000  # make this somewhat reasonable. I think the max ws in prod is +/- 40000
 
 def fix_all_workspace_info(ws_url, auth_url, token):
     """
@@ -26,18 +26,18 @@ def fix_all_workspace_info(ws_url, auth_url, token):
     assert(token)
 
     try:
-        user_info = _get_user_id(auth_url, token)
+        user_id = _get_user_id(auth_url, token)
     except:
         print("Failed to validate token or retrieve user info! Exiting.")
         raise
 
     ws = Workspace(url=ws_url, token=token)
-    for ws_id in range(MAX_WS_ID):
+    for ws_id in range(1, MAX_WS_ID):
         try:
-            _fix_single_workspace_info(ws_id, user_info['user'], ws, verbose=True)
+            _fix_single_workspace_info(ws_id, user_id, ws, verbose=True)
         except baseclient.ServerError as e:
             if "No workspace with id" in str(e):
-                print("WS:{} does not exist")
+                print("WS:{} does not exist".format(ws_id))
 
 def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
     """
@@ -92,12 +92,20 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
         if verbose:
             print("WS:{} Updating id from {} -> {}".format(ws_id, ws_meta.get('narrative'), narr_obj_id))
 
+    # get list of cells
+    # if it's really REALLY old, it has a 'worksheets' field. Removed in Jupyter notebook format 4.
+    if 'worksheets' in narr_obj['data']:
+        cells = narr_obj['data']['worksheets'][0]['cells']
+    else:
+        cells = narr_obj['data']['cells']
+
     # 2. Test "is_temporary" key.
     # Should be true if there's only a single narrative version, and it's name is Untitled, and it only has a single markdown cell.
     # Should never reset to be temporary if it's not.
     # Really, this is here to add the field if it's not there, and to set things as non-temporary
     # if it looks like they should be.
     # So, if the marked 'is_temporary' is already false, do nothing.
+
     current_temp = ws_meta.get('is_temporary')
     if current_temp == 'true':
         # make sure it should be temporary.
@@ -105,12 +113,6 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
             if verbose:
                 print("WS:{} Narrative is named {} and has {} versions - marking not temporary".format(ws_id, narr_name, narr_info[4]))
             new_meta['is_temporary'] = 'false'
-        # get list of cells
-        # if it's really REALLY old, it has a 'worksheets' field. Removed in Jupyter notebook format 4.
-        if 'worksheets' in narr_obj['data']:
-            cells = narr_obj['data']['worksheets'][0]['cells']
-        else:
-            cells = narr_obj['data']['cells']
         if len(cells) > 1 or cells[0]['cell_type'] != 'markdown':
             if verbose:
                 print("WS:{} Narrative has {} cells and the first is type {} - marking not temporary".format(ws_id, len(cells), cells[0]['cell_type']))

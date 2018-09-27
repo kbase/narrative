@@ -123,6 +123,29 @@
             "narrative": "Narrative.6",
             "narrative_nice_name": "Test6"
         }],
-        "perms": { "user4": "a" }
+        "perms": { "user6": "a" }
+    },
+    "7": {
+        "objects": {
+            "3": {
+                "info": [3, "Narrative.7", "KBaseNarrative.Narrative-1.0", "timestamp", 75, "user7", 7, "user7:narrative_7", "hash", 12375, null],
+                "data": {
+                    "metadata": {
+                        "name": "Test7"
+                    },
+                    "worksheets": [{
+                        "cells": [{
+                            "cell_type": "markdown"
+                        }]
+                    }]
+                }
+            }
+        },
+        "ws_info": [7, "user7:narrative_7", "user7", "timestamp", 5, "a", "n", "unlocked", {
+            "is_temporary": "false",
+            "narrative": "Narrative.7",
+            "narrative_nice_name": "Test7"
+        }],
+        "perms": { "user7": "a" }
     }
 }

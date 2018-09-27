@@ -25,12 +25,7 @@ def fix_all_workspace_info(ws_url, auth_url, token):
     assert(auth_url)
     assert(token)
 
-    try:
-        user_id = _get_user_id(auth_url, token)
-    except:
-        print("Failed to validate token or retrieve user info! Exiting.")
-        raise
-
+    user_id = _get_user_id(auth_url, token)
     ws = Workspace(url=ws_url, token=token)
     for ws_id in range(1, MAX_WS_ID):
         try:

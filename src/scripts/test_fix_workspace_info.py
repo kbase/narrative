@@ -3,6 +3,7 @@ import mock
 import json
 from . import fix_workspace_info
 from biokbase.workspace.baseclient import ServerError
+from requests.exceptions import HTTPError
 
 FAKE_ADMIN_ID = "fakeadmin"
 FAKE_WS_FILE = "fake_workspace_db.json"
@@ -12,6 +13,8 @@ def mocked_requests_get(*args, **kwargs):
         def __init__(self, data, status_code):
             self.status_code = status_code
             self.content = data
+        def raise_for_status(self):
+            raise HTTPError(response="Unauthorized")
 
     if args[0].endswith('/api/V2/token') and 'Authorization' in kwargs['headers']:
         tok = kwargs['headers']['Authorization']
@@ -156,12 +159,15 @@ class TestWSInfoFix(unittest.TestCase):
     def test__get_user_id(self, request_mock):
         userid = fix_workspace_info._get_user_id('some_endpoint', 'goodtoken')
         self.assertEqual(userid, FAKE_ADMIN_ID)
-        with self.assertRaises(Exception):
+        with self.assertRaises(HTTPError):
             fix_workspace_info._get_user_id('some_endpoint', 'badtoken')
 
     @mock.patch('scripts.fix_workspace_info.requests.get', side_effect=mocked_requests_get)
     @mock.patch('scripts.fix_workspace_info.Workspace')
     def test_fix_all_workspace_info(self, ws_mock, request_mock):
         fix_workspace_info.Workspace = MockWorkspace
+        with self.assertRaises(HTTPError):
+            fix_workspace_info.fix_all_workspace_info('fake_ws', 'fake_auth', 'bad_token')
+
         fix_workspace_info.fix_all_workspace_info('fake_ws', 'fake_auth', 'good_token')
         # TODO: add actual tests for results of "database"

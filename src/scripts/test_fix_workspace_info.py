@@ -7,6 +7,12 @@ from requests.exceptions import HTTPError
 
 FAKE_ADMIN_ID = "fakeadmin"
 FAKE_WS_FILE = "fake_workspace_db.json"
+FAKE_WS_DB = dict()
+
+def reset_fake_ws_db():
+    global FAKE_WS_DB
+    with open(FAKE_WS_FILE, "r") as f:
+        FAKE_WS_DB = json.loads(f.read().strip())
 
 def mocked_requests_get(*args, **kwargs):
     class MockResponse:
@@ -41,15 +47,11 @@ class MockWorkspace:
     """
 
     def __init__(self, url=None, token=None):
+        global FAKE_WS_DB
         self.url = url
         self.token = token
-        self.fake_ws_db = self._build_fake_workspace_db()
+        self.fake_ws_db = FAKE_WS_DB
         self.max_ws_id = len(self.fake_ws_db.keys())
-
-    def _build_fake_workspace_db(self):
-        with open(FAKE_WS_FILE, "r") as f:
-            fake_ws_db = json.loads(f.read().strip())
-        return fake_ws_db
 
     def _check_ws_id(self, ws_id):
         if str(ws_id) not in self.fake_ws_db:
@@ -132,6 +134,7 @@ class TestWSInfoFix(unittest.TestCase):
             self.assertIn(bad_args[1], str(e.exception))
 
     def test__admin_update_metadata(self):
+        reset_fake_ws_db()
         ws = MockWorkspace()
         new_meta = {'foo': 'bar'}
 
@@ -165,9 +168,65 @@ class TestWSInfoFix(unittest.TestCase):
     @mock.patch('scripts.fix_workspace_info.requests.get', side_effect=mocked_requests_get)
     @mock.patch('scripts.fix_workspace_info.Workspace')
     def test_fix_all_workspace_info(self, ws_mock, request_mock):
+        reset_fake_ws_db()
+        fake_ws = MockWorkspace()
         fix_workspace_info.Workspace = MockWorkspace
         with self.assertRaises(HTTPError):
             fix_workspace_info.fix_all_workspace_info('fake_ws', 'fake_auth', 'bad_token')
 
         fix_workspace_info.fix_all_workspace_info('fake_ws', 'fake_auth', 'good_token')
         # TODO: add actual tests for results of "database"
+        # ws1 - no change to metadata
+        self.assertEqual(fake_ws.fake_ws_db['1']['ws_info'][8], {})
+
+        # ws2 - add cell_count = 1
+        self.assertEqual(fake_ws.fake_ws_db['2']['ws_info'][8], {
+            'is_temporary': 'false',
+            'narrative': '1',
+            'narrative_nice_name': 'Test',
+            'cell_count': '1',
+            'searchtags': 'narrative'
+        })
+
+        # ws3 - not temp, fix name, add num-cells
+        self.assertEqual(fake_ws.fake_ws_db['3']['ws_info'][8], {
+            'is_temporary': 'false',
+            'narrative': '1',
+            'narrative_nice_name': 'Test3',
+            'cell_count': '2',
+            'searchtags': 'narrative'
+        })
+
+        # ws4 - not temp, 1 cell
+        self.assertEqual(fake_ws.fake_ws_db['4']['ws_info'][8], {
+            'is_temporary': 'false',
+            'narrative': '1',
+            'narrative_nice_name': 'Test4',
+            'cell_count': '1',
+            'searchtags': 'narrative'
+        })
+
+        # ws5 - add num cells. even though there's > 1, it's configured.
+        self.assertEqual(fake_ws.fake_ws_db['5']['ws_info'][8], {
+            'is_temporary': 'false',
+            'narrative': '1',
+            'narrative_nice_name': 'Test5'
+        })
+
+        #ws6 - fix id, add cell count
+        self.assertEqual(fake_ws.fake_ws_db['6']['ws_info'][8], {
+            'is_temporary': 'false',
+            'narrative': '3',
+            'narrative_nice_name': 'Test6',
+            'cell_count': '1',
+            'searchtags': 'narrative'
+        })
+
+        # ws7 - fix id, cell count
+        self.assertEqual(fake_ws.fake_ws_db['7']['ws_info'][8], {
+            'is_temporary': 'false',
+            'narrative': '3',
+            'narrative_nice_name': 'Test7',
+            'cell_count': '1',
+            'searchtags': 'narrative'
+        })

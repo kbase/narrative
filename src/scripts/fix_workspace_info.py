@@ -55,14 +55,6 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
             'type': 'KBaseNarrative.Narrative'
         }
     })
-    # narr_obj_list = ws.list_objects({'ids': [ws_id], 'type': 'KBaseNarrative.Narrative'})
-    if len(narr_obj_list) != 1:
-        if verbose:
-            print("WS:{} Found {} Narratives! Skipping this workspace".format(ws_id, len(narr_obj_list)))
-        return
-    narr_info = narr_obj_list[0]
-    narr_obj_id = narr_info[0]
-
     # fetch the workspace info and narrative object (with metadata)
     ws_info = ws.administer({
         'command': 'getWorkspaceInfo',
@@ -72,6 +64,19 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
     })
     # ws_info = ws.get_workspace_info({'id': int(ws_id)})
     ws_meta = ws_info[8]
+    # narr_obj_list = ws.list_objects({'ids': [ws_id], 'type': 'KBaseNarrative.Narrative'})
+    if len(narr_obj_list) != 1:
+        if not 'narrative' in ws_meta:
+            if verbose:
+                print("WS:{} Found {} Narratives and metadata isn't initialized! Skipping this workspace".format(ws_id, len(narr_obj_list)))
+            return
+        else:
+            if verbose:
+                print("WS:{} Found {} Narratives, metadata configured to point to Narrative with obj id {}. Skipping, but do this manually.".format(ws_id, len(narr_obj_list), ws_meta['narrative']))
+            return
+
+    narr_info = narr_obj_list[0]
+    narr_obj_id = narr_info[0]
     narr_obj = ws.administer({
         'command': 'getObjects',
         'params': {

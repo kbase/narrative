@@ -14,12 +14,14 @@ import json
 from biokbase.workspace.client import Workspace
 import biokbase.workspace.baseclient as baseclient
 
-MAX_WS_ID = 100 #45000  # make this somewhat reasonable. I think the max ws in prod is +/- 40000
-
-def fix_all_workspace_info(ws_url, auth_url, token):
+def fix_all_workspace_info(ws_url, auth_url, token, max_id):
     """
     Iterates over all workspaces available at the ws_url endpoint, using the given admin token,
     and applies _fix_single_workspace_info to each.
+    ws_url = endpoint for the workspace service to modify
+    auth_url = endpoint for the auth service that the workspace talks to
+    token = an active auth token for a workspace administrator
+    max_id = the max workspace id to fix - should be fairly large, any that are missing up to that point are just ignored.
     """
     assert(ws_url)
     assert(auth_url)
@@ -27,7 +29,7 @@ def fix_all_workspace_info(ws_url, auth_url, token):
 
     user_id = _get_user_id(auth_url, token)
     ws = Workspace(url=ws_url, token=token)
-    for ws_id in range(1, MAX_WS_ID):
+    for ws_id in range(1, max_id):
         try:
             _fix_single_workspace_info(ws_id, user_id, ws, verbose=True)
         except baseclient.ServerError as e:
@@ -199,6 +201,7 @@ def parse_args(args):
     p.add_argument("-t", "--token", dest="token", default=None, help="Auth token for workspace admin")
     p.add_argument("-w", "--ws_url", dest="ws_url", default=None, help="Workspace service endpoint")
     p.add_argument("-a", "--auth_url", dest="auth_url", default=None, help="Auth service endpoint")
+    p.add_argument("-m", "--max_id", dest="max_id", default=40000, help="Highest workspace id to fix (will ignore any others in the way)")
     args = p.parse_args(args)
     if args.ws_url is None:
         raise ValueError("ws_url - the Workspace service endpoint - is required!")
@@ -210,7 +213,7 @@ def parse_args(args):
 
 def main(args):
     args = parse_args(args)
-    return fix_all_workspace_info(args.ws_url, args.auth_url, args.token)
+    return fix_all_workspace_info(args.ws_url, args.auth_url, args.token, args.max_id)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

@@ -172,7 +172,7 @@ def _load_workspace_data(ws, ws_data, idx, narrative_ver):
 def main():
     admin_token = create_user(mini_ws_admin)
     admin_ws = Workspace(url=mini_ws_url, token=admin_token)
-#    versions = load_narrative_type(admin_ws)
+    # versions = load_narrative_type(admin_ws)
     versions = {
         'old_ver': '1.0',
         'new_ver': '2.0'
@@ -183,7 +183,7 @@ def main():
     loaded_info = load_narrative_test_data(user_ws, versions)
     pprint(loaded_info)
 
-    fix_all_workspace_info(mini_ws_url, mini_auth_url, admin_token)
+    fix_all_workspace_info(mini_ws_url, mini_auth_url, admin_token, 100)
     for ws_data in loaded_info:
         ws_id = ws_data['ws_id']
         ws_meta = user_ws.get_workspace_info({'id': ws_id})[8]

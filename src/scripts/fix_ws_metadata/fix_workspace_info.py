@@ -14,7 +14,9 @@ import json
 from biokbase.workspace.client import Workspace
 import biokbase.workspace.baseclient as baseclient
 
-def fix_all_workspace_info(ws_url, auth_url, token, max_id):
+DEFAULT_OUTPUT_FILE='update_results.json'
+
+def fix_all_workspace_info(ws_url, auth_url, token, max_id, outfile=DEFAULT_OUTPUT_FILE):
     """
     Iterates over all workspaces available at the ws_url endpoint, using the given admin token,
     and applies _fix_single_workspace_info to each.
@@ -223,6 +225,7 @@ def parse_args(args):
     p.add_argument("-w", "--ws_url", dest="ws_url", default=None, help="Workspace service endpoint")
     p.add_argument("-a", "--auth_url", dest="auth_url", default=None, help="Auth service endpoint")
     p.add_argument("-m", "--max_id", dest="max_id", default=40000, help="Highest workspace id to fix (will ignore any others in the way)")
+    p.add_argument("-o", "--outfile", dest="outfile", default=DEFAULT_OUTPUT_FILE, help="Output JSON file for results of the fix")
     args = p.parse_args(args)
     if args.ws_url is None:
         raise ValueError("ws_url - the Workspace service endpoint - is required!")
@@ -234,7 +237,7 @@ def parse_args(args):
 
 def main(args):
     args = parse_args(args)
-    return fix_all_workspace_info(args.ws_url, args.auth_url, args.token, args.max_id)
+    return fix_all_workspace_info(args.ws_url, args.auth_url, args.token, args.max_id, args.outfile)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

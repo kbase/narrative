@@ -172,9 +172,9 @@ class TestWSInfoFix(unittest.TestCase):
         fake_ws = MockWorkspace()
         fix_workspace_info.Workspace = MockWorkspace
         with self.assertRaises(HTTPError):
-            fix_workspace_info.fix_all_workspace_info('fake_ws', 'fake_auth', 'bad_token')
+            fix_workspace_info.fix_all_workspace_info('fake_ws', 'fake_auth', 'bad_token', 20)
 
-        fix_workspace_info.fix_all_workspace_info('fake_ws', 'fake_auth', 'good_token')
+        fix_workspace_info.fix_all_workspace_info('fake_ws', 'fake_auth', 'good_token', 20)
         # TODO: add actual tests for results of "database"
         # ws1 - no change to metadata
         self.assertEqual(fake_ws.fake_ws_db['1']['ws_info'][8], {})
@@ -227,6 +227,24 @@ class TestWSInfoFix(unittest.TestCase):
             'is_temporary': 'false',
             'narrative': '3',
             'narrative_nice_name': 'Test7',
+            'cell_count': '1',
+            'searchtags': 'narrative'
+        })
+
+        # ws8 - missing metadata all together, so add it
+        self.assertEqual(fake_ws.fake_ws_db['8']['ws_info'][8], {
+            'is_temporary': 'false',
+            'narrative': '3',
+            'narrative_nice_name': 'Test8',
+            'cell_count': '1',
+            'searchtags': 'narrative'
+        })
+
+        # ws9 - missing metadata here, too, but it's temporary
+        self.assertEqual(fake_ws.fake_ws_db['9']['ws_info'][8], {
+            'is_temporary': 'true',
+            'narrative': '3',
+            'narrative_nice_name': 'Untitled',
             'cell_count': '1',
             'searchtags': 'narrative'
         })

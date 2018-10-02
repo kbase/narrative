@@ -147,5 +147,40 @@
             "narrative_nice_name": "Test7"
         }],
         "perms": { "user7": "a" }
-    }
-}
+    },
+    "8": {
+        "objects": {
+            "3": {
+                "info": [3, "Narrative.7", "KBaseNarrative.Narrative-1.0", "timestamp", 75, "user7", 7, "user7:narrative_7", "hash", 12375, null],
+                "data": {
+                    "metadata": {
+                        "name": "Test8"
+                    },
+                    "worksheets": [{
+                        "cells": [{
+                            "cell_type": "markdown"
+                        }]
+                    }]
+                }
+            }
+        },
+        "ws_info": [7, "user7:narrative_7", "user7", "timestamp", 5, "a", "n", "unlocked", {}],
+        "perms": { "user7": "a" }
+    },
+    "9": {
+        "objects": {
+            "3": {
+                "info": [3, "Narrative.7", "KBaseNarrative.Narrative-1.0", "timestamp", 1, "user7", 7, "user7:narrative_7", "hash", 12375, null],
+                "data": {
+                    "metadata": {
+                        "name": "Untitled"
+                    },
+                    "cells": [{
+                        "cell_type": "markdown"
+                    }]
+                }
+            }
+        },
+        "ws_info": [7, "user7:narrative_7", "user7", "timestamp", 5, "a", "n", "unlocked", {}],
+        "perms": { "user7": "a" }
+    }}

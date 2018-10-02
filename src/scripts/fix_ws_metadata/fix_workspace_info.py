@@ -29,12 +29,28 @@ def fix_all_workspace_info(ws_url, auth_url, token, max_id):
 
     user_id = _get_user_id(auth_url, token)
     ws = Workspace(url=ws_url, token=token)
+    all_results = {
+        'multiple': [],     # more than 1 narrative, not updated
+        'update': [],       # list of updated narratives
+        'skip': [],         # skipped - likely has 0 narratives
+        'fail': []          # failed because either that id doesn't exist, or it was deleted. maybe locked.
+    }
     for ws_id in range(1, max_id):
         try:
-            _fix_single_workspace_info(ws_id, user_id, ws, verbose=True)
+            result = _fix_single_workspace_info(ws_id, user_id, ws, verbose=True)
+            if result.get('multiple') is not None:
+                all_results['multiple'].append(result['multiple'])
+            if result.get('update') is not None:
+                all_results['update'].append(result['update'])
+            if result.get('skip') is not None:
+                all_results['skip'].append(result['skip'])
         except baseclient.ServerError as e:
             if "No workspace with id" in str(e):
                 print("WS:{} does not exist".format(ws_id))
+            all_results['fail'].append({'id': ws_id, 'error': str(e.message)})
+    print('Done. Results in update_results.json')
+    with open('update_results.json', 'w') as f:
+        f.write(json.dumps(all_results, indent=4))
 
 def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
     """
@@ -44,6 +60,7 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
     assert(ws is not None)
     assert(str(ws_id).isdigit())
 
+    result = dict()
     new_meta = dict()
 
     if verbose:
@@ -69,11 +86,13 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
         if not 'narrative' in ws_meta:
             if verbose:
                 print("WS:{} Found {} Narratives and metadata isn't initialized! Skipping this workspace".format(ws_id, len(narr_obj_list)))
-            return
+            result['skip'] = {'id': ws_id, 'num_narr': len(narr_obj_list), 'moddate': ws_info[3]}
+            return result
         else:
             if verbose:
                 print("WS:{} Found {} Narratives, metadata configured to point to Narrative with obj id {}. Skipping, but do this manually.".format(ws_id, len(narr_obj_list), ws_meta['narrative']))
-            return
+            result['multiple'] = {'id': ws_id, 'num_narr': len(narr_obj_list), 'moddate': ws_info[3]}
+            return result
 
     narr_info = narr_obj_list[0]
     narr_obj_id = narr_info[0]
@@ -143,6 +162,8 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
 
     # ...and update the metadata
     _admin_update_metadata(ws, admin_id, ws_id, new_meta)
+    result['update'] = {'id': ws_id, 'moddate': ws_info[3]}
+    return result
 
 def _admin_update_metadata(ws, admin_id, ws_id, new_meta):
     """

@@ -62,9 +62,7 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
             'id': int(ws_id)
         }
     })
-    # ws_info = ws.get_workspace_info({'id': int(ws_id)})
     ws_meta = ws_info[8]
-    # narr_obj_list = ws.list_objects({'ids': [ws_id], 'type': 'KBaseNarrative.Narrative'})
     if len(narr_obj_list) != 1:
         if not 'narrative' in ws_meta:
             if verbose:
@@ -83,7 +81,6 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
             'objects': [{'ref': '{}/{}'.format(ws_id, narr_obj_id)}]
         }
     })['data'][0]
-    # narr_obj = ws.get_objects2({'objects': [{'ref': '{}/{}'.format(ws_id, narr_obj_id)}]})['data'][0]
     narr_name = narr_obj['data']['metadata']['name']
 
     # 1. Test "narrative" key of ws_meta
@@ -116,6 +113,15 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
         if len(cells) > 1 or cells[0]['cell_type'] != 'markdown':
             if verbose:
                 print("WS:{} Narrative has {} cells and the first is type {} - marking not temporary".format(ws_id, len(cells), cells[0]['cell_type']))
+            new_meta['is_temporary'] = 'false'
+    elif current_temp is None:
+        if len(cells) == 1 and cells[0]['cell_type'] == 'markdown' and narr_name == 'Untitled' and narr_info[4] == 1:
+            if verbose:
+                print("WS:{} Narrative has no 'is_temporary' key - it appears temporary, so marking it that way".format(ws_id))
+            new_meta['is_temporary'] = 'true'
+        else:
+            if verbose:
+                print("WS:{} Narrative has no 'is_temporary' key - it doesn't appear temporary, so marking it that way".format(ws_id))
             new_meta['is_temporary'] = 'false'
 
     # 3. Test "narrative_nice_name" key

@@ -1,78 +1,86 @@
-[
-    {
-        "narratives": [],
-        "ws_meta": {},
-        "perms": { "kbasetest": "a" }
-    },
-    {
-        "narratives": [{
-            "nbformat": 4,
-            "nbformat_minor": 0,
-            "cells": [{
-                "cell_type": "code",
-                "metadata": {}
+{
+    "old": [
+        {
+            "narratives": [{
+                "nbformat": 3,
+                "nbformat_minor": 0,
+                "worksheets": [{
+                    "cells": [{
+                        "cell_type": "code",
+                        "metadata": {}
+                    }, {
+                        "cell_type": "markdown",
+                        "metadata": {}
+                    }],
+                    "metadata": {}
+                }],
+                "metadata": {
+                    "description": "",
+                    "data_dependencies": [],
+                    "name": "OldTest"
+                }
             }],
-            "metadata": {
-                "description": "",
-                "data_dependencies": [],
-                "name": "Test"
-            }
-        }],
-        "ws_meta": {
-            "is_temporary": "false",
-            "narrative": 1,
-            "narrative_nice_name": "Test"
+            "ws_meta": {
+                "is_temporary": "false",
+                "narrative": "1",
+                "narrative_nice_name": "OldTest"
+            },
+            "correct_meta": {
+                "is_temporary": "false",
+                "narrative": "1",
+                "narrative_nice_name": "OldTest",
+                "cell_count": "2",
+                "searchtags": "narrative"
+            },
+            "perms": {"kbasetest": "a"}
         },
-        "perms": {"kbasetest": "a", "wsadmin": "a"}
-    },
-    {
-        "narratives": [{
-            "nbformat": 4,
-            "nbformat_minor": 0,
-            "cells": [{
-                "cell_type": "code",
-                "metadata": {}
-            }, {
-                "cell_type": "markdown",
-                "metadata": {}
+        {
+            "narratives": [{
+                "nbformat": 3,
+                "nbformat_minor": 0,
+                "worksheets": [{
+                    "cells": [{
+                        "cell_type": "code",
+                        "metadata": {}
+                    }, {
+                        "cell_type": "markdown",
+                        "metadata": {}
+                    }, {
+                        "cell_type": "code",
+                        "metadata": {}
+                    }],
+                    "metadata": {}
+                }],
+                "metadata": {
+                    "description": "",
+                    "data_dependencies": [],
+                    "name": "OldTest2"
+                }
             }],
-            "metadata": {
-                "description": "",
-                "data_dependencies": [],
-                "name": "Test3"
-            }
-        }],
-        "ws_meta": {
-            "is_temporary": "true",
-            "narrative": "1",
-            "narrative_nice_name": "Narrative.3"
+            "ws_meta": {
+                "is_temporary": "true",
+                "narrative": "1",
+                "narrative_nice_name": "blahblahwrong"
+            },
+            "correct_meta": {
+                "is_temporary": "false",
+                "narrative": "1",
+                "narrative_nice_name": "OldTest2",
+                "cell_count": "3",
+                "searchtags": "narrative"
+            },
+            "perms": {"kbasetest": "a"}
+        }
+    ],
+    "new": [
+        {
+            "narratives": [],
+            "ws_meta": {},
+            "correct_meta": {},
+            "perms": { "kbasetest": "a" }
         },
-        "perms": { "kbasetest": "a", "wsadmin": "r" }
-    },
-    {
-        "narratives": [{
-            "nbformat": 4,
-            "nbformat_minor": 0,
-            "cells": [{
-                "cell_type": "markdown",
-                "metadata": {}
-            }],
-            "metadata": {
-                "description": "",
-                "data_dependencies": [],
-                "name": "Untitled"
-            }
-        }],
-        "ws_meta": {
-            "is_temporary": "true",
-            "narrative": "1",
-            "narrative_nice_name": "Test4"
-        },
-        "perms": {"kbasetest": "a"}
-    },
-    {
-        "narratives": [
-            {
+        {
+            "narratives": [{
                 "nbformat": 4,
                 "nbformat_minor": 0,
                 "cells": [{
@@ -82,9 +90,25 @@
                 "metadata": {
                     "description": "",
                     "data_dependencies": [],
-                    "name": "Test5"
+                    "name": "Test"
                 }
-            }, {
+            }],
+            "ws_meta": {
+                "is_temporary": "false",
+                "narrative": "1",
+                "narrative_nice_name": "Test"
+            },
+            "correct_meta": {
+                "is_temporary": "false",
+                "narrative": "1",
+                "narrative_nice_name": "Test",
+                "searchtags": "narrative",
+                "cell_count": "1"
+            },
+            "perms": {"kbasetest": "a", "wsadmin": "a"}
+        },
+        {
+            "narratives": [{
                 "nbformat": 4,
                 "nbformat_minor": 0,
                 "cells": [{
@@ -94,36 +118,170 @@
                 "metadata": {
                     "description": "",
                     "data_dependencies": [],
-                    "name": "Test6"
+                    "name": "TestEmptyMeta"
                 }
-            }
-        ],
-        "ws_meta": {
-            "is_temporary": "false",
-            "narrative": "1",
-            "narrative_nice_name": "Test5"
-        },
-        "perms": {"kbasetest": "a"}
-    },
-    {
-        "narratives": [{
-            "nbformat": 4,
-            "nbformat_minor": 0,
-            "cells": [{
-                "cell_type": "code",
-                "metadata": {}
             }],
-            "metadata": {
-                "description": "",
-                "data_dependencies": [],
-                "name": "Test7"
-            }
-        }],
-        "ws_meta": {
-            "is_temporary": "false",
-            "narrative": "Narrative.7",
-            "narrative_nice_name": "Test7"
+            "ws_meta": {
+            },
+            "correct_meta": {
+                "is_temporary": "false",
+                "narrative": "1",
+                "narrative_nice_name": "TestEmptyMeta",
+                "searchtags": "narrative",
+                "cell_count": "1"
+            },
+            "perms": {"kbasetest": "a", "wsadmin": "a"}
         },
-        "perms": {"kbasetest": "a"}
-    }
-]
+        {
+            "narratives": [{
+                "nbformat": 4,
+                "nbformat_minor": 0,
+                "cells": [{
+                    "cell_type": "markdown",
+                    "metadata": {}
+                }],
+                "metadata": {
+                    "description": "",
+                    "data_dependencies": [],
+                    "name": "Untitled"
+                }
+            }],
+            "ws_meta": {
+            },
+            "correct_meta": {
+                "is_temporary": "true",
+                "narrative": "1",
+                "narrative_nice_name": "Untitled",
+                "searchtags": "narrative",
+                "cell_count": "1"
+            },
+            "perms": {"kbasetest": "a", "wsadmin": "a"}
+        },        {
+            "narratives": [{
+                "nbformat": 4,
+                "nbformat_minor": 0,
+                "cells": [{
+                    "cell_type": "code",
+                    "metadata": {}
+                }, {
+                    "cell_type": "markdown",
+                    "metadata": {}
+                }],
+                "metadata": {
+                    "description": "",
+                    "data_dependencies": [],
+                    "name": "Test3"
+                }
+            }],
+            "ws_meta": {
+                "is_temporary": "true",
+                "narrative": "1",
+                "narrative_nice_name": "Narrative.3"
+            },
+            "correct_meta": {
+                "is_temporary": "false",
+                "narrative": "1",
+                "narrative_nice_name": "Test3",
+                "searchtags": "narrative",
+                "cell_count": "2"
+            },
+            "perms": { "kbasetest": "a", "wsadmin": "r" }
+        },
+        {
+            "narratives": [{
+                "nbformat": 4,
+                "nbformat_minor": 0,
+                "cells": [{
+                    "cell_type": "markdown",
+                    "metadata": {}
+                }],
+                "metadata": {
+                    "description": "",
+                    "data_dependencies": [],
+                    "name": "Untitled"
+                }
+            }],
+            "ws_meta": {
+                "is_temporary": "true",
+                "narrative": "1",
+                "narrative_nice_name": "Test4"
+            },
+            "correct_meta": {
+                "is_temporary": "true",
+                "narrative": "1",
+                "narrative_nice_name": "Untitled",
+                "cell_count": "1",
+                "searchtags": "narrative"
+            },
+            "perms": {"kbasetest": "a"}
+        },
+        {
+            "narratives": [
+                {
+                    "nbformat": 4,
+                    "nbformat_minor": 0,
+                    "cells": [{
+                        "cell_type": "code",
+                        "metadata": {}
+                    }],
+                    "metadata": {
+                        "description": "",
+                        "data_dependencies": [],
+                        "name": "Test5"
+                    }
+                }, {
+                    "nbformat": 4,
+                    "nbformat_minor": 0,
+                    "cells": [{
+                        "cell_type": "code",
+                        "metadata": {}
+                    }],
+                    "metadata": {
+                        "description": "",
+                        "data_dependencies": [],
+                        "name": "Test6"
+                    }
+                }
+            ],
+            "ws_meta": {
+                "is_temporary": "false",
+                "narrative": "1",
+                "narrative_nice_name": "Test5"
+            },
+            "correct_meta": {
+                "is_temporary": "false",
+                "narrative": "1",
+                "narrative_nice_name": "Test5"
+            },
+            "perms": {"kbasetest": "a"}
+        },
+        {
+            "narratives": [{
+                "nbformat": 4,
+                "nbformat_minor": 0,
+                "cells": [{
+                    "cell_type": "code",
+                    "metadata": {}
+                }],
+                "metadata": {
+                    "description": "",
+                    "data_dependencies": [],
+                    "name": "Test7"
+                }
+            }],
+            "ws_meta": {
+                "is_temporary": "false",
+                "narrative": "Narrative.7",
+                "narrative_nice_name": "Test7"
+            },
+            "correct_meta": {
+                "is_temporary": "false",
+                "narrative": "1",
+                "narrative_nice_name": "Test7",
+                "searchtags": "narrative",
+                "cell_count": "1"
+            },
+            "perms": {"kbasetest": "a"}
+        }
+    ]
+}

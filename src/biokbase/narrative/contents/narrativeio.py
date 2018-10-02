@@ -225,7 +225,9 @@ class KBaseWSManagerMixin(object):
         try:
             updated_metadata = {
                 u'is_temporary': u'false',
-                u'narrative_nice_name': nb[u'metadata'][u'name']
+                u'narrative_nice_name': nb[u'metadata'][u'name'],
+                u'cell_count': str(len(nb[u'cells'])),
+                u'searchtags': 'narrative'
             }
             self.ws_client().alter_workspace_metadata({u'wsi': {u'id': ws_id}, u'new':updated_metadata})
         except ServerError, err:

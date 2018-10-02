@@ -8,6 +8,7 @@ from biokbase.narrative.contents.narrativeio import (
     PermissionsError
 )
 from biokbase.workspace.baseclient import ServerError
+from biokbase.workspace.client import Workspace
 import biokbase.auth
 from tornado.web import HTTPError
 import util
@@ -242,6 +243,11 @@ class NarrIOTestCase(unittest.TestCase):
         result = self.mixin.write_narrative(self.private_nar['ref'], nar, self.test_user)
         self.assertTrue(result[1] == self.private_nar['ws'] and result[2] == self.private_nar['obj'])
         self.assertEquals(result[0]['metadata']['is_temporary'], 'false')
+
+        ws = Workspace(url=URLS.workspace, token=self.test_token)
+        ws_info = ws.get_workspace_info({'id': result[1]})
+        self.assertEquals(ws_info[8]['searchtags'], 'narrative')
+        self.assertEquals(ws_info[8]['cell_count'], str(len(nar['cells'])))
         self.logout()
 
     def test_write_narrative_valid_anon(self):

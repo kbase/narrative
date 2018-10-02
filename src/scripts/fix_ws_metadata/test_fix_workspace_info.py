@@ -158,15 +158,15 @@ class TestWSInfoFix(unittest.TestCase):
             }
         })['perms'][0].get(FAKE_ADMIN_ID), 'r')
 
-    @mock.patch('scripts.fix_workspace_info.requests.get', side_effect=mocked_requests_get)
+    @mock.patch('src.scripts.fix_ws_metadata.fix_workspace_info.requests.get', side_effect=mocked_requests_get)
     def test__get_user_id(self, request_mock):
         userid = fix_workspace_info._get_user_id('some_endpoint', 'goodtoken')
         self.assertEqual(userid, FAKE_ADMIN_ID)
         with self.assertRaises(HTTPError):
             fix_workspace_info._get_user_id('some_endpoint', 'badtoken')
 
-    @mock.patch('scripts.fix_workspace_info.requests.get', side_effect=mocked_requests_get)
-    @mock.patch('scripts.fix_workspace_info.Workspace')
+    @mock.patch('src.scripts.fix_ws_metadata.fix_workspace_info.requests.get', side_effect=mocked_requests_get)
+    @mock.patch('src.scripts.fix_ws_metadata.fix_workspace_info.Workspace')
     def test_fix_all_workspace_info(self, ws_mock, request_mock):
         reset_fake_ws_db()
         fake_ws = MockWorkspace()

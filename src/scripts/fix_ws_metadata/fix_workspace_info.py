@@ -14,7 +14,7 @@ import json
 from biokbase.workspace.client import Workspace
 import biokbase.workspace.baseclient as baseclient
 
-MAX_WS_ID = 10 #45000  # make this somewhat reasonable. I think the max ws in prod is +/- 40000
+MAX_WS_ID = 100 #45000  # make this somewhat reasonable. I think the max ws in prod is +/- 40000
 
 def fix_all_workspace_info(ws_url, auth_url, token):
     """

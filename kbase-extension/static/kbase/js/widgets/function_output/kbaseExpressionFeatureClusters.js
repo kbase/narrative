@@ -127,7 +127,7 @@ define (
                                     return self.ws.callFunc('get_object_subset', [[{ 
                                         ref: self.genomeRef, 
                                         included: ['/id', '/scientific_name', '/features/[*]/id', 'features/[*]/type',
-                                            'features/[*]/function', 'features/[*]/aliases'] 
+                                            'features/[*]/function', 'features/[*]/functions', 'features/[*]/aliases']
                                     }]])
                                         .spread(function(result) {
                                             var data = result[0];

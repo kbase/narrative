@@ -13,8 +13,8 @@ __author__ = 'James Jeffryes <jjeffryes@mcs.anl.gov>'
 class ViewersTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.condition_set_ref = "28852/13/1"
-        cls.generic_type_ref = "28852/12/2"
+        cls.attribute_set_ref = "36095/73/1"
+        cls.generic_ref = "36095/74/1"
         cls.expression_matrix_ref = "28852/11/1"
         config = util.TestConfig()
         cls.user_id = config.get('users', 'test_user')
@@ -28,64 +28,68 @@ class ViewersTestCase(unittest.TestCase):
     def test_bad_view_as_clustergrammer_params(self):
         from biokbase.narrative import viewers
         with self.assertRaises(AssertionError):
-            viewers.view_as_clustergrammer(self.generic_type_ref, col_categories="Time")
+            viewers.view_as_clustergrammer(self.generic_ref, col_categories="Time")
         with self.assertRaises(AssertionError):
-            viewers.view_as_clustergrammer(self.generic_type_ref, row_categories="Time")
+            viewers.view_as_clustergrammer(self.generic_ref, row_categories="Time")
         with self.assertRaises(AssertionError):
-            viewers.view_as_clustergrammer(self.generic_type_ref, normalize_on="Time")
+            viewers.view_as_clustergrammer(self.generic_ref, normalize_on="Time")
         with self.assertRaisesRegexp(ValueError, "not a compatible data type"):
-            viewers.view_as_clustergrammer(self.condition_set_ref)
+            viewers.view_as_clustergrammer(self.attribute_set_ref)
 
     def test__get_categories(self):
+        import pandas as pd
         from biokbase.narrative import viewers
-        ids = ["condition_1", "condition_2", "condition_3", "condition_4"]
+        ids = ["WRI_RS00010_CDS_1", "WRI_RS00015_CDS_1", "WRI_RS00025_CDS_1"]
         mapping = {
-            "condition_1": "test_condition_1",
-            "condition_2": "test_condition_2",
-            "condition_3": "test_condition_3",
-            "condition_4": "test_condition_3"
+            "WRI_RS00010_CDS_1": "test_row_instance_1",
+            "WRI_RS00015_CDS_1": "test_row_instance_2",
+            "WRI_RS00025_CDS_1": "test_row_instance_3"
         }
-        index = [
-             ('condition_1',
-              'test_factor_1:1-1',
-              'test_factor_2:1-2',
-              'test_factor_3:1-3'),
-             ('condition_2',
-              'test_factor_1:2-1',
-              'test_factor_2:2-2',
-              'test_factor_3:2-3'),
-             ('condition_3',
-              'test_factor_1:3-1',
-              'test_factor_2:3-2',
-              'test_factor_3:3-3'),
-             ('condition_4',
-              'test_factor_1:3-1',
-              'test_factor_2:3-2',
-              'test_factor_3:3-3')]
-        filtered_index = [
-             ('condition_1', 'test_factor_1:1-1'),
-             ('condition_2', 'test_factor_1:2-1'),
-             ('condition_3', 'test_factor_1:3-1'),
-             ('condition_4', 'test_factor_1:3-1')]
-        self.assertEqual(ids, viewers._get_categories(ids))
+        index = [('WRI_RS00010_CDS_1',
+                  'test_attribute_1: 1',
+                  'test_attribute_2: 4',
+                  'test_attribute_3: 7'),
+                 ('WRI_RS00015_CDS_1',
+                  'test_attribute_1: 2',
+                  'test_attribute_2: 5',
+                  'test_attribute_3: 8'),
+                 ('WRI_RS00025_CDS_1',
+                  'test_attribute_1: 3',
+                  'test_attribute_2: 6',
+                  'test_attribute_3: 9')]
+        filtered_index = [('WRI_RS00010_CDS_1', 'test_attribute_1: 1'),
+                          ('WRI_RS00015_CDS_1', 'test_attribute_1: 2'),
+                          ('WRI_RS00025_CDS_1', 'test_attribute_1: 3')]
+        multi_index = pd.MultiIndex(levels=[[u'WRI_RS00010_CDS_1', u'WRI_RS00015_CDS_1', u'WRI_RS00025_CDS_1'], [u'1', u'2', u'3']],
+                                    labels=[[0, 1, 2], [0, 1, 2]], names=[u'ID', u'test_attribute_1'])
+        self.assertEqual(ids, viewers._get_categories(ids, self.generic_ref))
         with self.assertRaisesRegexp(ValueError, "not in the provided mapping"):
-            viewers._get_categories(['boo'], self.condition_set_ref, mapping)
-        with self.assertRaisesRegexp(ValueError, "has no condition"):
-            viewers._get_categories(['boo'], self.condition_set_ref)
-        self.assertEqual(index, viewers._get_categories(ids, self.condition_set_ref, mapping))
-        self.assertEqual(filtered_index, viewers._get_categories(ids, self.condition_set_ref,
-                                                                 mapping, {"test_factor_1"}))
+            viewers._get_categories(['boo'], self.generic_ref, self.attribute_set_ref, mapping)
+        with self.assertRaisesRegexp(ValueError, "has no attribute"):
+            viewers._get_categories(['boo'], self.generic_ref, self.attribute_set_ref)
+        self.assertEqual(index,
+                         viewers._get_categories(ids, self.generic_ref, self.attribute_set_ref,
+                                                 mapping, clustergrammer=True))
+        pd.testing.assert_index_equal(
+            multi_index, viewers._get_categories(ids, self.generic_ref, self.attribute_set_ref,
+                                                 mapping, {"test_attribute_1"}))
+        self.assertEqual(filtered_index,
+                         viewers._get_categories(ids, self.generic_ref, self.attribute_set_ref,
+                                                 mapping, {"test_attribute_1"}, clustergrammer=True))
 
-    def test__get_df(self):
+    def test_get_df(self):
         from biokbase.narrative import viewers
-        res = viewers._get_df(self.generic_type_ref, (), ())
+        res = viewers.get_df(self.generic_ref)
         self.assertEqual(str(type(res)), "<class 'pandas.core.frame.DataFrame'>")
         self.assertEqual(res.shape, (3, 4))
-        res = viewers._get_df(self.expression_matrix_ref, (), ())
+        res = viewers.get_df(self.generic_ref, clustergrammer=True)
+        self.assertEqual(str(type(res)), "<class 'pandas.core.frame.DataFrame'>")
+        self.assertEqual(res.shape, (3, 4))
+        res = viewers.get_df(self.expression_matrix_ref)
         self.assertEqual(str(type(res)), "<class 'pandas.core.frame.DataFrame'>")
         self.assertEqual(res.shape, (4297, 16))
 
     def test_view_as_clustergrammer(self):
         from biokbase.narrative import viewers
-        self.assertEqual(str(type(viewers.view_as_clustergrammer(self.generic_type_ref))),
+        self.assertEqual(str(type(viewers.view_as_clustergrammer(self.generic_ref))),
                          "<class 'clustergrammer_widget.example.clustergrammer_widget'>")

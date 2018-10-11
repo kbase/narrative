@@ -61,6 +61,13 @@ define (
                 var refPathItems = this.ref.split(';');
                 this.objId = refPathItems[refPathItems.length - 1].trim().split('/')[1];
             }
+            this.ws = new Workspace(self.wsUrl, {token: this.token});
+            this.ws.get_object_info3({'objects':[{'ref':this.ref}]},
+                    (objectinfo) => {
+                this.objId = objectinfo.infos[0][1];
+                this.ref = this.ref.split("/").slice(0, -1).join("/") + "/" + this.objId;
+            }
+                );
             this.downloadSpecCache = options['downloadSpecCache'];
             var lastUpdateTime = this.downloadSpecCache['lastUpdateTime'];
             if (lastUpdateTime) {

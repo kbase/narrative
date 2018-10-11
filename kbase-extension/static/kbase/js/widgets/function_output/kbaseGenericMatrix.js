@@ -12,12 +12,14 @@ define ([
     'narrativeConfig',
     'kbase-generic-client-api',
     // For effect
+    'bluebird',
     'bootstrap',
     'jquery-dataTables',
     'datatables.net-buttons',
     'datatables.net-buttons-bs',
     'datatables.net-buttons-html5',
-    'datatables.net-buttons-print'
+    'datatables.net-buttons-print',
+    'datatables.net-buttons-colvis',
 ], function(
     Uuid,
     $,
@@ -42,11 +44,12 @@ define ([
         // Prefix for all div ids
         pref: null,
 
-        // KBaseFeatureValue client
-        featureValueClient: null,
-
         // Matrix data to be visualized
         matrixStat: null,
+        colAttributeData: null,
+        rowAttributeData: null,
+        colMapping: null,
+        rowMapping: null,
 
         init: function(options) {
             this._super(options);
@@ -65,6 +68,8 @@ define ([
                 this.showMessage('[Error] Couldn\'t retrieve the matrix.');
                 return this;
             }
+            this.loading(true);
+            this.wsClient = new Workspace(Config.url('workspace'), {token: auth.token});
 
             this.genericClient = new GenericClient(
               Config.url('service_wizard'),
@@ -83,42 +88,65 @@ define ([
         },
 
         loadAndRender: function(){
-            var self = this;
+            let self = this;
+            const matrixRef = this.options.upas.matrixID;
 
-            self.loading(true);
-            var matrixRef = this.options.upas.matrixID;
-
-            var get_matrix_stat_promise = self.genericClient.sync_call('KBaseFeatureValues.get_matrix_stat', [{
+            let get_matrix_stat_promise = self.genericClient.sync_call('KBaseFeatureValues.get_matrix_stat', [{
                 input_data: matrixRef
             }]);
-
-            get_matrix_stat_promise
-              .then( function (res) {
-                self.matrixStat = res[0];
-                self.render();
-                self.loading(false);
-              })
-              .catch(function(error){
-                self.clientError(error);
+            self.wsClient.get_objects2({
+                objects: [{ref: matrixRef, included: [
+                    'col_attributemapping_ref',
+                    'row_attributemapping_ref',
+                    'col_mapping',
+                    'row_mapping',
+                ]}],
+            }).then(function (res) {
+                let col_attribute_prom, row_attribute_prom;
+                let data = res.data[0].data;
+                if (data.col_attributemapping_ref) {
+                    col_attribute_prom = self.wsClient.get_objects2(
+                        {'objects': [{ref: data.col_attributemapping_ref}]})
+                };
+                if (data.row_attributemapping_ref) {
+                    row_attribute_prom = self.wsClient.get_objects2(
+                        {'objects': [{ref: data.row_attributemapping_ref}]})
+                };
+                self.colMapping = data.col_mapping;
+                self.rowMapping = data.row_mapping;
+                Promise.all([get_matrix_stat_promise, col_attribute_prom, row_attribute_prom]).then(
+                    function (res2) {
+                        self.matrixStat = res2[0][0];
+                        self.colAttributeData = res2[1] ? res2[1].data[0].data : null;
+                        self.rowAttributeData = res2[2] ? res2[2].data[0].data : null;
+                        self.render();
+                        self.loading(false);
               });
+            }).catch(function(error){
+                self.clientError(error);
+            });
         },
 
         render: function() {
-            var self = this;
-            var pref = this.pref;
-            var container = this.$elem;
-            var matrixStat = this.matrixStat;
+            let self = this;
+            let pref = this.pref;
+            let container = this.$elem;
+            let matrixStat = this.matrixStat;
+            let jqueryTblConfig = {
+                    'dom': "<'row'<'col-sm-6'B><'col-sm-6'f>>t<'row'<'col-sm-4'i><'col-sm-8'lp>>",
+                    'buttons': ['copy', 'csv', 'print', 'colvis'],
+                };
 
             ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
             container.empty();
-            var tabPane = $('<div id="'+pref+'tab-content">');
+            let tabPane = $('<div id="'+pref+'tab-content">');
             container.append(tabPane);
 
-            var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+            let tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             ///////////////////////////////////// Overview table ////////////////////////////////////////////
-            var tabOverview = $('<div/>');
+            let tabOverview = $('<div/>');
             tabWidget.addTab({tab: 'Overview', content: tabOverview, canDelete : false, show: true});
-            var tableOver = $('<table class="table table-striped table-bordered" '+
+            let tableOver = $('<table class="table table-striped table-bordered" '+
                 'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="'+pref+'overview-table"/>');
             tabOverview.append(tableOver);
             tableOver
@@ -133,105 +161,122 @@ define ([
 
             /////////////////////////////////// Column tab ////////////////////////////////////////////
 
-            var $tabColumns = $('<div/>');
+            let $tabColumns = $('<div/>');
             tabWidget.addTab({tab: 'Columns', content: $tabColumns, canDelete : false, show: false});
 
             ///////////////////////////////////// Column table ////////////////////////////////////////////
             $tabColumns.append(
-                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated across all rows in a column</div>')
+                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">' +
+                    'Statistics calculated across all rows in a column</div>')
             );
-
 
             $('<table id="'+pref+'column-table" \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
                 </table>')
                 .appendTo($tabColumns)
-                .dataTable( {
-                    'dom': "<'row'<'col-sm-6'B><'col-sm-6'f>>t<'row'<'col-sm-4'i><'col-sm-8'lp>>",
-                    'data': self.buildColumnTableData(),
-                    'buttons': ['copy', 'csv', 'print'],
-                    'columns': [
-                        { title: 'Column ID', data:'name' },
-                        { title: 'Min', data:'min' },
-                        { title: 'Max', data:'max' },
-                        { title: 'Average', data:'avg' },
-                        { title: 'Std. Dev.', data:'std'},
-                        { title: 'Missing Values?',  data:'missing_values' }
-                    ]
-                } );
+                .dataTable(Object.assign(self.buildColumnTableData(), jqueryTblConfig));
 
             ///////////////////////////////////// Rows tab ////////////////////////////////////////////
-            var $tabRows = $('<div/>');
+            let $tabRows = $('<div/>');
             tabWidget.addTab({tab: 'Rows', content: $tabRows, canDelete : false, show: false});
 
             ///////////////////////////////////// Rows table ////////////////////////////////////////////
             $tabRows.append(
-                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated across all columns for the row</div>')
+                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">' +
+                    'Statistics calculated across all columns for the row</div>')
             );
 
             $('<table id="'+pref+'row-table" \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
                 </table>')
                 .appendTo($tabRows)
-                .dataTable({
-                    dom: "<'row'<'col-sm-6'B><'col-sm-6'f>>t<'row'<'col-sm-4'i><'col-sm-8'lp>>",
-                    data: self.buildRowTableData(),
-                    columns: [
-                        { title: 'Row ID', data: 'id'},
-                        { title: 'Min', data:'min' },
-                        { title: 'Max', data:'max' },
-                        { title: 'Average', data:'avg' },
-                        { title: 'Std. Dev.', data:'std'},
-                        { title: 'Missing Values?', data:'missing_values' }
-                        ],
-                    buttons: ['copy', 'csv', 'print']
-                });
+                .dataTable(Object.assign(self.buildRowTableData(), jqueryTblConfig));
         },
 
         buildColumnTableData: function(){
-            var matrixStat = this.matrixStat;
-            var tableData = [];
-            for(var i = 0; i < matrixStat.column_descriptors.length; i++){
-                var desc = matrixStat.column_descriptors[i];
-                var stat = matrixStat.column_stats[i];
-                tableData.push({
-                    index: desc.index,
-                    id: desc.id,
-                    name: desc.name,
-                    min: $.isNumeric(stat.min) ? stat.min.toFixed(2) : null,
-                    max: $.isNumeric(stat.max) ? stat.max.toFixed(2) : null,
-                    avg: $.isNumeric(stat.avg) ? stat.avg.toFixed(2) : null,
-                    std: $.isNumeric(stat.std) ? stat.std.toFixed(2) : null,
-                    missing_values: stat.missing_values ? 'Yes' : 'No'
-                });
+            let matrixStat = this.matrixStat;
+            let tableData = [];
+            let tableColumns = [{ title: 'Column ID'}];
+            if (this.colAttributeData) {
+                this.colAttributeData.attributes.forEach(
+                    attr => {tableColumns.push({'title': attr.attribute})})
+            };
+
+            for(let i = 0; i < matrixStat.column_descriptors.length; i++){
+                let desc = matrixStat.column_descriptors[i];
+                let stat = matrixStat.column_stats[i];
+                let tableRow = [desc.id];
+                if (this.colAttributeData) {
+                    if (this.colMapping) {
+                        tableRow = tableRow.concat(
+                            this.colAttributeData.instances[this.colMapping[desc.id]]
+                        );
+                    } else {
+                        tableRow = tableRow.concat(this.colAttributeData.instances[desc.id]);
+                    }
+                }
+                tableRow.push(
+                    $.isNumeric(stat.min) ? stat.min.toFixed(2) : null,
+                    $.isNumeric(stat.max) ? stat.max.toFixed(2) : null,
+                    $.isNumeric(stat.avg) ? stat.avg.toFixed(2) : null,
+                    $.isNumeric(stat.std) ? stat.std.toFixed(2) : null,
+                    stat.missing_values ? 'Yes' : 'No'
+                );
+                tableData.push(tableRow);
             }
-            return tableData;
+            tableColumns.push(
+                { title: 'Min'},
+                { title: 'Max'},
+                { title: 'Average'},
+                { title: 'Std. Dev.'},
+                { title: 'Missing Values?'}
+                );
+            return {data: tableData, columns: tableColumns};
         },
 
         buildRowTableData: function(){
-            var matrixStat = this.matrixStat;
-            var tableData = [];
-            for(var i = 0; i < matrixStat.row_descriptors.length; i++){
-                var desc = matrixStat.row_descriptors[i];
-                var stat = matrixStat.row_stats[i];
-                tableData.push(
-                    {
-                        index: desc.index,
-                        id: desc.id,
-                        name: desc.name,
-                        min: $.isNumeric(stat.min) ? stat.min.toFixed(2) : null,
-                        max: $.isNumeric(stat.max) ? stat.max.toFixed(2) : null,
-                        avg: $.isNumeric(stat.avg) ? stat.avg.toFixed(2) : null,
-                        std: $.isNumeric(stat.std) ? stat.std.toFixed(2) : null,
-                        missing_values: stat.missing_values ? 'Yes' : 'No'
+            let matrixStat = this.matrixStat;
+            let tableData = [];
+            let tableColumns = [{ title: 'Row ID'}];
+            if (this.rowAttributeData) {
+                this.rowAttributeData.attributes.forEach(
+                    attr => {tableColumns.push({'title': attr.attribute})})
+            };
+
+            for(let i = 0; i < matrixStat.row_descriptors.length; i++){
+                let desc = matrixStat.row_descriptors[i];
+                let stat = matrixStat.row_stats[i];
+                let tableRow = [desc.id];
+                if (this.rowAttributeData) {
+                    if (this.rowMapping) {
+                        tableRow = tableRow.concat(
+                            this.rowAttributeData.instances[this.rowMapping[desc.id]]
+                        );
+                    } else {
+                        tableRow = tableRow.concat(this.rowAttributeData.instances[desc.id]);
                     }
+                }
+                tableRow.push(
+                    $.isNumeric(stat.min) ? stat.min.toFixed(2) : null,
+                    $.isNumeric(stat.max) ? stat.max.toFixed(2) : null,
+                    $.isNumeric(stat.avg) ? stat.avg.toFixed(2) : null,
+                    $.isNumeric(stat.std) ? stat.std.toFixed(2) : null,
+                    stat.missing_values ? 'Yes' : 'No'
                 );
+                tableData.push(tableRow);
             }
-            return tableData;
+            tableColumns.push(
+                { title: 'Min'},
+                { title: 'Max'},
+                { title: 'Average'},
+                { title: 'Std. Dev.'},
+                { title: 'Missing Values?'}
+                );
+            return {data: tableData, columns: tableColumns};
         },
 
         makeRow: function(name, value) {
-            var $row = $('<tr/>')
+            let $row = $('<tr/>')
                 .append($('<th />').css('width','20%').append(name))
                 .append($('<td />').append(value));
             return $row;
@@ -246,7 +291,7 @@ define ([
         },
 
         showMessage: function(message) {
-            var span = $('<span/>').append(message);
+            let span = $('<span/>').append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();

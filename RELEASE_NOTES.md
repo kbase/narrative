@@ -3,6 +3,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
 
+### Version 3.8.3
+- SCT-1253 - Replace old RNA-Seq data viewers.
+- SCT-1393 - Fix "Objects Created" links in app outputs.
+- SCT-1370 - Give instructions to users on how to link their account to Globus for uploading data.
+- SCT-1395 - Convert object ref and ids to common names for downloading.
+- Add viewers and support for generic data types.
+- Fix RNA-Seq data viewers, including Feature Clusters.
+
 ### Version 3.8.2
 - Add the clustergrammer_widget
 - SCT-1219 - Fix the app cell so it shows an error if an app has multiple outputs, and they're given the same name.

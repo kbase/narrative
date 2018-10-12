@@ -96,5 +96,17 @@ define ([
                 expect(StringUtil.escape(t[0])).toEqual(t[1]);
             });
         });
+
+        it('escape should do nothing if passed a falsy str', () => {
+            let tests = [
+                ['', ''],
+                [false, false],
+                [undefined, undefined],
+                [null, null]
+            ];
+            tests.forEach(t => {
+                expect(StringUtil.escape(t[0])).toEqual(t[1]);
+            });
+        })
     });
 });

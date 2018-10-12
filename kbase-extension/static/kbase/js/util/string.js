@@ -41,6 +41,9 @@ define([], function() {
      * @public
      */
     function escape (str) {
+        if (!str) {
+            return str;
+        }
         return str.replace(/[&<>"']/g, (s) => {
             const charMap = {
                 '&': '&amp;',

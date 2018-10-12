@@ -47,17 +47,20 @@ define([
      * displayRealName
      */
     function displayRealName(username, $target) {
-        authClient.getUserNames(null, [username])
-        .then(function(user) {
-            var usernameLink = '<a href="' + profilePageUrl + username + '" target="_blank">' + username + '</a>';
-            if (user[username]) {
-                usernameLink = user[username] + ' (' + usernameLink + ')';
-            }
-            $target.html(usernameLink);
-        })
-        .catch(function (err) {
-            console.error(err);
-        });
+        var usernameLink = '<a href="' + profilePageUrl + username + '" target="_blank">' + username + '</a>';
+        return authClient.getUserNames(null, [username])
+            .then((user) => {
+                if (user[username]) {
+                    $target.text(user[username]);
+                    usernameLink = ' (' + usernameLink + ')';
+                }
+            })
+            .catch((err) => {
+                console.error(err);
+            })
+            .finally(() => {
+                $target.append(usernameLink);
+            });
     }
 
     /**

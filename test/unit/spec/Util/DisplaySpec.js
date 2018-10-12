@@ -7,11 +7,13 @@
 define ([
     'jquery',
     'util/display',
-    'narrativeConfig'
+    'narrativeConfig',
+    'util/string'
 ], function(
     $,
     DisplayUtil,
-    Config
+    Config,
+    StringUtil
 ) {
     'use strict';
 
@@ -106,7 +108,30 @@ define ([
                     expect($nameTarget.html()).toEqual('<a href="' + profilePageUrl + userId + '" target="_blank">' + userId + '</a>');
                     done();
                 });
-        })
+        });
+
+        it('displayRealName should deal with hackery usernames as well', (done) => {
+            let userId = '<script>alert("Bad actor")</script>',
+                fullName = "Really Bad Actor",
+                response = {};
+            response[StringUtil.escape(userId)] = fullName;
+            jasmine.Ajax.stubRequest(/.*\/auth\/api\/V2\/users\/\?list/).andReturn({
+                status: 200,
+                statusText: 'success',
+                contentType: 'text/plain',
+                responseHeaders: '',
+                responseText: JSON.stringify(response)
+            });
+            DisplayUtil.displayRealName(userId, $nameTarget)
+                .finally(() => {
+                    let escapedId = StringUtil.escape(userId);
+                    expect($nameTarget.html()).toContain(escapedId);
+                    expect($nameTarget.html()).toContain(StringUtil.escape(fullName));
+                    let idWithQuotes = '&lt;script&gt;alert("Bad actor")&lt;/script&gt;';
+                    expect($nameTarget.html()).toContain(' (<a href="' + profilePageUrl + escapedId + '" target="_blank">' + idWithQuotes + '</a>)');
+                    done();
+                });
+        });
 
         it('getAppIcon() should create a default icons for methods and apps', function() {
             var $icon = DisplayUtil.getAppIcon({});

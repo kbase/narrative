@@ -1,8 +1,9 @@
 define([
     'bluebird',
     'jquery',
+    'util/string',
     'jqueryCookie'
-], function(Promise, $) {
+], function(Promise, $, StringUtil) {
     'use strict';
 
     function factory(config) {
@@ -81,7 +82,8 @@ define([
             if (!token) {
                 token = getAuthToken();
             }
-            var operation = '/users/?list=' + users.join(',');
+            let encodedUsers = users.map(u => encodeURIComponent(u));
+            var operation = '/users/?list=' + encodedUsers.join(',');
             return makeAuthCall(token, {
                 operation: operation,
                 method: 'GET'

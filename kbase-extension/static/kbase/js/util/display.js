@@ -13,6 +13,7 @@ define([
     'bluebird',
     'narrativeConfig',
     'util/timeFormat',
+    'util/string',
     'kbase-client-api',
     'kbaseAccordion',
     'api/auth'
@@ -24,6 +25,7 @@ define([
     Promise,
     Config,
     TimeFormat,
+    StringUtil,
     kbase_client_api,
     KBaseAccordion,
     Auth
@@ -47,11 +49,12 @@ define([
      * displayRealName
      */
     function displayRealName(username, $target) {
-        var usernameLink = '<a href="' + profilePageUrl + username + '" target="_blank">' + username + '</a>';
+        let safeUser = StringUtil.escape(username),
+            usernameLink = '<a href="' + profilePageUrl + safeUser + '" target="_blank">' + safeUser + '</a>';
         return authClient.getUserNames(null, [username])
             .then((user) => {
-                if (user[username]) {
-                    $target.text(user[username]);
+                if (user[safeUser]) {
+                    $target.text(user[safeUser]);
                     usernameLink = ' (' + usernameLink + ')';
                 }
             })

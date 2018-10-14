@@ -2,6 +2,7 @@ from clustergrammer_widget import *
 import pandas as pd
 
 import biokbase.narrative.clients as clients
+from biokbase.narrative.app_util import system_variable
 
 
 def view_as_clustergrammer(ws_ref, col_categories=(), row_categories=(), normalize_on=None):
@@ -9,11 +10,11 @@ def view_as_clustergrammer(ws_ref, col_categories=(), row_categories=(), normali
     This function returns an interactive clustergrammer widget for a specified object. Data type
     must contain a 'data' key with a FloatMatrix2D type value
     :param ws_ref: Object workspace reference
-    :param col_categories: iterable with the permitted factors from the col_conditionset.
-        Defaults to all factors.
-    :param row_categories: iterable with the permitted categories from the row_conditionset.
-        Defaults to all factors.
-    :param normalize_on: If provided, the matrix will be converted to zscores normalized on the
+    :param col_categories: iterable with the permitted factors from the col_attributemapping.
+        Defaults to all factors, pass None to exclude.
+    :param row_categories: iterable with the permitted categories from the row_attributemapping.
+        Defaults to all factors, pass None to exclude.
+    :param normalize_on: If provided, the matrix will be converted to z-scores normalized on the
         'row' or 'column' axis
     :return:
     """
@@ -31,9 +32,23 @@ def view_as_clustergrammer(ws_ref, col_categories=(), row_categories=(), normali
     return net.widget()
 
 
-def get_df(ws_ref, col_categories=(), row_categories=(), clustergrammer=False):
-    """Gets a dataframe from the WS object"""
+def get_df(ws_ref, col_attributes=(), row_attributes=(), clustergrammer=False):
+    """
+    Gets a dataframe from the WS object
+
+    :param ws_ref: The Workspace reference of the 2DMatrix containing object
+    :param col_attributes: Which column attributes should appear in the resulting DataFrame as a
+        multiIndex. Defaults to all attributes, pass None to use a simple index of only ID.
+    :param row_attributes: Which row attributes should appear in the resulting DataFrame as a
+        multiIndex. Defaults to all attributes, pass None to use a simple index of only ID.
+    :param clustergrammer: Returns a DataFrame with Clustergrammer compatible indices and columns.
+        Defaults to False.
+    :return: A Pandas DataFrame
+    """
+
     ws = clients.get('workspace')
+    if "/" not in ws_ref:
+        ws_ref = "{}/{}".format(system_variable('workspace'), ws_ref)
     generic_data = ws.get_objects2({'objects': [{'ref': ws_ref}]})['data'][0]['data']
     if not _is_compatible_matrix(generic_data):
         raise ValueError("{} is not a compatible data type for this viewer. Data type must "
@@ -42,13 +57,13 @@ def get_df(ws_ref, col_categories=(), row_categories=(), clustergrammer=False):
                            ws_ref,
                            generic_data.get('col_attributemapping_ref'),
                            generic_data.get('col_mapping'),
-                           col_categories,
+                           col_attributes,
                            clustergrammer)
     rows = _get_categories(generic_data['data']['row_ids'],
                            ws_ref,
                            generic_data.get('row_attributemapping_ref'),
                            generic_data.get('row_mapping'),
-                           row_categories,
+                           row_attributes,
                            clustergrammer)
     return pd.DataFrame(data=generic_data['data']['values'], columns=cols, index=rows)
 
@@ -64,9 +79,10 @@ def _is_compatible_matrix(obj):
     return True
 
 
-def _get_categories(ids, matrix_ref, attributemapping_ref=None, mapping=None, whitelist=(), clustergrammer=False):
+def _get_categories(ids, matrix_ref, attributemapping_ref=None, mapping=None, whitelist=(),
+                    clustergrammer=False):
     """Creates the correct kind of multi-factor index for clustergrammer display"""
-    if not attributemapping_ref:
+    if not attributemapping_ref or whitelist is None:
         return ids
     cat_list = []
     ws = clients.get('workspace')

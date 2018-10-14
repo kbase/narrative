@@ -78,16 +78,28 @@ class ViewersTestCase(unittest.TestCase):
                                                  mapping, {"test_attribute_1"}, clustergrammer=True))
 
     def test_get_df(self):
+        import pandas as pd
         from biokbase.narrative import viewers
+
         res = viewers.get_df(self.generic_ref)
-        self.assertEqual(str(type(res)), "<class 'pandas.core.frame.DataFrame'>")
+        self.assertIsInstance(res, pd.DataFrame)
         self.assertEqual(res.shape, (3, 4))
+        self.assertIsInstance(res.index, pd.MultiIndex)
+
+        res = viewers.get_df(self.generic_ref, None, None)
+        self.assertIsInstance(res, pd.DataFrame)
+        self.assertEqual(res.shape, (3, 4))
+        self.assertIsInstance(res.index, pd.Index)
+
         res = viewers.get_df(self.generic_ref, clustergrammer=True)
-        self.assertEqual(str(type(res)), "<class 'pandas.core.frame.DataFrame'>")
+        self.assertIsInstance(res, pd.DataFrame)
         self.assertEqual(res.shape, (3, 4))
+        self.assertIsInstance(res.index, pd.Index)
+
         res = viewers.get_df(self.expression_matrix_ref)
-        self.assertEqual(str(type(res)), "<class 'pandas.core.frame.DataFrame'>")
+        self.assertIsInstance(res, pd.DataFrame)
         self.assertEqual(res.shape, (4297, 16))
+        self.assertIsInstance(res.index, pd.Index)
 
     def test_view_as_clustergrammer(self):
         from biokbase.narrative import viewers

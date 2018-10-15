@@ -5,24 +5,23 @@
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbase-client-api',
-		'kbase-generic-client-api',
-		'base/js/namespace'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbase_client_api,
-		GenericClient,
-		Jupyter
-	) {
+define ([
+    'bluebird',
+    'kbwidget',
+    'jquery',
+    'narrativeConfig',
+    'kbase-client-api',
+    'kbase-generic-client-api',
+    'base/js/namespace'
+], function(
+    Promise,
+    KBWidget,
+    $,
+    Config,
+    kbase_client_api,
+    GenericClient,
+    Jupyter
+) {
     'use strict';
     return KBWidget({
         name: "kbaseNarrativeDownloadPanel",
@@ -31,7 +30,8 @@ define (
         	token: null,
         	type: null,
         	objId: null,
-        	ref: null,
+            ref: null,
+            objName: null,
         	downloadSpecCache: null  // {'lastUpdateTime': <millisec.>, 'types': {<type>: <spec>}}
         },
         token: null,
@@ -44,7 +44,6 @@ define (
         exportURL: Config.url('data_import_export'),
         useDynamicDownloadSupport: false,
         nmsURL: Config.url('narrative_method_store'),
-        nmsTypesURL: Config.url('narrative_method_store_types'),
         eeURL: Config.url('job_service'),
         srvWizURL: Config.url('service_wizard'),
         timer: null,
@@ -52,62 +51,47 @@ define (
 
         init: function(options) {
             this._super(options);
-            var self = this;
             this.token = this.options.token;
             this.type = this.options.type;
             this.objId = this.options.objId;
+            this.objName = this.options.objName;
             this.ref = this.options.ref;
             if (!this.objId) {
                 var refPathItems = this.ref.split(';');
                 this.objId = refPathItems[refPathItems.length - 1].trim().split('/')[1];
             }
-            this.ws = new Workspace(self.wsUrl, {token: this.token});
-            this.ws.get_object_info3({'objects':[{'ref':this.ref}]},
-                    (objectinfo) => {
-                this.objId = objectinfo.infos[0][1];
-                this.ref = this.ref.split("/").slice(0, -1).join("/") + "/" + this.objId;
-            }
-                );
             this.downloadSpecCache = options['downloadSpecCache'];
             var lastUpdateTime = this.downloadSpecCache['lastUpdateTime'];
             if (lastUpdateTime) {
                 this.render();
             } else {
-                if (!this.nmsTypesURL) {
-                    this.nmsTypesURL = this.nmsURL;
-                }
-                var nms = new NarrativeMethodStore(this.nmsTypesURL, { token: this.token });
-                nms.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1},
-                        $.proxy(function(data) {
-                            var aTypes = data[3];
-                            var types = {};
-                            var count = 0;
-                            for (var key in aTypes) {
-                                if (aTypes[key]["loading_error"]) {
-                                    console.log("Error loading type [" + key + "]: " + 
-                                            aTypes[key]["loading_error"]);
-                                    continue;
-                                }
-                                types[key] = aTypes[key];
-                                count++;
+                var nms = new NarrativeMethodStore(this.nmsURL, { token: this.token });
+                Promise.resolve(nms.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1}))
+                    .then((data) => {
+                        let aTypes = data[3],
+                            types = {};
+                        Object.keys(aTypes).forEach(key => {
+                            if (aTypes[key]["loading_error"]) {
+                                console.error("Error loading type [" + key + "]: " +
+                                        aTypes[key]["loading_error"]);
                             }
-                            self.downloadSpecCache['types'] = types;
-                            self.downloadSpecCache['lastUpdateTime'] = Date.now();
-                            console.log(count + " type-specs loaded");
-                            self.render();
-                        }, this),
-                        $.proxy(function(error) {
-                            self.showError(error);
-                        }, this)
-                );
+                            types[key] = aTypes[key];
+                        });
+                        this.downloadSpecCache['types'] = types;
+                        this.downloadSpecCache['lastUpdateTime'] = Date.now();
+                        this.render();
+                    })
+                    .catch(error => {
+                        this.showError(error);
+                    });
             }
             return this;
         },
-        
+
         render: function() {
             var self = this;
     		var downloadPanel = this.$elem;
-		
+
     		var $labeltd = $('<td>').css({'white-space':'nowrap','padding':'1px'})
     		        .append('Export as:');
     		var $btnTd = $('<td>').css({'padding':'1px'});
@@ -116,27 +100,46 @@ define (
     		        .append($labeltd)
     		        .append($btnTd));
 
-		
     		var addDownloader = function(descr) {
     		    $btnTd.append($('<button>').addClass('kb-data-list-btn')
     		            .append(descr.name)
     		            .click(function() {
     		                $btnTd.find('.kb-data-list-btn').prop('disabled', true);
-    		                self.runDownloader(self.type, self.ref, self.objId, descr);
+    		                self.runDownloader(self.type, self.ref, self.objName, descr);
     		            }));
     		};
-    		
-    		var downloaders = self.prepareDownloaders(self.type, self.ref, self.objId);
-    		for (var downloadPos in downloaders)
-    			addDownloader(downloaders[downloadPos]);
-		
+
+            let addStagingButton = () => {
+                $btnTd.append($('<button>').addClass('kb-data-list-btn')
+                    .append('STAGING')
+                    .click(() => {
+                        Jupyter.narrative.addAndPopulateApp('kb_staging_exporter/export_to_staging', 'beta', {
+                            input_ref: self.objName
+                        });
+                    }));
+            };
+
+            var downloaders = self.prepareDownloaders(self.type);
+            downloaders.forEach(dl => addDownloader(dl));
+
+            const typeArr = [
+                "KBaseFile.SingleEndLibrary",
+                "KBaseFile.PairedEndLibrary",
+                "KBaseGenomeAnnotations.Assembly",
+                "KBaseRNASeq.RNASeqAlignment",
+                "KBaseGenomes.Genome"
+            ];
+            if (typeArr.includes(self.type)) {
+                addStagingButton();
+            }
+
     		$btnTd.append($('<button>').addClass('kb-data-list-btn')
                     .append('JSON')
                     .click(function() {
-                    	var urlSuffix = '/download?' + 
+                    	var urlSuffix = '/download?' +
                     	    'ref='+encodeURIComponent(self.ref)+
                     		'&url='+encodeURIComponent(self.wsUrl) + '&wszip=1'+
-                    		'&name=' + encodeURIComponent(self.objId + '.JSON.zip');
+                    		'&name=' + encodeURIComponent(self.objName + '.JSON.zip');
                     	self.downloadFile(urlSuffix);
                     }));
     		$btnTd.append($('<button>').addClass('kb-data-list-cancel-btn')
@@ -145,29 +148,28 @@ define (
     		            self.stopTimer();
     		            downloadPanel.empty();
     		        } ));
-		
+
     		self.$statusDiv = $('<div>').css({'margin':'15px'});
     		self.$statusDivContent = $('<div>');
     		self.$statusDiv.append(self.$statusDivContent);
     		downloadPanel.append(self.$statusDiv.hide());
         },
-        
-        prepareDownloaders: function(type, ref, objId) {
+
+        prepareDownloaders: function(type) {
             var ret = [];
-            var typeSpec = this.downloadSpecCache['types'] ? 
+            var typeSpec = this.downloadSpecCache['types'] ?
                     this.downloadSpecCache['types'][type] : null;
             if (typeSpec && typeSpec['export_functions']) {
-                for (var name in typeSpec['export_functions'])
-                    if (typeSpec['export_functions'].hasOwnProperty(name))
-                        ret.push({name: name, local_function: 
-                            typeSpec['export_functions'][name]});
+                Object.keys(typeSpec['export_functions']).forEach(name => {
+                    ret.push({name: name, local_function: typeSpec['export_functions'][name]});
+                });
             } else {
                 console.log("Type [" + type + "] was skipped (no 'export_functions' block in " +
                         "type-spec).");
             }
             return ret;
         },
-        
+
         getVersionTag: function() {
             var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
             if (!tag) {
@@ -175,29 +177,32 @@ define (
             }
             return tag;
         },
-        
+
         runDownloader: function(type, ref, objId, descr) {
             // descr is {name: ..., local_function: ...}
-            var self = this;
-            self.showMessage('<img src="'+self.loadingImage+'" /> Export status: Preparing data');
-            self.$statusDiv.show();
+            this.showMessage('<img src="'+this.loadingImage+'" /> Export status: Preparing data');
+            this.$statusDiv.show();
             var wsObjectName = objId + '.' + descr.name.replace(/[^a-zA-Z0-9|\.\-_]/g,'_');
-            var tag = self.getVersionTag();
+            var tag = this.getVersionTag();
             var method = descr.local_function.replace('/', '.');
-            var genericClient = new GenericClient(this.eeURL, {token: this.token}, null, 
-                    false);
-            genericClient.sync_call("NarrativeJobService.run_job",
-                    [{method: method, params: [{input_ref: ref}],
-                        service_ver: tag}], function(data){
-                var jobId = data[0];
-                console.log("Running " + descr.local_function + " (tag=\"" + tag + "\"), " +
-                        "job ID: " + jobId);
-                self.waitForSdkJob(jobId, wsObjectName);
-            },
-            function(error){
-                console.error(error);
-                self.showError(error);
-            });
+            var genericClient = new GenericClient(this.eeURL, {token: this.token}, null, false);
+            Promise.resolve(genericClient.sync_call(
+                "NarrativeJobService.run_job",
+                [{
+                    method: method,
+                    params: [{input_ref: ref}],
+                    service_ver: tag,
+                }]))
+                .then(data => {
+                    var jobId = data[0];
+                    console.log("Running " + descr.local_function + " (tag=\"" + tag + "\"), " +
+                            "job ID: " + jobId);
+                    this.waitForSdkJob(jobId, wsObjectName);
+                })
+                .catch(error => {
+                    console.error(error);
+                    this.showError(error);
+                });
         },
 
         waitForSdkJob: function(jobId, wsObjectName) {
@@ -233,15 +238,15 @@ define (
                                 self.$statusDiv.hide();
                                 self.$elem.find('.kb-data-list-btn').prop('disabled', false);
                                 var result = jobState['result'];
-                                self.downloadUJSResults(result[0].shock_id, self.shockURL, 
+                                self.downloadUJSResults(result[0].shock_id, self.shockURL,
                                         wsObjectName);
                             }
                         } else {
-                            var status = skipLogLines == 0 ? jobState['job_state'] : 
+                            var status = skipLogLines == 0 ? jobState['job_state'] :
                                 lastLogLine.line;
                             if (skipLogLines == 0)
                                 console.log("Export status: " + status);
-                            self.showMessage('<img src="'+self.loadingImage+'" /> ' + 
+                            self.showMessage('<img src="'+self.loadingImage+'" /> ' +
                                     'Export status: ' + status);
                         }
                     }, function(data) {
@@ -282,7 +287,7 @@ define (
         	};
         	downloadShockNodeWithName(wsObjectName + ".zip");
         },
-        
+
         downloadFile: function(urlSuffix) {
             var self = this;
             if (self.useDynamicDownloadSupport) {
@@ -299,7 +304,7 @@ define (
                 });
             } else {
                 self.downloadFileInner(self.exportURL + urlSuffix);
-            }            
+            }
         },
 
         downloadFileInner: function(url) {
@@ -314,19 +319,20 @@ define (
         	}
         	iframe.src = url;
         },
-        
+
         showMessage: function(msg) {
         	var self = this;
             self.$statusDivContent.empty();
             self.$statusDivContent.append(msg);
         },
-        
+
         showError: function(msg) {
         	var self = this;
             if (typeof msg === 'object' && msg.error) {
                 msg = msg.error;
-                if (typeof msg === 'object' && msg.message)
+                if (typeof msg === 'object' && msg.message) {
                     msg = msg.message;
+                }
             }
         	self.$statusDivContent.empty();
         	// error is final state, so reactivate!
@@ -334,12 +340,11 @@ define (
         	self.$statusDivContent.append($('<span>').css({color:'#F44336'})
         	        .append('Error: '+msg));
         },
-        
+
         stopTimer: function() {
 			if (this.timer != null) {
 				clearInterval(this.timer);
 				this.timer = null;
-				console.log("Timer was stopped");
 			}
 		}
     });

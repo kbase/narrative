@@ -915,6 +915,7 @@ define([
                         type: type,
                         objId: objId,
                         ref: objRef,
+                        objName: objData.objectInfo.name,
                         downloadSpecCache: _this.downloadSpecCache
                     });
                 });

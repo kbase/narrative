@@ -71,8 +71,6 @@ define([
         }
 
         function render() {
-            // var displayName = StringUtil.escape(displayName),
-            //     userName = StringUtil.escape(userName);
             var menu = div({class: 'dropdown', style: 'display:inline-block'}, [
                 button({type: 'button', class: 'btn btn-default dropdown-toggle', 'data-toggle': 'dropdown', 'aria-expanded': 'false'}, [
                     renderAvatar(),

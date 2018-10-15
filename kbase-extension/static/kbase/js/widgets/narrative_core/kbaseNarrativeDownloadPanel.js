@@ -90,48 +90,40 @@ define ([
 
         render: function() {
             var self = this;
-    		var downloadPanel = this.$elem;
+            var downloadPanel = this.$elem;
 
-    		var $labeltd = $('<td>').css({'white-space':'nowrap','padding':'1px'})
-    		        .append('Export as:');
-    		var $btnTd = $('<td>').css({'padding':'1px'});
-    		downloadPanel.append($('<table>').css({width:'100%'})
-    		        .append('<tr>')
-    		        .append($labeltd)
-    		        .append($btnTd));
+            var $labeltd = $('<td>')
+                .css({'white-space':'nowrap','padding':'1px'})
+                .append('Export as:');
+            var $btnTd = $('<td>').css({'padding':'1px'});
+            downloadPanel.append($('<table>').css({width:'100%'})
+                .append('<tr>')
+                .append($labeltd)
+                .append($btnTd));
 
-    		var addDownloader = function(descr) {
-    		    $btnTd.append($('<button>').addClass('kb-data-list-btn')
-    		            .append(descr.name)
-    		            .click(function() {
-    		                $btnTd.find('.kb-data-list-btn').prop('disabled', true);
-    		                self.runDownloader(self.type, self.ref, self.objName, descr);
-    		            }));
-    		};
+            var addDownloader = (descr) => {
+                let $dlBtn = $('<button>')
+                    .addClass('kb-data-list-btn')
+                    .append(descr.name);
 
-            let addStagingButton = () => {
-                $btnTd.append($('<button>').addClass('kb-data-list-btn')
-                    .append('STAGING')
-                    .click(() => {
+                if (descr.name.toLocaleLowerCase() === 'staging') {
+                    $dlBtn.click(() => {
                         Jupyter.narrative.addAndPopulateApp('kb_staging_exporter/export_to_staging', 'beta', {
                             input_ref: self.objName
                         });
-                    }));
+                    });
+                }
+                else {
+                    $dlBtn.click(() => {
+                        $btnTd.find('.kb-data-list-btn').prop('disabled', true);
+                        self.runDownloader(self.type, self.ref, self.objName, descr);
+                    });
+                }
+                $btnTd.append($dlBtn);
             };
 
             var downloaders = self.prepareDownloaders(self.type);
             downloaders.forEach(dl => addDownloader(dl));
-
-            const typeArr = [
-                "KBaseFile.SingleEndLibrary",
-                "KBaseFile.PairedEndLibrary",
-                "KBaseGenomeAnnotations.Assembly",
-                "KBaseRNASeq.RNASeqAlignment",
-                "KBaseGenomes.Genome"
-            ];
-            if (typeArr.includes(self.type)) {
-                addStagingButton();
-            }
 
     		$btnTd.append($('<button>').addClass('kb-data-list-btn')
                     .append('JSON')

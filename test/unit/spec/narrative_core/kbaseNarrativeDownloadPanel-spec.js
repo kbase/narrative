@@ -106,8 +106,16 @@ define([
                 objName: name,
                 objId: oid,
                 ref: upa,
-                downloadSpecCache: {'lastUpdateTime': 100, 'types': {
-                    [objType]: {'export_functions': {"FAKE": "fake_method"}}}
+                downloadSpecCache: {
+                    'lastUpdateTime': 100,
+                    'types': {
+                        [objType]: {
+                            'export_functions': {
+                                "FAKE": "fake_method",
+                                "STAGING": "staging_method"
+                            }
+                        }
+                    }
                 }
             });
 

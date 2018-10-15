@@ -8,23 +8,16 @@ define ([
     'jquery',
     'kbwidget',
     'kbaseAuthenticatedWidget',
-    'kbaseTabs',
     'narrativeConfig',
     'base/js/namespace',
     'common/utils',
     // For effect
     'bootstrap',
-    'jquery-dataTables',
-    'datatables.net-buttons',
-    'datatables.net-buttons-bs',
-    'datatables.net-buttons-html5',
-    'datatables.net-buttons-print'
 ], function(
     Uuid,
     $,
     KBWidget,
     kbaseAuthenticatedWidget,
-    kbaseTabs,
     Config,
     Jupyter,
     utils
@@ -113,16 +106,8 @@ define ([
             return this;
         },
 
-        loading: function(isLoading) {
-            if (isLoading) {
-                this.showMessage('<img src=\'' + this.options.loadingImage + '\'/>');
-            } else {
-                this.hideMessage();
-            }
-        },
-
         showMessage: function(message) {
-            var span = $('<span/>').append(message);
+            let span = $('<span/>').append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();

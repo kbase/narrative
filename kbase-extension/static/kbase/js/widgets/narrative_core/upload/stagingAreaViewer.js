@@ -294,6 +294,19 @@ define([
                         this.updateView();
                     }.bind(this));
 
+                    $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', function (e) {
+                        let file = $(e.currentTarget).data('download');
+                        console.log("Download: " + file);
+                        this.stagingServiceClient.download({
+                            path: this.subpath + '/' + file
+                        }).then(function (d, s, x) {
+                            this.updateView();
+                        }.bind(this))
+                            .fail(function (xhr) {
+                                alert('Error ' + xhr.status + '\r' + xhr.responseText);
+                            }.bind(this));
+                    }.bind(this));
+
                     $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', function (e) {
                         var file = $(e.currentTarget).data('delete');
                         if (window.confirm('Really delete ' + file + '?')) {

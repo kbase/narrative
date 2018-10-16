@@ -7,7 +7,6 @@ define ([
     'uuid',
     'jquery',
     'kbwidget',
-    'kbaseAuthenticatedWidget',
     'narrativeConfig',
     'base/js/namespace',
     'common/utils',
@@ -17,7 +16,6 @@ define ([
     Uuid,
     $,
     KBWidget,
-    kbaseAuthenticatedWidget,
     Config,
     Jupyter,
     utils
@@ -26,7 +24,6 @@ define ([
 
     return KBWidget({
         name: 'codeCellLauncher',
-        parent : kbaseAuthenticatedWidget,
         version: '1.0.2',
         options: {
             output: null,
@@ -39,6 +36,12 @@ define ([
             // Create a message pane
             this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
             this.$elem.append(this.$messagePane);
+            console.log(this.options);
+            const type = this.options.output_type,
+                matrix_ref = this.options.matrix_ref;
+
+            const code = this.get_python_code(type, matrix_ref);
+            if (code) this.launchCodeCell(code);
             return this;
         },
 
@@ -89,33 +92,6 @@ define ([
                 this.showMessage(`Unsupported output type ${type}`);
             }
             return code;
-        },
-
-        loggedInCallback: function(event, auth) {
-            console.log(this.options);
-            const type = this.options.output_type,
-                matrix_ref = this.options.matrix_ref;
-
-            const code = this.get_python_code(type, matrix_ref);
-            if (code) this.launchCodeCell(code);
-            return this;
-        },
-
-        loggedOutCallback: function() {
-            this.isLoggedIn = false;
-            return this;
-        },
-
-        showMessage: function(message) {
-            let span = $('<span/>').append(message);
-
-            this.$messagePane.append(span);
-            this.$messagePane.show();
-        },
-
-        hideMessage: function() {
-            this.$messagePane.hide();
-            this.$messagePane.empty();
         }
     });
 });

@@ -200,8 +200,8 @@ define([
 
         downloadFile: function(url) {
         	console.log("Downloading url=" + url);
-        	var hiddenIFrameID = 'hiddenDownloader';
-            var iframe = document.getElementById(hiddenIFrameID);
+        	const hiddenIFrameID = 'hiddenDownloader';
+            let iframe = document.getElementById(hiddenIFrameID);
         	if (iframe === null) {
         		iframe = document.createElement('iframe');
         		iframe.id = hiddenIFrameID;
@@ -307,10 +307,10 @@ define([
                         this.updateView();
                     }.bind(this));
 
-                    $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', function (e) {
+                    $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', (e) => {
                         let file = $(e.currentTarget).data('download');
                         this.downloadFile(Config.url('staging_api_url') + '/download/' + file)
-                    }.bind(this));
+                    });
 
                     $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', function (e) {
                         var file = $(e.currentTarget).data('delete');

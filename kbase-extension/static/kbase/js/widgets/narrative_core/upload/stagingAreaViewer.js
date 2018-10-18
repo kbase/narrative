@@ -198,19 +198,6 @@ define([
             }.bind(this));
         },
 
-        downloadFile: function(url) {
-        	console.log("Downloading url=" + url);
-        	const hiddenIFrameID = 'hiddenDownloader';
-            let iframe = document.getElementById(hiddenIFrameID);
-        	if (iframe === null) {
-        		iframe = document.createElement('iframe');
-        		iframe.id = hiddenIFrameID;
-        		iframe.style.display = 'none';
-        		document.body.appendChild(iframe);
-        	}
-        	iframe.src = url;
-        },
-
         renderFiles: function (files) {
 
             var parent = this.$elem.parent().get(0);
@@ -309,7 +296,17 @@ define([
 
                     $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', (e) => {
                         let file = $(e.currentTarget).data('download');
-                        this.downloadFile(Config.url('staging_api_url') + '/download/' + file)
+                        if (this.subpath) {
+                            file = this.subpath + '/' + file;
+                        }
+                        const url = Config.url('staging_api_url') + '/download/' + file;
+                        console.log(file);
+                        let anchor = document.createElement('a');
+                        anchor.setAttribute('target', '_blank');
+                        anchor.setAttribute('href', url);
+                        anchor.setAttribute('download', file);
+                        anchor.click();
+                        anchor.remove();
                     });
 
                     $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', function (e) {

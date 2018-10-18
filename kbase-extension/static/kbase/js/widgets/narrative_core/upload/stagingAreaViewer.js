@@ -309,7 +309,11 @@ define([
 
                     $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', (e) => {
                         let file = $(e.currentTarget).data('download');
-                        this.downloadFile(Config.url('staging_api_url') + '/download/' + file)
+                        if (this.subpath) {
+                            file = this.subpath + '/' + file;
+                        }
+                        const url = Config.url('staging_api_url') + '/download/' + file;
+                        this.downloadFile(url);
                     });
 
                     $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', function (e) {

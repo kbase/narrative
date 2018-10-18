@@ -17,24 +17,28 @@
             <td>{{mtime}}</td>
             <td>
                 {{#if imported }}
-                    <select id="import-type" style="width:60%">
+                <div class="pull-right">
+                    <select id="import-type" style="width: 118px;">
                         <option></option>
                         {{#each ../uploaders}}
                             <option value="{{id}}">{{name}}</option>
                         {{/each}}
                     </select>
-                {{ else }}
-                    <span style = 'display : inline-block; width : 60%'>&nbsp;</span>
-                {{/if}}
-                    <button data-import="{{name}}" class="btn btn-xs btn-primary" style='opacity :  {{#if imported}}1{{else}}0{{/if}}'>
+                    <button data-import="{{name}}" class="btn btn-xs btn-primary">
                         <span><i class="fa fa-upload"></i></span>
                     </button>
-                <button data-download="{{name}}" class="btn btn-xs btn-primary">
-                        <span><i class="fa fa-download"></i></span>
-                </button>
-                <button data-delete="{{name}}" class="btn btn-xs btn-danger">
-                    <span><i class="fa fa-trash"></i></span>
-                </button>
+                    <button data-download="{{name}}" class="btn btn-xs btn-primary">
+                            <span><i class="fa fa-download"></i></span>
+                    </button>
+                    <button data-delete="{{name}}" class="btn btn-xs btn-danger">
+                        <span><i class="fa fa-trash"></i></span>
+                    </button>
+                </div>
+                {{ else }}
+                    <button data-delete="{{name}}" class="btn btn-xs btn-danger pull-right">
+                        <span><i class="fa fa-trash"></i></span>
+                    </button>
+                {{/if}}
             </td>
         </tr>
     {{/each}}

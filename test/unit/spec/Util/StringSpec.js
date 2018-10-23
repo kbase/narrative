@@ -84,5 +84,29 @@ define ([
                          '}';
             expect(StringUtil.prettyPrintJSON(obj)).toBe(result);
         });
+
+        it('escape should turn nasty HTML into printable HTML', () => {
+            let tests = [
+                ['foo', 'foo'],
+                ['<script>', '&lt;script&gt;'],
+                ['&<>"\'', '&amp;&lt;&gt;&quot;&#39;'],
+                ['some string', 'some string']
+            ];
+            tests.forEach(t => {
+                expect(StringUtil.escape(t[0])).toEqual(t[1]);
+            });
+        });
+
+        it('escape should do nothing if passed a falsy str', () => {
+            let tests = [
+                ['', ''],
+                [false, false],
+                [undefined, undefined],
+                [null, null]
+            ];
+            tests.forEach(t => {
+                expect(StringUtil.escape(t[0])).toEqual(t[1]);
+            });
+        })
     });
 });

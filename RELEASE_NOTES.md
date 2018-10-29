@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
 
+### Version 3.9.0
+- Fix security vulnerability with rendering some user info.
+- SCT-1547 - Add a download endpoint to the staging service, so a user can now download files directly from the FTP stagin area.
+- SCT-1496 - Add functionality for downloading data from the data panel to the FTP Staging area.
+- SCT-1526 - Create a code cell generator as an app output.
+
 ### Version 3.8.3
 - SCT-1253 - Replace old RNA-Seq data viewers.
 - SCT-1393 - Fix "Objects Created" links in app outputs.

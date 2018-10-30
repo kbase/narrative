@@ -198,6 +198,19 @@ define([
             }.bind(this));
         },
 
+        downloadFile: function(url) {
+        	console.log("Downloading url=" + url);
+        	const hiddenIFrameID = 'hiddenDownloader';
+            let iframe = document.getElementById(hiddenIFrameID);
+        	if (iframe === null) {
+        		iframe = document.createElement('iframe');
+        		iframe.id = hiddenIFrameID;
+        		iframe.style.display = 'none';
+        		document.body.appendChild(iframe);
+        	}
+        	iframe.src = url;
+        },
+
         renderFiles: function (files) {
 
             var parent = this.$elem.parent().get(0);
@@ -293,6 +306,15 @@ define([
                         this.initImportApp(importType, importFile);
                         this.updateView();
                     }.bind(this));
+
+                    $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', (e) => {
+                        let file = $(e.currentTarget).data('download');
+                        if (this.subpath) {
+                            file = this.subpath + '/' + file;
+                        }
+                        const url = Config.url('staging_api_url') + '/download/' + file;
+                        this.downloadFile(url);
+                    });
 
                     $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', function (e) {
                         var file = $(e.currentTarget).data('delete');

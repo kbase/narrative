@@ -32,7 +32,7 @@ define([
             $div.remove();
         });
 
-        it('Should properly load with a valid upa', (done) => {
+        it('Should properly load with a valid upa', () => {
             let ws = 1111,
                 oid = 2222,
                 ver = 3333,
@@ -77,13 +77,49 @@ define([
                     type: objType,
                     objId: oid,
                     ref: upa,
+                    objName: name,
                     downloadSpecCache: {'lastUpdateTime': 100, 'types': {
                         [objType]: {'export_functions': {"FAKE": "fake_method"}}}
                     }
             });
             expect($div.html()).toContain("JSON");
             expect($div.html()).toContain("FAKE");
-            done();
+        });
+
+        it('Should load and register a Staging app button', () => {
+            let ws = 1111,
+                oid = 2222,
+                ver = 3333,
+                name = 'fake_test_object',
+                objType = 'KBaseGenomes.Genome',
+                saveDate = '2018-08-03T00:17:04+0000',
+                userId = 'fakeUser',
+                wsName = 'fakeWs',
+                checksum = '12345',
+                meta = {},
+                size = 1234567,
+                upa = String(ws) + '/' + String(oid) + '/' + String(ver);
+
+            let w = new kbaseNarrativeDownloadPanel($div, {
+                token: null,
+                type: objType,
+                objName: name,
+                objId: oid,
+                ref: upa,
+                downloadSpecCache: {
+                    'lastUpdateTime': 100,
+                    'types': {
+                        [objType]: {
+                            'export_functions': {
+                                "FAKE": "fake_method",
+                                "STAGING": "staging_method"
+                            }
+                        }
+                    }
+                }
+            });
+
+            expect($div.html()).toContain('STAGING');
         });
     });
 });

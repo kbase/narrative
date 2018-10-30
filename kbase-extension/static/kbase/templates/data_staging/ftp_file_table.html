@@ -2,10 +2,10 @@
     <thead>
         <tr>
             <th style="width: 5%"></th>
-            <th style="width: 42%; overflow:hidden">Name</th>
+            <th style="width: 40%; overflow:hidden">Name</th>
             <th style="width: 13%">Size</th>
-            <th style="width: 15%">Age</th>
-            <th style="width: 25%">Import As...</th>
+            <th style="width: 12%">Age</th>
+            <th style="width: 30%">Import As...</th>
         </tr>
     </thead>
     <tbody>
@@ -17,21 +17,28 @@
             <td>{{mtime}}</td>
             <td>
                 {{#if imported }}
-                    <select id="import-type" style="width:70%">
+                <div class="pull-right">
+                    <select id="import-type" style="width: 118px;">
                         <option></option>
                         {{#each ../uploaders}}
                             <option value="{{id}}">{{name}}</option>
                         {{/each}}
                     </select>
-                {{ else }}
-                    <span style = 'display : inline-block; width : 70%'>&nbsp;</span>
-                {{/if}}
-                    <button data-import="{{name}}" class="btn btn-xs btn-primary" style='opacity :  {{#if imported}}1{{else}}0{{/if}}'>
+                    <button data-import="{{name}}" class="btn btn-xs btn-primary">
                         <span><i class="fa fa-upload"></i></span>
                     </button>
-                <button data-delete="{{name}}" class="btn btn-xs btn-danger">
-                    <span><i class="fa fa-trash"></i></span>
-                </button>
+                    <button data-download="{{name}}" class="btn btn-xs btn-primary">
+                            <span><i class="fa fa-download"></i></span>
+                    </button>
+                    <button data-delete="{{name}}" class="btn btn-xs btn-danger">
+                        <span><i class="fa fa-trash"></i></span>
+                    </button>
+                </div>
+                {{ else }}
+                    <button data-delete="{{name}}" class="btn btn-xs btn-danger pull-right">
+                        <span><i class="fa fa-trash"></i></span>
+                    </button>
+                {{/if}}
             </td>
         </tr>
     {{/each}}

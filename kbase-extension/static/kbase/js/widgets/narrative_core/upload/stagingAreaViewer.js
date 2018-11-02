@@ -153,9 +153,31 @@ define([
         renderFileHeader: function () {
             this.$elem.append(this.ftpFileHeaderTmpl({userInfo: this.userInfo}));
 
+
             // Set up the link to the web upload app.
             this.$elem.find('.web_upload_div').click(function () {
                 this.initImportApp('web_upload');
+            }.bind(this));
+
+            // Add ACL before going to the staging area
+            var globus_flag = false;
+            this.$elem.find('.globus_link').click(function (e) {
+
+                if(globus_flag){
+                    globus_flag = false;
+                    var url =  window.location.hostname + "/services/staging_service/add-acl";
+                    $.ajax({
+                        async: false,
+                        url: url,
+                        xhrFields: {
+                            withCredentials: true
+                        }
+                    }).done(function (data) { console.log(data); });
+                    return;
+                }
+                e.preventDefault();
+                globus_flag = true;
+                $(this).trigger(e.type);
             }.bind(this));
 
             // Bind the help button to start the tour.

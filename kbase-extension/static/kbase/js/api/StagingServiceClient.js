@@ -11,6 +11,8 @@ define([
             token : args.token,
 
             routes : {
+                addAcl : { method : 'get', path : 'add-acl' },
+                removeAcl : { method : 'get', path : 'remove-acl' },
                 testService : { method : 'get', path : 'test-service' },
                 testAuth    : { method : 'get', path : 'test-auth' },
                 list        : { method : 'get', path : 'list/${path}?${type}' },

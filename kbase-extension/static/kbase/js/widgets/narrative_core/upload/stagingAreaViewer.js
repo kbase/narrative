@@ -162,22 +162,16 @@ define([
             // Add ACL before going to the staging area
             var globus_flag = false;
             this.$elem.find('.globus_link').click(function (e) {
-
-                if(globus_flag){
-                    globus_flag = false;
-                    var url =  window.location.hostname + "/services/staging_service/add-acl";
-                    $.ajax({
-                        async: false,
-                        url: url,
-                        xhrFields: {
-                            withCredentials: true
-                        }
-                    }).done(function (data) { console.log(data); });
-                    return;
+                if (!globus_flag) {
+                    e.preventDefault();
+                    this.stagingServiceClient.addAcl()
+                        .done(
+                            data => {
+                                globus_flag = true;
+                                $(this).trigger(e.type); //e.click Throws an error for 2nd call of double call
+                            }
+                        )
                 }
-                e.preventDefault();
-                globus_flag = true;
-                $(this).trigger(e.type);
             }.bind(this));
 
             // Bind the help button to start the tour.

@@ -153,9 +153,25 @@ define([
         renderFileHeader: function () {
             this.$elem.append(this.ftpFileHeaderTmpl({userInfo: this.userInfo}));
 
+
             // Set up the link to the web upload app.
             this.$elem.find('.web_upload_div').click(function () {
                 this.initImportApp('web_upload');
+            }.bind(this));
+
+            // Add ACL before going to the staging area
+            var globus_flag = false;
+            this.$elem.find('.globus_link').click(function (e) {
+                if (!globus_flag) {
+                    e.preventDefault();
+                    this.stagingServiceClient.addAcl()
+                        .done(
+                            data => {
+                                globus_flag = true;
+                                $(this).trigger(e.type); //e.click Throws an error for 2nd call of double call
+                            }
+                        )
+                }
             }.bind(this));
 
             // Bind the help button to start the tour.

@@ -99,6 +99,8 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     # regex for parsing out workspace_id and object_id from
     # a "ws.{workspace}.{object}" string
+    path_regex = re.compile('^(ws\.)?(?P<wsid>\d+)((\.obj\.(?P<objid>\d+))(\.ver\.(?P<ver>\d+))?)?$')
+
     ws_regex = re.compile('^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)(\.(?P<ver>\d+))?')
     # regex for parsing out fully qualified workspace name and object name
     ws_regex2 = re.compile('^(?P<wsname>[\w:]+)/(?P<objname>[\w]+)')
@@ -175,9 +177,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         except PermissionsError as e:
             self.log.warn(u'found a 403 error')
             raise HTTPError(403, u"You do not have permission to view the narrative with id {}".format(path))
-        # except Exception as e:
-        #     self.log.debug('got a 500 error')
-        #     raise HTTPError(500, e)
 
     def exists(self, path):
         """Looks up whether a directory or file path (i.e. narrative)
@@ -210,7 +209,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         return ref
 
     def _parse_path(self, path):
-        m = self.ws_regex.match(path)
+        m = self.path_regex.match(path)
         if m is None:
             return None
         return dict(

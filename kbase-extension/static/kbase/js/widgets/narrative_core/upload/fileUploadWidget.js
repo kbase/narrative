@@ -5,6 +5,7 @@ define([
     'common/runtime',
     'dropzone',
     'handlebars',
+    'StagingServiceClient',
     'text!kbase/templates/data_staging/dropzone_area.html',
     'text!kbase/templates/data_staging/dropped_file.html'
 ], function(
@@ -14,6 +15,7 @@ define([
     Runtime,
     Dropzone,
     Handlebars,
+    StagingServiceClient,
     DropzoneAreaHtml,
     DropFileHtml
 ) {
@@ -41,8 +43,24 @@ define([
                 $dropzoneElem.find('#clear-completed').css({'display': 'none'});
             }.bind(this));
 
-            $dropzoneElem.find('a').click((e) => {
+            // $dropzoneElem.find('a').click((e) => {
+            //     e.stopPropagation();
+            // });
+
+            $dropzoneElem.find('a.globus_link').click((e) => {
                 e.stopPropagation();
+                e.preventDefault();
+                let stagingServiceClient = new StagingServiceClient({
+                    root: this.stagingUrl,
+                    token: Runtime.make().authToken()
+                });
+                var globusWindow = window.open('', 'dz-globus');
+                globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
+                stagingServiceClient.addAcl()
+                    .done(() => {
+                        window.open($(e.target).attr('href'), 'dz-globus');
+                        return true;
+                    });
             });
 
             this.$elem.append($dropzoneElem);

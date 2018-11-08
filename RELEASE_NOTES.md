@@ -3,6 +3,9 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
 
+### Version 3.9.1
+- SCT-1509 - Ensure access permissions to Globus before redirecting a user there from the Import area.
+
 ### Version 3.9.0
 - Fix security vulnerability with rendering some user info.
 - SCT-1547 - Add a download endpoint to the staging service, so a user can now download files directly from the FTP stagin area.

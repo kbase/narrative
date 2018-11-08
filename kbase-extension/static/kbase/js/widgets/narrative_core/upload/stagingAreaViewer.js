@@ -153,10 +153,26 @@ define([
         renderFileHeader: function () {
             this.$elem.append(this.ftpFileHeaderTmpl({userInfo: this.userInfo}));
 
+
             // Set up the link to the web upload app.
             this.$elem.find('.web_upload_div').click(function () {
                 this.initImportApp('web_upload');
             }.bind(this));
+
+            // Add ACL before going to the staging area
+            // If it fails, it'll just do so silently.
+            var $globusLink = this.$elem.find('.globus_link');
+            $globusLink.click((e) => {
+                var globusWindow = window.open('', 'globus');
+                globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
+                this.stagingServiceClient.addAcl()
+                    .done(
+                        () => {
+                            window.open($globusLink.attr('href'), 'globus');
+                            return true;
+                        }
+                    )
+            });
 
             // Bind the help button to start the tour.
             this.$elem.find('button#help').click(function () {

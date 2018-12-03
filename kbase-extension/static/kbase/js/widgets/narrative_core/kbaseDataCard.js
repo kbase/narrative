@@ -54,7 +54,7 @@ define ([
         }
 
         //params
-        var shortName = entry.name ? entry.name : object_info[1],
+        var name = entry.name ? entry.name : object_info[1],
             version = entry.version ? entry.version : ('v' + object_info[4]),
             date = entry.date ? entry.date : TimeFormat.getTimeStampStr(object_info[3]),
             editBy = entry.editedBy ? entry.editedBy : (' by ' + object_info[5]);
@@ -72,17 +72,25 @@ define ([
         }
 
         //shorten name if applicable
-        var isShortened = false;
-        if ((maxNameLength && shortName) && shortName.length > maxNameLength) {
-            shortName = shortName.substring(0, maxNameLength - 3) + '...';
-            isShortened = true;
+        var $name = $('<span>').addClass('kb-data-list-name');
+        if ((maxNameLength && name) && name.length > maxNameLength) {
+            $name.append(name.substring(0, maxNameLength - 3) + '...');
+            $name.tooltip({
+                title: name,
+                placement: 'bottom',
+                delay: {
+                    show: Config.get('tooltip').showDelay,
+                    hide: Config.get('tooltip').hideDelay
+                }
+            });
+        } else {
+            $name.append(name)
         }
 
         var $logo = $('<div>');
         Icon.buildDataIcon($logo, objectType, entry.is_set, 0);
 
-        var $name = $('<span>').addClass('kb-data-list-name').append(shortName),
-            $version = $('<span>').addClass('kb-data-list-version').append(version),
+        var $version = $('<span>').addClass('kb-data-list-version').append(version),
             $type = $('<div>').addClass('kb-data-list-type').append(viewType),
             $date = $('<span>').addClass('kb-data-list-date').append(date);
 
@@ -103,18 +111,6 @@ define ([
                 e.stopPropagation();
                 window.open('/#people/' + object_info[5]);
             }.bind(null, object_info));
-
-        //tooltip for long title
-        if (isShortened) {
-            $name.tooltip({
-                title: entry.name,
-                placement: 'bottom',
-                delay: {
-                    show: Config.get('tooltip').showDelay,
-                    hide: Config.get('tooltip').hideDelay
-                }
-            });
-        }
 
         //create card
         var actionButtonClick = function (e) {

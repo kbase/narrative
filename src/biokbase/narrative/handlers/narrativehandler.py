@@ -85,7 +85,6 @@ class NarrativeMainHandler(IPythonHandler):
         if model['type'] != 'notebook':
             # not a notebook, redirect to files
             return FilesRedirectHandler.redirect_to_files(self, path)
-        name = url_escape(path.rsplit('/', 1)[-1])
         path = url_escape(path)
         self.write(
             self.render_template(

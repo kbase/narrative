@@ -56,9 +56,14 @@ class MockClients(object):
 
     # ----- Workspace functions -----
 
+    def ver(self):
+        return "0.0.0"
+
     def get_workspace_info(self, params):
-        if params.get('workspace', '') != 'invalid_workspace':
-            return [12345, 'foo', 'bar']
+        wsid = params.get('id', 12345)
+        name = params.get('workspace', 'some_workspace')
+        if name != 'invalid_workspace' and wsid > 0:
+            return [wsid, name, 'owner', 'moddate', 'largestid', 'a', 'n', 'unlocked', {'is_temporary': 'false', 'narrative': '1', 'narrative_nice_name': 'Fake'}]
         else:
             raise Exception('not found')
 

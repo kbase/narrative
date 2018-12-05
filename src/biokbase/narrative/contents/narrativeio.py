@@ -125,11 +125,12 @@ class KBaseWSManagerMixin(object):
         containing a single key: 'info', with the object info and, optionally,
         metadata.
 
-        :param ref: a NarrativeRef:
+        :param ref: a NarrativeRef
         :param content: if True, returns the narrative document, otherwise just the metadata
         :param include_metadata: if True, includes the object metadata when returning
         """
-        assert isinstance(ref, NarrativeRef), "Must use a NarrativeRef as input!"
+        log_event(g_log, "reading narrative: {}", {'ref': str(ref)})
+        assert isinstance(ref, NarrativeRef), "read_narrative must use a NarrativeRef as input!"
         try:
             if content:
                 nar_data = self.ws_client().get_objects([{'ref': str(ref)}])
@@ -193,7 +194,7 @@ class KBaseWSManagerMixin(object):
            (narrative, ws_id, obj_id, ver)
         """
 
-        assert isinstance(ref, NarrativeRef), "Must use a NarrativeRef as input!"
+        assert isinstance(ref, NarrativeRef), "write_narrative must use a NarrativeRef as input!"
         if 'worksheets' in nb:
             # it's an old version. update it by replacing the 'worksheets' key with
             # the 'cells' subkey
@@ -528,7 +529,7 @@ class KBaseWSManagerMixin(object):
 
         If nobody is logged in, this throws a WorkspaceClient.ServerError.
         """
-        assert isinstance(ref, NarrativeRef), "Must use a NarrativeRef as input!"
+        assert isinstance(ref, NarrativeRef), "narrative_permissions must use a NarrativeRef as input!"
         perms = {}
         try:
             perms = self.ws_client().get_permissions({'id': ref.wsid})

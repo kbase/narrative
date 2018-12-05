@@ -214,7 +214,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                 raise HTTPError(404, u'Unknown Narrative "{}"'.format(path))
             try:
                 # nar_obj = self.read_narrative(u'{}/{}'.format(ref[u'wsid'], ref[u'objid']), content)
-                nar_obj = self.fetch_narrative(ref, content=content)  #ref['wsid'], objid=ref['objid'], ver=ref['ver'], content=content)
+                nar_obj = self.read_narrative(ref, content=content)  #ref['wsid'], objid=ref['objid'], ver=ref['ver'], content=content)
                 model[u'type'] = u'notebook'
                 user = self.get_userid()
                 if content:
@@ -228,7 +228,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                     util.kbase_env.workspace = model['content'].metadata.ws_name
                     self.narrative_logger.narrative_open(u'{}/{}'.format(ref.wsid, ref.objid), nar_obj['info'][4])
                 if user is not None:
-                    model['writable'] = self.narrative_writable(u'{}/{}'.format(ref.wsid, ref.objid), user)
+                    model['writable'] = self.narrative_writable(ref, user)
                 self.log.info(u'Got narrative {}'.format(model['name']))
             except HTTPError:
                 raise

@@ -142,7 +142,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_narrative_exists_bad(self):
         with self.assertRaises(AssertionError) as err:
             self.mixin.narrative_exists(self.bad_nar_ref)
-        self.assertEquals("Must use a NarrativeRef as input!", str(err.exception))
+        self.assertEquals("read_narrative must use a NarrativeRef as input!", str(err.exception))
 
     def test_narrative_exists_noauth(self):
         if self.test_token is None:
@@ -240,7 +240,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_read_narrative_bad(self):
         with self.assertRaises(AssertionError) as err:
             self.mixin.read_narrative(self.bad_nar_ref)
-        self.assertEquals("Must use a NarrativeRef as input!", str(err.exception))
+        self.assertEquals("read_narrative must use a NarrativeRef as input!", str(err.exception))
 
     ##### test KBaseWSManagerMixin.write_narrative #####
 
@@ -285,7 +285,7 @@ class NarrIOTestCase(unittest.TestCase):
         nar = self.mixin.read_narrative(self.public_nar['ref'])['data']
         with self.assertRaises(AssertionError) as err:
             self.mixin.write_narrative(self.bad_nar_ref, nar, self.test_user)
-        self.assertEquals("Must use a NarrativeRef as input!", str(err.exception))
+        self.assertEquals("write_narrative must use a NarrativeRef as input!", str(err.exception))
         self.logout()
 
     def test_write_narrative_bad_file(self):
@@ -339,7 +339,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_rename_narrative_bad(self):
         with self.assertRaises(AssertionError) as err:
             self.mixin.rename_narrative(self.bad_nar_ref, self.test_user, 'new_name')
-        self.assertEquals("Must use a NarrativeRef as input!", str(err.exception))
+        self.assertEquals("read_narrative must use a NarrativeRef as input!", str(err.exception))
 
     ##### test KBaseWSManagerMixin.copy_narrative #####
 
@@ -452,7 +452,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_narrative_permissions_bad(self):
         with self.assertRaises(AssertionError) as err:
             self.mixin.narrative_permissions(self.bad_nar_ref)
-        self.assertEquals("Must use a NarrativeRef as input!", str(err.exception))
+        self.assertEquals("narrative_permissions must use a NarrativeRef as input!", str(err.exception))
 
 
     ##### test KBaseWSManagerMixin.narrative_writable #####
@@ -503,7 +503,7 @@ class NarrIOTestCase(unittest.TestCase):
         self.login()
         with self.assertRaises(AssertionError) as err:
             self.mixin.narrative_writable(self.bad_nar_ref, self.test_user)
-        self.assertEquals("Must use a NarrativeRef as input!", str(err.exception))
+        self.assertEquals("narrative_permissions must use a NarrativeRef as input!", str(err.exception))
         self.logout()
 
 if __name__ == '__main__':

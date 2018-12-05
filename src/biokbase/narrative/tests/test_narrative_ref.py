@@ -12,3 +12,10 @@ class NarrativeRefTestCase(unittest.TestCase):
         self.assertEqual(ref.wsid, 123)
         self.assertEqual(ref.objid, 1)
         self.assertIsNone(ref.ver)
+
+    def test_ok(self):
+        ref = NarrativeRef({"wsid": 123, "objid": 456, "ver": 7})
+        self.assertEqual(ref.wsid, 123)
+        self.assertEqual(ref.objid, 456)
+        self.assertEqual(ref.ver, 7)
+

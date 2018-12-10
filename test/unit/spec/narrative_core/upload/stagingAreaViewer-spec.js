@@ -94,7 +94,7 @@ define ([
                 });
             linkedStagingViewer.render();
             expect($node.html()).toContain('Or upload to this staging area by using');
-            expect($node.html()).toContain('https://www.globus.org/app/transfer?destination_id=3aca022a-5e5b-11e6-8309-22000b97daec&amp;destination_path=%2F' + fakeUser);
+            expect($node.html()).toContain('https://app.globus.org/file-manager?destination_id=3aca022a-5e5b-11e6-8309-22000b97daec&amp;destination_path=%2F' + fakeUser);
         });
 
         it('Should render properly without a Globus linked account', () => {

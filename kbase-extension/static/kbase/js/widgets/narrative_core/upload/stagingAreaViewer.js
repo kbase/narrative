@@ -160,19 +160,19 @@ define([
             }.bind(this));
 
             // Add ACL before going to the staging area
-            var globus_flag = false;
-            this.$elem.find('.globus_link').click(function (e) {
-                if (!globus_flag) {
-                    e.preventDefault();
-                    this.stagingServiceClient.addAcl()
-                        .done(
-                            data => {
-                                globus_flag = true;
-                                $(this).trigger(e.type); //e.click Throws an error for 2nd call of double call
-                            }
-                        )
-                }
-            }.bind(this));
+            // If it fails, it'll just do so silently.
+            var $globusLink = this.$elem.find('.globus_link');
+            $globusLink.click((e) => {
+                var globusWindow = window.open('', 'globus');
+                globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
+                this.stagingServiceClient.addAcl()
+                    .done(
+                        () => {
+                            window.open($globusLink.attr('href'), 'globus');
+                            return true;
+                        }
+                    )
+            });
 
             // Bind the help button to start the tour.
             this.$elem.find('button#help').click(function () {

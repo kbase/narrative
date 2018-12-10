@@ -247,7 +247,7 @@ class AppManager(object):
         kblogging.log_event(self._log, "run_batch_app", log_info)
 
         try:
-            job_id = clients.get("job_service").run_job(job_runner_inputs)
+            job_id = clients.get("job_service", token=agent_token['token']).run_job(job_runner_inputs)
         except Exception as e:
             log_info.update({'err': str(e)})
             kblogging.log_event(self._log, "run_batch_app_error", log_info)
@@ -424,7 +424,7 @@ class AppManager(object):
         kblogging.log_event(self._log, "run_app", log_info)
 
         try:
-            job_id = clients.get("job_service").run_job(job_runner_inputs)
+            job_id = clients.get("job_service", token=agent_token['token']).run_job(job_runner_inputs)
         except Exception as e:
             log_info.update({'err': str(e)})
             kblogging.log_event(self._log, "run_app_error", log_info)

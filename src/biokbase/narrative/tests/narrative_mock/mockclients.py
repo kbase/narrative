@@ -29,7 +29,9 @@ class MockClients(object):
     Will likely be removed (or modified, at least), when a minified KBase deploy becomes available.
     Then we don't need to mock as much.
     """
-    def __init__(self):
+    def __init__(self, token=None):
+        if token is not None:
+            assert isinstance(token, basestring)
         self.config = TestConfig()
         self.job_info = self.config.load_json_file(self.config.get('jobs', 'job_info_file'))
         self.test_job_id = self.config.get('app_tests', 'test_job_id')
@@ -257,8 +259,8 @@ class MockClients(object):
         return [data]
 
 
-def get_mock_client(client_name):
-    return MockClients()
+def get_mock_client(client_name, token=None):
+    return MockClients(token=token)
 
 class MockStagingHelper():
     def list(self):

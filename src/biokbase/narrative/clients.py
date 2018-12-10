@@ -9,11 +9,11 @@ from biokbase.narrative.common.url_config import URLS
 __clients = dict()
 
 
-def get(client_name):
+def get(client_name, token=None):
     # if client_name in __clients:
     #     return __clients[client_name]
     # else:
-    return __init_client(client_name)
+    return __init_client(client_name, token=token)
 
 
 def reset():

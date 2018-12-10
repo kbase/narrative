@@ -20,12 +20,6 @@ define(
 
         function loadDomEvents() {
 
-            $(document).on('workspaceIdQuery.Narrative', function(e, callback) {
-                if (callback) {
-                    callback(window.workspaceId);
-                }
-            });
-
             // bind menubar buttons
             $('#kb-save-btn').click(function() {
                 if (Jupyter && Jupyter.notebook) {

@@ -1126,14 +1126,6 @@ define([
             // console.debug("activate read-write mode");
         },
 
-
-        /**
-         * Object identifier of current narrative, extracted from page URL.
-         */
-        getNarrId: function () {
-            return window.location.pathname.split('/').pop();
-        },
-
         /**
          * Once the notebook is loaded, all code cells with generated code
          * (e.g. the placeholder, provenance cells) should be hidden.

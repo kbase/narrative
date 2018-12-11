@@ -294,10 +294,7 @@ define(
 
         function initializeRuntime() {
             var runtime = Runtime.make();
-            var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
-            if (wsInfo && wsInfo.length === 3) {
-                runtime.setEnv('workspaceId', parseInt(wsInfo[1]));
-            }
+            runtime.setEnv('workspaceId', Config.workspaceId);
         }
 
         return {

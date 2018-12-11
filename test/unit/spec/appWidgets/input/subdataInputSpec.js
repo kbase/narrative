@@ -48,25 +48,5 @@ define([
             var widget = SubdataInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
         });
-
-        it('should start up and stop correctly', function(done) {
-            TestUtil.pendingIfNoToken();
-            var widget = SubdataInput.make(testConfig);
-            widget.start({node: document.createElement('div')})
-                .then(function() {
-                    return widget.stop();
-                })
-                .then(function() {
-                    // no-op
-                })
-                .catch(function(error) {
-                    console.error(JSON.stringify(error, null, 4));
-                    console.error(error.stack);
-                    done.fail();
-                })
-                .finally(function() {
-                    done();
-                });
-        });
     });
 });

@@ -26,12 +26,13 @@ define([
     GrowthCondition) {
     'use strict';
 
-    var t = html.tag,
+    let t = html.tag,
         div = t('div');
 
     function factory() {
 
-        var runtime = Runtime.make();
+
+        let runtime = Runtime.make();
 
         function workspaceCall(subObjectIdentity) {
             return new Workspace(runtime.config('services.workspace.url'), {
@@ -41,7 +42,7 @@ define([
         }
 
         function genericClientCall(subdataSelection, subObjectIdentity) {
-            var swUrl = runtime.config('services.workspace.url').replace('ws', 'service_wizard'),
+            const swUrl = runtime.config('services.workspace.url').replace('ws', 'service_wizard'),
                 genericClient = new GenericClient(swUrl, {
                     token: runtime.authToken()
                 });
@@ -80,7 +81,7 @@ define([
         }
 
         function standardFetchData(arg) {
-            var referenceObjectRef = arg.referenceObjectRef,
+            let referenceObjectRef = arg.referenceObjectRef,
                 subdataSelection = arg.spec.data.constraints.subdataSelection,
                 subObjectIdentity = {
                     ref: referenceObjectRef,
@@ -90,7 +91,7 @@ define([
 
             let parseData = function (results) {
                 console.log(results);
-                var values = [],
+                let values = [],
                     selectionId = subdataSelection.selection_id,
                     descriptionFields = subdataSelection.selection_description || [],
                     descriptionTemplateText = subdataSelection.description_template,
@@ -113,7 +114,7 @@ define([
                         result = result[0];
                     }
 
-                    var subdata = Props.getDataItem(result.data, subdata_path);
+                    let subdata = Props.getDataItem(result.data, subdata_path);
 
                     if (!subdata) {
                         return;
@@ -123,7 +124,7 @@ define([
                         // For arrays we pluck off the "selectionId" property from
                         // each item.
                         subdata.forEach(function (datum) {
-                            var id = datum;
+                            let id = datum;
                             if (selectionId && typeof id === 'object') {
                                 id = datum[selectionId];
                             }
@@ -136,7 +137,7 @@ define([
                         });
                     } else {
                         Object.keys(subdata).forEach(function (key) {
-                            var datum = subdata[key],
+                            let datum = subdata[key],
                                 id;
 
                             if (selectionId) {
@@ -179,12 +180,13 @@ define([
             } else {
                 dataCall = workspaceCall(subObjectIdentity);
             }
+            const followRefKey = "WSREF(";
             let subdata_path = subdataSelection.path_to_subdata[0];
-            if (subdata_path.startsWith("WSREF(")) {
+            if (subdata_path.startsWith(followRefKey)) {
                 // Look for the "WSREF" key in the subdata_path and if present, follow the
                 // path in brackets to extract and load a reference to another object
                 let ref_loc;
-                [ref_loc, subdata_path] = subdata_path.slice(6).split(")", 2);
+                [ref_loc, subdata_path] = subdata_path.slice(followRefKey.length).split(")", 2);
                 return dataCall
                     .then(function (results) {
                         let reference = Props.getDataItem(results[0].data, [ref_loc]);
@@ -235,7 +237,7 @@ define([
         }
 
         function customFetchDataNormal(arg) {
-            var workspace = new Workspace(runtime.config('services.workspace.url'), {
+            const workspace = new Workspace(runtime.config('services.workspace.url'), {
                     token: runtime.authToken()
                 }),
                 query = [{

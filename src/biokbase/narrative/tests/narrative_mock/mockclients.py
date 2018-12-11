@@ -1,5 +1,5 @@
 from ..util import TestConfig
-
+from biokbase.workspace.baseclient import ServerError
 
 class MockClients(object):
     """
@@ -62,9 +62,23 @@ class MockClients(object):
         return "0.0.0"
 
     def get_workspace_info(self, params):
+        """
+        Some magic workspace ids.
+        12345 - the standard one.
+        678 - doesn't have useful narrative info in its metadata
+        789 - raises a permissions error
+        890 - raises a deleted workspace error
+        otherwise, returns workspace info with narrative = 1, and narrative name = 'Fake'
+        """
         wsid = params.get('id', 12345)
         name = params.get('workspace', 'some_workspace')
-        if name != 'invalid_workspace' and wsid > 0:
+        if wsid == 678:
+            return [wsid, name, 'owner', 'moddate', 'largestid', 'a', 'n', 'unlocked', {}]
+        elif wsid == 789:
+            raise ServerError("JSONRPCError", -32500, "User you may not read workspace 789")
+        elif wsid == 890:
+            raise ServerError("JSONRPCError", -32500, "Workspace 890 is deleted")
+        elif name != 'invalid_workspace':
             return [wsid, name, 'owner', 'moddate', 'largestid', 'a', 'n', 'unlocked', {'is_temporary': 'false', 'narrative': '1', 'narrative_nice_name': 'Fake'}]
         else:
             raise Exception('not found')

@@ -31,7 +31,7 @@ class NarrativeRef(object):
             except ValueError:
                 raise ValueError("objid must be numerical, not {}".format(self.objid))
         else:
-            self.objid = self._get_narrative_objid(self.wsid)
+            self.objid = self._get_narrative_objid()
 
     def __str__(self):
         ref_str = "{}/{}".format(self.wsid, self.objid)
@@ -44,46 +44,29 @@ class NarrativeRef(object):
                self.objid == other.objid and \
                self.ver == other.ver
 
-    def _get_narrative_objid(self, wsid):
+    def _get_narrative_objid(self):
         """
         Attempts to find the Narrative object id given a workspace id.
+        This is only called on the internal wsid, which must be an int.
         Can raise:
-            - ValueError
-                - if wsid is not an int
-                - if the found objid from the workspace metadata is not an int
-            - RuntimeError
-                - if there's not exactly 1 Narrative in that Workspace
             - PermissionsError
                 - if the current user doesn't have access to that workspace
+            - RuntimeError
+                - if there's anything wrong with the workspace metadata that's
+                  supposed to contain the narrative object id (either missing
+                  or not an int)
+            - ServerError
+                - if anything else bad happens from the Workspace
         """
         objid = None
         try:
-            wsid = int(wsid)
-            ws_meta = clients.get('workspace').get_workspace_info({"id": wsid})[8]
-            if "narrative" in ws_meta:
-                objid = int(ws_meta["narrative"])
-            else:
-                narr_list = clients.get('workspace').list_objects({
-                    'ids': [wsid],
-                    'type': 'KBaseNarrative.Narrative'
-                })
-                if len(narr_list) == 0:
-                    raise RuntimeError("No Narratives found in workspace {}".format(wsid))
-                elif len(narr_list) == 1:
-                    objid = narr_list[0][0]
-                else:
-                    raise RuntimeError(
-                        "Not enough information to open Narrative - there are "
-                        "{} Narratives available in workspace {}, and no object "
-                        "id was given".format(len(narr_list), wsid)
-                    )
-            return int(objid)
-        except ValueError as err:
-            msg = "Unable to open Narrative with workspace id {}".format(wsid)
-            if objid is not None:
-                msg = msg + " and object id {}".format(objid)
-            msg = msg + " -- not an integer!"
-            raise ValueError(msg)
+            ws_meta = clients.get("workspace").get_workspace_info({"id": self.wsid})[8]
+            objid = int(ws_meta.get("narrative"))
+            return objid
+        except (ValueError, TypeError):
+            raise RuntimeError(
+                "Expected an integer while looking up the Narrative id, "
+                "got '{}'".format(ws_meta.get("narrative")))
         except ServerError as err:
             raise self._ws_err_to_perm_err(err)
 

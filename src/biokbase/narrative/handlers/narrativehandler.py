@@ -49,26 +49,6 @@ class NarrativeMainHandler(IPythonHandler):
     """
     def get(self, path):
         _init_session(self.request, self.cookies)
-        # """
-        # Inject the user's KBase cookie before trying to look up a file.
-        # One of our big use cases bypasses the typical Jupyter login mechanism.
-        # """
-        # client_ip = self.request.remote_ip
-        # http_headers = self.request.headers
-        # ua = http_headers.get('User-Agent', 'unknown')
-
-        # auth_cookie = self.cookies.get(auth_cookie_name, None)
-        # if auth_cookie:
-        #     token = urllib.unquote(auth_cookie.value)
-        # else:
-        #     raise web.HTTPError(status_code=401,
-        #                         log_message='No auth cookie, denying access',
-        #                         reason='Authorization required for Narrative access')
-
-        # if token != kbase_env.auth_token:
-        #     init_session_env(get_user_info(token), client_ip)
-        #     log_event(g_log, 'session_start', {'user': kbase_env.user, 'user_agent': ua})
-
         """
         get renders the notebook template if a name is given, or
         redirects to the '/files/' handler if the name is not given.

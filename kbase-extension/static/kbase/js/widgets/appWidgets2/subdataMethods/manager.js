@@ -26,12 +26,13 @@ define([
     GrowthCondition) {
     'use strict';
 
-    var t = html.tag,
+    let t = html.tag,
         div = t('div');
 
     function factory() {
 
-        var runtime = Runtime.make();
+
+        let runtime = Runtime.make();
 
         function workspaceCall(subObjectIdentity) {
             return new Workspace(runtime.config('services.workspace.url'), {
@@ -41,7 +42,7 @@ define([
         }
 
         function genericClientCall(subdataSelection, subObjectIdentity) {
-            var swUrl = runtime.config('services.workspace.url').replace('ws', 'service_wizard'),
+            const swUrl = runtime.config('services.workspace.url').replace('ws', 'service_wizard'),
                 genericClient = new GenericClient(swUrl, {
                     token: runtime.authToken()
                 });
@@ -63,90 +64,84 @@ define([
             ]);
         }
 
+
+
+        function sortData (data) {
+            // sort by id now.
+            data.sort(function (a, b) {
+                if (a.id > b.id) {
+                    return 1;
+                }
+                if (a.id < b.id) {
+                    return -1;
+                }
+                return 0;
+            });
+            return data;
+        }
+
         function standardFetchData(arg) {
-            var referenceObjectRef = arg.referenceObjectRef,
+            let referenceObjectRef = arg.referenceObjectRef,
                 subdataSelection = arg.spec.data.constraints.subdataSelection,
                 subObjectIdentity = {
                     ref: referenceObjectRef,
                     included: subdataSelection.subdata_included
                 },
                 dataCall;
-            if (subdataSelection.service_function) {
-                dataCall = genericClientCall(subdataSelection, subObjectIdentity);
-            } else {
-                dataCall = workspaceCall(subObjectIdentity);
-            }
-            return dataCall
-                .then(function (results) {
-                    var values = [],
-                        selectionId = subdataSelection.selection_id,
-                        descriptionFields = subdataSelection.selection_description || [],
-                        descriptionTemplateText = subdataSelection.description_template,
-                        descriptionTemplate;
 
-                    if (!descriptionTemplateText) {
-                        descriptionTemplateText = descriptionFields.map(function (field) {
-                            return '{{' + field + '}}';
-                        }).join(' - ');
+            let parseData = function (results) {
+                console.log(results);
+                let values = [],
+                    selectionId = subdataSelection.selection_id,
+                    descriptionFields = subdataSelection.selection_description || [],
+                    descriptionTemplateText = subdataSelection.description_template,
+                    descriptionTemplate;
+
+                if (!descriptionTemplateText) {
+                    descriptionTemplateText = descriptionFields.map(function (field) {
+                        return '{{' + field + '}}';
+                    }).join(' - ');
+                }
+
+                descriptionTemplate = Handlebars.compile(descriptionTemplateText);
+                results.forEach(function (result) {
+                    if (!result) {
+                        return;
                     }
 
-                    descriptionTemplate = Handlebars.compile(descriptionTemplateText);
-                    results.forEach(function (result) {
-                        if (!result) {
-                            return;
-                        }
+                    // Check if some generic wrapping is used which wasn't unwrapped by GenericClient
+                    if (result instanceof Array) {
+                        result = result[0];
+                    }
 
-                        // Check if some generic wrapping is used which wasn't unwrapped by GenericClient
-                        if (result instanceof Array) {
-                            result = result[0];
-                        }
+                    let subdata = Props.getDataItem(result.data, subdata_path);
 
-                        var subdata = Props.getDataItem(result.data, subdataSelection.path_to_subdata);
+                    if (!subdata) {
+                        return;
+                    }
 
-                        if (!subdata) {
-                            return;
-                        }
-
-                        // if(subdata instanceof Array) {
-                        //     for(var k=0; k<subdata.length; k++) {
-                        //         var dname = datainfo[1];
-                        //         if(includeWsId) { dname = datainfo[6] + '/' + datainfo[1]; }
-                        //         var id = subdata[k]; // default id is just the value
-                        //         // if the selection_id is set, and the object is an object of somekind, then use that value
-                        //         if(selection_id && typeof id === 'object') {
-                        //             id = subdata[k][selection_id];
-                        //         }
-                        //         var autofill = {
-                        //             id: id,
-                        //             desc: hb_template(subdata[k]),
-                        //             dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
-                        //             dname: dname
-                        //         };
-                        //         self.autofillData.push(autofill);
-                        //     }
-
-                        if (subdata instanceof Array) {
-                            // For arrays we pluck off the "selectionId" property from
-                            // each item.
-                            subdata.forEach(function (datum) {
-                                var id = datum;
-                                if (selectionId && typeof id === 'object') {
-                                    id = datum[selectionId];
-                                }
-                                values.push({
-                                    id: id,
-                                    desc: descriptionTemplate(datum), // TODO
-                                    objectRef: [result.info[6], result.info[0], result.info[4]].join('/'),
-                                    objectName: result.info[1]
-                                });
+                    if (subdata instanceof Array) {
+                        // For arrays we pluck off the "selectionId" property from
+                        // each item.
+                        subdata.forEach(function (datum) {
+                            let id = datum;
+                            if (selectionId && typeof id === 'object') {
+                                id = datum[selectionId];
+                            }
+                            values.push({
+                                id: id,
+                                desc: descriptionTemplate(datum), // TODO
+                                objectRef: [result.info[6], result.info[0], result.info[4]].join('/'),
+                                objectName: result.info[1]
                             });
-                        } else {
-                            Object.keys(subdata).forEach(function (key) {
-                                var datum = subdata[key],
-                                    id;
+                        });
+                    } else {
+                        Object.keys(subdata).forEach(function (key) {
+                            let datum = subdata[key],
+                                id;
 
-                                if (selectionId) {
-                                    switch (typeof datum) {
+                            if (selectionId) {
+                                switch (typeof datum) {
                                     case 'object':
                                         id = datum[selectionId];
                                         break;
@@ -160,39 +155,54 @@ define([
                                         break;
                                     default:
                                         id = key;
-                                    }
-                                } else {
-                                    id = key;
                                 }
+                            } else {
+                                id = key;
+                            }
 
-                                values.push({
-                                    id: id,
-                                    desc: descriptionTemplate(datum), // todo
-                                    // desc: id,
-                                    objectRef: [result.info[6], result.info[0], result.info[4]].join('/'),
-                                    objectName: result.info[1]
-                                });
+                            values.push({
+                                id: id,
+                                desc: descriptionTemplate(datum), // todo
+                                // desc: id,
+                                objectRef: [result.info[6], result.info[0], result.info[4]].join('/'),
+                                objectName: result.info[1]
                             });
-                        }
-                    });
-                    return values.map(function (item) {
-                        item.text = makeLabel(item, arg.spec.ui.showSourceObject);
-                        return item;
-                    });
-                })
-                .then(function (data) {
-                    // sort by id now.
-                    data.sort(function (a, b) {
-                        if (a.id > b.id) {
-                            return 1;
-                        }
-                        if (a.id < b.id) {
-                            return -1;
-                        }
-                        return 0;
-                    });
-                    return data;
+                        });
+                    }
                 });
+                return values.map(function (item) {
+                    item.text = makeLabel(item, arg.spec.ui.showSourceObject);
+                    return item;
+                });
+            };
+            if (subdataSelection.service_function) {
+                dataCall = genericClientCall(subdataSelection, subObjectIdentity);
+            } else {
+                dataCall = workspaceCall(subObjectIdentity);
+            }
+            const followRefKey = "WSREF(";
+            let subdata_path = subdataSelection.path_to_subdata[0];
+            if (subdata_path.startsWith(followRefKey)) {
+                // Look for the "WSREF" key in the subdata_path and if present, follow the
+                // path in brackets to extract and load a reference to another object
+                let ref_loc;
+                [ref_loc, subdata_path] = subdata_path.slice(followRefKey.length).split(")", 2);
+                return dataCall
+                    .then(function (results) {
+                        let reference = Props.getDataItem(results[0].data, [ref_loc]);
+                        return workspaceCall({
+                                ref: reference,
+                                included: subdataSelection.subdata_included
+                        })
+                            .then(parseData)
+                            .then(sortData);
+
+                    })
+            } else {
+                return dataCall
+                    .then(parseData)
+                    .then(sortData);
+            }
         }
 
         function getSubdataInfo(appSpec, paramSpec) {
@@ -227,7 +237,7 @@ define([
         }
 
         function customFetchDataNormal(arg) {
-            var workspace = new Workspace(runtime.config('services.workspace.url'), {
+            const workspace = new Workspace(runtime.config('services.workspace.url'), {
                     token: runtime.authToken()
                 }),
                 query = [{

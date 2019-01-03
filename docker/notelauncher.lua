@@ -88,6 +88,9 @@ local function launch_notebook(self, image)
     else
         conf.Image = string.format("%s:%s", M.repository_image, M.repository_version)
     end
+    -- Clear the cmd and user settings to avoid clobbering desired notebook imagge behavior
+    conf.Cmd = nil
+    conf.User = nil
     conf.PortSpecs = {tostring(M.private_port)}
     if M.syslog_src then
         -- Make sure it exists and is writeable

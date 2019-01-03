@@ -147,40 +147,6 @@ class KBaseWSManagerMixin(object):
         except ServerError as err:
             raise self._ws_err_to_perm_err(err)
 
-    # def read_narrative(self, obj_ref, content=True, include_metadata=True):
-    #     """
-    #     Fetches a Narrative and its object info from the Workspace
-    #     If content is False, this only returns the Narrative's info
-    #     and metadata, otherwise, it returns the whole workspace object.
-
-    #     This is mainly a wrapper around Workspace.get_objects(), except that
-    #     it always returns a dict. If content is False, it returns a dict
-    #     containing a single key: 'info', with the object info and, optionally,
-    #     metadata.
-
-    #     obj_ref: expected to be in the format "wsid/objid", e.g. "4337/1"
-    #     or even "4337/1/1" to include version.
-    #     """
-
-    #     self._test_obj_ref(obj_ref)
-    #     try:
-    #         if content:
-    #             nar_data = self.ws_client().get_objects([{'ref': obj_ref}])
-    #             if nar_data:
-    #                 nar = nar_data[0]
-    #                 nar['data'] = update_narrative(nar['data'])
-    #                 return nar
-    #         else:
-    #             log_event(g_log, 'read_narrative testing existence', {'ref': obj_ref})
-    #             nar_data = self.ws_client().get_object_info_new({
-    #                 u'objects': [{'ref': obj_ref}],
-    #                 u'includeMetadata': 1 if include_metadata else 0
-    #             })
-    #             if nar_data:
-    #                 return {'info': nar_data[0]}
-    #     except ServerError, err:
-    #         raise self._ws_err_to_perm_err(err)
-
     def write_narrative(self, ref, nb, cur_user):
         """
         :param ref: a NarrativeRef

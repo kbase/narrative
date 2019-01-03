@@ -37,7 +37,6 @@ define([
     var config, debug;
 
     // Get the workspace id from the URL
-    console.log(window.location.href);
     var workspaceId = null,
         objectId = null,
         narrativeRef = null,

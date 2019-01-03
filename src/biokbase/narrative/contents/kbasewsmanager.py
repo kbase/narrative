@@ -100,15 +100,12 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     # regex for parsing out workspace_id and object_id from
     # a "ws.{workspace}.{object}" string
+    # should accept any of the following formats (the numbers are just random):
+    # ws.123.obj.456.ver.789
+    # ws.123.obj.456
+    # ws.123
+    # 123
     path_regex = re.compile('^(ws\.)?(?P<wsid>\d+)((\.obj\.(?P<objid>\d+))(\.ver\.(?P<ver>\d+))?)?$')
-
-    # ws_regex = re.compile('^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)(\.(?P<ver>\d+))?')
-    # # regex for parsing out fully qualified workspace name and object name
-    # ws_regex2 = re.compile('^(?P<wsname>[\w:]+)/(?P<objname>[\w]+)')
-    # regex for par
-    # kbid_regex = re.compile('^(kb\|[a-zA-Z]+\..+)')
-    # regex from pretty name path
-    # objid_regex = re.compile('^.*\s-\s(?P<obj_long_id>ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+))\s-\s')
 
     # This is a regular expression to make sure that the workspace ID
     # doesn't contain non-legit characters in the object ID field
@@ -213,8 +210,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             if not ref:
                 raise HTTPError(404, u'Unknown Narrative "{}"'.format(path))
             try:
-                # nar_obj = self.read_narrative(u'{}/{}'.format(ref[u'wsid'], ref[u'objid']), content)
-                nar_obj = self.read_narrative(ref, content=content)  #ref['wsid'], objid=ref['objid'], ver=ref['ver'], content=content)
+                nar_obj = self.read_narrative(ref, content=content)
                 model[u'type'] = u'notebook'
                 user = self.get_userid()
                 if content:
@@ -306,7 +302,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             self.rename_narrative(self._parse_path(path), self.get_userid(), new_name)
         except PermissionsError as err:
             pass
-            # raise HTTPError(403, err.message)
         except Exception as err:
             raise HTTPError(500, u'An error occurred while renaming your Narrative: {}'.format(err))
 
@@ -537,7 +532,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             if not trusted:
                 self.log.warn("Notebook %s is not trusted", path)
             self.notary.mark_cells(nb, trusted)
-
             # self.log.warn("Notebook %s is totally trusted", path)
             # # all notebooks are trustworthy, because KBase is Pollyanna.
 

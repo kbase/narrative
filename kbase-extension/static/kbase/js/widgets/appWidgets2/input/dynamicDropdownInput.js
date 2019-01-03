@@ -99,7 +99,7 @@ define([
                 style: {
                     width: '100%'
                 },
-                multiple: dd_options.multiselection || false,
+                multiple: false,
                 id: html.genId()
             }, [option({ value: '' }, '')].concat(selectOptions));
 

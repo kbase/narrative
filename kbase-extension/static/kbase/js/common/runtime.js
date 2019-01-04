@@ -100,10 +100,7 @@ define([
          * The kbaseNarrative object does this, but it also does a lot more...
          */
         function workspaceId() {
-            var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
-            if (wsInfo && wsInfo.length === 3) {
-                return wsInfo[1];
-            }
+            return narrativeConfig.getItem('workspaceId', null);
         }
 
         return {

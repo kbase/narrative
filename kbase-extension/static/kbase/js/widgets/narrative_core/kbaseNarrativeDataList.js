@@ -55,10 +55,6 @@ define([
 ) {
     'use strict';
 
-    function objectInfoToRef(info) {
-        return [info[6], info[0], info[4]].join('/');
-    }
-
     return KBWidget({
         name: 'kbaseNarrativeDataList',
         parent: kbaseAuthenticatedWidget,
@@ -73,6 +69,7 @@ define([
             slideTime: 400
         },
         // private variables
+        runtime: Runtime.make(),
         mainListPanelHeight: '340px',
         refreshTimer: null,
         ws_name: null,
@@ -306,13 +303,11 @@ define([
                 _this.refresh();
             });
 
-            // _this.initDataListSets();
-
             if (this.options.ws_name) {
                 this.ws_name = this.options.ws_name;
             }
 
-            this.wsId = Number(Jupyter.narrative.workspaceId);
+            this.wsId = this.runtime.workspaceId();
 
             return this;
         },
@@ -448,8 +443,7 @@ define([
                         return info;
                     }.bind(this));
                     var data = JSON.parse(JSON.stringify(justInfo));
-                    var runtime = Runtime.make();
-                    runtime.bus().set({
+                    this.runtime.bus().set({
                         data: data,
                         timestamp: new Date().getTime(),
                         objectInfo: objectInfoPlus

@@ -14,6 +14,7 @@ from notebook.utils import (
     to_api_path,
     to_os_path
 )
+from biokbase.narrative.common.exceptions import PermissionsError
 from traitlets import (
     Unicode,
     Dict,
@@ -28,6 +29,8 @@ import re
 import json
 from collections import Counter
 from updater import update_narrative
+from biokbase.narrative.common.narrative_ref import NarrativeRef
+
 
 # The list_workspace_objects method has been deprecated, the
 # list_objects method is the current primary method for fetching
@@ -43,22 +46,6 @@ MAX_METADATA_SIZE_BYTES = 16000
 WORKSPACE_TIMEOUT = 30  # seconds
 
 g_log = get_logger("biokbase.narrative")
-
-
-class PermissionsError(ServerError):
-    """Raised if user does not have permission to
-    access the workspace.
-    """
-    @staticmethod
-    def is_permissions_error(err):
-        """Try to guess if the error string is a permission-denied error
-        for the narrative (i.e. the workspace the narrative is in).
-        """
-        pat = re.compile("(\s*[Uu]sers?\s*(\w+)?\s*may not \w+ workspace.*)|(\s*[Tt]oken validation failed)")
-        return pat.search(err) is not None
-
-    def __init__(self, name=None, code=None, message=None, **kw):
-        ServerError.__init__(self, name, code, message, **kw)
 
 
 class KBaseWSManagerMixin(object):
@@ -113,20 +100,21 @@ class KBaseWSManagerMixin(object):
             ver=m.group('ver')
         )
 
-    def narrative_exists(self, obj_ref):
+    def narrative_exists(self, ref):
         """
         Test if a narrative exists.
         If we can fetch the narrative info (e.g. the get_object_info from the
             workspace), then it exists.
+        :param ref: a NarrativeRef object
         """
         try:
-            return self.read_narrative(obj_ref, content=False, include_metadata=False) is not None
+            return self.read_narrative(ref, content=False, include_metadata=False) is not None
         except PermissionsError:
             raise
         except ServerError:
             return False
 
-    def read_narrative(self, obj_ref, content=True, include_metadata=True):
+    def read_narrative(self, ref, content=True, include_metadata=True):
         """
         Fetches a Narrative and its object info from the Workspace
         If content is False, this only returns the Narrative's info
@@ -137,31 +125,33 @@ class KBaseWSManagerMixin(object):
         containing a single key: 'info', with the object info and, optionally,
         metadata.
 
-        obj_ref: expected to be in the format "wsid/objid", e.g. "4337/1"
-        or even "4337/1/1" to include version.
+        :param ref: a NarrativeRef
+        :param content: if True, returns the narrative document, otherwise just the metadata
+        :param include_metadata: if True, includes the object metadata when returning
         """
-
-        self._test_obj_ref(obj_ref)
+        log_event(g_log, "reading narrative: {}", {'ref': str(ref)})
+        assert isinstance(ref, NarrativeRef), "read_narrative must use a NarrativeRef as input!"
         try:
             if content:
-                nar_data = self.ws_client().get_objects([{'ref': obj_ref}])
-                if nar_data:
-                    nar = nar_data[0]
-                    nar['data'] = update_narrative(nar['data'])
-                    return nar
+                nar_data = self.ws_client().get_objects([{'ref': str(ref)}])
+                nar = nar_data[0]
+                nar['data'] = update_narrative(nar['data'])
+                return nar
             else:
-                log_event(g_log, 'read_narrative testing existence', {'ref': obj_ref})
-                nar_data = self.ws_client().get_object_info_new({
-                    u'objects': [{'ref': obj_ref}],
-                    u'includeMetadata': 1 if include_metadata else 0
+                log_event(g_log, 'read_narrative testing existence', {'ref': str(ref)})
+                nar_data = self.ws_client().get_object_info3({
+                    'objects': [{'ref': str(ref)}],
+                    'includeMetadata': 1 if include_metadata else 0
                 })
-                if nar_data:
-                    return {'info': nar_data[0]}
-        except ServerError, err:
+                return {'info': nar_data['infos'][0]}
+        except ServerError as err:
             raise self._ws_err_to_perm_err(err)
 
-    def write_narrative(self, obj_ref, nb, cur_user):
+    def write_narrative(self, ref, nb, cur_user):
         """
+        :param ref: a NarrativeRef
+        :param nb: a notebook model
+        :cur_user: the current user id
         Given a notebook, break this down into a couple parts:
         1. Figure out what ws and obj to save to
         2. Build metadata object
@@ -170,6 +160,7 @@ class KBaseWSManagerMixin(object):
            (narrative, ws_id, obj_id, ver)
         """
 
+        assert isinstance(ref, NarrativeRef), "write_narrative must use a NarrativeRef as input!"
         if 'worksheets' in nb:
             # it's an old version. update it by replacing the 'worksheets' key with
             # the 'cells' subkey
@@ -182,11 +173,8 @@ class KBaseWSManagerMixin(object):
             del(nb['worksheets'])
             nb['nbformat'] = 4
 
-        parsed_ref = self._parse_obj_ref(obj_ref)
-        if parsed_ref is None:
-            raise HTTPError(500, u'Unable to parse incorrect obj_ref "{}"'.format(obj_ref))
-        ws_id = parsed_ref['wsid']
-        obj_id = parsed_ref['objid']
+        ws_id = ref.wsid
+        obj_id = ref.objid
 
         # make sure the metadata's up to date.
         try:
@@ -392,7 +380,7 @@ class KBaseWSManagerMixin(object):
             # otherwise, remove them all.
             if total_size - method_size + len(meth_overflow_key) + len(unicode(num_methods)) < MAX_METADATA_SIZE_BYTES:
                 # filter them.
-                method_info = _filter_app_methods(total_size, meth_overflow_key, method_info)
+                method_info = self._filter_app_methods(total_size, meth_overflow_key, method_info)
             else:
                 method_info = Counter({meth_overflow_key : num_methods})
             total_size -= method_size
@@ -405,7 +393,7 @@ class KBaseWSManagerMixin(object):
 
             # same for apps now.
             if total_size - app_size + len(app_overflow_key) + len(unicode(num_apps)) < MAX_METADATA_SIZE_BYTES:
-                app_info = _filter_app_methods(total_size, app_overflow_key, app_info)
+                app_info = self._filter_app_methods(total_size, app_overflow_key, app_info)
             else:
                 app_info = Counter({app_overflow_key : num_apps})
             total_size -= app_size
@@ -430,9 +418,9 @@ class KBaseWSManagerMixin(object):
         filter_dict[overflow_key] = overflow_count
         return filter_dict
 
-    def rename_narrative(self, obj_ref, cur_user, new_name):
+    def rename_narrative(self, ref, cur_user, new_name):
         """
-        Renames a Narrative. Requires an obj_ref
+        Renames a Narrative. Requires a ref (NarrativeRef)
         and the name to set for the Narrative. If the current name
         doesn't match the new name, nothing changes.
 
@@ -441,12 +429,12 @@ class KBaseWSManagerMixin(object):
 
         Any Exceptions that get thrown should just be auto-raised.
         """
-        nar = self.read_narrative(obj_ref)['data']
+        nar = self.read_narrative(ref)['data']
         # do stuff to set the new name
         if nar['metadata']['name'] == new_name:
             return
         nar['metadata']['name'] = new_name
-        self.write_narrative(obj_ref, nar, cur_user)
+        self.write_narrative(ref, nar, cur_user)
 
     def copy_narrative(self, obj_ref, content=True):
         pass
@@ -494,7 +482,7 @@ class KBaseWSManagerMixin(object):
 
         return my_narratives
 
-    def narrative_permissions(self, obj_ref, user=None):
+    def narrative_permissions(self, ref, user=None):
         """
         Returns permissions to a Narrative.
         This is returned as a dict, where each key is a user.
@@ -507,13 +495,10 @@ class KBaseWSManagerMixin(object):
 
         If nobody is logged in, this throws a WorkspaceClient.ServerError.
         """
-        m = obj_ref_regex.match(obj_ref)
-        if m is None:
-            raise ValueError('Narrative object references must be of the format wsid/objid/ver')
-        ws_id = m.group('wsid')
+        assert isinstance(ref, NarrativeRef), "narrative_permissions must use a NarrativeRef as input!"
         perms = {}
         try:
-            perms = self.ws_client().get_permissions({'id': ws_id})
+            perms = self.ws_client().get_permissions({'id': ref.wsid})
         except ServerError, err:
             raise self._ws_err_to_perm_err(err)
         if user is not None:
@@ -523,7 +508,7 @@ class KBaseWSManagerMixin(object):
                 perms = {user: 'n'}
         return perms
 
-    def narrative_writable(self, obj_ref, user):
+    def narrative_writable(self, ref, user):
         """
         Returns True if the logged in user can know if the given user can write to this narrative.
         E.g. user A is logged in. If A can see user B's permissions, and user B can write to this
@@ -537,10 +522,12 @@ class KBaseWSManagerMixin(object):
 
         Throws a WorkspaceClient.ServerError if not logged in, or
         if the narrative doesn't exist.
+        :param ref: a NarrativeRef
+        :param user: str - the user to check for permissions
         """
         if user is None:
             raise ValueError('A user must be given for testing whether a Narrative can be written')
-        perms = self.narrative_permissions(obj_ref, user)
+        perms = self.narrative_permissions(ref, user)
         if perms.has_key(user):
             return perms[user] == 'w' or perms[user] == 'a'
         else:

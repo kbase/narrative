@@ -8,13 +8,15 @@ define([
     'kbaseNarrativeOutputCell',
     'base/js/namespace',
     'kbaseNarrative',
-    'common/runtime'
+    'common/runtime',
+    'narrativeConfig'
 ], function(
     $,
     Widget,
     Jupyter,
     Narrative,
-    Runtime
+    Runtime,
+    Config
 ) {
     'use strict';
     describe('Test the kbaseNarrativeOutputCell widget', function() {
@@ -53,6 +55,7 @@ define([
         beforeEach(function() {
             beforeEach(function () {
                 history.pushState(null, null, '/narrative/ws.10.obj.1');
+                Config.config.workspaceId = 10;
             });
             Jupyter.narrative = new Narrative();
             $('body').append($('<div id="notebook-container">').append($target));

@@ -140,7 +140,6 @@ define([
         getCells: getCells,
         getCell: getCell,
         disableKeyListenersForCell: disableKeyListenersForCell,
-        // getWorkspaceRef: getWorkspaceRef,
         onEvent: onEvent,
         uiModeIs: uiModeIs,
         canEdit: canEdit,

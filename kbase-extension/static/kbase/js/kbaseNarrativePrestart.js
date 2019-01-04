@@ -20,12 +20,6 @@ define(
 
         function loadDomEvents() {
 
-            $(document).on('workspaceIdQuery.Narrative', function(e, callback) {
-                if (callback) {
-                    callback(window.workspaceId);
-                }
-            });
-
             // bind menubar buttons
             $('#kb-save-btn').click(function() {
                 if (Jupyter && Jupyter.notebook) {
@@ -300,10 +294,7 @@ define(
 
         function initializeRuntime() {
             var runtime = Runtime.make();
-            var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
-            if (wsInfo && wsInfo.length === 3) {
-                runtime.setEnv('workspaceId', parseInt(wsInfo[1]));
-            }
+            runtime.setEnv('workspaceId', Config.workspaceId);
         }
 
         return {

@@ -294,7 +294,7 @@ define(
 
         function initializeRuntime() {
             var runtime = Runtime.make();
-            runtime.setEnv('workspaceId', Config.workspaceId);
+            runtime.setEnv('workspaceId', Config.get('workspaceId'));
         }
 
         return {

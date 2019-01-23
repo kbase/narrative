@@ -40,7 +40,7 @@ define([
     var workspaceId = null,
         objectId = null,
         narrativeRef = null,
-        m = window.location.href.match(/(ws\.)?(\d+)((\.obj\.(\d+))(\.ver\.(\d+))?)?/);
+        m = window.location.href.match(/(ws\.)?(\d+)((\.obj\.(\d+))(\.ver\.(\d+))?)?$/);
     // 2 = wsid
     // 5 = objid
     // 7 = ver

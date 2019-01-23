@@ -202,7 +202,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     def get(self, path, content=True, type=None, format=None):
         """Get the model of a file or directory with or without content."""
         path = path.strip('/')
-
         model = base_model(path, path)
         if self.exists(path) and type != u'directory':
             #It's a narrative object, so try to fetch it.

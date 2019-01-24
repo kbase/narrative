@@ -61,8 +61,6 @@ class NarrativeMainHandler(IPythonHandler):
         try:
             model = cm.get(path, content=False)
         except web.HTTPError as e:
-            print("ERROR")
-            print(e.status_code)
             if e.status_code == 500:
                 self.write(self.render_template('500.html'))
                 raise

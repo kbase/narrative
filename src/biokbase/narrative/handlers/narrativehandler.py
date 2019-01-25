@@ -61,8 +61,15 @@ class NarrativeMainHandler(IPythonHandler):
         try:
             model = cm.get(path, content=False)
         except web.HTTPError as e:
-            raise
-        if model['type'] != 'notebook':
+            if e.status_code == 500:
+                self.write(self.render_template('500.html'))
+                raise
+            elif e.status_code == 403:
+                self.write(self.render_template('403.html'))
+                raise
+            else:
+                raise
+        if model.get('type') != 'notebook':
             # not a notebook, redirect to files
             return FilesRedirectHandler.redirect_to_files(self, path)
         path = url_escape(path)

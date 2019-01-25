@@ -203,12 +203,12 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """Get the model of a file or directory with or without content."""
         path = path.strip('/')
         model = base_model(path, path)
-        if self.exists(path) and type != u'directory':
+        try:
+            if self.exists(path) and type != u'directory':
             #It's a narrative object, so try to fetch it.
-            ref = self._parse_path(path)
-            if not ref:
-                raise HTTPError(404, u'Unknown Narrative "{}"'.format(path))
-            try:
+                ref = self._parse_path(path)
+                if not ref:
+                    raise HTTPError(404, u'Unknown Narrative "{}"'.format(path))
                 nar_obj = self.read_narrative(ref, content=content)
                 model[u'type'] = u'notebook'
                 user = self.get_userid()
@@ -225,12 +225,10 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                 if user is not None:
                     model['writable'] = self.narrative_writable(ref, user)
                 self.log.info(u'Got narrative {}'.format(model['name']))
-            except HTTPError:
-                raise
-            except PermissionsError as e:
-                raise HTTPError(403, e)
-            except Exception as e:
-                raise HTTPError(500, u'An error occurred while fetching your narrative: {}'.format(e))
+        except PermissionsError as e:
+            raise HTTPError(403, str(e))
+            # except Exception as e:
+            #     raise HTTPError(500, u'An error occurred while fetching your narrative: {}'.format(e))
 
         if not path or type == 'directory':
             #if it's the empty string, look up all narratives, treat them as a dir

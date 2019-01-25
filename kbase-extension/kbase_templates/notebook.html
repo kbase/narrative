@@ -78,6 +78,12 @@ data-notebook-path="{{notebook_path | urlencode}}"
 
 {% endblock header %}
 
+{% block narrative_menu %}
+{{super()}}
+{% include 'narrative_header.html' %}
+{% endblock %}
+
+
 {% block site %}
 
 <div id="main-container">
@@ -108,7 +114,6 @@ data-notebook-path="{{notebook_path | urlencode}}"
     </div>
 </div>
 
-<!-- <div id='widget-tooltip' class='ipython_tooltip' style='display:none; min-height: 25px;'>Test message</div> -->
 <div id='kb-error-dialog'></div>
 
 {% endblock %}

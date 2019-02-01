@@ -18,7 +18,7 @@ require([
     ) {
     Config.updateConfig()
         .then(function () {
-            return Login.init($('#signin-button'));
+            return Login.init($('#signin-button'), true);
         })
         .then(function () {
             let statusCode = document.getElementsByClassName('error')[0].getAttribute('data-code');

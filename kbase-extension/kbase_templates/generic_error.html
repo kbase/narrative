@@ -16,20 +16,26 @@ div#header, div#site {
 {% block loading_message %}
 {% endblock %}
 
+{% block narrative_menu %}
+{% include 'basic_header.html' %}
+{% endblock %}
+
 {% block site %}
 
 <div class="error">
     {% block h1_error %}
-    <h1>{{status_code}} : {{status_message}}</h1>
+    <p style="font-weight: bold">
+        An error occurred while loading this Narrative.
+    </p>
     {% endblock h1_error %}
     {% block error_detail %}
-    {% if message %}
-    <p>The error was:</p>
-    <div class="traceback-wrapper">
-    <pre class="traceback">{{message}}</pre>
-    </div>
-    {% endif %}
+        {% if message %}
+            <p>The error was:</p>
+            <div class="traceback-wrapper">
+                <pre class="traceback">{{message}}</pre>
+            </div>
+        {% endif %}
     {% endblock %}
-</header>
+</div>
 
 {% endblock %}

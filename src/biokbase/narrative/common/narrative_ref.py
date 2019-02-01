@@ -3,7 +3,7 @@ Describes a Narrative Ref and has utilities for dealing with it.
 """
 import biokbase.narrative.clients as clients
 from biokbase.workspace.baseclient import ServerError
-from exceptions import PermissionsError
+from exceptions import WorkspaceError
 
 class NarrativeRef(object):
     def __init__(self, ref):
@@ -68,11 +68,4 @@ class NarrativeRef(object):
                 "Expected an integer while looking up the Narrative id, "
                 "got '{}'".format(ws_meta.get("narrative")))
         except ServerError as err:
-            raise self._ws_err_to_perm_err(err)
-
-    def _ws_err_to_perm_err(self, err):
-        if PermissionsError.is_permissions_error(err.message):
-            return PermissionsError(name=err.name, code=err.code,
-                                    message=err.message, data=err.data)
-        else:
-            return err
+            raise WorkspaceError(err, self.wsid)

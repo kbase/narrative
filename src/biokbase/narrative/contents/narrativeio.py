@@ -14,7 +14,9 @@ from notebook.utils import (
     to_api_path,
     to_os_path
 )
-from biokbase.narrative.common.exceptions import PermissionsError
+from biokbase.narrative.common.exceptions import (
+    WorkspaceError
+)
 from traitlets import (
     Unicode,
     Dict,
@@ -64,55 +66,34 @@ class KBaseWSManagerMixin(object):
     def test_connection(self):
         try:
             self.ws_client().ver()
-        except Exception, e:
+        except ServerError as e:
             raise HTTPError(500, u'Unable to connect to workspace service at {}: {}'.format(self.ws_uri, e))
 
     def ws_client(self):
         return biokbase.narrative.clients.get('workspace')
 
-    def _test_obj_ref(self, obj_ref):
-        m = obj_ref_regex.match(obj_ref)
-        if m is None:
-            raise ValueError(u'Narrative object references must be of the format wsid/objid/ver')
-
-    def _ws_err_to_perm_err(self, err):
-        if PermissionsError.is_permissions_error(err.message):
-            return PermissionsError(name=err.name, code=err.code,
-                                    message=err.message, data=err.data)
-        else:
-            return err
-
     def _ws_id_to_name(self, wsid):
         try:
             ws_info = self.ws_client().get_workspace_info({'id': wsid})
             return ws_info[1]
-        except ServerError, err:
-            raise self._ws_err_to_perm_err(err)
-
-    def _parse_obj_ref(self, obj_ref):
-        log_event(g_log, '_parse_obj_ref', {'ref': obj_ref})
-        m = obj_ref_regex.match(obj_ref)
-        if m is None:
-            return None
-        return dict(
-            wsid=m.group('wsid'),
-            objid=m.group('objid'),
-            ver=m.group('ver')
-        )
+        except ServerError as err:
+            raise WorkspaceError(err, wsid)
 
     def narrative_exists(self, ref):
         """
         Test if a narrative exists.
-        If we can fetch the narrative info (e.g. the get_object_info from the
-            workspace), then it exists.
+        If we can fetch the narrative info (e.g. the get_object_info from the workspace), then it
+        exists. If we can't, then it doesn't. If any non-404 looking error gets raised, then we
+        don't know, and should just propagate the error on up.
         :param ref: a NarrativeRef object
         """
         try:
             return self.read_narrative(ref, content=False, include_metadata=False) is not None
-        except PermissionsError:
-            raise
-        except ServerError:
-            return False
+        except WorkspaceError as err:
+            if err.http_code == 404:
+                return False
+            else:
+                raise
 
     def read_narrative(self, ref, content=True, include_metadata=True):
         """
@@ -145,7 +126,7 @@ class KBaseWSManagerMixin(object):
                 })
                 return {'info': nar_data['infos'][0]}
         except ServerError as err:
-            raise self._ws_err_to_perm_err(err)
+            raise WorkspaceError(err, ref.wsid)
 
     def write_narrative(self, ref, nb, cur_user):
         """
@@ -216,11 +197,8 @@ class KBaseWSManagerMixin(object):
                 u'narrative_nice_name': nb[u'metadata'][u'name']
             }
             self.ws_client().alter_workspace_metadata({u'wsi': {u'id': ws_id}, u'new':updated_metadata})
-        except ServerError, err:
-            pass
-#            raise self._ws_err_to_perm_err(err)
-        except Exception as e:
-            raise HTTPError(500, u'Error adjusting Narrative metadata: %s, %s' % (e.__str__(), ws_id))
+        except ServerError as err:
+            raise WorkspaceError(err, ws_id, message="Error adjusting Narrative metadata", http_code=500)
 
         # Now we can save the Narrative object.
         try:
@@ -261,8 +239,7 @@ class KBaseWSManagerMixin(object):
                 ws_save_obj['meta'].pop('job_ids')
             # clear out anything from metadata that doesn't have a string value
             # This flushes things from IPython that we don't need as KBase object metadata
-            ws_save_obj['meta'] = {key: value for key, value in ws_save_obj['meta'].items() if isinstance(value, str) or isinstance(value, unicode)}
-
+            ws_save_obj['meta'] = {key: value for key, value in ws_save_obj['meta'].items() if isinstance(value, basestring)}
             ws_save_obj['meta'] = self._process_cell_usage(nb, ws_save_obj['meta'])
 
             # Actually do the save now!
@@ -271,8 +248,8 @@ class KBaseWSManagerMixin(object):
 
             return (nb, obj_info[6], obj_info[0], obj_info[4])
 
-        except ServerError, err:
-            raise self._ws_err_to_perm_err(err)
+        except ServerError as err:
+            raise WorkspaceError(err, ws_id)
         except Exception as e:
             raise HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
 
@@ -454,7 +431,7 @@ class KBaseWSManagerMixin(object):
 
         This is just a wrapper around the Workspace list_objects command.
 
-        Raises: PermissionsError, if access is denied; ValueError is ws_id is not
+        Raises: WorkspaceError, if access is denied; ValueError is ws_id is not
         numeric.
         """
         log_event(g_log, 'list_narratives start', {'ws_id': ws_id})
@@ -470,8 +447,8 @@ class KBaseWSManagerMixin(object):
         try:
             ws = self.ws_client()
             res = ws.list_objects(list_obj_params)
-        except ServerError, err:
-            raise self._ws_err_to_perm_err(err)
+        except ServerError as err:
+            raise WorkspaceError(err, ws_id)
         my_narratives = [dict(zip(list_objects_fields, obj)) for obj in res]
         for nar in my_narratives:
             # Look first for the name in the object metadata. if it's not there, use
@@ -493,14 +470,14 @@ class KBaseWSManagerMixin(object):
         If that key isn't present, then the user doesn't have access, and
         'n' is returned for that key's value.
 
-        If nobody is logged in, this throws a WorkspaceClient.ServerError.
+        If nobody is logged in, this raises a WorkspaceError.
         """
         assert isinstance(ref, NarrativeRef), "narrative_permissions must use a NarrativeRef as input!"
         perms = {}
         try:
             perms = self.ws_client().get_permissions({'id': ref.wsid})
-        except ServerError, err:
-            raise self._ws_err_to_perm_err(err)
+        except ServerError as err:
+            raise WorkspaceError(err, ref.wsid)
         if user is not None:
             if perms.has_key(user):
                 perms = {user: perms[user]}

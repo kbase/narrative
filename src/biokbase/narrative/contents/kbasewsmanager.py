@@ -36,13 +36,11 @@ from traitlets.traitlets import (
 
 # Local
 from .manager_util import base_model
-from .narrativeio import (
-    KBaseWSManagerMixin,
-    PermissionsError
-)
+from .narrativeio import KBaseWSManagerMixin
 from .kbasecheckpoints import KBaseCheckpoints
 import biokbase.narrative.ws_util as ws_util
 from biokbase.narrative.common.url_config import URLS
+from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.narrative.common import util
 from biokbase.narrative.common.kblogging import get_narrative_logger
 from biokbase.narrative.common.narrative_ref import NarrativeRef
@@ -163,9 +161,12 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         try:
             self.log.warn(u'trying to get narrative {}'.format(ref))
             return self.narrative_exists(ref)
-        except PermissionsError:
-            self.log.warn(u'found a 403 error')
-            raise HTTPError(403, u"You do not have permission to view the narrative with id {}".format(path))
+        except WorkspaceError as err:
+            self.log.warn(u'found a 403 error at path {}'.format(ref))
+            if err.http_code == 403:
+                raise HTTPError(403, u"You do not have permission to view the narrative with id {}".format(path))
+            else:
+                raise HTTPError(err.http_code, "An error occurred while trying to find the Narrative with id {}".format(path))
 
     def exists(self, path):
         """Looks up whether a directory or file path (i.e. narrative)
@@ -225,10 +226,8 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                 if user is not None:
                     model['writable'] = self.narrative_writable(ref, user)
                 self.log.info(u'Got narrative {}'.format(model['name']))
-        except PermissionsError as e:
-            raise HTTPError(403, str(e))
-            # except Exception as e:
-            #     raise HTTPError(500, u'An error occurred while fetching your narrative: {}'.format(e))
+        except WorkspaceError as e:
+            raise HTTPError(e.http_code, e.message)
 
         if not path or type == 'directory':
             #if it's the empty string, look up all narratives, treat them as a dir
@@ -280,11 +279,8 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                 model[u'message'] = validation_message
             self.narrative_logger.narrative_save(u'{}/{}'.format(result[1], result[2]), result[3])
             return model
-
-        except PermissionsError as err:
-            raise HTTPError(403, err.message)
-        except Exception as err:
-            raise HTTPError(500, u'An error occurred while saving your Narrative: {}'.format(err))
+        except WorkspaceError as err:
+            raise HTTPError(err.http_code, "While saving your Narrative: {}".format(err.message))
 
     def delete_file(self, path):
         """Delete file or directory by path."""
@@ -297,8 +293,8 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         change, but the 'new_path' is actually the new Narrative name."""
         try:
             self.rename_narrative(self._parse_path(path), self.get_userid(), new_name)
-        except PermissionsError as err:
-            pass
+        except WorkspaceError as err:
+            raise HTTPError(err.http_code, err.message)
         except Exception as err:
             raise HTTPError(500, u'An error occurred while renaming your Narrative: {}'.format(err))
 

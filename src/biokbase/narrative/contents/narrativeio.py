@@ -46,6 +46,7 @@ obj_ref_regex = re.compile('^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$')
 MAX_METADATA_STRING_BYTES = 900
 MAX_METADATA_SIZE_BYTES = 16000
 WORKSPACE_TIMEOUT = 30  # seconds
+NARRATIVE_TYPE = "KBaseNarrative.Narrative"
 
 g_log = get_logger("biokbase.narrative")
 
@@ -95,13 +96,21 @@ class KBaseWSManagerMixin(object):
             else:
                 raise
 
+    def _validate_nar_type(self, t, ref):
+        if not t.startswith(NARRATIVE_TYPE):
+            err = "Expected a Narrative object"
+            if ref is not None:
+                err += " with reference {}".format(ref)
+            err += ", got a {}".format(t)
+            raise HTTPError(500, err)
+
     def read_narrative(self, ref, content=True, include_metadata=True):
         """
         Fetches a Narrative and its object info from the Workspace
         If content is False, this only returns the Narrative's info
         and metadata, otherwise, it returns the whole workspace object.
 
-        This is mainly a wrapper around Workspace.get_objects(), except that
+        This is mainly a wrapper around Workspace.get_objects2(), except that
         it always returns a dict. If content is False, it returns a dict
         containing a single key: 'info', with the object info and, optionally,
         metadata.
@@ -110,12 +119,13 @@ class KBaseWSManagerMixin(object):
         :param content: if True, returns the narrative document, otherwise just the metadata
         :param include_metadata: if True, includes the object metadata when returning
         """
-        log_event(g_log, "reading narrative: {}", {'ref': str(ref)})
+        log_event(g_log, "reading narrative", {'ref': str(ref), 'content': content, 'include_meta': include_metadata})
         assert isinstance(ref, NarrativeRef), "read_narrative must use a NarrativeRef as input!"
         try:
             if content:
-                nar_data = self.ws_client().get_objects([{'ref': str(ref)}])
-                nar = nar_data[0]
+                nar_data = self.ws_client().get_objects2({'objects': [{'ref': str(ref)}]})
+                nar = nar_data['data'][0]
+                self._validate_nar_type(nar['info'][2], ref)
                 nar['data'] = update_narrative(nar['data'])
                 return nar
             else:
@@ -124,7 +134,9 @@ class KBaseWSManagerMixin(object):
                     'objects': [{'ref': str(ref)}],
                     'includeMetadata': 1 if include_metadata else 0
                 })
-                return {'info': nar_data['infos'][0]}
+                nar_info = nar_data['infos'][0]
+                self._validate_nar_type(nar_info[2], ref)
+                return {'info': nar_info}
         except ServerError as err:
             raise WorkspaceError(err, ref.wsid)
 

@@ -162,7 +162,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             self.log.warn(u'trying to get narrative {}'.format(ref))
             return self.narrative_exists(ref)
         except WorkspaceError as err:
-            self.log.warn(u'found a 403 error at path {}'.format(ref))
+            self.log.warn("Error while testing narrative existence: {}".format(str(err)))
             if err.http_code == 403:
                 raise HTTPError(403, u"You do not have permission to view the narrative with id {}".format(path))
             else:
@@ -194,11 +194,16 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         m = self.path_regex.match(path)
         if m is None:
             raise HTTPError(404, "Invalid Narrative path {}".format(path))
-        return NarrativeRef(dict(
-            wsid=m.group(u'wsid'),
-            objid=m.group(u'objid'),
-            ver=m.group(u'ver')
-        ))
+        try:
+            return NarrativeRef(dict(
+                wsid=m.group(u'wsid'),
+                objid=m.group(u'objid'),
+                ver=m.group(u'ver')
+            ))
+        except RuntimeError as e:
+            raise HTTPError(500, str(e))
+        except WorkspaceError as e:
+            raise HTTPError(e.http_code, e.message)
 
     def get(self, path, content=True, type=None, format=None):
         """Get the model of a file or directory with or without content."""

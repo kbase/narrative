@@ -489,5 +489,21 @@ class NarrIOTestCase(unittest.TestCase):
         self.assertEquals("narrative_permissions must use a NarrativeRef as input!", str(err.exception))
         self.logout()
 
+    ##### test KBaseWSManagerMixin._validate_nar_type #####
+    def test__validate_nar_type_ok(self):
+        self.assertIsNone(self.mixin._validate_nar_type("KBaseNarrative.Narrative-123.45", None))
+        self.assertIsNone(self.mixin._validate_nar_type("KBaseNarrative.Narrative", None))
+
+    def test__validate_nar_type_fail(self):
+        bad_type = "NotANarrative"
+        ref = "123/45"
+        with self.assertRaises(HTTPError) as err:
+            self.mixin._validate_nar_type(bad_type, None)
+        self.assertIn("Expected a Narrative object, got a {}".format(bad_type), str(err.exception))
+
+        with self.assertRaises(HTTPError) as err:
+            self.mixin._validate_nar_type(bad_type, ref)
+        self.assertIn("Expected a Narrative object with reference {}, got a {}".format(ref, bad_type), str(err.exception))
+
 if __name__ == '__main__':
     unittest.main()

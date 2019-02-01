@@ -4,7 +4,7 @@ from biokbase.narrative.contents.kbasewsmanager import KBaseWSManager
 from narrative_mock.mockclients import get_mock_client
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 from tornado.web import HTTPError
-from biokbase.narrative.common.exceptions import PermissionsError
+from biokbase.narrative.common.exceptions import WorkspaceError
 
 class NarrativeRefTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.common.narrative_ref.clients.get', get_mock_client)
@@ -28,5 +28,7 @@ class NarrativeRefTestCase(unittest.TestCase):
 
     @mock.patch('biokbase.narrative.common.narrative_ref.clients.get', get_mock_client)
     def test_no_ws_perm(self):
-        with self.assertRaises(PermissionsError) as e:
+        with self.assertRaises(WorkspaceError) as e:
             NarrativeRef({"wsid": 789, "objid": None, "ver": None})
+        self.assertEqual(403, e.exception.http_code)
+        self.assertIn("You do not have access to this workspace", e.exception.message)

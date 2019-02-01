@@ -23,9 +23,13 @@ class WorkspaceError(Exception):
         ws_server_err should be the ServerError that comes back from a workspace
         response. This will still try to infer what happened and make it easier to get to,
         but it's best to use a ServerError.
+
+        If there's a useful message, then that will be used to set the http_code, and
+        can override the kwarg input.
         """
         self.err = ws_server_err
         self.ws_id = ws_id
+        self.http_code = http_code
         if message is not None:
             self.message = message
         elif "No workspace with id" in ws_server_err.message:
@@ -39,7 +43,6 @@ class WorkspaceError(Exception):
             self.http_code = 403
         else:
             self.message = ws_server_err.message
-            self.http_code = 500
 
     def __str__(self):
         return "WorkspaceError: {}: {}: {}".format(self.ws_id, self.http_code, self.message)

@@ -9,7 +9,8 @@ require([
         'narrativeConfig',
         'narrativeLogin',
         'css!font-awesome'
-    ], function ($,
+    ], function (
+        $,
         Promise,
         DynamicServiceClient,
         Config,
@@ -20,7 +21,10 @@ require([
             return Login.init($('#signin-button'));
         })
         .then(function () {
-            buildRequestControl();
+            let statusCode = document.getElementsByClassName('error')[0].getAttribute('data-code');
+            if (statusCode === 403) {
+                buildRequestControl();
+            }
         });
 
     function buildRequestControl() {

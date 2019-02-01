@@ -22,20 +22,22 @@ div#header, div#site {
 
 {% block site %}
 
-<div class="error">
+<div class="error" data-code={{status_code}}>
     {% block h1_error %}
     <p style="font-weight: bold">
-        An error occurred while loading this Narrative.
+        An error occurred while loading this Narrative
     </p>
     {% endblock h1_error %}
     {% block error_detail %}
         {% if message %}
-            <p>The error was:</p>
-            <div class="traceback-wrapper">
-                <pre class="traceback">{{message}}</pre>
-            </div>
+            <p>{{message}}</p>
         {% endif %}
     {% endblock %}
 </div>
 
+{% endblock %}
+
+{% block script %}
+{{super()}}
+<script src="{{ static_url("errorMain.js") }}" charset="utf-8"></script>
 {% endblock %}

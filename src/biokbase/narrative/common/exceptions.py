@@ -29,13 +29,13 @@ class WorkspaceError(Exception):
         if message is not None:
             self.message = message
         elif "No workspace with id" in ws_server_err.message:
-            self.message = "No Narrative found with this id"
+            self.message = "No Narrative was found with this id."
             self.http_code = 404
         elif "is deleted" in ws_server_err.message:
-            self.message = "This Narrative was deleted and is no longer available"
+            self.message = "This Narrative was deleted and is no longer available."
             self.http_code = 410
         elif "may not read" in ws_server_err.message:
-            self.message = "You do not have access to this workspace"
+            self.message = "You do not have access to this workspace."
             self.http_code = 403
         else:
             self.message = ws_server_err.message

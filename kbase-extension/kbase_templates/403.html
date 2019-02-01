@@ -22,7 +22,7 @@ div#header, div#site {
 
 {% block site %}
 
-<div class="error">
+<div class="error" data-code={{status_code}}>
     <p style="font-weight: bold">You do not have permission to access this Narrative.</p>
     <p style="font-size: 150%">You can request access from the Narrative owners using the controls below.</p>
 
@@ -45,5 +45,5 @@ div#header, div#site {
 
 {% block script %}
 {{super()}}
-<script src="{{ static_url("permErrorMain.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("errorMain.js") }}" charset="utf-8"></script>
 {% endblock %}

@@ -63,10 +63,12 @@ class NarrativeMainHandler(IPythonHandler):
         except web.HTTPError as e:
             log_event(g_log, 'loading_error', {'error': str(e)})
             if e.status_code == 403:
-                self.write(self.render_template('403.html'))
+                self.write(self.render_template('403.html', status_code=403))
                 return
             else:
-                self.write(self.render_template('generic_error.html', message=e.log_message))
+                self.write(self.render_template(
+                    'generic_error.html', message=e.log_message, status_code=e.status_code
+                ))
                 return
         if model.get('type') != 'notebook':
             # not a notebook, redirect to files

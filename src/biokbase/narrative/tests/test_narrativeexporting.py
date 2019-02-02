@@ -1,5 +1,6 @@
 from __future__ import print_function
-from biokbase.narrative.contents.narrativeio import PermissionsError
+from biokbase.narrative.common.exceptions import WorkspaceError
+from biokbase.workspace.baseclient import ServerError
 from biokbase.narrative.exporter.exporter import NarrativeExporter
 import unittest
 import os
@@ -32,7 +33,7 @@ def mock_read_narrative(style):
     elif style == bad_narrative_ref:
         raise ValueError('Bad Narrative!')
     elif style == private_narrative_ref:
-        raise PermissionsError('Private Narrative!')
+        raise WorkspaceError(ServerError("Error", -32500, "Private workspace!"), private_narrative_ref)
 
 test_narrative_ref = config.get('narrative_refs', 'public')
 private_narrative_ref = config.get('narrative_refs', 'private')
@@ -62,7 +63,7 @@ class NarrativeExportTesting(unittest.TestCase):
             self.exporter.export_narrative(bad_narrative_ref, output_file)
 
     def test_export_private(self):
-        with self.assertRaises(PermissionsError):
+        with self.assertRaises(WorkspaceError):
             self.exporter.export_narrative(private_narrative_ref, output_file)
 
 

@@ -61,14 +61,15 @@ class NarrativeMainHandler(IPythonHandler):
         try:
             model = cm.get(path, content=False)
         except web.HTTPError as e:
-            if e.status_code == 500:
-                self.write(self.render_template('500.html'))
-                raise
-            elif e.status_code == 403:
-                self.write(self.render_template('403.html'))
-                raise
+            log_event(g_log, 'loading_error', {'error': str(e)})
+            if e.status_code == 403:
+                self.write(self.render_template('403.html', status_code=403))
+                return
             else:
-                raise
+                self.write(self.render_template(
+                    'generic_error.html', message=e.log_message, status_code=e.status_code
+                ))
+                return
         if model.get('type') != 'notebook':
             # not a notebook, redirect to files
             return FilesRedirectHandler.redirect_to_files(self, path)

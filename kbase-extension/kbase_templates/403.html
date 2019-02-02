@@ -22,9 +22,9 @@ div#header, div#site {
 
 {% block site %}
 
-<div class="error">
-    <div style="font-size: 200%; font-weight: bold">You do not have permission to access this Narrative.</div>
-    <div style="font-size: 125%; margin-top: 1em">You can request access from the Narrative owners using the controls below.</div>
+<div class="error" data-code={{status_code}}>
+    <p style="font-weight: bold">You do not have permission to access this Narrative.</p>
+    <p style="font-size: 150%">You can request access from the Narrative owners using the controls below.</p>
 
     <div id="perm-request" class="form-group form-inline" style="margin-top: 2em">
         <label for="req-level">Access Level</label>
@@ -35,7 +35,7 @@ div#header, div#site {
         </select>
         <button id="req-btn" type="button" class="btn btn-sm btn-primary">Request</button>
     </div>
-    <div id="loader" style="display:none; margin-top: 1em">
+    <div id="loader" style="display: none; margin-top: 1em">
         <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
     </div>
     <div id="request-result" style="font-size: 125%; margin-top: 2em"></div>
@@ -45,5 +45,5 @@ div#header, div#site {
 
 {% block script %}
 {{super()}}
-<script src="{{ static_url("permErrorMain.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("errorMain.js") }}" charset="utf-8"></script>
 {% endblock %}

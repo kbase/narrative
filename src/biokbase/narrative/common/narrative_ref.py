@@ -3,7 +3,7 @@ Describes a Narrative Ref and has utilities for dealing with it.
 """
 import biokbase.narrative.clients as clients
 from biokbase.workspace.baseclient import ServerError
-from exceptions import PermissionsError
+from exceptions import WorkspaceError
 
 class NarrativeRef(object):
     def __init__(self, ref):
@@ -11,7 +11,10 @@ class NarrativeRef(object):
         :param ref: dict with keys wsid, objid, ver (either present or None)
         wsid is required, this will raise a ValueError if it is not present, or not a number
         objid, while required, can be gathered from the wsid. If there are problems with
-        fetching the objid, this will raise a ValueError
+        fetching the objid, this will raise a ValueError or a RuntimeError. ValueError gets
+        raised if the value is invalid, RuntimeError gets raised if it can't be found
+        from the workspace metadata.
+
         ver is not required
         """
         (self.wsid, self.objid, self.ver) = (ref.get("wsid"), ref.get("objid"), ref.get("ver"))
@@ -61,18 +64,15 @@ class NarrativeRef(object):
         objid = None
         try:
             ws_meta = clients.get("workspace").get_workspace_info({"id": self.wsid})[8]
-            objid = int(ws_meta.get("narrative"))
-            return objid
+            objid = ws_meta.get("narrative")
+            return int(objid)
         except (ValueError, TypeError):
-            raise RuntimeError(
-                "Expected an integer while looking up the Narrative id, "
-                "got '{}'".format(ws_meta.get("narrative")))
+            err = ""
+            if objid is None:
+                err = "Couldn't find Narrative object id in Workspace metadata."
+            else:
+                err = ("Expected an integer while looking up the Narrative object id, " \
+                       "got '{}'".format(objid))
+            raise RuntimeError(err)
         except ServerError as err:
-            raise self._ws_err_to_perm_err(err)
-
-    def _ws_err_to_perm_err(self, err):
-        if PermissionsError.is_permissions_error(err.message):
-            return PermissionsError(name=err.name, code=err.code,
-                                    message=err.message, data=err.data)
-        else:
-            return err
+            raise WorkspaceError(err, self.wsid)

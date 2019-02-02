@@ -9,7 +9,8 @@ require([
         'narrativeConfig',
         'narrativeLogin',
         'css!font-awesome'
-    ], function ($,
+    ], function (
+        $,
         Promise,
         DynamicServiceClient,
         Config,
@@ -17,14 +18,17 @@ require([
     ) {
     Config.updateConfig()
         .then(function () {
-            return Login.init($('#signin-button'));
+            return Login.init($('#signin-button'), true);
         })
         .then(function () {
-            buildRequestControl();
+            let statusCode = document.getElementsByClassName('error')[0].getAttribute('data-code');
+            if (statusCode === '403') {
+                buildRequestControl();
+            }
         });
 
     function buildRequestControl() {
-        $('#req-btn').click(requestPermission);
+        document.getElementById('req-btn').onclick = requestPermission;
     }
 
     function requestPermission() {
@@ -39,10 +43,13 @@ require([
         toggleControls();
         toggleLoader(true);
         Promise.try(() => {
-            $('#request-result').empty();
+            let resultElem = document.getElementById('request-result');
+            while (resultElem.firstChild) {
+                resultElem.removeChild(resultElem.firstChild);
+            }
             let userId = Login.sessionInfo.user_id,
                 token = Login.sessionInfo.token,
-                reqLevel = $('#req-level').val(),
+                reqLevel = document.getElementById('req-level').value,
                 wsId = Config.get('workspaceId'),
                 params = {
                     'ws_id': wsId,
@@ -65,29 +72,33 @@ require([
     }
 
     function toggleLoader(on) {
+        let loader = document.getElementById('loader');
         if (on) {
-            $('#loader').show();
+            loader.style.display = 'inherit';
         } else {
-            $('#loader').hide();
+            loader.style.display = 'none';
         }
     }
 
     function toggleControls(on) {
+        let controls = document.getElementById('perm-request');
         if (on) {
-            $('#perm-request').show();
+            controls.style.display = 'inherit';
         } else {
-            $('#perm-request').hide();
+            controls.style.display = 'none';
         }
     }
 
     function showError(err) {
-        let msg = err.message ? err.message : err.originalError.name;
-        let errText = 'Sorry, an error occurred while processing your request: ' + msg;
-        $('#request-result').append(errText);
+        let msg = err.message ? err.message : err.originalError.name,
+            errText = 'Sorry, an error occurred while processing your request: ' + msg,
+            errElem = document.getElementById('request-result');
+        errElem.append(errText);
     }
 
     function showSuccess() {
-        $('#request-result').append('Access request sent successfully!')
+        let errElem = document.getElementById('request-result');
+        errElem.append('Access request sent successfully!');
     }
 });
 });

@@ -17,6 +17,7 @@ from biokbase.auth import (
     get_user_info,
     init_session_env
 )
+from biokbase.narrative.common.url_config import URLS
 
 HTTPError = web.HTTPError
 
@@ -80,7 +81,8 @@ class NarrativeMainHandler(IPythonHandler):
                 notebook_path=path,
                 notebook_name=path,
                 kill_kernel=False,
-                mathjax_url=self.mathjax_url
+                mathjax_url=self.mathjax_url,
+                google_analytics_id=URLS.google_analytics_id,
             )
         )
 

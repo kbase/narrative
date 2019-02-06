@@ -1,0 +1,33 @@
+{
+    "users": {
+        "userA": {
+            "id": "USERA_ID",
+            "tokenFile": "./PATH_TO_USER_A_TOKEN",
+            "token" : "USERA_TOKEN_GOES_HERE"
+        },
+        "userB": {
+            "id": "USERB_ID",
+            "tokenFile": "./PATH_TO_USER_B_TOKEN",
+            "token" : "USERB_TOKEN_GOES_HERE"
+        }
+    },
+    "host": "ci.kbase.us",
+    "protocol" : "https://",
+
+    "widgets": {
+        "kbaseGenomeView": {
+            "dataSelector": ".icon-genome",
+            "widgetSelector": ".tabbable",
+            "testFile": "widgets/kbaseGenomeView.js",
+            "publicData": "31082/46/1",
+            "type" : "genome",
+            "testFile" : "./widget-tests/genomeViewTest.js"
+        },
+        "kbaseGenomeAnnotationAssembly": {
+            "dataSelector": ".fa-stack-1x",
+            "widgetSelector": ".tabbable",
+            "publicData": "31082/40/2",
+            "type" : "assembly"
+        }
+    }
+}

@@ -8,7 +8,8 @@ define([
     'kbase-client-api',
     'kb_common/gravatar',
     'kb_common/html',
-    'util/bootstrapDialog'
+    'util/bootstrapDialog',
+    'util/string'
 ], function(
     $,
     Promise,
@@ -16,15 +17,16 @@ define([
     ClientAPI,
     Gravatar,
     html,
-    BootstrapDialog
+    BootstrapDialog,
+    StringUtil
 ) {
     'use strict';
 
     function factory(config) {
         var target = config.target,
             email = config.email,
-            userName = config.userName,
-            displayName = config.displayName,
+            userName = StringUtil.escape(config.userName),
+            displayName = StringUtil.escape(config.displayName),
             token = config.token,
             gravatar = Gravatar.make(),
             button = html.tag('button'),

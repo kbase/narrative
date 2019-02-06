@@ -228,12 +228,17 @@ define ([
         return authClient.getAuthToken();
     }
 
-    function init($elem) {
+    function init($elem, noServer) {
         /* Flow.
          * 1. Get cookie. If present and valid, yay. If not, dialog / redirect to login page.
          * 2. Setup event triggers. need loggedInQuery.kbase, promptForLogin.kbase, logout.kbase,
          * 3. events to trigger: loggedIn, loggedInFailure, loggedOut
          * 4. Set up user widget thing on #signin-button
+         *
+         * If noServer is present, then DO NOT try to log in to the ipython kernel. Because it
+         * won't be there - this is mainly done if there's an error page, and we still want to
+         * show that the user is logged in, and potentially provide a resource to do authenticated
+         * communication with other KBase resources.
          */
         clearTokenCheckTimers();
         var sessionToken = authClient.getAuthToken();
@@ -254,7 +259,9 @@ define ([
                     email: results[1].email,
                     displayName: results[1].display
                 });
-                ipythonLogin(sessionToken);
+                if (!noServer) {
+                    ipythonLogin(sessionToken);
+                }
                 $(document).trigger('loggedIn', this.sessionInfo);
                 $(document).trigger('loggedIn.kbase', this.sessionInfo);
             }.bind(this))

@@ -2,8 +2,6 @@
 
 It is useful to run the Narrative within a local docker container. E.g. this makes it easy to work on Narrative ui locally integrated with a local instance of kbase-ui.
 
-
-
 ## Narrative
 
 The following changes are required:
@@ -11,11 +9,15 @@ The following changes are required:
 - Build the docker image using the make target "dev_image", this builds the docker image without the "grunt minify" step.
   The image will be tagged kbase/narrative:dev instead of the current git branch
 
+  ```
+  make dev_image
+  ```
+
 - start the container using the `scripts/local-dev-run.sh` script. 
 
     This script starts the narrative image using features to integrate it with local kbase-ui.
 
-    ```bash
+    ```
     env=ci bash scripts/local-dev-run.sh
     ```
 
@@ -39,29 +41,16 @@ If you need to update or change dependencies (bower.json), you'll need to rebuil
 The Dockerfile runs 'src/scripts/kb-update-config' to generate '/kb/deployment/ui-common/narrative_version'. This script has the unfortunate side effect of overwriting the config file source in /src/config.json.
 This is a little frustrating because it means that a committer has to be very careful to omit this file when building the image for development or testing.
 
-
 ## kbase-ui
 
-The kbase-ui proxier needs to route narrative requests. In order to enable this, the proxier's nginx config needs to be modified:
+The kbase-ui proxier knows how to route to a local narrative container. To invoke this behavior add `local-narrative=t` to the start line as run from the kbase-ui repo:
 
-- in your kbase-ui repo
+```
+make dev-start env=ci build=dev build-image=f local-narrative=t
+```
 
-- edit tools/proxier/docker/src/conf/nginx.conf.tmpl
-
-- comment out the line `proxy_pass https://{{ .Env.deploy_ui_hostname }}/narrative;` and uncomment the line below it
-
-- comment out the line `proxy_pass https://{{ .Env.deploy_hostname }}/narrative;` and uncomment the line below it.
-
-- rebuild the proxier image: make proxier-image
-
-- launch the proxier image: make run-proxier-image env=ci
+> Use `build-image=t` if you haven't built the kbase-ui image yet.
 
 ## Done?
 
 You should now be able to navigate to https://ci.kbase.us, log in, and pull a Narrative from the Dashboard.
-
-## Full Recipe
-
-TODO: all steps to from zero to hero.
-
-TODO: copy version of this doc into kbase-ui docs.

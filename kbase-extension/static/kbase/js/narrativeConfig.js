@@ -37,10 +37,19 @@ define([
     var config, debug;
 
     // Get the workspace id from the URL
-    var workspaceId = null;
-    var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
-    if (m && m.length > 1) {
-        workspaceId = parseInt(m[1]);
+    var workspaceId = null,
+        objectId = null,
+        narrativeRef = null,
+        m = window.location.href.match(/(ws\.)?(\d+)((\.obj\.(\d+))(\.ver\.(\d+))?)?$/);
+    // 2 = wsid
+    // 5 = objid
+    // 7 = ver
+    if (m && m.length > 2) {
+        workspaceId = parseInt(m[2]);
+        if (m[5] != undefined) {
+            objectId = parseInt(m[5]);
+            narrativeRef = workspaceId + '/' + objectId;
+        }
     }
 
     // Build the config up from the configSet (from config.json)
@@ -57,6 +66,8 @@ define([
         tooltip: ConfigSet.tooltip,
         icons: IconsSet,
         workspaceId: workspaceId,
+        objectId: objectId,
+        narrativeRef: narrativeRef,
         loading_gif: ConfigSet.loading_gif,
         use_local_widgets: ConfigSet.use_local_widgets,
         features: FeatureSet,
@@ -200,7 +211,6 @@ define([
 
     return {
         updateConfig: updateConfig,
-        // loadConfig: loadConfig,
         config: config,
         getConfig: getConfig,
         url: url,

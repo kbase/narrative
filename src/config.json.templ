@@ -43,7 +43,8 @@
         "user_profile": "https://appdev.kbase.us/services/user_profile/rpc",
         "version_check": "{{ .Env.VERSION_CHECK }}",
         "workspace": "https://appdev.kbase.us/services/ws",
-        "ws_browser": "https://appdev.kbase.us/#ws"
+        "ws_browser": "https://appdev.kbase.us/#ws",
+        "google_analytics_id": "UA-74533556-1"
     },
     "auth_cookie": "kbase_session",
     "auth_sleep_recheck_ms": 60000,
@@ -90,7 +91,8 @@
         "user_profile": "https://ci.kbase.us/services/user_profile/rpc",
         "version_check": "{{ .Env.VERSION_CHECK }}",
         "workspace": "https://ci.kbase.us/services/ws",
-        "ws_browser": "https://narrative.kbase.us/#ws"
+        "ws_browser": "https://narrative.kbase.us/#ws",
+        "google_analytics_id": "UA-74532036-1"
     },
     "comm_wait_timeout": 600000,
     "config": "{{ .Env.CONFIG_ENV }}",
@@ -148,13 +150,14 @@
         "user_profile": "https://ci.kbase.us/services/user_profile/rpc",
         "version_check": "{{ .Env.VERSION_CHECK }}",
         "workspace": "https://ci.kbase.us/services/ws",
-        "ws_browser": "https://narrative.kbase.us/#ws"
-    }, 
+        "ws_browser": "https://narrative.kbase.us/#ws",
+        "google_analytics_id": "UA-74532036-1"
+    },
     "dev_mode": {{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }},
-    "git_commit_hash": "0ebb301fd", 
-    "git_commit_time": "Thu Sep 13 13:45:03 2018 -0700", 
-    "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif", 
-    "name": "KBase Narrative", 
+    "git_commit_hash": "21c2fdca3",
+    "git_commit_time": "Thu Jan 24 15:53:50 2019 -0800",
+    "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif",
+    "name": "KBase Narrative",
     "next": {
         "KBaseSearchEngine": "https://next.kbase.us/services/searchapi",
         "auth": "https://next.kbase.us/services/auth",
@@ -199,7 +202,8 @@
         "user_profile": "https://next.kbase.us/services/user_profile/rpc",
         "version_check": "{{ .Env.VERSION_CHECK }}",
         "workspace": "https://next.kbase.us/services/ws",
-        "ws_browser": "https://narrative.kbase.us/#ws"
+        "ws_browser": "https://narrative.kbase.us/#ws",
+        "google_analytics_id": "UA-74530365-1"
     },
     "prod": {
         "KBaseSearchEngine": "https://kbase.us/services/searchapi",
@@ -245,7 +249,55 @@
         "user_profile": "https://kbase.us/services/user_profile/rpc",
         "version_check": "{{ .Env.VERSION_CHECK }}",
         "workspace": "https://kbase.us/services/ws",
-        "ws_browser": "https://narrative.kbase.us/#ws"
+        "ws_browser": "https://narrative.kbase.us/#ws",
+        "google_analytics_id": "UA-38443357-1"
+    },
+    "narrative-dev": {
+        "KBaseSearchEngine": "https://narrative-dev.kbase.us/services/searchapi",
+        "auth": "https://narrative-dev.kbase.us/services/auth",
+        "awe": "https://narrative-dev.kbase.us/services/awe-api",
+        "catalog": "https://narrative-dev.kbase.us/services/catalog",
+        "cdn": "https://narrative-dev.kbase.us/cdn/files",
+        "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
+        "data_import_export": "https://narrative-dev.kbase.us/services/data_import_export",
+        "data_panel_sources": "/data_source_config.json",
+        "fba": "https://narrative-dev.kbase.us/services/KBaseFBAModeling/",
+        "ftp_api_root": "/data/bulk",
+        "ftp_api_url": "https://narrative-dev.kbase.us/services/kb-ftp-api/v0",
+        "gene_families": "https://narrative-dev.kbase.us/services/gene_families",
+        "genomeCmp": "https://narrative-dev.kbase.us/services/genome_comparison/jsonrpc",
+        "job_service": "https://narrative-dev.kbase.us/services/njs_wrapper",
+        "landing_pages": "/#dataview/",
+        "log_host": "https://elasticsearch2.chicago.kbase.us",
+        "log_port": 9000,
+        "log_proxy_host": "172.17.42.1",
+        "log_proxy_port": 32001,
+        "login": "https://narrative-dev.kbase.us/services/authorization/Sessions/Login",
+        "narrative_job_proxy": "https://narrative-dev.kbase.us/services/narrativejobproxy/",
+        "narrative_method_store": "https://narrative-dev.kbase.us/services/narrative_method_store/rpc",
+        "narrative_method_store_image": "https://narrative-dev.kbase.us/services/narrative_method_store/",
+        "narrative_method_store_types": "https://narrative-dev.kbase.us/services/narrative_method_store/rpc",
+        "profile_page": "/#people/",
+        "protein_info": "",
+        "provenance_view": "/#objgraphview",
+        "reset_password": "https://gologin.kbase.us/ResetPassword",
+        "search": "https://narrative-dev.kbase.us/services/search/getResults",
+        "service_wizard": "https://narrative-dev.kbase.us/services/service_wizard",
+        "shock": "https://narrative-dev.kbase.us/services/shock-api",
+        "staging_api_url": "https://narrative-dev.kbase.us/services/staging_service",
+        "status_page": "http://kbase.us/internal/status/",
+        "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version",
+        "transform": "https://narrative-dev.kbase.us/services/transform",
+        "trees": "https://narrative-dev.kbase.us/services/trees",
+        "ui_common_root": "https://narrative-dev.kbase.us/",
+        "update_profile": "https://gologin.kbase.us/account/UpdateProfile",
+        "uploader": "",
+        "user_and_job_state": "https://narrative-dev.kbase.us/services/userandjobstate",
+        "user_profile": "https://narrative-dev.kbase.us/services/user_profile/rpc",
+        "version_check": "{{ .Env.VERSION_CHECK }}",
+        "workspace": "https://narrative-dev.kbase.us/services/ws",
+        "ws_browser": "https://narrative-dev.kbase.us/#ws",
+        "google_analytics_id": "UA-131054609-1"
     },
     "release_notes": "https://github.com/kbase/narrative/blob/master/RELEASE_NOTES.md",
     "tooltip": {
@@ -253,5 +305,5 @@
         "showDelay": 750
     },
     "use_local_widgets": true,
-    "version": "3.8.2"
+    "version": "3.9.1"
 }

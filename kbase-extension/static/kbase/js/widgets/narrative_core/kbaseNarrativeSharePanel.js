@@ -13,6 +13,7 @@ define ([
     'narrativeConfig',
     'kbaseAuthenticatedWidget',
     'api/auth',
+    'util/string',
     'select2'
 ], function (
     Promise,
@@ -21,7 +22,8 @@ define ([
     $,
     Config,
     kbaseAuthenticatedWidget,
-    Auth
+    Auth,
+    StringUtil
 ) {
     'use strict';
     return KBWidget({
@@ -441,7 +443,10 @@ define ([
                     templateSelection: function (object) {
                         if (object.found) {
                             var toShow = self.renderUserIconAndName(object.id, object.text);
-                            return $('<span>').append(toShow[0]).append(toShow[1].css({'white-space': 'normal'})).css({'width': '100%'});
+                            return $('<span>')
+                                .append(toShow[0])
+                                .append(toShow[1].css({'white-space': 'normal'}))
+                                .css({'width': '100%'});
                         }
                         return $('<b>' + object.text + '</b> (not found)');
                     },
@@ -514,14 +519,14 @@ define ([
                 shortName = shortName.substring(0, this.options.max_name_length - 3) + '...';
                 isShortened = true;
             }
-            var $name = $('<span>').css({'color': userColor, 'white-space': 'nowrap'}).append(shortName);
+            var $name = $('<span>').css({'color': userColor, 'white-space': 'nowrap'}).append(StringUtil.escape(shortName));
             if (isShortened) {
                 $name.tooltip({title: userString, placement: 'bottom'});
             }
 
             if (turnOnLink) {
                 $name = $('<a href="' + this.options.user_page_link + username + '" target="_blank">').append(
-                    $('<span>').css({'color': userColor, 'white-space': 'nowrap'}).append(shortName));
+                    $('<span>').css({'color': userColor, 'white-space': 'nowrap'}).append(StringUtil.escape(shortName)));
             }
             return [$span, $name];
         }

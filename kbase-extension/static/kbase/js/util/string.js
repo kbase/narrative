@@ -24,15 +24,35 @@ define([], function() {
     /**
      * @method
      * convenience to stringify a structure while escaping everything that needs it.
-     * @private
+     * @public
      */
     function safeJSONStringify (obj) {
         var esc = function(s) {
-            return s.replace(/'/g, "&apos;")
-                    .replace(/"/g, "&quot;");
+            return s.replace(/'/g, '&apos;').replace(/"/g, '&quot;');
         };
         return JSON.stringify(obj, function(key, value) {
             return (typeof(value) === 'string') ? esc(value) : value;
+        });
+    }
+
+    /**
+     * @method
+     * Escape a string to be HTML-safe. Don't let clever people inject script tags into their user name.
+     * @public
+     */
+    function escape (str) {
+        if (!str) {
+            return str;
+        }
+        return str.replace(/[&<>"']/g, (s) => {
+            const charMap = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            };
+            return charMap[s];
         });
     }
 
@@ -82,6 +102,7 @@ define([], function() {
         uuid: uuid,
         safeJSONStringify: safeJSONStringify,
         readableBytes: readableBytes,
-        prettyPrintJSON: prettyPrintJSON
+        prettyPrintJSON: prettyPrintJSON,
+        escape: escape
     };
 });

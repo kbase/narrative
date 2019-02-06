@@ -24,30 +24,29 @@
  * @class narrativeMain
  * @static
  */
-require(['./narrative_paths'], function (paths) {
+require([
+    './narrative_paths'
+], function () {
+    'use strict';
     require([
         'jquery',
-        'bluebird',
         'narrativeConfig',
-        'kbase-client-api',
         'narrativeLogin',
         'css!font-awesome'
     ], function ($,
-        Promise,
         Config,
-        ClientApi,
-        Login) {
-        'use strict';
+        Login
+    ) {
         console.log('Loading KBase Narrative setup routine.');
 
         Config.updateConfig()
-            .then(function (config) {
-                require(['kbaseNarrative'], function (Narrative) {
+            .then(function () {
+                require(['kbaseNarrative'], function () {
                     Login.init($('#signin-button'))
-                    .then(function() {
-                        console.log('Starting Jupyter main');
-                        require(['notebook/js/main']);
-                    });
+                        .then(function() {
+                            console.log('Starting Jupyter main');
+                            require(['notebook/js/main']);
+                        });
                 });
             });
     });

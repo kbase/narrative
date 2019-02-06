@@ -338,6 +338,7 @@ require.config({
         'kbaseDifferentialExpressionMatrixSetViewer': 'kbase/js/widgets/function_output/kbaseDifferentialExpressionMatrixSetViewer',
         'GenomeClassifierTrainingSet': 'kbase/js/widgets/function_output/GenomeClassifierTrainingSet',
         'GenomeCategorizer': 'kbase/js/widgets/function_output/GenomeCategorizer',
+        'code-cell': 'kbase/js/widgets/function_output/codeCellLauncher',
 
         /***
          * END CUSTOM OUTPUT WIDGETS

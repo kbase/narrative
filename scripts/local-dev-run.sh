@@ -8,13 +8,26 @@ if [ -z $env ]; then
 	echo "The 'env' environment variable is required"
 	exit 1
 fi
-# use this below if you want to install and mount external components (bower packages) into the running container.
-# --mount type=bind,src=${root}/${ext_components_dir},dst=${container_root}/${ext_components_dir} \
-docker run \
-	--dns=8.8.8.8 \
-	-e "CONFIG_ENV=${env}" \
-	--network=kbase-dev \
-	--name=narrative  \
-	--mount type=bind,src=${root}/${static_dir},dst=${container_root}/${static_dir} \
-	--mount type=bind,src=${root}/${nbextension_dir},dst=${container_root}/kbase-extension/static/${nbextension_dir} \
-	--rm kbase/narrative:dev
+echo "Starting Narrative for environment '${env}'"
+
+if [ "${mount}" == "t" ]; then
+	docker run \
+		--dns=8.8.8.8 \
+		-e "CONFIG_ENV=${env}" \
+		--network=kbase-dev \
+		--name=narrative  \
+		--mount type=bind,src=${root}/${static_dir},dst=${container_root}/${static_dir} \
+		--mount type=bind,src=${root}/${nbextension_dir},dst=${container_root}/kbase-extension/static/${nbextension_dir} \
+		--rm -it \
+		kbase/narrative:dev
+else
+	echo "Not mounting local dirs ${mount}"
+	docker run \
+		--dns=8.8.8.8 \
+		-e "CONFIG_ENV=${env}" \
+		--network=kbase-dev \
+		--name=narrative  \
+		--rm -it \
+		kbase/narrative:dev
+fi
+

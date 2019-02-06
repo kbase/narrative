@@ -153,10 +153,26 @@ define([
         renderFileHeader: function () {
             this.$elem.append(this.ftpFileHeaderTmpl({userInfo: this.userInfo}));
 
+
             // Set up the link to the web upload app.
             this.$elem.find('.web_upload_div').click(function () {
                 this.initImportApp('web_upload');
             }.bind(this));
+
+            // Add ACL before going to the staging area
+            // If it fails, it'll just do so silently.
+            var $globusLink = this.$elem.find('.globus_link');
+            $globusLink.click((e) => {
+                var globusWindow = window.open('', 'globus');
+                globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
+                this.stagingServiceClient.addAcl()
+                    .done(
+                        () => {
+                            window.open($globusLink.attr('href'), 'globus');
+                            return true;
+                        }
+                    )
+            });
 
             // Bind the help button to start the tour.
             this.$elem.find('button#help').click(function () {
@@ -196,6 +212,19 @@ define([
             this.$elem.find('button#refresh').click(function () {
                 this.updateView();
             }.bind(this));
+        },
+
+        downloadFile: function(url) {
+        	console.log("Downloading url=" + url);
+        	const hiddenIFrameID = 'hiddenDownloader';
+            let iframe = document.getElementById(hiddenIFrameID);
+        	if (iframe === null) {
+        		iframe = document.createElement('iframe');
+        		iframe.id = hiddenIFrameID;
+        		iframe.style.display = 'none';
+        		document.body.appendChild(iframe);
+        	}
+        	iframe.src = url;
         },
 
         renderFiles: function (files) {
@@ -293,6 +322,15 @@ define([
                         this.initImportApp(importType, importFile);
                         this.updateView();
                     }.bind(this));
+
+                    $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', (e) => {
+                        let file = $(e.currentTarget).data('download');
+                        if (this.subpath) {
+                            file = this.subpath + '/' + file;
+                        }
+                        const url = Config.url('staging_api_url') + '/download/' + file;
+                        this.downloadFile(url);
+                    });
 
                     $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', function (e) {
                         var file = $(e.currentTarget).data('delete');

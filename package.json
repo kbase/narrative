@@ -1,7 +1,7 @@
 {
   "name": "kbase-narrative-core",
   "description": "Core components for the KBase Narrative Interface",
-  "version": "3.9.1",
+  "version": "3.10.0",
   "private": true,
   "repository": "github.com/kbase/narrative",
   "devDependencies": {

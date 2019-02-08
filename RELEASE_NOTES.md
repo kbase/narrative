@@ -3,6 +3,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
 
+### Version 3.10.0
+- Fix tooltip for long object names in the data panel.
+- Add ability to prefix a part of path_to_subdata with WSREF to list options from other objects.
+- SCT-1602 - Add new URL options - /narrative/12345 will find the narrative in workspace 12345 (older URLs like /narrative/ws.12345.obj.1 still work).
+- Fix problem where jobs were not being properly started with an agent token (i.e. weren't guaranteed to have a week-long authentication token).
+- Improved error handling and display when a Narrative doesn't exist or a user doesn't have permission to see it.
+- Add functionality to request access to a Narrative instead of throwing a "not allowed" error.
+
 ### Version 3.9.1
 - SCT-1509 - Ensure access permissions to Globus before redirecting a user there from the Import area.
 

@@ -150,9 +150,9 @@ define ([
         prepareDownloaders: function(type) {
             var ret = [];
             if (!this.downloadSpecCache['types']) {
-                return ret
+                return ret;
             }
-            var module = type.split(".", 1)[0];
+            var module = type.split('.', 1)[0];
             var typeSpec = this.downloadSpecCache['types'][type] ?
                     this.downloadSpecCache['types'][type] : this.downloadSpecCache['types'][module];
             if (typeSpec && typeSpec['export_functions']) {

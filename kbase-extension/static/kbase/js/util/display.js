@@ -62,9 +62,10 @@ define([
         let safeUser = StringUtil.escape(username),
             usernameLink = '<a href="' + profilePageUrl + safeUser + '" target="_blank">' + safeUser + '</a>';
         if (displayName) {
-            return Promise.try(() => {
+            return new Promise((resolve) => {
                 $target.text(displayName);
                 $target.append(' (' + usernameLink + ')');
+                resolve();
             });
         }
         return authClient.getUserNames(null, [username])

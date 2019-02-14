@@ -149,8 +149,12 @@ define ([
 
         prepareDownloaders: function(type) {
             var ret = [];
-            var typeSpec = this.downloadSpecCache['types'] ?
-                    this.downloadSpecCache['types'][type] : null;
+            if (!this.downloadSpecCache['types']) {
+                return ret;
+            }
+            var module = type.split('.', 1)[0];
+            var typeSpec = this.downloadSpecCache['types'][type] ?
+                    this.downloadSpecCache['types'][type] : this.downloadSpecCache['types'][module];
             if (typeSpec && typeSpec['export_functions']) {
                 Object.keys(typeSpec['export_functions']).forEach(name => {
                     ret.push({name: name, local_function: typeSpec['export_functions'][name]});

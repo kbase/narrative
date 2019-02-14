@@ -30,7 +30,7 @@ define([
     ControlPanel,
     kbaseNarrativeSharePanel,
     KBaseClientAPI,
-    Workspace,    
+    Workspace,
     GenericClient,
     TimeFormat
 ) {
@@ -74,17 +74,6 @@ define([
 
             // the string name of the workspace.
             this.ws_name = Jupyter.narrative.getWorkspaceName();
-
-            // the workspace ref of this Narrative object. (w/o version)
-            this.workspaceRef = Jupyter.narrative.workspaceRef;
-            this.workspaceId = Jupyter.narrative.workspaceId;
-
-            // Doesn't appear to be used.
-            // $(document).on(
-            //     'copyThis.Narrative', function (e, panel, active, jump) {
-            //         this.copyThisNarrative(panel, active, jump);
-            //     }.bind(this)
-            // );
 
             $([Jupyter.events]).on(
                 'notebook_saved.Notebook', function () {
@@ -1021,7 +1010,10 @@ define([
                     $errorMessage.empty();
                     $doCopyBtn.prop('disabled', true);
                     $cancelBtn.prop('disabled', true);
-                    this.copyNarrative(this.workspaceRef, $newNameInput.val())
+                    Jupyter.narrative.getNarrativeRef()
+                        .then((narrativeRef) => {
+                            return this.copyNarrative(narrativeRef, $newNameInput.val());
+                        })
                         .then(function() {
                             $alertContainer.hide();
                             setButtonWorking(false);
@@ -1081,11 +1073,8 @@ define([
             if (!this.ws) {
                 preCheckError = 'Cannot copy - please sign in again.';
             }
-            else if (!this.workspaceRef) {
+            else if (!workspaceRef) {
                 preCheckError = 'Cannot copy - cannot find Narrative id. Please refresh the page and try again.';
-            }
-            else if (!this.workspaceId) {
-                preCheckError = 'Cannot copy - cannot find Narrative data id. Please refresh the page and try again.';
             }
             if (preCheckError) {
                 return Promise.reject(preCheckError);

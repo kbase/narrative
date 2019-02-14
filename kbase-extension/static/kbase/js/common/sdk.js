@@ -527,7 +527,8 @@ define([
                     required: required
                 },
                 defaultValue: null
-            }
+            },
+            original: spec,
         };
         updateNullValue(itemSpec, spec);
         updateDefaultValue(itemSpec, spec);

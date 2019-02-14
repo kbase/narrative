@@ -5,9 +5,11 @@
 /*jslint white: true*/
 
 define ([
-    'api/upa'
+    'api/upa',
+    'narrativeConfig'
 ], function(
-    UpaApi
+    UpaApi,
+    Config
 ) {
     'use strict';
     describe('Test the UPA API', function() {
@@ -89,6 +91,7 @@ define ([
 
         beforeEach(function () {
             history.pushState(null, null, '/narrative/ws.31.obj.1');
+            Config.config.workspaceId = 31;
         });
 
         it('Should properly serialize an UPA from this workspace', function () {
@@ -160,6 +163,7 @@ define ([
 
         it('Should fail if the workspace id cannot be found.', function () {
             history.pushState(null, null, '/narrative/');
+            Config.config.workspaceId = undefined;
             try {
                 upaApi.deserialize('[1]/2/3');
                 fail('Should have failed here!');

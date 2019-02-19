@@ -47,11 +47,10 @@ define ([
             this._super(options);
             this.$notificationPanel = $('<div>');
             this.$elem.append(this.$notificationPanel);
-
             this.$mainPanel = $('<div style="text-align:center">');
             this.$elem.append(this.$mainPanel);
             this.showWorking('loading narrative information');
-
+            
             if (!this.options.ws_name_or_id) {
                 //fail!
             }
@@ -62,6 +61,7 @@ define ([
             this.ws = new Workspace(this.options.ws_url, auth);
             this.authClient = Auth.make({url: Config.url('auth')});
             this.my_user_id = auth.user_id;
+            this.fetchOrgs(this.authClient.getAuthToken());
             this.refresh();
             return this;
         },
@@ -71,6 +71,40 @@ define ([
             this.my_user_id = null;
             this.refresh();
             return this;
+        },
+        
+        /**
+         * fetch organizations that user is associated. When promise is successfully returned,
+         * it calls updateOrgList function. 
+         * @param {string} token  authorization token
+         */
+        fetchOrgs: function(token) {
+            var groupUrl = 'https://ci.kbase.us/services/groups/member'
+            fetch(groupUrl, {
+                method: "GET",
+                mode: "cors",
+                json: true,
+                headers:{
+                    "Authorization": token,
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => response.json())
+            .then(response => {
+                this.updateOrgList(response);
+                console.log("Success:", JSON.stringify(response))
+            })
+            .catch(error => console.error('OH 💩:', error));
+        },
+
+        orgList: null,
+        /**
+         * Update global variable, orgList, then call render function.
+         * @param {array} list 
+         */
+        updateOrgList: function(list) {
+            this.orgList = list;
+            this.render();
         },
 
         ws_info: null,
@@ -121,6 +155,7 @@ define ([
                 self.render();
             });
         },
+
         /*
 
          WORKSPACE INFO
@@ -134,8 +169,8 @@ define ([
          7: lock_status lockstat
          8: usermeta metadata
 
-
          */
+
         isPrivate: true, // set if this ws is private or public
         render: function () {
             var self = this;
@@ -160,17 +195,20 @@ define ([
             self.$mainPanel.append($topDiv);
 
             var $togglePublicPrivate = self.makePublicPrivateToggle($togglePublicPrivate).hide();
-
             self.$mainPanel.append($togglePublicPrivate);
+
+            // meDiv
             var $meDiv = $('<div>').css({'margin': '5px', 'margin-top': '20px'});
             var status = 'You do not have access to this Narrative.';
             var isAdmin = false;
+            var isOwner = false;
             if (self.narrOwner === self.my_user_id) {
-                status = 'You own this Narrative. You can edit it and share it with other users.';
+                status = 'You can edit and share it with other users or request to add to an organization.';
                 isAdmin = true;
+                isOwner = true;
                 $togglePublicPrivate.show();
             } else if (self.ws_info[5] === 'a') {
-                status = 'You can edit and share this Narrative.';
+                status = 'You can edit and share this Narrative, but you cannot request to add to and organization.';
                 isAdmin = true;  // not really, but set this so we show sharing controls
                 $togglePublicPrivate.show();
             } else if (self.ws_info[5] === 'w') {
@@ -181,6 +219,103 @@ define ([
             $meDiv.append($('<div>').css({'margin-top': '10px'}).append(status));
             self.$mainPanel.append($meDiv);
 
+            /**
+             * Tabs to select share with users or org
+             *     - $tab1 for sharing user
+             *     - $tab2 for sharing with org
+             */
+            var $tabDiv = $('<div class="tabs">');
+            // make divs for each tab.
+
+            var $tab1 = createTab('white', 'Share with User');
+            
+            $tab1.click(function(){
+                tabSwitch($(this), $tab2);
+                $shareWithOrgDiv.css("display", "none");
+                $shareWithUserDiv.css("display", "inherit");
+            });
+            $tabDiv.append($tab1); 
+            
+            var $tab2 = createTab('#d8d8d8', 'Request to add to org').css("border-bottom", "1px solid");
+            $tab2.click(function(){
+                tabSwitch($(this), $tab1);
+                $shareWithOrgDiv.css("display", "inherit");
+                $shareWithUserDiv.css("display", "none");
+            });
+            $tabDiv.append($tab2);
+            
+            function createTab(color, text){
+                return $('<div class="shareTab">')
+                .css({'width': '50%', 'display': 'inline-block', 'padding': '10px', 'border': 'solid', 'border-width': '1px 1px 0px'})
+                .css('background-color', color)
+                .append(text);
+            }
+
+            function tabSwitch(tab, otherTab){
+                tab.css({"background-color": "white", "border-bottom": "none"});
+                otherTab.css({"background-color": "#d8d8d8", "border-bottom": "1px solid"});
+            }
+
+            self.$mainPanel.append($tabDiv);
+            // end of share tabs
+
+            /**
+             * Tab content div /$tabContent
+             *     - share with user div /$shareWithUserDiv
+             *     - share with org div /$shareWithOrgDiv
+             */
+            var $tabContent = $('<div class="tab-content">')
+            .css({'border': 'solid','border-width': '0px 1px 1px 1px', 'padding': '15px'});
+            
+            var $shareWithUserDiv = $('<div id="shareWUser" class="content">').css({'display': 'inherit'});
+            var $shareWithOrgDiv = $('<div id="shareWOrg" class="content">').css({'display': 'none'});
+            
+
+            // Content of Share with Org (Request to add to Org) Div
+            if(isOwner) {
+                var $addOrgDiv = $('<div>').css({'margin-top': '10px'});
+                var $inputOrg = $('<select single data-placeholder="Share with..." id="orgInput">')
+                    .addClass('form-control kb-share-select');
+                $inputOrg.append('<option></option>'); // option is needed for placeholder to work.
+
+                var $applyOrgBtn = $('<button>')
+                .addClass('btn btn-primary disabled')
+                .append('Apply')
+                .css("margin-left", "10px")
+                .click(function() {
+                    if (!$(this).hasClass('disabled')) {
+                        var org = $inputOrg.select2('data');
+                        var orgID = org[0]["id"]
+                        self.requestAddNarrative(self.authClient.getAuthToken(), orgID);
+                    }
+                });
+
+                self.orgSetupSelect2($inputOrg);
+
+                $addOrgDiv
+                .append($inputOrg)
+                .append($applyOrgBtn);
+                
+                $inputOrg.on('select2:select', function() {
+                    if ($inputOrg.select2('data').length > 0) {
+                        $applyOrgBtn.removeClass('disabled');
+                    }
+                });
+                $inputOrg.on('select2:unselect', function() {
+                    if ($inputOrg.select2('data').length === 0) {
+                        $applyOrgBtn.addClass('disabled');
+                    }
+                });
+                
+                $addOrgDiv.find('span.select2-selection--single')
+                .css({'min-height': '32px'});
+                            
+                $shareWithOrgDiv.append($addOrgDiv); // put addOrgDiv into shareWithOrgDiv 
+            } else {
+                $shareWithOrgDiv.append('<p style="margin-top: 18px;">You must be the owner to request to add this narrative.</p>')
+            } // end of if(isOwner)
+
+            // content of share with user div 
             if (isAdmin) {
                 var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
                 var $input = $('<select multiple data-placeholder="Share with...">')
@@ -208,8 +343,8 @@ define ([
                 $addUsersDiv.append($input)
                             .append($permSelect)
                             .append($applyBtn);
-                self.$mainPanel.append($addUsersDiv);
-
+                
+                            
                 self.setupSelect2($input);
                 $permSelect.select2({
                     minimumResultsForSearch: Infinity
@@ -224,13 +359,22 @@ define ([
                         $applyBtn.addClass('disabled');
                     }
                 });
+
                 // Silly Select2 has different height rules for multiple and single select.
                 $addUsersDiv.find('span.select2-selection--single')
-                            .css({'min-height': '32px'});
+                .css({'min-height': '32px'});
                 $addUsersDiv.find('.select2-container')
-                            .css({'margin-left': '5px', 'margin-right': '5px'});
-            }
+                .css({'margin-left': '5px', 'margin-right': '5px'});
 
+                $shareWithUserDiv.append($addUsersDiv);
+            } // end of if(isAdmin)  
+
+            // add share with.., divs to tab content
+            $tabContent.append($shareWithUserDiv, $shareWithOrgDiv);
+            // add tab content to the main panel
+            self.$mainPanel.append($tabContent);
+            // end of Tab content divs
+            
             var $othersDiv = $('<div>').css({
                 'margin-top': '15px',
                 'max-height': self.options.max_list_height,
@@ -323,6 +467,36 @@ define ([
                 $tbl.append($userRow);
             }
             self.$mainPanel.append($othersDiv);
+        },
+
+        /**
+         * Send request to add narrative to a organization.
+         * Returns either {"complete": true} or a Request with the additional field "complete" with a value of false.
+         * @param {string} token // authorization token
+         */
+
+        requestAddNarrative: function(token, orgID){
+            var ws_id = this.ws_info[0];
+            var groupResourceUrl = "https://ci.kbase.us/services/groups/group/"+orgID+"/resource/workspace/"+ws_id;
+            fetch(groupResourceUrl, {
+                method: "POST",
+                mode: "cors",
+                json: true,
+                headers:{
+                    "Authorization": token,
+                    "Content-Type": "application/json",
+                }
+            })
+            .then(response => response.json())
+            .then(response => {
+                console.log("Request to Add Narrative Completed:", JSON.stringify(response.error.message))
+                this.reportError(response);
+            })
+            .catch(error => {
+                console.error('OH NO 💩:', error)
+                this.reportError(error);
+            });
+
         },
 
         /**
@@ -461,6 +635,40 @@ define ([
                 $input.trigger('change');
             });
         },
+        // setting up Select2 for inputOrg
+        orgSetupSelect2: function($inputOrg){
+            var self = this;
+            var orgList = self.orgList;
+            var orgData = [];
+            var noMatchedOrgFoundStr = 'Search by Organization name';
+
+            $.fn.select2.amd.require([
+                'select2/data/array',
+                'select2/utils'
+            ], function (ArrayData, Utils) {
+                orgList.forEach(org=>{
+                    orgData.push({"id": org.id, "text": org.name})
+                })
+                $inputOrg.select2({
+                    formatNoMatches: noMatchedOrgFoundStr,
+                    placeholder: function() {
+                            return $(this).data('placeholder');
+                    },
+                    delay: 250,
+                    width: '40%',
+                    data: orgData,
+                    minimumResultsForSearch: 0,
+                    allowClear: true,
+                    language: {
+                        noResults: function () {
+                            return noMatchedOrgFoundStr;
+                        }
+                    },
+                });
+                $inputOrg.trigger('change');
+            });
+        },
+
         showWorking: function (message) {
             this.$mainPanel.empty();
             this.$mainPanel.append('<br><br><div style="text-align:center"><img src="' + this.options.loadingImage

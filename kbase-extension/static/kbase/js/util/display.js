@@ -13,6 +13,7 @@ define([
     'bluebird',
     'narrativeConfig',
     'util/timeFormat',
+    'util/string',
     'kbase-client-api',
     'kbaseAccordion',
     'api/auth'
@@ -24,6 +25,7 @@ define([
     Promise,
     Config,
     TimeFormat,
+    StringUtil,
     kbase_client_api,
     KBaseAccordion,
     Auth
@@ -45,19 +47,40 @@ define([
     /**
      * @method
      * displayRealName
+     *
      */
-    function displayRealName(username, $target) {
-        authClient.getUserNames(null, [username])
-        .then(function(user) {
-            var usernameLink = '<a href="' + profilePageUrl + username + '" target="_blank">' + username + '</a>';
-            if (user[username]) {
-                usernameLink = user[username] + ' (' + usernameLink + ')';
-            }
-            $target.html(usernameLink);
-        })
-        .catch(function (err) {
-            console.error(err);
-        });
+    /**
+     * Builds a displayable element from a user name. This includes a link to a user's profile page.
+     * For example, a user named "kbaseuser" would get a display like:
+     * KBase User (kbaseuser)
+     * where the part inside the parentheses links to the profile page.
+     * @param {string} username - the user id to put on display
+     * @param {object} $target - the target JQuery node to modify (maybe should just return the element as part of a promise?)
+     * @param {string} displayName - optional, the display name to use. If given, then an auth call isn't made.
+     */
+    function displayRealName(username, $target, displayName) {
+        let safeUser = StringUtil.escape(username),
+            usernameLink = '<a href="' + profilePageUrl + safeUser + '" target="_blank">' + safeUser + '</a>';
+        if (displayName) {
+            return new Promise((resolve) => {
+                $target.text(displayName);
+                $target.append(' (' + usernameLink + ')');
+                resolve();
+            });
+        }
+        return authClient.getUserNames(null, [username])
+            .then((user) => {
+                if (user[safeUser]) {
+                    $target.text(user[safeUser]);
+                    usernameLink = ' (' + usernameLink + ')';
+                }
+            })
+            .catch((err) => {
+                console.error(err);
+            })
+            .finally(() => {
+                $target.append(usernameLink);
+            });
     }
 
     /**

@@ -36,15 +36,14 @@ from traitlets.traitlets import (
 
 # Local
 from .manager_util import base_model
-from .narrativeio import (
-    KBaseWSManagerMixin,
-    PermissionsError
-)
+from .narrativeio import KBaseWSManagerMixin
 from .kbasecheckpoints import KBaseCheckpoints
 import biokbase.narrative.ws_util as ws_util
 from biokbase.narrative.common.url_config import URLS
+from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.narrative.common import util
 from biokbase.narrative.common.kblogging import get_narrative_logger
+from biokbase.narrative.common.narrative_ref import NarrativeRef
 from biokbase.narrative.services.user import UserService
 
 # -----------------------------------------------------------------------------
@@ -99,13 +98,12 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     # regex for parsing out workspace_id and object_id from
     # a "ws.{workspace}.{object}" string
-    ws_regex = re.compile('^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)(\.(?P<ver>\d+))?')
-    # regex for parsing out fully qualified workspace name and object name
-    ws_regex2 = re.compile('^(?P<wsname>[\w:]+)/(?P<objname>[\w]+)')
-    # regex for par
-    kbid_regex = re.compile('^(kb\|[a-zA-Z]+\..+)')
-    # regex from pretty name path
-    objid_regex = re.compile('^.*\s-\s(?P<obj_long_id>ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+))\s-\s')
+    # should accept any of the following formats (the numbers are just random):
+    # ws.123.obj.456.ver.789
+    # ws.123.obj.456
+    # ws.123
+    # 123
+    path_regex = re.compile('^(ws\.)?(?P<wsid>\d+)((\.obj\.(?P<objid>\d+))(\.ver\.(?P<ver>\d+))?)?$')
 
     # This is a regular expression to make sure that the workspace ID
     # doesn't contain non-legit characters in the object ID field
@@ -122,12 +120,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         if not self.kbasews_uri:
             raise HTTPError(412, u"Missing KBase workspace service endpoint URI.")
 
-        # Map Narrative ids to notebook names
-        mapping = Dict()
-        # Map notebook names to Narrative ids
-        rev_mapping = Dict()
-        # Setup empty hash for session object
-        self.kbase_session = {}
         # Init the session info we need.
         self.narrative_logger = get_narrative_logger()
         self.user_service = UserService()
@@ -164,20 +156,17 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     def file_exists(self, path):
         """We only support narratives right now, so look up
            a narrative from that path."""
-        path = path.strip('/')
-        obj_ref = self._obj_ref_from_path(path)
-        if obj_ref is None:
-            raise HTTPError(404, u'Path "{}" is not a valid Narrative path'.format(path))
+        ref = self._parse_path(path)
         self.log.warn(u'looking up whether a narrative exists')
         try:
-            self.log.warn(u'trying to get narrative {}'.format(obj_ref))
-            return self.narrative_exists(obj_ref)
-        except PermissionsError as e:
-            self.log.warn(u'found a 403 error')
-            raise HTTPError(403, u"You do not have permission to view the narrative with id {}".format(path))
-        # except Exception as e:
-        #     self.log.debug('got a 500 error')
-        #     raise HTTPError(500, e)
+            self.log.warn(u'trying to get narrative {}'.format(ref))
+            return self.narrative_exists(ref)
+        except WorkspaceError as err:
+            self.log.warn("Error while testing narrative existence: {}".format(str(err)))
+            if err.http_code == 403:
+                raise HTTPError(403, u"You do not have permission to view the narrative with id {}".format(path))
+            else:
+                raise HTTPError(err.http_code, "An error occurred while trying to find the Narrative with id {}".format(path))
 
     def exists(self, path):
         """Looks up whether a directory or file path (i.e. narrative)
@@ -193,44 +182,40 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         model[u'format'] = u'json'
         model[u'last_modified'] = nar[u'save_date']
         model[u'type'] = u'notebook'
-
-        # model = base_model('%s/%s' % (nar['notebook_id'], nar['name']))
-        # model['format'] = 'v3'
         return model
 
-    def _obj_ref_from_path(self, path):
-        parsed = self._parse_path(path)
-        if parsed is None:
-            return None
-        if u'wsid' not in parsed or u'objid' not in parsed:
-            return None
-        ref = u'{}/{}'.format(parsed[u'wsid'], parsed[u'objid'])
-        if parsed[u'ver'] is not None:
-            ref = ref + u'/{}'.format(parsed[u'ver'])
-        return ref
-
     def _parse_path(self, path):
-        m = self.ws_regex.match(path)
+        """
+        From the URL path for a Narrative, returns a NarrativeRef
+
+        if the path isn't parseable, this raises a 404 with the invalid path.
+        """
+        path = path.strip('/')
+        m = self.path_regex.match(path)
         if m is None:
-            return None
-        return dict(
-            wsid=m.group(u'wsid'),
-            objid=m.group(u'objid'),
-            ver=m.group(u'ver')
-        )
+            raise HTTPError(404, "Invalid Narrative path {}".format(path))
+        try:
+            return NarrativeRef(dict(
+                wsid=m.group(u'wsid'),
+                objid=m.group(u'objid'),
+                ver=m.group(u'ver')
+            ))
+        except RuntimeError as e:
+            raise HTTPError(500, str(e))
+        except WorkspaceError as e:
+            raise HTTPError(e.http_code, e.message)
 
     def get(self, path, content=True, type=None, format=None):
         """Get the model of a file or directory with or without content."""
         path = path.strip('/')
-
         model = base_model(path, path)
-        if self.exists(path) and type != u'directory':
+        try:
+            if self.exists(path) and type != u'directory':
             #It's a narrative object, so try to fetch it.
-            obj_ref = self._parse_path(path)
-            if not obj_ref:
-                raise HTTPError(404, u'Unknown Narrative "{}"'.format(path))
-            try:
-                nar_obj = self.read_narrative(u'{}/{}'.format(obj_ref[u'wsid'], obj_ref[u'objid']), content)
+                ref = self._parse_path(path)
+                if not ref:
+                    raise HTTPError(404, u'Unknown Narrative "{}"'.format(path))
+                nar_obj = self.read_narrative(ref, content=content)
                 model[u'type'] = u'notebook'
                 user = self.get_userid()
                 if content:
@@ -240,18 +225,14 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                     self.mark_trusted_cells(nb, nar_obj['info'][5], path)
                     model['content'] = nb
                     model['name'] = nar_obj['data']['metadata'].get('name', 'Untitled')
-                    util.kbase_env.narrative = 'ws.{}.obj.{}'.format(obj_ref['wsid'], obj_ref['objid'])
+                    util.kbase_env.narrative = 'ws.{}.obj.{}'.format(ref.wsid, ref.objid)
                     util.kbase_env.workspace = model['content'].metadata.ws_name
-                    self.narrative_logger.narrative_open(u'{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), nar_obj['info'][4])
+                    self.narrative_logger.narrative_open(u'{}/{}'.format(ref.wsid, ref.objid), nar_obj['info'][4])
                 if user is not None:
-                    model['writable'] = self.narrative_writable(u'{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), user)
+                    model['writable'] = self.narrative_writable(ref, user)
                 self.log.info(u'Got narrative {}'.format(model['name']))
-            except HTTPError:
-                raise
-            except PermissionsError as e:
-                raise HTTPError(403, e)
-            except Exception as e:
-                raise HTTPError(500, u'An error occurred while fetching your narrative: {}'.format(e))
+        except WorkspaceError as e:
+            raise HTTPError(e.http_code, e.message)
 
         if not path or type == 'directory':
             #if it's the empty string, look up all narratives, treat them as a dir
@@ -288,7 +269,8 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         self.check_and_sign(nb, path)
 
         try:
-            result = self.write_narrative(self._obj_ref_from_path(path), nb, self.get_userid())
+            ref = self._parse_path(path)
+            result = self.write_narrative(ref, nb, self.get_userid())
 
             new_id = u"ws.%s.obj.%s" % (result[1], result[2])
             util.kbase_env.narrative = new_id
@@ -302,28 +284,22 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                 model[u'message'] = validation_message
             self.narrative_logger.narrative_save(u'{}/{}'.format(result[1], result[2]), result[3])
             return model
-
-        except PermissionsError as err:
-            raise HTTPError(403, err.message)
-        except Exception as err:
-            raise HTTPError(500, u'An error occurred while saving your Narrative: {}'.format(err))
+        except WorkspaceError as err:
+            raise HTTPError(err.http_code, "While saving your Narrative: {}".format(err.message))
 
     def delete_file(self, path):
         """Delete file or directory by path."""
-        raise HTTPError(501, u'Narrative deletion not implemented here. Deletion should be handled elsewhere.')
+        raise HTTPError(501, u'Narrative deletion not implemented here. Deletion is handled elsewhere.')
 
     def rename_file(self, path, new_name):
         """Rename a file from old_path to new_path.
         This gets tricky in KBase since we don't deal with paths, but with
         actual file names. For now, assume that 'old_path' won't actually
         change, but the 'new_path' is actually the new Narrative name."""
-        path = path.strip('/')
-
         try:
-            self.rename_narrative(self._obj_ref_from_path(path), self.get_userid(), new_name)
-        except PermissionsError as err:
-            pass
-            # raise HTTPError(403, err.message)
+            self.rename_narrative(self._parse_path(path), self.get_userid(), new_name)
+        except WorkspaceError as err:
+            raise HTTPError(err.http_code, err.message)
         except Exception as err:
             raise HTTPError(500, u'An error occurred while renaming your Narrative: {}'.format(err))
 
@@ -554,7 +530,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             if not trusted:
                 self.log.warn("Notebook %s is not trusted", path)
             self.notary.mark_cells(nb, trusted)
-
             # self.log.warn("Notebook %s is totally trusted", path)
             # # all notebooks are trustworthy, because KBase is Pollyanna.
 

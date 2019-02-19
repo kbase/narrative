@@ -368,9 +368,12 @@ define([
                     $doCopyBtn.prop('disabled', true);
                     $cancelBtn.prop('disabled', true);
                     $newNameInput.prop('disabled', true);
-                    Jupyter.narrative.sidePanel.$narrativesWidget.copyNarrative(
-                            Jupyter.narrative.workspaceRef, $newNameInput.val()
-                        )
+                    Jupyter.narrative.getNarrativeRef()
+                        .then((narrativeRef) => {
+                            return Jupyter.narrative.sidePanel.$narrativesWidget.copyNarrative(
+                                narrativeRef, $newNameInput.val()
+                            );
+                        })
                         .then(function (result) {
                             Jupyter.narrative.sidePanel.$narrativesWidget.refresh();
                             // show go-to button
@@ -1124,14 +1127,6 @@ define([
          */
         activateReadwriteMode: function () {
             // console.debug("activate read-write mode");
-        },
-
-
-        /**
-         * Object identifier of current narrative, extracted from page URL.
-         */
-        getNarrId: function () {
-            return window.location.pathname.split('/').pop();
         },
 
         /**

@@ -30,7 +30,7 @@ class StagingHelperTest(unittest.TestCase):
         self.assertTrue('Reason: Unauthorized' in str(context.exception.message))
         self.assertTrue('Error code: 401' in str(context.exception.message))
 
-    def mock_fetch_url(end_point, values=None, headers=None, method='GET'):
+    def mock_fetch_url(end_point, values=None, headers=None, method='GET', save_path=None):
         if 'list' in end_point:
             print('mocking __fetch_url list endpoint')
             return '[{"path": "tgu/test_file_1", "isFolder": false},\
@@ -48,6 +48,8 @@ class StagingHelperTest(unittest.TestCase):
         elif 'delete' in end_point:
             print('mocking __fetch_url delete endpoint')
             return "successfully deleted tgu2/test.pdf"
+        elif 'download' in end_point:
+            print 'mocking __fetch_url download endpoint'
         elif 'mv' in end_point:
             print('mocking __fetch_url mv endpoint')
             return "successfully moved tgu2/test.pdf to tgu2/test_1.pdf"
@@ -99,11 +101,17 @@ class StagingHelperTest(unittest.TestCase):
         self.assertEqual(delete_ret.get('server_response'), 'successfully deleted tgu2/test.pdf')
 
     @patch.object(Helper, '_Helper__fetch_url', side_effect=mock_fetch_url)
+    def test_download(self, _fetch_url):
+        download_ret = self.staging_helper.download('test_fake_file')
+        self.assertTrue('test_fake_file' in download_ret)
+
+    @patch.object(Helper, '_Helper__fetch_url', side_effect=mock_fetch_url)
     def test_mv(self, _fetch_url):
         mv_ret = self.staging_helper.mv('test.pdf ', 'test_1.pdf')
         self.assertTrue('server_response' in mv_ret)
         self.assertEqual(mv_ret.get('server_response'),
                          'successfully moved tgu2/test.pdf to tgu2/test_1.pdf')
+
 
 if __name__ == "__main__":
     unittest.main()

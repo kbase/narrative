@@ -10,6 +10,7 @@ import unittest
 import SocketServer
 from biokbase.narrative.common import util
 from biokbase.workspace.client import Workspace
+from biokbase.narrative.common.narrative_ref import NarrativeRef
 import os
 import json
 import ConfigParser
@@ -149,7 +150,8 @@ def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False)
     return {
         'ws': ws_info[0],
         'obj': obj_info[0][0],
-        'ref': '{}/{}'.format(ws_info[0], obj_info[0][0])
+        'refstr': '{}/{}'.format(ws_info[0], obj_info[0][0]),
+        'ref': NarrativeRef({'wsid': ws_info[0], 'objid': obj_info[0][0]})
     }
 
 

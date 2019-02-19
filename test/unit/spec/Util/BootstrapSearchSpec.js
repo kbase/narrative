@@ -6,23 +6,29 @@
 
 define ([
     'jquery',
-    'util/bootstrapSearch'
+    'util/bootstrapSearch',
+    'base/js/namespace',
+    'kbaseNarrative'
 ], function(
     $,
-    BootstrapSearch
+    BootstrapSearch,
+    Jupyter,
+    Narrative
 ) {
     'use strict';
     var $targetElem;
 
-    beforeEach(function() {
-        $targetElem = $('<div>');
-    });
-
-    afterEach(function() {
-        $targetElem.empty();
-    });
-
     describe('Test the BootstrapSearch module', function() {
+        beforeEach(function() {
+            $targetElem = $('<div>');
+            Jupyter.narrative = new Narrative();
+            Jupyter.narrative.disableKeyboardManager = () => {};
+        });
+
+        afterEach(function() {
+            $targetElem.empty();
+        });
+
         it('Should create a new search object', function() {
             var bsSearch = new BootstrapSearch($targetElem, {});
             expect(bsSearch).not.toBeNull();

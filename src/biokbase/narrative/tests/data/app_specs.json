@@ -19,7 +19,7 @@
     },
     "info": {
         "name": "Phony Method Spec",
-        "id": "phony_spec"
+        "id": "PhonyModule/phony_spec"
     },
     "widgets": {
         "input": null
@@ -1483,4 +1483,512 @@
         }],
         "kb_service_url": ""
     }
-}]
+}, {
+    "info":{
+       "ver":"1.2.9",
+       "name":"Trimmomatic - Read Trimming - v0.36",
+       "subtitle":"Trim paired- or single-end Illumina reads with Trimmomatic.",
+       "output_types":[
+          "KBaseFile.PairedEndLibrary",
+          "KBaseFile.SingleEndLibrary",
+          "KBaseSets.ReadsSet"
+       ],
+       "app_type":"app",
+       "namespace":"kb_trimmomatic",
+       "tooltip":"Trim paired- or single-end Illumina reads with Trimmomatic.",
+       "git_commit_hash":"09b94c39b2fab79962a8d978aa15a424342defe4",
+       "input_types":[
+          "KBaseAssembly.PairedEndLibrary",
+          "KBaseAssembly.SingleEndLibrary",
+          "KBaseFile.PairedEndLibrary",
+          "KBaseFile.SingleEndLibrary",
+          "KBaseRNASeq.RNASeqSampleSet",
+          "KBaseSets.ReadsSet"
+       ],
+       "authors":[
+          "psdehal",
+          "dylan"
+       ],
+       "module_name":"kb_trimmomatic",
+       "id":"kb_trimmomatic/run_trimmomatic",
+       "categories":[
+          "active",
+          "reads"
+       ],
+       "icon":{
+          "url":"img?method_id=kb_trimmomatic/run_trimmomatic&image_name=trimmomatic-pink.png&tag=release"
+       }
+    },
+    "parameter_groups":[
+       {
+          "parameter_ids":[
+             "adapterFa",
+             "seed_mismatches",
+             "palindrome_clip_threshold",
+             "simple_clip_threshold"
+          ],
+          "allow_multiple":1,
+          "description":"",
+          "with_border":0,
+          "short_hint":"Configure if you wish to remove standard adapters",
+          "ui_name":"Adapter clipping options",
+          "optional":1,
+          "id":"adapter_clip",
+          "advanced":0
+       },
+       {
+          "parameter_ids":[
+             "sliding_window_size",
+             "sliding_window_min_quality"
+          ],
+          "allow_multiple":0,
+          "description":"",
+          "with_border":0,
+          "short_hint":"Configure quality window options",
+          "ui_name":"Sliding window options",
+          "optional":0,
+          "id":"sliding_window",
+          "advanced":0
+       }
+    ],
+    "parameters":[
+       {
+          "field_type":"text",
+          "ui_class":"input",
+          "allow_multiple":1,
+          "description":"The read library or read library set for which you want to trim.",
+          "text_options":{
+             "is_output_name":0,
+             "placeholder":"",
+             "regex_constraint":[
+
+             ],
+             "valid_ws_types":[
+                "KBaseRNASeq.RNASeqSampleSet",
+                "KBaseSets.ReadsSet",
+                "KBaseFile.PairedEndLibrary",
+                "KBaseFile.SingleEndLibrary",
+                "KBaseAssembly.PairedEndLibrary",
+                "KBaseAssembly.SingleEndLibrary"
+             ]
+          },
+          "disabled":0,
+          "short_hint":"The read library or read library set to examine",
+          "default_values":[
+             ""
+          ],
+          "ui_name":"Read library (or Set) object <font color=red>*</font>",
+          "optional":0,
+          "id":"input_reads_ref",
+          "advanced":0
+       },
+       {
+          "field_type":"text",
+          "ui_class":"output",
+          "allow_multiple":0,
+          "description":"Base name for output read library or read library set object",
+          "text_options":{
+             "is_output_name":1,
+             "placeholder":"",
+             "regex_constraint":[
+
+             ],
+             "valid_ws_types":[
+                "KBaseSets.ReadsSet",
+                "KBaseFile.PairedEndLibrary",
+                "KBaseFile.SingleEndLibrary"
+             ]
+          },
+          "disabled":0,
+          "short_hint":"Base name for output read library or read library set object",
+          "default_values":[
+             ""
+          ],
+          "ui_name":"Output library (or Set) name <font color=red>*</font>",
+          "optional":0,
+          "id":"output_reads_name",
+          "advanced":0
+       },
+       {
+          "field_type":"dropdown",
+          "ui_class":"parameter",
+          "allow_multiple":0,
+          "description":"Modernize and standardize phred64 (Illumina <= 1.7) read quality encoding format to phred33 (Sanger, 454, SRA, Illumina >= 1.8).  Does nothing if already phred33.",
+          "dropdown_options":{
+             "options":[
+                {
+                   "display":"no",
+                   "value":"0"
+                },
+                {
+                   "display":"yes",
+                   "value":"1"
+                }
+             ]
+          },
+          "disabled":0,
+          "short_hint":"Modernize and standardize phred64 (Illumina <= 1.7) read quality encoding format to phred33 (Sanger, 454, SRA, Illumina >= 1.8).",
+          "default_values":[
+             "1"
+          ],
+          "ui_name":"Translate quality encoding from phred64 to phred33",
+          "optional":1,
+          "id":"translate_to_phred33",
+          "advanced":1
+       },
+       {
+          "field_type":"dropdown",
+          "ui_class":"parameter",
+          "allow_multiple":0,
+          "description":"The reference adapter sequences.",
+          "dropdown_options":{
+             "options":[
+                {
+                   "display":"TruSeq3-PE",
+                   "value":"TruSeq3-PE.fa"
+                },
+                {
+                   "display":"TruSeq2-PE",
+                   "value":"TruSeq2-PE.fa"
+                },
+                {
+                   "display":"TruSeq3-PE-2",
+                   "value":"TruSeq3-PE-2.fa"
+                },
+                {
+                   "display":"TruSeq3-SE",
+                   "value":"TruSeq3-SE.fa"
+                },
+                {
+                   "display":"TruSeq2-SE",
+                   "value":"TruSeq2-SE.fa"
+                },
+                {
+                   "display":"NexteraPE-PE",
+                   "value":"NexteraPE-PE.fa"
+                }
+             ]
+          },
+          "disabled":0,
+          "short_hint":"The reference sequences for trimming.",
+          "default_values":[
+             ""
+          ],
+          "ui_name":"Adapters",
+          "optional":1,
+          "id":"adapterFa",
+          "advanced":1
+       },
+       {
+          "field_type":"text",
+          "ui_class":"parameter",
+          "allow_multiple":0,
+          "description":"Specifies the maximum mismatch count which will still allow a full match to be performed.",
+          "text_options":{
+             "is_output_name":0,
+             "placeholder":"",
+             "regex_constraint":[
+
+             ],
+             "validate_as":"int"
+          },
+          "disabled":0,
+          "short_hint":"Maximum mismatch count which will still allow a full match.",
+          "default_values":[
+             "2"
+          ],
+          "ui_name":"Seed mismatches",
+          "optional":1,
+          "id":"seed_mismatches",
+          "advanced":1
+       },
+       {
+          "field_type":"text",
+          "ui_class":"parameter",
+          "allow_multiple":0,
+          "description":"Specifies how accurate the match between the two 'adapter ligated' reads must be for PE palindrome read alignment.",
+          "text_options":{
+             "is_output_name":0,
+             "placeholder":"",
+             "regex_constraint":[
+
+             ],
+             "validate_as":"int"
+          },
+          "disabled":0,
+          "short_hint":"Specifies how accurate the match between the two 'adapter ligated' reads must be for PE palindrome read alignment.",
+          "default_values":[
+             "30"
+          ],
+          "ui_name":"Palindrome clip threshold",
+          "optional":1,
+          "id":"palindrome_clip_threshold",
+          "advanced":1
+       },
+       {
+          "field_type":"text",
+          "ui_class":"parameter",
+          "allow_multiple":0,
+          "description":"Specifies how accurate the match between any adapter etc. sequence must be against a read.",
+          "text_options":{
+             "is_output_name":0,
+             "placeholder":"",
+             "regex_constraint":[
+
+             ],
+             "validate_as":"int"
+          },
+          "disabled":0,
+          "short_hint":"Specifies how accurate the match between any adapter etc. sequence must be against a read.",
+          "default_values":[
+             "10"
+          ],
+          "ui_name":"Simple clip threshold",
+          "optional":1,
+          "id":"simple_clip_threshold",
+          "advanced":1
+       },
+       {
+          "field_type":"text",
+          "ui_class":"parameter",
+          "allow_multiple":0,
+          "description":"Perform a sliding window trimming, cutting once the average quality within the window falls below a threshold. By considering multiple bases, a single poor quality base will not cause the removal of high quality data later in the read.",
+          "text_options":{
+             "is_output_name":0,
+             "placeholder":"",
+             "regex_constraint":[
+
+             ],
+             "validate_as":"int"
+          },
+          "disabled":0,
+          "short_hint":"Specifies the number of bases to average across.",
+          "default_values":[
+             "4"
+          ],
+          "ui_name":"Sliding window size",
+          "optional":1,
+          "id":"sliding_window_size",
+          "advanced":1
+       },
+       {
+          "field_type":"text",
+          "ui_class":"parameter",
+          "allow_multiple":0,
+          "description":"Perform a sliding window trimming, cutting once the average quality within the window falls below a threshold. By considering multiple bases, a single poor quality base will not cause the removal of high quality data later in the read.",
+          "text_options":{
+             "is_output_name":0,
+             "placeholder":"",
+             "regex_constraint":[
+
+             ],
+             "validate_as":"int"
+          },
+          "disabled":0,
+          "short_hint":"Specifies the average quality required.",
+          "default_values":[
+             "15"
+          ],
+          "ui_name":"Sliding window minimum quality",
+          "optional":1,
+          "id":"sliding_window_min_quality",
+          "advanced":1
+       },
+       {
+          "field_type":"text",
+          "ui_class":"parameter",
+          "allow_multiple":0,
+          "description":"Removes bases regardless of quality from the end of the read, so that the read has maximally the specified length after this step has been performed. Steps performed after CROP might of course further shorten the read.",
+          "text_options":{
+             "is_output_name":0,
+             "placeholder":"",
+             "regex_constraint":[
+
+             ],
+             "validate_as":"int"
+          },
+          "disabled":0,
+          "short_hint":"The number of bases to keep, from the start of the read (e.g. tail crop 10 bases from a 150 base read: enter '         140         ').",
+          "default_values":[
+             ""
+          ],
+          "ui_name":"Post Tail Crop length",
+          "optional":1,
+          "id":"crop_length",
+          "advanced":1
+       },
+       {
+          "field_type":"text",
+          "ui_class":"parameter",
+          "allow_multiple":0,
+          "description":"Removes the specified number of bases, regardless of quality, from the beginning of the read.",
+          "text_options":{
+             "is_output_name":0,
+             "placeholder":"",
+             "regex_constraint":[
+
+             ],
+             "validate_as":"int"
+          },
+          "disabled":0,
+          "short_hint":"The number of bases to remove from the start of the read (e.g. head crop 10 bases: enter '         10         ').",
+          "default_values":[
+             "0"
+          ],
+          "ui_name":"Head crop length",
+          "optional":1,
+          "id":"head_crop_length",
+          "advanced":1
+       },
+       {
+          "field_type":"text",
+          "ui_class":"parameter",
+          "allow_multiple":0,
+          "description":"Remove low quality bases from the beginning. As long as a base has a value below this threshold the base is removed and the next base will be investigated.",
+          "text_options":{
+             "is_output_name":0,
+             "placeholder":"",
+             "regex_constraint":[
+
+             ],
+             "validate_as":"int"
+          },
+          "disabled":0,
+          "short_hint":"Specifies the minimum quality required to keep a base at start of read.",
+          "default_values":[
+             "3"
+          ],
+          "ui_name":"Leading minimum quality",
+          "optional":1,
+          "id":"leading_min_quality",
+          "advanced":1
+       },
+       {
+          "field_type":"text",
+          "ui_class":"parameter",
+          "allow_multiple":0,
+          "description":"Remove low quality bases from the end. As long as a base has a value below this threshold the base is removed and the next base (which as trimmomatic is starting from the 3  prime end would be base preceding the just removed base) will be investigated. This approach can be used removing the special illumina  low quality segment  regions (which are marked with quality score of 2), but we recommend Sliding Window or MaxInfo instead.",
+          "text_options":{
+             "is_output_name":0,
+             "placeholder":"",
+             "regex_constraint":[
+
+             ],
+             "validate_as":"int"
+          },
+          "disabled":0,
+          "short_hint":"Specifies the minimum quality required to keep a base at end of read.",
+          "default_values":[
+             "3"
+          ],
+          "ui_name":"Trailing minimum quality",
+          "optional":1,
+          "id":"trailing_min_quality",
+          "advanced":1
+       },
+       {
+          "field_type":"text",
+          "ui_class":"parameter",
+          "allow_multiple":0,
+          "description":"This module removes reads that fall below the specified minimal length. Reads removed by this step will be counted and included in the '         dropped reads' count presented in the trimmomatic summary.",
+          "text_options":{
+             "is_output_name":0,
+             "placeholder":"",
+             "regex_constraint":[
+
+             ],
+             "validate_as":"int"
+          },
+          "disabled":0,
+          "short_hint":"Specifies the minimum length of reads to be kept.",
+          "default_values":[
+             "36"
+          ],
+          "ui_name":"Minimum read length",
+          "optional":1,
+          "id":"min_length",
+          "advanced":1
+       }
+    ],
+    "job_id_output_field":"docker",
+    "fixed_parameters":[
+
+    ],
+    "behavior":{
+       "kb_service_method":"runTrimmomatic",
+       "kb_service_version":"09b94c39b2fab79962a8d978aa15a424342defe4",
+       "kb_service_output_mapping":[
+          {
+             "target_property":"report_name",
+             "service_method_output_path":[
+                "0",
+                "report_name"
+             ]
+          },
+          {
+             "target_property":"report_ref",
+             "service_method_output_path":[
+                "0",
+                "report_ref"
+             ]
+          },
+          {
+             "target_property":"workspace_name",
+             "narrative_system_variable":"workspace"
+          }
+       ],
+       "kb_service_url":"",
+       "kb_service_name":"kb_trimmomatic",
+       "kb_service_input_mapping":[
+          {
+             "target_property":"input_ws",
+             "narrative_system_variable":"workspace"
+          },
+          {
+             "target_property":"input_reads_ref",
+             "input_parameter":"input_reads_ref",
+             "target_type_transform":"resolved-ref"
+          },
+          {
+             "target_property":"output_reads_name",
+             "input_parameter":"output_reads_name"
+          },
+          {
+             "target_property":"translate_to_phred33",
+             "input_parameter":"translate_to_phred33"
+          },
+          {
+             "target_property":"adapter_clip",
+             "input_parameter":"adapter_clip"
+          },
+          {
+             "target_property":"sliding_window",
+             "input_parameter":"sliding_window"
+          },
+          {
+             "target_property":"leading_min_quality",
+             "input_parameter":"leading_min_quality"
+          },
+          {
+             "target_property":"trailing_min_quality",
+             "input_parameter":"trailing_min_quality"
+          },
+          {
+             "target_property":"crop_length",
+             "input_parameter":"crop_length"
+          },
+          {
+             "target_property":"head_crop_length",
+             "input_parameter":"head_crop_length"
+          },
+          {
+             "target_property":"min_length",
+             "input_parameter":"min_length"
+          }
+       ]
+    },
+    "widgets":{
+       "input":"null",
+       "output":"no-display"
+    }
+ }, {"info": {"ver": "0.0.1", "name": "Test Input Parameters", "subtitle": "Used for testing that input parameters are properly validated.", "output_types": ["KBaseGenomes.Genome"], "app_type": "app", "namespace": "NarrativeTest", "tooltip": "Used for testing that input parameters are properly validated.", "git_commit_hash": "daaf0bd2a797f60c85dfbfe3a0b4e7568037e763", "input_types": ["KBaseFBA.FBAModel", "KBaseGenomes.Genome"], "authors": ["wjriehl"], "module_name": "NarrativeTest", "id": "NarrativeTest/test_input_params", "categories": ["active"]}, "parameters": [{"field_type": "text", "ui_class": "input", "allow_multiple": 0, "description": "", "text_options": {"is_output_name": 0, "placeholder": "", "regex_constraint": [], "valid_ws_types": ["KBaseGenomes.Genome"]}, "disabled": 0, "short_hint": "Should be a genome (KBaseGenomes.Genome)", "default_values": [""], "ui_name": "Genome to be duplicated", "optional": 0, "id": "actual_input_object", "advanced": 0}, {"field_type": "text", "ui_class": "output", "allow_multiple": 0, "description": "", "text_options": {"is_output_name": 1, "placeholder": "", "regex_constraint": [], "valid_ws_types": ["KBaseGenomes.Genome"]}, "disabled": 0, "short_hint": "The name of the new Genome object that gets created (a KBaseGenomes.Genome)", "default_values": [""], "ui_name": "Name of new Genome", "optional": 0, "id": "actual_output_object", "advanced": 0}, {"field_type": "text", "ui_class": "parameter", "allow_multiple": 0, "description": "", "text_options": {"is_output_name": 0, "max_int": 100, "min_int": -100, "regex_constraint": [], "validate_as": "int", "placeholder": ""}, "disabled": 0, "short_hint": "Only accept a single integer between [-100, 100]", "default_values": [""], "ui_name": "Single integer", "optional": 1, "id": "single_int", "advanced": 0}, {"field_type": "text", "ui_class": "parameter", "allow_multiple": 1, "description": "", "text_options": {"is_output_name": 0, "max_int": 100, "min_int": -100, "regex_constraint": [], "validate_as": "int", "placeholder": ""}, "disabled": 0, "short_hint": "Accept multiple integers between [-100, 100]", "default_values": [""], "ui_name": "Multiple integers", "optional": 1, "id": "list_of_ints", "advanced": 0}, {"field_type": "text", "ui_class": "parameter", "allow_multiple": 0, "description": "", "text_options": {"is_output_name": 0, "min_float": -55.5, "max_float": 55.5, "regex_constraint": [], "validate_as": "float", "placeholder": ""}, "disabled": 0, "short_hint": "Only accept a single float between [-55.5, 55.5]", "default_values": [""], "ui_name": "Single floating point number", "optional": 1, "id": "single_float", "advanced": 0}, {"field_type": "text", "ui_class": "parameter", "allow_multiple": 1, "description": "", "text_options": {"is_output_name": 0, "min_float": -55.5, "max_float": 55.5, "regex_constraint": [], "validate_as": "float", "placeholder": ""}, "disabled": 0, "short_hint": "Accept multiple floating point numbers between [-55.5, 55.5]", "default_values": [""], "ui_name": "Multiple floating point numbers", "optional": 1, "id": "list_of_floats", "advanced": 0}, {"field_type": "text", "ui_class": "parameter", "allow_multiple": 0, "description": "", "disabled": 0, "short_hint": "Just validate that it is a something.", "default_values": [""], "ui_name": "Single random string", "optional": 1, "id": "single_string", "advanced": 0}, {"field_type": "text", "ui_class": "parameter", "allow_multiple": 1, "description": "", "disabled": 0, "short_hint": "Accept multple random strings", "default_values": [""], "ui_name": "Multiple strings", "optional": 1, "id": "list_of_strings", "advanced": 0}, {"field_type": "text", "ui_class": "input", "allow_multiple": 0, "description": "", "text_options": {"is_output_name": 0, "placeholder": "", "regex_constraint": [], "valid_ws_types": ["KBaseGenomes.Genome", "KBaseFBA.FBAModel"]}, "disabled": 0, "short_hint": "Accepts both KBaseGenomes.Genome or KBaseFBA.FBAModel", "default_values": [""], "ui_name": "A single ws object", "optional": 1, "id": "single_ws_object", "advanced": 0}, {"field_type": "text", "ui_class": "input", "allow_multiple": 1, "description": "", "text_options": {"is_output_name": 0, "placeholder": "", "regex_constraint": [], "valid_ws_types": ["KBaseGenomes.Genome", "KBaseFBA.FBAModel"]}, "disabled": 0, "short_hint": "Accepts both KBaseGenomes.Genome or KBaseFBA.FBAModel", "default_values": [""], "ui_name": "Multiple ws objects", "optional": 1, "id": "list_of_ws_objects", "advanced": 0}, {"field_type": "dropdown", "ui_class": "parameter", "allow_multiple": 0, "description": "", "dropdown_options": {"options": [{"display": "Apple", "value": "apple"}, {"display": "Banana", "value": "banana"}, {"display": "Carrot", "value": "carrot"}]}, "disabled": 0, "short_hint": "Should only accept what is in that dropdown.", "default_values": [""], "ui_name": "Dropdown of random strings", "optional": 1, "id": "dropdown_selection", "advanced": 0}, {"field_type": "dropdown", "ui_class": "parameter", "allow_multiple": 1, "description": "", "dropdown_options": {"options": [{"display": "Apple", "value": "apple"}, {"display": "Banana", "value": "banana"}, {"display": "Carrot", "value": "carrot"}]}, "disabled": 0, "short_hint": "Should accept only what is in the dropdown, but a list of them.", "default_values": [""], "ui_name": "Multiple dropdown results", "optional": 1, "id": "list_of_dropdown_selections", "advanced": 0}, {"field_type": "checkbox", "ui_class": "parameter", "allow_multiple": 0, "description": "", "checkbox_options": {"checked_value": 1, "unchecked_value": 0}, "disabled": 0, "short_hint": "Accepts just True or False, should auto-map to actual value", "default_values": [""], "ui_name": "A single checkbox", "optional": 1, "id": "single_checkbox", "advanced": 0}, {"field_type": "textarea", "ui_class": "parameter", "allow_multiple": 0, "description": "", "disabled": 0, "short_hint": "A textarea", "textarea_options": {"n_rows": 4, "placeholder": ""}, "default_values": [""], "ui_name": "Single textarea", "optional": 1, "id": "single_textarea", "advanced": 0}, {"field_type": "textarea", "ui_class": "parameter", "allow_multiple": 1, "description": "", "disabled": 0, "short_hint": "Maybe you want to write an article with lots of paragraphs?", "textarea_options": {"n_rows": 3, "placeholder": ""}, "default_values": [""], "ui_name": "A list of textareas.", "optional": 1, "id": "list_of_textareas", "advanced": 0}, {"field_type": "text", "ui_class": "input", "allow_multiple": 0, "description": "", "text_options": {"is_output_name": 0, "placeholder": "", "regex_constraint": [], "valid_ws_types": ["KBaseFBA.FBAModel"]}, "disabled": 0, "short_hint": "This is the FBA model that will be used for populating subdata selection", "default_values": [""], "ui_name": "A single FBA model for subdata selection", "optional": 1, "id": "model_for_subdata", "advanced": 0}, {"field_type": "textsubdata", "ui_class": "parameter", "allow_multiple": 0, "description": "", "textsubdata_options": {"subdata_selection": {"subdata_included": ["modelcompounds/[*]/id", "modelcompounds/[*]/name", "modelcompounds/[*]/formula"], "path_to_subdata": ["modelcompounds"], "parameter_id": "model_for_subdata", "selection_id": "id", "selection_description": ["name", "formula"], "description_template": "- {{name}} ({{formula}})"}, "multiselection": 1, "show_src_obj": 0, "placeholder": "", "allow_custom": 0}, "disabled": 0, "short_hint": "Used for a KBaseFBA.FBAModel (as in the example spec)", "default_values": [""], "ui_name": "A single fancy text subdata", "optional": 1, "id": "single_textsubdata", "advanced": 0}], "job_id_output_field": "docker", "fixed_parameters": [], "behavior": {"kb_service_method": "test_async_job", "kb_service_version": "daaf0bd2a797f60c85dfbfe3a0b4e7568037e763", "kb_service_output_mapping": [{"target_property": "report_name", "service_method_output_path": ["0", "report_name"]}, {"target_property": "report_ref", "service_method_output_path": ["0", "report_ref"]}, {"target_property": "report_window_line_height", "constant_value": "16"}, {"target_property": "contig_filter_result", "service_method_output_path": ["0"]}, {"target_property": "id", "input_parameter": "actual_output_object"}, {"target_property": "ws", "narrative_system_variable": "workspace"}], "kb_service_url": "", "kb_service_name": "NarrativeTest", "kb_service_input_mapping": [{"target_property": "workspace", "narrative_system_variable": "workspace"}, {"target_property": "input_genome_name", "input_parameter": "actual_input_object"}, {"target_property": "output_genome_name", "input_parameter": "actual_output_object"}]}, "widgets": {"input": "null", "output": "kbaseGenomeView"}}]

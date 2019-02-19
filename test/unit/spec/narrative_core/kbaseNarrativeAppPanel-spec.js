@@ -16,6 +16,13 @@ define([
     describe('Test the kbaseNarrativeAppPanel widget', function() {
         beforeEach(function(done) {
             Jupyter.narrative = new Narrative();
+            Jupyter.narrative.userId = 'narrativetest';
+            // just a dummy mock so we don't see error messages. Don't actually need a kernel.
+            Jupyter.notebook = {
+                kernel: {
+                    execute: function(inputs) { }
+                }
+            };
             appPanel = new AppPanel($panel);
             appPanel.refreshFromService().then(function() {
                 done();

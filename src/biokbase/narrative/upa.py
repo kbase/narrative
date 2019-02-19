@@ -35,7 +35,7 @@ def is_ref(ref):
         split_path = ref.split(";")
         for sub_ref in split_path:
             c = sub_ref.count("/")
-            if c < 2 or c > 3:
+            if c < 1 or c > 2:
                 return False
         return True
 

@@ -1,7 +1,48 @@
 ### OVERVIEW
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
+This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
+
+### Version 3.10.0
+- Fix tooltip for long object names in the data panel.
+- Add ability to prefix a part of path_to_subdata with WSREF to list options from other objects.
+- SCT-1602 - Add new URL options - /narrative/12345 will find the narrative in workspace 12345 (older URLs like /narrative/ws.12345.obj.1 still work).
+- Fix problem where jobs were not being properly started with an agent token (i.e. weren't guaranteed to have a week-long authentication token).
+- Improved error handling and display when a Narrative doesn't exist or a user doesn't have permission to see it.
+- Add functionality to request access to a Narrative instead of throwing a "not allowed" error.
+
+### Version 3.9.1
+- SCT-1509 - Ensure access permissions to Globus before redirecting a user there from the Import area.
+
+### Version 3.9.0
+- Fix security vulnerability with rendering some user info.
+- SCT-1547 - Add a download endpoint to the staging service, so a user can now download files directly from the FTP stagin area.
+- SCT-1496 - Add functionality for downloading data from the data panel to the FTP Staging area.
+- SCT-1526 - Create a code cell generator as an app output.
+
+### Version 3.8.3
+- SCT-1253 - Replace old RNA-Seq data viewers.
+- SCT-1393 - Fix "Objects Created" links in app outputs.
+- SCT-1370 - Give instructions to users on how to link their account to Globus for uploading data.
+- SCT-1395 - Convert object ref and ids to common names for downloading.
+- Add viewers and support for generic data types.
+- Fix RNA-Seq data viewers, including Feature Clusters.
+
+### Version 3.8.2
+- Add the clustergrammer_widget
+- SCT-1219 - Fix the app cell so it shows an error if an app has multiple outputs, and they're given the same name.
+- Add numpy, scipy, scikit-learn to the base Docker image
+
+### Version 3.8.1
+- SCT-1261 - Changed the 'outdated app' warning to a small icon with a popover text.
+- SCT-886 - Added a default viewer for typed objects that don't have an actual viewer associated with them.
+- Added a test-mode viewer for a new matrix type.
+- SCT-1253 - fixed bugs in how assembly and reads typed objects get viewed - their numbers of reads weren't being presented properly.
+- SCT-1210 - Module-level (not just type) spec files are available for determining object viewers.
+- SCT-1234 - Introduces the clustergrammer Jupyter Notebook widget.
+- SCT-1206 - fixes a cell error that can occur if an app doesn't produce any output objects (including reports).
+- Introduces a new build and deployment strategy.
+- Updates the versions of numpy and pandas so they should work again.
 
 ### Version 3.8.0
 - Generalized updates to support viewing the new version of the genome data type.
@@ -13,6 +54,11 @@ This is built on the Jupyter Notebook v5.4.1 (more notes will follow).
 - Reformat and generalize the job logs for both the App Cell and standalone job log viewer widget.
 - Migrate unit tests to use HeadlessChrome and (optionally) Firefox.
 - Refactor Public Data in the Data Slideout to make use of the new KBase Search API.
+- Display a warning if a typed object has no viewer associated with it.
+- SCT-901 - enhance expression matrix viewer.
+- Add ConditionSet viewer.
+- SCT-1082 - fix regressions in Public Data tab.
+- Fix regression in feature set viewer caused by SCT-762.
 
 ### Version 3.7.2
 - SCT-908 - Fix formatting issues with heatmaps.

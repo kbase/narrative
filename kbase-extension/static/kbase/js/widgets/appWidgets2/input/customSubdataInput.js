@@ -10,7 +10,7 @@ define([
     'common/ui',
     'common/props',
     'base/js/namespace',
-    './subdataMethods/manager',
+    '../subdataMethods/manager',
     'bootstrap',
     'css!font-awesome'
 ], function(

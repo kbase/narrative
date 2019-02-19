@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM kbase/narrbase:5.0dockerize
+FROM kbase/narrbase:5.2
 
 # These ARGs values are passed in via the docker build command
 ARG BUILD_DATE
@@ -29,7 +29,7 @@ RUN echo Skip=$SKIP_MINIFY
 
 # install pyopenssl cryptography idna and requests is the same as installing
 # requests[security]
-RUN conda install -c conda-forge  ndg-httpsclient pyasn1 pyopenssl cryptography idna requests \
+RUN conda install -c conda-forge ndg-httpsclient pyasn1 pyopenssl cryptography idna requests \
           beautifulsoup4 html5lib
 # TEMPORARY!
 # Update bs4 and pandas to resolve inability to run them
@@ -50,7 +50,7 @@ WORKDIR /kb/dev_container/narrative
 RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version
 
 # Install Javascript dependencies
-RUN npm install && bower install --allow-root --config.interactive=false
+RUN npm install && ./node_modules/.bin/bower install --allow-root --config.interactive=false
 
 # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
 # (commented out for now)
@@ -78,6 +78,9 @@ RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_pr
 # but since the raw template is consumed at build time as a JSON file, a template with a default string would
 # cause JSON parsing to fail - GRRRRR!!!
 ENV VERSION_CHECK /narrative_version
+
+# Set the default environment to be CI, can be overriden by passing new CONFIG_ENV setting at container start
+ENV CONFIG_ENV ci
 
 USER root
 

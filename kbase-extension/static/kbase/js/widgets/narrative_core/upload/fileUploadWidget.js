@@ -1,21 +1,21 @@
 define([
     'jquery',
-    'bluebird',
     'kbwidget',
     'narrativeConfig',
     'common/runtime',
     'dropzone',
     'handlebars',
+    'StagingServiceClient',
     'text!kbase/templates/data_staging/dropzone_area.html',
     'text!kbase/templates/data_staging/dropped_file.html'
 ], function(
     $,
-    Promise,
     KBWidget,
     Config,
     Runtime,
     Dropzone,
     Handlebars,
+    StagingServiceClient,
     DropzoneAreaHtml,
     DropFileHtml
 ) {
@@ -29,13 +29,13 @@ define([
             this.dropFileTmpl = Handlebars.compile(DropFileHtml);
             this.path = options.path;
             this.stagingUrl = Config.url('staging_api_url');
-            this.userId = options.userId;
+            this.userInfo = options.userInfo;
             this.render();
             return this;
         },
 
         render: function() {
-            var $dropzoneElem = $(this.dropzoneTmpl({username: this.userId}));
+            var $dropzoneElem = $(this.dropzoneTmpl({userInfo: this.userInfo}));
             $dropzoneElem.find('#clear-completed > button').click(function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -43,13 +43,30 @@ define([
                 $dropzoneElem.find('#clear-completed').css({'display': 'none'});
             }.bind(this));
 
-            this.$elem.append($dropzoneElem);
-            var self = this;
+            // $dropzoneElem.find('a').click((e) => {
+            //     e.stopPropagation();
+            // });
 
+            $dropzoneElem.find('a.globus_link').click((e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                let stagingServiceClient = new StagingServiceClient({
+                    root: this.stagingUrl,
+                    token: Runtime.make().authToken()
+                });
+                var globusWindow = window.open('', 'dz-globus');
+                globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
+                stagingServiceClient.addAcl()
+                    .done(() => {
+                        window.open($(e.target).attr('href'), 'dz-globus');
+                        return true;
+                    });
+            });
+
+            this.$elem.append($dropzoneElem);
             this.dropzone = new Dropzone($dropzoneElem.get(0), {
                 url: this.stagingUrl + '/upload',
                 accept: function(file, done) {
-                    console.log('uploading ' + file.name + ' = ' + file.size + 'B');
                     done();
                 },
                 headers: {'Authorization': Runtime.make().authToken()},
@@ -90,12 +107,12 @@ define([
                     //okay, if we've been given a full path, then we pull out the pieces (ignoring the filename at the end) and then
                     //tack it onto our set path, then set that as the destPath form param.
                     if (file.fullPath) {
-                      var subPath = file.fullPath.replace(new RegExp('/' + file.name + '$'), '');
-                      data.append('destPath', [this.path, subPath].join('/'));
+                        var subPath = file.fullPath.replace(new RegExp('/' + file.name + '$'), '');
+                        data.append('destPath', [this.path, subPath].join('/'));
                     }
                     //if we don't have a fullPath, then we're uploading a file and not a folder. Just use the current path.
                     else {
-                      data.append('destPath', this.path);
+                        data.append('destPath', this.path);
                     }
                     $($dropzoneElem.find('#total-progress')).show();
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());

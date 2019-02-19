@@ -1,0 +1,43 @@
+{% extends "page.html" %}
+
+{% block login_widget %}
+{% endblock %}
+
+{% block stylesheet %}
+{{super()}}
+<style type="text/css">
+/* disable initial hide */
+div#header, div#site {
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block loading_message %}
+{% endblock %}
+
+{% block narrative_menu %}
+{% include 'basic_header.html' %}
+{% endblock %}
+
+{% block site %}
+
+<div class="error" data-code={{status_code}}>
+    {% block h1_error %}
+    <p style="font-weight: bold">
+        An error occurred while loading this Narrative
+    </p>
+    {% endblock h1_error %}
+    {% block error_detail %}
+        {% if message %}
+            <p>{{message}}</p>
+        {% endif %}
+    {% endblock %}
+</div>
+
+{% endblock %}
+
+{% block script %}
+{{super()}}
+<script src="{{ static_url("errorMain.js") }}" charset="utf-8"></script>
+{% endblock %}

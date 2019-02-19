@@ -33,3 +33,8 @@ div#header, div#site {
 </header>
 
 {% endblock %}
+
+{% block script %}
+{{super()}}
+<script src="{{ static_url("errorMain.js") }}" charset="utf-8"></script>
+{% endblock %}

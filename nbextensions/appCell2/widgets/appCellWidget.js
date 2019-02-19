@@ -241,10 +241,11 @@ define([
                     bus.on('parameter-changed', function(message) {
                         // TODO: should never get these in the following states....
 
-                        var state = fsm.getCurrentState().state;
+                        let state = fsm.getCurrentState().state;
+                        let isError = Boolean(message.isError);
                         if (state.mode === 'editing') {
                             model.setItem(['params', message.parameter], message.newValue);
-                            evaluateAppState();
+                            evaluateAppState(isError);
                         } else {
                             console.warn('parameter-changed event detected when not in editing mode - ignored');
                         }
@@ -329,98 +330,13 @@ define([
                         }
                     });
 
-                    bus.on('parameter-changed', function(message) {
-                        // TODO: should never get these in the following states....
-
-                        var state = fsm.getCurrentState().state;
-                        if (state.mode === 'editing') {
-                            model.setItem(['params', message.parameter], message.newValue);
-                            evaluateAppState();
-                        } else {
-                            console.warn('parameter-changed event detected when not in editing mode - ignored');
-                        }
-                    });
-
-                    return widget.start({
-                        node: arg.node,
-                        appSpec: model.getItem('app.spec'),
-                        parameters: spec.getSpec().parameters
-                    })
-                        .then(function() {
-                            return {
-                                bus: bus,
-                                instance: widget
-                            };
-                        });
-                });
-        }
-
-        function loadBatchParamsWidget(arg) {
-            return pRequire(['./widgets/batchParamsWidget'])
-                .spread(function(Widget) {
-                    // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for batch input widget' }),
-                        widget = Widget.make({
-                            bus: bus,
-                            workspaceInfo: workspaceInfo,
-                            initialParams: model.getItem('params')
-                        });
-
-                    bus.on('sync-params', function(message) {
-                        message.parameters.forEach(function(paramId) {
-                            bus.send({
-                                parameter: paramId,
-                                value: model.getItem(['params', message.parameter])
-                            }, {
-                                key: {
-                                    type: 'update',
-                                    parameter: message.parameter
-                                }
-                            });
-                        });
-                    });
-
-                    bus.on('parameter-sync', function(message) {
-                        var value = model.getItem(['params', message.parameter]);
-                        bus.send({
-                            //                            parameter: message.parameter,
-                            value: value
-                        }, {
-                            // This points the update back to a listener on this key
-                            key: {
-                                type: 'update',
-                                parameter: message.parameter
-                            }
-                        });
-                    });
-
-                    bus.on('set-param-state', function(message) {
-                        model.setItem('paramState', message.id, message.state);
-                    });
-
-                    bus.on('toggle-batch-mode', function(message) {
-                        toggleBatchMode();
-                    });
-
                     bus.respond({
                         key: {
-                            type: 'get-param-state'
+                            type: 'get-batch-mode'
                         },
-                        handle: function(message) {
-                            return {
-                                state: model.getItem('paramState', message.id)
-                            };
-                        }
-                    });
-
-                    bus.respond({
-                        key: {
-                            type: 'get-parameter'
-                        },
-                        handle: function(message) {
-                            return {
-                                value: model.getItem(['params', message.parameterName])
-                            };
+                        handle: function() {
+                            var canDoBatch = Config.get('features').batchAppMode;
+                            return canDoBatch && (model.getItem('user-settings.batchMode') || false);
                         }
                     });
 
@@ -450,96 +366,191 @@ define([
                 });
         }
 
-        function loadViewBatchParamsWidget(arg) {
-            return pRequire(['./batchParamsViewWidget'])
-                .spread(function(Widget) {
-                    // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for batch input view widget' }),
-                        widget = Widget.make({
-                            bus: bus,
-                            workspaceInfo: workspaceInfo,
-                            initialParams: model.getItem('params')
-                        });
+        // function loadBatchParamsWidget(arg) {
+        //     return pRequire(['./widgets/batchParamsWidget'])
+        //         .spread(function(Widget) {
+        //             // TODO: widget should make own bus.
+        //             var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for batch input widget' }),
+        //                 widget = Widget.make({
+        //                     bus: bus,
+        //                     workspaceInfo: workspaceInfo,
+        //                     initialParams: model.getItem('params')
+        //                 });
 
-                    bus.on('sync-params', function(message) {
-                        message.parameters.forEach(function(paramId) {
-                            bus.send({
-                                parameter: paramId,
-                                value: model.getItem(['params', message.parameter])
-                            }, {
-                                key: {
-                                    type: 'update',
-                                    parameter: message.parameter
-                                }
-                            });
-                        });
-                    });
+        //             bus.on('sync-params', function(message) {
+        //                 message.parameters.forEach(function(paramId) {
+        //                     bus.send({
+        //                         parameter: paramId,
+        //                         value: model.getItem(['params', message.parameter])
+        //                     }, {
+        //                         key: {
+        //                             type: 'update',
+        //                             parameter: message.parameter
+        //                         }
+        //                     });
+        //                 });
+        //             });
 
-                    bus.on('parameter-sync', function(message) {
-                        var value = model.getItem(['params', message.parameter]);
-                        bus.send({
-                            //                            parameter: message.parameter,
-                            value: value
-                        }, {
-                            // This points the update back to a listener on this key
-                            key: {
-                                type: 'update',
-                                parameter: message.parameter
-                            }
-                        });
-                    });
+        //             bus.on('parameter-sync', function(message) {
+        //                 var value = model.getItem(['params', message.parameter]);
+        //                 bus.send({
+        //                     //                            parameter: message.parameter,
+        //                     value: value
+        //                 }, {
+        //                     // This points the update back to a listener on this key
+        //                     key: {
+        //                         type: 'update',
+        //                         parameter: message.parameter
+        //                     }
+        //                 });
+        //             });
 
-                    bus.on('set-param-state', function(message) {
-                        model.setItem('paramState', message.id, message.state);
-                    });
+        //             bus.on('set-param-state', function(message) {
+        //                 model.setItem('paramState', message.id, message.state);
+        //             });
 
-                    bus.respond({
-                        key: {
-                            type: 'get-param-state'
-                        },
-                        handle: function(message) {
-                            return {
-                                state: model.getItem('paramState', message.id)
-                            };
-                        }
-                    });
+        //             bus.on('toggle-batch-mode', function(message) {
+        //                 toggleBatchMode();
+        //             });
 
-                    bus.respond({
-                        key: {
-                            type: 'get-parameter'
-                        },
-                        handle: function(message) {
-                            return {
-                                value: model.getItem(['params', message.parameterName])
-                            };
-                        }
-                    });
+        //             bus.respond({
+        //                 key: {
+        //                     type: 'get-param-state'
+        //                 },
+        //                 handle: function(message) {
+        //                     return {
+        //                         state: model.getItem('paramState', message.id)
+        //                     };
+        //                 }
+        //             });
 
-                    bus.on('parameter-changed', function(message) {
-                        // TODO: should never get these in the following states....
+        //             bus.respond({
+        //                 key: {
+        //                     type: 'get-parameter'
+        //                 },
+        //                 handle: function(message) {
+        //                     return {
+        //                         value: model.getItem(['params', message.parameterName])
+        //                     };
+        //                 }
+        //             });
 
-                        var state = fsm.getCurrentState().state;
-                        if (state.mode === 'editing') {
-                            model.setItem(['params', message.parameter], message.newValue);
-                            evaluateAppState();
-                        } else {
-                            console.warn('parameter-changed event detected when not in editing mode - ignored');
-                        }
-                    });
+        //             bus.on('parameter-changed', function(message) {
+        //                 // TODO: should never get these in the following states....
 
-                    return widget.start({
-                        node: arg.node,
-                        appSpec: model.getItem('app.spec'),
-                        parameters: spec.getSpec().parameters
-                    })
-                        .then(function() {
-                            return {
-                                bus: bus,
-                                instance: widget
-                            };
-                        });
-                });
-        }
+        //                 var state = fsm.getCurrentState().state;
+        //                 if (state.mode === 'editing') {
+        //                     model.setItem(['params', message.parameter], message.newValue);
+        //                     evaluateAppState();
+        //                 } else {
+        //                     console.warn('parameter-changed event detected when not in editing mode - ignored');
+        //                 }
+        //             });
+
+        //             return widget.start({
+        //                 node: arg.node,
+        //                 appSpec: model.getItem('app.spec'),
+        //                 parameters: spec.getSpec().parameters
+        //             })
+        //                 .then(function() {
+        //                     return {
+        //                         bus: bus,
+        //                         instance: widget
+        //                     };
+        //                 });
+        //         });
+        // }
+
+        // function loadViewBatchParamsWidget(arg) {
+        //     return pRequire(['./batchParamsViewWidget'])
+        //         .spread(function(Widget) {
+        //             // TODO: widget should make own bus.
+        //             var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for batch input view widget' }),
+        //                 widget = Widget.make({
+        //                     bus: bus,
+        //                     workspaceInfo: workspaceInfo,
+        //                     initialParams: model.getItem('params')
+        //                 });
+
+        //             bus.on('sync-params', function(message) {
+        //                 message.parameters.forEach(function(paramId) {
+        //                     bus.send({
+        //                         parameter: paramId,
+        //                         value: model.getItem(['params', message.parameter])
+        //                     }, {
+        //                         key: {
+        //                             type: 'update',
+        //                             parameter: message.parameter
+        //                         }
+        //                     });
+        //                 });
+        //             });
+
+        //             bus.on('parameter-sync', function(message) {
+        //                 var value = model.getItem(['params', message.parameter]);
+        //                 bus.send({
+        //                     //                            parameter: message.parameter,
+        //                     value: value
+        //                 }, {
+        //                     // This points the update back to a listener on this key
+        //                     key: {
+        //                         type: 'update',
+        //                         parameter: message.parameter
+        //                     }
+        //                 });
+        //             });
+
+        //             bus.on('set-param-state', function(message) {
+        //                 model.setItem('paramState', message.id, message.state);
+        //             });
+
+        //             bus.respond({
+        //                 key: {
+        //                     type: 'get-param-state'
+        //                 },
+        //                 handle: function(message) {
+        //                     return {
+        //                         state: model.getItem('paramState', message.id)
+        //                     };
+        //                 }
+        //             });
+
+        //             bus.respond({
+        //                 key: {
+        //                     type: 'get-parameter'
+        //                 },
+        //                 handle: function(message) {
+        //                     return {
+        //                         value: model.getItem(['params', message.parameterName])
+        //                     };
+        //                 }
+        //             });
+
+        //             bus.on('parameter-changed', function(message) {
+        //                 // TODO: should never get these in the following states....
+
+        //                 var state = fsm.getCurrentState().state;
+        //                 if (state.mode === 'editing') {
+        //                     model.setItem(['params', message.parameter], message.newValue);
+        //                     evaluateAppState();
+        //                 } else {
+        //                     console.warn('parameter-changed event detected when not in editing mode - ignored');
+        //                 }
+        //             });
+
+        //             return widget.start({
+        //                 node: arg.node,
+        //                 appSpec: model.getItem('app.spec'),
+        //                 parameters: spec.getSpec().parameters
+        //             })
+        //                 .then(function() {
+        //                     return {
+        //                         bus: bus,
+        //                         instance: widget
+        //                     };
+        //                 });
+        //         });
+        // }
 
         function batchConfigureWidget() {
             function factory() {
@@ -795,7 +806,13 @@ define([
             // btn.classList.toggle('batch-active');
             var curBatchState = model.getItem('user-settings.batchMode'),
                 newBatchMode = !curBatchState,
-                currentTabId = selectedTabId();
+                currentTabId = selectedTabId(),
+                runState = fsm.getCurrentState();
+            if (runState.state.mode !== 'editing') {
+                // TODO: should make a popup with warning, continuing = resetting, etc.
+                // for now, just ignore.
+                return;
+            }
             model.setItem('user-settings.batchMode', newBatchMode);
             bus.emit('set-batch-mode', newBatchMode);
             toggleTab('configure')
@@ -1042,13 +1059,10 @@ define([
         }
 
         function buildRunControlPanelRunButtons(events) {
-            var style = {};
-            style.padding = '6px';
-            var buttonDiv = div({
-                class: 'btn-group',
-                style: style
-            },
-            Object.keys(actionButtons.availableButtons).map(function(key) {
+            var style = {
+                padding: '6px'
+            };
+            var buttonList = Object.keys(actionButtons.availableButtons).map(function(key) {
                 var button = actionButtons.availableButtons[key],
                     classes = [].concat(button.classes),
                     icon;
@@ -1078,8 +1092,12 @@ define([
                     icon: icon,
                     label: button.label
                 });
-            })
-            );
+            });
+
+            var buttonDiv = div({
+                class: 'btn-group',
+                style: style
+            }, buttonList);
             return buttonDiv;
         }
 
@@ -1124,7 +1142,29 @@ define([
                 var tab = message.data.tab;
                 toggleTab(tab);
             });
-            return buttons;
+
+            var outdatedBtn = a({
+                tabindex: '0',
+                type: 'button',
+                class: 'btn hidden',
+                dataContainer: 'body',
+                container: 'body',
+                dataToggle: 'popover',
+                dataPlacement: 'bottom',
+                dataTrigger: 'focus',
+                dataElement: 'outdated',
+                role: 'button',
+                title: 'New version available',
+                style: {
+                    color: '#f79b22',
+                    padding: '6px 0 0 0'
+                }
+            }, span({
+                class: 'fa fa-exclamation-triangle fa-2x'
+            }));
+            buttons.unshift(outdatedBtn);
+
+                return buttons;
         }
 
         function buildRunControlPanel(events) {
@@ -1221,16 +1261,6 @@ define([
                     }, [
                         div({ dataElement: 'widget', style: { display: 'block', width: '100%' } }, [
                             div({ class: 'container-fluid' }, [
-                                div({
-                                    class: 'kb-app-warning alert alert-warning hidden',
-                                    dataElement: 'outdated',
-                                    role: 'alert'
-                                }, [
-                                    span({ style: { 'font-weight': 'bold' } }, 'Warning'),
-                                    ': this app appears to be out of date. Running it may cause undesired results. Add a new "',
-                                    span({ style: { 'font-weight': 'bold' }, dataElement: 'new-app-name' }),
-                                    '" App for the most recent version.'
-                                ]),
                                 buildRunControlPanel(events)
                             ])
                         ])
@@ -1442,8 +1472,14 @@ define([
             showFsmBar();
             var state = fsm.getCurrentState();
             if (!viewOnly && model.getItem('outdated')) {
-                ui.setContent('outdated.new-app-name', model.getItem('newAppName', model.getItem('app.spec.info.name')));
-                ui.showElement('outdated');
+                var outdatedBtn = ui.getElement('outdated');
+                outdatedBtn.setAttribute('data-content',
+                    'This app has a newer version available! ' +
+                    'There\'s probably nothing wrong with this version, ' +
+                    'but the new one may include new features. Add a new "' +
+                    model.getItem('newAppName') +
+                    '" app cell for the update.');
+                // outdatedBtn.classList.remove('hidden');
             }
 
             var indicatorNode = ui.getElement('run-control-panel.status.indicator');
@@ -1706,6 +1742,15 @@ define([
                 case 'job_started':
                     return { mode: 'processing', stage: 'running' };
                 case 'in-progress':
+                    // see if any subjobs are done, if so, set the stage to 'partial-complete'
+                    if (jobState.child_jobs && jobState.child_jobs.length) {
+                        let childDone = jobState.child_jobs.some((childState) => {
+                            return ['completed', 'canceled', 'suspend', 'error'].indexOf(childState.job_state) !== -1;
+                        });
+                        if (childDone) {
+                            return { mode: 'processing', stage: 'partial-complete' };
+                        }
+                    }
                     return { mode: 'processing', stage: 'running' };
                 case 'completed':
                     stopListeningForJobMessages();
@@ -1791,6 +1836,7 @@ define([
                 var layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
+                $(container).find('[data-toggle="popover"]').popover();
                 return null;
             });
         }
@@ -2374,6 +2420,10 @@ define([
                         bus.emit('reset-to-defaults');
                     }));
 
+                    busEventManager.add(parentBus.on('toggle-batch-mode', () => {
+                        toggleBatchMode();
+                    }));
+
                     // TODO: only turn this on when we need it!
                     busEventManager.add(cellBus.on('run-status', function(message) {
                         updateFromLaunchEvent(message);
@@ -2491,14 +2541,14 @@ define([
             return messages;
         }
 
-        function evaluateAppState() {
+        function evaluateAppState(isError) {
             validateModel()
                 .then(function(result) {
                     // we have a tree of validations, so we need to walk the tree to see if anything
                     // does not validate.
                     var messages = gatherValidationMessages(result);
 
-                    if (messages.length === 0) {
+                    if (messages.length === 0 && !isError) {
                         buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
                         fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
                     } else {

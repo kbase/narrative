@@ -1,0 +1,49 @@
+{% extends "page.html" %}
+
+{% block login_widget %}
+{% endblock %}
+
+{% block stylesheet %}
+{{super()}}
+<style type="text/css">
+/* disable initial hide */
+div#header, div#site {
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block loading_message %}
+{% endblock %}
+
+{% block narrative_menu %}
+{% include 'basic_header.html' %}
+{% endblock %}
+
+{% block site %}
+
+<div class="error" data-code={{status_code}}>
+    <p style="font-weight: bold">You do not have permission to access this Narrative.</p>
+    <p style="font-size: 150%">You can request access from the Narrative owners using the controls below.</p>
+
+    <div id="perm-request" class="form-group form-inline" style="margin-top: 2em">
+        <label for="req-level">Access Level</label>
+        <select id="req-level" class="form-control">
+            <option value="r">View only</option>
+            <option value="w">Edit and save</option>
+            <option value="a">Edit, save, and share</option>
+        </select>
+        <button id="req-btn" type="button" class="btn btn-sm btn-primary">Request</button>
+    </div>
+    <div id="loader" style="display: none; margin-top: 1em">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+    </div>
+    <div id="request-result" style="font-size: 125%; margin-top: 2em"></div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+{{super()}}
+<script src="{{ static_url("errorMain.js") }}" charset="utf-8"></script>
+{% endblock %}

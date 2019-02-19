@@ -8,7 +8,7 @@ define([
     'use strict';
 
     function factory(config) {
-        var container, model = config.model, ui;            
+        var container, model = config.model, ui;
         function start(arg) {
             ui = UI.make({node: arg.node});
             return Promise.try(function () {

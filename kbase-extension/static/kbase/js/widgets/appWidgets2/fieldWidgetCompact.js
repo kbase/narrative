@@ -59,7 +59,8 @@ define([
             options = {},
             fieldId = html.genId(),
             spec = config.parameterSpec,
-            enabled;
+            enabled,
+            closeParameters = config.closeParameters;
 
         try {
             inputControl = inputControlFactory.make({
@@ -72,7 +73,8 @@ define([
                 workspaceInfo: config.workspaceInfo,
                 workspaceId: config.workspaceId,
                 fieldSpec: config.fieldSpec,
-                referenceType: config.referenceType
+                referenceType: config.referenceType,
+                closeParameters: closeParameters
             });
         } catch (ex) {
             console.error('Error creating input control', ex);

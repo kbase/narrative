@@ -40,7 +40,8 @@ define([
     var t = html.tag,
         form = t('form'),
         span = t('span'),
-        div = t('div');
+        div = t('div'),
+        b = t('b');
 
     function factory(config) {
         var runtime = Runtime.make(),
@@ -95,9 +96,14 @@ define([
         /*
         The field widget is a generic wrapper around the input. It serves the following purposes:
         - intercepts messages in order to display status.
+        appSpec - specifies the whole app
+        parameterSpec - just the segment of the appSpec that specifies this individual parameter
+        value - the initial value of this field
+        closeParameters - a list of "close" parameters, which might be context-dependent. E.g. for an output
+            field, this would be the list of all parameters meant to be output objects, so their names can
+            be cross-validated for uniqueness (optional)
         */
-
-        function makeFieldWidget(appSpec, parameterSpec, value) {
+        function makeFieldWidget(appSpec, parameterSpec, value, closeParameters) {
             return paramResolver.loadInputControl(parameterSpec)
                 .then(function (inputWidget) {
                     var fieldWidget = FieldWidget.make({
@@ -109,14 +115,16 @@ define([
                         parameterSpec: parameterSpec,
                         workspaceId: workspaceInfo.id,
                         referenceType: 'name',
-                        paramsChannelName: paramsBus.channelName
+                        paramsChannelName: paramsBus.channelName,
+                        closeParameters: closeParameters
                     });
 
                     // Forward all changed parameters to the controller. That is our main job!
                     fieldWidget.bus.on('changed', function (message) {
                         paramsBus.send({
                             parameter: parameterSpec.id,
-                            newValue: message.newValue
+                            newValue: message.newValue,
+                            isError: message.isError
                         }, {
                             key: {
                                 type: 'parameter-changed',
@@ -126,7 +134,8 @@ define([
 
                         paramsBus.emit('parameter-changed', {
                             parameter: parameterSpec.id,
-                            newValue: message.newValue
+                            newValue: message.newValue,
+                            isError: message.isError
                         });
                     });
 
@@ -201,6 +210,41 @@ define([
                                 });
                             } else {
                                 return null;
+                            }
+                        }
+                    });
+
+                    fieldWidget.bus.respond({
+                        key: {
+                            type: 'get-parameters'
+                        },
+                        handle: (message) => {
+                            if (message.parameterNames) {
+                                return Promise.all(
+                                    message.parameterNames.map((paramName) => {
+                                        return paramsBus.request({
+                                            parameterName: paramName
+                                        }, {
+                                            key: {
+                                                type: 'get-parameter'
+                                            }
+                                        })
+                                        .then((value) => {
+                                            let returnVal = {};
+                                            returnVal[paramName] = value.value;
+                                            return returnVal;
+                                        });
+                                    })
+                                )
+                                    .then((results) => {
+                                        let combined = {};
+                                        results.forEach((res) => {
+                                            Object.keys(res).forEach((key) => {
+                                                combined[key] = res[key];
+                                            })
+                                        });
+                                        return combined;
+                                    });
                             }
                         }
                     });
@@ -291,40 +335,28 @@ define([
             events.attachEvents();
         }
 
-        function buildBatchToggleButton(batchMode, events) {
-            var classes = [];
-            if (batchMode) {
-                classes.push('batch-active');
-            }
-            var btn = ui.buildButton({
-                dataElement: 'batch-toggle',
-                style: { width: '80px' },
-                label: 'Batch',
-                name: 'batch-toggle',
-                events: events,
-                type: 'default',
-                classes: classes,
-                hidden: false,
-                event: {
-                    type: 'batch-mode-toggle'
-                }
+        function renderBatchModeMessage() {
+            return ui.buildPanel({
+                title: span('Batch Mode'),
+                name: 'batch-mode-doc',
+                body: div({
+                    style: 'margin-left: 3ex'
+                }, [
+                    div('This App is set to Batch mode. To configure this app, you\'ll need to set the list of parameters manually.'),
+                    div('The easiest way to do this is to configure a single run app, toggle into Batch mode, then use the "Show code" menu option to review currently set inputs for this app.'),
+                    div('Then, just add another parameter dictionary to the batch_params list for each App run you want to do.<br>'),
+                    div('Once your batch is configured, press the "Run" button as usual.'),
+                    div({style: 'margin-top: 1ex'}, ['Tutorials, documentation, and API details to help you craft a set of App parameters can be found <a href="//kbase.us" target="api_doc">here</a>.'])
+                ]),
+                classes: ['kb-panel-light']
             });
-            bus.on('batch-mode-toggle', function(message) {
-                paramsBus.emit('toggle-batch-mode');
-                ui.getButton('batch-toggle').classList.toggle('batch-active');
-            });
-            return div({
-                class: 'btn-group',
-                style: { padding: '3px' },
-            }, btn);
         }
 
         function renderLayout(batchMode) {
             var events = Events.make(),
-                batchToggleBtn = Config.get('features').batchAppMode ? buildBatchToggleButton(batchMode, events) : null,
-                formContent = batchToggleBtn ? [batchToggleBtn] : [];
+                formContent = [];
             if (batchMode) {
-                formContent.push(div('batch mode!'));
+                formContent.push(renderBatchModeMessage());
             }
             else {
                 formContent = formContent.concat([
@@ -522,7 +554,7 @@ define([
                             return Promise.all(outputParams.layout.map(function (parameterId) {
                                 var spec = outputParams.paramMap[parameterId];
                                 try {
-                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id])
+                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id], outputParams.layout)
                                         .then(function (widget) {
                                             widgets.push(widget);
 

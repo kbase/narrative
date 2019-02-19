@@ -215,20 +215,20 @@ define([
             // Fetches job status from kernel.
             bus.on('request-job-status', function (message) {
                 // console.log('requesting job status for ' + message.jobId);
-                this.sendCommMessage(this.JOB_STATUS, message.jobId);
+                this.sendCommMessage(this.JOB_STATUS, message.jobId, { parent_job_id: message.parentJobId });
             }.bind(this));
 
             // Requests job status updates for this job via the job channel, and also
             // ensures that job polling is running.
             bus.on('request-job-update', function (message) {
                 // console.log('requesting job updates for ' + message.jobId);
-                this.sendCommMessage(this.START_JOB_UPDATE, message.jobId);
+                this.sendCommMessage(this.START_JOB_UPDATE, message.jobId, { parent_job_id: message.parentJobId });
             }.bind(this));
 
             // Tells kernel to stop including a job in the lookup loop.
             bus.on('request-job-completion', function (message) {
                 // console.log('cancelling job updates for ' + message.jobId);
-                this.sendCommMessage(this.STOP_JOB_UPDATE, message.jobId);
+                this.sendCommMessage(this.STOP_JOB_UPDATE, message.jobId, { parent_job_id: message.parentJobId });
             }.bind(this));
 
             // Fetches job logs from kernel.
@@ -243,9 +243,8 @@ define([
 
             // Fetches info (not state) about a job. Like the app id, name, and inputs.
             bus.on('request-job-info', function (message) {
-                this.sendCommMessage(this.JOB_INFO, message.jobId);
+                this.sendCommMessage(this.JOB_INFO, message.jobId, { parent_job_id: message.parentJobId });
             }.bind(this));
-
         },
         /**
          * Sends a comm message to the JobManager in the kernel.

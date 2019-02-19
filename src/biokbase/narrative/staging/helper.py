@@ -5,11 +5,14 @@ from biokbase.narrative.common.url_config import URLS
 import urllib.request
 import urllib.error
 import json
+import os
 
 """
 KBase staging.helper class
 """
 __author__ = "Tianhao Gu <tgu@anl.gov>"
+
+CHUNK_SIZE = 16 * 1024
 
 
 class Helper(object):
@@ -35,11 +38,15 @@ class Helper(object):
 
         return staging_url
 
-    def __fetch_url(self, end_point, values=None, headers=None, method='GET'):
+    def __fetch_url(self, end_point, values=None, headers=None, method='GET', save_path=None):
         """
         Fetching URL
         By default, it sends a GET request with {"Authorization": $KB_AUTH_TOKEN} header
         """
+
+        if save_path and os.path.exists(save_path):
+            raise ValueError("A file exists at {} but this method does not overwrite files"
+                             .format(save_path))
 
         data = None
         if values:
@@ -48,11 +55,11 @@ class Helper(object):
         if not headers:
             headers = {"Authorization": self._token}
 
-        req = urllib.request.Request(end_point, data, headers)
+        req = urllib2.Request(end_point, data, headers)
         req.get_method = lambda: method
         try:
-            response = urllib.request.urlopen(req)
-        except urllib.error.URLError as e:
+            response = urllib2.urlopen(req)
+        except urllib2.URLError as e:
             error_msg = 'The server could not fulfill the request.\n'
 
             server_msg = e.read()
@@ -67,7 +74,15 @@ class Helper(object):
 
             raise ValueError(error_msg)
 
-        return response.read()
+        if not save_path:
+            return response.read()
+
+        with open(save_path, 'wb') as f:
+            while True:
+                chunk = response.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+                f.write(chunk)
 
     def __init__(self):
         """
@@ -150,6 +165,18 @@ class Helper(object):
         response = self.__fetch_url(end_point, method='DELETE')
 
         return {'server_response': response}
+
+    def download(self, path, save_location=None):
+        """
+        Calling DOWNLOAD endpoint and saving the resulting file
+        """
+        if not save_location:
+            save_location = './' + os.path.basename(path)
+
+        end_point = self._staging_url + '/download/' + path
+        self.__fetch_url(end_point, save_path=save_location)
+
+        return save_location
 
     def mv(self, path='', new_path=''):
         """

@@ -28,10 +28,8 @@ define ([
     'kbaseTabs',
     'ContigBrowserPanel',
     'util/string',
-    'kb_common/jsonRpc/dynamicServiceClient',
-    'igv',
+    'kb_common/jsonRpc/dynamicServiceClient'
 
-    'css!ext_packages/igv/igv.js/igv.css',
 ], function(
     $,
     KBWidget,
@@ -44,8 +42,7 @@ define ([
     kbaseTabs,
     ContigBrowserPanel,
     StringUtil,
-    DynamicServiceClient,
-    igv
+    DynamicServiceClient
 ) {
     'use strict';
 
@@ -70,8 +67,8 @@ define ([
             } else {
                 errorMessage = JSON.stringify(err.error);
             }
-        } else { 
-            errorMessage = err.message; 
+        } else {
+            errorMessage = err.message;
         }
         return $('<div>')
             .addClass('alert alert-danger')
@@ -193,17 +190,6 @@ define ([
         tabData : function() {
             var names = ['Overview', 'Browse Features', 'Browse Contigs'];
             var ids = ['overview', 'browse_features', 'browse_contigs'];
-
-            /* XXX - The "Genome Browser" is just hardwired to an external URL to vend back a rhodobacter gff & fa file.
-                     So we never ever ever want this to accidentally escape into production, it's strictly a very vague proof
-                     of concept. This wiring ensures the "genome browser", such that it is, is only on CI, even if the widget
-                     goes out by accident. Clean this up when it actually works. */
-
-            var on_ci = Config.config.deploy.environment === 'ci';
-            if (on_ci) {
-                names.push('Genome Browser');
-                ids.push('genome_browser');
-            }
 
             return {
                 names : names,
@@ -550,13 +536,13 @@ define ([
                     start=0;
                     search($input.val(), start, limit, sort_by)
                         .then(function (result) {
-                            if (isLastQuery(result)) { 
-                                renderResult($table, result); 
+                            if (isLastQuery(result)) {
+                                renderResult($table, result);
                             }
                             inFlight=false;
                             start=0;
                         })
-                        .catch(function () { 
+                        .catch(function () {
                             inFlight=false;
                         });
                 };
@@ -653,66 +639,6 @@ define ([
 
         },
 
-
-
-        /*
-            input =>
-            {
-                genomeSearchUtil: genomeSearchUtil Client
-                $div:  JQuery div that I can render on
-                contigClick: callback when a contig id is clicked
-
-            }
-        */
-
-        buildGenomeBrowserView : function(params) {
-            var $div = params['$div'];
-
-            /* XXX - IGV is trivially easy to work with, as is shown here. Note that there is no working dynamic service yet to vend back the fasta / gff files
-             that it requires, so it's just hardwired to an external URL that vends back some rhodobacter info. These URLs should be replaced with some
-             sort of RESTful dynamic service call to get the fasta and GFF files.
-
-             BUT NOTE - As I dug into this further, I also discovered that most of the fasta files that I can pull out of KBase are insanely huge. Like 100+ megs,
-             which causes a minute or so delay before rendering, which is unacceptable. There's gotta be a better way to display this data w/o requiring loading up
-             a gigantic fasta file. Presumably, a properly configured JBrowse with its interim track data would be unaffected by such large files. Maybe if we had
-             fasta indexes it'd help? Maybe we should build a KBase specific genome browser instead? I have no good suggestions right now.
-
-             IGV also wants to do its own fetch of the data, and it'll do a little pre-processing before handing it onwards. Meaning that while we could just load
-             the fasta/gff data directly from a service call, we'd need to re-tool igv a bit to accept direct data instead of loading it itself. I'm leery of a custom
-             fork of external code.
-
-             It will support data:// urls on fasta files (with some preprocessing - it looks like it's gunzipping it), but not gff, as best as I can tell.
-          */
-
-            $div.append('Please note - this isn\'t a real genome browser, it\'s just an igv view dropped in and hardwired to a rhodobacter genome. '
-                       + 'So any genome shows the same data. It\'s strictly very minimal proof-of-concept. The Genome Browser tab will only show up on CI.');
-
-            var $igv = $div.append($.jqElem('div'));
-
-            var options = {
-                showNavigation: true,
-                showRuler: true,
-                reference: {
-                    id: 'rh',
-                    fastaURL : '//prototypesite.net/rhodo/rhodo.fa',
-                    indexed : false,
-                },
-                tracks: [
-                    {
-                        name: 'GFF3',
-                        sourceType: 'file',
-                        url: '//prototypesite.net/rhodo/rhodo.gff3',
-                        displayMode: 'EXPANDED',
-                        color : '#00FFFF',
-                        nameField : 'ID',
-                    }
-
-                ]
-            };
-
-            igv.createBrowser($igv, options);
-        },
-
         buildContigSearchView: function(params) {
             var self = this;
             // parse parameters
@@ -723,8 +649,8 @@ define ([
             var genome_ref = params['ref'];
 
             var contigClick = null;
-            if (params['contigClick']) { 
-                contigClick = params['contigClick']; 
+            if (params['contigClick']) {
+                contigClick = params['contigClick'];
             }
 
             // setup some defaults and variables (should be moved to class variables)
@@ -1028,7 +954,7 @@ define ([
         // showError will display an error as the only rendered element of this widget.
         showError: function(err) {
             this.$elem.empty();
-            // This wrapper is required because the output widget displays a "Details..." button 
+            // This wrapper is required because the output widget displays a "Details..." button
             // with float right; without clearing this button will reside inside the error
             // display area.
             var $errorBox = $('<div>')
@@ -1037,7 +963,7 @@ define ([
             this.$elem.append($errorBox);
         },
 
-        render: function() {           
+        render: function() {
             var self = this;
             var pref = StringUtil.uuid();
 
@@ -1178,12 +1104,6 @@ define ([
                                 }
                             });
                         });
-                    } else if (dataTab === 'Genome Browser') {
-                        aElem.on('click', function() {
-                            self.buildGenomeBrowserView({
-                                $div: $('#' + pref + 'genome_browser')
-                            });
-                        });
                     }
                 }
             };
@@ -1208,7 +1128,7 @@ define ([
                         ready(self.normalizeGenomeDataFromQuery(data['genomes'][0], genome_ref, ready));
                     })
                     .catch(function (err) {
-                        console.error(err);                        
+                        console.error(err);
                         container.empty();
                         container.append(buildError(err));
                     });
@@ -1496,8 +1416,8 @@ define ([
                             .append('<i class="fa fa-caret-left" aria-hidden="true">')
                             .append(' back 20kb')
                             .on('click', function() {
-                                if (start-twentyKb < 0) { 
-                                    return; 
+                                if (start-twentyKb < 0) {
+                                    return;
                                 }
                                 $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                                 start = start - twentyKb;
@@ -1509,12 +1429,12 @@ define ([
                             .append('forward 20kb ')
                             .append('<i class="fa fa-caret-right" aria-hidden="true">')
                             .on('click', function() {
-                                if (start+twentyKb>contig_length) { 
-                                    return; 
+                                if (start+twentyKb>contig_length) {
+                                    return;
                                 }
                                 $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
-                                if (start+twentyKb>contig_length) { 
-                                    return; 
+                                if (start+twentyKb>contig_length) {
+                                    return;
                                 }
                                 start = start + twentyKb;
                                 length = twentyKb;
@@ -1823,7 +1743,6 @@ define ([
                             $dnaSeq.empty().append('Not Available');
                         }
                         if(featureFullRecord['warnings']) {
-                            // console.warn(featureFullRecord['warnings']);
                             $warnings.empty().append(featureFullRecord['warnings'].join('<br>'));
                         }
                         if(featureFullRecord['notes']) {
@@ -1835,28 +1754,28 @@ define ([
                         if(featureFullRecord['functional_descriptions']) {
                             $functions.empty().append(featureFullRecord['functional_descriptions'].join('<br>'));
                         }
-                        // if(featureFullRecord['parent_gene']) {
-                        //     $relationships.append('Parent Gene: ' + parent_gene + '<br>');
-                        // }
-                        // if(featureFullRecord['parent_mrna']) {
-                        //     $relationships.append('Parent mRNA: '+parent_mrna+'<br>');
-                        // }
+                        if(featureFullRecord['parent_gene']) {
+                            $relationships.append('Parent Gene: ' + featureFullRecord['parent_gene'] + '<br>');
+                        }
+                        if(featureFullRecord['parent_mrna']) {
+                            $relationships.append('Parent mRNA: ' + featureFullRecord['parent_mrna'] + '<br>');
+                        }
+                        if(featureFullRecord['children']) {
+                            $relationships.append('Children: ' + featureFullRecord['children'] + '<br>');
+                        }
                         if(featureFullRecord['mrnas']) {
                             featureFullRecord['mrnas'].forEach(function(mrna){$relationships.append('Child mRNA: '+ mrna + '<br>');});
                         }
                         if(featureFullRecord['cdss']) {
                             featureFullRecord['cdss'].forEach(function(cds){$relationships.append('Child CDS: '+cds+'<br>');});
                         }
-                        // if(featureFullRecord['cds']) {
-                        //     $relationships.append('Child CDS: '+ cds+ '<br>');
-                        // }
                     })
                     .catch(function (err) {
                         console.error(err);
                         $protLen.empty();
                         $protSeq.empty();
                         $dnaLen.empty();
-                        $dnaSeq.empty();                       
+                        $dnaSeq.empty();
                         $protSeq.append(buildError(err));
                     });
 
@@ -1980,9 +1899,6 @@ define ([
             showGene(featureData);
         },
 
-        showOntology : function() {
-        },
-
         loggedInCallback: function (event, auth) {
             if (!this.state.isOk()) {
                 var errorMessage = 'Widget is in invalid state -- cannot render: ' + this.state.info().message;
@@ -2000,7 +1916,7 @@ define ([
             if (!this.state.isOk()) {
                 var errorMessage = 'Widget is in invalid state -- cannot render: ' + this.state.info().message;
                 console.error(errorMessage);
-                this.showError(errorMessage);                
+                this.showError(errorMessage);
                 return;
             }
             this.token = null;

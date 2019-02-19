@@ -962,6 +962,7 @@ define (
 
                     D3svg = d3.select($elem.get(0))
                         .append('svg')
+                        .attr('xmlns', "http://www.w3.org/2000/svg")
                         .attr('style', 'width : ' + this.options.width + '; height : ' + this.options.height)
                     //.attr('viewBox', '0 0 1600 1600')
                     //.attr('preserveAspectRatio', 'mMidYMid mMidYMid')

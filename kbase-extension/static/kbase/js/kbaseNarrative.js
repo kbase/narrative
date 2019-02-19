@@ -21,7 +21,6 @@ define([
     'kbaseNarrativeMethodCell',
     'kbaseAccordion',
     'kbaseNarrativeSharePanel',
-    'kbase-client-api',
     'kbaseNarrativePrestart',
     'ipythonCellMenu',
     'base/js/namespace',
@@ -40,7 +39,7 @@ define([
     'narrativeTour',
     'kb_service/utils',
     'widgets/loadingWidget',
-
+    'kb_service/client/workspace',
     // for effect
     'bootstrap',
 
@@ -55,7 +54,6 @@ define([
     KBaseNarrativeMethodCell,
     KBaseAccordion,
     KBaseNarrativeSharePanel,
-    KBaseClient,
     KBaseNarrativePrestart,
     KBaseCellToolbar,
     Jupyter,
@@ -73,7 +71,8 @@ define([
     Runtime,
     Tour,
     ServiceUtils,
-    LoadingWidget
+    LoadingWidget,
+    Workspace
 ) {
     'use strict';
 
@@ -133,8 +132,10 @@ define([
         // Used for mapping from user id -> user name without having to it
         // up again every time.
         this.cachedUserIds = {};
+
+        this.runtime = Runtime.make();
         this.workspaceRef = null;
-        this.workspaceId = null;
+        this.workspaceId = this.runtime.workspaceId();
         this.workspaceInfo = {};
         this.sidePanel = null;
 
@@ -162,6 +163,23 @@ define([
 
     Narrative.prototype.getAuthToken = function () {
         return NarrativeLogin.getAuthToken();
+    };
+
+    Narrative.prototype.getNarrativeRef = function () {
+        return Promise.try(() => {
+            if (this.workspaceRef) {
+                return this.workspaceRef;
+            }
+            else {
+                return new Workspace(Config.url('workspace'), {token: this.getAuthToken()})
+                    .get_workspace_info({id: this.workspaceId})
+                    .then((wsInfo) => {
+                        let narrId = wsInfo[8]['narrative'];
+                        this.workspaceRef = this.workspaceId + '/' + narrId;
+                        return this.workspaceRef;
+                    });
+            }
+        });
     };
 
     /**
@@ -256,7 +274,7 @@ define([
             'kernel_disconnected.Kernel', 'kernel_killed.Kernel', 'kernel_dead.Kernel'
         ].forEach(function(e) {
             $([Jupyter.events]).on(e, function () {
-                Runtime.make().bus().emit(
+                self.runtime.bus().emit(
                     'kernel-state-changed',
                     {
                         isReady: Jupyter.notebook.kernel && Jupyter.notebook.kernel.is_connected()
@@ -323,23 +341,6 @@ define([
         }.bind(this));
     };
 
-    /*
-     * Given an inner node, which is probably a button, inspect the contents
-     * of the submitted form.
-     * Note - this is a cheap implementation just to get something up
-     * to play with.
-     */
-    // TODO: add matches to the mustard.js test
-    function findParent(node, selector) {
-        if (node.matches(selector)) {
-            return node;
-        }
-        if (node === document.body) {
-            return null;
-        }
-        return findParent(node.parentNode, selector);
-    }
-
     /**
      * Expects docInfo to be a workspace object info array, especially where the 4th element is
      * an int > 0.
@@ -371,17 +372,18 @@ define([
             }
             else {
                 var workspace = new Workspace(Config.url('workspace'), {token: self.getAuthToken()});
-                Promise.resolve(workspace.get_object_info_new({
-                    'objects': [{'ref': self.workspaceRef}],
-                    'includeMetadata': 1
-                }))
-                    .then(function (info) {
-                        self.documentVersionInfo = info[0];
-                    })
-                    .catch(function (error) {
-                        // no op for now.
-                        console.error(error);
+                self.getNarrativeRef()
+                .then((narrativeRef) => {
+                    return workspace.get_object_info_new({
+                        objects: [{'ref': narrativeRef}],
+                        includeMetadata: 1
                     });
+                }).then(function (info) {
+                    self.documentVersionInfo = info[0];
+                }).catch(function (error) {
+                    // no op for now.
+                    console.error(error);
+                });
             }
         });
     };
@@ -708,11 +710,6 @@ define([
         $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
             this.loadingWidget.updateProgress('narrative', true);
             $('#notification_area').find('div#notification_trusted').hide();
-            var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
-            if (wsInfo && wsInfo.length === 3) {
-                this.workspaceRef = wsInfo[1] + '/' + wsInfo[2];
-                this.workspaceId = wsInfo[1];
-            }
 
             $(document).one('dataUpdated.Narrative', function () {
                 this.loadingWidget.updateProgress('data', true);
@@ -746,10 +743,7 @@ define([
                 this.loadingWidget.remove();
                 return;
             }
-
             this.initSharePanel();
-            // this.initSettingsDialog();
-
             this.updateDocumentVersion()
                 .then(function() {
                     // init the controller

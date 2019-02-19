@@ -9,6 +9,13 @@ require.config({
         'bootstrap-slider': 'ext_components/bootstrap-slider/bootstrap-slider',
         'jquery-dataTables-base': 'ext_components/datatables/media/js/jquery.dataTables.min',
         'jquery-dataTables': 'ext_components/datatables/media/js/dataTables.bootstrap.min',
+        'datatables.net': 'ext_components/datatables.net/js/jquery.dataTables.min',
+        'datatables.net-bs': 'ext_components/datatables.net-bs/js/dataTables.bootstrap.min',
+        'datatables.net-buttons': 'ext_components/datatables.net-buttons/js/dataTables.buttons.min',
+        'datatables.net-buttons-bs': 'ext_components/datatables.net-buttons-bs/js/buttons.bootstrap.min',
+        'datatables.net-buttons-html5': 'ext_components/datatables.net-buttons/js/buttons.html5.min',
+        'datatables.net-buttons-colvis': 'ext_components/datatables.net-buttons/js/buttons.colVis.min',
+        'datatables.net-buttons-print': 'ext_components/datatables.net-buttons/js/buttons.print.min',
         bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',
         // css: 'ext_components/require-css/css',
         d3: 'ext_components/d3/d3.min',
@@ -35,7 +42,6 @@ require.config({
 
         // not under bower control
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',
-        'igv' : 'ext_packages/igv/igv.js/igv.min',
         // copied from the cdn
         'google-code-prettify': 'ext_packages/google-code-prettify/1.2.0/',
         jqueryCookie: 'ext_packages/jquery-extensions/js/jquery.cookie.min',
@@ -81,9 +87,11 @@ require.config({
         'TaxonAPI-client-api': 'kbase/js/api/TaxonAPIClient',
         'GenomeSearchUtil-client-api': 'kbase/js/api/GenomeSearchUtilClient',
         'SetAPI-client-api': 'kbase/js/api/SetAPIClient',
+        'ExpressionUtils-client-api': 'kbase/js/api/ExpressionUtilsClient',
         'Taxonomy-client-api': 'kbase/js/api/TaxonomyAPIClient',
         'RestAPIClient' : 'kbase/js/api/RestAPIClient',
         'StagingServiceClient' : 'kbase/js/api/StagingServiceClient',
+        'KBaseSearchEngineClient': 'kbase/js/api/KBaseSearchEngineClient',
 
         'njs-wrapper-client-api': 'kbase/js/api/NarrativeJobServiceWrapper',
         kbaseNarrativeJobStatus: 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',
@@ -189,14 +197,15 @@ require.config({
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
+        kbaseDefaultObjectView: 'kbase/js/widgets/function_output/kbaseDefaultObjectView',
         kbaseBinnedContigs: 'kbase/js/widgets/function_output/kbaseBinnedContigs',
+        kbaseAlignment: 'kbase/js/widgets/function_output/kbaseAlignment',
         'kbaseReadsViewer': 'kbase/js/widgets/function_output/kbaseReadsViewer',
         'kbaseReadsSetView': 'kbase/js/widgets/function_output/kbaseReadsSetView',
         'kbaseMatrix2DAbstract': 'kbase/js/widgets/function_output/kbaseMatrix2DAbstract',
         'kbaseGrowthMatrixAbstract': 'kbase/js/widgets/function_output/kbaseGrowthMatrixAbstract',
         'kbaseGrowthMatrix': 'kbase/js/widgets/function_output/kbaseGrowthMatrix',
         'kbaseGrowthCurves': 'kbase/js/widgets/function_output/kbaseGrowthCurves',
-
 
         'kbaseGrowthParametersAbstract': 'kbase/js/widgets/function_output/kbaseGrowthParametersAbstract',
         'kbaseGrowthParameters': 'kbase/js/widgets/function_output/kbaseGrowthParameters',
@@ -237,6 +246,7 @@ require.config({
         'kbaseHomologySearch': 'kbase/js/widgets/function_input/kbaseHomologySearch',
         'kbaseModal': 'kbase/js/widgets/narrative_core/kbaseModal',
         'kbaseGenericSetViewer': 'kbase/js/widgets/function_output/kbaseGenericSetViewer',
+        'kbaseGenericMatrix': 'kbase/js/widgets/function_output/kbaseGenericMatrix',
 
         // another implementation of kbaseTabs needed for kbaseTabTable
         'kbaseTabTableTabs': 'kbase/js/widgets/function_output/modeling/kbaseTabs',
@@ -270,7 +280,8 @@ require.config({
         'AnnotationSetTable': 'kbase/js/widgets/function_output/kbaseAnnotationSetTable',
         'AbundanceDataView': 'kbase/js/widgets/function_output/kbaseAbundanceDataView',
         'RankAbundancePlot': 'kbase/js/widgets/function_output/kbaseRankAbundancePlot',
-        'kbaseConditionSetViewer': 'kbase/js/widgets/function_output/kbaseConditionSetViewer',
+        'kbaseAttributeMapping': 'kbase/js/widgets/function_output/kbaseAttributeMapping',
+        'kbaseConditionSetViewer': 'kbase/js/widgets/function_output/kbaseAttributeMapping',
         'kbaseFeatureSet': 'kbase/js/widgets/function_output/kbaseFeatureSet',
 
         'kbaseExpressionMatrix': 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
@@ -299,8 +310,8 @@ require.config({
         'kbaseLineSerieschart': 'kbase/js/widgets/vis/kbaseLineSerieschart',
         'kbasePiechart': 'kbase/js/widgets/vis/kbasePiechart',
         'kbaseTreechart': 'kbase/js/widgets/vis/kbaseTreechart',
-        'kbaseRNASeqPie': 'kbase/js/widgets/function_output/rna-seq/kbaseRNASeqPie',
-        'kbaseRNASeqPieNew': 'kbase/js/widgets/function_output/rna-seq/kbaseRNASeqPieNew',
+        'kbaseRNASeqPie': 'kbase/js/widgets/function_output/kbaseAlignment',
+        'kbaseRNASeqPieNew': 'kbase/js/widgets/function_output/kbaseAlignment',
         'kbaseRNASeqAnalysis': 'kbase/js/widgets/function_output/rna-seq/kbaseRNASeqAnalysis',
         'kbaseRNASeqAnalysisNew': 'kbase/js/widgets/function_output/rna-seq/kbaseRNASeqAnalysisNew',
         'kbaseRNASeqSample': 'kbase/js/widgets/function_output/rna-seq/kbaseRNASeqSample',
@@ -325,7 +336,9 @@ require.config({
 
         'kbaseRESKESearchResultDemo': 'kbase/js/widgets/function_output/kbaseRESKESearchResultDemo',
         'kbaseDifferentialExpressionMatrixSetViewer': 'kbase/js/widgets/function_output/kbaseDifferentialExpressionMatrixSetViewer',
-
+        'GenomeClassifierTrainingSet': 'kbase/js/widgets/function_output/GenomeClassifierTrainingSet',
+        'GenomeCategorizer': 'kbase/js/widgets/function_output/GenomeCategorizer',
+        'code-cell': 'kbase/js/widgets/function_output/codeCellLauncher',
 
         /***
          * END CUSTOM OUTPUT WIDGETS
@@ -471,9 +484,6 @@ require.config({
         },
         bootstrap: {
             deps: ['jquery', 'jqueryui']
-        },
-        igv : {
-          deps : ['jquery', 'jqueryui', 'bootstrap']
         }
     }
 });

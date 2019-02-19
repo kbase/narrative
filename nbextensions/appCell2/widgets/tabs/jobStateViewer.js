@@ -237,7 +237,8 @@ define([
             jobState = null,
             runtime = Runtime.make(),
             listeningForJob = false,
-            jobId;
+            jobId,
+            parentJobId;
 
         var viewModel = {
             lastUpdated: {
@@ -306,7 +307,8 @@ define([
                 return;
             }
             runtime.bus().emit('request-job-update', {
-                jobId: jobId
+                jobId: jobId,
+                parentJobId: parentJobId
             });
             listeningForJob = true;
         }
@@ -314,7 +316,8 @@ define([
         function stopJobUpdates() {
             if (listeningForJob) {
                 runtime.bus().emit('request-job-completion', {
-                    jobId: jobId
+                    jobId: jobId,
+                    parentJobId: parentJobId
                 });
                 listeningForJob = false;
             }
@@ -389,39 +392,55 @@ define([
         }
 
         function start(arg) {
-            return Promise.try(function() {
-                container = arg.node;
-                ui = UI.make({ node: container });
+            return Promise.try(() => {
+                if (container) {
+                    return detach();
+                }
+            })
+            .then(() => {
+                return Promise.try(() => {
+                    container = arg.node;
+                    ui = UI.make({ node: container });
 
-                container.innerHTML = renderRunStats();
+                    container.innerHTML = renderRunStats();
 
-                jobId = arg.jobId;
+                    jobId = arg.jobId;
+                    parentJobId = arg.parentJobId ? arg.parentJobId : null;
 
-                listeners.push(runtime.bus().on('clock-tick', function() {
-                    updateRunStats(ui, viewModel, jobState);
-                }));
+                    listeners.push(runtime.bus().on('clock-tick', function() {
+                        updateRunStats(ui, viewModel, jobState);
+                    }));
 
-                listenForJobStatus();
-                runtime.bus().emit('request-job-status', {
-                    jobId: jobId
+                    listenForJobStatus();
+                    runtime.bus().emit('request-job-status', {
+                        jobId: jobId,
+                        parentJobId: parentJobId
+                    });
+                    listeningForJob = true;
+
+                    ui.updateFromViewModel(viewModel);
+
                 });
-                listeningForJob = true;
-
-                ui.updateFromViewModel(viewModel);
-
             });
         }
 
         function stop() {
             return Promise.try(function() {
                 stopListeningForJobStatus();
-                // runtime.bus().removeListeners(listeners);
             });
+        }
+
+        function detach() {
+            return stop()
+                .then(() => {
+                    container.innerHTML = '';
+                });
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
+            detach: detach
         };
     }
 

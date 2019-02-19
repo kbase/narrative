@@ -7,7 +7,7 @@ define([
     function filterObjectInfoByType(objects, types) {
         return objects.map(function(objectInfo) {
                 var type = objectInfo.typeModule + '.' + objectInfo.typeName;
-                if (types.indexOf(type) >= 0) {
+                if (types.indexOf(type) >= 0 || types.indexOf(objectInfo.typeModule) >= 0) {
                     return objectInfo;
                 }
             })

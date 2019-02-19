@@ -8,7 +8,7 @@ NAR_NAME="kbase/narrative"
 NAR_VER_NAME="kbase/narrative_version"  # Image for serving up the narrative version
 HEADLESS_NAME="kbase/narrative_headless"
 NAR_BASE="kbase/narrbase"
-NAR_BASE_VER="5.0dockerize"
+NAR_BASE_VER="5.2"
 
 # Get the current branch, so that we can tag images to branch
 BRANCH=${TRAVIS_BRANCH:-`git symbolic-ref --short HEAD`}
@@ -16,8 +16,6 @@ BRANCH=${TRAVIS_BRANCH:-`git symbolic-ref --short HEAD`}
 NARRATIVE_VER=${DOCKER_TAG:-$BRANCH}
 COMMIT=`git rev-parse --short HEAD`
 
-#NAR_PREREQ="kbase/narrprereq"
-#NAR_PREREQ_VER="1.3"
 WEBROOT_DIR="deployment/services/kbase-ui"
 DOCKERFILE_HEADLESS="Dockerfile_headless"
 
@@ -62,22 +60,19 @@ mkdir -p $WEBROOT_DIR
 ./src/scripts/kb-update-config -f src/config.json.templ -o $WEBROOT_DIR/narrative_version -e $env -d $dev_mode || exit 1
 cp kbase-extension/static/kbase/config/data_source_config.json $WEBROOT_DIR/data_source_config.json
 
-# Make sure the prereq image is there. If not, build it.
-#echo "Checking for prereq image v$NAR_PREREQ_VER"
-#docker images |grep "^$NAR_PREREQ "|grep " $NAR_PREREQ_VER " > /dev/null
-
-#if [ $? -eq 1 ] ; then
-#    echo "Prereq image not found! Building..."
-#    docker build --no-cache -q -t $NAR_PREREQ:$NAR_PREREQ_VER narrprereq-image/
-#fi
-
 # Make sure the base image is there. If not, build it.
 echo "Checking for base image v$NAR_BASE_VER"
 docker images |grep "^$NAR_BASE "|grep " $NAR_BASE_VER " > /dev/null
 
 if [ $? -eq 1 ] ; then
-  echo "Base image not found! Building..."
+  echo "Base image $NAR_BASE:$NAR_BASE_VER not found! Checking Dockerhub..."
+  docker pull $NAR_BASE:$NAR_BASE_VER
+fi
+
+if [ $? -eq 1 ] ; then
+  echo "Base image not found on Dockerhub either! Building..."
   docker build -t $NAR_BASE:$NAR_BASE_VER narrbase-image/
+  echo "Done. Recommend pushing this back to Dockerhub."
 fi
 
 echo "Building latest narrative version"

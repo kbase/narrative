@@ -81,7 +81,6 @@ define ([
          */
         fetchOrgs: function(token) {
             var groupUrl = this.options.groups_url+'/member';
-            console.log("this.options, groupUrl", this.options, groupUrl)
             fetch(groupUrl, {
                 method: "GET",
                 mode: "cors",
@@ -492,8 +491,7 @@ define ([
             })
             .then(response => response.json())
             .then(response => {
-                console.log("Request to Add Narrative Completed:", JSON.stringify(response.error.message))
-                this.reportError(response);
+                console.log("Request to Add Narrative:", JSON.stringify(response))
             })
             .catch(error => {
                 console.error('OH NO 💩:', error)

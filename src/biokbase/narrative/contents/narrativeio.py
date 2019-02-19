@@ -5,7 +5,7 @@ Implements the KBaseWSManagerMixin class.
 
 import biokbase.auth
 import biokbase.narrative.clients
-import biokbase.narrative.common.service as service
+from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import util
 import biokbase.workspace
 from biokbase.workspace.baseclient import ServerError
@@ -56,7 +56,7 @@ class KBaseWSManagerMixin(object):
     Manages the connection to the workspace for a user
     """
 
-    ws_uri = service.URLS.workspace
+    ws_uri = URLS.workspace
     nar_type = 'KBaseNarrative.Narrative'
 
     def __init__(self, *args, **kwargs):

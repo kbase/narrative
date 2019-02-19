@@ -32,12 +32,13 @@ define ([
         version: '1.0.0',
         options: {
             ws_url: Config.url('workspace'),
+            groups_url: Config.url('groups'),
             loadingImage: Config.get('loading_gif'),
             user_page_link: Config.url('profile_page'),
             ws_name_or_id: null,
             max_name_length: 35,
             max_list_height: '250px',
-            add_user_input_width: '200px'
+            add_user_input_width: '200px',
         },
         ws: null, // workspace client
         narrOwner: null,
@@ -79,7 +80,8 @@ define ([
          * @param {string} token  authorization token
          */
         fetchOrgs: function(token) {
-            var groupUrl = 'https://ci.kbase.us/services/groups/member'
+            var groupUrl = this.options.groups_url+'/member';
+            console.log("this.options, groupUrl", this.options, groupUrl)
             fetch(groupUrl, {
                 method: "GET",
                 mode: "cors",
@@ -275,7 +277,8 @@ define ([
             if(isOwner) {
                 var $addOrgDiv = $('<div>').css({'margin-top': '10px'});
                 var $inputOrg = $('<select single data-placeholder="Share with..." id="orgInput">')
-                    .addClass('form-control kb-share-select');
+                    .addClass('form-control kb-share-select')
+                    .css("display", "inline");
                 $inputOrg.append('<option></option>'); // option is needed for placeholder to work.
 
                 var $applyOrgBtn = $('<button>')
@@ -477,7 +480,7 @@ define ([
 
         requestAddNarrative: function(token, orgID){
             var ws_id = this.ws_info[0];
-            var groupResourceUrl = "https://ci.kbase.us/services/groups/group/"+orgID+"/resource/workspace/"+ws_id;
+            var groupResourceUrl = this.options.groups_url+"/group/"+orgID+"/resource/workspace/"+ws_id;
             fetch(groupResourceUrl, {
                 method: "POST",
                 mode: "cors",

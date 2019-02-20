@@ -6,7 +6,6 @@
 #
 ############################################################
 
-from __future__ import print_function
 # the following is a hack to get the baseclient to import whether we're in a
 # package or not. This makes pep8 unhappy hence the annotations.
 try:
@@ -254,7 +253,7 @@ class Workspace(object):
         Lock a workspace, preventing further changes.
                 WARNING: Locking a workspace is permanent. A workspace, once locked,
                 cannot be unlocked.
-                
+
                 The only changes allowed for a locked workspace are changing user
                 based permissions or making a private workspace globally readable,
                 thus permanently publishing the workspace. A locked, globally readable
@@ -316,7 +315,7 @@ class Workspace(object):
     def get_workspacemeta(self, params, context=None):
         """
         Retrieves the metadata associated with the specified workspace.
-        Provided for backwards compatibility. 
+        Provided for backwards compatibility.
         @deprecated Workspace.get_workspace_info
         :param params: instance of type "get_workspacemeta_params"
            (DEPRECATED Input parameters for the "get_workspacemeta" function.
@@ -2498,18 +2497,18 @@ class Workspace(object):
         DEPRECATED
                 Get objects by references from other objects.
                 NOTE: In the vast majority of cases, this method is not necessary and
-                get_objects should be used instead. 
-                
+                get_objects should be used instead.
+
                 get_referenced_objects guarantees that a user that has access to an
                 object can always see a) objects that are referenced inside the object
                 and b) objects that are referenced in the object's provenance. This
                 ensures that the user has visibility into the entire provenance of the
                 object and the object's object dependencies (e.g. references).
-                
+
                 The user must have at least read access to the first object in each
                 reference chain, but need not have access to any further objects in
                 the chain, and those objects may be deleted.
-                
+
                 @deprecated Workspace.get_objects2
         :param ref_chains: instance of list of type "ref_chain" (A chain of
            objects with references to one another. An object reference chain
@@ -4510,7 +4509,7 @@ class Workspace(object):
         Also see the release_types function.
         :param params: instance of type "RegisterTypespecCopyParams"
            (Parameters for the register_typespec_copy function. Required
-           arguments: string external_workspace_url - the URL of the 
+           arguments: string external_workspace_url - the URL of the
            workspace server from which to copy a typespec. modulename mod -
            the name of the module in the workspace server Optional arguments:
            spec_version version - the version of the module in the workspace
@@ -4535,7 +4534,7 @@ class Workspace(object):
                 backwards incompatible changes from minor version to minor version.
                 Once a type is released, backwards incompatible changes always
                 cause a major version increment.
-        2) This version of the type becomes the default version, and if a 
+        2) This version of the type becomes the default version, and if a
                 specific version is not supplied in a function call, this version
                 will be used. This means that newer, unreleased versions of the
                 type may be skipped.

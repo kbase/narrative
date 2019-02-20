@@ -49,7 +49,7 @@ class StagingHelperTest(unittest.TestCase):
             print('mocking __fetch_url delete endpoint')
             return "successfully deleted tgu2/test.pdf"
         elif 'download' in end_point:
-            print 'mocking __fetch_url download endpoint'
+            print('mocking __fetch_url download endpoint')
         elif 'mv' in end_point:
             print('mocking __fetch_url mv endpoint')
             return "successfully moved tgu2/test.pdf to tgu2/test_1.pdf"

@@ -5,7 +5,6 @@
 #
 ############################################################
 
-from __future__ import print_function
 # the following is a hack to get the baseclient to import whether we're in a
 # package or not. This makes pep8 unhappy hence the annotations.
 try:
@@ -57,7 +56,7 @@ class Catalog(object):
 
     def register_repo(self, params, context=None):
         """
-        allow/require developer to supply git branch/git commit tag? 
+        allow/require developer to supply git branch/git commit tag?
         if this is a new module, creates the initial registration with the authenticated user as
         the sole owner, then launches a build to update the dev version of the module.  You can check
         the state of this build with the 'get_module_state' method passing in the git_url.  If the module
@@ -206,7 +205,7 @@ class Catalog(object):
         """
         :param params: instance of type "ListFavoriteCounts" (if favorite
            item is given, will return stars just for that item.  If a module
-           name is given, will return stars for all methods in that module. 
+           name is given, will return stars for all methods in that module.
            If none of those are given, then will return stars for every
            method that there is info on parameters to add: list<FavoriteItem>
            items;) -> structure: parameter "modules" of list of String
@@ -488,9 +487,9 @@ class Catalog(object):
            "include_compilation_report" of type "boolean" (@range [0,1])
         :returns: instance of type "ModuleVersion" (module_name            -
            the name of the module module_description     - (optionally
-           returned) html description in KBase YAML of this module git_url   
-           - the git url of the source for this module released              
-           - 1 if this version has been released, 0 otherwise release_tags   
+           returned) html description in KBase YAML of this module git_url
+           - the git url of the source for this module released
+           - 1 if this version has been released, 0 otherwise release_tags
            - list of strings of: 'dev', 'beta', or 'release', or empty list
            this is a list because the same commit version may be the version
            in multiple release states release_timestamp      - time in ms
@@ -500,7 +499,7 @@ class Catalog(object):
            the registration timestamp timestamp              - time in ms
            since epoch when the registration for this version was started
            registration_id        - id of the last registration for this
-           version, used for fetching registration logs and state version    
+           version, used for fetching registration logs and state version
            - validated semantic version number as indicated in the KBase YAML
            of this version semantic versions are unique among released
            versions of this module git_commit_hash        - the full git
@@ -509,7 +508,7 @@ class Catalog(object):
            if this version is available as a web service, 0 otherwise
            narrative_app_ids      - list of Narrative App ids registered with
            this module version local_function_ids     - list of Local
-           Function ids registered with this module version docker_img_name  
+           Function ids registered with this module version docker_img_name
            - name of the docker image for this module created on registration
            data_folder            - name of the data folder used
            compilation_report     - (optionally returned) summary of the KIDL

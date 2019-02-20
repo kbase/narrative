@@ -1,4 +1,3 @@
-from __future__ import print_function
 import unittest
 from biokbase.narrative.widgetmanager import WidgetManager
 import IPython

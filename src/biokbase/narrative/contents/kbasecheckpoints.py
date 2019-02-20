@@ -8,7 +8,7 @@ from notebook.services.contents.checkpoints import (
     Checkpoints,
     GenericCheckpointsMixin
 )
-from narrativeio import KBaseWSManagerMixin
+from .narrativeio import KBaseWSManagerMixin
 import notebook._tz as tz
 
 

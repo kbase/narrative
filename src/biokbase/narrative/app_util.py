@@ -142,7 +142,7 @@ def map_inputs_from_job(job_inputs, app_spec):
 
 
 def _untransform(transform_type, value):
-    if transform_type == 'ref' and isinstance(value, basestring):
+    if transform_type == 'ref' and isinstance(value, str):
         # shear off everything before the first '/' - there should just be one.
         slash = value.find('/')
         if slash == -1:
@@ -543,7 +543,7 @@ def validate_param_value(param, value, workspace):
 
     # Also, for strings, an empty string is the same as null/None
     if param['type'] in ['string', 'dropdown', 'checkbox'] and \
-            isinstance(value, basestring) and value == '':
+            isinstance(value, str) and value == '':
         return (ws_ref, None)
 
     # cases - value == list (checked by wrapping function,
@@ -554,23 +554,23 @@ def validate_param_value(param, value, workspace):
     elif param['type'] == 'mapping' and not isinstance(value, dict):
         return (ws_ref, "a parameter of type 'mapping' must be a dict")
     elif param['type'] == 'textsubdata' and \
-            not (isinstance(value, basestring) or
+            not (isinstance(value, str) or
                  isinstance(value, list)):
         return (ws_ref, "input value not supported for 'textsubdata' type - "
                         "only str or list is supported")
     elif param['type'] == 'custom_textsubdata' and \
-            not (isinstance(value, basestring) or
+            not (isinstance(value, str) or
                  isinstance(value, list)):
         return (ws_ref, "input value not supported for 'custom_textsubdata' type - "
                         "only str or list is supported")
     elif param['type'] not in ['group', 'mapping', 'textsubdata', 'custom_textsubdata', 'custom'] and \
-            not (isinstance(value, basestring) or
+            not (isinstance(value, str) or
                  isinstance(value, int) or
                  isinstance(value, float)):
         return (ws_ref, "input value not supported for '" + str(param['type']) +
                         "' type - only str, int or float")
 
-    # check types. basestring is pretty much anything (it'll just get
+    # check types. str is pretty much anything (it'll just get
     # casted), but ints, floats, or lists are funky.
     if param['type'] == 'int' and not isinstance(value, int):
         return (ws_ref, 'Given value {} is not an int'.format(value))

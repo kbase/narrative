@@ -745,7 +745,7 @@ class AppManager(object):
                     p_value = self._map_group_inputs(p_value, spec_params[input_param_id],
                                                      spec_params)
                 # turn empty strings into None
-                if isinstance(p_value, basestring) and len(p_value) == 0:
+                if isinstance(p_value, str) and len(p_value) == 0:
                     p_value = None
             elif 'narrative_system_variable' in p:
                 p_value = system_variable(p['narrative_system_variable'])
@@ -768,8 +768,8 @@ class AppManager(object):
                     # This is case when slashes in target_prop separeate
                     # elements in nested maps. We ignore escaped slashes
                     # (separate backslashes should be escaped as well).
-                    bck_slash = u"\u244A"
-                    fwd_slash = u"\u20EB"
+                    bck_slash = "\u244A"
+                    fwd_slash = "\u20EB"
                     temp_string = target_prop.replace("\\\\", bck_slash)
                     temp_string = temp_string.replace("\\/", fwd_slash)
                     temp_path = []
@@ -828,7 +828,7 @@ class AppManager(object):
                 'Must have at least 1 symbol to randomly generate!'
             )
         ret = ''.join([chr(random.randrange(0, 26) + ord('A'))
-                      for _ in xrange(symbols)])
+                      for _ in range(symbols)])
         if 'prefix' in generator:
             ret = str(generator['prefix']) + ret
         if 'suffix' in generator:

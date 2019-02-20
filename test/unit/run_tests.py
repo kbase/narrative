@@ -7,7 +7,6 @@
 # script.
 # (recipe here)
 # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
-from __future__ import print_function
 
 import subprocess
 import sys

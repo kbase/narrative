@@ -5,7 +5,7 @@ documents.
 """
 
 import re
-from app_util import system_variable
+from .app_util import system_variable
 
 external_tag = "&"
 
@@ -94,7 +94,7 @@ def deserialize(serial_upa):
     In the [ws] case, the current workspace id replaces that whole token. In the &ws case,
     the & tag is removed.
     """
-    if not isinstance(serial_upa, basestring):
+    if not isinstance(serial_upa, str):
         raise ValueError("Can only deserialize UPAs from strings.")
     if serial_upa.startswith(external_tag):
         deserial = serial_upa[len(external_tag):]

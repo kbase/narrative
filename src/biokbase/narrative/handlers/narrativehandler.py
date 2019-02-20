@@ -10,7 +10,7 @@ from biokbase.narrative.common.kblogging import (
     get_logger, log_event
 )
 from biokbase.narrative.common.util import kbase_env
-import urllib
+import urllib.parse
 import tornado.log
 from traitlets.config import Application
 from biokbase.auth import (
@@ -34,7 +34,7 @@ def _init_session(request, cookies):
     ua = http_headers.get('User-Agent', 'unknown')
     auth_cookie = cookies.get(auth_cookie_name)
     if auth_cookie is not None:
-        token = urllib.unquote(auth_cookie.value)
+        token = urllib.parse.unquote(auth_cookie.value)
     else:
         raise web.HTTPError(status_code=401,
                             log_message='No auth cookie, denying access',

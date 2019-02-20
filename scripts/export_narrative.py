@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 """
 Some tests for narrative exporting.
 """

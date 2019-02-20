@@ -1,4 +1,3 @@
-from __future__ import print_function
 from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.workspace.baseclient import ServerError
 from biokbase.narrative.exporter.exporter import NarrativeExporter

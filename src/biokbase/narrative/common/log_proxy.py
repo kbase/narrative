@@ -377,7 +377,7 @@ class Handler(object):
 
     def _get_record_meta(self, record):
         return {val: record.get(key, '')
-                for key, val in self.EXTRACT_META.iteritems()}
+                for key, val in self.EXTRACT_META.items()}
 
 class MongoDBHandler(Handler):
     def __init__(self, coll):

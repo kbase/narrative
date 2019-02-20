@@ -12,13 +12,13 @@ class NarrativeLoggerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.log_host = 'localhost'
-        self.log_port = 34567
+        # self.log_port = 34567
         self.poll_interval = 0.5
         self.real_log_host = URLS.log_host
         self.real_log_port = URLS.log_port
         URLS.log_host = self.log_host
-        URLS.log_port = self.log_port
-        self.logger = NarrativeLogger()
+        # URLS.log_port = self.log_port
+        # self.logger = NarrativeLogger()
 
     @classmethod
     def tearDownClass(self):
@@ -28,8 +28,10 @@ class NarrativeLoggerTestCase(unittest.TestCase):
     @classmethod
     def start_log_stack(self):
         # start up a dummy listener on the (hopefully dev) host and port, etc.
+        log_port = util.find_free_port()
+        URLS.log_port = log_port
         self.log_recv, self.log_recv_thread = util.start_tcp_server(
-            self.log_host, self.log_port, self.poll_interval, bufferer=util.NarrativeMessageBufferer
+            self.log_host, log_port, self.poll_interval, bufferer=util.NarrativeMessageBufferer
         )
 
     @classmethod
@@ -38,9 +40,10 @@ class NarrativeLoggerTestCase(unittest.TestCase):
         util.stop_tcp_server(self.log_recv, self.log_recv_thread)
 
     def test_logger_init(self):
-        self.assertEqual(self.logger.host, URLS.log_host)
-        self.assertEqual(self.logger.port, URLS.log_port)
-        self.assertEqual(self.logger.env, kbase_env.env)
+        logger = NarrativeLogger()
+        self.assertEqual(logger.host, URLS.log_host)
+        self.assertEqual(logger.port, URLS.log_port)
+        self.assertEqual(logger.env, kbase_env.env)
 
     def test_null_logger(self):
         URLS.log_host = None
@@ -53,13 +56,13 @@ class NarrativeLoggerTestCase(unittest.TestCase):
         self.stop_log_stack()
         self.assertFalse(data)
         URLS.log_host = self.log_host
-        URLS.log_port = self.log_port
 
     def test_open_narr(self):
         narrative = "12345/67"
         version = 8
         self.start_log_stack()
-        self.logger.narrative_open(narrative, version)
+        logger = NarrativeLogger()
+        logger.narrative_open(narrative, version)
         time.sleep(self.poll_interval * 4)
         self.assert_log_msg(self.log_recv.get_data(), "open", narrative, version)
         self.stop_log_stack()
@@ -68,7 +71,8 @@ class NarrativeLoggerTestCase(unittest.TestCase):
         narrative = "67890/12"
         version = 3
         self.start_log_stack()
-        self.logger.narrative_save(narrative, version)
+        logger = NarrativeLogger()
+        logger.narrative_save(narrative, version)
         time.sleep(self.poll_interval * 4)
         self.assert_log_msg(self.log_recv.get_data(), "save", narrative, version)
         self.stop_log_stack()
@@ -79,7 +83,8 @@ class NarrativeLoggerTestCase(unittest.TestCase):
         i.e. - don't start the log stack.
         """
         try:
-            self.logger.narrative_save("12345/67", 8)
+            logger = NarrativeLogger()
+            logger.narrative_save("12345/67", 8)
         except:
             self.fail('Log writing threw an unexpected exception without a live socket!')
 

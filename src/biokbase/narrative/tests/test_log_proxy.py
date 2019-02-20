@@ -32,19 +32,20 @@ class MainTestCase(unittest.TestCase):
     def test_run_proxy(self):
         pid = os.fork()
         if pid == 0:
-            #print("Run child")
+            print("Run child")
             proxy.run(self)
         else:
             time.sleep(1)
-            #print("Wait for child to start")
+            print("Wait for child to start")
             # let it start
             time.sleep(4)
             # send it a HUP to stop it
-            #print("Send child ({:d}) a HUP".format(pid))
+            print("Send child ({:d}) a HUP".format(pid))
             os.kill(pid, signal.SIGHUP)
             # wait for it to stop
-            #print("Wait for child ({:d}) to stop".format(pid))
+            print("Wait for child ({:d}) to stop".format(pid))
             cpid, r = os.waitpid(pid, 0)
+            print("cpid, r: {}, {}".format(cpid, r))
             self.assertTrue(r < 2, "Bad exit status ({:d}) from proxy".format(r))
 
     def test_configuration(self):

@@ -8,12 +8,14 @@ import threading
 import time
 import unittest
 import socketserver
-from biokbase.narrative.common import util
-from biokbase.workspace.client import Workspace
-from biokbase.narrative.common.narrative_ref import NarrativeRef
+import socket
 import os
 import json
 import configparser
+from contextlib import closing
+from biokbase.narrative.common import util
+from biokbase.workspace.client import Workspace
+from biokbase.narrative.common.narrative_ref import NarrativeRef
 
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>, Bill Riehl <wjriehl@lbl.gov>'
 _log = logging.getLogger('kbtest')
@@ -225,7 +227,7 @@ class SocketServerBuf(socketserver.TCPServer):
 
 
 def recvall(socket, n, timeout=0):
-    buf, m, t = '', 0, time.time()
+    buf, m, t = b'', 0, time.time()
     while m < n:
         if timeout > 0 and (time.time() - t > timeout):
             raise RuntimeError("Timeout")
@@ -255,8 +257,8 @@ class LogProxyMessageBufferer(socketserver.BaseRequestHandler):
             if size < 65536:
                 chunk = recvall(self.request, size, timeout=1)
                 record = pickle.loads(chunk)
-                # print("@@ message <{}>".format(record['message']))
-                self.server.buf += record['message']
+                # print("@@ message <{}>".format(record['msg']))
+                self.server.buf += record['msg']
 
 
 class NarrativeMessageBufferer(socketserver.StreamRequestHandler):
@@ -264,8 +266,8 @@ class NarrativeMessageBufferer(socketserver.StreamRequestHandler):
         # self.rfile is a file-like object created by the handler;
         # we can now use e.g. readline() instead of raw recv() calls
         self.data = self.rfile.readline().strip()
-        print("{} wrote:".format(self.client_address[0]))
-        print(self.data)
+        # print("{} wrote:".format(self.client_address[0]))
+        # print(self.data)
         self.server.buf += self.data.decode('utf-8')
 
 
@@ -286,6 +288,13 @@ def stop_tcp_server(server, thr):
     _log.info("Stopped server")
     server.server_close()
     _log.info("Closed server")
+
+
+def find_free_port() -> int:
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))
+        return s.getsockname()[1]
+
 
 if __name__ == '__main__':
     unittest.main()

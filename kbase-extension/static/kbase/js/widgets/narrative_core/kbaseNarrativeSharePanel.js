@@ -470,7 +470,6 @@ define ([
                 }
                 $tbl.append($userRow);
             }
-            //self.$mainPanel.append($othersDiv);
             $shareWithUserDiv.append($othersDiv);
         },
         

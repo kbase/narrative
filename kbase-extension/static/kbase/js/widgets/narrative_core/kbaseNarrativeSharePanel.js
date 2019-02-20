@@ -491,11 +491,18 @@ define ([
             })
             .then(response => response.json())
             .then(response => {
+                if(response.error) {
+                    console.log(response.error.message)
+                    this.reportError(response);
+                }
                 console.log("Request to Add Narrative:", JSON.stringify(response))
+
             })
             .catch(error => {
                 console.error('OH NO 💩:', error)
-                this.reportError(error);
+                if(error) {
+                    this.reportError(error);
+                }
             });
 
         },

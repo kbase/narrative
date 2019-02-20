@@ -1,5 +1,5 @@
 import unittest
-import util
+from . import util
 import time
 import json
 

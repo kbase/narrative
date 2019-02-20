@@ -15,7 +15,7 @@ class StagingHelperTest(unittest.TestCase):
         os.environ['KB_AUTH_TOKEN'] = ''
         with self.assertRaises(ValueError) as context:
             Helper()
-        self.assertEqual('Cannot retrieve auth token', str(context.exception.message))
+        self.assertEqual('Cannot retrieve auth token', str(context.exception))
 
     def test_token(self):
         self.assertEqual(self.good_fake_token, self.staging_helper._token)
@@ -27,8 +27,8 @@ class StagingHelperTest(unittest.TestCase):
     def test_unauthorized_token(self):
         with self.assertRaises(ValueError) as context:
             self.staging_helper.list()
-        self.assertTrue('Reason: Unauthorized' in str(context.exception.message))
-        self.assertTrue('Error code: 401' in str(context.exception.message))
+        self.assertTrue('Reason: Unauthorized' in str(context.exception))
+        self.assertTrue('Error code: 401' in str(context.exception))
 
     def mock_fetch_url(end_point, values=None, headers=None, method='GET', save_path=None):
         if 'list' in end_point:
@@ -64,7 +64,7 @@ class StagingHelperTest(unittest.TestCase):
     def test_missing_path(self):
         with self.assertRaises(ValueError) as context:
             self.staging_helper.metadata()
-        self.assertEqual('Must provide path argument', str(context.exception.message))
+        self.assertEqual('Must provide path argument', str(context.exception))
 
     @patch.object(Helper, '_Helper__fetch_url', side_effect=mock_fetch_url)
     def test_metadata(self, _fetch_url):

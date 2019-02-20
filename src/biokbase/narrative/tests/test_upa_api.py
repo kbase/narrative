@@ -109,24 +109,24 @@ class UpaApiTestCase(unittest.TestCase):
     def test_serialize_good(self):
         for pair in self.serialize_test_data:
             serial_upa = serialize(pair["upa"])
-            self.assertEquals(serial_upa, pair["serial"])
+            self.assertEqual(serial_upa, pair["serial"])
 
     def test_serialize_external_good(self):
         for pair in self.serialize_external_test_data:
             serial_upa = serialize_external(pair["upa"])
-            self.assertEquals(serial_upa, pair["serial"])
+            self.assertEqual(serial_upa, pair["serial"])
 
     @mock.patch('biokbase.narrative.upa.system_variable', mock_sys_var)
     def test_deserialize_good(self):
         for pair in self.serialize_test_data + self.serialize_external_test_data:
             if type(pair["upa"]) is not list:
                 deserial_upa = deserialize(pair["serial"])
-                self.assertEquals(deserial_upa, pair["upa"])
+                self.assertEqual(deserial_upa, pair["upa"])
 
     @mock.patch('biokbase.narrative.upa.system_variable', mock_sys_var)
     def test_serialize_bad(self):
         for bad_upa in self.bad_upas:
-            with self.assertRaisesRegexp(
+            with self.assertRaisesRegex(
                 ValueError,
                 "^\".+\" is not a valid UPA\. It may have already been serialized\.$"
             ):
@@ -135,7 +135,7 @@ class UpaApiTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.upa.system_variable', mock_sys_var)
     def test_deserialize_bad(self):
         for bad_serial in self.bad_serials:
-            with self.assertRaisesRegexp(
+            with self.assertRaisesRegex(
                 ValueError,
                 "Deserialized UPA: \".+\" is invalid!"
             ):

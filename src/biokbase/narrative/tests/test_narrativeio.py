@@ -7,7 +7,7 @@ from biokbase.narrative.contents.narrativeio import KBaseWSManagerMixin
 from biokbase.narrative.common.exceptions import WorkspaceError
 import biokbase.auth
 from tornado.web import HTTPError
-import util
+from . import util
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 
@@ -125,7 +125,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_narrative_exists_bad(self):
         with self.assertRaises(AssertionError) as err:
             self.mixin.narrative_exists(self.bad_nar_ref)
-        self.assertEquals("read_narrative must use a NarrativeRef as input!", str(err.exception))
+        self.assertEqual("read_narrative must use a NarrativeRef as input!", str(err.exception))
 
     def test_narrative_exists_noauth(self):
         if self.test_token is None:
@@ -223,7 +223,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_read_narrative_bad(self):
         with self.assertRaises(AssertionError) as err:
             self.mixin.read_narrative(self.bad_nar_ref)
-        self.assertEquals("read_narrative must use a NarrativeRef as input!", str(err.exception))
+        self.assertEqual("read_narrative must use a NarrativeRef as input!", str(err.exception))
 
     ##### test KBaseWSManagerMixin.write_narrative #####
 
@@ -236,7 +236,7 @@ class NarrIOTestCase(unittest.TestCase):
         nar = self.mixin.read_narrative(self.private_nar['ref'])['data']
         result = self.mixin.write_narrative(self.private_nar['ref'], nar, self.test_user)
         self.assertTrue(result[1] == self.private_nar['ws'] and result[2] == self.private_nar['obj'])
-        self.assertEquals(result[0]['metadata']['is_temporary'], 'false')
+        self.assertEqual(result[0]['metadata']['is_temporary'], 'false')
         self.logout()
 
     def test_write_narrative_valid_anon(self):
@@ -268,7 +268,7 @@ class NarrIOTestCase(unittest.TestCase):
         nar = self.mixin.read_narrative(self.public_nar['ref'])['data']
         with self.assertRaises(AssertionError) as err:
             self.mixin.write_narrative(self.bad_nar_ref, nar, self.test_user)
-        self.assertEquals("write_narrative must use a NarrativeRef as input!", str(err.exception))
+        self.assertEqual("write_narrative must use a NarrativeRef as input!", str(err.exception))
         self.logout()
 
     def test_write_narrative_bad_file(self):
@@ -277,7 +277,7 @@ class NarrIOTestCase(unittest.TestCase):
         self.login()
         with self.assertRaises(HTTPError) as err:
             self.mixin.write_narrative(self.private_nar['ref'], {'not':'a narrative'}, self.test_user)
-        self.assertEquals(err.exception.status_code, 400)
+        self.assertEqual(err.exception.status_code, 400)
         self.logout()
 
 
@@ -292,7 +292,7 @@ class NarrIOTestCase(unittest.TestCase):
         cur_name = nar['info'][10]['name']
         self.mixin.rename_narrative(self.private_nar['ref'], self.test_user, new_name)
         nar = self.mixin.read_narrative(self.private_nar['ref'], content=False, include_metadata=True)
-        self.assertEquals(new_name, nar['info'][10]['name'])
+        self.assertEqual(new_name, nar['info'][10]['name'])
 
         ### now, put it back to the old name, so it doesn't break other tests...
         self.mixin.rename_narrative(self.private_nar['ref'], self.test_user, cur_name)
@@ -322,7 +322,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_rename_narrative_bad(self):
         with self.assertRaises(AssertionError) as err:
             self.mixin.rename_narrative(self.bad_nar_ref, self.test_user, 'new_name')
-        self.assertEquals("read_narrative must use a NarrativeRef as input!", str(err.exception))
+        self.assertEqual("read_narrative must use a NarrativeRef as input!", str(err.exception))
 
     ##### test KBaseWSManagerMixin.copy_narrative #####
 
@@ -435,7 +435,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_narrative_permissions_bad(self):
         with self.assertRaises(AssertionError) as err:
             self.mixin.narrative_permissions(self.bad_nar_ref)
-        self.assertEquals("narrative_permissions must use a NarrativeRef as input!", str(err.exception))
+        self.assertEqual("narrative_permissions must use a NarrativeRef as input!", str(err.exception))
 
 
     ##### test KBaseWSManagerMixin.narrative_writable #####
@@ -486,7 +486,7 @@ class NarrIOTestCase(unittest.TestCase):
         self.login()
         with self.assertRaises(AssertionError) as err:
             self.mixin.narrative_writable(self.bad_nar_ref, self.test_user)
-        self.assertEquals("narrative_permissions must use a NarrativeRef as input!", str(err.exception))
+        self.assertEqual("narrative_permissions must use a NarrativeRef as input!", str(err.exception))
         self.logout()
 
     ##### test KBaseWSManagerMixin._validate_nar_type #####

@@ -10,10 +10,10 @@ from biokbase.narrative.app_util import (
     map_inputs_from_job,
     map_outputs_from_state
 )
-from narrative_mock.mockclients import get_mock_client
+from .narrative_mock.mockclients import get_mock_client
 import os
 import mock
-import util
+from . import util
 
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
@@ -51,7 +51,7 @@ class AppUtilTestCase(unittest.TestCase):
     def test_sys_var_user(self):
         if (self.user_token):
             biokbase.auth.set_environ_token(self.user_token)
-            self.assertEquals(system_variable('user_id'), self.user_id)
+            self.assertEqual(system_variable('user_id'), self.user_id)
 
     def test_sys_var_no_ws(self):
         if 'KB_WORKSPACE_ID' in os.environ:
@@ -60,12 +60,12 @@ class AppUtilTestCase(unittest.TestCase):
 
     def test_sys_var_workspace(self):
         os.environ['KB_WORKSPACE_ID'] = self.workspace
-        self.assertEquals(system_variable('workspace'), self.workspace)
+        self.assertEqual(system_variable('workspace'), self.workspace)
 
     def test_sys_var_token(self):
         if (self.user_token):
             biokbase.auth.set_environ_token(self.user_token)
-        self.assertEquals(system_variable('token'), self.user_token)
+        self.assertEqual(system_variable('token'), self.user_token)
 
     def test_sys_var_no_ws_id(self):
         if 'KB_WORKSPACE_ID' in os.environ:
@@ -75,7 +75,7 @@ class AppUtilTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.app_util.clients.get', get_mock_client)
     def test_sys_var_workspace_id(self):
         os.environ['KB_WORKSPACE_ID'] = self.workspace
-        self.assertEquals(system_variable('workspace_id'), 12345)
+        self.assertEqual(system_variable('workspace_id'), 12345)
 
     @mock.patch('biokbase.narrative.app_util.clients.get', get_mock_client)
     def test_sys_var_workspace_id_except(self):
@@ -102,22 +102,22 @@ class AppUtilTestCase(unittest.TestCase):
     def test_get_result_sub_path(self):
         result = [{'report': 'this_is_a_report', 'report_ref': '123/456/7'}]
         path = [0, 'report_ref']
-        self.assertEquals(get_result_sub_path(result, path), '123/456/7')
+        self.assertEqual(get_result_sub_path(result, path), '123/456/7')
 
     def test_get_result_sub_path_deep_list(self):
         result = ['foo', 'bar', 'baz']
         path = [2]
-        self.assertEquals(get_result_sub_path(result, path), 'baz')
+        self.assertEqual(get_result_sub_path(result, path), 'baz')
 
     def test_get_result_sub_path_deep_obj(self):
         result = ['foo', {'bar': 'baz'}, 'foobar']
         path = [1, 'bar']
-        self.assertEquals(get_result_sub_path(result, path), 'baz')
+        self.assertEqual(get_result_sub_path(result, path), 'baz')
 
     def test_get_result_obj_path(self):
         result = ['foo', 0, {'bar': {'baz': [10, 11, 12, 13]}}]
         path = [2, 'bar', 'baz', 3]
-        self.assertEquals(get_result_sub_path(result, path), 13)
+        self.assertEqual(get_result_sub_path(result, path), 13)
 
     def test_get_result_sub_path_list_fail(self):
         result = ['foo']

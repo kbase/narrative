@@ -2,9 +2,9 @@
 A module for managing apps, specs, requirements, and for starting jobs.
 """
 import biokbase.auth as auth
-from job import Job
-from jobmanager import JobManager
-import specmanager
+from .job import Job
+from .jobmanager import JobManager
+from . import specmanager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager
 from biokbase.narrative.app_util import (
@@ -776,7 +776,7 @@ class AppManager(object):
                     for part in temp_string.split("/"):
                         part = part.replace(bck_slash, "\\")
                         part = part.replace(fwd_slash, "/")
-                        temp_path.append(part.encode('ascii', 'ignore'))
+                        temp_path.append(part.encode('ascii', 'ignore').decode("ascii"))
                     temp_map = final_input
                     temp_key = None
                     # We're going along the path and creating intermediate

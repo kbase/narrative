@@ -2,7 +2,7 @@
 A collection of helpful utilities for running batches of jobs.
 """
 from biokbase.narrative.staging.helper import Helper as StagingHelper
-import specmanager
+from . import specmanager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import (
     system_variable
@@ -274,7 +274,9 @@ def generate_input_batch(app, tag='release', **kwargs):
     batch_inputs = list()
     param_ids = input_vals.keys()
     product_inputs = [input_vals[k] for k in param_ids]
-    batch_size = reduce(lambda x, y: x*y, [len(p) for p in product_inputs])
+    batch_size = 1
+    for p in product_inputs:
+        batch_size *= len(p) #reduce(lambda x, y: x*y, [len(p) for p in product_inputs])
     # prepare output values
     output_vals = _prepare_output_vals(output_vals, spec_params_dict, batch_size)
 

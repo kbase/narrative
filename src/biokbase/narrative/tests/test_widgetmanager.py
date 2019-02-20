@@ -3,8 +3,8 @@ from biokbase.narrative.widgetmanager import WidgetManager
 import IPython
 import mock
 import os
-from util import TestConfig
-from narrative_mock.mockclients import get_mock_client
+from .util import TestConfig
+from .narrative_mock.mockclients import get_mock_client
 
 """
 Tests for the WidgetManager class
@@ -154,15 +154,15 @@ class WidgetManagerTestCase(unittest.TestCase):
             "extra_param": "extra_value",
             "other_extra_param": 0
         })
-        self.assertEquals(upas['obj_id1'], test_result_upa)
-        self.assertEquals(upas['obj_id2'], test_result_upa)
-        self.assertEquals(upas['obj_name1'], test_result_upa)
-        self.assertEquals(upas['obj_name2'], test_result_upa)
-        self.assertEquals(upas['obj_names'], [test_result_upa]*3)
-        self.assertEquals(upas['obj_ref1'], "1/2/3")
-        self.assertEquals(upas['obj_ref2'], test_result_upa)
-        self.assertEquals(upas['obj_refs'], [test_result_upa]*2)
-        self.assertEquals(len(upas.keys()), 8)
+        self.assertEqual(upas['obj_id1'], test_result_upa)
+        self.assertEqual(upas['obj_id2'], test_result_upa)
+        self.assertEqual(upas['obj_name1'], test_result_upa)
+        self.assertEqual(upas['obj_name2'], test_result_upa)
+        self.assertEqual(upas['obj_names'], [test_result_upa]*3)
+        self.assertEqual(upas['obj_ref1'], "1/2/3")
+        self.assertEqual(upas['obj_ref2'], test_result_upa)
+        self.assertEqual(upas['obj_refs'], [test_result_upa]*2)
+        self.assertEqual(len(upas.keys()), 8)
 
     @mock.patch('biokbase.narrative.widgetmanager.clients.get', get_mock_client)
     def test_infer_upas_none(self):
@@ -202,7 +202,7 @@ class WidgetManagerTestCase(unittest.TestCase):
     def assertIsValidCellCode(self, js_obj, data, type, widget, cellId, title):
         code_lines = js_obj.data.strip().split('\n')
         self.assertTrue(code_lines[0].strip().startswith('element.html("<div id=\'kb-vis'))
-        self.assertEquals(code_lines[1].strip(), "require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {")
+        self.assertEqual(code_lines[1].strip(), "require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {")
         self.assertTrue(code_lines[2].strip().startswith(r"var w = new KBaseNarrativeOutputCell($('#kb-vis"))
 
 if __name__ == '__main__':

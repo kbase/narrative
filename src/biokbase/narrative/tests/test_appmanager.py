@@ -8,9 +8,9 @@ from biokbase.narrative.jobs.job import Job
 from IPython.display import HTML
 import unittest
 import mock
-from narrative_mock.mockclients import get_mock_client
+from .narrative_mock.mockclients import get_mock_client
 import os
-from util import TestConfig
+from .util import TestConfig
 
 
 def mock_agent_token(*args, **kwargs):
@@ -96,7 +96,7 @@ class AppManagerTestCase(unittest.TestCase):
             dry_run=True
         )
         self.assertIsInstance(output, dict)
-        self.assertEquals(output['app_id'], self.test_app_id)
+        self.assertEqual(output['app_id'], self.test_app_id)
         self.assertIsInstance(output['params'], list)
         self.assertIn('method', output)
         self.assertIn('service_ver', output)
@@ -116,9 +116,9 @@ class AppManagerTestCase(unittest.TestCase):
             tag=self.test_tag
         )
         self.assertIsInstance(new_job, Job)
-        self.assertEquals(new_job.job_id, self.test_job_id)
-        self.assertEquals(new_job.app_id, self.test_app_id)
-        self.assertEquals(new_job.tag, self.test_tag)
+        self.assertEqual(new_job.job_id, self.test_job_id)
+        self.assertEqual(new_job.app_id, self.test_app_id)
+        self.assertEqual(new_job.tag, self.test_tag)
         self.assertIsNone(new_job.cell_id)
 
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
@@ -189,9 +189,9 @@ class AppManagerTestCase(unittest.TestCase):
             tag=self.test_tag
         )
         self.assertIsInstance(new_job, Job)
-        self.assertEquals(new_job.job_id, self.test_job_id)
-        self.assertEquals(new_job.app_id, self.batch_app_id)
-        self.assertEquals(new_job.tag, self.test_tag)
+        self.assertEqual(new_job.job_id, self.test_job_id)
+        self.assertEqual(new_job.app_id, self.batch_app_id)
+        self.assertEqual(new_job.tag, self.test_tag)
         self.assertIsNone(new_job.cell_id)
 
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
@@ -346,20 +346,20 @@ class AppManagerTestCase(unittest.TestCase):
             spec_params_map
         )
         expected = [{
-            u'output_object_name': 'MyReadsSet',
-            u'data': {
-                u'items': [{
-                    u'label': 'reads file 1',
-                    u'metadata': {'key1': 'value1'},
-                    u'ref': '12345/7/1'
+            'output_object_name': 'MyReadsSet',
+            'data': {
+                'items': [{
+                    'label': 'reads file 1',
+                    'metadata': {'key1': 'value1'},
+                    'ref': '12345/7/1'
                 }, {
-                    u'label': 'reads file 2',
-                    u'metadata': {'key2': 'value2'},
-                    u'ref': '12345/8/1'
+                    'label': 'reads file 2',
+                    'metadata': {'key2': 'value2'},
+                    'ref': '12345/8/1'
                 }],
-                u'description': 'New Reads Set'
+                'description': 'New Reads Set'
             },
-            u'workspace': ws_name
+            'workspace': ws_name
         }]
         self.assertDictEqual(expected[0], mapped_inputs[0])
         ref_path = ws_name + '/MyReadsSet; ' + ws_name + "/rhodobacterium.art.q10.PE.reads"

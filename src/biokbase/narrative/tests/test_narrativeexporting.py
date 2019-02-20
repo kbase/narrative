@@ -4,7 +4,7 @@ from biokbase.narrative.exporter.exporter import NarrativeExporter
 import unittest
 import os
 import mock
-from util import TestConfig
+from .util import TestConfig
 
 """
 Some tests for narrative exporting.

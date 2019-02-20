@@ -1,6 +1,6 @@
 import unittest
 import biokbase.auth
-import util
+from . import util
 
 
 """
@@ -32,7 +32,7 @@ class ViewersTestCase(unittest.TestCase):
             viewers.view_as_clustergrammer(self.generic_ref, row_categories="Time")
         with self.assertRaises(AssertionError):
             viewers.view_as_clustergrammer(self.generic_ref, normalize_on="Time")
-        with self.assertRaisesRegexp(ValueError, "not a compatible data type"):
+        with self.assertRaisesRegex(ValueError, "not a compatible data type"):
             viewers.view_as_clustergrammer(self.attribute_set_ref)
 
     def test__get_categories(self):
@@ -59,12 +59,12 @@ class ViewersTestCase(unittest.TestCase):
         filtered_index = [('WRI_RS00010_CDS_1', 'test_attribute_1: 1'),
                           ('WRI_RS00015_CDS_1', 'test_attribute_1: 2'),
                           ('WRI_RS00025_CDS_1', 'test_attribute_1: 3')]
-        multi_index = pd.MultiIndex(levels=[[u'WRI_RS00010_CDS_1', u'WRI_RS00015_CDS_1', u'WRI_RS00025_CDS_1'], [u'1', u'2', u'3']],
-                                    labels=[[0, 1, 2], [0, 1, 2]], names=[u'ID', u'test_attribute_1'])
+        multi_index = pd.MultiIndex(levels=[['WRI_RS00010_CDS_1', 'WRI_RS00015_CDS_1', 'WRI_RS00025_CDS_1'], ['1', '2', '3']],
+                                    labels=[[0, 1, 2], [0, 1, 2]], names=['ID', 'test_attribute_1'])
         self.assertEqual(ids, viewers._get_categories(ids, self.generic_ref))
-        with self.assertRaisesRegexp(ValueError, "not in the provided mapping"):
+        with self.assertRaisesRegex(ValueError, "not in the provided mapping"):
             viewers._get_categories(['boo'], self.generic_ref, self.attribute_set_ref, mapping)
-        with self.assertRaisesRegexp(ValueError, "has no attribute"):
+        with self.assertRaisesRegex(ValueError, "has no attribute"):
             viewers._get_categories(['boo'], self.generic_ref, self.attribute_set_ref)
         self.assertEqual(index,
                          viewers._get_categories(ids, self.generic_ref, self.attribute_set_ref,

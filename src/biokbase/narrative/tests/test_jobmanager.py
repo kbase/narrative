@@ -17,9 +17,8 @@ config = TestConfig()
 job_info = config.load_json_file(config.get('jobs', 'job_info_file'))
 
 
-@mock.patch('biokbase.narrative.jobs.job.clients.get')
-def phony_job(get):
-    get = get_mock_client
+@mock.patch('biokbase.narrative.jobs.job.clients.get', get_mock_client)
+def phony_job():
     return Job.from_state('phony_job',
                           {'params': [], 'service_ver': '0.0.0'},
                           'kbasetest',
@@ -40,14 +39,11 @@ def create_jm_message(r_type, job_id=None, data={}):
 class JobManagerTest(unittest.TestCase):
     @classmethod
     @mock.patch('biokbase.narrative.jobs.jobmanager.Comm', MockComm)
-    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get')
-    def setUpClass(self, get):
-        print(get)
-        get = get_mock_client
-        print(get)
+    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
+    def setUpClass(self):
         self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
         self.jm._comm = MockComm()
-        self.job_ids = list(job_info.get('job_param_info', {}).keys())
+        self.job_ids = [j[0] for j in job_info.get('job_info')]
         os.environ['KB_WORKSPACE_ID'] = config.get('jobs', 'job_test_wsname')
 
         self.jm.initialize_jobs(start_lookup_thread=False)
@@ -70,9 +66,7 @@ class JobManagerTest(unittest.TestCase):
         self.assertDictEqual(msg, {'content': None, 'data': {'content': 'bar', 'msg_type': 'foo'}})
         self.jm._comm.clear_message_cache()
 
-    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get')
-    def test_get_job_good(self, get):
-        get = get_mock_client
+    def test_get_job_good(self):
         job_id = self.job_ids[0]
         job = self.jm.get_job(job_id)
         self.assertEqual(job_id, job.job_id)

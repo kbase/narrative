@@ -93,9 +93,8 @@ define ([
             .then(response => response.json())
             .then(response => {
                 this.updateOrgList(response);
-                console.log("Success:", JSON.stringify(response))
             })
-            .catch(error => console.error('OH 💩:', error));
+                .catch(error => console.error('Error while fetching groups associated with the user:', error));
         },
 
         orgList: null,
@@ -225,36 +224,38 @@ define ([
              *     - $tab1 for sharing user
              *     - $tab2 for sharing with org
              */
-            var $tabDiv = $('<div class="tabs">');
+            var $tabDiv = $('<div class="tabs">').css({'margin': '0px 5px'});
+            
             // make divs for each tab.
-
-            var $tab1 = createTab('white', 'Share with User');
+            var $tab1 = createTab('white', 'Users')
+            .css({'border-top-left-radius': '2px'});
             
             $tab1.click(function(){
                 tabSwitch($(this), $tab2);
-                $shareWithOrgDiv.css("display", "none");
-                $shareWithUserDiv.css("display", "inherit");
+                $shareWithOrgDiv.css('display', 'none');
+                $shareWithUserDiv.css('display', 'inherit');
             });
             $tabDiv.append($tab1); 
             
-            var $tab2 = createTab('#d8d8d8', 'Request to add to org').css("border-bottom", "1px solid");
+            var $tab2 = createTab('#d8d8d8', 'Orgs')
+            .css({'padding-bottom': '9px', 'border-bottom': '1px solid', 'border-top-right-radius': '2px'});
+
             $tab2.click(function(){
                 tabSwitch($(this), $tab1);
-                $shareWithOrgDiv.css("display", "inherit");
-                $shareWithUserDiv.css("display", "none");
+                $shareWithOrgDiv.css('display', 'inherit');
+                $shareWithUserDiv.css('display', 'none');
             });
             $tabDiv.append($tab2);
             
             function createTab(color, text){
                 return $('<div class="shareTab">')
-                .css({'width': '50%', 'display': 'inline-block', 'padding': '10px', 'border': 'solid', 'border-width': '1px 1px 0px'})
-                .css('background-color', color)
+                .css({'background-color': color, 'width': '50%', 'display': 'inline-block', 'padding': '10px', 'border': 'solid', 'border-width': '1px 1px 0px', 'cursor': 'pointer'})
                 .append(text);
             }
 
             function tabSwitch(tab, otherTab){
-                tab.css({"background-color": "white", "border-bottom": "none"});
-                otherTab.css({"background-color": "#d8d8d8", "border-bottom": "1px solid"});
+                tab.css({'background-color': 'white', 'border-bottom': 'none', 'padding-bottom': '10px'});
+                otherTab.css({'background-color': '#d8d8d8', 'border-bottom': '1px solid', 'padding-bottom': '9px'});
             }
 
             self.$mainPanel.append($tabDiv);
@@ -266,7 +267,7 @@ define ([
              *     - share with org div /$shareWithOrgDiv
              */
             var $tabContent = $('<div class="tab-content">')
-            .css({'border': 'solid','border-width': '0px 1px 1px 1px', 'padding': '15px'});
+            .css({'border': 'solid', 'border-width': '0px 1px 1px 1px', 'border-radius': '0px 0px 2px 2px', 'padding': '15px', 'margin': '0px 5px'});
             
             var $shareWithUserDiv = $('<div id="shareWUser" class="content">').css({'display': 'inherit'});
             var $shareWithOrgDiv = $('<div id="shareWOrg" class="content">').css({'display': 'none'});
@@ -275,7 +276,7 @@ define ([
             // Content of Share with Org (Request to add to Org) Div
             if(isOwner) {
                 var $addOrgDiv = $('<div>').css({'margin-top': '10px'});
-                var $inputOrg = $('<select single data-placeholder="Share with..." id="orgInput">')
+                var $inputOrg = $('<select single data-placeholder="Accosicate with..." id="orgInput">')
                     .addClass('form-control kb-share-select')
                     .css("display", "inline");
                 $inputOrg.append('<option></option>'); // option is needed for placeholder to work.
@@ -287,7 +288,7 @@ define ([
                 .click(function() {
                     if (!$(this).hasClass('disabled')) {
                         var org = $inputOrg.select2('data');
-                        var orgID = org[0]["id"]
+                        var orgID = org[0]["id"];
                         self.requestAddNarrative(self.authClient.getAuthToken(), orgID);
                     }
                 });
@@ -314,7 +315,7 @@ define ([
                             
                 $shareWithOrgDiv.append($addOrgDiv); // put addOrgDiv into shareWithOrgDiv 
             } else {
-                $shareWithOrgDiv.append('<p style="margin-top: 18px;">You must be the owner to request to add this narrative.</p>')
+                $shareWithOrgDiv.append('<p style="margin-top: 18px;">You must be the owner to request to add this narrative.</p>');
             } // end of if(isOwner)
 
             // content of share with user div 
@@ -370,13 +371,14 @@ define ([
 
                 $shareWithUserDiv.append($addUsersDiv);
             } // end of if(isAdmin)  
-
+            
             // add share with.., divs to tab content
             $tabContent.append($shareWithUserDiv, $shareWithOrgDiv);
             // add tab content to the main panel
             self.$mainPanel.append($tabContent);
             // end of Tab content divs
             
+            // div contains other users sharing the narrative
             var $othersDiv = $('<div>').css({
                 'margin-top': '15px',
                 'max-height': self.options.max_list_height,
@@ -387,18 +389,18 @@ define ([
             });
             var $tbl = $('<table>');
             $othersDiv.append($tbl);
-
+            
             // sort
             self.ws_permissions.sort(function (a, b) {
                 var getPermLevel = function(perm) {
                     switch (perm) {
-                    case 'a':
+                        case 'a':
                         return 1;
-                    case 'w':
+                        case 'w':
                         return 2;
-                    case 'r':
+                        case 'r':
                         return 3;
-                    default:
+                        default:
                         return 0;
                     }
                 };
@@ -406,12 +408,12 @@ define ([
                     return getPermLevel(a[1]) - getPermLevel(b[1]);
                 } // then on user name
                 if (a[0] < b[0])
-                    return -1;
+                return -1;
                 if (a[0] > b[0])
-                    return 1;
+                return 1;
                 return 0;
             });
-
+            
             // show all other users
             for (var i = 0; i < self.ws_permissions.length; i++) {
                 if (self.ws_permissions[i][0] === self.my_user_id || self.ws_permissions[i][0] === '*') {
@@ -422,24 +424,24 @@ define ([
                 var thisUser = self.ws_permissions[i][0];
                 if (isAdmin && thisUser !== self.narrOwner) {
                     $select = $('<select>')
-                        .addClass('form-control kb-share-user-permissions-dropdown')
-                        .attr('user', thisUser)
-                        .append($('<option>').val('r').append('can view'))
-                        .append($('<option>').val('w').append('can edit'))
-                        .append($('<option>').val('a').append('can edit/share'))
-                        .val(self.ws_permissions[i][1])
-                        .on('change', function () {
-                            self.showWorking('updating permissions...');
-                            self.updateUserPermissions([{id: $(this).attr('user')}], $(this).val());
-                        });
+                    .addClass('form-control kb-share-user-permissions-dropdown')
+                    .attr('user', thisUser)
+                    .append($('<option>').val('r').append('can view'))
+                    .append($('<option>').val('w').append('can edit'))
+                    .append($('<option>').val('a').append('can edit/share'))
+                    .val(self.ws_permissions[i][1])
+                    .on('change', function () {
+                        self.showWorking('updating permissions...');
+                        self.updateUserPermissions([{id: $(this).attr('user')}], $(this).val());
+                    });
                     $removeBtn = $('<span>')
-                        .attr('user', thisUser)
-                        .addClass('btn btn-xs btn-danger')
-                        .append($('<span>')
-                                .addClass('fa fa-times'))
-                        .click(function() {
-                            self.updateUserPermissions([{id: $(this).attr('user')}], 'n');
-                        });
+                    .attr('user', thisUser)
+                    .addClass('btn btn-xs btn-danger')
+                    .append($('<span>')
+                    .addClass('fa fa-times'))
+                    .click(function() {
+                        self.updateUserPermissions([{id: $(this).attr('user')}], 'n');
+                    });
                 } else {
                     $select = $('<div>').addClass('form-control kb-share-user-permissions-dropdown');
                     if (thisUser === self.narrOwner) {
@@ -457,20 +459,21 @@ define ([
                 }
                 var user_display = self.renderUserIconAndName(self.ws_permissions[i][0], null, true);
                 var $userRow =
-                    $('<tr>')
-                    .append($('<td style="text-align:left">')
-                        .append(user_display[0]))
-                    .append($('<td style="text-align:left">').css({'padding': '4px', 'padding-top': '6px'})
-                        .append(user_display[1]))
-                    .append($('<td style="text-align:right">').append($select));
+                $('<tr>')
+                .append($('<td style="text-align:left">')
+                .append(user_display[0]))
+                .append($('<td style="text-align:left">').css({'padding': '4px', 'padding-top': '6px'})
+                .append(user_display[1]))
+                .append($('<td style="text-align:right">').append($select));
                 if ($removeBtn) {
                     $userRow.append($('<td style="text-align:left">').append($removeBtn));
                 }
                 $tbl.append($userRow);
             }
-            self.$mainPanel.append($othersDiv);
+            //self.$mainPanel.append($othersDiv);
+            $shareWithUserDiv.append($othersDiv);
         },
-
+        
         /**
          * Send request to add narrative to a organization.
          * Returns either {"complete": true} or a Request with the additional field "complete" with a value of false.
@@ -492,14 +495,13 @@ define ([
             .then(response => response.json())
             .then(response => {
                 if(response.error) {
-                    console.log(response.error.message)
                     this.reportError(response);
                 }
                 console.log("Request to Add Narrative:", JSON.stringify(response))
 
             })
             .catch(error => {
-                console.error('OH NO 💩:', error)
+                console.error('Error while sending request to add narrative:', error)
                 if(error) {
                     this.reportError(error);
                 }
@@ -655,7 +657,7 @@ define ([
                 'select2/utils'
             ], function (ArrayData, Utils) {
                 orgList.forEach(org=>{
-                    orgData.push({"id": org.id, "text": org.name})
+                    orgData.push({"id": org.id, "text": org.name});
                 })
                 $inputOrg.select2({
                     formatNoMatches: noMatchedOrgFoundStr,

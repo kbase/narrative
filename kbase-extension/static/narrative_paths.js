@@ -61,7 +61,7 @@ require.config({
         configPath: 'kbase',
         narrativeViewers: 'kbase/js/widgets/narrative_core/narrativeViewers',
         jquery: 'ext_components/jquery/dist/jquery.min',
-        jqueryui: 'components/jquery-ui/ui/minified/jquery-ui.min',
+        jqueryui: 'components/jquery-ui/jquery-ui.min',
         bootstrap: 'ext_components/bootstrap/dist/js/bootstrap.min',
         // 'css'                                   : 'ext_components/require-css/css.min',
 

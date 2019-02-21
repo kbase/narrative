@@ -51,7 +51,7 @@ define ([
             this.$mainPanel = $('<div style="text-align:center">');
             this.$elem.append(this.$mainPanel);
             this.showWorking('loading narrative information');
-            
+
             if (!this.options.ws_name_or_id) {
                 //fail!
             }
@@ -73,10 +73,10 @@ define ([
             this.refresh();
             return this;
         },
-        
+
         /**
          * fetch organizations that user is associated. When promise is successfully returned,
-         * it calls updateOrgList function. 
+         * it calls updateOrgList function.
          * @param {string} token  authorization token
          */
         fetchOrgs: function(token) {
@@ -100,7 +100,7 @@ define ([
         orgList: null,
         /**
          * Update global variable, orgList, then call render function.
-         * @param {array} list 
+         * @param {array} list
          */
         updateOrgList: function(list) {
             this.orgList = list;
@@ -225,18 +225,18 @@ define ([
              *     - $tab2 for sharing with org
              */
             var $tabDiv = $('<div class="tabs">').css({'margin': '0px 5px'});
-            
+
             // make divs for each tab.
             var $tab1 = createTab('white', 'Users')
             .css({'border-top-left-radius': '2px'});
-            
+
             $tab1.click(function(){
                 tabSwitch($(this), $tab2);
                 $shareWithOrgDiv.css('display', 'none');
                 $shareWithUserDiv.css('display', 'inherit');
             });
-            $tabDiv.append($tab1); 
-            
+            $tabDiv.append($tab1);
+
             var $tab2 = createTab('#d8d8d8', 'Orgs')
             .css({'padding-bottom': '9px', 'border-bottom': '1px solid', 'border-top-right-radius': '2px'});
 
@@ -246,7 +246,7 @@ define ([
                 $shareWithUserDiv.css('display', 'none');
             });
             $tabDiv.append($tab2);
-            
+
             function createTab(color, text){
                 return $('<div class="shareTab">')
                 .css({'background-color': color, 'width': '50%', 'display': 'inline-block', 'padding': '10px', 'border': 'solid', 'border-width': '1px 1px 0px', 'cursor': 'pointer'})
@@ -268,15 +268,15 @@ define ([
              */
             var $tabContent = $('<div class="tab-content">')
             .css({'border': 'solid', 'border-width': '0px 1px 1px 1px', 'border-radius': '0px 0px 2px 2px', 'padding': '15px', 'margin': '0px 5px'});
-            
+
             var $shareWithUserDiv = $('<div id="shareWUser" class="content">').css({'display': 'inherit'});
             var $shareWithOrgDiv = $('<div id="shareWOrg" class="content">').css({'display': 'none'});
-            
+
 
             // Content of Share with Org (Request to add to Org) Div
             if(isOwner) {
                 var $addOrgDiv = $('<div>').css({'margin-top': '10px'});
-                var $inputOrg = $('<select single data-placeholder="Accosicate with..." id="orgInput">')
+                var $inputOrg = $('<select single data-placeholder="Associate with..." id="orgInput">')
                     .addClass('form-control kb-share-select')
                     .css("display", "inline");
                 $inputOrg.append('<option></option>'); // option is needed for placeholder to work.
@@ -298,7 +298,7 @@ define ([
                 $addOrgDiv
                 .append($inputOrg)
                 .append($applyOrgBtn);
-                
+
                 $inputOrg.on('select2:select', function() {
                     if ($inputOrg.select2('data').length > 0) {
                         $applyOrgBtn.removeClass('disabled');
@@ -309,16 +309,16 @@ define ([
                         $applyOrgBtn.addClass('disabled');
                     }
                 });
-                
+
                 $addOrgDiv.find('span.select2-selection--single')
                 .css({'min-height': '32px'});
-                            
-                $shareWithOrgDiv.append($addOrgDiv); // put addOrgDiv into shareWithOrgDiv 
+
+                $shareWithOrgDiv.append($addOrgDiv); // put addOrgDiv into shareWithOrgDiv
             } else {
                 $shareWithOrgDiv.append('<p style="margin-top: 18px;">You must be the owner to request to add this narrative.</p>');
             } // end of if(isOwner)
 
-            // content of share with user div 
+            // content of share with user div
             if (isAdmin) {
                 var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
                 var $input = $('<select multiple data-placeholder="Share with...">')
@@ -346,8 +346,8 @@ define ([
                 $addUsersDiv.append($input)
                             .append($permSelect)
                             .append($applyBtn);
-                
-                            
+
+
                 self.setupSelect2($input);
                 $permSelect.select2({
                     minimumResultsForSearch: Infinity
@@ -370,14 +370,14 @@ define ([
                 .css({'margin-left': '5px', 'margin-right': '5px'});
 
                 $shareWithUserDiv.append($addUsersDiv);
-            } // end of if(isAdmin)  
-            
+            } // end of if(isAdmin)
+
             // add share with.., divs to tab content
             $tabContent.append($shareWithUserDiv, $shareWithOrgDiv);
             // add tab content to the main panel
             self.$mainPanel.append($tabContent);
             // end of Tab content divs
-            
+
             // div contains other users sharing the narrative
             var $othersDiv = $('<div>').css({
                 'margin-top': '15px',
@@ -389,7 +389,7 @@ define ([
             });
             var $tbl = $('<table>');
             $othersDiv.append($tbl);
-            
+
             // sort
             self.ws_permissions.sort(function (a, b) {
                 var getPermLevel = function(perm) {
@@ -413,7 +413,7 @@ define ([
                 return 1;
                 return 0;
             });
-            
+
             // show all other users
             for (var i = 0; i < self.ws_permissions.length; i++) {
                 if (self.ws_permissions[i][0] === self.my_user_id || self.ws_permissions[i][0] === '*') {
@@ -472,7 +472,7 @@ define ([
             }
             $shareWithUserDiv.append($othersDiv);
         },
-        
+
         /**
          * Send request to add narrative to a organization.
          * Returns either {"complete": true} or a Request with the additional field "complete" with a value of false.
@@ -496,7 +496,6 @@ define ([
                 if(response.error) {
                     this.reportError(response);
                 }
-                console.log("Request to Add Narrative:", JSON.stringify(response))
 
             })
             .catch(error => {

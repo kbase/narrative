@@ -24,8 +24,7 @@ branches:
   only:
     - develop
     - master
-    - travis-firefox
-    - staging
+    - py3-update
 
 before_install:
   - pip install virtualenv coveralls scikit-learn[alldeps] pandas

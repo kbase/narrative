@@ -30,8 +30,6 @@ define([
         div = t('div');
 
     function factory() {
-
-
         let runtime = Runtime.make();
 
         function workspaceCall(subObjectIdentity) {
@@ -64,8 +62,6 @@ define([
             ]);
         }
 
-
-
         function sortData (data) {
             // sort by id now.
             data.sort(function (a, b) {
@@ -81,6 +77,7 @@ define([
         }
 
         function standardFetchData(arg) {
+            let subdata_path;
             let referenceObjectRef = arg.referenceObjectRef,
                 subdataSelection = arg.spec.data.constraints.subdataSelection,
                 subObjectIdentity = {
@@ -90,7 +87,6 @@ define([
                 dataCall;
 
             let parseData = function (results) {
-                console.log(results);
                 let values = [],
                     selectionId = subdataSelection.selection_id,
                     descriptionFields = subdataSelection.selection_description || [],
@@ -130,15 +126,15 @@ define([
                             }
                             values.push({
                                 id: id,
-                                desc: descriptionTemplate(datum), // TODO
+                                desc: descriptionTemplate(datum),
                                 objectRef: [result.info[6], result.info[0], result.info[4]].join('/'),
                                 objectName: result.info[1]
                             });
                         });
-                    } else {
+                    } else if (subdata instanceof Object) {
                         Object.keys(subdata).forEach(function (key) {
-                            let datum = subdata[key],
-                                id;
+                            let datum = subdata[key]
+                            let id = key;
 
                             if (selectionId) {
                                 switch (typeof datum) {
@@ -149,25 +145,20 @@ define([
                                     case 'number':
                                         if (selectionId === 'value') {
                                             id = datum;
-                                        } else {
-                                            id = key;
                                         }
-                                        break;
-                                    default:
-                                        id = key;
                                 }
-                            } else {
-                                id = key;
                             }
 
                             values.push({
                                 id: id,
-                                desc: descriptionTemplate(datum), // todo
-                                // desc: id,
+                                desc: descriptionTemplate(datum),
                                 objectRef: [result.info[6], result.info[0], result.info[4]].join('/'),
                                 objectName: result.info[1]
                             });
                         });
+                    } else  {
+                        console.error(`subdata must be should be either an array or object 
+                                       but was ${typeof subdata}`)
                     }
                 });
                 return values.map(function (item) {
@@ -180,13 +171,14 @@ define([
             } else {
                 dataCall = workspaceCall(subObjectIdentity);
             }
-            const followRefKey = "WSREF(";
-            let subdata_path = subdataSelection.path_to_subdata[0];
-            if (subdata_path.startsWith(followRefKey)) {
-                // Look for the "WSREF" key in the subdata_path and if present, follow the
-                // path in brackets to extract and load a reference to another object
-                let ref_loc;
-                [ref_loc, subdata_path] = subdata_path.slice(followRefKey.length).split(")", 2);
+            // Look for the "<WSREF>" key in the path_to_subdata and if present, follow the path
+            // preceding that key to extract and load a reference to another object then follow
+            // the path after the key to extract the subdata
+            const followRefKey = "<WSREF>";
+            const ref_index = subdataSelection.path_to_subdata.indexOf(followRefKey);
+            if (ref_index > -1) {
+                const ref_loc = subdataSelection.path_to_subdata.slice(0, ref_index);
+                subdata_path = subdataSelection.path_to_subdata.slice(ref_index + 1);
                 return dataCall
                     .then(function (results) {
                         let reference = Props.getDataItem(results[0].data, [ref_loc]);
@@ -199,6 +191,7 @@ define([
 
                     })
             } else {
+                subdata_path =subdataSelection.path_to_subdata;
                 return dataCall
                     .then(parseData)
                     .then(sortData);

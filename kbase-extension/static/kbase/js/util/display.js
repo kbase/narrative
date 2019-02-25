@@ -254,13 +254,6 @@ define([
                .append($('<span>').addClass(iconClass));
     }
 
-    /* -------------------------------------------------------
-     * Code modified from:
-     * Lazy Load - jQuery plugin for lazy loading images
-     * Copyright (c) 2007-2015 Mika Tuupola
-     * Licensed under the MIT license
-     * Project home: http://www.appelsiini.net/projects/lazyload
-     */
     /**
      *
      * @param {DOMElement} element
@@ -277,12 +270,6 @@ define([
             (rect.top >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight)) ||
             (rect.bottom >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight))
         );
-        // if (!element || !settings) {
-        //     return true;
-        // }
-        // let fold = settings.container.offset().top + settings.container.height(),
-        //     elementTop = $(element).offset().top - settings.threshold;
-        // return elementTop <= fold;
     }
 
     return {

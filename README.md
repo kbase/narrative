@@ -15,13 +15,17 @@ The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.or
 
 This document contains links to various documentation in the [docs](docs) directory, with a brief description of each.
 
+## Installation
+If you want to use the KBase Narrative Interface, just point your browser at https://narrative.kbase.us, make a free account, and jump in. This repo is only for people who wish to contribute to the development of the interface.
+
 ## Local Installation (for developers)
 Short version:
 Requires the following:
-* Python 2.7+ (working on updating to Python 3...)
-* Node.js v6 LTS (needed for npm)
+* Python 3.6+
+* Anaconda recommended as an environment manager (https://www.anaconda.com/)
+* Node.js v6+ (latest LTS recommended)
 * Bower
-
+* 
 ```
 git clone https://github.com/kbase/narrative
 cd narrative

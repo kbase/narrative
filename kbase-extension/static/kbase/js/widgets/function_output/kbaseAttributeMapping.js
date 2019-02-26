@@ -68,7 +68,6 @@ define (
             var self = this;
             self.ws.get_objects2({objects: [{ref: self.options.obj_ref}]},
                 function(ret) {
-                    console.log(ret);
                     self.parseObj(ret.data[0].data);
                 },
                 function(error) {
@@ -103,7 +102,6 @@ define (
                 });
             }
             self.$mainPanel.show();
-            console.log(rows,cols);
             self.renderTable(rows, cols);
             self.loading(true);
         },

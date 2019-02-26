@@ -133,19 +133,15 @@ define([
                         });
                     } else if (subdata instanceof Object) {
                         Object.keys(subdata).forEach(function (key) {
-                            let datum = subdata[key]
+                            let datum = subdata[key];
                             let id = key;
 
                             if (selectionId) {
-                                switch (typeof datum) {
-                                    case 'object':
-                                        id = datum[selectionId];
-                                        break;
-                                    case 'string':
-                                    case 'number':
-                                        if (selectionId === 'value') {
-                                            id = datum;
-                                        }
+                                if (typeof datum === 'object'){
+                                    id = datum[selectionId];
+                                }
+                                else if (selectionId === 'value') {
+                                    id = datum;
                                 }
                             }
 

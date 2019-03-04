@@ -254,12 +254,31 @@ define([
                .append($('<span>').addClass(iconClass));
     }
 
+    /**
+     *
+     * @param {DOMElement} element
+     */
+    function verticalInViewport(element) {
+        if (!element) {
+            return true;
+        }
+        let rect = element.getBoundingClientRect();
+        if (rect.top === 0 && rect.bottom === 0) {
+            return false;
+        }
+        return (
+            (rect.top >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight)) ||
+            (rect.bottom >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight))
+        );
+    }
+
     return {
         lookupUserProfile: lookupUserProfile,
         displayRealName: displayRealName,
         loadingDiv: loadingDiv,
         getAppIcon: getAppIcon,
         createError: createError,
-        simpleButton: simpleButton
+        simpleButton: simpleButton,
+        verticalInViewport: verticalInViewport
     };
 });

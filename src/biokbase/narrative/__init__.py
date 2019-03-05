@@ -1,4 +1,4 @@
-__all__ = ['magics', 'ws_util', 'common', 'handlers', 'contents', 'services', 'widgetmanager'] #, 'viewers']
+__all__ = ['magics', 'common', 'handlers', 'contents', 'services', 'widgetmanager']
 
 from semantic_version import Version
 __version__ = Version("3.10.0")

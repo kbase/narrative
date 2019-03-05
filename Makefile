@@ -28,9 +28,7 @@ install:
 # runs the installer to locally build the Narrative in a
 # local venv.
 build-travis-narrative:
-	bower install && \
-	npm install && \
-	bash $(INSTALLER) --no-venv --travis && \
+	bash $(INSTALLER) && \
 	grunt minify && \
 	sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/" && \
 	sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json && \

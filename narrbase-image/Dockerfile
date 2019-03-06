@@ -1,7 +1,8 @@
-FROM kbase/kb_python:latest
+FROM kbase/kb_python:python3
 
-ENV JUPYTER_VERSION 5.6.0
-ENV IPYWIDGETS_VERSION 7.1.2
+ENV NOTEBOOK_VERSION 5.7.4
+ENV IPYTHON_VERSION 7.3.0
+ENV IPYWIDGETS_VERSION 7.4.2
 
 RUN mkdir -p /kb/installers
 
@@ -19,12 +20,14 @@ RUN conda update -n base conda && \
     conda install -c r --file /root/conda/r.r
 
 # Install misc R packages not available on Coda
-ADD ./r-packages-postconda.R /root/r-packages.R
-RUN apt-get install -y gfortran && \
-    R --vanilla < /root/r-packages.R
+RUN apt-get update && \
+    apt-get install -y gfortran
 
-RUN conda install tornado=4.5.3 && \
-    conda install -c anaconda notebook=${JUPYTER_VERSION} && \
+ADD ./r-packages-postconda.R /root/r-packages.R
+RUN R --vanilla < /root/r-packages.R
+
+RUN conda install -c anaconda ipython=${IPYTHON_VERSION} && \
+    conda install -c anaconda notebook=${NOTEBOOK_VERSION} && \
     conda update six && \
     conda install ipywidgets==${IPYWIDGETS_VERSION} && \
     jupyter nbextension enable --py widgetsnbextension

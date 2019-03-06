@@ -1007,61 +1007,67 @@ define([
         if (Jupyter.narrative.readonly) {
             return;
         }
-        options = options || {};
-        var that = this;
-        var dialog_body = $('<div>').append(
-            $('<p>').addClass('rename-message')
-                .text(options.message ? options.message : 'Enter a new Narrative name:')
-        ).append(
-            $('<br>')
-        ).append(
-            $('<input>').attr('type', 'text').attr('size', '25').addClass('form-control')
-                .val(options.notebook.get_notebook_name())
-        );
-        var d = dialog.modal({
-            title: 'Rename Narrative',
-            body: dialog_body,
-            notebook: options.notebook,
-            keyboard_manager: this.keyboard_manager,
-            buttons: {
-                'OK': {
-                    class: 'btn-primary',
-                    click: function () {
-                        var new_name = d.find('input').val();
-                        d.find('.rename-message').text('Renaming and saving...');
-                        d.find('input[type="text"]').prop('disabled', true);
-                        that.notebook.rename(new_name).then(
-                            function () {
-                                d.modal('hide');
-                                that.notebook.metadata.name = new_name;
-                                that.element.find('span.filename').text(new_name);
-                                Jupyter.narrative.saveNarrative();
-                                if (options.callback) {
-                                    options.callback();
-                                }
-                            },
-                            function (error) {
-                                d.find('.rename-message').text(error.message || 'Unknown error');
-                                d.find('input[type="text"]').prop('disabled', false).focus().select();
-                            }
-                        );
-                        return false;
-                    }
-                },
-                'Cancel': {}
-            },
-            open: function () {
-                /**
-                 * Upon ENTER, click the OK button.
-                 */
-                d.find('input[type="text"]').keydown(function (event) {
-                    if (event.which === keyboard.keycodes.enter) {
-                        d.find('.btn-primary').first().click();
-                        return false;
-                    }
-                });
-                d.find('input[type="text"]').focus().select();
+        Jupyter.narrative.getUserPermissions()
+        .then((perm) => {
+            if (perm !== 'a') {
+                return;
             }
+            options = options || {};
+            var that = this;
+            var dialog_body = $('<div>').append(
+                $('<p>').addClass('rename-message')
+                    .text(options.message ? options.message : 'Enter a new Narrative name:')
+            ).append(
+                $('<br>')
+            ).append(
+                $('<input>').attr('type', 'text').attr('size', '25').addClass('form-control')
+                    .val(options.notebook.get_notebook_name())
+            );
+            var d = dialog.modal({
+                title: 'Rename Narrative',
+                body: dialog_body,
+                notebook: options.notebook,
+                keyboard_manager: this.keyboard_manager,
+                buttons: {
+                    'OK': {
+                        class: 'btn-primary',
+                        click: function () {
+                            var new_name = d.find('input').val();
+                            d.find('.rename-message').text('Renaming and saving...');
+                            d.find('input[type="text"]').prop('disabled', true);
+                            that.notebook.rename(new_name).then(
+                                function () {
+                                    d.modal('hide');
+                                    that.notebook.metadata.name = new_name;
+                                    that.element.find('span.filename').text(new_name);
+                                    Jupyter.narrative.saveNarrative();
+                                    if (options.callback) {
+                                        options.callback();
+                                    }
+                                },
+                                function (error) {
+                                    d.find('.rename-message').text(error.message || 'Unknown error');
+                                    d.find('input[type="text"]').prop('disabled', false).focus().select();
+                                }
+                            );
+                            return false;
+                        }
+                    },
+                    'Cancel': {}
+                },
+                open: function () {
+                    /**
+                     * Upon ENTER, click the OK button.
+                     */
+                    d.find('input[type="text"]').keydown(function (event) {
+                        if (event.which === keyboard.keycodes.enter) {
+                            d.find('.btn-primary').first().click();
+                            return false;
+                        }
+                    });
+                    d.find('input[type="text"]').focus().select();
+                }
+            });
         });
     };
 });

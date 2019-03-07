@@ -203,14 +203,16 @@ class KBaseWSManagerMixin(object):
             raise HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
 
         # With that set, update the workspace metadata with the new info.
-        try:
-            updated_metadata = {
-                u'is_temporary': u'false',
-                u'narrative_nice_name': nb[u'metadata'][u'name']
-            }
-            self.ws_client().alter_workspace_metadata({u'wsi': {u'id': ws_id}, u'new':updated_metadata})
-        except ServerError as err:
-            raise WorkspaceError(err, ws_id, message="Error adjusting Narrative metadata", http_code=500)
+        perms = self.narrative_permissions(ref, user=cur_user)
+        if perms[cur_user] == 'a':
+            try:
+                updated_metadata = {
+                    u'is_temporary': u'false',
+                    u'narrative_nice_name': nb[u'metadata'][u'name']
+                }
+                self.ws_client().alter_workspace_metadata({u'wsi': {u'id': ws_id}, u'new':updated_metadata})
+            except ServerError as err:
+                raise WorkspaceError(err, ws_id, message="Error adjusting Narrative metadata", http_code=500)
 
         # Now we can save the Narrative object.
         try:

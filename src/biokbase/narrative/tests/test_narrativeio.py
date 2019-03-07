@@ -10,6 +10,7 @@ from tornado.web import HTTPError
 import util
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.narrative_ref import NarrativeRef
+import biokbase.narrative.clients as clients
 
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
@@ -102,8 +103,10 @@ class NarrIOTestCase(unittest.TestCase):
         self.mixin.ws_uri = self.ws_uri
 
     @classmethod
-    def login(self):
-        biokbase.auth.set_environ_token(self.test_token)
+    def login(self, token=None):
+        if token is None:
+            token = self.test_token
+        biokbase.auth.set_environ_token(token)
 
     @classmethod
     def logout(self):
@@ -258,6 +261,32 @@ class NarrIOTestCase(unittest.TestCase):
         with self.assertRaises(WorkspaceError) as err:
             self.mixin.write_narrative(self.invalid_nar_ref, nar, self.test_user)
         self.assertIsNotNone(err)
+        self.logout()
+
+    def test_write_narrative_shared_write_access(self):
+        if self.test_token is None or self.private_token is None:
+            self.skipTest("Missing auth token(s)")
+        # login as private_user
+        # set unauth_nar perms to allow test_user w access
+        # logout
+        self.login(token=self.private_token)
+        ws_client = clients.get('workspace')
+        ws_client.set_permissions({'id': self.unauth_nar['ws'], 'new_permission': 'w', 'users': [self.test_user]})
+        self.logout()
+        # login as test_user
+        # re-save unauth_nar
+        # should succeed
+        # logout
+        self.login(token=self.test_token)
+        nar = self.mixin.read_narrative(self.unauth_nar['ref'])['data']
+        self.mixin.write_narrative(self.unauth_nar['ref'], nar, self.test_user)
+        self.logout()
+        # log back in as private_user
+        # remove perms from test_user
+        # log back out
+        self.login(token=self.private_token)
+        ws_client = clients.get('workspace')
+        ws_client.set_permissions({'id': self.unauth_nar['ws'], 'new_permission': 'n', 'users': [self.test_user]})
         self.logout()
 
     # @unittest.skipIf(test_token is None, "No test user credentials available")

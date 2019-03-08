@@ -3,6 +3,7 @@ FROM kbase/kb_python:python3
 ENV NOTEBOOK_VERSION 5.7.4
 ENV IPYTHON_VERSION 7.3.0
 ENV IPYWIDGETS_VERSION 7.4.2
+ENV NODEJS_VERSION 11
 
 RUN mkdir -p /kb/installers
 
@@ -19,10 +20,15 @@ RUN conda update -n base conda && \
     conda install -c conda-forge --file /root/conda/r.conda-forge && \
     conda install -c r --file /root/conda/r.r
 
-# Install misc R packages not available on Coda
+# Install apt-get prereqs for node, R
 RUN apt-get update && \
-    apt-get install -y gfortran
+    apt-get install -y gfortran gnupg
 
+# Install nodejs at a useful version
+RUN curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
+    apt-get install -y nodejs
+
+# Install misc R packages not available on Coda
 ADD ./r-packages-postconda.R /root/r-packages.R
 RUN R --vanilla < /root/r-packages.R
 

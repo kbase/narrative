@@ -5,7 +5,7 @@
 # 3. Git submodules are up to date.
 # 4. Javascript requirements are already installed (the Dockerfile handles this)
 
-PYTHON=python3
+PYTHON=python
 
 SCRIPT_TGT="kbase-narrative"
 SCRIPT_TGT2="headless-narrative"
@@ -22,9 +22,10 @@ function console () {
 
 # Install Narrative code
 # ----------------------
+source activate base
 console "installing sklearn & clustergrammer_widget'"
-pip3 install -r $NARRATIVE_ROOT_DIR/src/requirements.txt
-pip3 install --no-dependencies semantic_version sklearn clustergrammer_widget
+pip install -r $NARRATIVE_ROOT_DIR/src/requirements.txt
+pip install --no-dependencies semantic_version sklearn clustergrammer_widget
 # We install clustergrammer_widget and sklearn specially here so that it does not
 # clobber dependencies in the base conda image
 console "Installing biokbase modules"

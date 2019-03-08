@@ -32,8 +32,8 @@ RUN curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
 ADD ./r-packages-postconda.R /root/r-packages.R
 RUN R --vanilla < /root/r-packages.R
 
-RUN conda install -c anaconda ipython=${IPYTHON_VERSION} && \
-    conda install -c anaconda notebook=${NOTEBOOK_VERSION} && \
+RUN conda install -c conda-forge ipython=${IPYTHON_VERSION} && \
+    conda install -c conda-forge notebook=${NOTEBOOK_VERSION} && \
     conda update six && \
     conda install ipywidgets==${IPYWIDGETS_VERSION} && \
     jupyter nbextension enable --py widgetsnbextension

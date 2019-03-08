@@ -22,9 +22,21 @@ If you want to use the KBase Narrative Interface, just point your browser at htt
 Short version:
 Requires the following:
 * Python 3.6+
-* Anaconda (at least miniconda) recommended as an environment manager (https://www.anaconda.com/)
-* Node.js v6+ (latest LTS recommended)
-* Bower
+* Anaconda/Miniconda as an environment manager (https://www.anaconda.com/)
+* Node.js (latest LTS recommended)
+* Bower 1.8.8+
+
+### Using a conda environment (recommended!)
+```
+git clone https://github.com/kbase/narrative
+cd narrative
+conda env -n my_narrative_environment
+source activate my_narrative_environment
+./scripts/install_narrative.sh
+kbase-narrative
+```
+
+### Or, without conda - this installs lots of requirements of specific versions and may clobber things on your PYTHONPATH.
 ```
 git clone https://github.com/kbase/narrative
 cd narrative

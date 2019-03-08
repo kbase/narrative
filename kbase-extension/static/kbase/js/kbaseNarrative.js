@@ -182,6 +182,14 @@ define([
         });
     };
 
+    Narrative.prototype.getUserPermissions = function () {
+        return new Workspace(Config.url('workspace'), {token: this.getAuthToken()})
+            .get_workspace_info({id: this.workspaceId})
+            .then((wsInfo) => {
+                return wsInfo[5];
+            });
+    }
+
     /**
      * A wrapper around the Jupyter.notebook.kernel.execute() function.
      * If any KBase widget needs to make a kernel call, it should go through here.

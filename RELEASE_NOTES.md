@@ -3,6 +3,9 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
 
+### Version 3.10.1
+- Fixed a critical bug where users with write access to a Narrative (but not share access) were unable to save changes to a Narrative or run Apps.
+
 ### Version 3.10.0
 - Fix tooltip for long object names in the data panel.
 - Add ability to prefix a part of path_to_subdata with WSREF to list options from other objects.

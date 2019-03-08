@@ -1003,65 +1003,85 @@ define([
 
     // Patch the save widget to take in options at save time
     saveWidget.SaveWidget.prototype.rename_notebook = function (options) {
-        // silently fail if a read-only narrative.
-        if (Jupyter.narrative.readonly) {
-            return;
-        }
-        options = options || {};
-        var that = this;
-        var dialog_body = $('<div>').append(
-            $('<p>').addClass('rename-message')
-                .text(options.message ? options.message : 'Enter a new Narrative name:')
-        ).append(
-            $('<br>')
-        ).append(
-            $('<input>').attr('type', 'text').attr('size', '25').addClass('form-control')
-                .val(options.notebook.get_notebook_name())
-        );
-        var d = dialog.modal({
-            title: 'Rename Narrative',
-            body: dialog_body,
-            notebook: options.notebook,
-            keyboard_manager: this.keyboard_manager,
-            buttons: {
-                'OK': {
-                    class: 'btn-primary',
-                    click: function () {
-                        var new_name = d.find('input').val();
-                        d.find('.rename-message').text('Renaming and saving...');
-                        d.find('input[type="text"]').prop('disabled', true);
-                        that.notebook.rename(new_name).then(
-                            function () {
-                                d.modal('hide');
-                                that.notebook.metadata.name = new_name;
-                                that.element.find('span.filename').text(new_name);
-                                Jupyter.narrative.saveNarrative();
-                                if (options.callback) {
-                                    options.callback();
+        Jupyter.narrative.getUserPermissions()
+        .then((perm) => {
+            let canChangeName = perm === 'a' && !Jupyter.narrative.readonly;
+            options = options || {};
+            var that = this,
+                dialogBody,
+                buttons;
+            if (canChangeName) {
+                dialogBody = $('<div>').append(
+                    $('<p>').addClass('rename-message')
+                        .text(options.message ? options.message : 'Enter a new Narrative name:')
+                ).append(
+                    $('<br>')
+                ).append(
+                    $('<input>').attr('type', 'text').attr('size', '25').addClass('form-control')
+                        .val(options.notebook.get_notebook_name())
+                );
+                buttons = {
+                    'OK': {
+                        class: 'btn-primary',
+                        click: function () {
+                            var new_name = d.find('input').val();
+                            d.find('.rename-message').text('Renaming and saving...');
+                            d.find('input[type="text"]').prop('disabled', true);
+                            that.notebook.rename(new_name).then(
+                                function () {
+                                    d.modal('hide');
+                                    that.notebook.metadata.name = new_name;
+                                    that.element.find('span.filename').text(new_name);
+                                    Jupyter.narrative.saveNarrative();
+                                    if (options.callback) {
+                                        options.callback();
+                                    }
+                                },
+                                function (error) {
+                                    d.find('.rename-message').text(error.message || 'Unknown error');
+                                    d.find('input[type="text"]').prop('disabled', false).focus().select();
                                 }
-                            },
-                            function (error) {
-                                d.find('.rename-message').text(error.message || 'Unknown error');
-                                d.find('input[type="text"]').prop('disabled', false).focus().select();
-                            }
-                        );
-                        return false;
-                    }
-                },
-                'Cancel': {}
-            },
-            open: function () {
-                /**
-                 * Upon ENTER, click the OK button.
-                 */
-                d.find('input[type="text"]').keydown(function (event) {
-                    if (event.which === keyboard.keycodes.enter) {
-                        d.find('.btn-primary').first().click();
-                        return false;
-                    }
-                });
-                d.find('input[type="text"]').focus().select();
+                            );
+                            return false;
+                        }
+                    },
+                    'Cancel': {}
+                };
             }
+            else {
+                let text;
+                if (Jupyter.narrative.readonly) {
+                    text = 'You cannot change the name of a read-only Narrative.';
+                }
+                else {
+                    text = 'Only a user with "edit and share" privileges can change a Narrative name.';
+                }
+                dialogBody = $('<div>').append($('<p>').addClass('rename-message').text(text));
+                buttons = {
+                    'OK': {}
+                };
+            }
+            var d = dialog.modal({
+                title: 'Rename Narrative',
+                body: dialogBody,
+                notebook: options.notebook,
+                keyboard_manager: this.keyboard_manager,
+                buttons: buttons,
+                open: function () {
+                    if (canChangeName) {
+                        /**
+                         * Upon ENTER, click the OK button.
+                         */
+                        d.find('input[type="text"]').keydown(function (event) {
+                            if (event.which === keyboard.keycodes.enter) {
+                                d.find('.btn-primary').first().click();
+                                return false;
+                            }
+                        });
+                        d.find('input[type="text"]').focus().select();
+                    }
+                }
+            });
         });
     };
 });

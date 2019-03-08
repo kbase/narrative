@@ -31,7 +31,7 @@ build-travis-narrative:
 	bash $(INSTALLER) && \
 	grunt minify && \
 	sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/" && \
-	sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json && \
+	sed -i "" 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json && \
 	jupyter notebook --version
 
 test: test-backend test-frontend-unit test-frontend-e2e

@@ -65,15 +65,13 @@ function usage () {
     printf "usage: $0 [options]\n"
     printf "options:\n"
     printf "  {-h | --help} \n\tShow these help options.\n"
-    printf "  {-v | --virtualenv} install_path\n\tSelect a virtualenv path to use if one is not activated.\n\t"
-    printf "If the virtualenv does not yet exist, the script will attempt\n\tto make one for you with default options.\n"
+    printf "  {-u | --update} \n\tOnly install the biokbase module, don't install all prereqs or Jupyter packages.\n"
 }
 
 # Arg parsing
 # -----------
 
 update_only=0
-travis=0
 while [ $# -gt 0 ]; do
     case $1 in
         -h | --help | -\?)
@@ -82,10 +80,6 @@ while [ $# -gt 0 ]; do
             ;;
         -u | --update)
             update_only=1
-            shift
-            ;;
-        --travis)
-            travis=1
             shift
             ;;
     esac

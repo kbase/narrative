@@ -765,7 +765,7 @@ class AppManager(object):
             if target_prop is not None:
                 final_input = inputs_dict.get(arg_position, dict())
                 if '/' in target_prop:
-                    # This is case when slashes in target_prop separeate
+                    # This is case when slashes in target_prop separate
                     # elements in nested maps. We ignore escaped slashes
                     # (separate backslashes should be escaped as well).
                     bck_slash = "\u244A"

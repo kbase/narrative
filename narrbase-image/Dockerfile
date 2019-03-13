@@ -3,7 +3,7 @@ FROM kbase/kb_python:python3
 ENV NOTEBOOK_VERSION 5.7.4
 ENV IPYTHON_VERSION 7.3.0
 ENV IPYWIDGETS_VERSION 7.4.2
-ENV NODEJS_VERSION 11
+# ENV NODEJS_VERSION 11
 
 RUN mkdir -p /kb/installers
 
@@ -18,24 +18,24 @@ RUN conda update -n base conda && \
     conda install --file /root/conda/biokbase-requirements.txt && \
     conda install -c r r-base && \
     conda install -c conda-forge --file /root/conda/r.conda-forge && \
-    conda install -c r --file /root/conda/r.r
+    conda install -c r --file /root/conda/r.r && \
+    conda install -c conda-forge nodejs
 
 # Install apt-get prereqs for node, R
 RUN apt-get update && \
     apt-get install -y gfortran gnupg
 
 # Install nodejs at a useful version
-RUN curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
-    apt-get install -y nodejs
+# RUN curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
+#     apt-get install -y nodejs
 
 # Install misc R packages not available on Coda
 ADD ./r-packages-postconda.R /root/r-packages.R
 RUN R --vanilla < /root/r-packages.R
 
-RUN conda install -c conda-forge ipython=${IPYTHON_VERSION} && \
-    conda install -c conda-forge notebook=${NOTEBOOK_VERSION} && \
+# Install IPython, Jupyter Notebook, and ipywidgets at controlled versions
+RUN conda install -c conda-forge ipython=${IPYTHON_VERSION} notebook=${NOTEBOOK_VERSION} ipywidgets==${IPYWIDGETS_VERSION} && \
     conda update six && \
-    conda install ipywidgets==${IPYWIDGETS_VERSION} && \
     jupyter nbextension enable --py widgetsnbextension
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to

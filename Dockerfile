@@ -48,7 +48,6 @@ RUN npm install -g grunt-cli && \
     ./node_modules/.bin/bower install --allow-root --config.interactive=false
 
 # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
-# (commented out for now)
 RUN [ -n "$SKIP_MINIFY" ] || grunt minify
 
 # Add Tini. Tini operates as a process subreaper for jupyter. This prevents

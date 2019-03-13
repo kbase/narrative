@@ -29,7 +29,7 @@ RUN apt-get update && \
 # RUN curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
 #     apt-get install -y nodejs
 
-# Install misc R packages not available on Coda
+# Install misc R packages not available on Conda
 ADD ./r-packages-postconda.R /root/r-packages.R
 RUN R --vanilla < /root/r-packages.R
 

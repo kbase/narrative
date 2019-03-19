@@ -5,7 +5,7 @@ Implements the KBaseWSManagerMixin class.
 
 import biokbase.auth
 import biokbase.narrative.clients
-import biokbase.narrative.common.service as service
+from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import util
 import biokbase.workspace
 from biokbase.workspace.baseclient import ServerError
@@ -56,7 +56,7 @@ class KBaseWSManagerMixin(object):
     Manages the connection to the workspace for a user
     """
 
-    ws_uri = service.URLS.workspace
+    ws_uri = URLS.workspace
     nar_type = 'KBaseNarrative.Narrative'
 
     def __init__(self, *args, **kwargs):
@@ -203,14 +203,16 @@ class KBaseWSManagerMixin(object):
             raise HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
 
         # With that set, update the workspace metadata with the new info.
-        try:
-            updated_metadata = {
-                u'is_temporary': u'false',
-                u'narrative_nice_name': nb[u'metadata'][u'name']
-            }
-            self.ws_client().alter_workspace_metadata({u'wsi': {u'id': ws_id}, u'new':updated_metadata})
-        except ServerError as err:
-            raise WorkspaceError(err, ws_id, message="Error adjusting Narrative metadata", http_code=500)
+        perms = self.narrative_permissions(ref, user=cur_user)
+        if perms[cur_user] == 'a':
+            try:
+                updated_metadata = {
+                    u'is_temporary': u'false',
+                    u'narrative_nice_name': nb[u'metadata'][u'name']
+                }
+                self.ws_client().alter_workspace_metadata({u'wsi': {u'id': ws_id}, u'new':updated_metadata})
+            except ServerError as err:
+                raise WorkspaceError(err, ws_id, message="Error adjusting Narrative metadata", http_code=500)
 
         # Now we can save the Narrative object.
         try:

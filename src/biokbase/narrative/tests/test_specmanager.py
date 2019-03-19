@@ -3,7 +3,7 @@ import unittest
 import mock
 
 from biokbase.narrative.jobs.specmanager import SpecManager
-from narrative_mock.mockclients import get_mock_client
+from .narrative_mock.mockclients import get_mock_client
 
 
 class SpecManagerTestCase(unittest.TestCase):
@@ -40,10 +40,10 @@ class SpecManagerTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.jobs.specmanager.clients.get', get_mock_client)
     def test_get_type_spec(self):
         self.sm.reload()
-        self.assertIn("export_functions", self.sm.get_type_spec("KBaseFBA.FBA").keys())
-        self.assertIn("export_functions", self.sm.get_type_spec("KBaseFBA.NU_FBA").keys())
-        with self.assertRaisesRegexp(ValueError, "Unknown type"):
-            self.assertIn("export_functions", self.sm.get_type_spec("KBaseExpression.NU_FBA").keys())
+        self.assertIn("export_functions", list(self.sm.get_type_spec("KBaseFBA.FBA").keys()))
+        self.assertIn("export_functions", list(self.sm.get_type_spec("KBaseFBA.NU_FBA").keys()))
+        with self.assertRaisesRegex(ValueError, "Unknown type"):
+            self.assertIn("export_functions", list(self.sm.get_type_spec("KBaseExpression.NU_FBA").keys()))
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ from biokbase.narrative.contents.updater import (
     suggest_apps
 )
 import json
-from util import TestConfig
+from .util import TestConfig
 
 
 class TestKeyError(ValueError):
@@ -102,9 +102,9 @@ class UpdaterTestCase(unittest.TestCase):
         for key in ['source', 'cell_type']:
             if key not in cell:
                 raise TestKeyError(key, 'Cell')
-        if not isinstance(cell['source'], basestring):
+        if not isinstance(cell['source'], str):
             raise ValueError('cell.source must be a string')
-        if not isinstance(cell['cell_type'], basestring):
+        if not isinstance(cell['cell_type'], str):
             raise ValueError('cell.cell_type must be a string')
         if 'metadata' in cell:
             if 'kbase' in cell['metadata']:
@@ -141,12 +141,12 @@ class UpdaterTestCase(unittest.TestCase):
         obsolete_id = 'build_a_metabolic_model'
         suggestions = suggest_apps(obsolete_id)
         self.assertTrue(isinstance(suggestions, list))
-        self.assertEquals(suggestions[0]['spec']['info']['id'], 'fba_tools/build_metabolic_model')
+        self.assertEqual(suggestions[0]['spec']['info']['id'], 'fba_tools/build_metabolic_model')
 
     def test_suggest_apps_none(self):
         suggestions = suggest_apps('NotAnAppModule')
         self.assertTrue(isinstance(suggestions, list))
-        self.assertEquals(len(suggestions), 0)
+        self.assertEqual(len(suggestions), 0)
 
 if __name__ == "__main__":
     unittest.main()

@@ -5,7 +5,7 @@
 # 3. Git submodules are up to date.
 # 4. Javascript requirements are already installed (the Dockerfile handles this)
 
-PYTHON=python2.7
+PYTHON=python
 
 SCRIPT_TGT="kbase-narrative"
 SCRIPT_TGT2="headless-narrative"
@@ -22,25 +22,18 @@ function console () {
 
 # Install Narrative code
 # ----------------------
+source activate base
+console "installing sklearn & clustergrammer_widget'"
+pip install -r $NARRATIVE_ROOT_DIR/src/requirements.txt
+pip install --no-dependencies semantic_version sklearn clustergrammer_widget
+# We install clustergrammer_widget and sklearn specially here so that it does not
+# clobber dependencies in the base conda image
 console "Installing biokbase modules"
 cd $NARRATIVE_ROOT_DIR/src
 console "Running local 'setup.py'"
 ${PYTHON} setup.py install
-console "installing sklearn & clustergrammer_widget'"
-# We install clustergrammer_widget and sklearn specially here so that it does not
-# clobber dependencies in the base conda image
-pip install --no-dependencies sklearn clustergrammer_widget
 console "Done installing biokbase."
 cd $NARRATIVE_ROOT_DIR
-
-# Install KBase data_api package
-# ------------------------------
-# git clone https://github.com/kbase/data_api -b develop
-# cd data_api
-# pip install -r requirements.txt
-# $PYTHON setup.py install
-# cd ..
-# rm -rf data_api
 
 # Setup jupyter_narrative script
 # and headless narrative runner
@@ -88,9 +81,6 @@ HOME=/tmp
 console "Installing nbextensions"
 cp -r nbextensions kbase-extension/static
 cd kbase-extension/static/nbextensions
-
-#jupyter nbextension install $(pwd)/appCell --symlink --sys-prefix
-#jupyter nbextension enable appCell/main --sys-prefix
 
 jupyter nbextension install $(pwd)/viewCell --symlink --sys-prefix
 jupyter nbextension enable viewCell/main --sys-prefix

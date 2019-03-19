@@ -15,7 +15,7 @@ class StagingHelperTest(unittest.TestCase):
         os.environ['KB_AUTH_TOKEN'] = ''
         with self.assertRaises(ValueError) as context:
             Helper()
-        self.assertEqual('Cannot retrieve auth token', str(context.exception.message))
+        self.assertEqual('Cannot retrieve auth token', str(context.exception))
 
     def test_token(self):
         self.assertEqual(self.good_fake_token, self.staging_helper._token)
@@ -27,31 +27,31 @@ class StagingHelperTest(unittest.TestCase):
     def test_unauthorized_token(self):
         with self.assertRaises(ValueError) as context:
             self.staging_helper.list()
-        self.assertTrue('Reason: Unauthorized' in str(context.exception.message))
-        self.assertTrue('Error code: 401' in str(context.exception.message))
+        self.assertTrue('Reason: Unauthorized' in str(context.exception))
+        self.assertTrue('Error code: 401' in str(context.exception))
 
     def mock_fetch_url(end_point, values=None, headers=None, method='GET', save_path=None):
         if 'list' in end_point:
-            print 'mocking __fetch_url list endpoint'
+            print('mocking __fetch_url list endpoint')
             return '[{"path": "tgu/test_file_1", "isFolder": false},\
                      {"path": "tgu/test_dir", "isFolder": true},\
                      {"path": "tgu/test_dir/test_file_2", "isFolder": false}]'
         elif 'jgi-metadata' in end_point:
-            print 'mocking __fetch_url jgi-metadata endpoint'
+            print('mocking __fetch_url jgi-metadata endpoint')
             return '{"file_name": "test_file", "file_status": "BACKUP_COMPLETE"}'
         elif 'metadata' in end_point:
-            print 'mocking __fetch_url metadata endpoint'
+            print('mocking __fetch_url metadata endpoint')
             return '{"head": "head_line", "tail": "tail_line", "lineCount": 10}'
         elif 'search' in end_point:
-            print 'mocking __fetch_url search endpoint'
+            print('mocking __fetch_url search endpoint')
             return '[{"isFolder": false, "mtime": 1515526154896, "name": "LMS-PROC-315.pdf"}]'
         elif 'delete' in end_point:
-            print 'mocking __fetch_url delete endpoint'
+            print('mocking __fetch_url delete endpoint')
             return "successfully deleted tgu2/test.pdf"
         elif 'download' in end_point:
-            print 'mocking __fetch_url download endpoint'
+            print('mocking __fetch_url download endpoint')
         elif 'mv' in end_point:
-            print 'mocking __fetch_url mv endpoint'
+            print('mocking __fetch_url mv endpoint')
             return "successfully moved tgu2/test.pdf to tgu2/test_1.pdf"
 
     @patch.object(Helper, '_Helper__fetch_url', side_effect=mock_fetch_url)
@@ -64,7 +64,7 @@ class StagingHelperTest(unittest.TestCase):
     def test_missing_path(self):
         with self.assertRaises(ValueError) as context:
             self.staging_helper.metadata()
-        self.assertEqual('Must provide path argument', str(context.exception.message))
+        self.assertEqual('Must provide path argument', str(context.exception))
 
     @patch.object(Helper, '_Helper__fetch_url', side_effect=mock_fetch_url)
     def test_metadata(self, _fetch_url):

@@ -122,7 +122,7 @@ def run_narrative(narrative):
         result_notebook, resources_out = execute_notebook(kb_notebook)
     except CellExecutionError:
         msg = "CellExecutionError. Dumping state of code cells:"
-        print msg
+        print(msg)
         for cell in kb_notebook['cells']:
             if cell['cell_type'] == 'code':
                 pprint(cell)

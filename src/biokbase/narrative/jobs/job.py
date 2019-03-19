@@ -141,13 +141,13 @@ class Job(object):
         try:
             state = clients.get("job_service").check_job(self.job_id)
             if 'cancelled' in state:
-                state[u'canceled'] = state.get('cancelled', 0)
+                state['canceled'] = state.get('cancelled', 0)
                 del state['cancelled']
             if state.get('job_state', '') == 'cancelled':
-                state[u'job_state'] = 'canceled'
-            state[u'cell_id'] = self.cell_id
-            state[u'run_id'] = self.run_id
-            state[u'token_id'] = self.token_id
+                state['job_state'] = 'canceled'
+            state['cell_id'] = self.cell_id
+            state['run_id'] = self.run_id
+            state['token_id'] = self.token_id
             self._last_state = state
             return dict(state)
         except Exception as e:
@@ -238,7 +238,7 @@ class Job(object):
         return status.lower() in ['completed', 'error', 'suspend', 'cancelled']
 
     def __repr__(self):
-        return u"KBase Narrative Job - " + unicode(self.job_id)
+        return "KBase Narrative Job - " + str(self.job_id)
 
     def _repr_javascript_(self):
         tmpl = """

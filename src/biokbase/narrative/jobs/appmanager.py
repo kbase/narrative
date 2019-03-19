@@ -2,9 +2,9 @@
 A module for managing apps, specs, requirements, and for starting jobs.
 """
 import biokbase.auth as auth
-from job import Job
-from jobmanager import JobManager
-import specmanager
+from .job import Job
+from .jobmanager import JobManager
+from . import specmanager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager
 from biokbase.narrative.app_util import (
@@ -745,7 +745,7 @@ class AppManager(object):
                     p_value = self._map_group_inputs(p_value, spec_params[input_param_id],
                                                      spec_params)
                 # turn empty strings into None
-                if isinstance(p_value, basestring) and len(p_value) == 0:
+                if isinstance(p_value, str) and len(p_value) == 0:
                     p_value = None
             elif 'narrative_system_variable' in p:
                 p_value = system_variable(p['narrative_system_variable'])
@@ -765,18 +765,18 @@ class AppManager(object):
             if target_prop is not None:
                 final_input = inputs_dict.get(arg_position, dict())
                 if '/' in target_prop:
-                    # This is case when slashes in target_prop separeate
+                    # This is case when slashes in target_prop separate
                     # elements in nested maps. We ignore escaped slashes
                     # (separate backslashes should be escaped as well).
-                    bck_slash = u"\u244A"
-                    fwd_slash = u"\u20EB"
+                    bck_slash = "\u244A"
+                    fwd_slash = "\u20EB"
                     temp_string = target_prop.replace("\\\\", bck_slash)
                     temp_string = temp_string.replace("\\/", fwd_slash)
                     temp_path = []
                     for part in temp_string.split("/"):
                         part = part.replace(bck_slash, "\\")
                         part = part.replace(fwd_slash, "/")
-                        temp_path.append(part.encode('ascii', 'ignore'))
+                        temp_path.append(part.encode('ascii', 'ignore').decode("ascii"))
                     temp_map = final_input
                     temp_key = None
                     # We're going along the path and creating intermediate
@@ -828,7 +828,7 @@ class AppManager(object):
                 'Must have at least 1 symbol to randomly generate!'
             )
         ret = ''.join([chr(random.randrange(0, 26) + ord('A'))
-                      for _ in xrange(symbols)])
+                      for _ in range(symbols)])
         if 'prefix' in generator:
             ret = str(generator['prefix']) + ret
         if 'suffix' in generator:

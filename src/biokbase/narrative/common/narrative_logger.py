@@ -42,7 +42,7 @@ class NarrativeLogger(object):
         log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             log_socket.connect((self.host, self.port))
-            log_socket.sendall(json.dumps(message) + "\n")
+            log_socket.sendall((json.dumps(message) + "\n").encode())
         except:
             pass  # just bomb out silently. We can lose a log or two.
         finally:

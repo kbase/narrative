@@ -76,9 +76,9 @@ def main(args):
         generate(mc, args.gen)
     else:
         load_files(mc, args.infiles)
-        
+
     return 0
-    
+
 def load_files(mc, infiles):
     files = ['-'] if not infiles else infiles
     n = 0
@@ -145,8 +145,8 @@ def generate(mc, num):
         # process rec
         kbrec = log_proxy.KBaseLogRecord(rec)
         mc.insert(kbrec.record)
-        
+
     _log.info("Loaded {:d} (generated) records".format(num))
-        
+
 if __name__ == '__main__':
     sys.exit(main(parse_args()))

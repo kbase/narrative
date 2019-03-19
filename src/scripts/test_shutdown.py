@@ -28,31 +28,31 @@ def main(args):
     url = "https://{}.kbase.us".format(args.host_url)
 
     # 1. get an auth token and cookie-ize it
-    login_payload = {'user_id': args.user, 
-                     'password': args.pw, 
+    login_payload = {'user_id': args.user,
+                     'password': args.pw,
                      'cookie': 1,
                      'fields': 'name,kbase_sessionid,user_id,token'}
     r = requests.post("https://kbase.us/services/authorization/Sessions/Login", data=login_payload)
     res = json.loads(r.content)
 
     formatted_token = res['token'].replace('|', 'PIPESIGN').replace('=', 'EQUALSSIGN')
-    cookie_string = 'un%3D{}%7Ckbase_sessionid%3D{}%7Cuser_id%3D{}%7Ctoken%3D{}'.format(res['user_id'], 
-                                                                                        res['kbase_sessionid'], 
-                                                                                        res['user_id'], 
+    cookie_string = 'un%3D{}%7Ckbase_sessionid%3D{}%7Cuser_id%3D{}%7Ctoken%3D{}'.format(res['user_id'],
+                                                                                        res['kbase_sessionid'],
+                                                                                        res['user_id'],
                                                                                         formatted_token)
     # 2. test unauthorized
-    print "Testing shutdown without authentication"
+    print("Testing shutdown without authentication")
     r = requests.delete("{}/{}/{}".format(url, DELETE_CMD, args.user))
     print(r.content)
 
     # 3. test authenticated, wrong user
-    print "Testing shutdown of another user's container"
+    print("Testing shutdown of another user's container")
     auth_cookie = dict(kbase_session=cookie_string)
     r = requests.delete("{}/{}/{}".format(url, DELETE_CMD, args.wrong_user), cookies=auth_cookie)
     print(r.content)
 
     # 4. test authenticated, correct user
-    print "Testing valid shutdown of user's container"
+    print("Testing valid shutdown of user's container")
     r = requests.delete("{}/{}/{}".format(url, DELETE_CMD, args.user), cookies=auth_cookie)
     print(r.content)
 
@@ -65,7 +65,7 @@ def parse_args():
 
     args = p.parse_args()
     if args.pw is None:
-        print 'A password is required for user "{}". Not testing.'.format(args.user)
+        print('A password is required for user "{}". Not testing.'.format(args.user))
         sys.exit(0)
     return args
 

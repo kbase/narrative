@@ -6,10 +6,10 @@ except ImportError:
     import simplejson as _json
 
 import requests as _requests
-import urlparse as _urlparse
+import urllib.parse as _urlparse
 import random as _random
 import base64 as _base64
-from ConfigParser import ConfigParser as _ConfigParser
+from configparser import ConfigParser as _ConfigParser
 import os as _os
 
 _CT = 'content-type'
@@ -47,8 +47,8 @@ def _read_rcfile(file=_os.environ['HOME'] + '/.authrc'):  # @ReservedAssignment
                 authdata = {x: rawdata.get(x) for x in (
                     'user_id', 'token', 'client_secret', 'keyfile',
                     'keyfile_passphrase', 'password')}
-        except Exception, e:
-            print "Error while reading authrc file %s: %s" % (file, e)
+        except Exception as e:
+            print("Error while reading authrc file %s: %s" % (file, e))
     return authdata
 
 
@@ -67,8 +67,8 @@ def _read_inifile(file=_os.environ.get(  # @ReservedAssignment
                         else None for x in ('user_id', 'token',
                                             'client_secret', 'keyfile',
                                             'keyfile_passphrase', 'password')}
-        except Exception, e:
-            print "Error while reading INI file %s: %s" % (file, e)
+        except Exception as e:
+            print("Error while reading INI file %s: %s" % (file, e))
     return authdata
 
 
@@ -172,8 +172,8 @@ class Client(object):
         url = self.url
         if self.use_url_lookup:
             module_name = service_method.split('.')[0]
-            service_status_ret = self._call(self.url, 'ServiceWizard.get_service_status', 
-                                            [{'module_name' : module_name, 
+            service_status_ret = self._call(self.url, 'ServiceWizard.get_service_status',
+                                            [{'module_name' : module_name,
                                               'version' : service_version}], None)[0]
             url = service_status_ret['url']
         return self._call(url, service_method, param_list, json_rpc_context)

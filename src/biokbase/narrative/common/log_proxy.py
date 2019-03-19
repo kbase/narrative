@@ -18,6 +18,7 @@ import socket
 import struct
 import time
 import yaml
+from io import IOBase
 # Local
 from biokbase import narrative
 from biokbase.narrative.common.kvp import parse_kvp
@@ -54,7 +55,7 @@ class Configuration(object):
         """
         self._obj = {}
         if input_file:
-            if not isinstance(input_file, file):
+            if not isinstance(input_file, IOBase):
                 input_file = open(str(input_file), 'r')
             try:
                 self._obj = yaml.load(input_file)
@@ -377,7 +378,7 @@ class Handler(object):
 
     def _get_record_meta(self, record):
         return {val: record.get(key, '')
-                for key, val in self.EXTRACT_META.iteritems()}
+                for key, val in self.EXTRACT_META.items()}
 
 class MongoDBHandler(Handler):
     def __init__(self, coll):

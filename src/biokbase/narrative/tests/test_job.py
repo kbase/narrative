@@ -3,16 +3,16 @@ import mock
 import mock
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.job import Job
-from util import TestConfig
+from .util import TestConfig
 import os
 from IPython.display import (
     HTML,
     Javascript
 )
-from narrative_mock.mockclients import get_mock_client
-from narrative_mock.mockcomm import MockComm
+from .narrative_mock.mockclients import get_mock_client
+from .narrative_mock.mockcomm import MockComm
 from contextlib import contextmanager
-from StringIO import StringIO
+from io import StringIO
 import sys
 
 @contextmanager
@@ -57,7 +57,7 @@ class JobTest(unittest.TestCase):
 
         job = Job(self.job_id, self.app_id, self.inputs, self.owner, tag=self.app_tag, **kwargs)
         return job
-    
+
     def test_job_init(self):
         job = self._mocked_job()
         self.assertEqual(job.job_id, self.job_id)
@@ -75,7 +75,7 @@ class JobTest(unittest.TestCase):
             "params": self.inputs,
             "service_ver": self.app_version
         }
-        job = Job.from_state(self.job_id, job_info, self.owner, self.app_id, tag=self.app_tag, 
+        job = Job.from_state(self.job_id, job_info, self.owner, self.app_id, tag=self.app_tag,
                              cell_id=self.cell_id, run_id=self.run_id, token_id=self.token_id)
         self.assertEqual(job.job_id, self.job_id)
         self.assertEqual(job.app_id, self.app_id)
@@ -86,7 +86,7 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.cell_id, self.cell_id)
         self.assertEqual(job.run_id, self.run_id)
         self.assertEqual(job.token_id, self.token_id)
-    
+
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_job_info(self):
         job = self._mocked_job()
@@ -104,17 +104,17 @@ class JobTest(unittest.TestCase):
     def test_repr_js(self):
         job = self._mocked_job()
         js_out = job._repr_javascript_()
-        self.assertIsInstance(js_out, basestring)
+        self.assertIsInstance(js_out, str)
         # spot check to make sure the core pieces are present. needs the element.html part, job_id, and widget
         self.assertIn("element.html", js_out)
         self.assertIn(job.job_id, js_out)
         self.assertIn("kbaseNarrativeJobStatus", js_out)
-    
+
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_job_finished(self):
         job = self._mocked_job()
         self.assertTrue(job.is_finished())
-    
+
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_state(self):
         job = self._mocked_job()
@@ -132,12 +132,12 @@ class JobTest(unittest.TestCase):
         with self.assertRaises(Exception) as e:
             job.state()
         self.assertIn("Unable to fetch info for job", str(e.exception))
-    
+
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_show_output_widget(self):
         job = self._mocked_job()
         out_widget = job.show_output_widget()
-    
+
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_log(self):
         # Things set up by the mock:
@@ -181,12 +181,12 @@ class JobTest(unittest.TestCase):
         job = self._mocked_job()
         params = job.parameters()
         self.assertIsNotNone(params)
-        
+
         job.inputs = None
         params2 = job.parameters()
         self.assertIsNotNone(params2)
         self.assertEqual(params, params2)
-        
+
         job.job_id = "not_a_job_id"
         job.inputs = None
         with self.assertRaises(Exception) as e:

@@ -1,6 +1,6 @@
 import os
 import json
-from util import kbase_env
+from .util import kbase_env
 
 
 class Struct:

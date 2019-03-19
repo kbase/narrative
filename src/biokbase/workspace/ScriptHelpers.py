@@ -1,6 +1,6 @@
 import os
 import sys
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 from biokbase.auth import kb_config
 #from biokbase.userandjobstate.client import UserAndJobState
 
@@ -9,8 +9,8 @@ def getKBaseCfg():
     if os.path.exists(kb_config):
         try:
             cfg.read(kb_config)
-        except Exception, e:
-            print 'Error while reading INI file %s: %s' % (kb_config, e)
+        except Exception as e:
+            print('Error while reading INI file %s: %s' % (kb_config, e))
     if not cfg.has_section('workspace_deluxe'):
         cfg.add_section('workspace_deluxe')
         with open(kb_config, 'w') as configfile:
@@ -42,7 +42,7 @@ def user_workspace(newWs = None):
         try:
             currentWs = cfg.get('workspace_deluxe', userId+'-current-workspace')
         except:
-            # for compatibility, look for the old style workspace config variable 
+            # for compatibility, look for the old style workspace config variable
             try:
                 currentWs = cfg.get('workspace_deluxe', 'workspace')
                 cfg.set('workspace_deluxe',userId+'-current-workspace', currentWs)
@@ -78,19 +78,19 @@ def parseObjectMeta(metaTuple):
 
 def printObjectMeta(metaTuple):
     metaDict = parseObjectMeta(metaTuple)
-    print 'Object Name: '+metaDict['id']
-    print 'Type: '+metaDict['type']
-    print 'Instance: '+str(metaDict['instance'])
-    print 'Workspace: '+metaDict['workspace']
-    print 'Owner: '+metaDict['owner']
-    print 'Moddate: '+metaDict['moddate']
-    #print 'Last cmd: '+metaDict['command']
-    print 'Modified by: '+metaDict['lastmodifier']
-    #print 'Perm ref: '+metaDict['reference']
-    print 'Checksum: '+metaDict['chsum']
+    print('Object Name: '+metaDict['id'])
+    print('Type: '+metaDict['type'])
+    print('Instance: '+str(metaDict['instance']))
+    print('Workspace: '+metaDict['workspace'])
+    print('Owner: '+metaDict['owner'])
+    print('Moddate: '+metaDict['moddate'])
+    #print('Last cmd: '+metaDict['command'])
+    print('Modified by: '+metaDict['lastmodifier'])
+    #print('Perm ref: '+metaDict['reference'])
+    print('Checksum: '+metaDict['chsum'])
     if 'metadata' in metaDict:
         for key in metaDict['metadata']:
-            print key+': '+metaDict['metadata'][key]
+            print(key+': '+metaDict['metadata'][key])
     return
 
 def parseObjectInfo(infoTuple):
@@ -110,23 +110,23 @@ def parseObjectInfo(infoTuple):
 
 def printObjectInfo(infoTuple):
     infoDict = parseObjectInfo(infoTuple)
-    print 'Object Name: '+infoDict['name']
-    print 'Object ID: '+str(infoDict['id'])
-    print 'Type: '+infoDict['type']
-    print 'Version: '+str(infoDict['version'])
-    print 'Workspace: '+infoDict['workspace']
-    print 'Save Date: '+infoDict['save_date']
-    print 'Saved by: '+infoDict['saved_by']
-    print 'Checksum: '+infoDict['chsum']
-    print 'Size(bytes): '+str(infoDict['size'])
-    print 'User Meta Data: '
+    print('Object Name: '+infoDict['name'])
+    print('Object ID: '+str(infoDict['id']))
+    print('Type: '+infoDict['type'])
+    print('Version: '+str(infoDict['version']))
+    print('Workspace: '+infoDict['workspace'])
+    print('Save Date: '+infoDict['save_date'])
+    print('Saved by: '+infoDict['saved_by'])
+    print('Checksum: '+infoDict['chsum'])
+    print('Size(bytes): '+str(infoDict['size']))
+    print('User Meta Data: ')
     if 'metadata' in infoDict:
         if len(infoDict['metadata']) == 0:
-            print '  none.'
+            print('  none.')
         for key in infoDict['metadata']:
-            print '  '+key+': '+infoDict['metadata'][key]
+            print('  '+key+': '+infoDict['metadata'][key])
     else:
-        print '  none.'
+        print('  none.')
     return
 
 def parseWorkspaceInfo(infoTuple):
@@ -142,13 +142,13 @@ def parseWorkspaceInfo(infoTuple):
 
 def printWorkspaceInfo(infoTuple):
     infoDict = parseObjectInfo(infoTuple)
-    print 'Workspace Name: '+infoDict['workspace']
-    print 'Workspace ID: '+infoDict['id']
-    print 'Owner: '+infoDict['owner']
-    print 'Moddate: '+infoDict['moddate']
-    print 'Objects: '+str(infoDict['objects'])
-    print 'User permission: '+infoDict['user_permission']
-    print 'Global permission:'+infoDict['global_permission']
+    print('Workspace Name: '+infoDict['workspace'])
+    print('Workspace ID: '+infoDict['id'])
+    print('Owner: '+infoDict['owner'])
+    print('Moddate: '+infoDict['moddate'])
+    print('Objects: '+str(infoDict['objects']))
+    print('User permission: '+infoDict['user_permission'])
+    print('Global permission:'+infoDict['global_permission'])
     return
 
 def parseWorkspaceMeta(metaTuple):
@@ -163,10 +163,10 @@ def parseWorkspaceMeta(metaTuple):
 
 def printWorkspaceMeta(metaTuple):
     metaDict = parseWorkspaceMeta(metaTuple)
-    print 'Workspace ID: '+metaDict['id']
-    print 'Owner: '+metaDict['owner']
-    print 'Moddate: '+metaDict['moddate']
-    print 'Objects: '+str(metaDict['objects'])
-    print 'User permission: '+metaDict['user_permission']
-    print 'Global permission:'+metaDict['global_permission']
+    print('Workspace ID: '+metaDict['id'])
+    print('Owner: '+metaDict['owner'])
+    print('Moddate: '+metaDict['moddate'])
+    print('Objects: '+str(metaDict['objects']))
+    print('User permission: '+metaDict['user_permission'])
+    print('Global permission:'+metaDict['global_permission'])
     return

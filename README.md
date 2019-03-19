@@ -15,18 +15,32 @@ The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.or
 
 This document contains links to various documentation in the [docs](docs) directory, with a brief description of each.
 
+## Installation
+If you want to use the KBase Narrative Interface, just point your browser at https://narrative.kbase.us, make a free account, and jump in. This repo is only for people who wish to contribute to the development of the interface.
+
 ## Local Installation (for developers)
 Short version:
 Requires the following:
-* Python 2.7+ (working on updating to Python 3...)
-* Node.js v6 LTS (needed for npm)
-* Bower
+* Python 3.6+
+* Anaconda/Miniconda as an environment manager (https://www.anaconda.com/)
+* Node.js (latest LTS recommended)
+* Bower 1.8.8+
 
+### Using a conda environment (recommended!)
 ```
 git clone https://github.com/kbase/narrative
 cd narrative
-./scripts/install_narrative.sh -v narr-venv
-source narr-venv/bin/activate
+conda env -n my_narrative_environment
+source activate my_narrative_environment
+./scripts/install_narrative.sh
+kbase-narrative
+```
+
+### Or, without conda - this installs lots of requirements of specific versions and may clobber things on your PYTHONPATH.
+```
+git clone https://github.com/kbase/narrative
+cd narrative
+./scripts/install_narrative.sh
 kbase-narrative
 ```
 
@@ -65,15 +79,11 @@ Testing locally (i.e. not through Travis-CI) requires a local Narrative installa
 
 To run authenticated tests, you'll need to get an auth token from KBase servers, drop it in a file in the test directory (as the only line in that file), then modify two config files. These are `test/unit/testConfig.json` for frontend tests, and `src/biokbase/narrative/tests/test.cfg` for backend tests [TODO: merge those, or move them somewhere sensible]. The frontend test file should have the "token" block modified to include your username and the path to the token file. The backend test file should be updated so that the `test_user` and/or `private_user` keys in the `[users]` and `[token_files]` block are aligned (e.g. users.test_user is the user for the token in token_files.test_user).
 
-Note: **DO NOT CHECK YOUR TOKEN FILE IN TO GITHUB**. You'll be shamed mercilessly.
+Note: **DO NOT CHECK YOUR TOKEN FILE IN TO GITHUB**. You'll be shamed without mercy.
 
 
 ## Submitting code
 
-We currently use a modified version of the famous [Git flow](http://drewfradette.ca/a-simpler-successful-git-branching-model/) workflow, described below:
+Ensure that tests pass (and add some for your changes), then submit a PR to the `develop` branch.
 
-[Narrative Git Workflow](docs/git-workflow.md)
-
-The short version is this - all development work is done on the `develop` branch. After some stability occurs, this gets merged to `staging` for internal testing, then to `master` where it is tagged and released to production.
-
-So when you want to submit code, please make a pull request against `develop`.
+This branch will eventually get merged to `master` where it is tagged and released to production.

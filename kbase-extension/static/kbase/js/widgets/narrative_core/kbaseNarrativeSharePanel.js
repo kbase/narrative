@@ -371,7 +371,7 @@ define ([
                         let $logo = $('<img>').attr("src", value[1]).css({'width': '40', 'margin': '8px'});
                         $href.append($logo).append(value[0]);
                         let $tr = $('<tr>').css({'padding': '2px'}).append($href);
-                        $narrativeOrgsDiv.append($tr)
+                        $narrativeOrgsDiv.append($tr);
                     })
                 }
                 

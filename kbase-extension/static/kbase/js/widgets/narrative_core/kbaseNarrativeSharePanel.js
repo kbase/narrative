@@ -112,7 +112,7 @@ define ([
          * @param {string} token auth token
          * @param {Map} map empty map
          */
-        fetchOrgLogoUlr: function(org, token, map) {
+        fetchOrgLogoUrl: function(org, token, map) {
             map.set(org.id, [org.name])
             var groupUrl = this.options.groups_url+"/group/"+org.id;
             return fetch(groupUrl, {
@@ -151,7 +151,7 @@ define ([
             .then(response => response.json())
             .then(response => {
                 let orgInfoMap = new Map();
-                return Promise.all(response.map((org) => this.fetchOrgLogoUlr(org, token, orgInfoMap)));
+                return Promise.all(response.map((org) => this.fetchOrgLogoUrl(org, token, orgInfoMap)));
             })
                 .catch(error => console.error('Error while fetching groups associated with the workspace:', error));
         },

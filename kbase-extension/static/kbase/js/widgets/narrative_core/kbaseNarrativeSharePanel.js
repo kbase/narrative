@@ -39,6 +39,7 @@ define ([
             max_name_length: 35,
             max_list_height: '250px',
             add_user_input_width: '200px',
+            wsID: Config.get('workspaceId'),
         },
         ws: null, // workspace client
         narrOwner: null,
@@ -51,37 +52,45 @@ define ([
             this.$mainPanel = $('<div style="text-align:center">');
             this.$elem.append(this.$mainPanel);
             this.showWorking('loading narrative information');
-
+            
             if (!this.options.ws_name_or_id) {
                 //fail!
             }
             return this;
         },
         my_user_id: null,
+        orgList: null,
+        narrativeOrgList: null,
+
         loggedInCallback: function (event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
             this.authClient = Auth.make({url: Config.url('auth')});
             this.my_user_id = auth.user_id;
-            this.fetchOrgs(this.authClient.getAuthToken());
-            this.refresh();
-            return this;
+
+            const p1 = this.fetchOrgs(this.authClient.getAuthToken());
+            const p2 = this.fetchNarrativeOrgs(this.options.wsID, this.authClient.getAuthToken());
+            Promise.all([p1, p2]).then(() => {
+                this.refresh();
+            })
+                return this;
         },
         loggedOutCallback: function () {
             this.ws = null;
             this.authClient = null;
             this.my_user_id = null;
+            this.orgList = null;
+            this.narrativeOrgList = null;
             this.refresh();
             return this;
         },
 
         /**
-         * fetch organizations that user is associated. When promise is successfully returned,
-         * it calls updateOrgList function.
+         * fetch organizations that user is associated. 
          * @param {string} token  authorization token
          */
         fetchOrgs: function(token) {
             var groupUrl = this.options.groups_url+'/member';
-            fetch(groupUrl, {
+            return fetch(groupUrl, {
                 method: "GET",
                 mode: "cors",
                 json: true,
@@ -92,19 +101,59 @@ define ([
             })
             .then(response => response.json())
             .then(response => {
-                this.updateOrgList(response);
+                this.orgList = response;
             })
                 .catch(error => console.error('Error while fetching groups associated with the user:', error));
         },
-
-        orgList: null,
         /**
-         * Update global variable, orgList, then call render function.
-         * @param {array} list
+         * fetch organization info from id
+         * extract logo url and map it to org id with org name.
+         * @param {string} org org id
+         * @param {string} token auth token
+         * @param {Map} map empty map
          */
-        updateOrgList: function(list) {
-            this.orgList = list;
-            this.render();
+        fetchOrgLogoUrl: function(org, token, map) {
+            map.set(org.id, [org.name])
+            var groupUrl = this.options.groups_url+"/group/"+org.id;
+            return fetch(groupUrl, {
+                method: "GET",
+                mode: "cors",
+                json: true,
+                headers:{
+                    "Authorization": token,
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => response.json())
+            .then(response => {
+                let arr = map.get(org.id);
+                map.set(org.id, [arr, response.custom.logourl]);
+                this.narrativeOrgList = map;
+            })
+                .catch(error => console.error('Error while fetching group info:', error));
+        },
+        /**
+         * fetch organizations that workspace is associated. 
+         * @param {int} wsID workspace id
+         * @param {string} token  authorization token
+         */
+        fetchNarrativeOrgs: function(wsID, token) {
+            var groupUrl = this.options.groups_url+'/group?resourcetype=workspace&resource='+wsID;
+            return fetch(groupUrl, {
+                method: "GET",
+                mode: "cors",
+                json: true,
+                headers:{
+                    "Authorization": token,
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => response.json())
+            .then(response => {
+                let orgInfoMap = new Map();
+                return Promise.all(response.map((org) => this.fetchOrgLogoUrl(org, token, orgInfoMap)));
+            })
+                .catch(error => console.error('Error while fetching groups associated with the workspace:', error));
         },
 
         ws_info: null,
@@ -313,7 +362,21 @@ define ([
                 $addOrgDiv.find('span.select2-selection--single')
                 .css({'min-height': '32px'});
 
+                // if there are orgs already associated with the narrative, add the org list.
+                if(this.narrativeOrgList){
+                    var $narrativeOrgsDiv = $('<table>').css({'border': '1px solid rgb(170, 170, 170)', 'border-radius': '4px', 'text-align': 'left', 'width': '51%', 'padding': '10px', 'margin': 'auto', 'margin-top': '10px'});                    
+                    this.narrativeOrgList.forEach((value, key, map) => {
+                        let url = window.location.origin + "/#org/" + key;
+                        let $href = $('<a>').attr("href", url);
+                        let $logo = $('<img>').attr("src", value[1]).css({'width': '40', 'margin': '8px'});
+                        $href.append($logo).append(value[0]);
+                        let $tr = $('<tr>').css({'padding': '2px'}).append($href);
+                        $narrativeOrgsDiv.append($tr);
+                    })
+                }
+                
                 $shareWithOrgDiv.append($addOrgDiv); // put addOrgDiv into shareWithOrgDiv
+                $shareWithOrgDiv.append($narrativeOrgsDiv); // put list of narrative div
             } else {
                 $shareWithOrgDiv.append('<p style="margin-top: 18px;">You must be the owner to request to add this narrative.</p>');
             } // end of if(isOwner)
@@ -654,6 +717,7 @@ define ([
                 'select2/data/array',
                 'select2/utils'
             ], function (ArrayData, Utils) {
+                if(!orgList) return;
                 orgList.forEach(org=>{
                     orgData.push({"id": org.id, "text": org.name});
                 })

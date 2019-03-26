@@ -12,7 +12,6 @@
 --
 -- session_map
 -- docker_map
--- token_cache
 -- proxy_mgr
 --
 -- author: Steve Chan sychan@lbl.gov
@@ -113,7 +112,7 @@ local initialized = nil
 
 -- Command to run in order to get netstat info for tcp connections in
 -- pure numeric form (no DNS or service name lookups)
-local NETSTAT = 'netstat -nt'
+local NETSTAT = '/proc/net/tcp'
 
 -- name of shared dict for locking library
 M.lock_name = "lock_map"
@@ -146,17 +145,18 @@ M.load_redirect = "/load-narrative.html?n=%s&check=true"
 --
 est_connections = function()
     local connections = {}
-    local handle = io.popen( NETSTAT, 'r')
+    local handle = io.open( NETSTAT, 'r')
     if handle then
         netstat = handle:read('*a')
         handle:close()
-        for conn in string.gmatch(netstat,"[%d%.]+:[%d]+ + ESTABLISHED") do
-            ipport = string.match(conn, "[%d%.]+:[%d]+")
-            if connections[ipport] then
-                connections[ipport] = connections[ipport] + 1
-            else
-                connections[ipport] = 1
-            end
+        for conn in string.gmatch(netstat," %x%x%x%x%x%x%x%x:%x%x%x%x 01 ") do
+           o4,o3,o2,o1,port = string.match(conn, "(%x%x)(%x%x)(%x%x)(%x%x):(%x%x%x%x)")
+           ipport = string.format("%d.%d.%d.%d:%d",tonumber(o1,16), tonumber(o2,16), tonumber(o3,16),tonumber(o4,16),tonumber(port,16))
+           if connections[ipport] then
+          connections[ipport] = connections[ipport] + 1
+           else
+          connections[ipport] = 1
+           end
         end
     else
         ngx.log(ngx.ERR, string.format("Error trying to execute %s", NETSTAT))

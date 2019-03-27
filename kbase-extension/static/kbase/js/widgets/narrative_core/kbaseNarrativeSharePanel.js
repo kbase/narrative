@@ -32,12 +32,14 @@ define ([
         version: '1.0.0',
         options: {
             ws_url: Config.url('workspace'),
+            groups_url: Config.url('groups'),
             loadingImage: Config.get('loading_gif'),
             user_page_link: Config.url('profile_page'),
             ws_name_or_id: null,
             max_name_length: 35,
             max_list_height: '250px',
-            add_user_input_width: '200px'
+            add_user_input_width: '200px',
+            wsID: Config.get('workspaceId'),
         },
         ws: null, // workspace client
         narrOwner: null,
@@ -47,30 +49,111 @@ define ([
             this._super(options);
             this.$notificationPanel = $('<div>');
             this.$elem.append(this.$notificationPanel);
-
             this.$mainPanel = $('<div style="text-align:center">');
             this.$elem.append(this.$mainPanel);
             this.showWorking('loading narrative information');
-
+            
             if (!this.options.ws_name_or_id) {
                 //fail!
             }
             return this;
         },
         my_user_id: null,
+        orgList: null,
+        narrativeOrgList: null,
+
         loggedInCallback: function (event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
             this.authClient = Auth.make({url: Config.url('auth')});
             this.my_user_id = auth.user_id;
-            this.refresh();
-            return this;
+
+            const p1 = this.fetchOrgs(this.authClient.getAuthToken());
+            const p2 = this.fetchNarrativeOrgs(this.options.wsID, this.authClient.getAuthToken());
+            Promise.all([p1, p2]).then(() => {
+                this.refresh();
+            })
+                return this;
         },
         loggedOutCallback: function () {
             this.ws = null;
             this.authClient = null;
             this.my_user_id = null;
+            this.orgList = null;
+            this.narrativeOrgList = null;
             this.refresh();
             return this;
+        },
+
+        /**
+         * fetch organizations that user is associated. 
+         * @param {string} token  authorization token
+         */
+        fetchOrgs: function(token) {
+            var groupUrl = this.options.groups_url+'/member';
+            return fetch(groupUrl, {
+                method: "GET",
+                mode: "cors",
+                json: true,
+                headers:{
+                    "Authorization": token,
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => response.json())
+            .then(response => {
+                this.orgList = response;
+            })
+                .catch(error => console.error('Error while fetching groups associated with the user:', error));
+        },
+        /**
+         * fetch organization info from id
+         * extract logo url and map it to org id with org name.
+         * @param {string} org org id
+         * @param {string} token auth token
+         * @param {Map} map empty map
+         */
+        fetchOrgLogoUrl: function(org, token, map) {
+            map.set(org.id, [org.name])
+            var groupUrl = this.options.groups_url+"/group/"+org.id;
+            return fetch(groupUrl, {
+                method: "GET",
+                mode: "cors",
+                json: true,
+                headers:{
+                    "Authorization": token,
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => response.json())
+            .then(response => {
+                let arr = map.get(org.id);
+                map.set(org.id, [arr, response.custom.logourl]);
+                this.narrativeOrgList = map;
+            })
+                .catch(error => console.error('Error while fetching group info:', error));
+        },
+        /**
+         * fetch organizations that workspace is associated. 
+         * @param {int} wsID workspace id
+         * @param {string} token  authorization token
+         */
+        fetchNarrativeOrgs: function(wsID, token) {
+            var groupUrl = this.options.groups_url+'/group?resourcetype=workspace&resource='+wsID;
+            return fetch(groupUrl, {
+                method: "GET",
+                mode: "cors",
+                json: true,
+                headers:{
+                    "Authorization": token,
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => response.json())
+            .then(response => {
+                let orgInfoMap = new Map();
+                return Promise.all(response.map((org) => this.fetchOrgLogoUrl(org, token, orgInfoMap)));
+            })
+                .catch(error => console.error('Error while fetching groups associated with the workspace:', error));
         },
 
         ws_info: null,
@@ -121,6 +204,7 @@ define ([
                 self.render();
             });
         },
+
         /*
 
          WORKSPACE INFO
@@ -134,8 +218,8 @@ define ([
          7: lock_status lockstat
          8: usermeta metadata
 
-
          */
+
         isPrivate: true, // set if this ws is private or public
         render: function () {
             var self = this;
@@ -160,17 +244,20 @@ define ([
             self.$mainPanel.append($topDiv);
 
             var $togglePublicPrivate = self.makePublicPrivateToggle($togglePublicPrivate).hide();
-
             self.$mainPanel.append($togglePublicPrivate);
+
+            // meDiv
             var $meDiv = $('<div>').css({'margin': '5px', 'margin-top': '20px'});
             var status = 'You do not have access to this Narrative.';
             var isAdmin = false;
+            var isOwner = false;
             if (self.narrOwner === self.my_user_id) {
-                status = 'You own this Narrative. You can edit it and share it with other users.';
+                status = 'You can edit and share it with other users or request to add to an organization.';
                 isAdmin = true;
+                isOwner = true;
                 $togglePublicPrivate.show();
             } else if (self.ws_info[5] === 'a') {
-                status = 'You can edit and share this Narrative.';
+                status = 'You can edit and share this Narrative, but you cannot request to add to and organization.';
                 isAdmin = true;  // not really, but set this so we show sharing controls
                 $togglePublicPrivate.show();
             } else if (self.ws_info[5] === 'w') {
@@ -181,6 +268,120 @@ define ([
             $meDiv.append($('<div>').css({'margin-top': '10px'}).append(status));
             self.$mainPanel.append($meDiv);
 
+            /**
+             * Tabs to select share with users or org
+             *     - $tab1 for sharing user
+             *     - $tab2 for sharing with org
+             */
+            var $tabDiv = $('<div class="tabs">').css({'margin': '0px 5px'});
+
+            // make divs for each tab.
+            var $tab1 = createTab('white', 'Users')
+            .css({'border-top-left-radius': '2px'});
+
+            $tab1.click(function(){
+                tabSwitch($(this), $tab2);
+                $shareWithOrgDiv.css('display', 'none');
+                $shareWithUserDiv.css('display', 'inherit');
+            });
+            $tabDiv.append($tab1);
+
+            var $tab2 = createTab('#d8d8d8', 'Orgs')
+            .css({'padding-bottom': '9px', 'border-bottom': '1px solid', 'border-top-right-radius': '2px'});
+
+            $tab2.click(function(){
+                tabSwitch($(this), $tab1);
+                $shareWithOrgDiv.css('display', 'inherit');
+                $shareWithUserDiv.css('display', 'none');
+            });
+            $tabDiv.append($tab2);
+
+            function createTab(color, text){
+                return $('<div class="shareTab">')
+                .css({'background-color': color, 'width': '50%', 'display': 'inline-block', 'padding': '10px', 'border': 'solid', 'border-width': '1px 1px 0px', 'cursor': 'pointer'})
+                .append(text);
+            }
+
+            function tabSwitch(tab, otherTab){
+                tab.css({'background-color': 'white', 'border-bottom': 'none', 'padding-bottom': '10px'});
+                otherTab.css({'background-color': '#d8d8d8', 'border-bottom': '1px solid', 'padding-bottom': '9px'});
+            }
+
+            self.$mainPanel.append($tabDiv);
+            // end of share tabs
+
+            /**
+             * Tab content div /$tabContent
+             *     - share with user div /$shareWithUserDiv
+             *     - share with org div /$shareWithOrgDiv
+             */
+            var $tabContent = $('<div class="tab-content">')
+            .css({'border': 'solid', 'border-width': '0px 1px 1px 1px', 'border-radius': '0px 0px 2px 2px', 'padding': '15px', 'margin': '0px 5px'});
+
+            var $shareWithUserDiv = $('<div id="shareWUser" class="content">').css({'display': 'inherit'});
+            var $shareWithOrgDiv = $('<div id="shareWOrg" class="content">').css({'display': 'none'});
+
+
+            // Content of Share with Org (Request to add to Org) Div
+            if(isOwner) {
+                var $addOrgDiv = $('<div>').css({'margin-top': '10px'});
+                var $inputOrg = $('<select single data-placeholder="Associate with..." id="orgInput">')
+                    .addClass('form-control kb-share-select')
+                    .css("display", "inline");
+                $inputOrg.append('<option></option>'); // option is needed for placeholder to work.
+
+                var $applyOrgBtn = $('<button>')
+                .addClass('btn btn-primary disabled')
+                .append('Apply')
+                .css("margin-left", "10px")
+                .click(function() {
+                    if (!$(this).hasClass('disabled')) {
+                        var org = $inputOrg.select2('data');
+                        var orgID = org[0]["id"];
+                        self.requestAddNarrative(self.authClient.getAuthToken(), orgID);
+                    }
+                });
+
+                self.orgSetupSelect2($inputOrg);
+
+                $addOrgDiv
+                .append($inputOrg)
+                .append($applyOrgBtn);
+
+                $inputOrg.on('select2:select', function() {
+                    if ($inputOrg.select2('data').length > 0) {
+                        $applyOrgBtn.removeClass('disabled');
+                    }
+                });
+                $inputOrg.on('select2:unselect', function() {
+                    if ($inputOrg.select2('data').length === 0) {
+                        $applyOrgBtn.addClass('disabled');
+                    }
+                });
+
+                $addOrgDiv.find('span.select2-selection--single')
+                .css({'min-height': '32px'});
+
+                // if there are orgs already associated with the narrative, add the org list.
+                if(this.narrativeOrgList){
+                    var $narrativeOrgsDiv = $('<table>').css({'border': '1px solid rgb(170, 170, 170)', 'border-radius': '4px', 'text-align': 'left', 'width': '51%', 'padding': '10px', 'margin': 'auto', 'margin-top': '10px'});                    
+                    this.narrativeOrgList.forEach((value, key, map) => {
+                        let url = window.location.origin + "/#org/" + key;
+                        let $href = $('<a>').attr("href", url);
+                        let $logo = $('<img>').attr("src", value[1]).css({'width': '40', 'margin': '8px'});
+                        $href.append($logo).append(value[0]);
+                        let $tr = $('<tr>').css({'padding': '2px'}).append($href);
+                        $narrativeOrgsDiv.append($tr);
+                    })
+                }
+                
+                $shareWithOrgDiv.append($addOrgDiv); // put addOrgDiv into shareWithOrgDiv
+                $shareWithOrgDiv.append($narrativeOrgsDiv); // put list of narrative div
+            } else {
+                $shareWithOrgDiv.append('<p style="margin-top: 18px;">You must be the owner to request to add this narrative.</p>');
+            } // end of if(isOwner)
+
+            // content of share with user div
             if (isAdmin) {
                 var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
                 var $input = $('<select multiple data-placeholder="Share with...">')
@@ -208,7 +409,7 @@ define ([
                 $addUsersDiv.append($input)
                             .append($permSelect)
                             .append($applyBtn);
-                self.$mainPanel.append($addUsersDiv);
+
 
                 self.setupSelect2($input);
                 $permSelect.select2({
@@ -224,13 +425,23 @@ define ([
                         $applyBtn.addClass('disabled');
                     }
                 });
+
                 // Silly Select2 has different height rules for multiple and single select.
                 $addUsersDiv.find('span.select2-selection--single')
-                            .css({'min-height': '32px'});
+                .css({'min-height': '32px'});
                 $addUsersDiv.find('.select2-container')
-                            .css({'margin-left': '5px', 'margin-right': '5px'});
-            }
+                .css({'margin-left': '5px', 'margin-right': '5px'});
 
+                $shareWithUserDiv.append($addUsersDiv);
+            } // end of if(isAdmin)
+
+            // add share with.., divs to tab content
+            $tabContent.append($shareWithUserDiv, $shareWithOrgDiv);
+            // add tab content to the main panel
+            self.$mainPanel.append($tabContent);
+            // end of Tab content divs
+
+            // div contains other users sharing the narrative
             var $othersDiv = $('<div>').css({
                 'margin-top': '15px',
                 'max-height': self.options.max_list_height,
@@ -246,13 +457,13 @@ define ([
             self.ws_permissions.sort(function (a, b) {
                 var getPermLevel = function(perm) {
                     switch (perm) {
-                    case 'a':
+                        case 'a':
                         return 1;
-                    case 'w':
+                        case 'w':
                         return 2;
-                    case 'r':
+                        case 'r':
                         return 3;
-                    default:
+                        default:
                         return 0;
                     }
                 };
@@ -260,9 +471,9 @@ define ([
                     return getPermLevel(a[1]) - getPermLevel(b[1]);
                 } // then on user name
                 if (a[0] < b[0])
-                    return -1;
+                return -1;
                 if (a[0] > b[0])
-                    return 1;
+                return 1;
                 return 0;
             });
 
@@ -276,24 +487,24 @@ define ([
                 var thisUser = self.ws_permissions[i][0];
                 if (isAdmin && thisUser !== self.narrOwner) {
                     $select = $('<select>')
-                        .addClass('form-control kb-share-user-permissions-dropdown')
-                        .attr('user', thisUser)
-                        .append($('<option>').val('r').append('can view'))
-                        .append($('<option>').val('w').append('can edit'))
-                        .append($('<option>').val('a').append('can edit/share'))
-                        .val(self.ws_permissions[i][1])
-                        .on('change', function () {
-                            self.showWorking('updating permissions...');
-                            self.updateUserPermissions([{id: $(this).attr('user')}], $(this).val());
-                        });
+                    .addClass('form-control kb-share-user-permissions-dropdown')
+                    .attr('user', thisUser)
+                    .append($('<option>').val('r').append('can view'))
+                    .append($('<option>').val('w').append('can edit'))
+                    .append($('<option>').val('a').append('can edit/share'))
+                    .val(self.ws_permissions[i][1])
+                    .on('change', function () {
+                        self.showWorking('updating permissions...');
+                        self.updateUserPermissions([{id: $(this).attr('user')}], $(this).val());
+                    });
                     $removeBtn = $('<span>')
-                        .attr('user', thisUser)
-                        .addClass('btn btn-xs btn-danger')
-                        .append($('<span>')
-                                .addClass('fa fa-times'))
-                        .click(function() {
-                            self.updateUserPermissions([{id: $(this).attr('user')}], 'n');
-                        });
+                    .attr('user', thisUser)
+                    .addClass('btn btn-xs btn-danger')
+                    .append($('<span>')
+                    .addClass('fa fa-times'))
+                    .click(function() {
+                        self.updateUserPermissions([{id: $(this).attr('user')}], 'n');
+                    });
                 } else {
                     $select = $('<div>').addClass('form-control kb-share-user-permissions-dropdown');
                     if (thisUser === self.narrOwner) {
@@ -311,18 +522,52 @@ define ([
                 }
                 var user_display = self.renderUserIconAndName(self.ws_permissions[i][0], null, true);
                 var $userRow =
-                    $('<tr>')
-                    .append($('<td style="text-align:left">')
-                        .append(user_display[0]))
-                    .append($('<td style="text-align:left">').css({'padding': '4px', 'padding-top': '6px'})
-                        .append(user_display[1]))
-                    .append($('<td style="text-align:right">').append($select));
+                $('<tr>')
+                .append($('<td style="text-align:left">')
+                .append(user_display[0]))
+                .append($('<td style="text-align:left">').css({'padding': '4px', 'padding-top': '6px'})
+                .append(user_display[1]))
+                .append($('<td style="text-align:right">').append($select));
                 if ($removeBtn) {
                     $userRow.append($('<td style="text-align:left">').append($removeBtn));
                 }
                 $tbl.append($userRow);
             }
-            self.$mainPanel.append($othersDiv);
+            $shareWithUserDiv.append($othersDiv);
+        },
+
+        /**
+         * Send request to add narrative to a organization.
+         * Returns either {"complete": true} or a Request with the additional field "complete" with a value of false.
+         * @param {string} token // authorization token
+         */
+
+        requestAddNarrative: function(token, orgID){
+            var ws_id = this.ws_info[0];
+            var groupResourceUrl = this.options.groups_url+"/group/"+orgID+"/resource/workspace/"+ws_id;
+            fetch(groupResourceUrl, {
+                method: "POST",
+                mode: "cors",
+                json: true,
+                headers:{
+                    "Authorization": token,
+                    "Content-Type": "application/json",
+                }
+            })
+            .then(response => response.json())
+            .then(response => {
+                if(response.error) {
+                    this.reportError(response);
+                }
+
+            })
+            .catch(error => {
+                console.error('Error while sending request to add narrative:', error)
+                if(error) {
+                    this.reportError(error);
+                }
+            });
+
         },
 
         /**
@@ -461,6 +706,41 @@ define ([
                 $input.trigger('change');
             });
         },
+        // setting up Select2 for inputOrg
+        orgSetupSelect2: function($inputOrg){
+            var self = this;
+            var orgList = self.orgList;
+            var orgData = [];
+            var noMatchedOrgFoundStr = 'Search by Organization name';
+
+            $.fn.select2.amd.require([
+                'select2/data/array',
+                'select2/utils'
+            ], function (ArrayData, Utils) {
+                if(!orgList) return;
+                orgList.forEach(org=>{
+                    orgData.push({"id": org.id, "text": org.name});
+                })
+                $inputOrg.select2({
+                    formatNoMatches: noMatchedOrgFoundStr,
+                    placeholder: function() {
+                            return $(this).data('placeholder');
+                    },
+                    delay: 250,
+                    width: '40%',
+                    data: orgData,
+                    minimumResultsForSearch: 0,
+                    allowClear: true,
+                    language: {
+                        noResults: function () {
+                            return noMatchedOrgFoundStr;
+                        }
+                    },
+                });
+                $inputOrg.trigger('change');
+            });
+        },
+
         showWorking: function (message) {
             this.$mainPanel.empty();
             this.$mainPanel.append('<br><br><div style="text-align:center"><img src="' + this.options.loadingImage

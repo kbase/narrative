@@ -18,6 +18,7 @@ Distributed unspecified open source license as of 9/27/2013
 import os
 import json
 import re
+import itertools
 # Third-party
 from tornado.web import HTTPError
 # IPython
@@ -38,7 +39,6 @@ from traitlets.traitlets import (
 from .manager_util import base_model
 from .narrativeio import KBaseWSManagerMixin
 from .kbasecheckpoints import KBaseCheckpoints
-import biokbase.narrative.ws_util as ws_util
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.narrative.common import util
@@ -94,7 +94,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     ipynb_type = Unicode('ipynb')
     allowed_formats = List([u'json'])
     node_format = ipynb_type
-    ws_type = Unicode(ws_util.ws_narrative_type, config=True, help='Type to store narratives within workspace service')
+    ws_type = Unicode('KBaseNarrative.Narrative', config=True, help='Type to store narratives within workspace service')
 
     # regex for parsing out workspace_id and object_id from
     # a "ws.{workspace}.{object}" string

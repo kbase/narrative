@@ -9,6 +9,7 @@ define([
     'common/events',
     'kb_service/client/narrativeMethodStore',
     'kb_common/html',
+    'util/display',
     'kbaseReportView'
 ], function(
     Promise,
@@ -18,6 +19,7 @@ define([
     Events,
     NarrativeMethodStore,
     html,
+    DisplayUtil,
     KBaseReportView
 ) {
     'use strict';
@@ -32,7 +34,9 @@ define([
             model = config.model,
             ui,
             runtime,
-            nms;
+            nms,
+            reportRendered = false,
+            reportParams;
 
         function start(arg) {
             container = arg.node;
@@ -107,13 +111,32 @@ define([
             });
         }
 
+        function lazyRenderReport() {
+            if (reportRendered) {
+                return;
+            }
+            let reportElem = ui.getElement('report-widget');
+            if (DisplayUtil.verticalInViewport(reportElem)) {
+                new KBaseReportView($(reportElem), reportParams);
+                reportRendered = true;
+                document.querySelector('#notebook-container').removeEventListener('scroll', lazyRenderReport);
+            }
+        }
+
         function renderReportView(params) {
-            params = JSON.parse(JSON.stringify(params));
+            reportParams = JSON.parse(JSON.stringify(params));
             // Override the option to show created objects listed in the report
             // object. For some reason this single option defaults to false!
-            params.showCreatedObjects = true;
+            reportParams.showCreatedObjects = true;
             ui.setContent('report', div({dataElement: 'report-widget'}));
-            new KBaseReportView($(ui.getElement('report-widget')), params);
+            lazyRenderReport();
+            if (!reportRendered) {
+                let nbContainer = document.querySelector('#notebook-container');
+                nbContainer.addEventListener(
+                    'scroll',
+                    lazyRenderReport
+                );
+            }
         }
 
         function renderNextApps(apps) {

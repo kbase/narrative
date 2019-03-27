@@ -47,10 +47,27 @@ define([
     /**
      * @method
      * displayRealName
+     *
      */
-    function displayRealName(username, $target) {
+    /**
+     * Builds a displayable element from a user name. This includes a link to a user's profile page.
+     * For example, a user named "kbaseuser" would get a display like:
+     * KBase User (kbaseuser)
+     * where the part inside the parentheses links to the profile page.
+     * @param {string} username - the user id to put on display
+     * @param {object} $target - the target JQuery node to modify (maybe should just return the element as part of a promise?)
+     * @param {string} displayName - optional, the display name to use. If given, then an auth call isn't made.
+     */
+    function displayRealName(username, $target, displayName) {
         let safeUser = StringUtil.escape(username),
             usernameLink = '<a href="' + profilePageUrl + safeUser + '" target="_blank">' + safeUser + '</a>';
+        if (displayName) {
+            return new Promise((resolve) => {
+                $target.text(displayName);
+                $target.append(' (' + usernameLink + ')');
+                resolve();
+            });
+        }
         return authClient.getUserNames(null, [username])
             .then((user) => {
                 if (user[safeUser]) {
@@ -237,12 +254,31 @@ define([
                .append($('<span>').addClass(iconClass));
     }
 
+    /**
+     *
+     * @param {DOMElement} element
+     */
+    function verticalInViewport(element) {
+        if (!element) {
+            return true;
+        }
+        let rect = element.getBoundingClientRect();
+        if (rect.top === 0 && rect.bottom === 0) {
+            return false;
+        }
+        return (
+            (rect.top >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight)) ||
+            (rect.bottom >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight))
+        );
+    }
+
     return {
         lookupUserProfile: lookupUserProfile,
         displayRealName: displayRealName,
         loadingDiv: loadingDiv,
         getAppIcon: getAppIcon,
         createError: createError,
-        simpleButton: simpleButton
+        simpleButton: simpleButton,
+        verticalInViewport: verticalInViewport
     };
 });

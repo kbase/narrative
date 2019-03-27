@@ -21,7 +21,6 @@ define([
     'util/icon',
     'text!kbase/templates/beta_warning_body.html',
     'yaml!ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml',
-    //'yaml!kbase/config/categories.yml',
     'kbaseAccordion',
     'kbaseNarrativeControlPanel',
     'base/js/namespace',
@@ -30,6 +29,7 @@ define([
     'narrative_core/catalog/kbaseCatalogBrowser',
     'kbase/js/widgets/narrative_core/kbaseAppCard',
     'common/runtime',
+    'kb_common/jsonRpc/dynamicServiceClient',
     'kbaseNarrative',
     'catalog-client-api',
     'kbase-client-api',
@@ -53,7 +53,8 @@ define([
     Uuid,
     KBaseCatalogBrowser,
     kbaseAppCard,
-    Runtime
+    Runtime,
+    DynamicServiceClient
 ) {
     'use strict';
     return KBWidget({
@@ -473,82 +474,35 @@ define([
          * Returns a promise that resolves when the app is done refreshing itself.
          */
         refreshFromService: function(versionTag) {
-            var self = this;
             this.showLoadingMessage('Loading available Apps...');
-
             var filterParams = {};
             if (versionTag) {
                 filterParams['tag'] = versionTag;
                 this.currentTag = versionTag;
             }
 
-            var loadingCalls = [];
-            loadingCalls.push(
-                Promise.resolve(self.methClient.list_methods(filterParams))
-                    .then(function(methods) {
-                        self.methodSpecs = {};
-                        self.methodInfo = {};
-                        for (var i = 0; i < methods.length; i++) {
-                        // key should have LC module name if an SDK method
-                            if (methods[i].module_name) {
-                                var idTokens = methods[i].id.split('/');
-                                self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = { info: methods[i] };
-                            }
-                        }
-                    }));
+            var narrativeService = new DynamicServiceClient({
+                module: 'NarrativeService',
+                url: Config.url('service_wizard'),
+                token: Runtime.make().authToken()
+            });
 
-            loadingCalls.push(
-                Promise.resolve(self.methClient.list_categories({}))
-                    .then(function(categories) {
-                        self.categories = categories[0];
-                    }));
-
-            if (!versionTag || versionTag === 'release') {
-                loadingCalls.push(self.catalog.list_basic_module_info({})
-                    .then(function(moduleInfoList) {
-                        self.moduleVersions = {};
-                        return Promise.map(moduleInfoList, function(module) {
-                            if (module.dynamic_service === 0) {
-                                return Promise.resolve(
-                                    self.catalog.get_module_version({ module_name: module.module_name })
-                                )
-                                    .then(function(version) {
-                                        self.moduleVersions[version.module_name] = version.version;
-                                    });
-                            }
-                        });
-                    })
-                );
-            }
-
-            return Promise.all(loadingCalls)
-                .then(function() {
-                    return Promise.resolve(self.catalog.list_favorites(Jupyter.narrative.userId))
-                        .then(function(favs) {
-                            for (var k = 0; k < favs.length; k++) {
-                                var fav = favs[k];
-                                var lookup = fav.id;
-                                if (fav.module_name_lc !== 'nms.legacy') {
-                                    lookup = fav.module_name_lc + '/' + lookup;
-                                }
-                                if (self.methodSpecs[lookup]) {
-                                    self.methodSpecs[lookup]['favorite'] = fav.timestamp; // this is when this was added as a favorite
-                                }
-                            }
-                            self.trigger('appListUpdated.Narrative');
-                        })
-                        // For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
-                        .catch(function(error) {
-                            console.error(error);
-                        })
-                        .finally(function() {
-                            self.parseApps(self.categories, self.methodSpecs);
-                            self.showAppPanel();
-                        });
+            return narrativeService.callFunc('get_all_app_info', [{
+                tag: this.currentTag,
+                user: Jupyter.narrative.userId
+            }])
+                .then((appInfo) => {
+                    appInfo = appInfo[0];
+                    this.methodSpecs = appInfo.app_infos;
+                    this.categories = appInfo.categories;
+                    this.moduleVersions = appInfo.module_versions;
+                    this.trigger('appListUpdated.Narrative');
+                    this.parseApps(this.categories, this.methodSpecs);
+                    this.showAppPanel();
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     console.error(error);
-                    self.showError('Sorry, an error occurred while loading Apps.', error);
+                    this.showError('Sorry, an error occurred while loading Apps.', error);
                 });
         },
 
@@ -570,7 +524,6 @@ define([
                     body: 'Read-only Narrative -- you may not add apps to this Narrative',
                     alertOnly: true
                 }).show();
-                // alert('Read-only Narrative -- may not add apps to this Narrative');
                 return;
             }
             var self = this;

@@ -18,7 +18,8 @@ define([
     'kbase-client-api',
     'kb_service/client/workspace',
     'kbase-generic-client-api',
-    'util/timeFormat'
+    'util/timeFormat',
+    'api/auth'
 ], function (
     $,
     Jupyter,
@@ -32,7 +33,8 @@ define([
     KBaseClientAPI,
     Workspace,
     GenericClient,
-    TimeFormat
+    TimeFormat,
+    Auth
 ) {
     'use strict';
     return new KBWidget({
@@ -113,159 +115,60 @@ define([
         narData: null,
         tempNars: null,
         oldStyleWs: null,
+
         loadDataAndRenderPanel: function () {
-            if (!this.ws)
+            if (!this.ws) {
                 return;
-            this.narData = null;
-            var narRefsToLookup = [];
-            var wsPermsToLookup = [];
+            }
             this.showLoading();
-
-            /**
-             * Loading and rendering flow.
-             * 1. Get users workspace infos (owned and shared, not global)
-             * 2. Look at metadata for 'narrative' tag - if present, that ws has a Narrative.
-             *    a. Add the object id in that tag to the narRefsToLookUp var.
-             *    b. Add that ws to wsPermsToLookup
-             * 3. Make a pile of Promises.
-             *    a. One to fetch all object info for those Narratives (assuming it's under 10000, that'll get fixed if it gets larger)
-             *    b. One for each batch of 1000 workspaces to get permissions for
-             */
-            Promise.resolve(this.ws.list_workspace_info({excludeGlobal: 1}))
-                .then(function (wsList) {
+            this.narData = null;
+            // look up all Narratives this user has access to.
+            let proms = [
+                Promise.resolve(this.serviceClient.sync_call('NarrativeService.list_narratives', [{type: 'mine'}])),
+                Promise.resolve(this.serviceClient.sync_call('NarrativeService.list_narratives', [{type: 'shared'}]))
+            ];
+            let permsToLookup = [];
+            Promise.all(proms)
+                .spread((mine, shared) => {
+                    // Manage the output from looking up narratives
                     this.narData = {
-                        mine: [],
-                        shared: [],
-                        pub: [],
-                        temp: [],
-                        allWs: []
-                    };
-                    this.allNarData = [];
-                    /*WORKSPACE INFO
-                 0: ws_id id
-                 1: ws_name workspace
-                 2: username owner
-                 3: timestamp moddate,
-                 4: int object
-                 5: permission user_permission
-                 6: permission globalread,
-                 7: lock_status lockstat
-                 8: usermeta metadata*/
-                    var i;
-                    for (i = 0; i < wsList.length; i++) {
-                        if (wsList[i][8]) { // must have metadata or else we skip
-
-                        // if it is temporary, we skip
-                            if (wsList[i][8].is_temporary) {
-                                if (wsList[i][8].is_temporary === 'true') {
-                                    this.narData.temp.push({ws_info: wsList[i]});
-                                    continue;
-                                }
-                            }
-                            //must have the new narrative tag, or else we skip
-                            if (wsList[i][8].narrative) {
-                                var info = {
-                                    ws_info: wsList[i],
-                                    nar_info: null,
-                                    $div: null
-                                };
-                                if (wsList[i][2] === this._attributes.auth.user_id) {
-                                    this.allNarData.push(info);
-                                    this.narData.mine.push(info);
-                                    narRefsToLookup.push({ref: info.ws_info[0] + '/' + wsList[i][8].narrative});
-                                    wsPermsToLookup.push({id: info.ws_info[0]});
-                                } else if (wsList[i][5] === 'a' || wsList[i][5] === 'w' || wsList[i][5] === 'r') {
-                                    this.allNarData.push(info);
-                                    this.narData.shared.push(info);
-                                    narRefsToLookup.push({ref: info.ws_info[0] + '/' + wsList[i][8].narrative});
-                                    wsPermsToLookup.push({id: info.ws_info[0]});
-                                }
-                            }
-                            if (wsList[i][5] === 'a' || wsList[i][5] === 'w') {
-                            // allWs is used for advanced management options, which we only
-                            // have if we have admin or write access
-                                this.narData.allWs.push({ws_info: wsList[i]});
-                            }
-                        }
+                        mine: mine[0].narratives,
+                        shared: shared[0].narratives
                     }
-                    var newProms = [];
-                    /*
-                 * set up Promises - first is for all Narrative object info, rest are for WS permissions
-                 */
-                    if (narRefsToLookup.length > 0) {
-                        var objInfoProm = Promise.resolve(this.ws.get_object_info_new({objects: narRefsToLookup, includeMetadata: 1, ignoreErrors: 1}));
-                        newProms.push(objInfoProm);
-
-                        for (i=0; i<wsPermsToLookup.length; i+=1000) {
-                            newProms.push(Promise.resolve(this.ws.get_permissions_mass({workspaces: wsPermsToLookup.slice(i, i+1000)})));
-                        }
+                    // Find out who and what permissions are available
+                    permsToLookup = [
+                        ...this.narData.mine.map(info => { return {id: info.ws[0]} }),
+                        ...this.narData.shared.map(info => { return {id: info.ws[0]} })
+                    ];
+                    let newProms = [];
+                    for (let i=0; i<permsToLookup.length; i+=1000) {
+                        newProms.push(Promise.resolve(this.ws.get_permissions_mass({workspaces: permsToLookup.slice(i, i+1000)})));
                     }
                     return Promise.all(newProms);
-                }.bind(this))
-                .then(function(results) { //objList = results[0], rest are permList chunks
-                /*
-                 * Now we have a set of objects and permissions for each narrative.
-                 * The arrays are in the same order, so keep them parallel when the permission list gets merged.
-                 */
-                    var objList = results.shift();
-                    var permList = [];
-                    for (var i=0; i<results.length; i++) {
-                        permList = permList.concat(results[i].perms);
-                    }
-                    // If no narratives, we're done!
-                    if (!objList)
-                        return;
-
-                    var errorProms = [];
-                    /*
-                 * Go through each object and permission pair, merge them together in this.allNarData.
-                 * If it's not a Narrative object, then create an error.
-                 * In the end, allNarData will be a list like this:
-                 * {
-                 *   nar_info: { get_object_info_new result },
-                 *   perms : { get_permissions_mass result },
-                 *   error : boolean
-                 * }
-                 */
-                    for (i = 0; i < objList.length; i++) {
-                        this.allNarData[i].perms = permList[i];
-                        if (objList[i] !== null && objList[i][2].indexOf('KBaseNarrative.Narrative') === 0) {
-                            this.allNarData[i].nar_info = objList[i];
-                        } else {
-                        // If this isn't a KBaseNarrative.Narrative, then it's wrong!
-                        // look up the object, and expect to see an error.
-                        // This is all done as a set of promises, so they'll get dealt with when theyre returned.
-                            this.allNarData[i].error = true;
-                            var errorIndex = i;
-
-                            errorProms.push(Promise.resolve(this.ws.get_object_info_new({
-                                objects: [narRefsToLookup[errorIndex]],
-                                includeMetadata: 1,
-                                ignoreErrors: 0
-                            }))
-                                .then(function(error_obj_info) {
-                                    if (error_obj_info[0][2].indexOf('KBaseNarrative.Narrative') === 0) {
-                                        // this should not work!! but if it does, fine, remove the error and save the info
-                                        this.allNarData[errorIndex].error = false;
-                                        this.allNarData[errorIndex].nar_info = error_obj_info[0];
-                                    } else {
-                                        // could give an error message here stating that the workspace is pointing to a non-narrative object
-                                        //this.allNarData[errorIndex].error_msg = error.error.message;
-                                    }
-                                }.bind(this))
-                                .catch(function(error) {
-                                    this.allNarData[errorIndex].error_msg = error.error.message;
-                                    this.allNarData[errorIndex].$div = null;
-                                }.bind(this)));
-                        }
-                    }
-                    return Promise.all(errorProms);
-                }.bind(this))
-                .then(function() {
-                // At this stage, this.allNarData should be fully populated.
+                })
+                .then((permsData) => {
+                    let perms = permsData.reduce((accumulator, cur) => {
+                        return accumulator.concat(cur.perms);
+                    }, []);
+                    this.wsPerms = {};
+                    perms.map((perm, idx) => {
+                        this.wsPerms[permsToLookup[idx].id] = perm;
+                    });
+                })
+                .then(() => {
+                    // get the names of all ws owners
+                    let owners = {};
+                    this.narData.shared.map(info => owners[info.ws[2]] = 1);
+                    let auth = Auth.make({url: Config.url('auth')});
+                    return auth.getUserNames(auth.getAuthToken(), Object.keys(owners));
+                })
+                .then((users) => {
+                    this.narData.owners = users;
+                })
+                .then(() => {
                     this.renderPanel();
-                }.bind(this))
-                .catch(function(error) {
+                })
+                .catch((err) => {
                     console.error(error);
                 });
         },
@@ -305,9 +208,9 @@ define([
             if (b.error) {
                 return -1;
             }
-            if (a.nar_info[3] > b.nar_info[3])
+            if (a.nar[3] > b.nar[3])
                 return -1; // sort by date
-            if (a.nar_info[3] < b.nar_info[3])
+            if (a.nar[3] < b[3])
                 return 1;  // sort by date
             return 0;
         },
@@ -343,135 +246,6 @@ define([
                         self.$narPanel.append(self.narData.shared[k].$div);
                     }
                 }
-
-
-                // ADVANCED TAB: allows users to set the default narrative for any workspace
-                var $advancedDiv = $('<div>').hide();
-                var $advLink = $('<h4>').append('Show Advanced Controls');
-                self.$narPanel.append($('<div>').append($('<span>').append($('<a>').append($advLink)))
-                    .css({'text-align': 'center', 'cursor': 'pointer'})
-                    .on('click', function () {
-                        if ($advancedDiv.is(':visible')) {
-                            $advancedDiv.hide();
-                            $advLink.html('Show Advanced Controls');
-                        } else {
-                            $advancedDiv.show();
-                            $advLink.html('Hide Advanced Controls');
-                        }
-                    }));
-                self.$narPanel.append($advancedDiv);
-
-                var $selectWsContainer = $('<select id="setPrimaryNarSelectWs">')
-                    .addClass('form-control');
-                var $selectNarContainer = $('<select id="setPrimaryNarSelectNar">')
-                    .addClass('form-control')
-                    .hide();
-                var $setBtn = $('<button>')
-                    .addClass('btn btn-default')
-                    .append('Set this Narrative')
-                    .hide();
-                var $setPrimary = $('<div>').append(
-                    $('<div>')
-                        .addClass('form-group')
-                        .css({'text-align': 'center'})
-                        .append($('<label for="setPrimaryNarSelectWs">')
-                            .append('Set Active Narrative for Workspace'))
-                        .append($selectWsContainer)
-                        .append($selectNarContainer)
-                        .append($setBtn)
-                );
-
-                self.narData.allWs.sort(function (a, b) {
-                    var aName = a.ws_info[1].toLowerCase();
-                    var bName = b.ws_info[1].toLowerCase();
-                    if (aName > bName)
-                        return 1;
-                    if (bName < aName)
-                        return -1;
-                    return 0;
-                });
-
-                for (k = 0; k < self.narData.allWs.length; k++) {
-                    var info = self.narData.allWs[k].ws_info;
-                    $selectWsContainer.append($('<option value="' + info[1] + '">').append(info[1] + ' (id=' + info[0] + ')'));
-                }
-
-                $selectWsContainer.on('change',
-                    function () {
-                        $selectNarContainer.empty();
-                        Promise.resolve(self.serviceClient.sync_call(
-                            'NarrativeService.list_objects_with_sets',
-                            [{
-                                types: ['KBaseNarrative.Narrative'],
-                                workspaces: [$selectWsContainer.val()]
-                            }]
-                        ))
-                            .then(function(objList) {
-                                objList = objList[0].data;
-                                if (objList.length === 0) {
-                                    $selectNarContainer.append($('<option value="none">').append('No Narratives'));
-                                    $setBtn.prop('disabled', true);
-                                    $selectNarContainer.prop('disabled', true);
-                                    return;
-                                }
-                                $setBtn.prop('disabled', false);
-                                $selectNarContainer.prop('disabled', false);
-
-                                // sort by date
-                                objList.sort(function (a, b) {
-                                    var aDate = a.object_info[3];
-                                    var bDate = b.object_info[3];
-                                    if (aDate > bDate)
-                                        return -1; // sort by date
-                                    if (aDate < bDate)
-                                        return 1;  // sort by date
-                                    return 0;
-                                });
-                                self.advancedSetNarLookup = {};
-                                // add the list to the select
-                                for (var i = 0; i < objList.length; i++) {
-                                    var info = objList[i].object_info;
-                                    var narDispName = info[1];
-                                    if (info[10] && info[10].name) {
-                                        narDispName = info[10].name;
-                                    }
-                                    self.advancedSetNarLookup[info[0]] = narDispName;
-                                    $selectNarContainer.append($('<option value="' + info[0] + '">')
-                                        .append(narDispName + ' (id=' + info[0] + ')'));
-                                }
-                            })
-                            .catch(function(error) {
-                                console.error(error);
-                            });
-                        $selectNarContainer.show();
-                        $setBtn.show();
-                    }
-                );
-                $selectWsContainer.change();
-                $setBtn.on('click',
-                    function () {
-                        // should only get here if it was a valid WS/Nar combo
-                        var ws = $selectWsContainer.val();
-                        var nar = $selectNarContainer.val();
-                        $(this).prop('disabled', true).empty().append('please wait...');
-                        // should probably be moved to NarrativeManager
-                        self.ws.alter_workspace_metadata({
-                            wsi: {workspace: ws},
-                            new : {
-                                'narrative': nar,
-                                'is_temporary': 'false',
-                                'narrative_nice_name': self.advancedSetNarLookup[nar]
-                            }},
-                        function () {
-                            self.loadDataAndRenderPanel();
-                        },
-                        function name(error) {
-                            $setBtn.html('error...');
-                            console.error(error);
-                        }
-                        );
-                    });
-                $advancedDiv.append($setPrimary);
             }
         },
         setInteractionError: function ($interactionPanel, errorMessage) {
@@ -737,11 +511,19 @@ define([
             return $btnToolbar;
         },
         renderNarrativeDiv: function (data) {
+            /* data looks like:
+             * {
+                 ws_info: [array of ws info],
+                 nar_info: [array of nar info]
+
+               }
+             */
+
             var self = this,
                 isError = false;
 
             var isCurrent = false;
-            if (this.ws_name === data.ws_info[1]) {
+            if (this.ws_name === data.ws[1]) {
                 isCurrent = true;
             }
 
@@ -781,20 +563,20 @@ define([
                 .data('mode', 'inactive')
                 .hide();
 
-            var narRef = 'ws.' + data.ws_info[0] + '.obj.' + data.ws_info[8].narrative;
+            var narRef = 'ws.' + data.ws[0] + '.obj.' + data.ws[8].narrative;
             var nameText = narRef;
             var version = '';
-            if (data.nar_info && data.nar_info[10].name) {
-                nameText = data.nar_info[10].name;
-                version = 'v' + data.nar_info[4];
-            } else if (data.error && data.ws_info[8].narrative_nice_name) {
-                nameText = data.ws_info[8].narrative_nice_name + ' (' + nameText + ')';
+            if (data.nar && data.nar[10].name) {
+                nameText = data.nar[10].name;
+                version = ' v' + data.nar[4];
+            } else if (data.error && data.ws[8].narrative_nice_name) {
+                nameText = data.ws[8].narrative_nice_name + ' (' + nameText + ')';
             }
             var $version = $('<span>').addClass('kb-data-list-version').append(version);
             var $priv = $('<span>').css({'color': '#999', 'margin-left': '8px'}).prop('data-toggle', 'tooltip').prop('data-placement', 'right');
-            if (data.ws_info[5] === 'r') {
+            if (data.ws[5] === 'r') {
                 $priv.addClass('fa fa-lock').prop('title', 'read-only');
-            } else if (data.ws_info[5] === 'w' || data.ws_info[5] === 'a') {
+            } else if (data.ws[5] === 'w' || data.ws[5] === 'a') {
                 $priv.addClass('fa fa-pencil').prop('title', 'you can edit');
             }
 
@@ -811,34 +593,19 @@ define([
 
             // only display the rest if there was no error
             if (!data.error) {
-                var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws_info[2]);
-                if (data.ws_info[2] !== this._attributes.auth.user_id) {
+                var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws[2]);
+                if (data.ws[2] !== this._attributes.auth.user_id) {
                     $dataCol.append($usrNameSpan).append('<br>');
-                    DisplayUtil.displayRealName(data.ws_info[2], $usrNameSpan);
+                    DisplayUtil.displayRealName(data.ws[2], $usrNameSpan, this.narData.owners[data.ws[2]]);
                 }
-                var summary = this.getNarSummary(data.nar_info);
+                var summary = this.getNarSummary(data.nar);
                 if (summary) {
                     $dataCol.append($('<span>')
                         .addClass('kb-data-list-narinfo')
                         .append(summary)
-                        // REMOVE MORE INFO: needs a rethink, because these methods have versions now....
-                        /*.click(
-                            function () {
-                                var opened = self.toggleInteractionPanel($interactionPanel, 'info');
-                                if (!opened) {
-                                    return;
-                                }
-
-                                var $infoDiv = $('<div>')
-                                    .append(self.getNarContent(data.nar_info));
-
-
-                                // var $infoDiv = self.getNarContent(data.nar_info);
-                                self.setInteractionPanel($interactionPanel, 'Narrative Info', $infoDiv);
-                            })*/
                         .append('<br>'));
                 }
-                $dataCol.append($('<span>').addClass('kb-data-list-type').append(TimeFormat.getTimeStampStr(data.nar_info[3], true)));
+                $dataCol.append($('<span>').addClass('kb-data-list-type').append(TimeFormat.getTimeStampStr(data.nar[3], true)));
 
 
                 // Render the share toolbar layout.
@@ -855,15 +622,17 @@ define([
                     .append($shareToolbarGroup);
                 $ctrContent.append($shareToolbar);
 
-                var shareCount = 0;
-                for (var usr in data.perms) {
-                    if (data.perms.hasOwnProperty(usr)) {
+                var shareCount = -1;  // our user is always going to be included, but will bump the count, since it's not "shared"
+                let perms = this.wsPerms[data.ws[0]];
+                for (var usr in perms) {
+                    if (perms.hasOwnProperty(usr)) {
                         if (usr === '*') {
                             continue;
                         }
                         shareCount++;
                     }
                 }
+
                 // should really put this in the addDatacontrols; so refactor at some point!
                 $shareToolbarGroup.append(
                     $('<button>')
@@ -881,7 +650,7 @@ define([
                             var $sharingDiv = $('<div>');
                             self.setInteractionPanel($interactionPanel, 'Share Settings', $sharingDiv);
                             new kbaseNarrativeSharePanel($sharingDiv, {
-                                ws_name_or_id: data.ws_info[0],
+                                ws_name_or_id: data.ws[0],
                                 max_list_height: 'none',
                                 add_user_input_width: '280px'
                             });
@@ -900,7 +669,7 @@ define([
                         .addClass('kb-data-list-narrative-error')
                         .append(errorMessage));
             }
-            var $btnToolbar = self.addDataControls(data.nar_info, $interactionPanel, data.ws_info, isError);
+            var $btnToolbar = self.addDataControls(data.nar, $interactionPanel, data.ws, isError);
 
             if (!isError) {
                 // Set up basic interactivity -- hide and show controls with mouseover.
@@ -1155,133 +924,42 @@ define([
         },
 
         getNarSummary: function (nar_info) {
-            var summary = '';
+            let summary = [],
+                counts = {
+                    apps: 0,
+                    md: 0,
+                    code: 0,
+                    viewers: 0
+                };
             if (nar_info[10].methods) {
                 var content = JSON.parse(nar_info[10].methods);
-                var summaryCounts = [];
-                var appCount = 0;
-                var methodCount = 0;
-                for (var a in content.app) {
-                    if (content.app.hasOwnProperty(a)) {
-                        appCount += content.app[a];
-                    }
-                }
-                if (appCount === 1) {
-                    summaryCounts.push('1 App');
-                } else if (appCount > 1) {
-                    summaryCounts.push(appCount + ' Apps');
-                }
-
-                for (var m in content.method) {
-                    if (content.method.hasOwnProperty(m)) {
-                        methodCount += content.method[m];
-                    }
-                }
-                if (methodCount === 1) {
-                    summaryCounts.push('1 Method');
-                } else if (methodCount > 1) {
-                    summaryCounts.push(methodCount + ' Methods');
-                }
-
-                if (content.output === 1) {
-                    summaryCounts.push('1 Result');
-                } else if (content.output > 1) {
-                    summaryCounts.push(content.output + ' Results');
-                }
-
-                if (content.ipython.code === 1) {
-                    summaryCounts.push('1 Code Cell');
-                } else if (content.ipython.code > 1) {
-                    summaryCounts.push(content.ipython.code + ' Code Cells');
-                }
-
-                if (content.ipython.markdown === 1) {
-                    summaryCounts.push('1 Md Cell');
-                } else if (content.ipython.markdown > 1) {
-                    summaryCounts.push(content.ipython.markdown + ' Md Cells');
-                }
-
-
-                if (summaryCounts.length > 0) {
-                    summary = summaryCounts.join(', ');
-                } else {
-                    summary = 'Empty Narrative';
-                }
+                Object.keys(content.app).forEach(a => counts.apps++);
+                Object.keys(content.method).forEach(m => counts.apps++);
+                counts.viewers += content.output;
+                counts.code += content.ipython.code;
+                counts.md += content.ipython.markdown;
             }
-            return summary;
+            Object.keys(nar_info[10]).forEach(key => {
+                if (key === 'jupyter.markdown') {
+                    counts.md += nar_info[10][key];
+                }
+                else if (key.startsWith('method.') || key.startsWith('app.')) {
+                    counts.apps += parseInt(nar_info[10][key]);
+                }
+            })
+            if (counts.apps > 0) {
+                summary.push(counts.apps + ' App' + (counts.apps > 1 ? 's' : ''));
+            }
+            if (counts.viewers > 0) {
+                summary.push(counts.viewers + ' Viewer' + (counts.viewers > 1 ? 's' : ''));
+            }
+            if (counts.code > 0) {
+                summary.push(counts.code + ' Code Cell' + (counts.code > 1 ? 's' : ''))
+            }
+            if (counts.markdown > 0) {
+                summary.push(counts.markdown + ' Md Cell' + (counts.markdown > 1 ? 's' : ''));
+            }
+            return summary.join(', ');
         },
-        getNarContent: function (nar_info) {
-            var self = this;
-
-            var specsToLookup = {apps: [], methods: []};
-            if (nar_info[10].methods) {
-                var content = JSON.parse(nar_info[10].methods);
-                var apps = [];
-                var methods = [];
-                for (var a in content.app) {
-                    if (content.app.hasOwnProperty(a)) {
-                        apps.push({name: a, count: content.app[a]});
-                        specsToLookup.apps.push(a);
-                    }
-                }
-                for (var m in content.method) {
-                    if (content.method.hasOwnProperty(m)) {
-                        methods.push({name: m, count: content.method[m]});
-                        specsToLookup.methods.push(m);
-                    }
-                }
-            }
-
-            if ((apps.length + methods.length) === 0) {
-                if (nar_info[10].description) {
-                    $container.append('<br><b>Description</b><br><div style="text-align:left;">' + nar_info[10].description + '</div>');
-                }
-                return '<br>No Apps or Methods in this Narrative.<br>';
-            }
-
-            var $container = $('<div>').css({'width': '100%'});
-            if (!self.appMethodSpecRef) {
-                self.trigger('getFunctionSpecs.Narrative', [specsToLookup,
-                    function (specLookup) {
-                        var k, link;
-                        //todo: sort here based on counts or name?
-                        if (nar_info[10].description) {
-                            $container.append('<br><b>Description</b><br><div style="text-align:left;">' + nar_info[10].description + '</div>');
-                        }
-
-                        if (apps.length > 0) {
-                            $container.append('<br><b>Apps</b><br>');
-                            var $apptbl = $('<table>').css({'width': '100%'});
-                            for (k = 0; k < apps.length; k++) {
-                                link = '<a href="/#narrativestore/app/' + apps[k].name + '" target="_blank">' + apps[k].name + '</a>';
-                                if (specLookup.apps[apps[k].name]) {
-                                    link = '<a href="/#narrativestore/app/' + apps[k].name + '" target="_blank">' + specLookup.apps[apps[k].name].info.name + '</a>';
-                                }
-                                $apptbl.append($('<tr>')
-                                    .append($('<td>').append(link))
-                                    .append($('<td>').append(apps[k].count)));
-                            }
-                            $container.append($apptbl);
-                        }
-
-                        if (methods.length > 0) {
-                            $container.append('<br><b>Methods</b><br>');
-                            var $methodtbl = $('<table>').css({'width': '100%'});
-                            for (k = 0; k < methods.length; k++) {
-                                link = '<a href="/#narrativestore/method/' + methods[k].name + '" target="_blank">' + methods[k].name + '</a>';
-                                if (specLookup.methods[methods[k].name]) {
-                                    link = '<a href="/#narrativestore/method/' + methods[k].name + '" target="_blank">' + specLookup.methods[methods[k].name].info.name + '</a>';
-                                }
-                                $methodtbl.append($('<tr>')
-                                    .append($('<td>').append(link))
-                                    .append($('<td>').append(methods[k].count)));
-                            }
-                            $container.append($methodtbl);
-                        }
-                        $container.append('<br>');
-                    }]);
-            }
-            return $container;
-        }
     });
 });

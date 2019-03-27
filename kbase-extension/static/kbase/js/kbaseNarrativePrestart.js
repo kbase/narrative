@@ -7,14 +7,16 @@ define(
         'bootstrap',
         'jquery',
         'narrativeConfig',
-        'common/runtime'
+        'common/runtime',
+        'api/auth'
     ],
     function(
         KBWidget,
         bootstrap,
         $,
         Config,
-        Runtime
+        Runtime,
+        Auth
     ) {
         'use strict';
 
@@ -284,9 +286,10 @@ define(
             });
 
             $([Jupyter.events]).on('kernel_ready.Kernel', function () {
+                let auth = Auth.make({url: Config.url('auth')});
                 Jupyter.notebook.kernel.execute(
                     'import os;' +
-                    'os.environ["KB_AUTH_TOKEN"]="' + Jupyter.narrative.getAuthToken() + '";' +
+                    'os.environ["KB_AUTH_TOKEN"]="' + auth.getAuthToken() + '";' +
                     'os.environ["KB_WORKSPACE_ID"]="' + Jupyter.notebook.metadata.ws_name + '"'
                 );
             });

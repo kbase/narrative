@@ -1,9 +1,0 @@
-brew install homebrew/nginx/openresty
-brew install lua51 luajit
-# apt-get install -y lua5.1 luarocks liblua5.1-0 liblua5.1-0-dev liblua5.1-json liblua5.1-lpeg2 libssl-dev
-sudo luarocks-5.1 install lpeg
-sudo luarocks-5.1 install luasocket
-sudo luarocks-5.1 install luajson
-sudo luarocks-5.1 install penlight
-sudo luarocks-5.1 install lua-spore
-sudo luarocks-5.1 install luacrypto LDFLAGS='-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib' OPENSSL_INCDIR=/usr/local/opt/openssl/include/

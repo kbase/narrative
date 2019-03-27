@@ -1,6 +1,0 @@
-apt-get install -y lua5.1 luarocks liblua5.1-0 liblua5.1-0-dev liblua5.1-json liblua5.1-lpeg2 libssl-dev
-luarocks install luasocket
-luarocks install luajson
-luarocks install penlight
-luarocks install lua-spore
-luarocks install luacrypto

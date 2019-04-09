@@ -2,12 +2,9 @@
 <html>
 
 <head>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-137652528-1"></script>
-    <script src="../static/gtagSupport.js"></script>
     <meta charset="utf-8">
     <title>{% block title %}KBase Narrative{% endblock %}</title>
-    {% block favicon %}<link id="favicon" rel="shortcut icon" type="image/x-icon" href="{{static_url("kbase/images/KBase_favicon.ico") }}">{% endblock %}
+    {% block favicon %}<link id="favicongit remov" rel="shortcut icon" type="image/x-icon" href="{{static_url("kbase/images/KBase_favicon.ico") }}">{% endblock %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="stylesheet" href="{{static_url("components/jquery-ui/themes/smoothness/jquery-ui.min.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{static_url("components/jquery-typeahead/dist/jquery.typeahead.min.css") }}" type="text/css" />
@@ -30,7 +27,7 @@
     <script src="{{ static_url("ext_components/bowser/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
         /**
-         * A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
+         * CAN I UPDATE THIS AND DOES THIS STICK A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
          * This puts a flag in sessionStorage - as long as that flag's there, the check won't be done again
          * (to avoid having the same thing happen on page refreshes and such).
          *
@@ -56,8 +53,15 @@
       function gtag() { dataLayer.push(arguments); }
       gtag('js', new Date());
       gtag('config', '{{google_analytics_id}}', {
-        'cookie_domain': 'kbase.us'
-      })
+        'username': '{{userName}}',
+        'Page_location': document.URL,
+        'page_path': document.location.pathname,
+        'page_title': document.location.pathname
+      });
+      gtag('set', {'user_id': '{{userName}}'});
+      if (document.location.hostname.includes('narrative')){
+        gtag('config', 'AW-753507180');
+      }
     </script>
 
     <script src="{{static_url('components/es6-promise/promise.min.js')}}" type="text/javascript" charset="utf-8"></script>

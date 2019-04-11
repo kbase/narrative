@@ -59,9 +59,9 @@
         'page_title': document.location.pathname
       });
       gtag('set', {'user_id': '{{userName}}'});
-      if (document.location.hostname.includes('narrative')){
-        gtag('config', 'AW-753507180');
-      }
+      {% if google_ad_id %}
+        gtag('config', '{{google_ad_id}}');
+      {% endif %}
     </script>
 
     <script src="{{static_url('components/es6-promise/promise.min.js')}}" type="text/javascript" charset="utf-8"></script>

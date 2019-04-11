@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="utf-8">
-
     <title>{% block title %}KBase Narrative{% endblock %}</title>
     {% block favicon %}<link id="favicon" rel="shortcut icon" type="image/x-icon" href="{{static_url("kbase/images/KBase_favicon.ico") }}">{% endblock %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -54,8 +53,15 @@
       function gtag() { dataLayer.push(arguments); }
       gtag('js', new Date());
       gtag('config', '{{google_analytics_id}}', {
-        'cookie_domain': 'kbase.us'
-      })
+        'username': '{{userName}}',
+        'Page_location': document.location,
+        'page_path': document.location.pathname,
+        'page_title': document.location.pathname
+      });
+      gtag('set', {'user_id': '{{userName}}'});
+      {% if google_ad_id %}
+        gtag('config', '{{google_ad_id}}');
+      {% endif %}
     </script>
 
     <script src="{{static_url('components/es6-promise/promise.min.js')}}" type="text/javascript" charset="utf-8"></script>

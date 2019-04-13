@@ -61,7 +61,10 @@
       gtag('set', {'user_id': '{{userName}}'});
       {% if google_ad_id %}
         gtag('config', '{{google_ad_id}}');
+        gtag('event', 'conversion', {'send_to': '{{google_ad_id}}'+'/kR9OCLas4JgBEOy2pucC'});
       {% endif %}
+</script>
+
     </script>
 
     <script src="{{static_url('components/es6-promise/promise.min.js')}}" type="text/javascript" charset="utf-8"></script>

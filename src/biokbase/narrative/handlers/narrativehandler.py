@@ -84,7 +84,8 @@ class NarrativeMainHandler(IPythonHandler):
                 mathjax_url=self.mathjax_url,
                 google_analytics_id=URLS.google_analytics_id,
                 userName=kbase_env.user,
-                google_ad_id=URLS.google_ad_id
+                google_ad_id=URLS.google_ad_id,
+                google_ad_conversion=URLS.google_ad_conversion,
             )
         )
 

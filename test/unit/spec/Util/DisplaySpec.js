@@ -110,7 +110,7 @@ define ([
                 });
         });
 
-        it('displayRealName should deal with hackery usernames', (done) => {
+        xit('displayRealName should deal with hackery usernames', (done) => {
             let userId = "<script>alert('Bad actor')</script>",
                 fullName = "Really Bad Actor",
                 response = {};
@@ -127,7 +127,7 @@ define ([
                     let idWithQuotes = "&lt;script&gt;alert('Bad actor')&lt;/script&gt;";
                     expect($nameTarget[0].innerHTML).toContain(idWithQuotes);
                     expect($nameTarget[0].innerHTML).toContain(StringUtil.escape(fullName));
-                    expect($nameTarget[0].innerHTML).toContain(' (<a href="' + profilePageUrl + idWithQuotes + '" target="_blank">' + idWithQuotes + '</a>)');
+                    expect($nameTarget[0].innerHTML).toContain(' (<a href="' + profilePageUrl + userId + '" target="_blank">' + idWithQuotes + '</a>)');
                     done();
                 });
         });

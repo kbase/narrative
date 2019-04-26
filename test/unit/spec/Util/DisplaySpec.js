@@ -110,7 +110,7 @@ define ([
                 });
         });
 
-        it('displayRealName should deal with hackery usernames as well', (done) => {
+        it('displayRealName should deal with hackery usernames', (done) => {
             let userId = "<script>alert('Bad actor')</script>",
                 fullName = "Really Bad Actor",
                 response = {};
@@ -124,11 +124,32 @@ define ([
             });
             DisplayUtil.displayRealName(userId, $nameTarget)
                 .finally(() => {
-                    let escapedId = StringUtil.escape(userId);
                     let idWithQuotes = "&lt;script&gt;alert('Bad actor')&lt;/script&gt;";
                     expect($nameTarget[0].innerHTML).toContain(idWithQuotes);
                     expect($nameTarget[0].innerHTML).toContain(StringUtil.escape(fullName));
                     expect($nameTarget[0].innerHTML).toContain(' (<a href="' + profilePageUrl + idWithQuotes + '" target="_blank">' + idWithQuotes + '</a>)');
+                    done();
+                });
+        });
+
+        it('displayRealName should deal with hackery full names as well', (done) => {
+            let userId = "badActor",
+                fullName = "<script>alert('Bad actor')</script>",
+                response = {};
+            response[userId] = fullName;
+            jasmine.Ajax.stubRequest(/.*\/auth\/api\/V2\/users\/\?list/).andReturn({
+                status: 200,
+                statusText: 'success',
+                contentType: 'text/plain',
+                responseHeaders: '',
+                responseText: JSON.stringify(response)
+            });
+            DisplayUtil.displayRealName(userId, $nameTarget)
+                .finally(() => {
+                    let fullNameWithQuotes = "&lt;script&gt;alert('Bad actor')&lt;/script&gt;";
+                    expect($nameTarget[0].innerHTML).toContain(userId);
+                    expect($nameTarget[0].innerHTML).toContain(fullNameWithQuotes);
+                    expect($nameTarget[0].innerHTML).toContain(' (<a href="' + profilePageUrl + userId + '" target="_blank">' + userId + '</a>)');
                     done();
                 });
         });

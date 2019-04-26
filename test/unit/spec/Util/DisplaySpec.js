@@ -111,7 +111,7 @@ define ([
         });
 
         it('displayRealName should deal with hackery usernames as well', (done) => {
-            let userId = '<script>alert("Bad actor")</script>',
+            let userId = "<script>alert('Bad actor')</script>",
                 fullName = "Really Bad Actor",
                 response = {};
             response[StringUtil.escape(userId)] = fullName;
@@ -125,10 +125,10 @@ define ([
             DisplayUtil.displayRealName(userId, $nameTarget)
                 .finally(() => {
                     let escapedId = StringUtil.escape(userId);
-                    expect($nameTarget[0].innerHTML).toContain(escapedId);
+                    let idWithQuotes = "&lt;script&gt;alert('Bad actor')&lt;/script&gt;";
+                    expect($nameTarget[0].innerHTML).toContain(idWithQuotes);
                     expect($nameTarget[0].innerHTML).toContain(StringUtil.escape(fullName));
-                    let idWithQuotes = '&lt;script&gt;alert("Bad actor")&lt;/script&gt;';
-                    expect($nameTarget[0].innerHTML).toContain(' (<a href="' + profilePageUrl + escapedId + '" target="_blank">' + idWithQuotes + '</a>)');
+                    expect($nameTarget[0].innerHTML).toContain(' (<a href="' + profilePageUrl + idWithQuotes + '" target="_blank">' + idWithQuotes + '</a>)');
                     done();
                 });
         });

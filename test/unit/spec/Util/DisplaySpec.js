@@ -125,10 +125,10 @@ define ([
             DisplayUtil.displayRealName(userId, $nameTarget)
                 .finally(() => {
                     let escapedId = StringUtil.escape(userId);
-                    expect($nameTarget.html()).toContain(escapedId);
-                    expect($nameTarget.html()).toContain(StringUtil.escape(fullName));
+                    expect($nameTarget[0].innerHTML).toContain(escapedId);
+                    expect($nameTarget[0].innerHTML).toContain(StringUtil.escape(fullName));
                     let idWithQuotes = '&lt;script&gt;alert("Bad actor")&lt;/script&gt;';
-                    expect($nameTarget.html()).toContain(' (<a href="' + profilePageUrl + escapedId + '" target="_blank">' + idWithQuotes + '</a>)');
+                    expect($nameTarget[0].innerHTML).toContain(' (<a href="' + profilePageUrl + escapedId + '" target="_blank">' + idWithQuotes + '</a>)');
                     done();
                 });
         });

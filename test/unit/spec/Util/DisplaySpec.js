@@ -125,7 +125,7 @@ define ([
                     const properId = $('<div>').text(userId).html();
                     expect($nameTarget[0].innerHTML).toContain(fullName);
                     expect($nameTarget[0].innerHTML).toContain(properId);
-                    expect($nameTarget[0].innerHTML).toContain(' (<a href="' + profilePageUrl + properId + '" target="_blank">' + properId + '</a>)');
+                    expect($nameTarget[0].innerHTML).toContain(' (<a href="' + profilePageUrl + userId + '" target="_blank">' + properId + '</a>)');
                     done();
                 });
         });

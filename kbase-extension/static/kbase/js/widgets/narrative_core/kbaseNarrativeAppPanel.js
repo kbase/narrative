@@ -71,7 +71,11 @@ define([
             methodHelpLink: '/#appcatalog/app/',
             appHelpLink: '/#appcatalog/app/l.a/'
         },
-        ignoreCategories: {},
+        ignoreCategories: {
+            inactive: 1,
+            importers: 1,
+            viewers: 1
+        },
         id2Elem: {},
         methodSpecs: {}, // id -> spec
         categories: {}, // id -> category info
@@ -94,7 +98,7 @@ define([
             });
 
             this.ignoreCategories = (function() {
-                this.narrativeService.callFunc('get_ignore_categories', [{}])
+                self.narrativeService.callFunc('get_ignore_categories', [])
                 .then((ignoreCategories) => {
                     return ignoreCategories[0];
                 })

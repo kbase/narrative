@@ -71,11 +71,7 @@ define([
             methodHelpLink: '/#appcatalog/app/',
             appHelpLink: '/#appcatalog/app/l.a/'
         },
-        ignoreCategories: {
-            inactive: 1,
-            importers: 1,
-            viewers: 1
-        },
+        ignoreCategories: {},
         id2Elem: {},
         methodSpecs: {}, // id -> spec
         categories: {}, // id -> category info
@@ -97,21 +93,7 @@ define([
                 token: Runtime.make().authToken()
             });
 
-            this.ignoreCategories = (function() {
-                self.narrativeService.callFunc('get_ignore_categories', [])
-                .then((ignoreCategories) => {
-                    return ignoreCategories[0];
-                })
-                .catch((error) => {
-                    console.error(error);
-                    // return default ignore categories
-                    return {
-                        inactive: 1,
-                        importers: 1,
-                        viewers: 1
-                    };
-                });
-            })();
+            this.getIgnoreCategories();
 
             this.icon_colors = Config.get('icons').colors;
 
@@ -490,6 +472,24 @@ define([
                 .append($('<div>').append(this.help.$helpLinkout))
                 .append($('<h2>').append('Click to hide'));
             $('body').append(this.help.$helpPanel);
+        },
+
+        /**
+         * Fetch ignored_category from Narrative Service and assign returned value to local ignoreCategories
+         */
+        getIgnoreCategories: function() {
+            this.narrativeService.callFunc('get_ignore_categories', [])
+                .then((ignoreCategories) => {
+                    this.ignoreCategories = ignoreCategories[0];
+                })
+                .catch((error) => {
+                    // return default ignore categories
+                    this.ignoreCategories =  {
+                        inactive: 1,
+                        importers: 1,
+                        viewers: 1
+                    };
+                });
         },
 
         /**

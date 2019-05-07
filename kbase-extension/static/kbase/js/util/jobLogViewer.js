@@ -770,7 +770,6 @@ define([
                     };
                     break;
                 case 'in-progress':
-                case 'running':
                     startJobUpdates();
                     startAutoFetch();
                     newState = {
@@ -812,7 +811,6 @@ define([
                     // no change
                     break;
                 case 'in-progress':
-                case 'running':
                     newState = {
                         mode: 'active',
                         auto: true
@@ -846,7 +844,6 @@ define([
                     // this should not occur!
                     break;
                 case 'in-progress':
-                case 'running':
                     startAutoFetch();
                     break;
                 case 'completed':

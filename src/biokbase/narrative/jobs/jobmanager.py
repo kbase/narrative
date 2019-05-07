@@ -65,25 +65,6 @@ class JobManager(object):
         self._send_comm_message("start", {"time": int(round(time.time() * 1000))})
         ws_id = system_variable("workspace_id")
 
-        # NU STYLE.
-        # try:
-        #     job_states = clients.get("job_service").list_job_statuses(ws_id)
-        # except Exception as e:
-        #     kblogging.log_event(self._log, "init_error", {"err": str(e)})
-        #     new_e = transform_job_exception(e)
-        #     error = {
-        #         "error": "Unable to get initial jobs list"
-        #         "message": getattr(new_e, "message", "Unknown reason"),
-        #         "code": getattr(new_e, "code", -1),
-        #         "source": getattr(new_e, "source", "jobmanager"),
-        #         "name": getattr(new_e, "name", type(e).__name__),
-        #         "service": "NarrativeJobService"
-        #     }
-        #     self._send_comm_message("job_init_err", error)
-        #     raise new_e
-
-
-        # OLD STYLE
         try:
             nar_jobs = clients.get('user_and_job_state').list_jobs2({
                 'authstrat': 'kbaseworkspace',

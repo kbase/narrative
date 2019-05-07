@@ -104,7 +104,6 @@ class JobManager(object):
             raise new_e
 
         job_ids = [j[0] for j in nar_jobs]
-        kblogging.log_event(self._log, "RUNNING CHECK JOBS", {})
         job_states = clients.get('job_service').check_jobs({
             'job_ids': job_ids, 'with_job_params': 1
         })
@@ -205,7 +204,6 @@ class JobManager(object):
         Initially used to make Child jobs from some parent, but will eventually be adapted to all jobs on startup.
         Just slaps them all into _running_jobs
         """
-        kblogging.log_event(self._log, "RUNNING CHECK JOBS", {})
         job_states = clients.get('job_service').check_jobs({'job_ids': job_ids, 'with_job_params': 1})
         job_states = sanitize_all_states(job_states)
         for job_id in job_ids:

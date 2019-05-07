@@ -514,6 +514,7 @@ define([
                 this.requestJobStatus();
                 break;
             case 'in-progress':
+            case 'running':
                 this.requestedUpdates = true;
                 this.requestJobStatus();
                 break;

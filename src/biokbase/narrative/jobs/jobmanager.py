@@ -12,6 +12,7 @@ from biokbase.narrative.exception_util import (
     transform_job_exception
 )
 import traceback
+from .util import sanitize_all_states
 """
 KBase Job Manager
 
@@ -61,11 +62,28 @@ class JobManager(object):
         4. start the status lookup loop.
         """
 
-        the_time = int(round(time.time() * 1000))
+        self._send_comm_message("start", {"time": int(round(time.time() * 1000))})
+        ws_id = system_variable("workspace_id")
 
-        self._send_comm_message('start', {'time': the_time})
+        # NU STYLE.
+        # try:
+        #     job_states = clients.get("job_service").list_job_statuses(ws_id)
+        # except Exception as e:
+        #     kblogging.log_event(self._log, "init_error", {"err": str(e)})
+        #     new_e = transform_job_exception(e)
+        #     error = {
+        #         "error": "Unable to get initial jobs list"
+        #         "message": getattr(new_e, "message", "Unknown reason"),
+        #         "code": getattr(new_e, "code", -1),
+        #         "source": getattr(new_e, "source", "jobmanager"),
+        #         "name": getattr(new_e, "name", type(e).__name__),
+        #         "service": "NarrativeJobService"
+        #     }
+        #     self._send_comm_message("job_init_err", error)
+        #     raise new_e
 
-        ws_id = system_variable('workspace_id')
+
+        # OLD STYLE
         try:
             nar_jobs = clients.get('user_and_job_state').list_jobs2({
                 'authstrat': 'kbaseworkspace',
@@ -86,9 +104,11 @@ class JobManager(object):
             raise new_e
 
         job_ids = [j[0] for j in nar_jobs]
+        kblogging.log_event(self._log, "RUNNING CHECK JOBS", {})
         job_states = clients.get('job_service').check_jobs({
             'job_ids': job_ids, 'with_job_params': 1
         })
+        job_states = sanitize_all_states(job_states)
         job_param_info = job_states.get('job_params', {})
         job_check_error = job_states.get('check_error', {})
         error_jobs = dict()
@@ -170,7 +190,7 @@ class JobManager(object):
             self._send_comm_message(err_type, error)
 
         if not self._running_lookup_loop and start_lookup_thread:
-            # only keep one loop at a time in cause this gets called again!
+            # only keep one loop at a time in case this gets called again!
             if self._lookup_timer is not None:
                 self._lookup_timer.cancel()
             self._running_lookup_loop = True
@@ -185,7 +205,9 @@ class JobManager(object):
         Initially used to make Child jobs from some parent, but will eventually be adapted to all jobs on startup.
         Just slaps them all into _running_jobs
         """
+        kblogging.log_event(self._log, "RUNNING CHECK JOBS", {})
         job_states = clients.get('job_service').check_jobs({'job_ids': job_ids, 'with_job_params': 1})
+        job_states = sanitize_all_states(job_states)
         for job_id in job_ids:
             ujs_info = clients.get('user_and_job_state').get_job_info2(job_id)
 
@@ -441,6 +463,7 @@ class JobManager(object):
 
         sub_job_list = sorted(sub_job_list)
         job_info = clients.get('job_service').check_jobs({'job_ids': sub_job_list, 'with_job_params': 1})
+        job_info = sanitize_all_states(job_info)
         child_job_states = list()
 
         for job_id in sub_job_list:
@@ -544,6 +567,9 @@ class JobManager(object):
         Looks up status for all jobs.
         Once job info is acquired, it gets pushed to the front end over the
         'KBaseJobs' channel.
+        Returns the number of jobs whose status were looked up (useful for deciding when
+        to stop calling this function - if 0 is returned, we don't need to look up any more jobs
+        for a while).
         """
         jobs_to_lookup = list()
         # grab the list of running job ids, so we don't run into update-while-iterating problems.
@@ -852,7 +878,21 @@ class JobManager(object):
 
     def _get_all_job_states(self, job_ids=None):
         """
-        Returns the state for all running jobs
+        Returns the state for all running jobs.
+        Returns a list where each element has this structure:
+        {
+            cell_id: (optional) id of the cell that spawned the job
+            run_id: (optional) id of the job run
+            awe_job_state: string
+            creation_time: timestamp (ms since epoch)
+            finished: 0/1
+            job_id: string
+            job_state: string
+            status: [ timestamp, _, _, _, _, _, _ ], (7-tuple)
+            sub_jobs: [],
+            ujs_url: string,
+            child_jobs: []
+        }
         """
         # 1. Get list of ids
         if job_ids is None:
@@ -871,11 +911,12 @@ class JobManager(object):
         # 3. Lookup those jobs what need it. Cache 'em as we go, if finished.
         try:
             fetched_states = clients.get('job_service').check_jobs({'job_ids': jobs_to_lookup})
+            fetched_states = sanitize_all_states(fetched_states)
         except Exception as e:
             kblogging.log_event(self._log, 'get_all_job_states_error', {'err': str(e)})
             return {}
 
-        error_states = fetched_states.get('check_errors', {})
+        error_states = fetched_states.get('check_error', {})
         fetched_states = fetched_states.get('job_states', {})
         for job_id in jobs_to_lookup:
             if job_id in fetched_states:

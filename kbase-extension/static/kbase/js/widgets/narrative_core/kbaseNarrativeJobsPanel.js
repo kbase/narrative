@@ -82,6 +82,7 @@ define([
                 var s = status.string.toLowerCase();
                 switch (s) {
                 case 'in-progress':
+                case 'running':
                     return '<b>' + status + '</b>';
                 case 'queued':
                     return '<b>' + status + '</b>';
@@ -785,7 +786,7 @@ define([
         jobIsIncomplete: function (status) {
             if (status) {
                 status = status.toLowerCase();
-                return (status === 'in-progress' || status === 'queued');
+                return (status === 'in-progress' || status === 'queued' || status === 'running');
             } else
                 return true;
         },

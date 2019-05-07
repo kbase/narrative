@@ -117,6 +117,13 @@ class NarrativeJobService(object):
         return self._client.call_method(
             'NarrativeJobService.run_job',
             [params], self._service_ver, context)
+    ###
+    ### TODO: REMOVE THIS HACK AND REBUILD CLIENT
+    ###
+    def list_job_statuses(self, ws_id, context=None):
+        return self._client.call_method(
+            'NarrativeJobService.list_job_statuses',
+            [ws_id], self._service_ver, context)
 
     def get_job_params(self, job_id, context=None):
         """

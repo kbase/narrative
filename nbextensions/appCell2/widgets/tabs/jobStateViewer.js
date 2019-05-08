@@ -31,7 +31,7 @@ define([
                 color = 'red';
                 break;
             case 'canceled':
-                label = 'cancelation';
+                label = 'cancellation';
                 color = 'orange';
                 break;
             case 'does_not_exist':

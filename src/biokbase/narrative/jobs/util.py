@@ -13,8 +13,8 @@ def sanitize_state(state):
     if state.get('job_state', '') == 'cancelled':
         state['job_state'] = 'canceled'
     ujs_status = state.get('status', [])
-    if len(ujs_status) >= 2 and ujs_status[1] == 'cancelled':
-        state['status'][1] == 'canceled'
+    if isinstance(ujs_status, list) and len(ujs_status) >= 2 and ujs_status[1] == 'cancelled':
+        state['status'][1] = 'canceled'
     return state
 
 

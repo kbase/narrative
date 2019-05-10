@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
 
+### Version 3.11.1
+- Add internal information for users who came to the site from a Google ad click.
+- Improve load time of the App Panel.
+- Fix a bug where jobs canceled in the non-Narrative job browser would cause issues with the corresponding App Cell.
+
 ### Version 3.11.0
 - Add an option to share a Narrative with an organization as well as people.
 - SCT-1783 - Reduce the number of network calls to the auth service on startup.

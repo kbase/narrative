@@ -106,6 +106,7 @@ define([
             this.my_user_id = auth.user_id;
             if (this.options.autopopulate) {
                 this.refresh();
+                this.hasBeenActivated = true;
             }
             return this;
         },

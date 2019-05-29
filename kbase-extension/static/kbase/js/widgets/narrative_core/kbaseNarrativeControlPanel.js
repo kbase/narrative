@@ -212,5 +212,15 @@ define ([
         body: function() {
             return this.$bodyDiv;
         },
+
+        /**
+         * Gets invoked whenever the user clicks over to the side panel tab where this control
+         * panel lives. For example, the current (5/29/2019) narrative starts on the Analyze tab.
+         * When a user clicks on the Narratives tab, each widget there (just the one, really) has
+         * this function called.
+         */
+        activate: function() {
+            // no op - meant to be extended by some functional widget.
+        }
     });
 });

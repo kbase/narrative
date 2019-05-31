@@ -27,7 +27,7 @@ define([
             this.dataSet = options.dataSet;
             this.$importStatus = options.$importStatus;
             this.wsName = options.ws_name;
-            this.maxObjFetch = Config.get('data_panel').ws_max_objs_to_fetch || 30000;
+            this.objectCountLimit = 30000; //Config.get('data_panel').ws_max_objs_to_fetch || 30000;
             this.state = {
                 data: [],
                 wsIdFilter: null,   // int for ws id
@@ -42,7 +42,7 @@ define([
                     .addClass('close')
                     .append($('<span aria-hidden="true">&times;</span>'))
                     .click(() => {
-                        $messageHeader.slideUp(400);
+                        this.$messageHeader.slideUp(400);
                     }))
                 .append($('<span id="kb-data-panel-msg">'))
                 .hide();
@@ -105,14 +105,16 @@ define([
 
         changeState(newState) {
             this.state = {...this.state, ...newState};
-            if ('wsIdFilter' in newState || 'typeFilter' in newState) {
+            let updateWsList = false,
+                updateTypeList = false;
+            if (newState.hasOwnProperty('wsIdFilter') || newState.hasOwnProperty('typeFilter')) {
                 this.state.searchFilter = '';
-                this.setLoading(true);
-                this.updateView();
             }
-            else {
-
+            if (this.state.typeFilter === null) {
+                updateTypeList = true;
             }
+            this.setLoading(true);
+            this.updateView(updateWsList, updateTypeList);
         }
 
         /**
@@ -121,11 +123,14 @@ define([
          * from fetch data (and the current filter state, so watch for that) to
          * populate the Narratives filter dropdown.
          */
-        updateView(resetWorkspaces) {
+        updateView(resetWorkspaces, resetTypes) {
             this.fetchData()
                 .then((data) => {
                     if (resetWorkspaces) {
                         this.workspaces = data.workspace_display;
+                    }
+                    if (resetTypes) {
+                        this.types = this.processTypes(data.type_counts);
                     }
                     this.createFilters(data);
                     this.render(data, []);
@@ -133,6 +138,47 @@ define([
                 .catch((error) => {
                     console.error('ERROR ', error);
                 });
+        }
+
+        /**
+         * Turns this:
+         * {
+         *      Module1.Type : 5,
+         *      Module2.Type : 5,
+         *      Module3.OtherType: 1
+         * }
+         * into this:
+         * {
+         *      Type: {
+         *          count: 10,
+         *          full: [Module1.Type, Module2.Type]
+         *      },
+         *      OtherType: {
+         *          count: 1,
+         *          full: [Module3.OtherType]
+         *      }
+         * }
+         * @param {object} typeCounts
+         */
+        processTypes(typeCounts) {
+            let types = {};
+            Object.keys(typeCounts).forEach(t => {
+                const unversioned = t.split('-')[0];
+                const typeName = unversioned.split('.')[1];
+                if (!types.hasOwnProperty(typeName)) {
+                    types[typeName] = {
+                        count: typeCounts[t],
+                        full: [unversioned]
+                    };
+                }
+                else {
+                    types[typeName].count += typeCounts[t];
+                    if (!types[typeName].full.includes(unversioned)) {
+                        types[typeName].full.push(unversioned);
+                    }
+                }
+            });
+            return types;
         }
 
         /**
@@ -155,7 +201,8 @@ define([
             const otherParams = {
                 include_type_counts: 1,
                 simple_types: 0,
-                ignore_narratives: 1
+                ignore_narratives: 1,
+                limit: this.objectCountLimit
             }
             params = {...params, ...otherParams};
             return Promise.resolve(this.serviceClient.sync_call(command, [params]))
@@ -192,8 +239,8 @@ define([
          */
         renderOnIconsReady(data, selected) {
             var headerMessage = '';
-            if (data.objects.length >= this.maxObjFetch) {
-                headerMessage = 'You have access to over <b>' + this.maxObjFetch + '</b> data objects, so we\'re only showing a sample. Please use the Types or Narratives selectors above to filter.';
+            if (data.limit_reached && data.limit_reached === 1) {
+                headerMessage = 'You have access to over <b>' + this.objectCountLimit + '</b> data objects, so we\'re only showing a sample. Please use the Types or Narratives selectors above to filter.';
             }
             this.setHeaderMessage(headerMessage);
 
@@ -448,16 +495,16 @@ define([
             // event for ws dropdown
             wsInput.change((e) => {
                 let wsId = $(e.target).children('option:selected').data('id');
-                this.changeState({wsIdFilter: wsId});
+                this.changeState({wsIdFilter: wsId, typeFilter: null});
             });
 
             // create type filter
             var typeInput = $('<select class="form-control kb-import-filter">');
             typeInput.append('<option>All types...</option>');
 
-            Object.keys(data.type_counts).sort().forEach(key => {
-                typeInput.append('<option data-type="' + key + '">' +
-                    key + ' (' + data.type_counts[key] + ')' +
+            Object.keys(this.types).sort().forEach(t => {
+                typeInput.append('<option data-type="' + t + '">' +
+                    t + ' (' + this.types[t].count + ')' +
                     '</option>');
             });
 
@@ -465,11 +512,7 @@ define([
             // event for type dropdown
             typeInput.change((e) => {
                 const type = $(e.target).children('option:selected').data('type');
-                let types = [];
-                if (type) {
-                    types = type.split(',');
-                }
-                // request again with filted type
+                const types = this.types[type].full;
                 this.changeState({typeFilter: types});
             });
 
@@ -486,7 +529,7 @@ define([
                     .click(() => {
                         this.$scrollPanel.empty();
                         this.setLoading(true);
-                        this.updateView(true);
+                        this.updateView();
                     })
                     .append($('<span>')
                         .addClass('fa fa-refresh')));

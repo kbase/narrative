@@ -237,13 +237,13 @@ define([
                     {
                         widget : this.mineTab,
                         render : function () {
-                            this.mineTab.updateView(true);
+                            this.mineTab.updateView(true, true);
                         }.bind(this),
                     },
                     {
                         widget : this.sharedTab,
                         render : function () {
-                            this.sharedTab.updateView(true);
+                            this.sharedTab.updateView(true, true);
                         }.bind(this),
                     },
                     {

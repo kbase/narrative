@@ -67,6 +67,7 @@ define([
         nar_name: null,
         $mainPanel: null,
         $newNarrativeLink: null, // when a new narrative is created, gives a place to link to it
+        hasBeenActivated: false,
 
         init: function (options) {
             this._super(options);
@@ -90,13 +91,23 @@ define([
         },
 
         my_user_id: null,
+        activate: function () {
+            if (!this.hasBeenActivated) {
+                this.refresh();
+                this.hasBeenActivated = true;
+            }
+        },
+
         loggedInCallback: function (event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
             this.manager = new NarrativeManager({ws_url: this.options.ws_url, nms_url: this.options.nms_url}, auth);
             this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
 
             this.my_user_id = auth.user_id;
-            this.refresh();
+            if (this.options.autopopulate) {
+                this.refresh();
+                this.hasBeenActivated = true;
+            }
             return this;
         },
         loggedOutCallback: function () {

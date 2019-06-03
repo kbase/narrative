@@ -21,15 +21,16 @@ define([
 ) {
     'use strict';
 
+    const OBJECT_COUNT_LIMIT = Config.get('data_panel').ws_max_objs_to_fetch || 30000;
+    const RENDER_CHUNK = 30; // 30 objects per scroll
+
     class DataBrowser {
         constructor(node, options) {
             this.node = node;
             this.dataSet = options.dataSet;
             this.$importStatus = options.$importStatus;
             this.wsName = options.ws_name;
-            this.objectCountLimit = 30000; //Config.get('data_panel').ws_max_objs_to_fetch || 30000;
             this.state = {
-                data: [],
                 wsIdFilter: null,   // int for ws id
                 typeFilter: null,   // string for type to filter
                 searchFilter: null, // string for search filter
@@ -107,14 +108,17 @@ define([
             this.state = {...this.state, ...newState};
             let updateWsList = false,
                 updateTypeList = false;
-            if (newState.hasOwnProperty('wsIdFilter') || newState.hasOwnProperty('typeFilter')) {
-                this.state.searchFilter = '';
-            }
             if (this.state.typeFilter === null) {
                 updateTypeList = true;
             }
-            this.setLoading(true);
-            this.updateView(updateWsList, updateTypeList);
+            if (newState.hasOwnProperty('wsIdFilter') || newState.hasOwnProperty('typeFilter')) {
+                this.state.searchFilter = '';
+                this.setLoading(true);
+                this.updateView(updateWsList, updateTypeList);
+            }
+            if (newState.hasOwnProperty('searchFilter')) {
+                this.render();
+            }
         }
 
         /**
@@ -126,14 +130,15 @@ define([
         updateView(resetWorkspaces, resetTypes) {
             this.fetchData()
                 .then((data) => {
+                    this.data = data;
                     if (resetWorkspaces) {
                         this.workspaces = data.workspace_display;
                     }
                     if (resetTypes) {
                         this.types = this.processTypes(data.type_counts);
                     }
-                    this.createFilters(data);
-                    this.render(data, []);
+                    this.createFilters();
+                    this.render();
                 })
                 .catch((error) => {
                     console.error('ERROR ', error);
@@ -196,81 +201,56 @@ define([
                 params = {workspace_ids: [this.state.wsIdFilter]};
             }
             if (this.state.typeFilter) {
-                params.types = this.state.typeFilter;
+                params.types = this.types[this.state.typeFilter].full || [];
             }
             const otherParams = {
                 include_type_counts: 1,
                 simple_types: 0,
                 ignore_narratives: 1,
-                limit: this.objectCountLimit
+                limit: OBJECT_COUNT_LIMIT
             }
             params = {...params, ...otherParams};
             return Promise.resolve(this.serviceClient.sync_call(command, [params]))
                 .then(data => data[0]);
         }
 
-        // This function takes data to render and
-        // a container to put data in.
-        // It produces a scrollable dataset
         /**
-         *
-         * @param {object} data - keys objects, workspace_display
-         * @param {jquery node} container
-         * @param {*} selected
-         * @param {*} template
-         */
-        render(data, selected) {
-            var setDataIconTrigger = $._data($(document)[0], 'events')['setDataIcon'];
-            if (setDataIconTrigger) {
-                this.renderOnIconsReady(data, selected);
-            } else {
-                setTimeout(function () {
-                    this.renderOnIconsReady(data, selected);
-                }, 100);
-            }
-        }
-
-        /**
-         *
+         * Resets the rendering, renders all the things from scratch.
          * @param {object} data
          * @param {jquery node} container
          * @param {*} selected
          * @param {*} template - not used?
          */
-        renderOnIconsReady(data, selected) {
+        render() {
             var headerMessage = '';
-            if (data.limit_reached && data.limit_reached === 1) {
-                headerMessage = 'You have access to over <b>' + this.objectCountLimit + '</b> data objects, so we\'re only showing a sample. Please use the Types or Narratives selectors above to filter.';
+            if (this.data.limit_reached && this.data.limit_reached === 1) {
+                headerMessage = 'You have access to over <b>' + OBJECT_COUNT_LIMIT + '</b> data objects, so we\'re only showing a sample. Please use the Types or Narratives selectors above to filter.';
             }
             this.setHeaderMessage(headerMessage);
-
-            var start = 0,
-                numRows = 30;
+            this.state.objectPointer = 0;   // resets the pointer to the first element in the data list.
 
             // remove items from only current container being rendered
             this.$scrollPanel.empty();
 
-            if (data.objects.length == 0) {
+            if (this.data.objects.length == 0) {
                 this.$scrollPanel.append($('<div>').addClass('kb-data-list-type').css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
                 this.setLoading(false);
                 return;
             }
 
-            var rows = this.buildMyRows(data, start, numRows);
+            var rows = this.buildNextRows();
             this.$scrollPanel.append(rows);
-            this.events(this.$scrollPanel, selected);
+            this.events(this.$scrollPanel, []);
 
             // infinite scroll
-            var currentPos = numRows;
             this.$scrollPanel.unbind('scroll');
             this.$scrollPanel.on('scroll', () => {
                 if (this.$scrollPanel.scrollTop() + this.$scrollPanel.innerHeight() >= this.$scrollPanel[0].scrollHeight &&
-                    currentPos < data.objects.length) {
-                    var rows = this.buildMyRows(data, currentPos, numRows);
+                    this.state.objectPointer < this.data.objects.length) {
+                    var rows = this.buildNextRows();
                     this.$scrollPanel.append(rows);
-                    currentPos += numRows;
                 }
-                this.events(this.$scrollPanel, selected);
+                this.events(this.$scrollPanel, []);
             });
             this.setLoading(false);
         }
@@ -369,50 +349,6 @@ define([
 
         }
 
-        filterData(data, f) {
-            if (data.length == 0)
-                return [];
-
-            var filteredData = [];
-            // add each item to view
-            for (var i = 0; i < data.length; i < i++) {
-                var obj = data[i];
-
-                var mod_type = obj[2].split('-')[0],
-                    ws = obj[7],
-                    name = obj[1];
-                var kind = mod_type.split('.')[1];
-
-                // filter conditions
-                if (f.query) {
-                    //query filter
-                    var query = f.query.toLowerCase();
-                    if (name.toLowerCase().indexOf(query) >= 0) {
-                        filteredData.push(obj);
-                    } else if (kind.toLowerCase().indexOf(query) >= 0) {
-                        filteredData.push(obj);
-                    } else if (obj[5].toLowerCase().indexOf(query) >= 0) {
-                        filteredData.push(obj);
-                    }
-                } else if (f.type) {
-                    //type filter
-                    if (f.type.split('.')[1] === kind) {
-                        filteredData.push(obj);
-                    }
-                } else if (f.ws) {
-                    // workspace filter
-                    if (f.ws === ws) {
-                        filteredData.push(obj);
-                    }
-                } else {
-                    // no filter is on, so add it
-                    filteredData.push(obj);
-                }
-
-            }
-            return filteredData;
-        }
-
         /**
          *
          * @param {object} data - keys objects, workspace_display
@@ -421,7 +357,7 @@ define([
          * @param {Int} numRows
          * @param {*} template
          */
-        buildMyRows(data, start, numRows, template) {
+        buildNextRows() { //}, start, numRows) {
             // add each set of items to container to be added to DOM
             var rows = $('<div class="kb-import-items">');
             var loadedData = {};
@@ -435,46 +371,39 @@ define([
                     });
                 }
             ]);
-            for (var i = start; i < Math.min(start + numRows, data.objects.length); i++) {
-                let obj = data.objects[i];
-                obj.relativeTime = TimeFormat.getTimeStampStr(obj.timestamp);
-                obj.narrativeName = data.workspace_display[obj.ws_id].display;
-                // var mod_type = obj[2].split('-')[0];
-                // var item = {id: obj[0],
-                //     name: obj[1],
-                //     mod_type: mod_type,
-                //     version: obj[4],
-                //     kind: mod_type.split('.')[1],
-                //     module: mod_type.split('.')[0],
-                //     wsID: obj[6],
-                //     ws: obj[7],
-                //     info: obj, // we need to have this all on hand!
-                //     relativeTime: TimeFormat.getTimeStampStr(obj[3])}; //use the same one as in data list for consistencey  kb.ui.relativeTime( Date.parse(obj[3]) ) }
+            // set the count to be 0, use the stateful objectpointer as the index,
+            // and go until we get RENDER_CHUNK rows, or we hit the end.
+            for (let count=0; this.state.objectPointer < this.data.objects.length && count < RENDER_CHUNK; this.state.objectPointer++) {
+                let obj = this.data.objects[this.state.objectPointer];
+                if (this.testFilter(obj)) {
+                    obj.relativeTime = TimeFormat.getTimeStampStr(obj.timestamp);
+                    obj.narrativeName = this.data.workspace_display[obj.ws_id].display;
 
-                if (template) {
-                    rows.append(template(obj));
-                }
-                else {
                     rows.append(this.rowTemplate(obj, loadedData));
+                    count++;
                 }
             }
             return rows;
         }
 
         /**
-         *
-         * @param {object} data - objects, workspace_display
-         * @param {jquery node} container
-         * @param {jquery node} filterContainer
+         * Returns true if this passes the state's string filter, false otherwise.
+         * @param {Object} obj - a data object
          */
-        createFilters(data, container) {
-            // possible filter inputs
-            let type, ws, query;
+        testFilter(obj) {
+            if (!this.state.searchFilter) {
+                return true;
+            }
+            const query = this.state.searchFilter;
 
-            // create filter (search)
-            const filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
-            const searchFilter = $('<div class="col-sm-4">').append(filterInput);
+            return (
+                obj.name.toLowerCase().indexOf(query) != -1 ||
+                obj.type.toLowerCase().indexOf(query) != -1 ||
+                obj.saved_by.toLowerCase().indexOf(query) != -1
+            );
+        }
 
+        buildWorkspaceFilter() {
             // create workspace filter
             const wsInput = $('<select class="form-control kb-import-filter">')
                             .append('<option>All Narratives...</option>');
@@ -497,32 +426,47 @@ define([
                 let wsId = $(e.target).children('option:selected').data('id');
                 this.changeState({wsIdFilter: wsId, typeFilter: null});
             });
+            return wsFilter;
+        }
 
+        buildTypeFilter() {
             // create type filter
-            var typeInput = $('<select class="form-control kb-import-filter">');
-            typeInput.append('<option>All types...</option>');
+            const typeInput = $('<select class="form-control kb-import-filter">')
+                              .append('<option>All types...</option>'),
+                  typeFilter = $('<div class="col-sm-3">').append(typeInput);
 
             Object.keys(this.types).sort().forEach(t => {
-                typeInput.append('<option data-type="' + t + '">' +
+                const $option = $('<option data-type="' + t + '">' +
                     t + ' (' + this.types[t].count + ')' +
                     '</option>');
+                if (this.state.typeFilter === t) {
+                    $option.prop('selected', true);
+                }
+                typeInput.append($option);
             });
 
-            var typeFilter = $('<div class="col-sm-3">').append(typeInput);
             // event for type dropdown
             typeInput.change((e) => {
                 const type = $(e.target).children('option:selected').data('type');
-                const types = this.types[type].full;
-                this.changeState({typeFilter: types});
+                this.changeState({typeFilter: type});
             });
+            return typeFilter;
+        }
 
+        createFilters() {
+            // create filter (search)
+            const filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">'),
+                searchFilter = $('<div class="col-sm-4">').append(filterInput);
             // event for filter (search)
             filterInput.keyup((e) => {
-                query = $(e.target).val();
-                this.changeState({searchFilter: query});
+                const query = $(e.target).val();
+                this.changeState({searchFilter: query.toLowerCase()});
             });
 
-            var $refreshBtnDiv = $('<div>').addClass('col-sm-1').css({'text-align': 'center'}).append(
+            const wsFilter = this.buildWorkspaceFilter(),
+                typeFilter = this.buildTypeFilter();
+
+            const $refreshBtnDiv = $('<div>').addClass('col-sm-1').css({'text-align': 'center'}).append(
                 $('<button>')
                     .css({'margin-top': '12px'})
                     .addClass('btn btn-xs btn-default')
@@ -533,6 +477,7 @@ define([
                     })
                     .append($('<span>')
                         .addClass('fa fa-refresh')));
+
             this.$filterRow.empty()
                 .append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
         }
@@ -564,11 +509,26 @@ define([
             return kbaseDataCard.apply(this, [{
                 narrative: obj.narrativeName,
                 actionButtonText: actionButtonText,
+                copyFunction: () => this.doObjectCopy(obj),
                 moreContent: $btnToolbar,
                 max_name_length: 50,
-                object_info: [obj.obj_id, obj.name, obj.type, obj.timestamp, obj.ver, obj.saved_by, obj.narrativeName, 'ws_name', 'hash', 'size'],
-                ws_name: this.wsName
+                object_info: [obj.obj_id, obj.name, obj.type, obj.timestamp, obj.ver, obj.saved_by, obj.narrativeName, 'ws_name', 'hash', 'size']
             }]);
+        }
+
+        /**
+         * Makes a copy of the object in the current workspace by calling to NarrativeService.
+         * Returns a Promise around that copy function.
+         * @param {} obj
+         */
+        doObjectCopy(obj) {
+            return this.serviceClient.sync_call(
+                'NarrativeService.copy_object',
+                [{
+                    ref: obj.ws_id + '/' + obj.obj_id,
+                    target_ws_name: this.wsName,
+                }]
+            )
         }
 
         setHeaderMessage(message) {

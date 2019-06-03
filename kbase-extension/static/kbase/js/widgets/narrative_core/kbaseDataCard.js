@@ -22,6 +22,7 @@
  *      is_set: boolean, true if this is a Set object,
  *      max_name_length: int, overrides the Config'd max_name_length if present (chops down the
  *                       objects name to some maximum number of characters)
+ *      targetWsName: the target workspace for copying any objects.
  *  });
  */
 
@@ -33,7 +34,6 @@ define ([
     'kbase/js/widgets/narrative_core/kbaseCardLayout',
     'narrativeConfig',
     'jquery',
-
     'bootstrap'
 ], function(
     Icon,
@@ -46,30 +46,21 @@ define ([
 ) {
     'use strict';
     function KbaseDataCard(entry) {
-        var self = this,
-            object_info = entry.object_info,
-            maxNameLength = Config.get('data_panel').max_name_length;
+        const objectInfo = entry.object_info;
+        let maxNameLength = Config.get('data_panel').max_name_length;
         if (entry.max_name_length) {
             maxNameLength = entry.max_name_length;
         }
 
         //params
-        var name = entry.name ? entry.name : object_info[1],
-            version = entry.version ? entry.version : ('v' + object_info[4]),
-            date = entry.date ? entry.date : TimeFormat.getTimeStampStr(object_info[3]),
-            editBy = entry.editedBy ? entry.editedBy : (' by ' + object_info[5]);
+        var name = entry.name ? entry.name : objectInfo[1],
+            version = entry.version ? entry.version : ('v' + objectInfo[4]),
+            date = entry.date ? entry.date : TimeFormat.getTimeStampStr(objectInfo[3]),
+            editBy = entry.editedBy ? entry.editedBy : (' by ' + objectInfo[5]);
 
-        // in order - entry.viewType > entry.type > parsing it out of the object_info type string.
-        var objectType = entry.type ? entry.type : object_info[2].split('.')[1].split('-')[0],
-            viewType = entry.viewType;
-        if (!viewType) {
-            if (entry.type) {
-                viewType = entry.type;
-            }
-            else {
-                viewType = objectType;
-            }
-        }
+        // in order - entry.viewType > entry.type > parsing it out of the objectInfo type string.
+        var objectType = entry.type ? entry.type : objectInfo[2].split('.')[1].split('-')[0],
+            viewType = (entry.viewType || entry.type) || objectType;
 
         //shorten name if applicable
         var $name = $('<span>').addClass('kb-data-list-name');
@@ -107,31 +98,30 @@ define ([
             .append($date)
             .append($byUser);
         $byUser
-            .click(function (object_info, e) {
+            .click(function (objectInfo, e) {
                 e.stopPropagation();
-                window.open('/#people/' + object_info[5]);
-            }.bind(null, object_info));
+                window.open('/#people/' + objectInfo[5]);
+            }.bind(null, objectInfo));
 
-        //create card
+        /**
+         * This is intended to be the function that gets called when the "Copy" button gets
+         * clicked. It'll be in the scope of the button itself, and gets passed the
+         * click event.
+         * @param {event} e - the click event that gets passed to this function on click
+         */
         var actionButtonClick = function (e) {
-            if (!entry.ws_name) {
+            if (!entry.copyFunction) {
                 return;
             }
             e.stopPropagation();
             var updateButton = function () {
-                var className = '.' + object_info[1].split('.').join('\\.');
+                var className = '.' + objectInfo[1].split('.').join('\\.');
                 var btns = $(className);
                 var thisHolder = this;
                 var $thisBtn = $($(this).children()[0]);
                 $(this).html('<img src="' + Config.get('loading_gif') + '">');
-                Promise.resolve(self.serviceClient.sync_call(
-                    'NarrativeService.copy_object',
-                    [{
-                        ref: object_info[6] + '/' + object_info[0],
-                        target_ws_name: entry.ws_name,
-                    }]
-                ))
-                    .then(function () {
+                entry.copyFunction()
+                    .then(() => {
                         var $button;
                         for(var i = 0 ; i< btns.length; i++){
                             $button = btns[i];
@@ -139,7 +129,7 @@ define ([
                         }
                         $(thisHolder).html('');
                         $(thisHolder).append($thisBtn);
-                        self.trigger('updateDataList.Narrative');
+                        $(document).trigger('updateDataList.Narrative');
                     })
                     .catch(function (error) {
                         $(this).html('Error');
@@ -168,7 +158,7 @@ define ([
                             updateButton.call(this);
 
                         }.bind(this))
-                        , $('<a type="button" class="btn btn-default">')
+                    , $('<a type="button" class="btn btn-default">')
                         .append('No')
                         .click(function () {
                             dialog.hide();
@@ -193,12 +183,9 @@ define ([
         };
 
         var $card = new kbaseCardLayout(layout);
-
-        var $renderedActionButton = $card.find('.narrative-card-action-button');
-        $renderedActionButton.addClass(function () {
-            return object_info[1].split('.').join('.');
-        })
-            .hide();
+        $card.find('.narrative-card-action-button')
+             .addClass(() => objectInfo[1].split('.').join('.'))
+             .hide();
 
         return $card;
     }

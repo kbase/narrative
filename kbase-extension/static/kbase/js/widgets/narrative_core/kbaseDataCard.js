@@ -34,6 +34,7 @@ define ([
     'kbase/js/widgets/narrative_core/kbaseCardLayout',
     'narrativeConfig',
     'jquery',
+    'api/dataProvider',
     'bootstrap'
 ], function(
     Icon,
@@ -42,7 +43,8 @@ define ([
     TimeFormat,
     kbaseCardLayout,
     Config,
-    $
+    $,
+    DataProvider
 ) {
     'use strict';
     function KbaseDataCard(entry) {
@@ -114,25 +116,34 @@ define ([
                 return;
             }
             e.stopPropagation();
-            var updateButton = function () {
+
+            /**
+             * if there's already something with this name, warn the user.
+             * if user says no, quit.
+             * if user says yes,
+             *      hide btn with spinner
+             *      get all buttons attached to objects with this name
+             *      do the copy
+             *      update button texts
+             *      remove spinner, but btn back
+             *      trigger updateDataList.Narrative
+             */
+
+            function doObjectCopy() {
                 var className = '.' + objectInfo[1].split('.').join('\\.');
                 var btns = $(className);
-                var thisHolder = this;
-                var $thisBtn = $($(this).children()[0]);
-                $(this).html('<img src="' + Config.get('loading_gif') + '">');
+                var thisHolder = e.currentTarget;
+                var $thisBtn = $($(thisHolder).children()[0]);
+                $(thisHolder).html('<img src="' + Config.get('loading_gif') + '">');
                 entry.copyFunction()
                     .then(() => {
-                        var $button;
-                        for(var i = 0 ; i< btns.length; i++){
-                            $button = btns[i];
-                            $($button).find('div').text(' Copy');
-                        }
-                        $(thisHolder).html('');
-                        $(thisHolder).append($thisBtn);
+                        btns.each(function() {
+                            $(this).find('div').text(' Copy');
+                        });
+                        $(thisHolder).html('').append($thisBtn);
                         $(document).trigger('updateDataList.Narrative');
                     })
-                    .catch(function (error) {
-                        $(this).html('Error');
+                    .catch((error) => {
                         var $importError = $('<div>').css({ 'color': '#F44336', 'width': '500px' });
                         if (error.error && error.error.message) {
                             if (error.error.message.indexOf('may not write to workspace') >= 0) {
@@ -143,34 +154,46 @@ define ([
                         } else {
                             $importError.append('Unknown error!');
                         }
-                        self.options.$importStatus.html($importError);
+                        new BootstrapDialog({
+                            title: 'An error occurred while copying.',
+                            body: $importError,
+                            alertOnly: true
+                        }).show();
                         console.error(error);
                     });
-            };
-            if ($(this).text().split(' ')[1] === 'Copy') {
+            }
+
+            function showCopyWarningDialog() {
                 var dialog = new BootstrapDialog({
                     title: 'An item with this name already exists in this Narrative.',
-                    body: 'Do you want to override the existing copy?',
-                    buttons: [$('<a type="button" class="btn btn-default">')
+                    body: 'Do you want to overwrite the existing copy?',
+                    buttons: [
+                        $('<a type="button" class="btn btn-default">')
                         .append('Yes')
-                        .click(function () {
+                        .click(() => {
                             dialog.hide();
-                            updateButton.call(this);
-
-                        }.bind(this))
-                    , $('<a type="button" class="btn btn-default">')
+                            doObjectCopy();
+                        }),
+                        $('<a type="button" class="btn btn-default">')
                         .append('No')
-                        .click(function () {
+                        .click(() => {
                             dialog.hide();
                         })
                     ],
                     closeButton: true
                 });
                 dialog.show();
-            } else {
-                updateButton.call(this);
             }
 
+            DataProvider.getDataByName()
+                .then(data => {
+                    if (data.hasOwnProperty(objectInfo[1])) {
+                        showCopyWarningDialog();
+                    }
+                    else {
+                        doObjectCopy();
+                    }
+                });
         };
         var layout = {
             actionButtonText: entry.actionButtonText,

@@ -26,6 +26,7 @@ define([
     'util/bootstrapDialog',
     'util/bootstrapSearch',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
+    'api/dataProvider',
     'bootstrap',
     'jquery-nearest'
 ], function (
@@ -51,7 +52,8 @@ define([
     ServiceUtils,
     BootstrapDialog,
     BootstrapSearch,
-    kbaseDataCard
+    kbaseDataCard,
+    DataProvider
 ) {
     'use strict';
 
@@ -577,18 +579,8 @@ define([
                 }.bind(this));
             }.bind(this);
 
-            var narrativeService = new DynamicServiceClient({
-                module: 'NarrativeService',
-                url: Config.url('service_wizard'),
-                token: this.token
-            });
-
-            return narrativeService.callFunc('list_objects_with_sets', [{
-                'ws_name': this.ws_name,
-                'includeMetadata': 1
-            }])
-                .spread(function (result) {
-                    var objects = result.data;
+            return DataProvider.getData(true)
+                .then(function(objects) {
                     objects.forEach(function (obj) {
                         var objInfo = obj.object_info;
                         if (objInfo[2].indexOf('KBaseNarrative') === 0) {

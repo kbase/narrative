@@ -11,13 +11,17 @@ define([
     'common/runtime',
     'util/timeFormat',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
+    'util/bootstrapDialog',
+    'api/dataProvider'
 ], function(
     Promise,
     Config,
     GenericClient,
     Runtime,
     TimeFormat,
-    kbaseDataCard
+    kbaseDataCard,
+    BootstrapDialog,
+    DataProvider
 ) {
     'use strict';
 
@@ -238,21 +242,26 @@ define([
                 return;
             }
 
-            var rows = this.buildNextRows();
-            this.$scrollPanel.append(rows);
-            this.events(this.$scrollPanel, []);
-
-            // infinite scroll
-            this.$scrollPanel.unbind('scroll');
-            this.$scrollPanel.on('scroll', () => {
-                if (this.$scrollPanel.scrollTop() + this.$scrollPanel.innerHeight() >= this.$scrollPanel[0].scrollHeight &&
-                    this.state.objectPointer < this.data.objects.length) {
-                    var rows = this.buildNextRows();
+            this.buildNextRows()
+                .then(rows => {
                     this.$scrollPanel.append(rows);
-                }
-                this.events(this.$scrollPanel, []);
-            });
-            this.setLoading(false);
+                    this.events(this.$scrollPanel, []);
+
+                    // infinite scroll
+                    this.$scrollPanel.unbind('scroll');
+                    this.$scrollPanel.on('scroll', () => {
+                        if (this.$scrollPanel.scrollTop() + this.$scrollPanel.innerHeight() >= this.$scrollPanel[0].scrollHeight &&
+                            this.state.objectPointer < this.data.objects.length) {
+                            this.buildNextRows()
+                                .then(rows => this.$scrollPanel.append(rows));
+                                this.events(this.$scrollPanel, []);
+                        }
+                        else {
+                            this.events(this.$scrollPanel, []);
+                        }
+                    });
+                    this.setLoading(false);
+                });
         }
 
         copyObjects(objs, nar_ws_name) {
@@ -360,30 +369,20 @@ define([
         buildNextRows() { //}, start, numRows) {
             // add each set of items to container to be added to DOM
             var rows = $('<div class="kb-import-items">');
-            var loadedData = {};
-            $(document).trigger('dataLoadedQuery.Narrative', [
-                false, 0,
-                function (data) {
-                    Object.keys(data).forEach(function (type) {
-                        data[type].forEach(function (obj) {
-                            loadedData[obj[1]] = true;
-                        });
-                    });
-                }
-            ]);
-            // set the count to be 0, use the stateful objectpointer as the index,
-            // and go until we get RENDER_CHUNK rows, or we hit the end.
-            for (let count=0; this.state.objectPointer < this.data.objects.length && count < RENDER_CHUNK; this.state.objectPointer++) {
-                let obj = this.data.objects[this.state.objectPointer];
-                if (this.testFilter(obj)) {
-                    obj.relativeTime = TimeFormat.getTimeStampStr(obj.timestamp);
-                    obj.narrativeName = this.data.workspace_display[obj.ws_id].display;
+            return DataProvider.getDataByName()
+                .then((loadedData) => {
+                    for (let count=0; this.state.objectPointer < this.data.objects.length && count < RENDER_CHUNK; this.state.objectPointer++) {
+                        let obj = this.data.objects[this.state.objectPointer];
+                        if (this.testFilter(obj)) {
+                            obj.relativeTime = TimeFormat.getTimeStampStr(obj.timestamp);
+                            obj.narrativeName = this.data.workspace_display[obj.ws_id].display;
 
-                    rows.append(this.rowTemplate(obj, loadedData));
-                    count++;
-                }
-            }
-            return rows;
+                            rows.append(this.rowTemplate(obj, loadedData.hasOwnProperty(obj.name)));
+                            count++;
+                        }
+                    }
+                    return rows;
+                });
         }
 
         /**
@@ -482,7 +481,12 @@ define([
                 .append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
         }
 
-        rowTemplate(obj) {
+        /**
+         *
+         * @param {object} obj
+         * @param {boolean} nameExists true if an object with this name already exists in the current Narrative
+         */
+        rowTemplate(obj, nameExists) {
             var btnClasses = 'btn btn-xs btn-default';
             var $btnToolbar = $('<div>').addClass('btn-toolbar narrative-data-panel-btnToolbar');
             var $openLandingPage = $('<span>')
@@ -503,8 +507,7 @@ define([
                 });
             $btnToolbar.append($openLandingPage).append($openProvenance);
 
-            const isCopy = this.loadedData && this.loadedData[obj.name];
-            const actionButtonText = (isCopy) ? ' Copy' : ' Add';
+            const actionButtonText = nameExists ? ' Copy' : ' Add';
 
             return kbaseDataCard.apply(this, [{
                 narrative: obj.narrativeName,
@@ -528,7 +531,7 @@ define([
                     ref: obj.ws_id + '/' + obj.obj_id,
                     target_ws_name: this.wsName,
                 }]
-            )
+            );
         }
 
         setHeaderMessage(message) {

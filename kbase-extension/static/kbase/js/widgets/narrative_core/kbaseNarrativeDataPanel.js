@@ -29,6 +29,7 @@ define([
     'kbaseNarrativeSidePublicTab',
     'kbaseNarrativeExampleDataTab',
     'kbaseNarrativeStagingDataTab',
+    'api/dataProvider',
     'bootstrap'
 ], function (
     KBWidget,
@@ -43,6 +44,7 @@ define([
     kbaseNarrativeSidePublicTab,
     kbaseNarrativeExampleDataTab,
     kbaseNarrativeStagingDataTab,
+    DataProvider
 ) {
     'use strict';
 

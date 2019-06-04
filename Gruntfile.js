@@ -180,7 +180,7 @@ module.exports = function(grunt) {
             'ui-common': {
                 src: 'build/test-coverage/lcov/**/*.info',
             },
-        },
+        }
 
     });
 

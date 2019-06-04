@@ -1,12 +1,6 @@
-'use strict';
-var path = require('path');
-
-// the actual "static" directory path, relative to this Gruntfile.
-// should be updated as necessary, if this moves
-var staticDir = 'static';
-
 module.exports = function(grunt) {
     // Project configuration
+    'use strict';
     grunt.loadNpmTasks('grunt-contrib-requirejs');
     grunt.loadNpmTasks('grunt-filerev');
     grunt.loadNpmTasks('grunt-regex-replace');
@@ -21,7 +15,7 @@ module.exports = function(grunt) {
         // Compile the requirejs stuff into a single, uglified file.
         // the options below are taken verbatim from a standard build.js file
         // used for r.js (if we were doing this outside of a grunt build)
-        'requirejs': {
+        requirejs: {
             compile: {
                 options: {
                     name: 'narrative_paths',
@@ -104,7 +98,7 @@ module.exports = function(grunt) {
         },
 
         // Testing with Karma!
-        'karma': {
+        karma: {
             unit: {
                 configFile: 'test/unit/karma.conf.js',
                 // reporters: ['progress'], //, 'coverage'],
@@ -134,7 +128,7 @@ module.exports = function(grunt) {
             },
         },
 
-        'jasmine_nodejs': {
+        jasmine_nodejs: {
             // task specific (default) options
             options: {
                 useHelpers: true,
@@ -179,7 +173,7 @@ module.exports = function(grunt) {
             },
         },
         // Run coveralls and send the info.
-        'coveralls': {
+        coveralls: {
             options: {
                 force: true,
             },

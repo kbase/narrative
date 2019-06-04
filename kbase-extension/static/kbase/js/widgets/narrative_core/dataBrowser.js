@@ -109,7 +109,8 @@ define([
         }
 
         changeState(newState) {
-            this.state = {...this.state, ...newState};
+            Object.assign(this.state, newState);
+            // this.state = {...this.state, ...newState};
             let updateWsList = false,
                 updateTypeList = false;
             if (this.state.typeFilter === null) {
@@ -213,7 +214,8 @@ define([
                 ignore_narratives: 1,
                 limit: OBJECT_COUNT_LIMIT
             }
-            params = {...params, ...otherParams};
+            Object.assign(params, otherParams);
+            // params = {...params, ...otherParams};
             return Promise.resolve(this.serviceClient.sync_call(command, [params]))
                 .then(data => data[0]);
         }

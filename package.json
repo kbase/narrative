@@ -20,9 +20,12 @@
     "jasmine-ajax": "3.4.0",
     "jasmine-core": "2.4.1",
     "jasmine-jquery": "2.1.1",
-    "karma": "2.0.5",
+    "karma": "^4.1.0",
+    "karma-babel-preprocessor": "^8.0.0",
     "karma-chrome-launcher": "2.2.0",
     "karma-coverage": "1.1.2",
+    "karma-coverage-istanbul-reporter": "^2.0.5",
+    "karma-es6-shim": "1.0.0",
     "karma-firefox-launcher": "1.1.0",
     "karma-jasmine": "1.0.2",
     "karma-mocha-reporter": "2.2.5",
@@ -43,7 +46,6 @@
     "build": "grunt build"
   },
   "dependencies": {
-    "karma-es6-shim": "1.0.0",
     "npm": "6.7.0"
   }
 }

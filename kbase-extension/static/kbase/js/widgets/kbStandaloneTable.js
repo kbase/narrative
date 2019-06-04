@@ -22,7 +22,7 @@
 
   sorted (BOOLEAN)
       Enables / disabled initial sorting of the table by the sortcol. Default is false.
-  
+
   offset (INT)
       Initial first row to display. Default is 0.
 
@@ -77,10 +77,10 @@
         query: [ { searchword: $filter_value, field: $column_name_to_search, comparison: $comparison_operator }, ... ]
         goto: $row_index
         limit: $number_of_rows_per_page
-    
+
 */
 (function () {
-    var root = this;
+    var root = this || {};
     var standaloneTable = root.standaloneTable = {
 	about: {
 	    name: "table",
@@ -190,18 +190,18 @@
 	},
 	render: function (index) {
 	    var renderer = rendererTable[index];
-	    
+
 	    renderer.settings.target.innerHTML = "";
 	    if (renderer.settings.synchronous == false) {
 		renderer.settings.target.innerHTML = '<div style="position: absolute; width: 100%; height: 100%; opacity: 0.7; background-color: white; display: none;"></div>';
 	    }
-	    
+
 	    // check if we have a header, otherwise interpret the first line as the header
 	    if (renderer.settings.data.length) {
 		renderer.settings.data = { header: renderer.settings.data[0], data: renderer.settings.data };
 		renderer.settings.data.data.shift();
 	    }
-	    
+
 	    // if a header has already been initialized, don't touch it again
 	    var header;
 	    if (renderer.settings.header) {
@@ -214,13 +214,13 @@
 		renderer.settings.header = header;
 		renderer.settings.data.header = null;
 	    }
-	    
+
 	    // check if we have already parsed the data
 	    var tdata = [];
 	    if (renderer.settings.tdata) {
 		tdata = renderer.settings.tdata;
 	    } else {
-		
+
 		// the data has not been parsed, do it now
 		for (var i=0;i<renderer.settings.data.data.length; i++) {
 		    tdata[tdata.length] = {};
@@ -231,7 +231,7 @@
 		renderer.settings.tdata = tdata;
 		renderer.settings.data.data = null;
 	    }
-	    
+
 	    // if we are to auto determine sort functions, do so
 	    if (renderer.settings.sort_autodetect) {
 		for (var i=0; i<header.length; i++) {
@@ -249,7 +249,7 @@
 		    }
 		}
 	    }
-	    
+
 	    // create filter elements
 	    var filter = renderer.settings.filter;
 	    var filter_present = false;
@@ -308,7 +308,7 @@
 					if (parseFloat(word) >= parseFloat(filter[i].searchword)) {
 					    pass = 0;
 					}
-					break;				      
+					break;
 				    case "><":
 					if (parseFloat(word) > parseFloat(filter[i].minmax[1]) || parseFloat(word) < parseFloat(filter[i].minmax[0])) {
 					    pass = 0;
@@ -336,7 +336,7 @@
 		renderer.settings.filtered_data = newdata;
 		tdata = newdata;
 	    }
-	    
+
 	    // initialize the options
 	    var offset = renderer.settings.offset;
 	    var rows = (renderer.settings.rows_per_page < 0) ? tdata.length : renderer.settings.rows_per_page;
@@ -344,7 +344,7 @@
 	    var sortdir = renderer.settings.sortdir;
 	    var sorttype = renderer.settings.sorttype;
 	    var target = renderer.settings.target;
-	    	    
+
 	    // check width and height
 	    var defined_width = "";
 	    if (renderer.settings.width) {
@@ -354,7 +354,7 @@
 	    if (renderer.settings.height) {
 		defined_height = "height: " + renderer.settings.height + "px; ";
 	    }
-	    
+
 	    // create the actual table header
 	    var table_element = document.createElement("table");
 	    table_element.setAttribute("class", "table table-striped table-bordered table-condensed");
@@ -363,10 +363,10 @@
 	    var tr = document.createElement("tr");
 	    tr.setAttribute('style', 'height: 30px; border-top: 1px solid lightgray;');
 	    for (var i=0;i<header.length;i++) {
-		
+
 		// check if this column is visible
 		if (! renderer.settings.invisible_columns[i]) {
-		    
+
 		    // create sorting elements
 		    var asc = document.createElement("i");
 		    asc.setAttribute("class", "fa fa-chevron-down");
@@ -446,7 +446,7 @@
 			    }
 			}
 		    }
-		    
+
 		    // check for filter autodetection
 		    if (renderer.settings.filter_autodetect) {
 			if (! renderer.settings.filter[i]) {
@@ -457,7 +457,7 @@
 			    }
 			    var selopts = [];
 			    var numopts = 0;
-			    for (var h=0;h<tdata.length;h++) {				  
+			    for (var h=0;h<tdata.length;h++) {
 				if (! selopts[tdata[h][header[i]]]) {
 				    numopts++;
 				}
@@ -468,7 +468,7 @@
 			    }
 			}
 		    }
-		    
+
 		    // create filter element
 		    if (renderer.settings.filter[i]) {
 			if (! renderer.settings.filter[i].searchword) {
@@ -476,7 +476,7 @@
 			}
 			var filter_elem;
 			if (renderer.settings.filter[i].type == "text") {
-			    
+
 			    var filter_text  = document.createElement("input");
 			    filter_text.setAttribute('type', 'text');
 			    filter_text.value = filter[i].searchword;
@@ -505,7 +505,7 @@
 				    }
 				}
 			    };
-			    
+
 			    if (renderer.settings.filter[i].operator) {
 				filter_elem = document.createElement("div");
 				filter_elem.setAttribute("style", "float: left; margin-bottom: 0px; display: none; position: absolute; margin-top: 2px; height: 16px; z-index: 100;");
@@ -549,7 +549,7 @@
 			    } else {
 				filter_elem = filter_text;
 			    }
-			    
+
 			} else if (renderer.settings.filter[i].type == "select") {
 			    filter_elem = document.createElement("select");
 			    filter_elem.setAttribute("style", "position: absolute; height: 26px; margin-bottom: 0px; margin-top: 2px; z-index: 100; display: none;");
@@ -617,7 +617,7 @@
 			    }
 			}
 		    }
-		    
+
 		    // build header cell
 		    var caret = document.createElement("table");
 		    caret.setAttribute("style", "float: right; margin: 0px; border: none;");
@@ -670,7 +670,7 @@
 				this.nextSibling.style.display = "";
 				this.parentNode.firstChild.style.display = "none";
 			    }
-			}			  
+			}
 			th.appendChild(filter_icon);
 			th.appendChild(filter_elem);
 		    }
@@ -680,13 +680,13 @@
 	    thead.appendChild(tr);
 	    table_element.appendChild(thead);
 	    var tinner_elem = document.createElement("tbody");
-	    
+
 	    // check if the data is sorted, otherwise sort now
 	    var disp;
 	    if (renderer.settings.sorted) {
 		disp = tdata;
 	    } else {
-		disp = tdata.sort(function (a,b) {		      
+		disp = tdata.sort(function (a,b) {
 		    if (sortdir == 'desc') {
 			var c = a; a=b; b=c;
 		    }
@@ -722,12 +722,12 @@
 		});
 		renderer.settings.sorted = true;
 	    }
-	    
+
 	    // select the part of the data that will be displayed
 	    if (renderer.settings.synchronous) {
 		disp = disp.slice(offset, offset+rows);
 	    }
-	    
+
 	    // create the table rows
 	    for (var i=0;i<disp.length;i++) {
 		var tinner_row = document.createElement("tr");
@@ -746,7 +746,7 @@
 				for (var x=0;x<ot.parentNode.children.length;x++) {
 				    if (ot.parentNode.children[x] == ot) {
 					clicked_cell_index = x;
-				    }				      
+				    }
 				}
 				for (var y=0;y<ot.parentNode.parentNode.children.length;y++) {
 				    if (ot.parentNode.parentNode.children[y] == ot.parentNode) {
@@ -754,7 +754,7 @@
 					break;
 				    }
 				}
-				
+
 				var edit = document.createElement('input');
 				edit.setAttribute('type', 'text');
 				edit.setAttribute('value', renderer.settings.tdata[clicked_row_index][header[clicked_cell_index]]);
@@ -793,10 +793,10 @@
 		}
 		tinner_elem.appendChild(tinner_row);
 	    }
-	    
+
 	    // render the table
 	    table_element.appendChild(tinner_elem);
-	    
+
 	    // create the navigation
 	    // first, previous
 	    var prev_td = document.createElement("td");
@@ -831,7 +831,7 @@
 		prev_td.appendChild(first);
 		prev_td.appendChild(prev);
 	    }
-	    
+
 	    // next, last
 	    var next_td = document.createElement("td");
 	    next_td.setAttribute("style", "text-align: right; width: 45px; border: none;");
@@ -871,12 +871,12 @@
 		next_td.appendChild(next);
 		next_td.appendChild(last);
 	    }
-	    
+
 	    // display of window offset
 	    var showing = document.createElement("td");
-	    showing.setAttribute("style", "text-align: center; border: none;");	  
+	    showing.setAttribute("style", "text-align: center; border: none;");
 	    showing.innerHTML = "showing rows "+ ((renderer.settings.offset || offset) + 1) +"-"+(disp.length + (renderer.settings.offset || offset))+" of "+(renderer.settings.numrows || tdata.length);
-	    
+
 	    // create the table to host navigation
 	    var bottom_table = document.createElement("table");
 	    bottom_table.setAttribute("style", "width: 100%; border: none;");
@@ -886,7 +886,7 @@
 	    bottom_row.appendChild(showing);
 	    bottom_row.appendChild(next_td);
 	    bottom_table.appendChild(bottom_row);
-	    
+
 	    // goto
 	    var goto_label = document.createElement("span");
 	    goto_label.innerHTML = "goto row ";
@@ -914,7 +914,7 @@
 		    }
 		}
 	    };
-	    
+
 	    // clear filter button
 	    var clear_btn = document.createElement("input");
 	    clear_btn.setAttribute("type", "button");
@@ -936,7 +936,7 @@
 		    renderer.render(index);
 	        }
 	    };
-	    
+
 	    // rows per page
 	    var perpage = document.createElement("input");
 	    perpage.setAttribute("type", "text");
@@ -961,7 +961,7 @@
 	    ppspan1.innerHTML = " show ";
 	    var ppspan2 = document.createElement("span");
 	    ppspan2.innerHTML = " rows at a time";
-	    
+
 	    // handle onclick event
 	    if (renderer.settings.onclick) {
 		table_element.index = index;
@@ -991,7 +991,7 @@
 		    }
 		};
 	    }
-	    
+
 	    var col_sel_span = document.createElement("span");
 	    var col_sel_btn = document.createElement("input");
 	    col_sel_btn.setAttribute("class", "btn btn-xs btn-default");
@@ -1000,7 +1000,7 @@
 	    var col_sel = document.createElement("div");
 	    col_sel.setAttribute('style', "position: absolute; left: 528px; min-width: 150px; border: 1px solid #BBB; background-color: white; z-index: 99000; display: none; box-shadow: 4px 4px 4px #666; padding: 2px;");
 	    col_sel_btn.addEventListener("click", function () {
-		
+
 		if (col_sel.style.display == "none") {
 		    col_sel.style.display = "";
 		} else {
@@ -1019,7 +1019,7 @@
 	    col_sel.innerHTML = colsel_html;
 	    col_sel_span.appendChild(col_sel_btn);
 	    col_sel_span.appendChild(col_sel);
-	    
+
 	    var options_icon = document.createElement("div");
 	    options_icon.innerHTML = "<i class='fa fa-cog'></i>";
 	    options_icon.title ='table options, click to show';
@@ -1032,7 +1032,7 @@
 	    var options_span = document.createElement("div");
 	    options_span.setAttribute('style', "display: none;");
 	    options_span.innerHTML = "<div title='close options' onclick='this.parentNode.previousSibling.style.display=\"\";this.parentNode.style.display=\"none\";' style='cursor: pointer; margin-right: 5px;' class='btn btn-xs btn-default'><i class='fa fa-times'></div>";
-	    
+
 	    // append navigation to target element
 	    if (renderer.settings.hide_options == false) {
 		target.appendChild(options_icon);
@@ -1046,8 +1046,8 @@
 		options_span.appendChild(col_sel_span);
 	    }
 	    target.appendChild(table_element);
-	    target.appendChild(bottom_table);	  
-	    
+	    target.appendChild(bottom_table);
+
 	    return renderer;
 	}
     }

@@ -10,7 +10,7 @@ addons:
   chrome: stable
 env:
   global:
-    - TRAVIS_NODE_VERSION="6.6.0"
+    - TRAVIS_NODE_VERSION="10.10.0"
     - secure: "JPdkdywgQbUUixuDuATMXZHWpWImziRoGKd1tCjYd3+0lamLBlldmjhsZ+Bp7ZabKg2ExQZareGDp34cJdOwWBGb2gg0/emjy4UkWkbDH28zyoWNK1SFp6OTY8AeY/icPXKw3MBgKoXG+hemfcxhYc8rUNgUt7V2fA0JSAkCi4w="
     - secure: "BrGlbfGLxZYCynh7LeIFyQeiTx4YX6fdMYK2UceVLoAFjOml9mvtJY5i4Oafc2iBDPQ0wAP/eIzZOTcddwc+12o1S0EAq3zZb5z+MOwRKjsiC+BGUXNzAGLaeJqFTC5Sn+vvqsaDGaR3jrdQ8APUL7XapuLUAkof7vqc1SPsn3I="
 

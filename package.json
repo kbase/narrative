@@ -5,8 +5,8 @@
   "private": true,
   "repository": "github.com/kbase/narrative",
   "devDependencies": {
-    "bower": "1.8.4",
-    "geckodriver": "1.14.1",
+    "bower": "^1.8.8",
+    "geckodriver": "^1.16.2",
     "grunt": "1.0.4",
     "grunt-cli": "1.3.2",
     "grunt-contrib-copy": "1.0.0",
@@ -42,8 +42,5 @@
     "bower": "bower install",
     "test": "grunt test",
     "build": "grunt build"
-  },
-  "dependencies": {
-    "npm": "6.7.0"
   }
 }

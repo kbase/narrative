@@ -84,13 +84,6 @@ module.exports = function(grunt) {
                         replace: function(match) {
                             return 'kbase-narrative-min.js';
                         },
-
-                        //     // do a little sneakiness here. we just did the filerev thing, so get that mapping
-                        //     // and return that (minus the .js on the end)
-                        //     var revvedFile = 'kbase-narrative-min.js';
-                        //     // starts with 'static/' and ends with '.js' so return all but the first 7 and last 3 characters
-                        //     return revvedFile.substr(7, revvedFile.length - 10);
-                        // },
                         flags: ''
                     }
                 ]
@@ -101,15 +94,6 @@ module.exports = function(grunt) {
         karma: {
             unit: {
                 configFile: 'test/unit/karma.conf.js',
-                // reporters: ['progress'], //, 'coverage'],
-                // coverageReporter: {
-                //     dir: 'build/test-coverage/',
-                //     reporters: [
-                //         {
-                //             type: 'html', subdir: 'html'
-                //         }
-                //     ]
-                // }
             },
             dev: {
                 // to do - add watch here
@@ -124,8 +108,7 @@ module.exports = function(grunt) {
 
                 autoWatch: true,
                 singleRun: false,
-
-            },
+            }
         },
 
         jasmine_nodejs: {
@@ -148,12 +131,6 @@ module.exports = function(grunt) {
                         listStyle: 'indent', // "flat"|"indent"
                         activity: false
                     },
-                    // junit: {
-                    //     savePath: "./reports",
-                    //     filePrefix: "junit-report",
-                    //     consolidate: true,
-                    //     useDotNotation: true
-                    // },
                 },
                 // add custom Jasmine reporter(s)
                 customReporters: []
@@ -170,7 +147,7 @@ module.exports = function(grunt) {
                 helpers: [
                     'test/functional/helpers/**/*.helper.js'
                 ]
-            },
+            }
         },
         // Run coveralls and send the info.
         coveralls: {
@@ -179,7 +156,7 @@ module.exports = function(grunt) {
             },
             'ui-common': {
                 src: 'build/test-coverage/lcov/**/*.info',
-            },
+            }
         }
 
     });
@@ -197,8 +174,7 @@ module.exports = function(grunt) {
     ]);
 
     grunt.registerTask('test', [
-        'karma:unit',
-        // 'jasmine_nodejs'
+        'karma:unit'
     ]);
 
     // Does a single unit test run, then sends
@@ -206,7 +182,7 @@ module.exports = function(grunt) {
     // from travis-ci.
     grunt.registerTask('test-travis', [
         'karma:unit',
-        'coveralls',
+        'coveralls'
     ]);
 
     // node (instead of karma) based jasmine tasks
@@ -216,6 +192,6 @@ module.exports = function(grunt) {
     // Does an ongoing test run in a watching development
     // mode.
     grunt.registerTask('develop', [
-        'karma:dev',
+        'karma:dev'
     ]);
 };

@@ -412,9 +412,11 @@ define([
                 return this.workspaces[a].display.localeCompare(this.workspaces[b].display);
             });
             sortedWsKeys.forEach(wsId => {
-                const $option = $('<option data-id="' + wsId + '">' +
-                    this.workspaces[wsId].display + ' (' + this.workspaces[wsId].count + ')' +
-                    '</option>');
+                let name = this.workspaces[wsId].display;
+                if (!this.data.limit_reached || this.data.limit_reached !== 1) {
+                    name += ' (' + this.workspaces[wsId].count + ')';
+                }
+                const $option = $('<option data-id="' + wsId + '">' + name +  '</option>');
                 if (this.state.wsIdFilter == wsId) {
                     $option.prop('selected', true);
                 }

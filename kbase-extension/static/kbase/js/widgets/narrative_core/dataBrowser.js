@@ -1,7 +1,5 @@
 /**
  * The data browser that shows up in the slideout under My Data and Shared With Me.
- *
- * Some hacks in here to get this working without it taking a catastrophic amount of time to build.
  */
 
 define([
@@ -247,7 +245,6 @@ define([
             this.buildNextRows()
                 .then(rows => {
                     this.$scrollPanel.append(rows);
-                    this.events(this.$scrollPanel, []);
 
                     // infinite scroll
                     this.$scrollPanel.unbind('scroll');
@@ -256,108 +253,10 @@ define([
                             this.state.objectPointer < this.data.objects.length) {
                             this.buildNextRows()
                                 .then(rows => this.$scrollPanel.append(rows));
-                                this.events(this.$scrollPanel, []);
-                        }
-                        else {
-                            this.events(this.$scrollPanel, []);
                         }
                     });
                     this.setLoading(false);
                 });
-        }
-
-        copyObjects(objs, nar_ws_name) {
-            importStatus.html('Adding <i>' + objs.length + '</i> objects to narrative...');
-
-            var proms = [];
-            for (var i in objs) {
-                var ref = objs[i].ref;
-                proms.push(
-                    this.serviceClient.sync_call(
-                        'NarrativeService.copy_object',
-                        [{
-                            ref: ref,
-                            target_ws_name: nar_ws_name
-                        }]
-                    )
-                );
-            }
-            return proms;
-        }
-
-        events(panel, selected) {
-            panel.find('.kb-import-item').unbind('click');
-            panel.find('.kb-import-item').click(function () {
-                var item = $(this);
-                var ref = item.data('ref').replace(/\./g, '/');
-                var name = item.data('obj-name');
-
-                var checkbox = $(this).find('.kb-import-checkbox');
-                checkbox.toggleClass('fa-check-square-o')
-                    .toggleClass('fa-square-o');
-
-                // update model for selected items
-                if (checkbox.hasClass('fa-check-square-o')) {
-                    selected.push({ref: ref, name: name});
-                } else {
-                    for (var i = 0; i < selected.length; i++) {
-                        if (selected[i].ref == ref)
-                            selected.splice(i, 1);
-                    }
-                }
-
-                // disable/enable button
-                if (selected.length > 0)
-                    btn.prop('disabled', false);
-                else
-                    btn.prop('disabled', true);
-
-                // import items on button click
-                btn.unbind('click');
-                btn.click(function () {
-                    if (selected.length == 0)
-                        return;
-
-                    //uncheck all checkboxes, disable add button
-                    $('.kb-import-checkbox').removeClass('fa-check-square-o', false);
-                    $('.kb-import-checkbox').addClass('fa-square-o', false);
-                    $(this).prop('disabled', true);
-
-                    var proms = this.copyObjects(selected, narWSName);
-                    $.when.apply($, proms).done(() => {
-                        importStatus.html('');
-                        var status = $('<span class="text-success">done.</span>');
-                        importStatus.append(status);
-                        status.delay(1000).fadeOut();
-
-                        // update sidebar data list
-                        this.trigger('updateDataList.Narrative');
-                    });
-
-                    selected = [];
-
-                    // um... reset events until my rendering issues are solved
-                    events(panel, selected);
-                });
-            });
-
-            panel.find('.kb-import-item').unbind('hover');
-            panel.find('.kb-import-item').hover(function () {
-                $(this).find('hr').css('visibility', 'hidden');
-                $(this).prev('.kb-import-item').find('hr').css('visibility', 'hidden');
-                $(this).find('.kb-import-checkbox').css('opacity', '.8');
-            }, function () {
-                $(this).find('hr').css('visibility', 'visible');
-                $(this).prev('.kb-import-item').find('hr').css('visibility', 'visible');
-                $(this).find('.kb-import-checkbox').css('opacity', '.4');
-            });
-
-            // prevent checking when clicking link
-            panel.find('.kb-import-item a').unbind('click');
-            panel.find('.kb-import-item a').click(function (e) {
-                e.stopPropagation();
-            });
-
         }
 
         /**

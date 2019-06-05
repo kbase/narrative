@@ -3,6 +3,10 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
 
+### Version 3.11.2
+- Improve load times for the Data Panel and the browser in the data slideout (the "My Data" and "Shared with Me" tabs).
+- Set the Narratives tab to lazy load.
+
 ### Version 3.11.1
 - Add internal information for users who came to the site from a Google ad click.
 - Improve load time of the App Panel.

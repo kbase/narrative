@@ -9,7 +9,6 @@ define([
     'common/runtime',
     'util/timeFormat',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
-    'util/bootstrapDialog',
     'api/dataProvider'
 ], function(
     Promise,
@@ -18,7 +17,6 @@ define([
     Runtime,
     TimeFormat,
     kbaseDataCard,
-    BootstrapDialog,
     DataProvider
 ) {
     'use strict';

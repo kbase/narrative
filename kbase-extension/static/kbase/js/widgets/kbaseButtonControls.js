@@ -32,8 +32,6 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery',
-		'bootstrap',
-		'kbwidget',
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
@@ -41,8 +39,6 @@ define (
 		KBWidget,
 		bootstrap,
 		$,
-		bootstrap,
-		KBWidget,
 		geometry_rectangle,
 		geometry_point,
 		geometry_size

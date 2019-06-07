@@ -79,7 +79,7 @@ define(
 
                 var manageWidgets = this.buildPanelSet([{
                     name: 'kbaseNarrativeManagePanel',
-                    params: { autopopulate: true, showTitle: false }
+                    params: { autopopulate: false, showTitle: false }
                 }, ]);
 
                 this.$narrativesWidget = manageWidgets['kbaseNarrativeManagePanel'];
@@ -93,10 +93,12 @@ define(
 
                 this.$tabs = this.buildTabs([{
                     tabName: 'Analyze',
-                    content: $analysisPanel
+                    content: $analysisPanel,
+                    widgets: [this.$dataWidget, this.$methodsWidget]
                 }, {
                     tabName: 'Narratives',
-                    content: $managePanel
+                    content: $managePanel,
+                    widgets: [this.$narrativesWidget]
                 },
                 ], true);
 
@@ -197,6 +199,9 @@ define(
                         $body.find('div.kb-side-tab').removeClass('active');
                         // $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
                         $body.find('[kb-data-id=' + idx + ']').addClass('active');
+                        tabs[idx].widgets.forEach(w => {
+                            w.activate();
+                        });
                         if (isOuter)
                             this.hideOverlay();
                     }
@@ -204,6 +209,9 @@ define(
 
                 $header.find('div:nth-child(2)').addClass('active');
                 $body.find('div:first-child.kb-side-tab').addClass('active');
+                tabs[0].widgets.forEach(w => {
+                    w.activate();
+                });
 
                 return {
                     header: $header,

@@ -48,16 +48,14 @@ define (
 		'jquery',
 		'd3',
 		'kbaseBarchart',
-		'kbaseAuthenticatedWidget',
-		'bootstrap'
+		'kbaseAuthenticatedWidget'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
 		d3,
 		kbaseBarchart,
-		kbaseAuthenticatedWidget,
-		bootstrap
+		kbaseAuthenticatedWidget
 	) {
 
     //'use strict';

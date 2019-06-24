@@ -64,16 +64,16 @@ define([
                 tabPosition: top,
                 canDelete: true,
                 tabs: [{
-                    tab: 'Pan-genome Summary',
+                    tab: 'Pangenome Overview',
                     canDelete: false,
                     show: true,
                     showContentCallback: this.showSummary.bind(this)
                 }, {
-                    tab: 'Shared homolog families',
+                    tab: 'Genome Comparison',
                     canDelete: false,
                     showContentCallback: this.showHomologFamilies.bind(this)
                 }, {
-                    tab: 'Protein families',
+                    tab: 'Families',
                     canDelete: false,
                     showContentCallback: this.showProteinFamilies.bind(this)
                 },

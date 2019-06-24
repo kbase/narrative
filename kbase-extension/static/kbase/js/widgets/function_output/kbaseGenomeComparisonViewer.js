@@ -69,7 +69,7 @@ define (
                 var tabObj = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
     			///////////////////////////////////// Overview table ////////////////////////////////////////////
         		var tabOverview = $("<div/>");
-    			tabObj.addTab({tab: 'Overview', content: tabOverview, canDelete : false, show: true});
+    			tabObj.addTab({tab: 'Pangenome Overview', content: tabOverview, canDelete : false, show: true});
         		var tableOver = $('<table class="table table-striped table-bordered" '+
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table"/>');
         		tabOverview.append(tableOver);
@@ -86,7 +86,7 @@ define (
         		tableOver.append('<tr><td>Creation</td><td>'+info[3]+'</td></tr>');
         		///////////////////////////////////// Genomes table ////////////////////////////////////////////
         		var tabGenomes = $("<div/>");
-    			tabObj.addTab({tab: 'Genomes', content: tabGenomes, canDelete : false, show: false});
+    			tabObj.addTab({tab: 'Genome Comparison', content: tabGenomes, canDelete : false, show: false});
         		var tableGenomes = $('<table class="table table-striped table-bordered" '+
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'genome-table"/>');
         		tabGenomes.append(tableGenomes);
@@ -114,107 +114,6 @@ define (
             		}
             		tableGenomes.append('<tr><td>'+row.join('</td><td>')+'</td></tr>');
             	}
-            	///////////////////////////////////// Functions table ////////////////////////////////////////////
-        		var tabFunctions = $("<div/>");
-    			tabObj.addTab({tab: 'Functions', content: tabFunctions, canDelete : false, show: false});
-        		var tableFunctions = $('<table class="table table-striped table-bordered" '+
-        				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'function-table"/>');
-        		tabFunctions.append(tableFunctions);
-        		var func_data = [];
-        		var tableSettings = {
-        				"sPaginationType": "full_numbers",
-        				"iDisplayLength": 10,
-        				"aaData": func_data,
-        				"aaSorting": [[ 2, "desc" ], [0, "asc"]],
-        				"aoColumns": [
-        				              { "sTitle": "Function", 'mData': 'id'},
-        				              { "sTitle": "Subsystem", 'mData': 'subsystem'},
-        				              { "sTitle": "Primary class", 'mData': 'primclass'},
-        				              { "sTitle": "Secondary class", 'mData': 'subclass'},
-        				              { "sTitle": "Totals", 'mData': 'totals'},
-        				              { "sTitle": "Families", 'mData': 'families'},
-        				              { "sTitle": "Family genes", 'mData': 'famgenes'},
-        				              { "sTitle": "Family genomes", 'mData': 'famgenomes'},
-        				],
-        				"oLanguage": {
-        				        	"sEmptyTable": "No functions found!",
-        				        	"sSearch": "Search: "
-        				},
-        				'fnDrawCallback': events
-        		}
-				for (var i in families) {
-            		var fam = families[i];
-            		var gcount = 0;
-            		for (var j in genomes) {
-            			var compgenome = genomes[j];
-            			if (fam.genome_features[compgenome.genome_ref]) {
-            				var genes = fam.genome_features[compgenome.genome_ref];
-            				for (var k in genes) {
-            					gcount++;
-            				}
-            			}
-            		}
-            		fam.numgenes = gcount;
-            	}
-        		for (var i in functions) {
-            		var func = functions[i];
-    				func.subsystem = func.subsystem.replace(/_/g, ' ');
-    				var funcdata = {
-    					"id": '<a class="show-function'+self.pref+'" data-pos="'+i+'">'+func.id+'</a>',
-    					"subsystem": func.subsystem,
-    					"primclass": func.primclass,
-    					"subclass": func.subclass,
-    				};
-            		var funcindecies = {};
-            		var funcgenomes = {};
-            		var gcount = 0;
-            		for (var j in genomes) {
-            			var compgenome = genomes[j];
-            			if (func.genome_features[compgenome.genome_ref]) {
-            				var genomefams = {};
-            				var genes = func.genome_features[compgenome.genome_ref];
-            				for (var k in genes) {
-            					gcount++;
-            					gene = genes[k];
-            					genomefams[gene[1]] = 1;
-            					if (funcindecies[gene[1]] === undefined) {
-            						funcindecies[gene[1]] = 0;
-            					}
-            					funcindecies[gene[1]]++;
-            				}
-            				for (var genfam in genomefams) {
-            					if (funcgenomes[genfam] === undefined) {
-            						funcgenomes[genfam] = 0;
-            					}
-            					funcgenomes[genfam]++;
-            				}
-            			}
-            		}
-            		func.numgenes = gcount;
-            		var sortedfams = getSortedKeys(funcindecies);
-            		funcdata.totals = "Families:&nbsp;"+sortedfams.length+"<br>Genes:&nbsp;"+gcount+"<br>Genomes:&nbsp;"+func.number_genomes;
-            		funcdata.families = "";
-            		funcdata.famgenes = "";
-            		funcdata.famgenomes = "";
-            		for (var j in sortedfams) {
-            			if (funcdata.families.length > 0) {
-            				funcdata.families += "<br>";
-            				funcdata.famgenes += "<br>";
-            				funcdata.famgenomes += "<br>";
-            			}
-            			if (sortedfams[j] === "null") {
-            				funcdata.famgenes = 0;
-            				funcdata.famgenomes = 0;
-            				funcdata.families = "none";
-            			} else {
-            				funcdata.famgenes += funcindecies[sortedfams[j]]+"("+Math.round(100*funcindecies[sortedfams[j]]/families[sortedfams[j]].numgenes)+"%)";
-            				funcdata.famgenomes += funcgenomes[sortedfams[j]]+"("+Math.round(100*funcgenomes[sortedfams[j]]/families[sortedfams[j]].number_genomes)+"%)";
-            				funcdata.families += '<a class="show-family'+self.pref+'" data-id="'+families[sortedfams[j]].id+'">'+families[sortedfams[j]].id+'</a>';
-            			}
-            		}
-            		tableSettings.aaData.push(funcdata);
-    			}
-    			tableFunctions.dataTable(tableSettings);
         		///////////////////////////////////// Families table ////////////////////////////////////////////
         		var tabFamilies = $("<div/>");
     			if (self.options.withExport) {
@@ -317,7 +216,108 @@ define (
             		}
             		tableSettings.aaData.push(famdata);
     			}
-    			tableFamilies.dataTable(tableSettings);
+    			tableFamilies.dataTable(tableSettings);				
+            	///////////////////////////////////// Functions table ////////////////////////////////////////////
+        		var tabFunctions = $("<div/>");
+    			tabObj.addTab({tab: 'Functions', content: tabFunctions, canDelete : false, show: false});
+        		var tableFunctions = $('<table class="table table-striped table-bordered" '+
+        				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'function-table"/>');
+        		tabFunctions.append(tableFunctions);
+        		var func_data = [];
+        		var tableSettings = {
+        				"sPaginationType": "full_numbers",
+        				"iDisplayLength": 10,
+        				"aaData": func_data,
+        				"aaSorting": [[ 2, "desc" ], [0, "asc"]],
+        				"aoColumns": [
+        				              { "sTitle": "Function", 'mData': 'id'},
+        				              { "sTitle": "Subsystem", 'mData': 'subsystem'},
+        				              { "sTitle": "Primary class", 'mData': 'primclass'},
+        				              { "sTitle": "Secondary class", 'mData': 'subclass'},
+        				              { "sTitle": "Totals", 'mData': 'totals'},
+        				              { "sTitle": "Families", 'mData': 'families'},
+        				              { "sTitle": "Family genes", 'mData': 'famgenes'},
+        				              { "sTitle": "Family genomes", 'mData': 'famgenomes'},
+        				],
+        				"oLanguage": {
+        				        	"sEmptyTable": "No functions found!",
+        				        	"sSearch": "Search: "
+        				},
+        				'fnDrawCallback': events
+        		}
+				for (var i in families) {
+            		var fam = families[i];
+            		var gcount = 0;
+            		for (var j in genomes) {
+            			var compgenome = genomes[j];
+            			if (fam.genome_features[compgenome.genome_ref]) {
+            				var genes = fam.genome_features[compgenome.genome_ref];
+            				for (var k in genes) {
+            					gcount++;
+            				}
+            			}
+            		}
+            		fam.numgenes = gcount;
+            	}
+        		for (var i in functions) {
+            		var func = functions[i];
+    				func.subsystem = func.subsystem.replace(/_/g, ' ');
+    				var funcdata = {
+    					"id": '<a class="show-function'+self.pref+'" data-pos="'+i+'">'+func.id+'</a>',
+    					"subsystem": func.subsystem,
+    					"primclass": func.primclass,
+    					"subclass": func.subclass,
+    				};
+            		var funcindecies = {};
+            		var funcgenomes = {};
+            		var gcount = 0;
+            		for (var j in genomes) {
+            			var compgenome = genomes[j];
+            			if (func.genome_features[compgenome.genome_ref]) {
+            				var genomefams = {};
+            				var genes = func.genome_features[compgenome.genome_ref];
+            				for (var k in genes) {
+            					gcount++;
+            					gene = genes[k];
+            					genomefams[gene[1]] = 1;
+            					if (funcindecies[gene[1]] === undefined) {
+            						funcindecies[gene[1]] = 0;
+            					}
+            					funcindecies[gene[1]]++;
+            				}
+            				for (var genfam in genomefams) {
+            					if (funcgenomes[genfam] === undefined) {
+            						funcgenomes[genfam] = 0;
+            					}
+            					funcgenomes[genfam]++;
+            				}
+            			}
+            		}
+            		func.numgenes = gcount;
+            		var sortedfams = getSortedKeys(funcindecies);
+            		funcdata.totals = "Families:&nbsp;"+sortedfams.length+"<br>Genes:&nbsp;"+gcount+"<br>Genomes:&nbsp;"+func.number_genomes;
+            		funcdata.families = "";
+            		funcdata.famgenes = "";
+            		funcdata.famgenomes = "";
+            		for (var j in sortedfams) {
+            			if (funcdata.families.length > 0) {
+            				funcdata.families += "<br>";
+            				funcdata.famgenes += "<br>";
+            				funcdata.famgenomes += "<br>";
+            			}
+            			if (sortedfams[j] === "null") {
+            				funcdata.famgenes = 0;
+            				funcdata.famgenomes = 0;
+            				funcdata.families = "none";
+            			} else {
+            				funcdata.famgenes += funcindecies[sortedfams[j]]+"("+Math.round(100*funcindecies[sortedfams[j]]/families[sortedfams[j]].numgenes)+"%)";
+            				funcdata.famgenomes += funcgenomes[sortedfams[j]]+"("+Math.round(100*funcgenomes[sortedfams[j]]/families[sortedfams[j]].number_genomes)+"%)";
+            				funcdata.families += '<a class="show-family'+self.pref+'" data-id="'+families[sortedfams[j]].id+'">'+families[sortedfams[j]].id+'</a>';
+            			}
+            		}
+            		tableSettings.aaData.push(funcdata);
+    			}
+    			tableFunctions.dataTable(tableSettings);
 				///////////////////////////////////// Event handling for links ///////////////////////////////////////////
         		function events() {
         			// event for clicking on ortholog count

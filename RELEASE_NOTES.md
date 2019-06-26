@@ -7,6 +7,8 @@ This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
 - Improve load times for the Data Panel and the browser in the data slideout (the "My Data" and "Shared with Me" tabs).
 - Set the Narratives tab to lazy load.
 - #1487 - fixed typo in genome feature viewer.
+- Updated data import tutorial for some clarity.
+- Changed Pangenome viewer field names for clarity and consistency.
 
 ### Version 3.11.1
 - Add internal information for users who came to the site from a Google ad click.

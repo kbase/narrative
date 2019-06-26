@@ -162,10 +162,11 @@ define([
                 var genomeList = Object.keys(data.genomes).sort();
                 var numGenomes = genomeList.length;
                 var numberTable = [];
-                var header = [];
+                var header = ["<th>Genome</th><th>Legend</th>"];
                 for (var i=0; i<numGenomes; i++) {
                     header.push('<th style="text-align:center"><b>G' + (i+1) + '</b></th>');
                     var singleComp = [];
+                    singleComp.push('<b>G' + (i+1) + '</b> - ' + genomeList[i] + "<td># homolog families</td>");
                     for (var j=0; j<numGenomes; j++) {
                         var cell = data.shared_family_map[genomeList[i]][genomeList[j]];
                         if (i === j) {
@@ -173,7 +174,7 @@ define([
                         }
                         singleComp.push(cell);
                     }
-                    singleComp.push('<b>G' + (i+1) + '</b> - ' + genomeList[i]);
+
                     numberTable.push(singleComp);
                 }
 

@@ -94,13 +94,13 @@ define (
 					"Genome","Legend"
 				];
 				for (var i in genomes) {
-					headings.push("G"+i);
+					headings.push("G"+(i+1));
 				}
 				tableGenomes.append('<tr><th><b>'+headings.join('</b></th><th><b>')+'</b></th></tr>');
 				for (var i in genomes) {
             		var genome = genomes[i];
             		var row = [
-            			"<b>G"+i+"</b>-"+genome.name,"# of families:<br># of functions:"
+            			"<b>G"+(i+1)+"</b>-"+genome.name,"# of families:<br># of functions:"
             		];
             		for (var j in genomes) {
             			var compgenome = genomes[j];

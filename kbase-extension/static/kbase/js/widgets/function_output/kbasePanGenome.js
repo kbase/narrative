@@ -108,7 +108,7 @@ define([
                     .append(self.tableRow(['Total # of protein coding genes', [
                         '<b>',
                         data.genes.genes_count,
-                        '</b> genes, <b>',
+                        '</b> genes with translation, <b>',
                         data.genes.homolog_family_genes_count,
                         '</b> are in homolog families, <b>',
                         data.genes.singleton_family_genes_count,

@@ -107,7 +107,7 @@ define (
             			if (genome.genome_similarity[compgenome.genome_ref]) {
             				row.push(genome.genome_similarity[compgenome.genome_ref][0]+'<br>'+genome.genome_similarity[compgenome.genome_ref][1]);
             			} else if (j == i) {
-            				row.push(genome.families+'<br>'+genome.functions);
+            				row.push("<font color='#d269e'>" + genome.families+'<br>'+genome.functions + "</font>");
             			} else {
             				row.push('0<br>0');
             			}

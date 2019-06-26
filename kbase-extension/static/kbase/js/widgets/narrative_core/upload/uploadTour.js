@@ -64,7 +64,7 @@ define([
                 title: 'Import to this Narrative',
                 placement: 'top',
                 element: that.$elem.find('#kb-data-staging-table > thead > tr > th:last-child'),
-                content: 'Select an object type for your file, then click the <i class="fa fa-upload"></i> button to create an Import App cell. Check the parameters and click the Play button (green arrow) to transform your data file(s) into an object available for analysis in your Narrative.'
+                content: 'Select an object type for your file, then click the <i class="fa fa-upload"></i> button to create an Import App cell in your narrative. Check the app parameters and click the Run button to transform your data file(s) into an object available for analysis in your Narrative.'
             },
             {
                 title: 'End of Tour',

@@ -128,9 +128,10 @@ define([
                     .append($('<tr>')
                         .append($('<th>Genome</th>'))
                         .append($('<th># Genes</th>'))
-                        .append($('<th>Homologs</th>'))
-                        .append($('<th>Homolog Families</th>'))
-                        .append($('<th>Singletons</th>')));
+                        .append($('<th># Genes in Homologs</th>'))
+                        .append($('<th># Genes in Singletons</th>'))
+                        .append($('<th># Homolog Families</th>'))
+                        );
 
                 Object.keys(data.genomes).forEach(function(genome) {
                     var genomeData = data.genomes[genome];
@@ -138,8 +139,8 @@ define([
                         genome,
                         genomeData.genome_genes,
                         genomeData.genome_homolog_family_genes,
-                        genomeData.genome_homolog_family,
                         genomeData.genome_singleton_family_genes
+                        genomeData.genome_homolog_family,
                     ]));
                 });
 

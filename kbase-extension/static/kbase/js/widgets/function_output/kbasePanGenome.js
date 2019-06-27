@@ -139,8 +139,8 @@ define([
                         genome,
                         genomeData.genome_genes,
                         genomeData.genome_homolog_family_genes,
-                        genomeData.genome_singleton_family_genes
-                        genomeData.genome_homolog_family,
+                        genomeData.genome_singleton_family_genes,
+                        genomeData.genome_homolog_family
                     ]));
                 });
 

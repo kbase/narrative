@@ -197,21 +197,21 @@ define([
             var $pfDiv = $('<div>');
             new DynamicTable($pfDiv, {
                 headers: [{
+                    id: 'id',
+                    text: 'Family',
+                    isSortable: true
+                }, {
                     id: 'function',
                     text: 'Function',
                     isSortable: true
                 }, {
-                    id: 'id',
-                    text: 'ID',
-                    isSortable: true
-                }, {
                     id: 'pcgCount',
                     text: 'Protein Coding Gene Count',
-                    isSortable: false
+                    isSortable: true
                 }, {
                     id: 'gCount',
                     text: 'Genome Count',
-                    isSortable: false
+                    isSortable: true
                 }],
                 rowsPerPage: this.options.pFamsPerPage,
                 searchPlaceholder: 'Search Families',
@@ -429,8 +429,8 @@ define([
                         orthoGenomes[ortholog[2]] = 1;
                     });
                     rows.push([
-                        info.function || '',
                         info.id,
+                        info.function || '',
                         info.orthologs.length,
                         Object.keys(orthoGenomes).length
                     ]);

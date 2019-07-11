@@ -1,5 +1,5 @@
 from biokbase.workspace.client import Workspace
-from biokbase.NarrativeJobService.Client import NarrativeJobService
+from biokbase.NarrativeJobService.NarrativeJobServiceClient import NarrativeJobService
 from biokbase.narrative_method_store.client import NarrativeMethodStore
 from biokbase.userandjobstate.client import UserAndJobState
 from biokbase.catalog.Client import Catalog

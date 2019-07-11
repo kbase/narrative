@@ -2381,8 +2381,8 @@ button.kb-data-obj {
     color:#333;
 
     box-shadow: 1px 1px 1px 1px #fff;
-    -webkit-box-shadow: 1px 1px 1px 1px #fff;
-    moz-box-shadow: 1px 1px 1px 1px #fff;
+    --webkit-box-shadow: 1px 1px 1px 1px #fff;
+    --moz-box-shadow: 1px 1px 1px 1px #fff;
 
 }
 

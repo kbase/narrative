@@ -4,7 +4,7 @@
   Displays a heatmap.
 
   Options
-  
+
   width (int)
      Number of pixels the resulting image is wide. Default is 700
 
@@ -52,7 +52,7 @@
         normalized value matrix
 */
 (function () {
-    var root = this;
+    var root = this || {};
     var standaloneHeatmap = root.standaloneHeatmap = {
 	about: {
 	    name: "heatmap",
@@ -80,9 +80,9 @@
 			{ name: 'col_text_size', type: 'int', description: "font size of the column text in pixel", title: "column font size" },
 			{ name: 'min_cell_height', type: 'int', description: "minimum height of a cell", title: "minimum cell height" }
 		    ]
-		},		
+		},
 		{
-		    layout: [ 
+		    layout: [
 			{ name: 'height', type: 'int', description: "height of the plot", title: "height" },
 			{ name: 'width', type: 'int', description: "width of the plot", title: "width" },
 			{ name: 'tree_height', type: 'int', description: "height of the dendogram", title: "dendogram height" },
@@ -129,7 +129,7 @@
 	    target.firstChild.setAttribute('style', "width: "+ renderer.settings.width+"px; height: "+renderer.settings.height+"px;");
 	    jQuery('#heatmap_div'+index).svg();
 	    rendererHeatmap[index].drawImage(jQuery('#heatmap_div'+index).svg('get'), renderer.index);
-	    
+
 	    return renderer;
 	},
 
@@ -195,7 +195,7 @@
 			    fontColor = "blue";
 			}
 			svg.text(null, ctextx, ctexty, renderer.settings.data.columns[renderer.settings.data.colindex[h]-1], { fill: fontColor, fontSize: renderer.settings.col_text_size+"px", transform: "rotate(-90, "+ctextx+", "+ctexty+")", onclick: "rendererHeatmap["+index+"].toggleSelected("+h+", "+index+", 1);", cursor: "pointer" });
-			
+
 		    }
 
 		    // calculate box margins
@@ -223,7 +223,7 @@
 		    }
 
 		    // draw the box
-		    renderer.settings.cells[i][h] = svg.rect(null, x, y, width, height, rx, ry, settings);		    
+		    renderer.settings.cells[i][h] = svg.rect(null, x, y, width, height, rx, ry, settings);
 		}
 	    }
 	},
@@ -268,7 +268,7 @@
 	    }
 	    svg.path(null, path, {fill:"none", stroke: "black" });
 	},
-	
+
 	toggleSelected: function (row, index, dir) {
 	    var renderer = rendererHeatmap[index];
 
@@ -355,7 +355,7 @@
 	    	    }
 	    	    distances[i][h] = Math.pow(dist, 0.5);
 	    	}
-	    }	    
+	    }
 	    return distances;
 	},
 
@@ -420,7 +420,7 @@
 	    	avail[coords[1]] = false;
 	    	num_avail--;
 	    	avail[clusters.length] = true;
-		
+
 		var sumpa = 0;
 		var sumpb = 0
 		for (var h=0;h<2;h++) {
@@ -528,9 +528,9 @@
 
 		// get the level this cluster is at
 		var level = Math.max.apply(null, clusters[i].level) - 1;
-		
+
 		clusterdata[level].push({a: clusters[clusters[i].points[0]].data.length, b:clusters[clusters[i].points[1]].data.length, amin: roworder[Math.min.apply(null, clusters[clusters[i].points[0]].basepoints) + 1] });
-		
+
 		// draw single lines until we reach the next root
 		if (clusters[i].level[0] != clusters[i].level[1]) {
 		    var n = 0;
@@ -549,7 +549,7 @@
 	    	    clusterdata[i].sort(rendererHeatmap[0].clustsort);
 	    	}
 	    }
-	    
+
 	    if (data.length < 20) {
 		window.clustersx = clusters;
 		window.clusterdatax = clusterdata;

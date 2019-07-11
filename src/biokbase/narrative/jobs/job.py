@@ -4,6 +4,7 @@ from biokbase.narrative.app_util import (
     map_inputs_from_job,
     map_outputs_from_state
 )
+from .util import sanitize_state
 import json
 import uuid
 from jinja2 import Template
@@ -139,15 +140,10 @@ class Job(object):
         if self._last_state is not None and self._last_state.get('finished', 0) == 1:
             return self._last_state
         try:
-            state = clients.get("job_service").check_job(self.job_id)
-            if 'cancelled' in state:
-                state['canceled'] = state.get('cancelled', 0)
-                del state['cancelled']
-            if state.get('job_state', '') == 'cancelled':
-                state['job_state'] = 'canceled'
-            state['cell_id'] = self.cell_id
-            state['run_id'] = self.run_id
-            state['token_id'] = self.token_id
+            state = sanitize_state(clients.get("job_service").check_job(self.job_id))
+            state[u'cell_id'] = self.cell_id
+            state[u'run_id'] = self.run_id
+            state[u'token_id'] = self.token_id
             self._last_state = state
             return dict(state)
         except Exception as e:

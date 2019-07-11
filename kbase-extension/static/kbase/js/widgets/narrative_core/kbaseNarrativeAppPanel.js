@@ -71,11 +71,7 @@ define([
             methodHelpLink: '/#appcatalog/app/',
             appHelpLink: '/#appcatalog/app/l.a/'
         },
-        ignoreCategories: {
-            inactive: 1,
-            importers: 1,
-            viewers: 1
-        },
+        ignoreCategories: {},
         id2Elem: {},
         methodSpecs: {}, // id -> spec
         categories: {}, // id -> category info
@@ -90,6 +86,14 @@ define([
             // After this, just need to update the function list
 
             this.currentTag = 'release';
+
+            this.narrativeService = new DynamicServiceClient({
+                module: 'NarrativeService',
+                url: Config.url('service_wizard'),
+                token: Runtime.make().authToken()
+            });
+
+            this.getIgnoreCategories();
 
             this.icon_colors = Config.get('icons').colors;
 
@@ -471,33 +475,42 @@ define([
         },
 
         /**
+         * Fetch ignored_category from Narrative Service and assign returned value to local ignoreCategories
+         */
+        getIgnoreCategories: function() {
+            this.narrativeService.callFunc('get_ignore_categories', [])
+                .then((ignoreCategories) => {
+                    this.ignoreCategories = ignoreCategories[0];
+                })
+                .catch((error) => {
+                    // return default ignore categories
+                    this.ignoreCategories =  {
+                        inactive: 1,
+                        importers: 1,
+                        viewers: 1
+                    };
+                });
+        },
+
+        /**
          * Returns a promise that resolves when the app is done refreshing itself.
          */
         refreshFromService: function(versionTag) {
             this.showLoadingMessage('Loading available Apps...');
-            var filterParams = {};
             if (versionTag) {
-                filterParams['tag'] = versionTag;
                 this.currentTag = versionTag;
             }
 
-            var narrativeService = new DynamicServiceClient({
-                module: 'NarrativeService',
-                url: Config.url('service_wizard'),
-                token: Runtime.make().authToken()
-            });
-
-            return narrativeService.callFunc('get_all_app_info', [{
+            return this.narrativeService.callFunc('get_all_app_info', [{
                 tag: this.currentTag,
                 user: Jupyter.narrative.userId
             }])
                 .then((appInfo) => {
                     appInfo = appInfo[0];
                     this.methodSpecs = appInfo.app_infos;
-                    this.categories = appInfo.categories;
                     this.moduleVersions = appInfo.module_versions;
                     this.trigger('appListUpdated.Narrative');
-                    this.parseApps(this.categories, this.methodSpecs);
+                    this.refreshPanel();
                     this.showAppPanel();
                 })
                 .catch((error) => {
@@ -558,54 +571,6 @@ define([
             } else {
                 self.trigger('appClicked.Narrative', [app, tag, parameters]);
             }
-        },
-
-        /**
-         * "Parses" the apps to do some preliminary filtering of ignored categories and
-         * do some internal string chopping (i.e. keep an abbreviated list of objects -
-         * input_types = ['KBaseGenomes.Genome', 'KBaseGenomeAnnotations.Assembly'] ->).
-         *
-         * Sets the renderedApps property of the widget (the set of apps to render)
-         * and runs refreshPanel() when it's done.
-         */
-        parseApps: function(catSet, appSet) {
-            var self = this;
-
-            var shortenTypes = function(typeList) {
-                var shortTypes = [];
-                if (typeList) {
-                    typeList.forEach(function(t) {
-                        if (t.indexOf('.') !== -1) {
-                            shortTypes.push(t.split('.')[1]);
-                        }
-                    });
-                }
-                return shortTypes;
-            };
-
-            this.catSet = catSet;
-            this.renderedApps = {};
-            for (var app in appSet) {
-                if (!appSet.hasOwnProperty(app)) {
-                    continue;
-                }
-                // skip this if its to be ignored.
-                var ignoreFlag = false;
-                for (var i = 0; i < appSet[app].info.categories.length; i++) {
-                    if (self.ignoreCategories[appSet[app].info.categories[i]]) {
-                        ignoreFlag = true;
-                        break;
-                    }
-                }
-                if (ignoreFlag) {
-                    continue;
-                }
-                // passed all the filters, now add the short version of inputs/outputs...?
-                appSet[app].info.short_input_types = shortenTypes(appSet[app].info.input_types);
-                appSet[app].info.short_output_types = shortenTypes(appSet[app].info.output_types);
-                this.renderedApps[app] = appSet[app];
-            }
-            this.refreshPanel();
         },
 
         categorizeApps: function(style, appSet) {
@@ -694,7 +659,7 @@ define([
         refreshPanel: function() {
             var panelStyle = this.currentPanelStyle,
                 filterString = this.bsSearch.val(),
-                appSet = this.renderedApps,
+                appSet = this.methodSpecs,
                 self = this,
                 $appPanel = $('<div>');
 

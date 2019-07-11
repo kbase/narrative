@@ -2061,7 +2061,7 @@ define([
                 color = 'red';
                 break;
             case 'canceled':
-                label = 'cancelation';
+                label = 'cancellation';
                 color = 'orange';
                 break;
             default:

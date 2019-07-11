@@ -51,7 +51,6 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery',
-		'kbwidget',
 		'kbaseDeletePrompt',
 		'kbaseButtonControls',
 		'kbaseSearchControls'
@@ -59,7 +58,6 @@ define (
 		KBWidget,
 		bootstrap,
 		$,
-		KBWidget,
 		kbaseDeletePrompt,
 		kbaseButtonControls,
 		kbaseSearchControls

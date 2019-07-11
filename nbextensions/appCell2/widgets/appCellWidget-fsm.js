@@ -1063,7 +1063,7 @@ define([], function() {
             next: [{
                     mode: 'canceled'
                 },
-                // In case the cancelation request was denied
+                // In case the cancellation request was denied
                 {
                     mode: 'processing',
                     stage: 'running'

@@ -6,8 +6,9 @@ from time import time
 from fix_workspace_info import fix_all_workspace_info
 from pprint import pprint
 
-mini_ws_url = "http://localhost/services/ws"
-mini_auth_url = "http://localhost/services/auth/testmode"
+kb_port = 9999
+mini_ws_url = f"http://localhost:{kb_port}/services/ws"
+mini_auth_url = f"http://localhost:{kb_port}/services/auth/testmode"
 mini_ws_admin = "wsadmin"
 narrative_spec_file = '../../../narrative_object.spec'
 old_narrative_spec_file = 'old_narrative_object.spec'

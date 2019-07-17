@@ -48,10 +48,9 @@ def find_all_narrative_py2_code(ws_url:str, token:str, max_id:int, outfile:str):
             if "No workspace with id" in str(e):
                 print(f"WS:{ws_id} does not exist")
             all_results["fail"].append({"id": ws_id, "error": str(e.message)})
-    print(f"Done. Results in {outfile}")
-    print(all_results)
     with open(outfile, "w") as f:
         f.write(json.dumps(all_results, indent=4))
+    print(f"Done. Results in {outfile}")
 
 def _find_narrative_py2_code(ws_id: int, ws: Workspace, rt: RefactoringTool, verbose: bool=False) -> NarrativeInfo:
     """
@@ -86,6 +85,11 @@ def _find_narrative_py2_code(ws_id: int, ws: Workspace, rt: RefactoringTool, ver
     return _update_narrative(narr_obj, ws_info, rt)
 
 def _update_narrative(narr_obj: list, ws_info: list, rt: RefactoringTool) -> NarrativeInfo:
+    """
+    Core pieces of this taken from this gist by Thomas Takluyver and Fernando Perez:
+    https://gist.github.com/takluyver/c8839593c615bb2f6e80
+    """
+
     try:
         nb = nbformat.reads(json.dumps(narr_obj['data']), 4.0)
     except:

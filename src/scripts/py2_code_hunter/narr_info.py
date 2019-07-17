@@ -24,8 +24,7 @@ class NarrativeInfo(object):
             "last_saved": self.last_saved,
             "saved_by": self.saved_by,
             "updates": self.changed_cells,
-            "owner": self.ws_owner,
-            "changed_cells": self.changed_cells
+            "owner": self.ws_owner
         }
 
     def __repr__(self):

@@ -1,7 +1,7 @@
 """
-Stuff. And things!
+Hunts for Python 2 code in all Narratives in a Workspace environment.
+Needs an Administrator token.
 """
-
 import sys
 import requests
 import argparse
@@ -18,15 +18,12 @@ from narr_info import NarrativeInfo
 from typing import List
 
 
-
 DEFAULT_OUTPUT_FILE = "code_search_results.json"
 
-def find_all_narrative_py2_code(ws_url:str, auth_url:str, token:str, max_id:int, outfile:str):
+def find_all_narrative_py2_code(ws_url:str, token:str, max_id:int, outfile:str):
     assert(ws_url)
-    assert(auth_url)
     assert(token)
 
-    # user_id = _get_user_id(auth_url, token)
     ws = Workspace(url=ws_url, token=token)
     all_results = {
         "fail": [],
@@ -114,38 +111,22 @@ def _update_narrative(narr_obj: list, ws_info: list, rt: RefactoringTool) -> Nar
         ninfo.add_updated_cell(idx, source, result)
     return ninfo
 
-def _get_user_id(auth_url: str, token: str):
-    """
-    This uses the given token to query the authentication service for information
-    about the user who created the token.
-    """
-    token_api_url = auth_url + "/api/V2/token"
-    headers = { "Authorization": token }
-    r = requests.get(token_api_url, headers=headers)
-    if r.status_code != requests.codes.ok:
-        r.raise_for_status()
-    auth_info = json.loads(r.content)
-    return auth_info['user']
-
 def parse_args(args:List[str]):
     p = argparse.ArgumentParser(description=__doc__.strip())
     p.add_argument("-t", "--token", dest="token", default=None, help="Auth token for workspace admin")
     p.add_argument("-w", "--ws_url", dest="ws_url", default=None, help="Workspace service endpoint")
-    p.add_argument("-a", "--auth_url", dest="auth_url", default=None, help="Auth service endpoint")
     p.add_argument("-m", "--max_id", dest="max_id", default=40000, help="Highest workspace id to scan for code")
     p.add_argument("-o", "--outfile", dest="outfile", default=DEFAULT_OUTPUT_FILE, help="Output file for results of the search")
     args = p.parse_args(args)
     if args.ws_url is None:
         raise ValueError("ws_url - the Workspace service endpoint - is required!")
-    if args.auth_url is None:
-        raise ValueError("auth_url - the Auth service endpoint - is required!")
     if args.token is None:
         raise ValueError("token - a valid Workspace admin auth token - is required!")
     return args
 
 def main(args: List[str]):
     args = parse_args(args)
-    return find_all_narrative_py2_code(args.ws_url, args.auth_url, args.token, int(args.max_id), args.outfile)
+    return find_all_narrative_py2_code(args.ws_url, args.token, int(args.max_id), args.outfile)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

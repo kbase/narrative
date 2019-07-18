@@ -20,9 +20,12 @@ from typing import List
 
 DEFAULT_OUTPUT_FILE = "code_search_results.json"
 
-def find_all_narrative_py2_code(ws_url:str, token:str, max_id:int, outfile:str):
+def find_all_narrative_py2_code(ws_url:str, token:str, min_id: int, max_id:int, outfile:str, report:str):
     assert(ws_url)
     assert(token)
+    assert(min_id and min_id > 0)
+    assert(max_id and max_id >= min_id)
+    assert(outfile)
 
     ws = Workspace(url=ws_url, token=token)
     all_results = {
@@ -33,9 +36,9 @@ def find_all_narrative_py2_code(ws_url:str, token:str, max_id:int, outfile:str):
     }
 
     avail_fixes = set(get_fixers_from_package('lib2to3.fixes'))
-    rt = RefactoringTool(avail_fixes)
+    rt = RefactoringTool(avail_fixes, options={"print_function": False})
 
-    for ws_id in range(1, max_id):
+    for ws_id in range(min_id, max_id):
         try:
             result = _find_narrative_py2_code(ws_id, ws, rt, verbose=True)
             if result is None:
@@ -48,9 +51,18 @@ def find_all_narrative_py2_code(ws_url:str, token:str, max_id:int, outfile:str):
             if "No workspace with id" in str(e):
                 print(f"WS:{ws_id} does not exist")
             all_results["fail"].append({"id": ws_id, "error": str(e.message)})
-    with open(outfile, "w") as f:
-        f.write(json.dumps(all_results, indent=4))
+        except TypeError as e:
+            print(f"WS:{ws_id} metadata doesn't link to a Narrative type!")
+            all_results["fail"].append({"id": ws_id, "error": str(e)})
+    with open(outfile, "w") as fjson:
+        fjson.write(json.dumps(all_results, indent=4))
     print(f"Done. Results in {outfile}")
+    if report is not None:
+        with open(report, "w") as ftsv:
+            ftsv.write("user name\tnarrative id\tlast saved\n")
+            for n in all_results["changes"]:
+                ftsv.write(f"{n['owner']}\t{n['id']}\t{n['last_saved']}\n")
+
 
 def _find_narrative_py2_code(ws_id: int, ws: Workspace, rt: RefactoringTool, verbose: bool=False) -> NarrativeInfo:
     """
@@ -81,6 +93,8 @@ def _find_narrative_py2_code(ws_id: int, ws: Workspace, rt: RefactoringTool, ver
             }]
         }
     })['data'][0]
+    if not narr_obj['info'][2].startswith('KBaseNarrative.Narrative'):
+        raise TypeError(f"Object {ws_id}/{narr_id} is not a Narrative!")
 
     return _update_narrative(narr_obj, ws_info, rt)
 
@@ -102,7 +116,9 @@ def _update_narrative(narr_obj: list, ws_info: list, rt: RefactoringTool) -> Nar
         head = ''
         source = cell.source
         if source.startswith('%%'):
-            head, source = cell.source.split('\n', 1)
+            split_source = cell.source.split('\n', 1)
+            if len(split_source) == 2:
+                head, source = split_source
         try:
             tree = rt.refactor_string(source + "\n", f"{ws_info[0]}-cell{idx}")
             result = str(tree)[:-1]
@@ -119,8 +135,10 @@ def parse_args(args:List[str]):
     p = argparse.ArgumentParser(description=__doc__.strip())
     p.add_argument("-t", "--token", dest="token", default=None, help="Auth token for workspace admin")
     p.add_argument("-w", "--ws_url", dest="ws_url", default=None, help="Workspace service endpoint")
+    p.add_argument("-n", "--min_id", dest="min_id", default=1, help="Lowest workspace id to scan for code")
     p.add_argument("-m", "--max_id", dest="max_id", default=40000, help="Highest workspace id to scan for code")
-    p.add_argument("-o", "--outfile", dest="outfile", default=DEFAULT_OUTPUT_FILE, help="Output file for results of the search")
+    p.add_argument("-j", "--json_outfile", dest="outfile", default=DEFAULT_OUTPUT_FILE, help="Output file for results of the search")
+    p.add_argument("-r", "--report_outfile", dest="report", default=None, help="Output file for a TSV-formatted report")
     args = p.parse_args(args)
     if args.ws_url is None:
         raise ValueError("ws_url - the Workspace service endpoint - is required!")
@@ -130,7 +148,7 @@ def parse_args(args:List[str]):
 
 def main(args: List[str]):
     args = parse_args(args)
-    return find_all_narrative_py2_code(args.ws_url, args.token, int(args.max_id), args.outfile)
+    return find_all_narrative_py2_code(args.ws_url, args.token, int(args.min_id), int(args.max_id), args.outfile, args.report)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

@@ -29,8 +29,16 @@ RUN echo Skip=$SKIP_MINIFY
 
 # install pyopenssl cryptography idna and requests is the same as installing
 # requests[security]
-RUN conda install -c conda-forge ndg-httpsclient pyasn1 pyopenssl cryptography idna requests \
-          beautifulsoup4 html5lib
+RUN pip install \
+    ndg-httpsclient==0.5.1 \
+    pyasn1==0.4.5 \
+    pyopenssl==19.0.0 \
+    cryptography==2.7 \
+    idna==2.7 \
+    requests==2.20.0 \
+    beautifulsoup4==4.7.1 \
+    html5lib==1.0.1
+
 # TEMPORARY!
 # Update bs4 and pandas to resolve inability to run them
 #RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev libffi-dev libssl-dev \

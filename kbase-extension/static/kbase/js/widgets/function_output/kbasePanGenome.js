@@ -108,7 +108,7 @@ define([
                     .append(self.tableRow(['Total # of protein coding genes', [
                         '<b>',
                         data.genes.genes_count,
-                        '</b> genes, <b>',
+                        '</b> genes with translation, <b>',
                         data.genes.homolog_family_genes_count,
                         '</b> are in homolog families, <b>',
                         data.genes.singleton_family_genes_count,
@@ -128,9 +128,10 @@ define([
                     .append($('<tr>')
                         .append($('<th>Genome</th>'))
                         .append($('<th># Genes</th>'))
-                        .append($('<th>Homologs</th>'))
-                        .append($('<th>Homolog Families</th>'))
-                        .append($('<th>Singletons</th>')));
+                        .append($('<th># Genes in Homologs</th>'))
+                        .append($('<th># Genes in Singletons</th>'))
+                        .append($('<th># Homolog Families</th>'))
+                        );
 
                 Object.keys(data.genomes).forEach(function(genome) {
                     var genomeData = data.genomes[genome];
@@ -138,8 +139,8 @@ define([
                         genome,
                         genomeData.genome_genes,
                         genomeData.genome_homolog_family_genes,
-                        genomeData.genome_homolog_family,
-                        genomeData.genome_singleton_family_genes
+                        genomeData.genome_singleton_family_genes,
+                        genomeData.genome_homolog_family
                     ]));
                 });
 
@@ -161,10 +162,12 @@ define([
                 var genomeList = Object.keys(data.genomes).sort();
                 var numGenomes = genomeList.length;
                 var numberTable = [];
-                var header = [];
+                var header = ["<th>Genome</th><th>Legend</th>"];
                 for (var i=0; i<numGenomes; i++) {
                     header.push('<th style="text-align:center"><b>G' + (i+1) + '</b></th>');
                     var singleComp = [];
+                    singleComp.push('<b>G' + (i+1) + '</b> - ' + genomeList[i]);
+                    singleComp.push('# homolog families');
                     for (var j=0; j<numGenomes; j++) {
                         var cell = data.shared_family_map[genomeList[i]][genomeList[j]];
                         if (i === j) {
@@ -172,7 +175,7 @@ define([
                         }
                         singleComp.push(cell);
                     }
-                    singleComp.push('<b>G' + (i+1) + '</b> - ' + genomeList[i]);
+
                     numberTable.push(singleComp);
                 }
 
@@ -195,21 +198,21 @@ define([
             var $pfDiv = $('<div>');
             new DynamicTable($pfDiv, {
                 headers: [{
+                    id: 'id',
+                    text: 'Family',
+                    isSortable: true
+                }, {
                     id: 'function',
                     text: 'Function',
                     isSortable: true
                 }, {
-                    id: 'id',
-                    text: 'ID',
-                    isSortable: true
-                }, {
                     id: 'pcgCount',
                     text: 'Protein Coding Gene Count',
-                    isSortable: false
+                    isSortable: true
                 }, {
                     id: 'gCount',
                     text: 'Genome Count',
-                    isSortable: false
+                    isSortable: true
                 }],
                 rowsPerPage: this.options.pFamsPerPage,
                 searchPlaceholder: 'Search Families',
@@ -427,8 +430,8 @@ define([
                         orthoGenomes[ortholog[2]] = 1;
                     });
                     rows.push([
-                        info.function || '',
                         info.id,
+                        info.function || '',
                         info.orthologs.length,
                         Object.keys(orthoGenomes).length
                     ]);

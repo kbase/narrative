@@ -94,20 +94,20 @@ define (
 					"Genome","Legend"
 				];
 				for (var i in genomes) {
-					headings.push("G"+i);
+					headings.push("G"+(i+1));
 				}
 				tableGenomes.append('<tr><th><b>'+headings.join('</b></th><th><b>')+'</b></th></tr>');
 				for (var i in genomes) {
             		var genome = genomes[i];
             		var row = [
-            			"<b>G"+i+"</b>-"+genome.name,"# of families:<br># of functions:"
+            			"<b>G"+(i+1)+"</b>-"+genome.name,"# of families:<br># of functions:"
             		];
             		for (var j in genomes) {
             			var compgenome = genomes[j];
             			if (genome.genome_similarity[compgenome.genome_ref]) {
             				row.push(genome.genome_similarity[compgenome.genome_ref][0]+'<br>'+genome.genome_similarity[compgenome.genome_ref][1]);
             			} else if (j == i) {
-            				row.push(genome.families+'<br>'+genome.functions);
+            				row.push("<font color='#d2691e'>" + genome.families+'<br>'+genome.functions + "</font>");
             			} else {
             				row.push('0<br>0');
             			}
@@ -145,7 +145,7 @@ define (
         				        	"sSearch": "Search: "
         				},
         				'fnDrawCallback': events
-        		}
+        		};
         		for (var i in families) {
             		var fam = families[i];
     				var famdata = {
@@ -244,7 +244,7 @@ define (
         				        	"sSearch": "Search: "
         				},
         				'fnDrawCallback': events
-        		}
+        		};
 				for (var i in families) {
             		var fam = families[i];
             		var gcount = 0;

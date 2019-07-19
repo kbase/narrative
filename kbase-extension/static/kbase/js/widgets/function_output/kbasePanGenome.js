@@ -166,7 +166,8 @@ define([
                 for (var i=0; i<numGenomes; i++) {
                     header.push('<th style="text-align:center"><b>G' + (i+1) + '</b></th>');
                     var singleComp = [];
-                    singleComp.push('<b>G' + (i+1) + '</b> - ' + genomeList[i] + "</td><td># homolog families</td>");
+                    singleComp.push('<b>G' + (i+1) + '</b> - ' + genomeList[i]);
+                    singleComp.push('# homolog families');
                     for (var j=0; j<numGenomes; j++) {
                         var cell = data.shared_family_map[genomeList[i]][genomeList[j]];
                         if (i === j) {

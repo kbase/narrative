@@ -110,10 +110,23 @@ def _update_narrative(narr_obj: list, ws_info: list, rt: RefactoringTool) -> Nar
         nb = nbformat.reads(json.dumps(narr_obj['data']), 3.0)
     ninfo = NarrativeInfo(narr_obj['info'], ws_info[2])
 
+    cells = list()
+    if nb.nbformat == 4:
+        cells = nb.cells
+    else:
+        cells = nb.worksheets[0].cells
+
     for idx, cell in enumerate(nb.cells):
         if cell.cell_type != "code":
             continue
         head = ''
+        source = ''
+        if hasattr(cell, 'source'):
+            source = cell.source
+        elif hasattr(cell, 'input'):
+            source = cell.input
+        else:
+            continue
         source = cell.source
         if source.startswith('%%'):
             split_source = cell.source.split('\n', 1)

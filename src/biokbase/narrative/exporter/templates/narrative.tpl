@@ -47,7 +47,6 @@ div#notebook {
 }
 </style>
 
-<link rel="stylesheet" href="https://narrative-dev.kbase.us/static/ext_components/font-awesome/css/font-awesome.min.css">
 <link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/landing-pages.css">
 <link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/kbaseEditor.css">
 <link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/kbaseNotify.css">

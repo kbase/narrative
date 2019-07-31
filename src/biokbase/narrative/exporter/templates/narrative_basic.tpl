@@ -3,7 +3,51 @@
 
 {% block codecell %}
 <div class="cell border-box-sizing code_cell rendered">
+{%- if cell.metadata.kbase and cell.metadata.kbase.type == 'app' -%}
+{% block kb_app_cell %}
+  <div class="kb-cell-widget">
+    <div style="display: flex">
+      <div class="prompt input_prompt"></div>
+      <div class="kb-app-header-container">
+        <div class="kb-app-header-title">
+          <div class="kb-app-header-icon">
+            <div style="padding: 3px">
+              <img src="https://ci.kbase.us/services/narrative_method_store/img?method_id=kb_quast/run_QUAST_app&image_name=quast-blue_360.png&tag=release" style="max-width: 50px; max-height: 50px; margin: 0"/>
+            </div>
+          </div>
+          <div class="kb-app-header-title-text">
+            <div class="title">{{cell.metadata.kbase.app.title}}</div>
+            <div class="subtitle">{{cell.metadata.kbase.app.subtitle}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+
+
+<ul>
+  <li><b>id</b> - {{cell.metadata.kbase.app.id}}
+  <li><b>title</b> - {{cell.metadata.kbase.app.title}}
+  <li><b>subtitle</b> - {{cell.metadata.kbase.app.subtitle}}
+  <li><b>version</b> - {{cell.metadata.kbase.app.version}}
+  <li><b>tag</b> - {{cell.metadata.kbase.app.tag}}
+  <li><b>catalog url</b> - {{cell.metadata.kbase.app.catalog_url}}
+</ul>
+<ul>
+  <li><b>job state</b> - {{cell.metadata.kbase.job.state}}
+</ul>
+<ul>
+  {% for p in cell.metadata.kbase.params %}
+  <li>{{p.id}} - {{p.value}}</li>
+  {% endfor %}
+</ul>
+{% endblock kb_app_cell %}
+{% else %}
 {{ super() }}
+{%- endif -%}
 </div>
 {%- endblock codecell %}
 
@@ -23,11 +67,6 @@
 
 {% block in_prompt -%}
 <div class="prompt input_prompt">
-{%- if cell.execution_count is defined -%}
-In&nbsp;[{{ cell.execution_count|replace(None, "&nbsp;") }}]:
-{%- else -%}
-In&nbsp;[&nbsp;]:
-{%- endif -%}
 </div>
 {%- endblock in_prompt %}
 

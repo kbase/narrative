@@ -19,6 +19,8 @@ class NarrativeExporter():
         c.HTMLExporter.preprocessors = [NarrativePreprocessor]
         c.TemplateExporter.template_path = ['.', self._narrative_template_path()]
         c.CSSHTMLHeaderPreprocessor.enabled = True
+        c.NarrativePreprocessor.enabled = True
+        c.ClearMetadataPreprocessor.enabled = False
         self.html_exporter = HTMLExporter(config=c)
         self.html_exporter.template_file = 'narrative'
         self.ws_client = Workspace(URLS.workspace)

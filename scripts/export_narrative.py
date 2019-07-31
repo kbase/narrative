@@ -3,20 +3,19 @@ Some tests for narrative exporting.
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-from biokbase.narrative.narrativeio import PermissionsError
+from biokbase.narrative.common.exceptions import PermissionsError
 from biokbase.narrative.exporter.exporter import NarrativeExporter
+from biokbase.narrative.common.narrative_ref import NarrativeRef
 import os
-import sys
 import argparse
+import sys
 
-def main(args):
-    if not args.narrative_ref:
-        print("Must include a Narrative object reference in the format XXX/YYY (these are the numbers in the usual Narrative URL)")
-        return 1
+def main(args: dict) -> int:
+    if not args.workspace_id:
+        raise ValueError("A workspace id is required for exporting a Narrative")
 
     if not args.outfile:
-        print("Must include an output file for exporting the Narrative!")
-        return 1
+        raise ValueError("Must include an output file for exporting the Narrative!")
 
     outfile = args.outfile
     if not outfile.lower().endswith(".html"):
@@ -24,18 +23,18 @@ def main(args):
 
     exporter = NarrativeExporter()
     try:
-        exporter.export_narrative(args.narrative_ref, outfile)
+        exporter.export_narrative(NarrativeRef({'wsid': args.workspace_id}), outfile)
     except PermissionsError:
-        print("The Narrative at reference " + args.narrative_ref + " does not appear to be public!")
+        print("The Narrative at reference " + args.workspace_id + " does not appear to be public!")
         return 1
     except Exception as e:
         print("An error occurred while exporting your Narrative:")
-        print(str(e))
-        return 1
+        print(e)
+        raise
 
-def parse_args():
+def parse_args() -> dict:
     p = argparse.ArgumentParser(description="Exports a Narrative to an HTML page.")
-    p.add_argument("-n", "--narrative", dest="narrative_ref", help="Narrative object reference")
+    p.add_argument("-w", "--workspace_id", dest="workspace_id", help="Narrative workspace id")
     p.add_argument("-o", "--output_file", dest="outfile", help="Output HTML file (.html will be appended if necessary)")
     return p.parse_args()
 

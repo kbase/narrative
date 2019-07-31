@@ -1,0 +1,37 @@
+.kb-cell-widget {
+}
+
+.kb-app-header-container {
+
+}
+
+.kb-app-header-title {
+    display: flex;
+    /* height: 56px; */
+}
+
+.kb-app-header-icon {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+}
+
+.kb-app-header-title-text {
+    flex-grow: 1;
+    line-height: 20px;
+    overflow: hidden;
+}
+
+.kb-app-header-title-text .title {
+    margin-top: 8px;
+    font-size: 120%;
+    font-family: Oxygen, Arial, sans-serif;
+    font-weight: bold;
+    color: #2e618d;
+}
+
+.kb-app-header-title-text .subtitle {
+    font-family: "Roboto", Arial, sans-serif;
+    font-size: 90%;
+    color: #666;
+}

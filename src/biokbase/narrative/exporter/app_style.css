@@ -1,8 +1,63 @@
 .kb-cell-widget {
+    margin-bottom: 10px;
+}
+
+.kb-app-controls-wrapper {
+    padding: 10px;
 }
 
 .kb-app-header-container {
+    border-bottom: 1px solid #DDD;
+    padding-left: 5px;
+}
 
+.kb-app-body {
+    padding-left: 5px;
+}
+
+.kb-app-cell {
+    width: 100%;
+    border: 1px solid #CCC;
+    /* border-left: 5px solid #CCC; */
+    border-radius: 0px;
+}
+
+.kb-app-config {
+    font-family: 'Oxygen' sans-serif;
+}
+
+.kb-app-config-block {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid #DDD;
+}
+
+.kb-app-config-block-title {
+    flex-shrink: 0;
+    border-bottom: 1px solid #CCC;
+    color: #666;
+    font-weight: bold;
+    padding-bottom: 2px;
+}
+
+.kb-app-param {
+    padding: 5px;
+    color: #666;
+    display: flex;
+    flex-direction: row;
+}
+
+.kb-app-param:hover {
+    background-color: #EEE;
+}
+
+.kb-app-param-name {
+    width: 30%;
+    padding-left: 5px;
+}
+
+.kb-app-param-field {
+    flex-grow: 2;
 }
 
 .kb-app-header-title {

@@ -8,21 +8,91 @@
   <div class="kb-cell-widget">
     <div style="display: flex">
       <div class="prompt input_prompt"></div>
-      <div class="kb-app-header-container">
-        <div class="kb-app-header-title">
-          <div class="kb-app-header-icon">
-            <div style="padding: 3px">
-              <img src="https://ci.kbase.us/services/narrative_method_store/img?method_id=kb_quast/run_QUAST_app&image_name=quast-blue_360.png&tag=release" style="max-width: 50px; max-height: 50px; margin: 0"/>
+      <div class="kb-app-cell">
+        <div class="kb-app-header-container">
+          <div class="kb-app-header-title">
+            <div class="kb-app-header-icon">
+              <div style="padding: 3px">
+                <img src="https://ci.kbase.us/services/narrative_method_store/img?method_id=kb_quast/run_QUAST_app&image_name=quast-blue_360.png&tag=release" style="max-width: 50px; max-height: 50px; margin: 0"/>
+              </div>
+            </div>
+            <div class="kb-app-header-title-text">
+              <div class="title">{{cell.metadata.kbase.app.title}}</div>
+              <div class="subtitle">{{cell.metadata.kbase.app.subtitle}}</div>
             </div>
           </div>
-          <div class="kb-app-header-title-text">
-            <div class="title">{{cell.metadata.kbase.app.title}}</div>
-            <div class="subtitle">{{cell.metadata.kbase.app.subtitle}}</div>
+        </div>
+        <div class="kb-app-controls-wrapper">
+          <div class="kb-app-controls">
+            This app is {{ cell.metadata.kbase.job.state }}
+          </div>
+        </div>
+        <div class="kb-app-body">
+          <div id="app-{{ cell.idx }}" class="kb-app-config">
+          {% for b in [('input', 'Input Objects'), ('param', 'Parameters'), ('output', 'Output Objects')] %}
+            {% if cell.metadata.kbase.params[b[0]]|count > 0 %}
+              <div class="kb-app-config-block">
+                <div class="kb-app-config-block-title">{{ b[1] }}</div>
+                {% for p in cell.metadata.kbase.params[b[0]] %}
+                  <div class="kb-app-param">
+                    <div class="kb-app-param-name">{{ p.ui_name }}</div>
+                    <div class="kb-app-param-field">{{ p.value }}</div>
+                  </div>
+                {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+          </div>
+          {#
+          # {% if len(cell.metadata.kbase.params.input) %}
+          #   <div class="kb-app-config-block-title">Input Objects</div>
+          #   <div class="kb-app-config-params">
+          #     {% for p in cell.metadata.kbase.params.input %}
+          #       <div class="kb-app-param">
+          #         <div class="kb-app-param-name">{{p.ui_name}}</div>
+          #         <div class="kb-app-param-field">{{p.value}}</div>
+          #       </div>
+          #     {% endfor %}
+          #   </div>
+          # {% endif %}
+          # {% if len(cell.metadata.kbase.params.param) %}
+          #   <div class="kb-app-config-block-title">Parameters</div>
+          #   <div class="kb-app-config-params">
+          #     {% for p in cell.metadata.kbase.params.param %}
+          #       <div class="kb-app-param">
+          #         <div class="kb-app-param-name">{{p.ui_name}}</div>
+          #         <div class="kb-app-param-field">{{p.value}}</div>
+          #       </div>
+          #     {% endfor %}
+          #   </div>
+          # {% endif %}
+          # {% if len(cell.metadata.kbase.params.output) %}
+          #   <div class="kb-app-config-block-title">Output Objects</div>
+          #   <div class="kb-app-config-params">
+          #     {% for p in cell.metadata.kbase.params.param %}
+          #       <div class="kb-app-param">
+          #         <div class="kb-app-param-name">{{p.ui_name}}</div>
+          #         <div class="kb-app-param-field">{{p.value}}</div>
+          #       </div>
+          #     {% endfor %}
+          #   </div>
+          # {% endif %}
+          # </div>
+          #}
+
+          <div id="app-{{cell.idx}}" class="kb-app-results">
+            <div class="kb-app-result-objects">
+              # if there's a list of objects created, they go here.
+            </div>
+            <div class="kb-app-result-report">
+              # if there's a report, it gets embedded here.
+              # this one'll be tricksy...
+            </div>
           </div>
         </div>
       </div>
     </div>
-
   </div>
 
 

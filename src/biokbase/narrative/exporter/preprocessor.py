@@ -81,12 +81,17 @@ class NarrativePreprocessor(Preprocessor):
             'tag': kb_meta['appCell']['app']['tag'],
             'catalog_url': kb_meta['attributes']['info']['url'],
         }
-        kb_info['params'] = []
+        kb_info['params'] = {
+            'input': [],
+            'output': [],
+            'param': []
+        }
         param_values = kb_meta['appCell']['params']
         spec_params = kb_meta['appCell']['app']['spec']['parameters']
         for p in spec_params:
             p['value'] = param_values.get(p['id'])
-            kb_info['params'].append(p)
+            p_type = p['ui_class']
+            kb_info['params'][p_type].append(p)
         kb_info['output'] = kb_meta['appCell']['exec']['outputWidgetInfo']['params']
         kb_info['job'] = {
             'state': kb_meta['appCell']['exec']['jobState']['job_state']

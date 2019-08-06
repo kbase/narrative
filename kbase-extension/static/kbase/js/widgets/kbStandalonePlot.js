@@ -7,7 +7,7 @@
 
   title (STRING)
       Title string written at the top of the plot
-  
+
   title_color (CSS Color Value)
       Color of the title text. Default is black.
 
@@ -16,10 +16,10 @@
 
   default_line_width (INT)
       Number of pixels lines should be wide if not specified for an individual line. Default is 1.
-  
+
   width (INT)
       The width of the graph in pixel (including legend).
-  
+
   height (INT)
       The height of the graph in pixel (including legend).
 
@@ -89,10 +89,10 @@
 
   drag_select (FUNCTION)
       function to be called for drag select. This function will get passed an array of the selected points.
-  
+
 */
 (function () {
-    var root = this;
+    var root = this || {};
     var standalonePlot = root.standalonePlot = {
 	about: {
 	    name: "plot",
@@ -169,7 +169,7 @@
 		      { name: 'x_max', type: 'int', description: "maximum value of the x-axis", title: "x max" },
 		      { name: 'y_min', type: 'int', description: "minimum value of the y-axis", title: "y min" },
 		      { name: 'y_max', type: 'int', description: "maximum value of the y-axis", title: "y max" },
-		      
+
 		      { name: 'y_scale', type: 'select', description: "type of the scale of the y-axis",
 			title: "y scale", options: [
 			    { value: "linear", selected: true },
@@ -211,10 +211,10 @@
 
 	    return instance;
 	},
-	
+
 	render: function (index) {
 	    var renderer = rendererPlot[index];
-	    
+
 	    // get the target div
 	    var target = renderer.settings.target;
 	    target.innerHTML = "<div id='plot_div"+index+"'></div>";
@@ -235,7 +235,7 @@
             var exponent = Math.floor(Math.log10(range)); /** exponent of range */
             var fraction = range / Math.pow(10, exponent); /** fractional part of range */
             var niceFraction; /** nice, rounded fraction */
-	    
+
             if (round) {
 		if (fraction < 1.5) {
                     niceFraction = 1;
@@ -257,10 +257,10 @@
                     niceFraction = 10;
 		}
             }
-	    
+
             return niceFraction * Math.pow(10, exponent);
 	},
-	
+
 	/* get a nice scale, min, max and tick interval */
 	niceScale: function (params) {
  	    var minPoint = params.min;
@@ -270,30 +270,30 @@
 	    var tickSpacing = rendererPlot[0].niceNum(range / (maxTicks - 1), true);
 	    var niceMin = Math.floor(minPoint / tickSpacing) * tickSpacing;;
 	    var niceMax = Math.ceil(maxPoint / tickSpacing) * tickSpacing;
-	    
+
 	    return { min: niceMin, max: niceMax, space: tickSpacing };
 	},
-	
+
 	drawImage: function (svg, index) {
 	    var renderer = rendererPlot[index];
-	    
+
 	    var chartAreas  = [ [ 0.1, 0.1, 0.95, 0.9 ],
 				[ 0.2, 0.1, 0.95, 0.9 ],
 				[ 0.1, 0.1, 0.8, 0.9 ],
 				[ 0.1, 0.25, 0.9, 0.9 ],
-				[ 0.1, 0.1, 0.9, 0.8 ] ]; 
+				[ 0.1, 0.1, 0.9, 0.8 ] ];
 	    var legendAreas = [ [ 0.0, 0.0, 0.0, 0.0 ],
 				[ 0.005, 0.1, 0.125, 0.5 ],
 				[ 0.85, 0.1, 0.97, 0.5 ],
 				[ 0.2, 0.1, 0.8, 0.2 ],
-				[ 0.2, 0.9, 0.8, 0.995 ] ]; 
-	    
+				[ 0.2, 0.9, 0.8, 0.995 ] ];
+
 	    var colors = [ '#BD362F', // red
 			   '#0044CC', // blue
 			   '#51A351', // green
 			   '#F89406', // yellow
 			   '#2F96B4', // lightblue
-			   '#bd2fa6'  // purple 
+			   '#bd2fa6'  // purple
 			 ];
 
 	    if (renderer.settings.x_min === undefined) {
@@ -316,26 +316,26 @@
 		renderer.settings.y_min = sy.min;
 		renderer.settings.y_max = sy.max;
 	    }
-	    
+
 	    svg.plot.noDraw().title(renderer.settings.title, renderer.settings.titleOffset, renderer.settings.title_color, renderer.settings.title_settings);
 	    for (i=0;i<renderer.settings.data.length;i++) {
 		var d = renderer.settings.data[i];
 	    }
-	    
+
 	    svg.plot.plotPoints = renderer.settings.data.points;
 	    svg.plot.connected = renderer.settings.connected;
 	    svg.plot.showDots = renderer.settings.show_dots;
 	    svg.plot.series = renderer.settings.data.series;
 
-	    svg.plot.noDraw().format('white', 'gray').gridlines({stroke: 'gray', strokeDashArray: '2,2'}, 'gray'); 
-	    svg.plot.xAxis.scale(renderer.settings.x_min, renderer.settings.x_max, renderer.settings.x_scale).ticks(parseFloat((renderer.settings.x_max - renderer.settings.x_min) / 10), parseFloat((renderer.settings.x_max - renderer.settings.x_min) / 5), 8, 'sw', renderer.settings.x_scale).title(renderer.settings.x_title, renderer.settings.x_titleOffset); 
+	    svg.plot.noDraw().format('white', 'gray').gridlines({stroke: 'gray', strokeDashArray: '2,2'}, 'gray');
+	    svg.plot.xAxis.scale(renderer.settings.x_min, renderer.settings.x_max, renderer.settings.x_scale).ticks(parseFloat((renderer.settings.x_max - renderer.settings.x_min) / 10), parseFloat((renderer.settings.x_max - renderer.settings.x_min) / 5), 8, 'sw', renderer.settings.x_scale).title(renderer.settings.x_title, renderer.settings.x_titleOffset);
 	    svg.plot.yAxis.scale(renderer.settings.y_min, renderer.settings.y_max, renderer.settings.y_scale).ticks(parseFloat((renderer.settings.y_max - renderer.settings.y_min) / 10), parseFloat((renderer.settings.y_max - renderer.settings.y_min) / 5), 8, 'sw', renderer.settings.y_scale).title(renderer.settings.y_title, renderer.settings.y_titleOffset);
 	    svg.plot.legend.settings({fill: 'white', stroke: 'gray'});
-	    
+
 	    var plotLegend = 0;
 	    if (renderer.settings.show_legend) {
 		switch (renderer.settings.legend_position) {
-		case 'left': plotLegend = 1; 
+		case 'left': plotLegend = 1;
 		    break;
 		case 'right': plotLegend = 2;
 		    break;
@@ -347,7 +347,7 @@
 		    break;
 		}
 	    }
-	    svg.plot.noDraw(). 
+	    svg.plot.noDraw().
 		legend.show(plotLegend).area(renderer.settings.legendArea ? renderer.settings.legendArea : legendAreas[plotLegend]).end().
 		area(renderer.settings.chartArea ? renderer.settings.chartArea : chartAreas[plotLegend]).redraw();
 	}

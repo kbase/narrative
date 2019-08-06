@@ -3,6 +3,29 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
 
+### Version 3.11.2
+- Improve load times for the Data Panel and the browser in the data slideout (the "My Data" and "Shared with Me" tabs).
+- Set the Narratives tab to lazy load.
+- #1487 - fixed typo in genome feature viewer.
+- Updated data import tutorial for some clarity.
+- Changed Pangenome viewer field names for clarity and consistency.
+
+### Version 3.11.1
+- Add internal information for users who came to the site from a Google ad click.
+- Improve load time of the App Panel.
+- Fix a bug where jobs canceled in the non-Narrative job browser would cause issues with the corresponding App Cell.
+
+### Version 3.11.0
+- Add an option to share a Narrative with an organization as well as people.
+- SCT-1783 - Reduce the number of network calls to the auth service on startup.
+- SCT-1785 - Reduce the number of network calls to the Catalog/NMS services on startup.
+- SCT-1793 - Lazy-load reports (i.e. if they're not in the brower viewport, don't load them).
+- Fix an issue with nested subdata inputs into apps not being accessible as expected.
+- Removed a bunch of dead code, including the older "service" modules, that haven't been in use for a few years.
+
+### Version 3.10.1
+- Fixed a critical bug where users with write access to a Narrative (but not share access) were unable to save changes to a Narrative or run Apps.
+
 ### Version 3.10.0
 - Fix tooltip for long object names in the data panel.
 - Add ability to prefix a part of path_to_subdata with WSREF to list options from other objects.

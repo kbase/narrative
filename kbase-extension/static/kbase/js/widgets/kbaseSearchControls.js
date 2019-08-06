@@ -31,15 +31,11 @@ define (
 	[
 		'kbwidget',
 		'bootstrap',
-		'jquery',
-		'bootstrap',
-		'kbwidget'
+		'jquery'
 	], function(
 		KBWidget,
 		bootstrap,
-		$,
-		bootstrap,
-		KBWidget
+		$
 	) {
 
     return KBWidget({

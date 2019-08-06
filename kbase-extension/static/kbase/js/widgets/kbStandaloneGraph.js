@@ -18,7 +18,7 @@
 
   title (STRING)
       Title string written at the top of the graph
-  
+
   title_color (CSS Color Value)
       Color of the title text. Default is black.
 
@@ -51,7 +51,7 @@
 
   y_tick_interval (INT)
       Determines how many ticks are actually drawn on the y-axis. Default is 30.
-  
+
   x_labeled_tick_interval (INT)
       Determines which ticks on the x-axis get labels. Default is 1.
 
@@ -79,10 +79,10 @@
 
   legendArea (ARRAY of FLOAT)
       If this parameter is set, the legend_position parameter will not be used. Instead pass an array of floats. The values correspond to the left, top, width and height of the legend area respectively. The position is relative to the top left corner of the containing div. Values less than 1 are interpreted as fractions. Values greater than 1 are interpreted as absolute pixel values.
-  
+
   width (INT)
       The width of the graph in pixel (including legend).
-  
+
   height (INT)
       The height of the graph in pixel (including legend).
 
@@ -102,7 +102,7 @@
       If set to false the stacked area chart will not normalize the values
 */
 (function () {
-    var root = this;
+    var root = this || {};
     var standaloneGraph = root.standaloneGraph = {
 	about: {
 	    name: "graph",
@@ -158,7 +158,7 @@
 		      { name: 'default_line_width', type: 'int', description: "default width of the data lines of the graph in pixel", title: "default line width" },
 		      { name: 'show_grid', type: 'select', description: "sets whether grid is displayed or not", title: "show grid", options: [
 			  { value: 0, selected: true, label: "no" },
-			  { value: 1, label: "yes" } ] }    
+			  { value: 1, label: "yes" } ] }
 		  ]
 		},
 		{ text:
@@ -180,7 +180,7 @@
 			title: "show legend", options: [
 			    { value: 0, selected: true, label: "no" },
 			    { value: 1, label: "yes" } ] },
-		      { name: 'legend_position', 
+		      { name: 'legend_position',
 			type: 'select',
 			description: "position of the legend",
 			title: "legend position",
@@ -251,7 +251,7 @@
 	    }
 
 	    rendererGraph[index].drawImage(jQuery('#graph_div'+index).svg('get'), cmax, index);
-	    
+
 	    return renderer;
 	},
 
@@ -259,7 +259,7 @@
             var exponent = Math.floor(Math.log10(range)); /** exponent of range */
             var fraction = range / Math.pow(10, exponent); /** fractional part of range */
             var niceFraction; /** nice, rounded fraction */
-	    
+
             if (round) {
 		if (fraction < 1.5) {
                     niceFraction = 1;
@@ -281,10 +281,10 @@
                     niceFraction = 10;
 		}
             }
-	    
+
             return niceFraction * Math.pow(10, exponent);
 	},
-	
+
 	/* get a nice scale, min, max and tick interval */
 	niceScale: function (params) {
  	    var minPoint = params.min;
@@ -294,7 +294,7 @@
 	    var tickSpacing = rendererGraph[0].niceNum(range / (maxTicks - 1), true);
 	    var niceMin = Math.floor(minPoint / tickSpacing) * tickSpacing;;
 	    var niceMax = Math.ceil(maxPoint / tickSpacing) * tickSpacing;
-	    
+
 	    return { min: niceMin, max: niceMax, space: tickSpacing };
 	},
 
@@ -344,15 +344,15 @@
 				[ 0.2, 0.9, 0.8, 0.995   ] ]; // bottom
 
 	    var fills = [ 'url(#fadeBlue)', 'url(#fadeRed)', 'url(#fadeGreen)', 'url(#fadeYellow)', 'url(#fadeLightblue)', 'url(#fadePurple)' ];
-	    
+
 	    var colors = [ '#0044CC', // blue
 			   '#BD362F', // red
 			   '#51A351', // green
 			   '#F89406', // yellow
 			   '#2F96B4', // lightblue
-			   '#bd2fa6'  // purple 
+			   '#bd2fa6'  // purple
 			 ];
-	    
+
 	    var defs = svg.defs();
 	    var max = 0;
 	    var y2max = 0;
@@ -362,7 +362,7 @@
 			if (parseFloat(renderer.settings.data[i].data[h]) > y2max) {
 			    y2max = parseFloat(renderer.settings.data[i].data[h]);
 			}
-		    } else { 
+		    } else {
 			if (parseFloat(renderer.settings.data[i].data[h]) > max) {
 			    max = parseFloat(renderer.settings.data[i].data[h]);
 			}
@@ -370,9 +370,9 @@
 		}
 	    }
 	    max = cmax || max;
-	    
-	    svg.linearGradient(defs, 'fadeRed', [[0, '#EE5F5B'], [1, '#BD362F']]); 
-	    svg.linearGradient(defs, 'fadeBlue', [[0, '#0088CC'], [1, '#0044CC']]); 
+
+	    svg.linearGradient(defs, 'fadeRed', [[0, '#EE5F5B'], [1, '#BD362F']]);
+	    svg.linearGradient(defs, 'fadeBlue', [[0, '#0088CC'], [1, '#0044CC']]);
 	    svg.linearGradient(defs, 'fadeGreen', [[0, '#62C462'], [1, '#51A351']]);
 	    svg.linearGradient(defs, 'fadeYellow', [[0, '#FBB450'], [1, '#F89406']]);
 	    svg.linearGradient(defs, 'fadeLightblue', [[0, '#5BC0DE'], [1, '#2F96B4']]);
@@ -390,7 +390,7 @@
 	    for (i=0;i<renderer.settings.data.length;i++) {
 		svg.graph.noDraw().addSeries( renderer.settings.data[i].name, renderer.settings.data[i].data, null, renderer.settings.data[i].lineColor || 'white', renderer.settings.data[i].lineWidth || renderer.settings.default_line_width, renderer.settings.data[i].settings ? renderer.settings.data[i].settings : {});
 	    }
-	    
+
 	    svg.graph.xAxis.title(renderer.settings.x_title, renderer.settings.x_title_color).
 		ticks(renderer.settings.x_labeled_tick_interval, renderer.settings.x_tick_interval).
 		scale(0, 3);
@@ -410,22 +410,22 @@
 		    ticks(parseInt(y2max / renderer.settings.y2_labeled_tick_interval), parseInt(y2max / renderer.settings.y2_tick_interval), null, null, renderer.settings.y_scale).
 		    scale(0,y2max,renderer.settings.y2_scale);
 		if (renderer.settings.y2_labels.length) {
-		    svg.graph.y2Axis.labels(renderer.settings.y2_labels); 
+		    svg.graph.y2Axis.labels(renderer.settings.y2_labels);
 		}
 	    } else {
 		svg.graph.y2Axis = null;
 	    }
-	    
+
 	    if (renderer.settings.y_labels.length) {
-		svg.graph.yAxis.labels(renderer.settings.y_labels); 
+		svg.graph.yAxis.labels(renderer.settings.y_labels);
 	    }
-	    svg.graph.legend.settings({fill: 'white', stroke: 'white'}); 
-	    
+	    svg.graph.legend.settings({fill: 'white', stroke: 'white'});
+
 	    var chartType = renderer.settings.type;
 	    var chartLegend = 0;
 	    if (renderer.settings.show_legend) {
 		switch (renderer.settings.legend_position) {
-		case 'left': chartLegend = 1; 
+		case 'left': chartLegend = 1;
 		    break;
 		case 'right': chartLegend = 2;
 		    break;
@@ -436,10 +436,10 @@
 		};
 	    }
 	    var chartOptions = { barWidth: renderer.settings.barWidth || 25 };
-	    	    
+
 	    svg.graph.status(rendererGraph[index].hover);
 
-	    svg.graph.noDraw(). 
+	    svg.graph.noDraw().
 		legend.show(renderer.settings.show_legend).area(renderer.settings.legendArea ? renderer.settings.legendArea : legendAreas[chartLegend]).end();
 	    for (i=0; i< renderer.settings.data.length; i++) {
 		svg.graph.noDraw().series(i).format(renderer.settings.data[i].fill || fills[i]).end();
@@ -452,7 +452,7 @@
 	    var fivenumbers = [];
 	    var min = data[0].data[0];
 	    var max = data[0].data[0];
-	    
+
 	    for (var i=0;i<data.length;i++) {
 		data[i].data = data[i].data.sort(function (a, b) {
 		    return a - b;

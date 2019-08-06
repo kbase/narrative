@@ -14,7 +14,6 @@ define ([
     'base/js/namespace',
     'util/display',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
-    
     'bootstrap',
 ], function (
     KBWidget,
@@ -58,7 +57,7 @@ define ([
          * @private
          */
         init: function(options) {
-            
+
             this._super(options);
 
             this.$loadingDiv = $('<div>').addClass('kb-data-list-type')
@@ -117,7 +116,7 @@ define ([
                             }.bind(this)
                         ]);
                         infoList = infoList[0]['data'];
-                        this.infoList = infoList;                   
+                        this.infoList = infoList;
                         this.render();
                     }.bind(this))
                     .catch(function(error) {
@@ -241,9 +240,9 @@ define ([
             var actionButtonText = (isCopy) ? ' Copy' : ' Add';
 
             var $card = kbaseDataCard.apply(this, [
-                {     
+                {
                     version: false,
-                    date:false,
+                    date: false,
                     editedBy:false,
                     actionButtonText: actionButtonText,
                     name: object_info[1],
@@ -251,10 +250,26 @@ define ([
                     max_name_length: this.options.max_name_length,
                     object_info: object_info,
                     self: self,
-                    ws_name: self.narWs
+                    ws_name: self.narWs,
+                    copyFunction: () => this.doObjectCopy(object_info[6] + '/' + object_info[0])
                 }]);
 
             return $card;
+        },
+
+        /**
+         * Makes a copy of the object in the current workspace by calling to NarrativeService.
+         * Returns a Promise around that copy function.
+         * @param {string} objRef
+         */
+        doObjectCopy: function(objRef) {
+            return this.serviceClient.sync_call(
+                'NarrativeService.copy_object',
+                [{
+                    ref: objRef,
+                    target_ws_name: this.narWs,
+                }]
+            );
         },
 
         showLoading : function() {

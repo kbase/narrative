@@ -1475,7 +1475,7 @@ define ([
 
                 $div.append($('<span>').css({color:'orange'}).append('Small Nonpolar'));
                 $div.append(' | ');
-                $div.append($('<span>').css({color:'green'}).append('Hyrdrophobic'));
+                $div.append($('<span>').css({color:'green'}).append('Hydrophobic'));
                 $div.append(' | ');
                 $div.append($('<span>').css({color:'magenta'}).append('Polar'));
                 $div.append(' | ');

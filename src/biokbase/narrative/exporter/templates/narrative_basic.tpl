@@ -23,8 +23,16 @@
           </div>
         </div>
         <div class="kb-app-controls-wrapper">
-          <div class="kb-app-controls">
+          <div class="kb-app-status">
             This app is {{ cell.metadata.kbase.job.state }}
+          </div>
+          <div class="kb-app-controls">
+            <button type="button" id="input-{{cell.idx}}">
+              View Configure
+            </button>
+            <button type="button" id="result-{{cell.idx}}">
+              Result
+            </button>
           </div>
         </div>
         <div class="kb-app-body">
@@ -44,42 +52,6 @@
             {% endif %}
           {% endfor %}
           </div>
-          {#
-          # {% if len(cell.metadata.kbase.params.input) %}
-          #   <div class="kb-app-config-block-title">Input Objects</div>
-          #   <div class="kb-app-config-params">
-          #     {% for p in cell.metadata.kbase.params.input %}
-          #       <div class="kb-app-param">
-          #         <div class="kb-app-param-name">{{p.ui_name}}</div>
-          #         <div class="kb-app-param-field">{{p.value}}</div>
-          #       </div>
-          #     {% endfor %}
-          #   </div>
-          # {% endif %}
-          # {% if len(cell.metadata.kbase.params.param) %}
-          #   <div class="kb-app-config-block-title">Parameters</div>
-          #   <div class="kb-app-config-params">
-          #     {% for p in cell.metadata.kbase.params.param %}
-          #       <div class="kb-app-param">
-          #         <div class="kb-app-param-name">{{p.ui_name}}</div>
-          #         <div class="kb-app-param-field">{{p.value}}</div>
-          #       </div>
-          #     {% endfor %}
-          #   </div>
-          # {% endif %}
-          # {% if len(cell.metadata.kbase.params.output) %}
-          #   <div class="kb-app-config-block-title">Output Objects</div>
-          #   <div class="kb-app-config-params">
-          #     {% for p in cell.metadata.kbase.params.param %}
-          #       <div class="kb-app-param">
-          #         <div class="kb-app-param-name">{{p.ui_name}}</div>
-          #         <div class="kb-app-param-field">{{p.value}}</div>
-          #       </div>
-          #     {% endfor %}
-          #   </div>
-          # {% endif %}
-          # </div>
-          #}
 
           <div id="app-{{cell.idx}}" class="kb-app-results">
             <div class="kb-app-result-objects">

@@ -4,6 +4,12 @@
 
 .kb-app-controls-wrapper {
     padding: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.kb-app-controls {
 }
 
 .kb-app-header-container {

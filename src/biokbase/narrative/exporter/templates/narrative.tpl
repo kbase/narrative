@@ -120,6 +120,23 @@ div#notebook {
   });
   $('.hide-input').click();
   </script>
+  <script>
+  function toggleAppView(node) {
+    // hide all panes from id,
+    // show only the given pane
+    const id = 'app-' + node.dataset.idx;
+    const view = node.dataset.view;
+    document.querySelectorAll('div[id^="' + id + '"]').forEach(node => node.hidden = true);
+    document.querySelector('div[id^="' + id + '-' + view + '"]').hidden = false;
+  }
+  document.querySelectorAll('button[class=app-view-toggle]').forEach((node) => {
+    console.log("binding node");
+    console.log(node);
+    node.addEventListener('click', (e) => {
+      toggleAppView(node);
+    });
+  });
+  </script>
 {%- endblock body %}
 </body>
 

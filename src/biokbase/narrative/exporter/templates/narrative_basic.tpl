@@ -27,16 +27,16 @@
             This app is {{ cell.metadata.kbase.job.state }}
           </div>
           <div class="kb-app-controls">
-            <button type="button" id="input-{{cell.idx}}">
+            <button type="button" class="app-view-toggle" data-idx={{cell.metadata.kbase.idx}} data-view="config">
               View Configure
             </button>
-            <button type="button" id="result-{{cell.idx}}">
+            <button type="button" class="app-view-toggle" data-idx={{cell.metadata.kbase.idx}} data-view="result">
               Result
             </button>
           </div>
         </div>
         <div class="kb-app-body">
-          <div id="app-{{ cell.idx }}" class="kb-app-config">
+          <div id="app-{{ cell.metadata.kbase.idx }}-config" class="kb-app-config" hidden>
           {% for b in [('input', 'Input Objects'), ('param', 'Parameters'), ('output', 'Output Objects')] %}
             {% if cell.metadata.kbase.params[b[0]]|count > 0 %}
               <div class="kb-app-config-block">
@@ -47,13 +47,12 @@
                     <div class="kb-app-param-field">{{ p.value }}</div>
                   </div>
                 {% endfor %}
-                </div>
               </div>
             {% endif %}
           {% endfor %}
           </div>
 
-          <div id="app-{{cell.idx}}" class="kb-app-results">
+          <div id="app-{{cell.metadata.kbase.idx}}-result" class="kb-app-results">
             <div class="kb-app-result-objects">
               # if there's a list of objects created, they go here.
             </div>
@@ -85,6 +84,12 @@
   {% for p in cell.metadata.kbase.params %}
   <li>{{p.id}} - {{p.value}}</li>
   {% endfor %}
+</ul>
+<b>Cell keys</b>
+<ul>
+  {% for key in cell.metadata.kbase %}
+  <li>{{key}}</li>
+  {%endfor%}
 </ul>
 {% endblock kb_app_cell %}
 {% else %}

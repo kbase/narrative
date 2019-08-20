@@ -121,15 +121,20 @@ div#notebook {
   $('.hide-input').click();
   </script>
   <script>
-  function toggleAppView(node) {
-    // hide all panes from id,
-    // show only the given pane
-    const id = 'app-' + node.dataset.idx;
-    const view = node.dataset.view;
-    document.querySelectorAll('div[id^="' + id + '"]').forEach(node => node.hidden = true);
+  function toggleAppView(btn) {
+    const appIdx = btn.dataset.idx;
+    const id = 'app-' + appIdx;
+    const view = btn.dataset.view;
+    document.querySelectorAll('div[id^="' + id + '"]').forEach(node => {
+      node.hidden = true;
+    });
+    document.querySelectorAll('button.app-view-toggle[data-idx="' + appIdx + '"]').forEach(node => {
+      node.classList.remove('selected');
+    });
     document.querySelector('div[id^="' + id + '-' + view + '"]').hidden = false;
+    btn.classList.add('selected');
   }
-  document.querySelectorAll('button[class=app-view-toggle]').forEach((node) => {
+  document.querySelectorAll('button.app-view-toggle').forEach((node) => {
     console.log("binding node");
     console.log(node);
     node.addEventListener('click', (e) => {

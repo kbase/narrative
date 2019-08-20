@@ -3,14 +3,35 @@
 }
 
 .kb-app-controls-wrapper {
-    padding: 10px;
+    margin: 10px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    border-bottom: 2px solid rgb(33, 150, 243);
 }
 
 .kb-app-controls {
+    align-self: flex-end;
 }
+
+.kb-app-cell-btn {
+    border: 2px solid rgb(33, 150, 243);
+    color: rgb(33, 150, 243);
+    background-color: #FFF;
+    margin-bottom: 2px;
+}
+
+.kb-app-cell-btn.selected,
+.kb-app-cell-btn:hover,
+.kb-app-cell-btn:active {
+    background-color: rgb(33, 150, 243);
+    border: 2px solid rgb(33, 150, 243);
+    margin-bottom: 0;
+    border-bottom: 4px solid rgb(33, 150, 243);
+    border-radius: 2px 2px 0 0;
+    color: #FFF;
+}
+
 
 .kb-app-header-container {
     border-bottom: 1px solid #DDD;

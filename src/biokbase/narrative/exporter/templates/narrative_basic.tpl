@@ -27,10 +27,10 @@
             This app is {{ cell.metadata.kbase.job.state }}
           </div>
           <div class="kb-app-controls">
-            <button type="button" class="app-view-toggle" data-idx={{cell.metadata.kbase.idx}} data-view="config">
+            <button type="button" class="btn btn-primary kb-app-cell-btn app-view-toggle" data-idx={{cell.metadata.kbase.idx}} data-view="config">
               View Configure
             </button>
-            <button type="button" class="app-view-toggle" data-idx={{cell.metadata.kbase.idx}} data-view="result">
+            <button type="button" class="btn btn-primary kb-app-cell-btn app-view-toggle selected" data-idx={{cell.metadata.kbase.idx}} data-view="result">
               Result
             </button>
           </div>

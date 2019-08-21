@@ -53,7 +53,7 @@
           </div>
 
           <div id="app-{{cell.metadata.kbase.idx}}-result" class="kb-app-results">
-            {{ result_tab(cell.metadata) }}
+            {{ result_tab(cell.metadata.kbase) }}
           </div>
         </div>
       </div>

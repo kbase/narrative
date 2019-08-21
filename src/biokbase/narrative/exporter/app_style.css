@@ -3,7 +3,8 @@
 }
 
 .kb-app-controls-wrapper {
-    margin: 10px;
+    margin: 10px 0;
+    padding: 0 10px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -50,7 +51,7 @@
 }
 
 .kb-app-config {
-    font-family: 'Oxygen' sans-serif;
+    font-family: 'Oxygen', sans-serif;
 }
 
 .kb-app-config-block {

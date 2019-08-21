@@ -92,7 +92,10 @@ class NarrativePreprocessor(Preprocessor):
             p['value'] = param_values.get(p['id'])
             p_type = p['ui_class']
             kb_info['params'][p_type].append(p)
-        kb_info['output'] = kb_meta['appCell']['exec']['outputWidgetInfo']['params']
+        kb_info['output'] = {
+            "widget": kb_meta['appCell']['exec'].get('outputWidgetInfo', {}),
+            "result": kb_meta['appCell']['exec']['jobState'].get('result', [])
+        }
         kb_info['job'] = {
             'state': kb_meta['appCell']['exec']['jobState']['job_state']
         }

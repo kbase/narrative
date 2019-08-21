@@ -1,5 +1,5 @@
 {%- extends 'display_priority.tpl' -%}
-
+{% from 'app_cell_macros.tpl' import result_tab %}
 
 {% block codecell %}
 <div class="cell border-box-sizing code_cell rendered">
@@ -37,7 +37,7 @@
         </div>
         <div class="kb-app-body">
           <div id="app-{{ cell.metadata.kbase.idx }}-config" class="kb-app-config" hidden>
-          {% for b in [('input', 'Input Objects'), ('param', 'Parameters'), ('output', 'Output Objects')] %}
+          {% for b in [('input', 'Input Objects'), ('parameter', 'Parameters'), ('output', 'Output Objects')] %}
             {% if cell.metadata.kbase.params[b[0]]|count > 0 %}
               <div class="kb-app-config-block">
                 <div class="kb-app-config-block-title">{{ b[1] }}</div>
@@ -53,13 +53,7 @@
           </div>
 
           <div id="app-{{cell.metadata.kbase.idx}}-result" class="kb-app-results">
-            <div class="kb-app-result-objects">
-              # if there's a list of objects created, they go here.
-            </div>
-            <div class="kb-app-result-report">
-              # if there's a report, it gets embedded here.
-              # this one'll be tricksy...
-            </div>
+            {{ result_tab(cell.metadata) }}
           </div>
         </div>
       </div>

@@ -135,8 +135,6 @@ div#notebook {
     btn.classList.add('selected');
   }
   document.querySelectorAll('button.app-view-toggle').forEach((node) => {
-    console.log("binding node");
-    console.log(node);
     node.addEventListener('click', (e) => {
       toggleAppView(node);
     });

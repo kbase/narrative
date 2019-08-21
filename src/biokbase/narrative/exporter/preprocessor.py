@@ -84,7 +84,7 @@ class NarrativePreprocessor(Preprocessor):
         kb_info['params'] = {
             'input': [],
             'output': [],
-            'param': []
+            'parameter': []
         }
         param_values = kb_meta['appCell']['params']
         spec_params = kb_meta['appCell']['app']['spec']['parameters']

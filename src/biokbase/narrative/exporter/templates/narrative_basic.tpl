@@ -63,7 +63,7 @@
 
 
 
-<ul>
+{# <ul>
   <li><b>id</b> - {{cell.metadata.kbase.app.id}}
   <li><b>title</b> - {{cell.metadata.kbase.app.title}}
   <li><b>subtitle</b> - {{cell.metadata.kbase.app.subtitle}}
@@ -84,7 +84,7 @@
   {% for key in cell.metadata.kbase %}
   <li>{{key}}</li>
   {%endfor%}
-</ul>
+</ul> #}
 {% endblock kb_app_cell %}
 {% else %}
 {{ super() }}

@@ -118,3 +118,13 @@
     font-size: 90%;
     color: #666;
 }
+
+.kb-app-report-summary {
+    width: 100%;
+    font-family: "Monaco",monospace;
+    font-size: 9pt;
+    white-space: pre-wrap;
+    overflow: auto;
+    height: auto;
+    max-height: 500px;
+}

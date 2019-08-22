@@ -119,8 +119,7 @@ div#notebook {
     $('div[class^=kb-vis-area]').closest('div.cell').find('div.output_prompt').toggleClass('white-text');
   });
   $('.hide-input').click();
-  </script>
-  <script>
+
   function toggleAppView(btn) {
     const appIdx = btn.dataset.idx;
     const id = 'app-' + appIdx;
@@ -139,6 +138,8 @@ div#notebook {
       toggleAppView(node);
     });
   });
+
+
   </script>
 {%- endblock body %}
 </body>

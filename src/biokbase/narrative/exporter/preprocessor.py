@@ -6,7 +6,8 @@ __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 from nbconvert.preprocessors import Preprocessor
 import os
 from .processor_util import (
-    build_report_view_data
+    build_report_view_data,
+    get_icon
 )
 
 class NarrativePreprocessor(Preprocessor):
@@ -21,7 +22,10 @@ class NarrativePreprocessor(Preprocessor):
     def __init__(self, **kw):
         super(NarrativePreprocessor, self).__init__(**kw)
         self.host = 'https://narrative-dev.kbase.us'
+        self.fonts_root = os.path.join(os.environ.get('NARRATIVE_DIR', '.'), 'kbase-extension', 'static', 'kbase', 'fonts')
         self.app_style_file = os.path.join(os.environ.get('NARRATIVE_DIR', '.'), 'src', 'biokbase', 'narrative', 'exporter', 'app_style.css')
+        self.icon_style_file = os.path.join(os.environ.get('NARRATIVE_DIR', '.'), 'kbase-extension', 'static', 'kbase', 'css', 'kbaseIcons.css')
+
 
     def preprocess(self, nb, resources):
         (nb, resources) = super(NarrativePreprocessor, self).preprocess(nb, resources)
@@ -41,22 +45,24 @@ class NarrativePreprocessor(Preprocessor):
             resources['inlining']['css'] = []
         with open(self.app_style_file, 'r') as css:
             resources['inlining']['css'].append(css.read())
+        with open(self.icon_style_file, 'r') as icons:
+            icons_file = icons.read()
+            icons_file = icons_file.replace('url("../fonts', f'url("{self.fonts_root}')
+            resources['inlining']['css'].append(icons_file)
 
         return nb, resources
 
     def preprocess_cell(self, cell, resources, index):
-        # for output in cell.get('outputs', []):
-        #     if 'application/javascript' in output.get('data', {}):
-        #         output['data']['application/javascript'][]
-        # outputs = print cell.get('outputs', [])
         if 'kbase' in cell.metadata:
             kb_meta = cell.metadata.get('kbase')
             kb_info = {
                 'type': kb_meta.get('type'),
-                'idx': index
+                'idx': index,
+                'attributes': kb_meta.get('attributes', {}),
+                'icon': get_icon(kb_meta)
             }
             if kb_info['type'] == 'app':
-                kb_info = self._process_app_info(kb_info, kb_meta)
+                kb_info.update(self._process_app_info(kb_info, kb_meta))
             cell.metadata['kbase'] = kb_info
         else:
             kb_info = {
@@ -69,6 +75,7 @@ class NarrativePreprocessor(Preprocessor):
         resources['foo'] = 'bar'
         resources['kbase']['cells'][index] = cell.metadata.get('kbase')
         return cell, resources
+
 
     def _process_app_info(self, kb_info: dict, kb_meta: dict) -> dict:
         """
@@ -104,3 +111,4 @@ class NarrativePreprocessor(Preprocessor):
             'state': kb_meta['appCell']['exec']['jobState']['job_state']
         }
         return kb_info
+

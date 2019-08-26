@@ -1,3 +1,6 @@
+import json
+import os
+from biokbase.narrative.common.url_config import URLS
 import biokbase.narrative.clients as clients
 
 def build_report_view_data(result):
@@ -62,3 +65,49 @@ def build_report_view_data(result):
         'summary': report.get('text_message', ''),
         'html': html
     }
+
+def get_icon(self, metadata):
+    """
+    Should return a dict with keys "type" and "icon"
+    if "type" = image, then "icon" second should be the src.
+    if "type" = class, "icon" should be the full class to use to render the icon - "fa fa-right-arrow", for instance.
+    also, if "type" == "class", then the keys "color" and "shape" should also be present.
+    """
+    meta_icon = metadata.get('attributes', {}).get('icon')
+    icon = {
+        'type': 'image',
+        'icon': None
+    }
+    icon_type = 'image'
+    if metadata.get('type') == 'data':
+        icon['type'] = 'class'
+        icon.update(get_data_icon(metadata.get('dataCell', {}).get('objectInfo', {}).get('typeName')))
+    elif metadata.get('type') == 'output':
+        icon['type'] = 'class'
+        icon['icon'] = 'fa-arrow-right'
+        icon['color'] = 'silver'
+        icon['shape'] = 'square'
+    elif metadata.get('type') == 'app':
+        icon['type'] = 'image'
+        icon['icon'] = URLS.narrative_method_store_image + metadata.get('appCell', {})['app']['spec']['info']['icon']['url']
+    else:
+        icon['type'] = 'class'
+        icon['icon'] = 'fa-question-circle-o'
+        icon['shape'] = 'square'
+        icon['color'] = 'silver'
+    return icon
+
+def get_data_icon(self, obj_type):
+    icon_json = os.path.join(os.environ.get('NARRATIVE_DIR', '.'), 'kbase-extension', 'static', 'kbase', 'config', 'icons.json')
+    with open(icon_json, 'r') as icon_file:
+        icon_mapping = json.load(icon_file)
+    icon_info = {
+        'icon': icon_mapping['data']['DEFAULT'],
+        'color': icon_mapping['colors'][0],
+        'shape': 'circle'
+    }
+    if obj_type in icon_mapping['data']:
+        icon_info['icon'] = " ".join(icon_mapping['data'][obj_type])
+    if obj_type in icon_mapping['color_mapping']:
+        icon_info['color'] = icon_mapping['color_mapping'][obj_type]
+    return icon_info

@@ -133,3 +133,19 @@
     width: 100%;
     height: 500px;
 }
+
+.kb-temp-output-cell {
+    height: 125px;
+    background-color: #DDD;
+    padding-top: 50px;
+    text-align: center;
+}
+
+.kb-temp-data-cell {
+    height: 125px;
+    background-color: #daedf7;
+    padding-top: 50px;
+    text-align: center;
+}
+
+

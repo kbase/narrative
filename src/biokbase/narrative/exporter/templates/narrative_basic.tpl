@@ -9,11 +9,11 @@
   {% endblock kb_app_cell %}
 {%- elif cell.metadata.kbase and cell.metadata.kbase.type == 'output' -%}
   {% block kb_output_cell %}
-    {{ render_output_cell(cell.metadata.kbase) }}
+    {{ render_output_cell(cell.metadata.kbase, resources.kbase.narrative_link) }}
   {% endblock kb_output_cell %}
 {%- elif cell.metadata.kbase and cell.metadata.kbase.type == 'data' -%}
   {% block kb_data_cell %}
-    {{ render_data_cell(cell.metadata.kbase) }}
+    {{ render_data_cell(cell.metadata.kbase, resources.kbase.narrative_link) }}
   {% endblock kb_data_cell %}
 {% else %}
 {{ super() }}

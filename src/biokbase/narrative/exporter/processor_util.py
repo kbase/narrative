@@ -66,7 +66,7 @@ def build_report_view_data(result):
         'html': html
     }
 
-def get_icon(self, metadata):
+def get_icon(metadata):
     """
     Should return a dict with keys "type" and "icon"
     if "type" = image, then "icon" second should be the src.
@@ -97,7 +97,7 @@ def get_icon(self, metadata):
         icon['color'] = 'silver'
     return icon
 
-def get_data_icon(self, obj_type):
+def get_data_icon(obj_type):
     icon_json = os.path.join(os.environ.get('NARRATIVE_DIR', '.'), 'kbase-extension', 'static', 'kbase', 'config', 'icons.json')
     with open(icon_json, 'r') as icon_file:
         icon_mapping = json.load(icon_file)

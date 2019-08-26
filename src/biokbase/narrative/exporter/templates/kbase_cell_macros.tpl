@@ -77,19 +77,25 @@
     </div>
 {%- endmacro %}
 
-{%- macro render_output_cell(metadata) -%}
+{%- macro render_output_cell(metadata, narrative_link) -%}
     {% call render_kbase_cell(metadata,
                               metadata.attributes.title|default('Output Cell', True),
                               metadata.attributes.subtitle|default('', True)) %}
-        <div>I'm an output cell!</div>
+        <div class="kb-temp-output-cell">
+            The viewer for the data created by this App is available at the original Narrative at this link:
+            <a href="{{ narrative_link }}">{{ narrative_link }}</a>
+        </div>
     {% endcall %}
 {%- endmacro -%}
 
-{%- macro render_data_cell(metadata) -%}
+{%- macro render_data_cell(metadata, narrative_link) -%}
     {% call render_kbase_cell(metadata,
                               metadata.attributes.title|default('Data Cell', True),
                               metadata.attributes.subtitle|default('', True)) %}
-        <div>I'm a data cell!</div>
+        <div class="kb-temp-data-cell">
+            The viewer for the data in this Cell is available at the original Narrative at this link:
+            <a href="{{ narrative_link }}">{{ narrative_link }}</a>
+        </div>
     {% endcall %}
 {%- endmacro -%}
 

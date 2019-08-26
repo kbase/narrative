@@ -33,6 +33,7 @@ class NarrativeExporter():
         nar = self.narr_fetcher.read_narrative(narrative_ref)
 
         nar = nar['data']
+        nar['metadata']['wsid'] = narrative_ref.wsid
 
         # # 1. Get the narrative object
         # # (put in try/except)

@@ -9,6 +9,7 @@ from .processor_util import (
     build_report_view_data,
     get_icon
 )
+from biokbase.narrative.common.util import kbase_env
 
 class NarrativePreprocessor(Preprocessor):
     """
@@ -21,7 +22,11 @@ class NarrativePreprocessor(Preprocessor):
 
     def __init__(self, **kw):
         super(NarrativePreprocessor, self).__init__(**kw)
-        self.host = 'https://narrative-dev.kbase.us'
+        env = kbase_env.env
+        if env == "dev":
+            env = "ci"
+        self.env = env
+        self.host = f'https://{self.env}.kbase.us'
         self.fonts_root = os.path.join(os.environ.get('NARRATIVE_DIR', '.'), 'kbase-extension', 'static', 'kbase', 'fonts')
         self.app_style_file = os.path.join(os.environ.get('NARRATIVE_DIR', '.'), 'src', 'biokbase', 'narrative', 'exporter', 'app_style.css')
         self.icon_style_file = os.path.join(os.environ.get('NARRATIVE_DIR', '.'), 'kbase-extension', 'static', 'kbase', 'css', 'kbaseIcons.css')
@@ -36,7 +41,8 @@ class NarrativePreprocessor(Preprocessor):
         resources['kbase'].update({
             'title': nb['metadata']['name'],
             'host': self.host,
-            'creator': nb['metadata']['creator']
+            'creator': nb['metadata']['creator'],
+            'narrative_link': f"{self.host}/narrative/{nb['metadata']['wsid']}"
         })
 
         if not 'inlining' in resources:

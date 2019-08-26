@@ -47,10 +47,11 @@ div#notebook {
 }
 </style>
 
-<link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/landing-pages.css">
+{# <link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/landing-pages.css">
 <link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/kbaseEditor.css">
 <link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/kbaseNotify.css">
-<link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/contigBrowserStyles.css">
+<link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/contigBrowserStyles.css"> #}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
 <!-- Loading mathjax macro -->
 {{ mathjax() }}
 
@@ -138,6 +139,53 @@ div#notebook {
       toggleAppView(node);
     });
   });
+
+  let fileSetServUrl = null,
+      lastFSSUrlLookup = 0;
+  function getFileServUrl(servWizardUrl) {
+    const now = new Date();
+    const fiveMin = 300000;  //ms
+    if (fileSetServUrl == null || now.getTime() > lastFSSUrlLookup + fiveMin) {
+      return fetch(servWizardUrl, {
+        method: 'POST',
+        mode: 'cors',
+        cache: 'no-cache',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          method: 'ServiceWizard.get_service_status',
+          params: [{
+            module_name: 'HTMLFileSetServ',
+            version: null
+          }],
+          version: '1.1',
+          id: String(Math.random()).slice(2)
+        })
+      })
+      .then(response => response.json())
+      .then((res) => {
+        fileSetServUrl = res.result[0].url;
+        return fileSetServUrl;
+      });
+    }
+    else {
+      return new Promise((resolve) => {
+        resolve(fileSetServUrl);
+      });
+    }
+  }
+  getFileServUrl("https://ci.kbase.us/services/service_wizard")
+    .then((fssUrl) => {
+      document.querySelectorAll('div.kb-app-report').forEach((node) => {
+        const reportUrl = fssUrl + node.dataset.path;
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('id', 'iframe-' + String(Math.random()).slice(2));
+        iframe.classList.add('kb-app-report-iframe');
+        node.appendChild(iframe);
+        iframe.setAttribute('src', reportUrl);
+      });
+    });
 
 
   </script>

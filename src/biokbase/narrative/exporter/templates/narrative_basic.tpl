@@ -1,91 +1,20 @@
 {%- extends 'display_priority.tpl' -%}
-{% from 'app_cell_macros.tpl' import result_tab %}
+{% from 'kbase_cell_macros.tpl' import render_app_cell, render_output_cell, render_data_cell %}
 
 {% block codecell %}
 <div class="cell border-box-sizing code_cell rendered">
 {%- if cell.metadata.kbase and cell.metadata.kbase.type == 'app' -%}
-{% block kb_app_cell %}
-  <div class="kb-cell-widget">
-    <div style="display: flex">
-      <div class="prompt input_prompt"></div>
-      <div class="kb-app-cell">
-        <div class="kb-app-header-container">
-          <div class="kb-app-header-title">
-            <div class="kb-app-header-icon">
-              <div style="padding: 3px">
-                <img src="https://ci.kbase.us/services/narrative_method_store/img?method_id=kb_quast/run_QUAST_app&image_name=quast-blue_360.png&tag=release" style="max-width: 50px; max-height: 50px; margin: 0"/>
-              </div>
-            </div>
-            <div class="kb-app-header-title-text">
-              <div class="title">{{cell.metadata.kbase.app.title}}</div>
-              <div class="subtitle">{{cell.metadata.kbase.app.subtitle}}</div>
-            </div>
-          </div>
-        </div>
-        <div class="kb-app-controls-wrapper">
-          <div class="kb-app-status">
-            This app is {{ cell.metadata.kbase.job.state }}
-          </div>
-          <div class="kb-app-controls">
-            <button type="button" class="btn btn-primary kb-app-cell-btn app-view-toggle" data-idx={{cell.metadata.kbase.idx}} data-view="config">
-              View Configure
-            </button>
-            <button type="button" class="btn btn-primary kb-app-cell-btn app-view-toggle selected" data-idx={{cell.metadata.kbase.idx}} data-view="result">
-              Result
-            </button>
-          </div>
-        </div>
-        <div class="kb-app-body">
-          <div id="app-{{ cell.metadata.kbase.idx }}-config" class="kb-app-config" hidden>
-          {% for b in [('input', 'Input Objects'), ('parameter', 'Parameters'), ('output', 'Output Objects')] %}
-            {% if cell.metadata.kbase.params[b[0]]|count > 0 %}
-              <div class="kb-app-config-block">
-                <div class="kb-app-config-block-title">{{ b[1] }}</div>
-                {% for p in cell.metadata.kbase.params[b[0]] %}
-                  <div class="kb-app-param">
-                    <div class="kb-app-param-name">{{ p.ui_name }}</div>
-                    <div class="kb-app-param-field">{{ p.value }}</div>
-                  </div>
-                {% endfor %}
-              </div>
-            {% endif %}
-          {% endfor %}
-          </div>
-
-          <div id="app-{{cell.metadata.kbase.idx}}-result" class="kb-app-results">
-            {{ result_tab(cell.metadata.kbase) }}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-
-
-{# <ul>
-  <li><b>id</b> - {{cell.metadata.kbase.app.id}}
-  <li><b>title</b> - {{cell.metadata.kbase.app.title}}
-  <li><b>subtitle</b> - {{cell.metadata.kbase.app.subtitle}}
-  <li><b>version</b> - {{cell.metadata.kbase.app.version}}
-  <li><b>tag</b> - {{cell.metadata.kbase.app.tag}}
-  <li><b>catalog url</b> - {{cell.metadata.kbase.app.catalog_url}}
-</ul>
-<ul>
-  <li><b>job state</b> - {{cell.metadata.kbase.job.state}}
-</ul>
-<ul>
-  {% for p in cell.metadata.kbase.params %}
-  <li>{{p.id}} - {{p.value}}</li>
-  {% endfor %}
-</ul>
-<b>Cell keys</b>
-<ul>
-  {% for key in cell.metadata.kbase %}
-  <li>{{key}}</li>
-  {%endfor%}
-</ul> #}
-{% endblock kb_app_cell %}
+  {% block kb_app_cell %}
+    {{ render_app_cell(cell.metadata.kbase) }}
+  {% endblock kb_app_cell %}
+{%- elif cell.metadata.kbase and cell.metadata.kbase.type == 'output' -%}
+  {% block kb_output_cell %}
+    {{ render_output_cell(cell.metadata.kbase) }}
+  {% endblock kb_output_cell %}
+{%- elif cell.metadata.kbase and cell.metadata.kbase.type == 'data' -%}
+  {% block kb_data_cell %}
+    {{ render_data_cell(cell.metadata.kbase) }}
+  {% endblock kb_data_cell %}
 {% else %}
 {{ super() }}
 {%- endif -%}

@@ -3,9 +3,11 @@ Narrative preprocessor for nbconvert exporting
 """
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
-
 from nbconvert.preprocessors import Preprocessor
 import os
+from .processor_util import (
+    build_report_view_data
+)
 
 class NarrativePreprocessor(Preprocessor):
     """
@@ -50,7 +52,8 @@ class NarrativePreprocessor(Preprocessor):
         if 'kbase' in cell.metadata:
             kb_meta = cell.metadata.get('kbase')
             kb_info = {
-                'type': kb_meta.get('type')
+                'type': kb_meta.get('type'),
+                'idx': index
             }
             if kb_info['type'] == 'app':
                 kb_info = self._process_app_info(kb_info, kb_meta)
@@ -94,7 +97,8 @@ class NarrativePreprocessor(Preprocessor):
             kb_info['params'][p_type].append(p)
         kb_info['output'] = {
             "widget": kb_meta['appCell']['exec'].get('outputWidgetInfo', {}),
-            "result": kb_meta['appCell']['exec']['jobState'].get('result', [])
+            "result": kb_meta['appCell']['exec']['jobState'].get('result', []),
+            "report": build_report_view_data(kb_meta['appCell']['exec']['jobState'].get('result', []))
         }
         kb_info['job'] = {
             'state': kb_meta['appCell']['exec']['jobState']['job_state']

@@ -30,7 +30,7 @@ def mock_read_narrative(style):
     style will raise a NarrativeIO.PermissionsError.
     """
     if style == test_narrative_ref:
-        return config.load_json_file(config.get('narrative_refs', 'narr_file'))
+        return config.load_json_file(config.get('narrative_refs', 'narr_file_for_export'))
     elif style == bad_narrative_ref:
         raise ValueError('Bad Narrative!')
     elif style == private_narrative_ref:

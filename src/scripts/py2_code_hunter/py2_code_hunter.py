@@ -127,7 +127,6 @@ def _update_narrative(narr_obj: list, ws_info: list, rt: RefactoringTool) -> Nar
             source = cell.input
         else:
             continue
-        source = cell.source
         if source.startswith('%%'):
             split_source = cell.source.split('\n', 1)
             if len(split_source) == 2:

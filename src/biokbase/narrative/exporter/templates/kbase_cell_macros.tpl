@@ -82,8 +82,10 @@
                               metadata.attributes.title|default('Output Cell', True),
                               metadata.attributes.subtitle|default('', True)) %}
         <div class="kb-temp-output-cell">
-            The viewer for the data created by this App is available at the original Narrative at this link:
-            <a href="{{ narrative_link }}">{{ narrative_link }}</a>
+            <div>
+                The viewer for the output created by this App is available at the original Narrative here:
+                <a href="{{ narrative_link }}">{{ narrative_link }}</a>
+            </div>
         </div>
     {% endcall %}
 {%- endmacro -%}
@@ -93,8 +95,10 @@
                               metadata.attributes.title|default('Data Cell', True),
                               metadata.attributes.subtitle|default('', True)) %}
         <div class="kb-temp-data-cell">
-            The viewer for the data in this Cell is available at the original Narrative at this link:
-            <a href="{{ narrative_link }}">{{ narrative_link }}</a>
+            <div>
+                The viewer for the data in this Cell is available at the original Narrative here:
+                <a href="{{ narrative_link }}">{{ narrative_link }}</a>
+            </div>
         </div>
     {% endcall %}
 {%- endmacro -%}
@@ -154,8 +158,8 @@
                             </div>
                             {% elif metadata.icon.type == 'class' %}
                             <div>
-                                <span class="fa-stack fa-2x" style="text-align: center; color: {{ metadata.icon.color }}; line-height: 56px">
-                                    <span class="fa fa-{{ metadata.icon.shape }} fa-stack-2x" style="color: {{ metadata.icon.color }}; line-height: 56px"></span>
+                                <span class="fa-stack fa-2x">
+                                    <span class="fa fa-{{ metadata.icon.shape }} fa-stack-2x" style="color: {{ metadata.icon.color }}"></span>
                                     <span class="fa fa-inverse fa-stack-1x {{ metadata.icon.icon }}"></span>
                                 </span>
                             </div>
@@ -165,6 +169,16 @@
                             <div class="title">{{ title }}</div>
                             <div class="subtitle">{{ subtitle }}</div>
                         </div>
+                        {% if metadata.external_link %}
+                        <div class="kb-external-link">
+                            <a href="{{ metadata.external_link }}">
+                                <span class="fa-stack fa-2x">
+                                    <span class="fa fa-square fa-stack-2x"></span>
+                                    <span class="fa fa-inverse fa-stack-1x fa-external-link"></span>
+                                </span>
+                            </a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="kb-cell-body">

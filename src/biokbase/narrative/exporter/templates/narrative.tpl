@@ -47,10 +47,6 @@ div#notebook {
 }
 </style>
 
-{# <link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/landing-pages.css">
-<link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/kbaseEditor.css">
-<link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/kbaseNotify.css">
-<link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/contigBrowserStyles.css"> #}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
 <!-- Loading mathjax macro -->
 {{ mathjax() }}
@@ -110,16 +106,10 @@ div#notebook {
 {{ super() }}
     </div>
   </div>
-  <div style="bottom:20px;right:20px;position:fixed;opacity:.8;z-index:100" class="btn btn-lg btn-info hide-input">Toggle Widget Inputs</div>
   <style type="text/css">
     .white-text{color:white !important;}
   </style>
   <script>
-  $('.hide-input').click(function() {
-    $('div[class^=kb-vis-area]').closest('div.cell').find('div.input').toggle();
-    $('div[class^=kb-vis-area]').closest('div.cell').find('div.output_prompt').toggleClass('white-text');
-  });
-  $('.hide-input').click();
 
   function toggleAppView(btn) {
     const appIdx = btn.dataset.idx;

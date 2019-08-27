@@ -148,4 +148,16 @@
     text-align: center;
 }
 
+.kb-external-link > a{
+    color: silver;
+}
+
+.kb-external-link > a:hover {
+    color: #23527B;
+}
+
+
+.prompt {
+    min-width: 0;
+}
 

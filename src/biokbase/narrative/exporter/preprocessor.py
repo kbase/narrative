@@ -69,6 +69,9 @@ class NarrativePreprocessor(Preprocessor):
             }
             if kb_info['type'] == 'app':
                 kb_info.update(self._process_app_info(kb_info, kb_meta))
+                kb_info['external_link'] = self.host + kb_info['app']['catalog_url']
+            elif kb_info['type'] == 'data':
+                kb_info['external_link'] = self.host + '/#dataview/' + kb_meta['dataCell']['objectInfo']['ref']
             cell.metadata['kbase'] = kb_info
         else:
             kb_info = {

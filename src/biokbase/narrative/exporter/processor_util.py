@@ -2,6 +2,8 @@ import json
 import os
 from biokbase.narrative.common.url_config import URLS
 import biokbase.narrative.clients as clients
+import biokbase.auth as auth
+import html
 
 def build_report_view_data(result):
     """
@@ -111,3 +113,17 @@ def get_data_icon(obj_type):
     if obj_type in icon_mapping['color_mapping']:
         icon_info['color'] = icon_mapping['color_mapping'][obj_type]
     return icon_info
+
+def get_authors(wsid):
+    ws = clients.get('workspace')
+    ws_info = ws.get_workspace_info({'id': wsid})
+    author_id_list = [ws_info[2]]
+    disp_names = auth.get_display_names(auth.get_auth_token(), author_id_list)
+    author_list = []
+    for author in author_id_list:
+        author_list.append({
+            'id': author,
+            'name': html.escape(disp_names.get(author, author)),
+            'path': URLS.profile_page + author
+        })
+    return author_list

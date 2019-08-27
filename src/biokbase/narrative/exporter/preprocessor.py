@@ -7,7 +7,8 @@ from nbconvert.preprocessors import Preprocessor
 import os
 from .processor_util import (
     build_report_view_data,
-    get_icon
+    get_icon,
+    get_authors
 )
 from biokbase.narrative.common.util import kbase_env
 
@@ -31,7 +32,6 @@ class NarrativePreprocessor(Preprocessor):
         self.app_style_file = os.path.join(os.environ.get('NARRATIVE_DIR', '.'), 'src', 'biokbase', 'narrative', 'exporter', 'app_style.css')
         self.icon_style_file = os.path.join(os.environ.get('NARRATIVE_DIR', '.'), 'kbase-extension', 'static', 'kbase', 'css', 'kbaseIcons.css')
 
-
     def preprocess(self, nb, resources):
         (nb, resources) = super(NarrativePreprocessor, self).preprocess(nb, resources)
 
@@ -42,7 +42,8 @@ class NarrativePreprocessor(Preprocessor):
             'title': nb['metadata']['name'],
             'host': self.host,
             'creator': nb['metadata']['creator'],
-            'narrative_link': f"{self.host}/narrative/{nb['metadata']['wsid']}"
+            'narrative_link': f"{self.host}/narrative/{nb['metadata']['wsid']}",
+            'authors': get_authors(nb['metadata']['wsid'])
         })
 
         if not 'inlining' in resources:

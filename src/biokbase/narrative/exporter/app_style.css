@@ -148,7 +148,7 @@
     text-align: center;
 }
 
-.kb-external-link > a{
+.kb-external-link > a {
     color: silver;
 }
 
@@ -156,6 +156,18 @@
     color: #23527B;
 }
 
+.kb-author-list {
+    font-size: 16px;
+    line-height: 20px;
+}
+
+.kb-author-list > a {
+    color: #555;
+}
+
+.kb-author-list > a:hover {
+    color: #23527B;
+}
 
 .prompt {
     min-width: 0;

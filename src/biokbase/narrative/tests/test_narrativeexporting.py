@@ -1,10 +1,12 @@
 from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.workspace.baseclient import ServerError
 from biokbase.narrative.exporter.exporter import NarrativeExporter
+from biokbase.narrative.common.narrative_ref import NarrativeRef
+import biokbase.auth
 import unittest
 import os
 import mock
-from .util import TestConfig
+from . import util
 
 """
 Some tests for narrative exporting.
@@ -12,7 +14,7 @@ Some tests for narrative exporting.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 output_file = "test.html"
-config = TestConfig()
+config = util.TestConfig()
 
 
 def mock_read_narrative(style):
@@ -34,9 +36,19 @@ def mock_read_narrative(style):
     elif style == private_narrative_ref:
         raise WorkspaceError(ServerError("Error", -32500, "Private workspace!"), private_narrative_ref)
 
-test_narrative_ref = config.get('narrative_refs', 'public')
-private_narrative_ref = config.get('narrative_refs', 'private')
-bad_narrative_ref = config.get('narrative_refs', 'bad')
+def refstring_to_ref(refstr: str) -> NarrativeRef:
+    # just a one-off to fix the imported refs from the test config.
+    ref_split = refstr.split('/')
+    if len(ref_split) <= 1 or len(ref_split) > 3:
+        return None
+    elif len(ref_split) == 2:
+        return NarrativeRef(dict(zip(['wsid', 'objid'], ref_split)))
+    else:
+        return NarrativeRef(dict(zip(['wsid', 'objid', 'ver'], ref_split)))
+
+test_narrative_ref = refstring_to_ref(config.get('narrative_refs', 'public'))
+private_narrative_ref = refstring_to_ref(config.get('narrative_refs', 'private'))
+bad_narrative_ref = NarrativeRef({'wsid': 0, 'objid': 0, 'ver': 0}) #config.get('narrative_refs', 'bad')
 
 
 class NarrativeExportTesting(unittest.TestCase):
@@ -54,8 +66,10 @@ class NarrativeExportTesting(unittest.TestCase):
             os.remove(output_file)
 
     def test_export_good(self):
+        biokbase.auth.set_environ_token(util.read_token_file(config.get_path('token_files', 'test_user', from_root=True)))
         self.exporter.export_narrative(test_narrative_ref, output_file)
         self.assertTrue(os.path.isfile(output_file))
+        biokbase.auth.set_environ_token(None)
 
     def test_export_bad(self):
         with self.assertRaises(ValueError):

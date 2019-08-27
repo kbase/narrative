@@ -6,8 +6,10 @@ __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 from traitlets.config import Config
 from nbconvert import HTMLExporter, PDFExporter
 from biokbase.workspace.client import Workspace
+from biokbase.workspace.baseclient import ServerError
+from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.narrative.common.url_config import URLS
-from .preprocessor import NarrativePreprocessor
+import biokbase.narrative.exporter.preprocessor as preprocessor
 from biokbase.narrative.contents.narrativeio import KBaseWSManagerMixin as NarrativeIO
 import nbformat
 import json
@@ -16,7 +18,7 @@ import os
 class NarrativeExporter():
     def __init__(self):
         c = Config()
-        c.HTMLExporter.preprocessors = [NarrativePreprocessor]
+        c.HTMLExporter.preprocessors = [preprocessor.NarrativePreprocessor]
         c.TemplateExporter.template_path = ['.', self._narrative_template_path()]
         c.CSSHTMLHeaderPreprocessor.enabled = True
         c.NarrativePreprocessor.enabled = True
@@ -30,18 +32,13 @@ class NarrativeExporter():
         return os.path.join(os.environ.get('NARRATIVE_DIR', '.'), 'src', 'biokbase', 'narrative', 'exporter', 'templates')
 
     def export_narrative(self, narrative_ref, output_file):
-        nar = self.narr_fetcher.read_narrative(narrative_ref)
-
-        nar = nar['data']
-        nar['metadata']['wsid'] = narrative_ref.wsid
-
-        # # 1. Get the narrative object
-        # # (put in try/except)
-        # # (should also raise an error if narrative is not public)
-        # nar = self.ws_client.get_objects([{'ref': narrative_ref}])
-
-        # # put in separate try/except
-        # nar = nar[0]['data']
+        # 1. Get the Narrative object
+        try:
+            nar = self.narr_fetcher.read_narrative(narrative_ref)
+            nar = nar['data']
+            nar['metadata']['wsid'] = narrative_ref.wsid
+        except ServerError as e:
+            raise WorkspaceError(e, narrative_ref.wsid, "Error while exporting Narrative")
 
         # 2. Convert to a notebook object
         kb_notebook = nbformat.reads(json.dumps(nar), as_version=4)

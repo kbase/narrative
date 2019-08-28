@@ -4,7 +4,6 @@ from biokbase.narrative.app_util import (
     map_inputs_from_job,
     map_outputs_from_state
 )
-from .util import sanitize_state
 import json
 import uuid
 from jinja2 import Template
@@ -94,7 +93,6 @@ class Job(object):
             'params': widget_params
         }
 
-
     def info(self):
         spec = self.app_spec()
         print("App name (id): {}".format(spec['info']['name'], self.app_id))
@@ -127,7 +125,7 @@ class Job(object):
             return self.inputs
         else:
             try:
-                self.inputs = clients.get("job_service").get_job_params(self.job_id)[0]['params']
+                self.inputs = clients.get("execution_engine2").get_job_params(self.job_id)[0]['params']
                 return self.inputs
             except Exception as e:
                 raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
@@ -140,7 +138,7 @@ class Job(object):
         if self._last_state is not None and self._last_state.get('finished', 0) == 1:
             return self._last_state
         try:
-            state = sanitize_state(clients.get("job_service").check_job(self.job_id))
+            state = clients.get("execution_engine2").check_job({'job_id': self.job_id})
             state[u'cell_id'] = self.cell_id
             state[u'run_id'] = self.run_id
             state[u'token_id'] = self.token_id

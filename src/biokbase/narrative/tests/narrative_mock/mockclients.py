@@ -1,5 +1,7 @@
 from ..util import TestConfig
 from biokbase.workspace.baseclient import ServerError
+from ast import literal_eval
+
 
 class MockClients(object):
     """
@@ -34,6 +36,7 @@ class MockClients(object):
             assert isinstance(token, str)
         self.config = TestConfig()
         self.job_info = self.config.load_json_file(self.config.get('jobs', 'job_info_file'))
+        self.ee2_job_info = self.config.load_json_file(self.config.get('jobs', 'ee2_job_info_file'))
         self.test_job_id = self.config.get('app_tests', 'test_job_id')
 
     # ----- User and Job State functions -----
@@ -43,6 +46,9 @@ class MockClients(object):
 
     def delete_job(self, job):
         return "bar"
+
+    def check_workspace_jobs(self, params):
+        return self.ee2_job_info
 
     # ----- Narrative Method Store functions ------
 
@@ -54,7 +60,6 @@ class MockClients(object):
 
     def get_method_full_info(self, params):
         return self.config.load_json_file(self.config.get('specs', 'app_infos_file'))
-
 
     # ----- Workspace functions -----
 
@@ -150,25 +155,14 @@ class MockClients(object):
         return "done"
 
     def get_job_params(self, job_id):
-        return [self.job_info.get('job_param_info', {}).get(job_id, None)]
+        return [literal_eval(self.ee2_job_info.get(job_id, {}).get('job_input', '{}'))]
 
-    def check_job(self, job_id):
-        return self.job_info.get('job_status_info', {}).get(job_id, None)
+    def check_job(self, params):
+        return self.ee2_job_info.get(params.get('job_id'), {})
 
     def check_jobs(self, params):
-        states = dict()
-        job_params = dict()
-        for job_id in params['job_ids']:
-            states[job_id] = self.job_info.get('job_status_info', {}).get(job_id, {})
-        if params.get('with_job_params', 0) == 1:
-            for job_id in params['job_ids']:
-                job_params[job_id] = self.job_info.get('job_param_info', {}).get(job_id, None)
-        ret = {
-            'job_states': states
-        }
-        if len(job_params) > 0:
-            ret['job_params'] = job_params
-        return ret
+        job_ids = params.get('job_ids')
+        return {job_id: self.ee2_job_info[job_id] for job_id in job_ids}
 
     def get_job_logs(self, params):
         """

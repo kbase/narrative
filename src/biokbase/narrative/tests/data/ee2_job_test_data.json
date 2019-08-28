@@ -1,0 +1,22 @@
+{
+    "5d64935ab215ad4128de94d6":
+    {
+        "_id": "5d64935ab215ad4128de94d6",
+        "user": "fake_test_user",
+        "authstrat": "kbaseworkspace",
+        "wsid": "9999",
+        "status": "running",
+        "updated": "2019-08-27 02:20:11.891000",
+        "job_input": "{'wsid': 123, 'method': 'method', 'requested_release': 'requested_release', 'params': {}, 'service_ver': 'dev', 'app_id': 'super_module.super_function', 'source_ws_objects': [], 'narrative_cell_info': {'cell_id': 'ApplePie'}}"
+    },
+    "5d64935cb215ad4128de94d7":
+    {
+        "_id": "5d64935cb215ad4128de94d7",
+        "user": "tgu2",
+        "authstrat": "kbaseworkspace",
+        "wsid": "9999",
+        "status": "created",
+        "updated": "2019-08-27 02:20:12.923000",
+        "job_input": "{'wsid': 9999, 'method': 'MEGAHIT.run_megahit', 'params': [{'k_list': [], 'k_max': None, 'output_contigset_name': 'MEGAHIT.contigs'}], 'service_ver': '2.2.1', 'app_id': 'MEGAHIT/run_megahit', 'source_ws_objects': ['a/b/c', 'e/d'], 'parent_job_id': '9998', 'narrative_cell_info': {}}"
+    }
+}

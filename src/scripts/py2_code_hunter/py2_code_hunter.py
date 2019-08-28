@@ -54,6 +54,9 @@ def find_all_narrative_py2_code(ws_url:str, token:str, min_id: int, max_id:int, 
         except TypeError as e:
             print(f"WS:{ws_id} metadata doesn't link to a Narrative type!")
             all_results["fail"].append({"id": ws_id, "error": str(e)})
+        except json.JSONDecodeError as e:
+            print(f"WS:{ws_id} unable to unpack Narrative - not valid JSON!")
+            all_results["fail"].append({"id": ws_id, "error": f"Invalid JSON in Narrative object: {str(e)}"})
     with open(outfile, "w") as fjson:
         fjson.write(json.dumps(all_results, indent=4))
     print(f"Done. Results in {outfile}")

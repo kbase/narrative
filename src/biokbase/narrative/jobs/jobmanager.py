@@ -114,10 +114,10 @@ class JobManager(object):
                             'error': 'KBase execution engine returned an error while looking up this job.',
                             'message': job_state.get('errormsg', 'No error message available'),
                             'name': 'Job Error',
-                            'code': job_state.get('code', -999),
+                            'code': job_state.get('error_code', -999),
                             'exception': {
                                 'error_message': 'Job lookup in execution engine failed',
-                                'error_type': job_state.get('name', 'unknown'),
+                                'error_type': job_state.get('terminated_code', 'unknown'),
                                 'error_stacktrace': job_state.get('error', '')
                             }
                         },
@@ -214,25 +214,7 @@ class JobManager(object):
 
             if not len(status_set):
                 return "No running jobs!"
-            # status_set = sorted(status_set, key=lambda s: s['creation_time'])
             status_set = sorted(status_set, key=lambda s: ObjectId(s['_id']).generation_time.timestamp())
-
-            # for i in range(len(status_set)):
-            #     status_set[i]['creation_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['creation_time']/1000), "%Y-%m-%d %H:%M:%S")
-            #     exec_start = status_set[i].get('exec_start_time', None)
-            #     if 'finish_time' in status_set[i]:
-            #         finished = status_set[i].get('finish_time', None)
-            #         if finished is not None and exec_start:
-            #             delta = datetime.datetime.fromtimestamp(finished/1000.0) - datetime.datetime.fromtimestamp(exec_start/1000.0)
-            #             delta = delta - datetime.timedelta(microseconds=delta.microseconds)
-            #             status_set[i]['run_time'] = str(delta)
-            #             status_set[i]['finish_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['finish_time']/1000), "%Y-%m-%d %H:%M:%S")
-            #     elif exec_start:
-            #         delta = datetime.datetime.utcnow() - datetime.datetime.utcfromtimestamp(exec_start/1000.0)
-            #         delta = delta - datetime.timedelta(microseconds=delta.microseconds)
-            #         status_set[i]['run_time'] = str(delta)
-            #     else:
-            #         status_set[i]['run_time'] = 'Not started'
 
             for status in status_set:
                 status['creation_time'] = datetime.datetime.strftime(ObjectId(status_set[0]['_id']).generation_time, "%Y-%m-%d %H:%M:%S")

@@ -179,7 +179,7 @@ class JobManager(object):
                 job_state = job_states.get(job_id, {})
                 user = job_state.get('user')
                 job_info = literal_eval(job_state.get('job_input', '{}'))
-                job_meta = literal_eval(job_state.get('meta', '{}'))
+                job_meta = job_info.get('narrative_cell_info', {})
                 job = Job.from_state(job_id,                                     # the id
                                      job_info,                                   # params, etc.
                                      user,                                       # owner id

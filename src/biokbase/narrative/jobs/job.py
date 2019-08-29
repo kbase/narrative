@@ -82,7 +82,7 @@ class Job(object):
     @classmethod
     def map_viewer_params(Job, job_state, job_inputs, app_id, app_tag):
         # get app spec.
-        if job_state is None or job_state['job_state'] != 'completed':
+        if job_state is None or job_state.get('status', '') != 'finished':
             return None
 
         spec = SpecManager().get_spec(app_id, app_tag)
@@ -246,7 +246,7 @@ class Job(object):
         try:
             state = self.state()
             spec = self.app_spec()
-            if (state.get('job_state', '') == 'completed'):
+            if (state.get('status', '') == 'finished'):
                 (output_widget, widget_params) = self._get_output_info(state)
                 output_widget_info = {
                     'name': output_widget,

@@ -135,7 +135,7 @@ class Job(object):
         Queries the job service to see the status of the current job.
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
-        if self._last_state is not None and self._last_state.get('finished', 0) == 1:
+        if self._last_state is not None and self._last_state.get('status') in ['finished', 'terminated', 'error']:
             return self._last_state
         try:
             state = clients.get("execution_engine2").check_job({'job_id': self.job_id})

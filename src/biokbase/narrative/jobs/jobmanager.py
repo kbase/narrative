@@ -793,7 +793,7 @@ class JobManager(object):
 
         try:
             state = self._get_job_state(job_id, parent_job_id=parent_job_id)
-            if state.get('canceled', 0) == 1 or state.get('finished', 0) == 1:
+            if state.get('status') in ['finished', 'terminated', 'error']:
                 # It's already finished, don't try to cancel it again.
                 return
         except Exception as e:

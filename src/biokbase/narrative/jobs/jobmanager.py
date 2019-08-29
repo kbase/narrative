@@ -77,7 +77,7 @@ class JobManager(object):
                 'code': getattr(new_e, 'code', -1),
                 'source': getattr(new_e, 'source', 'jobmanager'),
                 'name': getattr(new_e, 'name', type(e).__name__),
-                'service': 'user_and_job_state'
+                'service': 'execution_engine2'
             }
             self._send_comm_message('job_init_err', error)
             raise new_e
@@ -109,7 +109,7 @@ class JobManager(object):
                     }
                 elif status in ['error', 'terminated']:
                     job_err_state = {
-                        'job_state': 'error',
+                        'state': 'error',
                         'error': {
                             'error': 'KBase execution engine returned an error while looking up this job.',
                             'message': job_state.get('errormsg', 'No error message available'),
@@ -307,7 +307,7 @@ class JobManager(object):
 
         if job is None:
             state = {
-                'job_state': 'error',
+                'state': 'error',
                 'error': {
                     'error': 'Job does not seem to exist, or it is otherwise unavailable.',
                     'message': 'Job does not exist',
@@ -338,7 +338,7 @@ class JobManager(object):
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': 'Unable to get job state for job {}'.format(job.job_id)})
 
             state = {
-                'job_state': 'error',
+                'state': 'error',
                 'error': {
                     'error': 'Unable to find current job state. Please try again later, or contact KBase.',
                     'message': 'Unable to return job state',
@@ -363,7 +363,7 @@ class JobManager(object):
                 'info': str(state['lookup_error'])
             })
             state = {
-                'job_state': 'error',
+                'state': 'error',
                 'error': {
                     'error': 'Unable to fetch current state. Please try again later, or contact KBase.',
                     'message': 'Error while looking up job state',
@@ -381,14 +381,14 @@ class JobManager(object):
                     'job_id': job.job_id
                 }
             }
-        if state.get('finished', 0) == 1:
+        if state.get('finished'):
             try:
                 widget_info = job.get_viewer_params(state)
             except Exception as e:
                 # Can't get viewer params
                 new_e = transform_job_exception(e)
                 kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
-                state['job_state'] = 'error'
+                state['state'] = 'error'
                 state['error'] = {
                     'error': 'Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact the developer of this App for assistance.',
                     'message': 'Unable to build output viewer parameters!',
@@ -396,9 +396,6 @@ class JobManager(object):
                     'code': getattr(new_e, "code", -1),
                     'source': getattr(new_e, "source", "JobManager")
                 }
-
-        if 'canceling' in self._running_jobs[job.job_id]:
-            state['job_state'] = 'canceling'
 
         state.update({
             'child_jobs': self._child_job_states(
@@ -908,6 +905,6 @@ class JobManager(object):
         if job_id in self._completed_job_states:
             return dict(self._completed_job_states[job_id])
         state = self._running_jobs[job_id]['job'].state()
-        if state.get('finished', 0) == 1:
+        if state.get('status') == 'finished':
             self._completed_job_states[job_id] = dict(state)
         return dict(state)

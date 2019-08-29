@@ -100,7 +100,7 @@ class Job(object):
 
         try:
             state = self.state()
-            print("Status: {}".format(state['job_state']))
+            print("Status: {}".format(state['status']))
             # inputs = map_inputs_from_state(state, spec)
             print("Inputs:\n------")
             pprint(self.inputs)
@@ -111,7 +111,7 @@ class Job(object):
         return SpecManager().get_spec(self.app_id, self.tag)
 
     def status(self):
-        return self.state().get('job_state', 'unknown')
+        return self.state().get('status', 'unknown')
 
     def parameters(self):
         """
@@ -155,17 +155,17 @@ class Job(object):
         from biokbase.narrative.widgetmanager import WidgetManager
         if state is None:
             state = self.state()
-        if state['job_state'] == 'completed' and 'result' in state:
+        if state['status'] == 'finished' and 'job_output' in state:
             (output_widget, widget_params) = self._get_output_info(state)
             return WidgetManager().show_output_widget(output_widget, widget_params, tag=self.tag)
         else:
-            return "Job is incomplete! It has status '{}'".format(state['job_state'])
+            return "Job is incomplete! It has status '{}'".format(state['status'])
 
     def get_viewer_params(self, state):
         """
         Maps job state 'result' onto the inputs for a viewer.
         """
-        if state is None or state['job_state'] != 'completed':
+        if state is None or state['status'] != 'finished':
             return None
         (output_widget, widget_params) = self._get_output_info(state)
         return {
@@ -229,7 +229,7 @@ class Job(object):
         False if its running/queued.
         """
         status = self.status()
-        return status.lower() in ['completed', 'error', 'suspend', 'cancelled']
+        return status.lower() in ['finished', 'terminated', 'error']
 
     def __repr__(self):
         return "KBase Narrative Job - " + str(self.job_id)

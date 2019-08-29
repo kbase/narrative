@@ -128,7 +128,6 @@ class MockClients(object):
                 infos.append(random_obj_info)
         return infos
 
-
         infos = [[5, 'Sbicolor2', 'KBaseGenomes.Genome-12.3', '2017-03-31T23:42:59+0000', 1,
                   'wjriehl', 18836, 'wjriehl:1490995018528', '278abf8f0dbf8ab5ce349598a8674a6e',
                   109180038, None]]

@@ -7,12 +7,12 @@ from IPython.display import HTML
 from jinja2 import Template
 import datetime
 import time
+from bson.objectid import ObjectId
 from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.exception_util import (
     transform_job_exception
 )
-import traceback
-from .util import sanitize_all_states
+from ast import literal_eval
 """
 KBase Job Manager
 
@@ -66,10 +66,8 @@ class JobManager(object):
         ws_id = system_variable("workspace_id")
 
         try:
-            nar_jobs = clients.get('user_and_job_state').list_jobs2({
-                'authstrat': 'kbaseworkspace',
-                'authparams': [str(ws_id)]
-            })
+            job_states = clients.get('execution_engine2').check_workspace_jobs({
+                'workspace_id': ws_id})
         except Exception as e:
             kblogging.log_event(self._log, 'init_error', {'err': str(e)})
             new_e = transform_job_exception(e)
@@ -79,37 +77,28 @@ class JobManager(object):
                 'code': getattr(new_e, 'code', -1),
                 'source': getattr(new_e, 'source', 'jobmanager'),
                 'name': getattr(new_e, 'name', type(e).__name__),
-                'service': 'user_and_job_state'
+                'service': 'execution_engine2'
             }
             self._send_comm_message('job_init_err', error)
             raise new_e
 
-        job_ids = [j[0] for j in nar_jobs]
-        job_states = clients.get('job_service').check_jobs({
-            'job_ids': job_ids, 'with_job_params': 1
-        })
-        job_states = sanitize_all_states(job_states)
-        job_param_info = job_states.get('job_params', {})
-        job_check_error = job_states.get('check_error', {})
         error_jobs = dict()
-        for info in nar_jobs:
-            job_id = info[0]
-            user_info = info[1]
-            job_meta = info[10]
+        for job_id, job_state in job_states.items():
+            user = job_state.get('user')
+            job_meta = literal_eval(job_state.get('meta', '{}'))
+            job_input = literal_eval(job_state.get('job_input', '{}'))
+            status = job_state.get('status')
             try:
-                if job_id in job_param_info:
-                    job_info = job_param_info[job_id]
-
+                if status in ['created', 'queued', 'estimating', 'running', 'finished']:
                     job = Job.from_state(job_id,
-                                         job_info,
-                                         user_info[0],
-                                         app_id=job_info.get('app_id'),
+                                         job_input,
+                                         user,
+                                         app_id=job_input.get('app_id'),
                                          tag=job_meta.get('tag', 'release'),
                                          cell_id=job_meta.get('cell_id', None),
                                          run_id=job_meta.get('run_id', None),
                                          token_id=job_meta.get('token_id', None),
                                          meta=job_meta)
-
                     # Note that when jobs for this narrative are initially loaded,
                     # they are set to not be refreshed. Rather, if a client requests
                     # updates via the start_job_update message, the refresh flag will
@@ -118,25 +107,24 @@ class JobManager(object):
                         'refresh': 0,
                         'job': job
                     }
-                elif job_id in job_check_error:
+                elif status in ['error', 'terminated']:
                     job_err_state = {
-                        'job_state': 'error',
+                        'state': 'error',
                         'error': {
                             'error': 'KBase execution engine returned an error while looking up this job.',
-                            'message': job_check_error[job_id].get('message', 'No error message available'),
+                            'message': job_state.get('errormsg', 'No error message available'),
                             'name': 'Job Error',
-                            'code': job_check_error[job_id].get('code', -999),
+                            'code': job_state.get('error_code', -999),
                             'exception': {
                                 'error_message': 'Job lookup in execution engine failed',
-                                'error_type': job_check_error[job_id].get('name', 'unknown'),
-                                'error_stacktrace': job_check_error[job_id].get('error', '')
+                                'error_type': job_state.get('terminated_code', 'unknown'),
+                                'error_stacktrace': job_state.get('error', '')
                             }
                         },
                         'cell_id': job_meta.get('cell_id', None),
                         'run_id': job_meta.get('run_id', None),
                     }
                     error_jobs[job_id] = job_err_state
-
             except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
                 new_e = transform_job_exception(e)
@@ -152,10 +140,10 @@ class JobManager(object):
                 self._send_comm_message('job_init_lookup_err', error)
                 raise new_e  # should crash and burn on any of these.
 
-        if len(job_check_error):
+        if len(error_jobs):
             err_str = 'Unable to find info for some jobs on initial lookup'
             err_type = 'job_init_partial_err'
-            if len(job_check_error) == len(nar_jobs):
+            if len(error_jobs) == len(job_states):
                 err_str = 'Unable to get info for any job on initial lookup'
                 err_type = 'job_init_lookup_err'
             error = {
@@ -185,17 +173,16 @@ class JobManager(object):
         Initially used to make Child jobs from some parent, but will eventually be adapted to all jobs on startup.
         Just slaps them all into _running_jobs
         """
-        job_states = clients.get('job_service').check_jobs({'job_ids': job_ids, 'with_job_params': 1})
-        job_states = sanitize_all_states(job_states)
+        job_states = clients.get('execution_engine2').check_jobs({'job_ids': job_ids})
         for job_id in job_ids:
-            ujs_info = clients.get('user_and_job_state').get_job_info2(job_id)
-
             if job_id in job_ids and job_id not in self._running_jobs:
-                job_info = job_states.get('job_params', {}).get(job_id, {})
-                job_meta = ujs_info[10]
+                job_state = job_states.get(job_id, {})
+                user = job_state.get('user')
+                job_info = literal_eval(job_state.get('job_input', '{}'))
+                job_meta = job_info.get('narrative_cell_info', {})
                 job = Job.from_state(job_id,                                     # the id
                                      job_info,                                   # params, etc.
-                                     ujs_info[2],                                # owner id
+                                     user,                                       # owner id
                                      app_id=job_info.get('app_id', job_info.get('method')),
                                      tag=job_meta.get('tag', 'release'),
                                      cell_id=job_meta.get('cell_id', None),
@@ -224,25 +211,28 @@ class JobManager(object):
                 job_state['app_id'] = job.app_id
                 job_state['owner'] = job.owner
                 status_set.append(job_state)
+
             if not len(status_set):
                 return "No running jobs!"
-            status_set = sorted(status_set, key=lambda s: s['creation_time'])
-            for i in range(len(status_set)):
-                status_set[i]['creation_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['creation_time']/1000), "%Y-%m-%d %H:%M:%S")
-                exec_start = status_set[i].get('exec_start_time', None)
-                if 'finish_time' in status_set[i]:
-                    finished = status_set[i].get('finish_time', None)
-                    if finished is not None and exec_start:
-                        delta = datetime.datetime.fromtimestamp(finished/1000.0) - datetime.datetime.fromtimestamp(exec_start/1000.0)
-                        delta = delta - datetime.timedelta(microseconds=delta.microseconds)
-                        status_set[i]['run_time'] = str(delta)
-                        status_set[i]['finish_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['finish_time']/1000), "%Y-%m-%d %H:%M:%S")
-                elif exec_start:
-                    delta = datetime.datetime.utcnow() - datetime.datetime.utcfromtimestamp(exec_start/1000.0)
+            status_set = sorted(status_set, key=lambda s: ObjectId(s['_id']).generation_time.timestamp())
+
+            for status in status_set:
+                status['creation_time'] = datetime.datetime.strftime(ObjectId(status_set[0]['_id']).generation_time, "%Y-%m-%d %H:%M:%S")
+                exec_start = status.get('running', None)
+                if status.get('finished'):
+                    finished_time = datetime.datetime.strptime(status.get('finished'), '%Y-%m-%d %H:%M:%S.%f')
+                    exec_start_time = datetime.datetime.strptime(exec_start, '%Y-%m-%d %H:%M:%S.%f')
+                    delta = finished_time - exec_start_time
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)
-                    status_set[i]['run_time'] = str(delta)
+                    status['run_time'] = str(delta)
+                    status['finish_time'] = datetime.datetime.strftime(finished_time, "%Y-%m-%d %H:%M:%S")
+                elif exec_start:
+                    exec_start_time = datetime.datetime.strptime(exec_start, '%Y-%m-%d %H:%M:%S.%f')
+                    delta = datetime.datetime.utcnow() - exec_start_time
+                    delta = delta - datetime.timedelta(microseconds=delta.microseconds)
+                    status['run_time'] = str(delta)
                 else:
-                    status_set[i]['run_time'] = 'Not started'
+                    status['run_time'] = 'Not started'
 
             tmpl = """
             <table class="table table-bordered table-striped table-condensed">
@@ -317,7 +307,7 @@ class JobManager(object):
 
         if job is None:
             state = {
-                'job_state': 'error',
+                'state': 'error',
                 'error': {
                     'error': 'Job does not seem to exist, or it is otherwise unavailable.',
                     'message': 'Job does not exist',
@@ -348,7 +338,7 @@ class JobManager(object):
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': 'Unable to get job state for job {}'.format(job.job_id)})
 
             state = {
-                'job_state': 'error',
+                'state': 'error',
                 'error': {
                     'error': 'Unable to find current job state. Please try again later, or contact KBase.',
                     'message': 'Unable to return job state',
@@ -373,7 +363,7 @@ class JobManager(object):
                 'info': str(state['lookup_error'])
             })
             state = {
-                'job_state': 'error',
+                'state': 'error',
                 'error': {
                     'error': 'Unable to fetch current state. Please try again later, or contact KBase.',
                     'message': 'Error while looking up job state',
@@ -391,14 +381,14 @@ class JobManager(object):
                     'job_id': job.job_id
                 }
             }
-        if state.get('finished', 0) == 1:
+        if state.get('finished'):
             try:
                 widget_info = job.get_viewer_params(state)
             except Exception as e:
                 # Can't get viewer params
                 new_e = transform_job_exception(e)
                 kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
-                state['job_state'] = 'error'
+                state['state'] = 'error'
                 state['error'] = {
                     'error': 'Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact the developer of this App for assistance.',
                     'message': 'Unable to build output viewer parameters!',
@@ -406,9 +396,6 @@ class JobManager(object):
                     'code': getattr(new_e, "code", -1),
                     'source': getattr(new_e, "source", "JobManager")
                 }
-
-        if 'canceling' in self._running_jobs[job.job_id]:
-            state['job_state'] = 'canceling'
 
         state.update({
             'child_jobs': self._child_job_states(
@@ -441,25 +428,26 @@ class JobManager(object):
             return []
 
         sub_job_list = sorted(sub_job_list)
-        job_info = clients.get('job_service').check_jobs({'job_ids': sub_job_list, 'with_job_params': 1})
-        job_info = sanitize_all_states(job_info)
+
+        job_states = clients.get('execution_engine2').check_jobs({'job_ids': sub_job_list})
         child_job_states = list()
 
         for job_id in sub_job_list:
-            params = job_info['job_params'][job_id]
+            job_state = job_states.get(job_id, {})
+            params = job_state.get('job_input', {}).get('params', [])
             # if it's error, get the error.
-            if job_id in job_info['check_error']:
-                error = job_info['check_error'][job_id]
+            if job_state.get('errormsg'):
+                error = job_state
                 error.update({'job_id': job_id})
                 child_job_states.append(error)
                 continue
             # if it's done, get the output mapping.
-            state = job_info['job_states'][job_id]
-            if state.get('finished', 0) == 1:
+            state = job_state.get('status')
+            if state == 'finished':
                 try:
                     widget_info = Job.map_viewer_params(
                         state,
-                        params['params'],
+                        params,
                         app_id,
                         app_tag
                     )
@@ -500,7 +488,6 @@ class JobManager(object):
                 child_job = self.get_job(child_job_id)
                 child_job.app_id = parent_job.meta.get('batch_app')
                 child_job.tag = parent_job.meta.get('batch_tag', 'release')
-
 
     def _lookup_job_status(self, job_id, parent_job_id=None):
         """
@@ -806,7 +793,7 @@ class JobManager(object):
 
         try:
             state = self._get_job_state(job_id, parent_job_id=parent_job_id)
-            if state.get('canceled', 0) == 1 or state.get('finished', 0) == 1:
+            if state.get('status') in ['finished', 'terminated', 'error']:
                 # It's already finished, don't try to cancel it again.
                 return
         except Exception as e:
@@ -819,7 +806,7 @@ class JobManager(object):
             self._running_jobs[job_id]['refresh'] = 0
             self._running_jobs[job_id]['canceling'] = True
         try:
-            clients.get('job_service').cancel_job({'job_id': job_id})
+            clients.get('execution_engine2').cancel_job({'job_id': job_id})
         except Exception as e:
             new_e = transform_job_exception(e)
             error = {
@@ -889,24 +876,23 @@ class JobManager(object):
                 jobs_to_lookup.append(job_id)
         # 3. Lookup those jobs what need it. Cache 'em as we go, if finished.
         try:
-            fetched_states = clients.get('job_service').check_jobs({'job_ids': jobs_to_lookup})
-            fetched_states = sanitize_all_states(fetched_states)
+            fetched_states = clients.get('execution_engine2').check_jobs({'job_ids': jobs_to_lookup})
         except Exception as e:
             kblogging.log_event(self._log, 'get_all_job_states_error', {'err': str(e)})
             return {}
 
-        error_states = fetched_states.get('check_error', {})
-        fetched_states = fetched_states.get('job_states', {})
         for job_id in jobs_to_lookup:
-            if job_id in fetched_states:
-                state = fetched_states[job_id]
+            state = fetched_states.get(job_id, {})
+            state['job_id'] = state.get('_id')
+            status = state.get('status')
+            if status in ['created', 'queued', 'estimating', 'running', 'finished']:
                 state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
                 state['run_id'] = self._running_jobs[job_id]['job'].run_id
-                if state.get('finished', 0) == 1:
+                if status == 'finished':
                     self._completed_job_states[state['job_id']] = dict(state)
                 job_states[state['job_id']] = state
-            elif job_id in error_states:
-                error = error_states[job_id]
+            elif status in ['error', 'terminated']:
+                error = state
                 job_states[state['job_id']] = {'lookup_error': error}
 
         return job_states
@@ -919,6 +905,6 @@ class JobManager(object):
         if job_id in self._completed_job_states:
             return dict(self._completed_job_states[job_id])
         state = self._running_jobs[job_id]['job'].state()
-        if state.get('finished', 0) == 1:
+        if state.get('status') == 'finished':
             self._completed_job_states[job_id] = dict(state)
         return dict(state)

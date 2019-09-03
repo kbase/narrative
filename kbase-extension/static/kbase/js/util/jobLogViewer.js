@@ -756,7 +756,7 @@ define([
         function handleJobStatusUpdate(message) {
             // if the job is finished, we don't want to reflect
             // this in the ui, and disable play/stop controls.
-            var jobStatus = message.jobState.job_state,
+            var jobStatus = message.jobState.status,
                 mode = fsm.getCurrentState().state.mode,
                 newState;
             switch (mode) {
@@ -777,7 +777,22 @@ define([
                         auto: true
                     };
                     break;
+                case 'running':
+                    startJobUpdates();
+                    startAutoFetch();
+                    newState = {
+                        mode: 'active',
+                        auto: true
+                    };
+                    break;
                 case 'completed':
+                    requestLatestJobLog();
+                    stopJobUpdates();
+                    newState = {
+                        mode: 'complete'
+                    };
+                    break;
+                case 'finished':
                     requestLatestJobLog();
                     stopJobUpdates();
                     newState = {
@@ -793,6 +808,13 @@ define([
                     };
                     break;
                 case 'canceled':
+                    requestLatestJobLog();
+                    stopJobUpdates();
+                    newState = {
+                        mode: 'canceled'
+                    };
+                    break;
+                case 'terminated':
                     requestLatestJobLog();
                     stopJobUpdates();
                     newState = {
@@ -817,7 +839,18 @@ define([
                     };
                     break;
                     // may happen that the job state jumps over in-progress...
+                case 'running':
+                    newState = {
+                        mode: 'active',
+                        auto: true
+                    };
+                    break;
                 case 'completed':
+                    newState = {
+                        mode: 'complete'
+                    };
+                    break;
+                case 'finished':
                     newState = {
                         mode: 'complete'
                     };
@@ -829,6 +862,11 @@ define([
                     };
                     break;
                 case 'canceled':
+                    newState = {
+                        mode: 'canceled'
+                    };
+                    break;
+                case 'terminated':
                     newState = {
                         mode: 'canceled'
                     };
@@ -846,7 +884,15 @@ define([
                 case 'in-progress':
                     startAutoFetch();
                     break;
+                case 'running':
+                    startAutoFetch();
+                    break;
                 case 'completed':
+                    newState = {
+                        mode: 'complete'
+                    };
+                    break;
+                case 'finished':
                     newState = {
                         mode: 'complete'
                     };
@@ -862,6 +908,11 @@ define([
                         mode: 'canceled'
                     };
                     break;
+                case 'terminated':
+                    newState = {
+                        mode: 'canceled'
+                    };
+                    break;
                 default:
                     console.error('Unknown log status', jobStatus, message);
                     throw new Error('Unknown log status ' + jobStatus);
@@ -871,6 +922,8 @@ define([
                 switch (jobStatus) {
                 case 'completed':
                     return;
+                case 'finished':
+                    return;
                 default:
                     // technically, an error, what to do?
                     return;
@@ -878,6 +931,8 @@ define([
             case 'canceled':
                 switch (jobStatus) {
                 case 'canceled':
+                    return;
+                case 'terminated':
                     return;
                 default:
                     console.error('Unexpected log status ' + jobStatus + ' for "canceled" state');

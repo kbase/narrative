@@ -332,21 +332,29 @@ define([
 
         function handleJobStatusUpdate(message) {
             jobState = message.jobState;
-            switch (jobState.job_state) {
+            switch (jobState.status) {
                 case 'queued':
+                case 'created':
                 case 'in-progress':
                     startJobUpdates();
                     break;
+                case 'running':
+                    startJobUpdates();
+                    break;
                 case 'completed':
+                case 'finished':
                 case 'error':
                 case 'suspend':
                 case 'canceled':
                     stopJobUpdates();
                     break;
+                case 'terminated':
+                    stopJobUpdates();
+                    break;
                 default:
                     stopJobUpdates();
-                    console.error('Unknown job status', jobState.job_state, message);
-                    throw new Error('Unknown job status ' + jobState.job_state);
+                    console.error('Unknown job status', jobState.status, message);
+                    throw new Error('Unknown job status ' + jobState.status);
             }
         }
 

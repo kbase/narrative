@@ -8,6 +8,7 @@ import json
 import uuid
 from jinja2 import Template
 from pprint import pprint
+from ast import literal_eval
 
 """
 KBase job class
@@ -125,7 +126,7 @@ class Job(object):
             return self.inputs
         else:
             try:
-                self.inputs = clients.get("execution_engine2").get_job_params(self.job_id)[0]['params']
+                self.inputs = clients.get("execution_engine2").get_job_params(self.job_id)['params']
                 return self.inputs
             except Exception as e:
                 raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
@@ -138,7 +139,10 @@ class Job(object):
         if self._last_state is not None and self._last_state.get('status') in ['finished', 'terminated', 'error']:
             return self._last_state
         try:
-            state = clients.get("execution_engine2").check_job({'job_id': self.job_id})
+            state = clients.get("execution_engine2").check_job({'job_id': self.job_id,
+                                                                'projection': []})
+            state['job_input'] = literal_eval(state.get('job_input', '{}'))
+            state['job_output'] = literal_eval(state.get('job_output', '{}'))
             state[u'cell_id'] = self.cell_id
             state[u'run_id'] = self.run_id
             state[u'token_id'] = self.token_id

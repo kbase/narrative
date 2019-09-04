@@ -154,7 +154,8 @@ class JobManager(object):
         Initially used to make Child jobs from some parent, but will eventually be adapted to all jobs on startup.
         Just slaps them all into _running_jobs
         """
-        job_states = clients.get('execution_engine2').check_jobs({'job_ids': job_ids})
+        job_states = clients.get('execution_engine2').check_jobs({'job_ids': job_ids,
+                                                                  'projection': []})
         for job_id in job_ids:
             if job_id in job_ids and job_id not in self._running_jobs:
                 job_state = job_states.get(job_id, {})
@@ -410,7 +411,8 @@ class JobManager(object):
 
         sub_job_list = sorted(sub_job_list)
 
-        job_states = clients.get('execution_engine2').check_jobs({'job_ids': sub_job_list})
+        job_states = clients.get('execution_engine2').check_jobs({'job_ids': sub_job_list,
+                                                                  'projection': []})
         child_job_states = list()
 
         for job_id in sub_job_list:
@@ -857,7 +859,8 @@ class JobManager(object):
                 jobs_to_lookup.append(job_id)
         # 3. Lookup those jobs what need it. Cache 'em as we go, if finished.
         try:
-            fetched_states = clients.get('execution_engine2').check_jobs({'job_ids': jobs_to_lookup})
+            fetched_states = clients.get('execution_engine2').check_jobs({'job_ids': jobs_to_lookup,
+                                                                          'projection': []})
         except Exception as e:
             kblogging.log_event(self._log, 'get_all_job_states_error', {'err': str(e)})
             return {}

@@ -89,42 +89,23 @@ class JobManager(object):
             job_input = literal_eval(job_state.get('job_input', '{}'))
             status = job_state.get('status')
             try:
-                if status in ['created', 'queued', 'estimating', 'running', 'finished']:
-                    job = Job.from_state(job_id,
-                                         job_input,
-                                         user,
-                                         app_id=job_input.get('app_id'),
-                                         tag=job_meta.get('tag', 'release'),
-                                         cell_id=job_meta.get('cell_id', None),
-                                         run_id=job_meta.get('run_id', None),
-                                         token_id=job_meta.get('token_id', None),
-                                         meta=job_meta)
-                    # Note that when jobs for this narrative are initially loaded,
-                    # they are set to not be refreshed. Rather, if a client requests
-                    # updates via the start_job_update message, the refresh flag will
-                    # be set to True.
-                    self._running_jobs[job_id] = {
-                        'refresh': 0,
-                        'job': job
-                    }
-                elif status in ['error', 'terminated']:
-                    job_err_state = {
-                        'state': 'error',
-                        'error': {
-                            'error': 'KBase execution engine returned an error while looking up this job.',
-                            'message': job_state.get('errormsg', 'No error message available'),
-                            'name': 'Job Error',
-                            'code': job_state.get('error_code', -999),
-                            'exception': {
-                                'error_message': 'Job lookup in execution engine failed',
-                                'error_type': job_state.get('terminated_code', 'unknown'),
-                                'error_stacktrace': job_state.get('error', '')
-                            }
-                        },
-                        'cell_id': job_meta.get('cell_id', None),
-                        'run_id': job_meta.get('run_id', None),
-                    }
-                    error_jobs[job_id] = job_err_state
+                job = Job.from_state(job_id,
+                                        job_input,
+                                        user,
+                                        app_id=job_input.get('app_id'),
+                                        tag=job_meta.get('tag', 'release'),
+                                        cell_id=job_meta.get('cell_id', None),
+                                        run_id=job_meta.get('run_id', None),
+                                        token_id=job_meta.get('token_id', None),
+                                        meta=job_meta)
+                # Note that when jobs for this narrative are initially loaded,
+                # they are set to not be refreshed. Rather, if a client requests
+                # updates via the start_job_update message, the refresh flag will
+                # be set to True.
+                self._running_jobs[job_id] = {
+                    'refresh': 0,
+                    'job': job
+                }
             except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
                 new_e = transform_job_exception(e)
@@ -247,11 +228,11 @@ class JobManager(object):
                 </tr>
                 {% for j in jobs %}
                 <tr>
-                    <td>{{ j.job_id|e }}</td>
+                    <td>{{ j._id|e }}</td>
                     <td>{{ j.app_id|e }}</td>
                     <td>{{ j.creation_time|e }}</td>
                     <td>{{ j.owner|e }}</td>
-                    <td>{{ j.job_state|e }}</td>
+                    <td>{{ j.status|e }}</td>
                     <td>{{ j.run_time|e }}</td>
                     <td>{% if j.finish_time %}{{ j.finish_time|e }}{% else %}Incomplete{% endif %}</td>
                 </tr>

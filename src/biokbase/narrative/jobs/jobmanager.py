@@ -866,15 +866,11 @@ class JobManager(object):
             state = fetched_states.get(job_id, {})
             state['job_id'] = state.get('_id')
             status = state.get('status')
-            if status in ['created', 'queued', 'estimating', 'running', 'finished']:
-                state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
-                state['run_id'] = self._running_jobs[job_id]['job'].run_id
-                if status == 'finished':
-                    self._completed_job_states[state['job_id']] = dict(state)
-                job_states[state['job_id']] = state
-            elif status in ['error', 'terminated']:
-                error = state
-                job_states[state['job_id']] = {'lookup_error': error}
+            state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
+            state['run_id'] = self._running_jobs[job_id]['job'].run_id
+            if status == 'finished':
+                self._completed_job_states[state['job_id']] = dict(state)
+            job_states[state['job_id']] = state
 
         return job_states
 

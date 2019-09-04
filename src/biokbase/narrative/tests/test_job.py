@@ -42,6 +42,7 @@ class JobTest(unittest.TestCase):
         cls.inputs = param_info["params"]
         cls.owner = info["user"]
         cls.token_id = "temp_token"
+        cls.inputs = None
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def _mocked_job(self, with_version=True, with_cell_id=True, with_run_id=True, with_token_id=True):
@@ -56,6 +57,7 @@ class JobTest(unittest.TestCase):
             kwargs["token_id"] = self.token_id
 
         job = Job(self.job_id, self.app_id, self.inputs, self.owner, tag=self.app_tag, **kwargs)
+
         return job
 
     def test_job_init(self):
@@ -90,7 +92,7 @@ class JobTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_job_info(self):
         job = self._mocked_job()
-        info_str = "App name (id): Test Editor\nVersion: 0.0.1\nStatus: finished\nInputs:\n------\n{"
+        info_str = "App name (id): Test Editor\nVersion: 0.0.1\nStatus: finished\nInputs:\n------\n"
         with capture_stdout() as (out, err):
             job.info()
             self.assertIn(info_str, out.getvalue().strip())

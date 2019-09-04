@@ -89,7 +89,6 @@ class JobManager(object):
             job_input = literal_eval(job_state.get('job_input', '{}'))
             status = job_state.get('status')
             try:
-                # if status in ['created', 'queued', 'estimating', 'running', 'finished']:
                 job = Job.from_state(job_id,
                                         job_input,
                                         user,

@@ -85,19 +85,19 @@ class JobManager(object):
         error_jobs = dict()
         for job_id, job_state in job_states.items():
             user = job_state.get('user')
-            job_meta = literal_eval(job_state.get('meta', '{}'))
             job_input = literal_eval(job_state.get('job_input', '{}'))
+            job_meta = job_input.get('narrative_cell_info', {})
             status = job_state.get('status')
             try:
                 job = Job.from_state(job_id,
-                                        job_input,
-                                        user,
-                                        app_id=job_input.get('app_id'),
-                                        tag=job_meta.get('tag', 'release'),
-                                        cell_id=job_meta.get('cell_id', None),
-                                        run_id=job_meta.get('run_id', None),
-                                        token_id=job_meta.get('token_id', None),
-                                        meta=job_meta)
+                                     job_input,
+                                     user,
+                                     app_id=job_input.get('app_id'),
+                                     tag=job_meta.get('tag', 'release'),
+                                     cell_id=job_meta.get('cell_id', None),
+                                     run_id=job_meta.get('run_id', None),
+                                     token_id=job_meta.get('token_id', None),
+                                     meta=job_meta)
                 # Note that when jobs for this narrative are initially loaded,
                 # they are set to not be refreshed. Rather, if a client requests
                 # updates via the start_job_update message, the refresh flag will

@@ -82,7 +82,7 @@ define([
                     viewModel.queue._attrib.style = { fontWeight: 'normal' };
                     viewModel.queue.active = false;
                     viewModel.queue.label = 'Queued for';
-                    var exec_start_time = Date.parse(jobState.running + 'Z')
+                    var exec_start_time = Date.parse(jobState.running + 'Z');
                     viewModel.queue.elapsed = format.niceDuration(exec_start_time - creation_time);
                     viewModel.queue.position.label = '';
                     viewModel.queue.position.number = '';
@@ -94,7 +94,7 @@ define([
                         viewModel.run._attrib.style = { fontWeight: 'normal' };
                         viewModel.run.active = false;
                         viewModel.run.label = 'Ran for';
-                        var finish_time = Date.parse(jobState.finished + 'Z')
+                        var finish_time = Date.parse(jobState.finished + 'Z');
                         viewModel.run.elapsed = format.niceDuration(finish_time - exec_start_time);
 
                         viewModel.finish._attrib.hidden = false;
@@ -124,7 +124,7 @@ define([
                         viewModel.queue._attrib.style = { fontWeight: 'normal' };
                         viewModel.queue.active = false;
                         viewModel.queue.label = 'Queued for';
-                        var finish_time = Date.parse(jobState.finished + 'Z')
+                        var finish_time = Date.parse(jobState.finished + 'Z');
                         viewModel.queue.elapsed = format.niceDuration(finish_time - creation_time);
                         viewModel.queue.position.label = '';
                         viewModel.queue.position.number = '';

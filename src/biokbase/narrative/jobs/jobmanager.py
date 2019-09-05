@@ -874,6 +874,8 @@ class JobManager(object):
                 state['run_id'] = self._running_jobs[job_id]['job'].run_id
                 if status == 'finished':
                     self._completed_job_states[state['job_id']] = dict(state)
+                state['job_input'] = literal_eval(state.get('job_input', '{}'))
+                state['job_output'] = literal_eval(state.get('job_output', '{}'))
                 job_states[state['job_id']] = state
             elif status in ['error', 'terminated']:
                 error = state

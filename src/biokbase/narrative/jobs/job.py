@@ -139,7 +139,7 @@ class Job(object):
         if self._last_state is not None and self._last_state.get('status') in ['finished', 'terminated', 'error']:
             return self._last_state
         try:
-            state = clients.get("execution_engine2").check_job({'job_id': self.job_id,
+            state = clients.get('execution_engine2').check_job({'job_id': self.job_id,
                                                                 'projection': []})
             state['job_input'] = literal_eval(state.get('job_input', '{}'))
             state['job_output'] = literal_eval(state.get('job_output', '{}'))

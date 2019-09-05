@@ -762,6 +762,7 @@ define([
             switch (mode) {
             case 'new':
                 switch (jobStatus) {
+                case 'created':
                 case 'queued':
                     startJobUpdates();
                     newState = {
@@ -829,6 +830,7 @@ define([
                 break;
             case 'queued':
                 switch (jobStatus) {
+                case 'created':
                 case 'queued':
                     // no change
                     break;

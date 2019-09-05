@@ -13,7 +13,6 @@ from biokbase.narrative.exception_util import (
     transform_job_exception
 )
 from ast import literal_eval
-
 """
 KBase Job Manager
 

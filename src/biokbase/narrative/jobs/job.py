@@ -221,7 +221,7 @@ class Job(object):
         return (num_available_lines, self._job_logs[first_line:first_line+num_lines])
 
     def _update_log(self):
-        log_update = clients.get("job_service").get_job_logs(
+        log_update = clients.get("execution_engine2").get_job_logs(
             {'job_id': self.job_id,
              'skip_lines': len(self._job_logs)})
         if log_update['lines']:

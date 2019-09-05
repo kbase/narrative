@@ -196,13 +196,17 @@ class JobManager(object):
 
             if not len(status_set):
                 return "No running jobs!"
-            status_set = sorted(status_set, key=lambda s: ObjectId(s['_id']).generation_time.timestamp())
+            status_set = sorted(status_set, key=lambda s: s.get('creation_time', 0))
 
             for status in status_set:
-                status['creation_time'] = datetime.datetime.strftime(ObjectId(status_set[0]['_id']).generation_time, "%Y-%m-%d %H:%M:%S")
                 exec_start = status.get('running', None)
+                status['creation_time'] = datetime.datetime.strftime(
+                    datetime.datetime.fromtimestamp(status['creation_time']/1000),
+                    "%Y-%m-%d %H:%M:%S"
+                )
+
                 if status.get('finished'):
-                    finished_time = datetime.datetime.strptime(status.get('finished'), '%Y-%m-%d %H:%M:%S.%f')
+                    finished_time = datetime.datetime.strptime(status.get('finished', 0), '%Y-%m-%d %H:%M:%S.%f')
                     exec_start_time = datetime.datetime.strptime(exec_start, '%Y-%m-%d %H:%M:%S.%f')
                     delta = finished_time - exec_start_time
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)

@@ -19,7 +19,8 @@ job_info = config.load_json_file(config.get('jobs', 'ee2_job_info_file'))
 
 @mock.patch('biokbase.narrative.jobs.job.clients.get', get_mock_client)
 def phony_job():
-    return Job.from_state('phony_job',
+    phony_job_id = '5d7031ad4446f0da4ac7eac5'
+    return Job.from_state(phony_job_id,
                           {'params': [], 'service_ver': '0.0.0'},
                           'kbasetest',
                           'NarrativeTest/test_editor',

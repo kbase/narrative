@@ -1766,14 +1766,10 @@ define([
                     }
                     return { mode: 'processing', stage: 'running' };
                 case 'completed':
-                    stopListeningForJobMessages();
-                    return { mode: 'success' };
                 case 'finished':
                     stopListeningForJobMessages();
                     return { mode: 'success' };
                 case 'canceled':
-                    stopListeningForJobMessages();
-                    return { mode: 'canceled' };
                 case 'terminated':
                     stopListeningForJobMessages();
                     return { mode: 'canceled' };

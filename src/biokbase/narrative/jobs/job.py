@@ -9,6 +9,7 @@ import uuid
 from jinja2 import Template
 from pprint import pprint
 from ast import literal_eval
+from bson import ObjectId
 
 """
 KBase job class
@@ -143,9 +144,13 @@ class Job(object):
                                                                 'projection': []})
             state['job_input'] = literal_eval(state.get('job_input', '{}'))
             state['job_output'] = literal_eval(state.get('job_output', '{}'))
-            state[u'cell_id'] = self.cell_id
-            state[u'run_id'] = self.run_id
-            state[u'token_id'] = self.token_id
+            state['cell_id'] = self.cell_id
+            state['run_id'] = self.run_id
+            state['token_id'] = self.token_id
+            try:
+                state['creation_time'] = int(ObjectId(self.job_id).generation_time.timestamp() * 1000)
+            except:
+                state['creation_time'] = 0
             self._last_state = state
             return dict(state)
         except Exception as e:

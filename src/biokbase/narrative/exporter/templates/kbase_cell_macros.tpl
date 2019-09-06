@@ -20,7 +20,7 @@
  #}
 {% macro report_panel(html_info, idx) %}
     {% call render_panel("Report", idx) -%}
-        {% if html_info.link_idx is not none %}
+        {% if html_info.link_idx is not none and html_info.paths %}
             <div class="kb-app-report" data-path="{{ html_info.paths[html_info.link_idx] }}"></div>
         {% elif html_info.direct %}
             Some directly injected HTML up in here!

@@ -8,7 +8,6 @@ import json
 import uuid
 from jinja2 import Template
 from pprint import pprint
-from ast import literal_eval
 
 """
 KBase job class
@@ -141,8 +140,8 @@ class Job(object):
         try:
             state = clients.get('execution_engine2').check_job({'job_id': self.job_id,
                                                                 'projection': []})
-            state['job_input'] = literal_eval(state.get('job_input', '{}'))
-            state['job_output'] = literal_eval(state.get('job_output', '{}'))
+            state['job_input'] = state.get('job_input', {})
+            state['job_output'] = state.get('job_output', {})
             state[u'cell_id'] = self.cell_id
             state[u'run_id'] = self.run_id
             state[u'token_id'] = self.token_id

@@ -12,7 +12,6 @@ from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.exception_util import (
     transform_job_exception
 )
-from ast import literal_eval
 """
 KBase Job Manager
 
@@ -85,7 +84,7 @@ class JobManager(object):
         error_jobs = dict()
         for job_id, job_state in job_states.items():
             user = job_state.get('user')
-            job_input = literal_eval(job_state.get('job_input', '{}'))
+            job_input = job_state.get('job_input', {})
             job_meta = job_input.get('narrative_cell_info', {})
             status = job_state.get('status')
             try:
@@ -160,7 +159,7 @@ class JobManager(object):
             if job_id in job_ids and job_id not in self._running_jobs:
                 job_state = job_states.get(job_id, {})
                 user = job_state.get('user')
-                job_info = literal_eval(job_state.get('job_input', '{}'))
+                job_info = job_state.get('job_input', {})
                 job_meta = job_info.get('narrative_cell_info', {})
                 job = Job.from_state(job_id,                                     # the id
                                      job_info,                                   # params, etc.
@@ -874,8 +873,8 @@ class JobManager(object):
                 state['run_id'] = self._running_jobs[job_id]['job'].run_id
                 if status == 'finished':
                     self._completed_job_states[state['job_id']] = dict(state)
-                state['job_input'] = literal_eval(state.get('job_input', '{}'))
-                state['job_output'] = literal_eval(state.get('job_output', '{}'))
+                state['job_input'] = state.get('job_input', {})
+                state['job_output'] = state.get('job_output', {})
                 job_states[state['job_id']] = state
             elif status in ['error', 'terminated']:
                 error = state

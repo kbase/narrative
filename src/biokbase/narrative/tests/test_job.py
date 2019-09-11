@@ -6,7 +6,6 @@ from .narrative_mock.mockclients import get_mock_client
 from contextlib import contextmanager
 from io import StringIO
 import sys
-from ast import literal_eval
 
 
 @contextmanager
@@ -33,7 +32,7 @@ class JobTest(unittest.TestCase):
         # cls.job_id = info[0]
         cls.job_id = info["_id"]
         # param_info = test_jobs["job_param_info"][cls.job_id]
-        param_info = literal_eval(info["job_input"])
+        param_info = info["job_input"]
         cls.app_id = param_info["app_id"]
         cls.app_tag = param_info.get("narrative_cell_info", {}).get("tag", "dev")
         cls.app_version = param_info.get("service_ver", "0.0.1")

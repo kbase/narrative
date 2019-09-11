@@ -22,25 +22,13 @@ define([
         var label;
         var color;
         switch (jobState) {
-            case 'completed':
-                label = 'success';
-                color = 'green';
-                break;
             case 'finished':
                 label = 'success';
                 color = 'green';
                 break;
-            case 'suspend':
-                label = 'error';
-                color = 'red';
-                break;
             case 'error':
                 label = 'error';
                 color = 'red';
-                break;
-            case 'canceled':
-                label = 'cancellation';
-                color = 'orange';
                 break;
             case 'terminated':
                 label = 'cancellation';
@@ -350,19 +338,12 @@ define([
             switch (jobState.status) {
                 case 'queued':
                 case 'created':
-                case 'in-progress':
-                    startJobUpdates();
-                    break;
+                case 'estimating':
                 case 'running':
                     startJobUpdates();
                     break;
-                case 'completed':
                 case 'finished':
                 case 'error':
-                case 'suspend':
-                case 'canceled':
-                    stopJobUpdates();
-                    break;
                 case 'terminated':
                     stopJobUpdates();
                     break;

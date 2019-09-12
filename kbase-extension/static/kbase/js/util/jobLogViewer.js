@@ -802,6 +802,7 @@ define([
                 break;
             case 'queued':
                 switch (jobStatus) {
+                case 'created':
                 case 'estimating':
                 case 'queued':
                     // no change

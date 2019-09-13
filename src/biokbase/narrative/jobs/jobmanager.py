@@ -288,7 +288,7 @@ class JobManager(object):
 
         if job is None:
             state = {
-                'state': 'error',
+                'status': 'error',
                 'error': {
                     'error': 'Job does not seem to exist, or it is otherwise unavailable.',
                     'message': 'Job does not exist',
@@ -319,7 +319,7 @@ class JobManager(object):
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': 'Unable to get job state for job {}'.format(job.job_id)})
 
             state = {
-                'state': 'error',
+                'status': 'error',
                 'error': {
                     'error': 'Unable to find current job state. Please try again later, or contact KBase.',
                     'message': 'Unable to return job state',
@@ -344,7 +344,7 @@ class JobManager(object):
                 'info': str(state['lookup_error'])
             })
             state = {
-                'state': 'error',
+                'status': 'error',
                 'error': {
                     'error': 'Unable to fetch current state. Please try again later, or contact KBase.',
                     'message': 'Error while looking up job state',
@@ -868,7 +868,7 @@ class JobManager(object):
             state = fetched_states.get(job_id, {})
             state['job_id'] = state.get('_id')
             status = state.get('status')
-            if status in ['created', 'queued', 'estimating', 'running', 'finished']:
+            if status in ['created', 'queued', 'estimating', 'running', 'finished', 'error', 'terminated']:
                 state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
                 state['run_id'] = self._running_jobs[job_id]['job'].run_id
                 if status == 'finished':
@@ -876,7 +876,7 @@ class JobManager(object):
                 state['job_input'] = state.get('job_input', {})
                 state['job_output'] = state.get('job_output', {})
                 job_states[state['job_id']] = state
-            elif status in ['error', 'terminated']:
+            else:
                 error = state
                 job_states[state['job_id']] = {'lookup_error': error}
 

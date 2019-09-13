@@ -7,6 +7,9 @@ import unittest
 import os
 import mock
 from . import util
+import requests_mock
+from biokbase.narrative.common.url_config import URLS
+import biokbase.auth as auth
 
 """
 Some tests for narrative exporting.
@@ -48,7 +51,7 @@ def refstring_to_ref(refstr: str) -> NarrativeRef:
 
 test_narrative_ref = refstring_to_ref(config.get('narrative_refs', 'public'))
 private_narrative_ref = refstring_to_ref(config.get('narrative_refs', 'private'))
-bad_narrative_ref = NarrativeRef({'wsid': 0, 'objid': 0, 'ver': 0}) #config.get('narrative_refs', 'bad')
+bad_narrative_ref = NarrativeRef({'wsid': 0, 'objid': 0, 'ver': 0})
 
 
 class NarrativeExportTesting(unittest.TestCase):
@@ -65,7 +68,10 @@ class NarrativeExportTesting(unittest.TestCase):
         if os.path.isfile(output_file):
             os.remove(output_file)
 
-    def test_export_good(self):
+    @unittest.skip("Skipping in Travis")
+    @requests_mock.mock()
+    def test_export_good(self, rq_mock):
+        rq_mock.get(auth.token_api_url + auth.endpt_user_display, json={"foo": "Bar"})
         biokbase.auth.set_environ_token(util.read_token_file(config.get_path('token_files', 'test_user', from_root=True)))
         self.exporter.export_narrative(test_narrative_ref, output_file)
         self.assertTrue(os.path.isfile(output_file))

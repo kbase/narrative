@@ -12,7 +12,6 @@ from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.exception_util import (
     transform_job_exception
 )
-from ast import literal_eval
 """
 KBase Job Manager
 
@@ -85,7 +84,7 @@ class JobManager(object):
         error_jobs = dict()
         for job_id, job_state in job_states.items():
             user = job_state.get('user')
-            job_input = literal_eval(job_state.get('job_input', '{}'))
+            job_input = job_state.get('job_input', {})
             job_meta = job_input.get('narrative_cell_info', {})
             status = job_state.get('status')
             try:
@@ -160,7 +159,7 @@ class JobManager(object):
             if job_id in job_ids and job_id not in self._running_jobs:
                 job_state = job_states.get(job_id, {})
                 user = job_state.get('user')
-                job_info = literal_eval(job_state.get('job_input', '{}'))
+                job_info = job_state.get('job_input', {})
                 job_meta = job_info.get('narrative_cell_info', {})
                 job = Job.from_state(job_id,                                     # the id
                                      job_info,                                   # params, etc.
@@ -289,7 +288,7 @@ class JobManager(object):
 
         if job is None:
             state = {
-                'state': 'error',
+                'status': 'error',
                 'error': {
                     'error': 'Job does not seem to exist, or it is otherwise unavailable.',
                     'message': 'Job does not exist',
@@ -320,7 +319,7 @@ class JobManager(object):
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': 'Unable to get job state for job {}'.format(job.job_id)})
 
             state = {
-                'state': 'error',
+                'status': 'error',
                 'error': {
                     'error': 'Unable to find current job state. Please try again later, or contact KBase.',
                     'message': 'Unable to return job state',
@@ -345,7 +344,7 @@ class JobManager(object):
                 'info': str(state['lookup_error'])
             })
             state = {
-                'state': 'error',
+                'status': 'error',
                 'error': {
                     'error': 'Unable to fetch current state. Please try again later, or contact KBase.',
                     'message': 'Error while looking up job state',
@@ -869,13 +868,15 @@ class JobManager(object):
             state = fetched_states.get(job_id, {})
             state['job_id'] = state.get('_id')
             status = state.get('status')
-            if status in ['created', 'queued', 'estimating', 'running', 'finished']:
+            if status in ['created', 'queued', 'estimating', 'running', 'finished', 'error', 'terminated']:
                 state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
                 state['run_id'] = self._running_jobs[job_id]['job'].run_id
                 if status == 'finished':
                     self._completed_job_states[state['job_id']] = dict(state)
+                state['job_input'] = state.get('job_input', {})
+                state['job_output'] = state.get('job_output', {})
                 job_states[state['job_id']] = state
-            elif status in ['error', 'terminated']:
+            else:
                 error = state
                 job_states[state['job_id']] = {'lookup_error': error}
 

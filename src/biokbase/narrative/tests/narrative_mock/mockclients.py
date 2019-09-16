@@ -1,6 +1,5 @@
 from ..util import TestConfig
 from biokbase.workspace.baseclient import ServerError
-from ast import literal_eval
 
 
 class MockClients(object):
@@ -154,7 +153,7 @@ class MockClients(object):
         return "done"
 
     def get_job_params(self, job_id):
-        return literal_eval(self.ee2_job_info.get(job_id, {'_id': job_id}).get('job_input', '{}'))
+        return self.ee2_job_info.get(job_id, {}).get('job_input', {})
 
     def check_job(self, params):
         return self.ee2_job_info.get(params.get('job_id'), {'_id': params.get('job_id')})

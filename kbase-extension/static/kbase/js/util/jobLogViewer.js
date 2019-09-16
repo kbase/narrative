@@ -762,18 +762,12 @@ define([
             switch (mode) {
             case 'new':
                 switch (jobStatus) {
+                case 'created':
+                case 'estimating':
                 case 'queued':
                     startJobUpdates();
                     newState = {
                         mode: 'queued',
-                        auto: true
-                    };
-                    break;
-                case 'in-progress':
-                    startJobUpdates();
-                    startAutoFetch();
-                    newState = {
-                        mode: 'active',
                         auto: true
                     };
                     break;
@@ -785,13 +779,6 @@ define([
                         auto: true
                     };
                     break;
-                case 'completed':
-                    requestLatestJobLog();
-                    stopJobUpdates();
-                    newState = {
-                        mode: 'complete'
-                    };
-                    break;
                 case 'finished':
                     requestLatestJobLog();
                     stopJobUpdates();
@@ -800,20 +787,6 @@ define([
                     };
                     break;
                 case 'error':
-                case 'suspend':
-                    requestLatestJobLog();
-                    stopJobUpdates();
-                    newState = {
-                        mode: 'error'
-                    };
-                    break;
-                case 'canceled':
-                    requestLatestJobLog();
-                    stopJobUpdates();
-                    newState = {
-                        mode: 'canceled'
-                    };
-                    break;
                 case 'terminated':
                     requestLatestJobLog();
                     stopJobUpdates();
@@ -829,43 +802,24 @@ define([
                 break;
             case 'queued':
                 switch (jobStatus) {
+                case 'created':
+                case 'estimating':
                 case 'queued':
                     // no change
                     break;
-                case 'in-progress':
-                    newState = {
-                        mode: 'active',
-                        auto: true
-                    };
-                    break;
-                    // may happen that the job state jumps over in-progress...
                 case 'running':
                     newState = {
                         mode: 'active',
                         auto: true
                     };
                     break;
-                case 'completed':
-                    newState = {
-                        mode: 'complete'
-                    };
-                    break;
+                    // may happen that the job state jumps over in-progress...
                 case 'finished':
                     newState = {
                         mode: 'complete'
                     };
                     break;
                 case 'error':
-                case 'suspend':
-                    newState = {
-                        mode: 'error'
-                    };
-                    break;
-                case 'canceled':
-                    newState = {
-                        mode: 'canceled'
-                    };
-                    break;
                 case 'terminated':
                     newState = {
                         mode: 'canceled'
@@ -881,16 +835,8 @@ define([
                 case 'queued':
                     // this should not occur!
                     break;
-                case 'in-progress':
-                    startAutoFetch();
-                    break;
                 case 'running':
                     startAutoFetch();
-                    break;
-                case 'completed':
-                    newState = {
-                        mode: 'complete'
-                    };
                     break;
                 case 'finished':
                     newState = {
@@ -898,16 +844,6 @@ define([
                     };
                     break;
                 case 'error':
-                case 'suspend':
-                    newState = {
-                        mode: 'error'
-                    };
-                    break;
-                case 'canceled':
-                    newState = {
-                        mode: 'canceled'
-                    };
-                    break;
                 case 'terminated':
                     newState = {
                         mode: 'canceled'
@@ -920,8 +856,6 @@ define([
                 break;
             case 'complete':
                 switch (jobStatus) {
-                case 'completed':
-                    return;
                 case 'finished':
                     return;
                 default:
@@ -930,8 +864,6 @@ define([
                 }
             case 'canceled':
                 switch (jobStatus) {
-                case 'canceled':
-                    return;
                 case 'terminated':
                     return;
                 default:

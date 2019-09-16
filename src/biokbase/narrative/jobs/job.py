@@ -8,8 +8,6 @@ import json
 import uuid
 from jinja2 import Template
 from pprint import pprint
-from ast import literal_eval
-from bson import ObjectId
 
 """
 KBase job class
@@ -140,17 +138,13 @@ class Job(object):
         if self._last_state is not None and self._last_state.get('status') in ['finished', 'terminated', 'error']:
             return self._last_state
         try:
-            state = clients.get("execution_engine2").check_job({'job_id': self.job_id,
+            state = clients.get('execution_engine2').check_job({'job_id': self.job_id,
                                                                 'projection': []})
-            state['job_input'] = literal_eval(state.get('job_input', '{}'))
-            state['job_output'] = literal_eval(state.get('job_output', '{}'))
-            state['cell_id'] = self.cell_id
-            state['run_id'] = self.run_id
-            state['token_id'] = self.token_id
-            try:
-                state['creation_time'] = int(ObjectId(self.job_id).generation_time.timestamp() * 1000)
-            except:
-                state['creation_time'] = 0
+            state['job_input'] = state.get('job_input', {})
+            state['job_output'] = state.get('job_output', {})
+            state[u'cell_id'] = self.cell_id
+            state[u'run_id'] = self.run_id
+            state[u'token_id'] = self.token_id
             self._last_state = state
             return dict(state)
         except Exception as e:
@@ -226,7 +220,7 @@ class Job(object):
         return (num_available_lines, self._job_logs[first_line:first_line+num_lines])
 
     def _update_log(self):
-        log_update = clients.get("job_service").get_job_logs(
+        log_update = clients.get("execution_engine2").get_job_logs(
             {'job_id': self.job_id,
              'skip_lines': len(self._job_logs)})
         if log_update['lines']:

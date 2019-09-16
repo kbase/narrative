@@ -7,7 +7,6 @@ import unittest
 import os
 import mock
 from . import util
-import requests_mock
 from biokbase.narrative.common.url_config import URLS
 import biokbase.auth as auth
 
@@ -69,9 +68,9 @@ class NarrativeExportTesting(unittest.TestCase):
             os.remove(output_file)
 
     @unittest.skip("Skipping in Travis")
-    @requests_mock.mock()
-    def test_export_good(self, rq_mock):
-        rq_mock.get(auth.token_api_url + auth.endpt_user_display, json={"foo": "Bar"})
+    # @requests_mock.mock()
+    def test_export_good(self):
+        # rq_mock.get(auth.token_api_url + auth.endpt_user_display, json={"foo": "Bar"})
         biokbase.auth.set_environ_token(util.read_token_file(config.get_path('token_files', 'test_user', from_root=True)))
         self.exporter.export_narrative(test_narrative_ref, output_file)
         self.assertTrue(os.path.isfile(output_file))

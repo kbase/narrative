@@ -46,21 +46,28 @@ define([
             // $dropzoneElem.find('a').click((e) => {
             //     e.stopPropagation();
             // });
-
+            
+            // there are two anchor elements with same class name .globus_link.
+            // One link takes the user to globus site, 
+            // and the other link takes user to how to link globus account. 
             $dropzoneElem.find('a.globus_link').click((e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                let stagingServiceClient = new StagingServiceClient({
-                    root: this.stagingUrl,
-                    token: Runtime.make().authToken()
-                });
-                var globusWindow = window.open('', 'dz-globus');
-                globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
-                stagingServiceClient.addAcl()
-                    .done(() => {
-                        window.open($(e.target).attr('href'), 'dz-globus');
-                        return true;
+                if(!(e.target.href).includes("http://kbase.us/transfer-data-from-globus-to-kbase")) {
+                    let stagingServiceClient = new StagingServiceClient({
+                        root: this.stagingUrl,
+                        token: Runtime.make().authToken()
                     });
+                    var globusWindow = window.open('', 'dz-globus');
+                    globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
+                    stagingServiceClient.addAcl()
+                        .done(() => {
+                            window.open($(e.target).attr('href'), 'dz-globus');
+                            return true;
+                        });
+                } else if((e.target.href).includes("http://kbase.us/transfer-data-from-globus-to-kbase")){
+                    window.open("http://kbase.us/transfer-data-from-globus-to-kbase", "_blank")
+                }
             });
 
             this.$elem.append($dropzoneElem);

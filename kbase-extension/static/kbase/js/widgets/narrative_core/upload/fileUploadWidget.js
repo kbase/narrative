@@ -66,7 +66,7 @@ define([
                             return true;
                         });
                 } else {
-                    window.open(e.target.href, "_blank")
+                    window.open(e.target.href, "_blank");
                 };
             });
 

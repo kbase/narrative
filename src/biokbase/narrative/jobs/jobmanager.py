@@ -195,10 +195,10 @@ class JobManager(object):
 
             if not len(status_set):
                 return "No running jobs!"
-            status_set = sorted(status_set, key=lambda s: ObjectId(s['_id']).generation_time.timestamp())
+            status_set = sorted(status_set, key=lambda s: ObjectId(s['job_id']).generation_time.timestamp())
 
             for status in status_set:
-                status['creation_time'] = datetime.datetime.strftime(ObjectId(status_set[0]['_id']).generation_time, "%Y-%m-%d %H:%M:%S")
+                status['creation_time'] = datetime.datetime.strftime(ObjectId(status['job_id']).generation_time, "%Y-%m-%d %H:%M:%S")
                 exec_start = status.get('running', None)
                 if status.get('finished'):
                     finished_time = datetime.datetime.strptime(status.get('finished'), '%Y-%m-%d %H:%M:%S.%f')
@@ -866,7 +866,7 @@ class JobManager(object):
 
         for job_id in jobs_to_lookup:
             state = fetched_states.get(job_id, {})
-            state['job_id'] = state.get('_id')
+            state['job_id'] = state.get('job_id')
             status = state.get('status')
             if status in ['created', 'queued', 'estimating', 'running', 'finished', 'error', 'terminated']:
                 state['cell_id'] = self._running_jobs[job_id]['job'].cell_id

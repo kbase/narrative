@@ -61,7 +61,7 @@ define([
             viewModel.launch._attrib.hidden = true;
 
             if (jobState.updated) {
-                var creation_time = parseInt(jobState._id.substring(0, 8), 16) * 1000;
+                var creation_time = Date.parse(jobState.created + 'Z');
                 // Queue status - at least in or has been in the queue
                 viewModel.queue._attrib.hidden = false;
                 if (jobState.running) {

@@ -53,7 +53,7 @@ define([
             $dropzoneElem.find('a.globus_link').click((e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                if(!(e.target.href).includes("http://kbase.us/transfer-data-from-globus-to-kbase")) {
+                if((e.target.href).includes("app.globus.org")) {
                     let stagingServiceClient = new StagingServiceClient({
                         root: this.stagingUrl,
                         token: Runtime.make().authToken()
@@ -65,9 +65,9 @@ define([
                             window.open($(e.target).attr('href'), 'dz-globus');
                             return true;
                         });
-                } else if((e.target.href).includes("http://kbase.us/transfer-data-from-globus-to-kbase")){
-                    window.open("http://kbase.us/transfer-data-from-globus-to-kbase", "_blank")
-                }
+                } else {
+                    window.open(e.target.href, "_blank")
+                };
             });
 
             this.$elem.append($dropzoneElem);

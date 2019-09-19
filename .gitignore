@@ -1,6 +1,7 @@
 *.DS_Store
 *.pyc
 /bin
+kbase-extension/migrated
 kbase-extension/static/kbase/config/config.json
 kbase-extension/ipython/profile_default/history.sqlite
 kbase-extension/history.sqlite

@@ -120,6 +120,7 @@ class JobTest(unittest.TestCase):
     def test_state(self):
         job = self._mocked_job()
         state = job.state()
+
         self.assertEqual(state['job_id'], job.job_id)
         self.assertIn('status', state)
         self.assertIn('updated', state)

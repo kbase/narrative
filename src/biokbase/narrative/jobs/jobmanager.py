@@ -8,6 +8,7 @@ from jinja2 import Template
 import datetime
 import time
 from bson.objectid import ObjectId
+import dateutil.parser
 from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.exception_util import (
     transform_job_exception
@@ -195,10 +196,11 @@ class JobManager(object):
 
             if not len(status_set):
                 return "No running jobs!"
-            status_set = sorted(status_set, key=lambda s: ObjectId(s['job_id']).generation_time.timestamp())
+
+            status_set = sorted(status_set, key=lambda s: dateutil.parser.parse(s['created']).timestamp())
 
             for status in status_set:
-                status['creation_time'] = datetime.datetime.strftime(ObjectId(status['job_id']).generation_time, "%Y-%m-%d %H:%M:%S")
+                status['creation_time'] = dateutil.parser.parse(status['created'])
                 exec_start = status.get('running', None)
                 if status.get('finished'):
                     finished_time = datetime.datetime.strptime(status.get('finished'), '%Y-%m-%d %H:%M:%S.%f')

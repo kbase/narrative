@@ -30,7 +30,7 @@ class JobTest(unittest.TestCase):
         info = next(iter(test_jobs.values()))
 
         # cls.job_id = info[0]
-        cls.job_id = info["_id"]
+        cls.job_id = info["job_id"]
         # param_info = test_jobs["job_param_info"][cls.job_id]
         param_info = info["job_input"]
         cls.app_id = param_info["app_id"]
@@ -120,7 +120,8 @@ class JobTest(unittest.TestCase):
     def test_state(self):
         job = self._mocked_job()
         state = job.state()
-        self.assertEqual(state['_id'], job.job_id)
+
+        self.assertEqual(state['job_id'], job.job_id)
         self.assertIn('status', state)
         self.assertIn('updated', state)
         self.assertIn('job_input', state)

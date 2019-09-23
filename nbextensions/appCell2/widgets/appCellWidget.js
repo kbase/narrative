@@ -2026,7 +2026,7 @@ define([
             widgets.runClock = RunClock.make({
                 prefix: 'for '
             });
-            var creation_time = parseInt(jobState._id.substring(0, 8), 16) * 1000;
+            var creation_time = Date.parse(jobState.created + 'Z');
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
                 startTime: creation_time

@@ -8,6 +8,7 @@ from jinja2 import Template
 import datetime
 import time
 from bson.objectid import ObjectId
+import dateutil.parser
 from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.exception_util import (
     transform_job_exception
@@ -195,9 +196,11 @@ class JobManager(object):
 
             if not len(status_set):
                 return "No running jobs!"
-            status_set = sorted(status_set, key=lambda s: s.get('creation_time', 0))
+
+            status_set = sorted(status_set, key=lambda s: dateutil.parser.parse(s['created']).timestamp())
 
             for status in status_set:
+                status['creation_time'] = dateutil.parser.parse(status['created'])
                 exec_start = status.get('running', None)
                 status['creation_time'] = datetime.datetime.strftime(
                     datetime.datetime.fromtimestamp(status['creation_time']/1000),
@@ -870,7 +873,6 @@ class JobManager(object):
 
         for job_id in jobs_to_lookup:
             state = fetched_states.get(job_id, {})
-            state['job_id'] = state.get('_id')
             status = state.get('status')
             if status in ['created', 'queued', 'estimating', 'running', 'finished', 'error', 'terminated']:
                 state['cell_id'] = self._running_jobs[job_id]['job'].cell_id

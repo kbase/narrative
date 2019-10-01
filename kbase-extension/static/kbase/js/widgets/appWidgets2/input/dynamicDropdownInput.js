@@ -188,7 +188,7 @@ define([
             searchTerm = searchTerm || '';
 
             if (!searchTerm && !dd_options.query_on_empty_input) {
-                return []
+                return [];
             }
             if (dataSource === 'ftp_staging') {
                 return Promise.resolve(stagingService.search({query: searchTerm}))
@@ -224,9 +224,9 @@ define([
                 } else {
                     return Promise.resolve(genericClientCall(call_params))
                         .then(function (results) {
-                            var index = dd_options.result_array_index
+                            var index = dd_options.result_array_index;
                             if (!index) {
-                                index = 0
+                                index = 0;
                             }
                             if (index >= results.length) {
                                 console.error(`Result array from ${dd_options.service_function} ` +
@@ -234,17 +234,17 @@ define([
                                     'was requested');
                                 return [];
                             }
-                            results = results[index]
-                            var path = dd_options.path_to_selection_items
+                            results = results[index];
+                            var path = dd_options.path_to_selection_items;
                             if (!path) {
-                                path = []
+                                path = [];
                             }
-                            results = Props.getDataItem(results, path)
+                            results = Props.getDataItem(results, path);
                             if (!Array.isArray(results)) {
                                 console.error('Selection items returned from ' +
                                     `${dd_options.service_function} at path /${path.join('/')} ` +
-                                    `in postion ${index} of the returned list are not an array`)
-                                return []
+                                    `in postion ${index} of the returned list are not an array`);
+                                return [];
                             } else {
                                 results.forEach(function(obj, index) {
                                     // could check here that each item is a map? YAGNI

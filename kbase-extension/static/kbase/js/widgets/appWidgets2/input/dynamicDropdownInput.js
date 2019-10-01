@@ -35,7 +35,7 @@ define([
     TimeFormat,
     StringUtil,
     GenericClient,
-    Props,
+    Props
 ) {
     'use strict';
 

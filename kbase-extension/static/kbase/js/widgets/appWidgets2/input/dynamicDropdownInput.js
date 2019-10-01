@@ -15,6 +15,7 @@ define([
     'util/timeFormat',
     'util/string',
     'kbase-generic-client-api',
+    'common/props',
     'KBaseSearchEngineClient',
     'select2',
     'bootstrap',
@@ -33,7 +34,8 @@ define([
     Data,
     TimeFormat,
     StringUtil,
-    GenericClient
+    GenericClient,
+    Props,
 ) {
     'use strict';
 
@@ -185,6 +187,9 @@ define([
         function fetchData(searchTerm) {
             searchTerm = searchTerm || '';
 
+            if (!searchTerm && !dd_options.query_on_empty_input) {
+                return []
+            }
             if (dataSource === 'ftp_staging') {
                 return Promise.resolve(stagingService.search({query: searchTerm}))
                     .then(function(results) {
@@ -219,18 +224,41 @@ define([
                 } else {
                     return Promise.resolve(genericClientCall(call_params))
                         .then(function (results) {
-                            if (results[0][0]) {
-                                results[0].forEach(function(obj, index) {
+                            var index = dd_options.result_array_index
+                            if (!index) {
+                                index = 0
+                            }
+                            if (index >= results.length) {
+                                console.error(`Result array from ${dd_options.service_function} ` +
+                                    `has length ${results.length} but index ${index} ` + 
+                                    'was requested');
+                                return [];
+                            }
+                            results = results[index]
+                            var path = dd_options.path_to_selection_items
+                            if (!path) {
+                                path = []
+                            }
+                            results = Props.getDataItem(results, path)
+                            if (!Array.isArray(results)) {
+                                console.error('Selection items returned from ' +
+                                    `${dd_options.service_function} at path /${path.join('/')} ` +
+                                    `in postion ${index} of the returned list are not an array`)
+                                return []
+                            } else {
+                                results.forEach(function(obj, index) {
+                                    // could check here that each item is a map? YAGNI
                                     obj = flattenObject(obj);
                                     if (!"id" in obj) {
-                                        obj.id = index;
+                                        obj.id = index; // what the fuck
                                     }
+                                    //this blows away any 'text' field
                                     obj.text = obj[dd_options.selection_id];
-                                    results[0][index] = obj;
+                                    results[index] = obj;
                                 });
-                                return results[0];
+                                return results;
+
                             }
-                            return [];
                         });
                 }
             }

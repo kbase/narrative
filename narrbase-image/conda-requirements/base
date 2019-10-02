@@ -6,6 +6,7 @@ chardet
 configobj
 gitpython
 jinja2
+jsonrpcbase
 jsonschema
 markdown
 networkx

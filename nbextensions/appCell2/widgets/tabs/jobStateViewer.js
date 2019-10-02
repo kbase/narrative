@@ -22,15 +22,15 @@ define([
         var label;
         var color;
         switch (jobState) {
-            case 'finished':
+            case 'completed':
                 label = 'success';
                 color = 'green';
                 break;
-            case 'error':
+            case 'suspend':
                 label = 'error';
                 color = 'red';
                 break;
-            case 'terminated':
+            case 'canceled':
                 label = 'cancellation';
                 color = 'orange';
                 break;
@@ -60,43 +60,41 @@ define([
 
             viewModel.launch._attrib.hidden = true;
 
-            if (jobState.updated) {
-                var creation_time = Date.parse(jobState.created + 'Z');
+            if (jobState.creation_time) {
                 // Queue status - at least in or has been in the queue
                 viewModel.queue._attrib.hidden = false;
-                if (jobState.running) {
+
+                if (jobState.exec_start_time) {
                     // Queue Status - show it, and it has finished, so show static elapsed time and
                     //   done't show position in queue.
                     viewModel.queue._attrib.style = { fontWeight: 'normal' };
                     viewModel.queue.active = false;
                     viewModel.queue.label = 'Queued for';
-                    var exec_start_time = Date.parse(jobState.running + 'Z');
-                    viewModel.queue.elapsed = format.niceDuration(exec_start_time - creation_time);
+                    viewModel.queue.elapsed = format.niceDuration(jobState.exec_start_time - jobState.creation_time);
                     viewModel.queue.position.label = '';
                     viewModel.queue.position.number = '';
 
                     // Run Status -- by definition it is running or ran, so show it.
                     viewModel.run._attrib.hidden = false;
 
-                    if (jobState.finished) {
+                    if (jobState.finish_time) {
                         viewModel.run._attrib.style = { fontWeight: 'normal' };
                         viewModel.run.active = false;
                         viewModel.run.label = 'Ran for';
-                        var finish_time = Date.parse(jobState.finished + 'Z');
-                        viewModel.run.elapsed = format.niceDuration(finish_time - exec_start_time);
+                        viewModel.run.elapsed = format.niceDuration(jobState.finish_time - jobState.exec_start_time);
 
                         viewModel.finish._attrib.hidden = false;
                         viewModel.finish._attrib.style = { fontWeight: 'bold' };
                         viewModel.finish.active = true;
-                        viewModel.finish.state = niceState(jobState.status);
-                        viewModel.finish.time = format.niceTime(finish_time);
-                        viewModel.finish.elapsed = format.niceDuration(now - finish_time);
+                        viewModel.finish.state = niceState(jobState.job_state);
+                        viewModel.finish.time = format.niceTime(jobState.finish_time);
+                        viewModel.finish.elapsed = format.niceDuration(now - jobState.finish_time);
 
                     } else {
                         viewModel.run._attrib.style = { fontWeight: 'bold' };
                         viewModel.run.active = true;
                         viewModel.run.label = 'Running ' + ui.loading({ size: null, color: 'green' });
-                        viewModel.run.elapsed = format.niceDuration(now - exec_start_time);
+                        viewModel.run.elapsed = format.niceDuration(now - jobState.exec_start_time);
 
                         viewModel.finish._attrib.hidden = true;
                     }
@@ -105,15 +103,14 @@ define([
                     viewModel.run._attrib.hidden = true;
                     viewModel.run.active = false;
 
-                    if (jobState.finished) {
+                    if (jobState.finish_time) {
                         // This can only happen when a job has been cancelled or errored out during queueing.
 
                         // Queue Status - it is out of the queue
                         viewModel.queue._attrib.style = { fontWeight: 'normal' };
                         viewModel.queue.active = false;
                         viewModel.queue.label = 'Queued for';
-                        var finish_time = Date.parse(jobState.finished + 'Z');
-                        viewModel.queue.elapsed = format.niceDuration(finish_time - creation_time);
+                        viewModel.queue.elapsed = format.niceDuration(jobState.finish_time - jobState.creation_time);
                         viewModel.queue.position.label = '';
                         viewModel.queue.position.number = '';
 
@@ -121,9 +118,9 @@ define([
                         viewModel.finish._attrib.hidden = false;
                         viewModel.finish._attrib.style = { fontWeight: 'bold' };
                         viewModel.finish.active = true;
-                        viewModel.finish.state = niceState(jobState.status);
-                        viewModel.finish.time = format.niceTime(finish_time);
-                        viewModel.finish.elapsed = format.niceDuration(now - finish_time);
+                        viewModel.finish.state = niceState(jobState.job_state);
+                        viewModel.finish.time = format.niceTime(jobState.finish_time);
+                        viewModel.finish.elapsed = format.niceDuration(now - jobState.finish_time);
                     } else {
                         // Queue Status - in the queue
                         viewModel.queue._attrib.style = { fontWeight: 'bold' };
@@ -136,7 +133,7 @@ define([
                             viewModel.queue.position.label = '';
                             viewModel.queue.position.number = '';
                         }
-                        viewModel.queue.elapsed = format.niceDuration(now - creation_time);
+                        viewModel.queue.elapsed = format.niceDuration(now - jobState.creation_time);
 
                         // Finished status -- ensure not showing
                         viewModel.finish._attrib.hidden = true;
@@ -335,22 +332,21 @@ define([
 
         function handleJobStatusUpdate(message) {
             jobState = message.jobState;
-            switch (jobState.status) {
+            switch (jobState.job_state) {
                 case 'queued':
-                case 'created':
-                case 'estimating':
-                case 'running':
+                case 'in-progress':
                     startJobUpdates();
                     break;
-                case 'finished':
+                case 'completed':
                 case 'error':
-                case 'terminated':
+                case 'suspend':
+                case 'canceled':
                     stopJobUpdates();
                     break;
                 default:
                     stopJobUpdates();
-                    console.error('Unknown job status', jobState.status, message);
-                    throw new Error('Unknown job status ' + jobState.status);
+                    console.error('Unknown job status', jobState.job_state, message);
+                    throw new Error('Unknown job status ' + jobState.job_state);
             }
         }
 

@@ -85,7 +85,7 @@ define([
                     renderReportView(jobState.widget_info.params);
                 } else {
                     ui.getElement('results').classList.remove('hidden');
-                    ui.setContent('results.body', ui.buildPresentableJson(jobState.job_output.result));
+                    ui.setContent('results.body', ui.buildPresentableJson(jobState.result));
                 }
 
                 // Look up this app's info to get it's suggested next steps.

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import json
 import uuid
@@ -12,7 +13,7 @@ from biokbase.narrative.app_util import (
     check_tag,
     system_variable
 )
-from .upa import (
+from upa import (
     is_upa,
     is_ref
 )
@@ -104,7 +105,7 @@ class WidgetManager(object):
         """
         check_tag(tag, raise_exception=True)
 
-        methods = list(self._sm.app_specs[tag].values())
+        methods = self._sm.app_specs[tag].values()
         all_widgets = dict()
 
         # keys = widget names / namespaced require path / etc.
@@ -156,13 +157,13 @@ class WidgetManager(object):
                                 in_type = spec_param['field_type']
                                 if in_type == 'text':
                                     param_type = 'string'
-                                    if 'text_options' in spec_param:
+                                    if spec_param.has_key('text_options'):
                                         validate_as = spec_param['text_options'].get('validate_as', None)
                                         if validate_as == 'int':
                                             param_type = 'int'
                                         elif validate_as == 'float':
                                             param_type = 'float'
-                                        if 'valid_ws_types' in spec_param['text_options']:
+                                        if spec_param['text_options'].has_key('valid_ws_types'):
                                             allowed_types.update(spec_param['text_options']['valid_ws_types'])
                                 elif param_type == 'textarea':
                                     param_type = 'string'

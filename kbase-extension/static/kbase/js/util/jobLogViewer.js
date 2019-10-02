@@ -756,14 +756,12 @@ define([
         function handleJobStatusUpdate(message) {
             // if the job is finished, we don't want to reflect
             // this in the ui, and disable play/stop controls.
-            var jobStatus = message.jobState.status,
+            var jobStatus = message.jobState.job_state,
                 mode = fsm.getCurrentState().state.mode,
                 newState;
             switch (mode) {
             case 'new':
                 switch (jobStatus) {
-                case 'created':
-                case 'estimating':
                 case 'queued':
                     startJobUpdates();
                     newState = {
@@ -771,7 +769,7 @@ define([
                         auto: true
                     };
                     break;
-                case 'running':
+                case 'in-progress':
                     startJobUpdates();
                     startAutoFetch();
                     newState = {
@@ -779,7 +777,7 @@ define([
                         auto: true
                     };
                     break;
-                case 'finished':
+                case 'completed':
                     requestLatestJobLog();
                     stopJobUpdates();
                     newState = {
@@ -787,7 +785,14 @@ define([
                     };
                     break;
                 case 'error':
-                case 'terminated':
+                case 'suspend':
+                    requestLatestJobLog();
+                    stopJobUpdates();
+                    newState = {
+                        mode: 'error'
+                    };
+                    break;
+                case 'canceled':
                     requestLatestJobLog();
                     stopJobUpdates();
                     newState = {
@@ -802,25 +807,28 @@ define([
                 break;
             case 'queued':
                 switch (jobStatus) {
-                case 'created':
-                case 'estimating':
                 case 'queued':
                     // no change
                     break;
-                case 'running':
+                case 'in-progress':
                     newState = {
                         mode: 'active',
                         auto: true
                     };
                     break;
                     // may happen that the job state jumps over in-progress...
-                case 'finished':
+                case 'completed':
                     newState = {
                         mode: 'complete'
                     };
                     break;
                 case 'error':
-                case 'terminated':
+                case 'suspend':
+                    newState = {
+                        mode: 'error'
+                    };
+                    break;
+                case 'canceled':
                     newState = {
                         mode: 'canceled'
                     };
@@ -835,16 +843,21 @@ define([
                 case 'queued':
                     // this should not occur!
                     break;
-                case 'running':
+                case 'in-progress':
                     startAutoFetch();
                     break;
-                case 'finished':
+                case 'completed':
                     newState = {
                         mode: 'complete'
                     };
                     break;
                 case 'error':
-                case 'terminated':
+                case 'suspend':
+                    newState = {
+                        mode: 'error'
+                    };
+                    break;
+                case 'canceled':
                     newState = {
                         mode: 'canceled'
                     };
@@ -856,7 +869,7 @@ define([
                 break;
             case 'complete':
                 switch (jobStatus) {
-                case 'finished':
+                case 'completed':
                     return;
                 default:
                     // technically, an error, what to do?
@@ -864,7 +877,7 @@ define([
                 }
             case 'canceled':
                 switch (jobStatus) {
-                case 'terminated':
+                case 'canceled':
                     return;
                 default:
                     console.error('Unexpected log status ' + jobStatus + ' for "canceled" state');

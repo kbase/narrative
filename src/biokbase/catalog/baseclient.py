@@ -5,6 +5,8 @@
 #
 ############################################################
 
+from __future__ import print_function
+
 import json as _json
 import requests as _requests
 import random as _random

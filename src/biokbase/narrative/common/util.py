@@ -13,7 +13,7 @@ import time
 from .kvp import KVP_EXPR, parse_kvp
 from biokbase.workspace.client import Workspace as WS2
 from biokbase.workspace.baseclient import ServerError
-from urllib.error import URLError
+from urllib2 import URLError
 
 def kbase_debug_mode():
     return bool(os.environ.get('KBASE_DEBUG', None))
@@ -64,7 +64,7 @@ class _KBaseEnv(object):
     # Dict emulation
 
     def __iter__(self):
-        return iter(self.keys())
+        return self.iterkeys()
 
     def __getitem__(self, name):
         return getattr(self, name)
@@ -73,10 +73,10 @@ class _KBaseEnv(object):
         return name in self._defaults
 
     def keys(self):
-        return list(self._defaults.keys())
+        return self._defaults.keys()
 
     def iterkeys(self):
-        return iter(self._defaults.keys())
+        return self._defaults.iterkeys()
 
     def __str__(self):
         return ', '.join(['{}: {}'.format(k, self[k])

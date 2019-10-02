@@ -4,7 +4,6 @@ from biokbase.narrative_method_store.client import NarrativeMethodStore
 from biokbase.userandjobstate.client import UserAndJobState
 from biokbase.catalog.Client import Catalog
 from biokbase.service.Client import Client as ServiceClient
-from biokbase.execution_engine2.execution_engine2Client import execution_engine2
 
 from biokbase.narrative.common.url_config import URLS
 __clients = dict()
@@ -34,8 +33,6 @@ def __init_client(client_name, token=None):
         c = Catalog(URLS.catalog, token=token)
     elif client_name == 'service' or client_name == 'service_wizard':
         c = ServiceClient(URLS.service_wizard, use_url_lookup=True, token=token)
-    elif client_name == 'execution_engine2' or client_name == 'execution_engine':
-        c = execution_engine2(URLS.execution_engine2, token=token)
     elif client_name == 'job_service_mock':
         c = JobServiceMock()
     else:

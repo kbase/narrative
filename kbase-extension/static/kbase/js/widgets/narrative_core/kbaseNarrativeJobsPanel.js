@@ -81,7 +81,7 @@ define([
             Handlebars.registerHelper('colorStatus', function (status) {
                 var s = status.string.toLowerCase();
                 switch (s) {
-                case 'running':
+                case 'in-progress':
                     return '<b>' + status + '</b>';
                 case 'queued':
                     return '<b>' + status + '</b>';
@@ -683,7 +683,7 @@ define([
 
                     if (jobState) {
                         jobState = jobState.toLowerCase();
-                        if (jobState === 'queued' || jobState === 'running') {
+                        if (jobState === 'queued' || jobState === 'running' || jobState === 'in-progress') {
                             warningText = 'This job is currently running on KBase servers! Removing it will attempt to stop the running job.';
                         } else if (jobState === 'completed') {
                             warningText = 'This job has completed running. You may safely remove it without affecting your Narrative.';
@@ -785,7 +785,7 @@ define([
         jobIsIncomplete: function (status) {
             if (status) {
                 status = status.toLowerCase();
-                return (status === 'running' || status === 'queued');
+                return (status === 'in-progress' || status === 'queued');
             } else
                 return true;
         },

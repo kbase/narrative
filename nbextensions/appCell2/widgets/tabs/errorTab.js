@@ -100,8 +100,8 @@ define([
                 ui = UI.make({ node: container });
 
                 var viewModel;
-                if (model.hasItem('exec.jobState.errormsg')) {
-                    viewModel = convertJobError(model.getItem('exec.jobState.errormsg'));
+                if (model.hasItem('exec.jobState.error')) {
+                    viewModel = convertJobError(model.getItem('exec.jobState.error'));
                 } else if (model.hasItem('internalError')) {
                     viewModel = convertInternalError(model.getItem('internalError'));
                 } else {

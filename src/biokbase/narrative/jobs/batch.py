@@ -2,7 +2,7 @@
 A collection of helpful utilities for running batches of jobs.
 """
 from biokbase.narrative.staging.helper import Helper as StagingHelper
-from . import specmanager
+import specmanager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import (
     system_variable
@@ -254,7 +254,7 @@ def generate_input_batch(app, tag='release', **kwargs):
     # Initial checking, make sure all kwargs exist as params.
     input_vals = dict()
     output_vals = dict()
-    for k, v in kwargs.items():
+    for k, v in kwargs.iteritems():
         if k not in spec_params_dict:
             raise ValueError("{} is not a parameter".format(k))
         elif spec_params_dict[k].get('is_output'):
@@ -274,9 +274,7 @@ def generate_input_batch(app, tag='release', **kwargs):
     batch_inputs = list()
     param_ids = input_vals.keys()
     product_inputs = [input_vals[k] for k in param_ids]
-    batch_size = 1
-    for p in product_inputs:
-        batch_size *= len(p) #reduce(lambda x, y: x*y, [len(p) for p in product_inputs])
+    batch_size = reduce(lambda x, y: x*y, [len(p) for p in product_inputs])
     # prepare output values
     output_vals = _prepare_output_vals(output_vals, spec_params_dict, batch_size)
 
@@ -293,7 +291,7 @@ def generate_input_batch(app, tag='release', **kwargs):
             else:
                 next_input[name] = p[idx]
         # handle output params
-        for out_key, out_val in output_vals.items():
+        for out_key, out_val in output_vals.iteritems():
             if isinstance(out_val, list):
                 next_input[out_key] = out_val[batch_count]
             else:
@@ -315,7 +313,7 @@ def _flatten_params(d):
     Group params are only one level deep, right?
     """
     flat = dict()
-    for k, v in d.items():
+    for k, v in d.iteritems():
         if isinstance(v, dict):
             flat.update(_flatten_params(v))
         elif isinstance(v, list):
@@ -341,7 +339,7 @@ def _prepare_output_vals(output_vals, spec_params_dict, batch_size):
     If anything fails, raises a ValueError.
     """
     parsed_out_vals = deepcopy(output_vals)  # avoid side effects
-    for p_id, p in spec_params_dict.items():
+    for p_id, p in spec_params_dict.iteritems():
         val = output_vals.get(p_id)
         if val:
             if isinstance(val, list):

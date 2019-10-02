@@ -2,9 +2,8 @@
 import biokbase.auth as auth
 from biokbase.narrative.common.url_config import URLS
 
-import urllib.parse
-import urllib.request
-import urllib.error
+import urllib
+import urllib2
 import json
 import os
 
@@ -51,16 +50,16 @@ class Helper(object):
 
         data = None
         if values:
-            data = urllib.parse.urlencode(values)
+            data = urllib.urlencode(values)
 
         if not headers:
             headers = {"Authorization": self._token}
 
-        req = urllib.request.Request(end_point, data, headers)
+        req = urllib2.Request(end_point, data, headers)
         req.get_method = lambda: method
         try:
-            response = urllib.request.urlopen(req)
-        except urllib.error.URLError as e:
+            response = urllib2.urlopen(req)
+        except urllib2.URLError as e:
             error_msg = 'The server could not fulfill the request.\n'
 
             server_msg = e.read()

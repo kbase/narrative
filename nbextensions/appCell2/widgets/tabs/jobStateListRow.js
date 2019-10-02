@@ -16,7 +16,7 @@ define([
     function niceState(jobState) {
         var label, icon, color;
         switch (jobState) {
-        case 'finished':
+        case 'completed':
             label = 'success';
             icon = 'fa fa-check';
             color = 'green';
@@ -26,17 +26,22 @@ define([
             icon = 'fa fa-angle-double-right';
             color = 'green';
             break;
-        case 'running':
+        case 'in-progress':
             label = jobState;
             icon = 'fa fa-spinner';
             color = 'green';
+            break;
+        case 'suspend':
+            label = 'suspended';
+            icon = 'fa fa-pause';
+            color = 'red';
             break;
         case 'error':
             label = jobState;
             icon = 'fa fa-times';
             color = 'red';
             break;
-        case 'terminated':
+        case 'canceled':
             label = jobState;
             icon = 'fa fa-times';
             color = 'orange';

@@ -7,7 +7,6 @@
 # script.
 # (recipe here)
 # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
-from __future__ import print_function
 
 import subprocess
 import sys
@@ -33,7 +32,7 @@ nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"
               '--port={}'.format(JUPYTER_PORT)]
 
 if not hasattr(sys, 'real_prefix'):
-    nb_command[0] = 'narrative-venv/bin/kbase-narrative'
+    nb_command[0] = 'kbase-narrative'
 
 nb_server = subprocess.Popen(nb_command,
     stderr=subprocess.STDOUT,

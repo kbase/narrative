@@ -2,13 +2,13 @@
 Tests for the app_util module
 """
 import unittest
-from narrative_mock.mockclients import (
+from .narrative_mock.mockclients import (
     get_mock_client,
     MockStagingHelper
 )
 import os
 import mock
-import util
+from . import util
 from biokbase.narrative.jobs.batch import (
     list_objects,
     list_files,
@@ -76,24 +76,24 @@ class BatchTestCase(unittest.TestCase):
         biokbase.narrative.jobs.specmanager.SpecManager().reload()
         scaffold = get_input_scaffold("kb_trimmomatic/run_trimmomatic")
         scaffold_standard = {
-            u'adapter_clip': [{
-                u'adapterFa': None,
-                u'palindrome_clip_threshold': None,
-                u'seed_mismatches': None,
-                u'simple_clip_threshold': None
+            'adapter_clip': [{
+                'adapterFa': None,
+                'palindrome_clip_threshold': None,
+                'seed_mismatches': None,
+                'simple_clip_threshold': None
             }],
-            u'crop_length': None,
-            u'head_crop_length': None,
-            u'input_reads_ref': None,
-            u'leading_min_quality': None,
-            u'min_length': None,
-            u'output_reads_name': None,
-            u'sliding_window': {
-                u'sliding_window_min_quality': None,
-                u'sliding_window_size': None
+            'crop_length': None,
+            'head_crop_length': None,
+            'input_reads_ref': None,
+            'leading_min_quality': None,
+            'min_length': None,
+            'output_reads_name': None,
+            'sliding_window': {
+                'sliding_window_min_quality': None,
+                'sliding_window_size': None
             },
-            u'trailing_min_quality': None,
-            u'translate_to_phred33': None
+            'trailing_min_quality': None,
+            'translate_to_phred33': None
         }
         self.assertEqual(scaffold_standard, scaffold)
 
@@ -115,24 +115,24 @@ class BatchTestCase(unittest.TestCase):
         biokbase.narrative.jobs.specmanager.SpecManager().reload()
         scaffold = get_input_scaffold("kb_trimmomatic/run_trimmomatic", use_defaults=True)
         scaffold_standard = {
-            u'adapter_clip': [{
-                u'adapterFa': None,
-                u'palindrome_clip_threshold': u'30',
-                u'seed_mismatches': u'2',
-                u'simple_clip_threshold': u'10'
+            'adapter_clip': [{
+                'adapterFa': None,
+                'palindrome_clip_threshold': '30',
+                'seed_mismatches': '2',
+                'simple_clip_threshold': '10'
             }],
-            u'crop_length': None,
-            u'head_crop_length': u'0',
-            u'input_reads_ref': None,
-            u'leading_min_quality': u'3',
-            u'min_length': u'36',
-            u'output_reads_name': None,
-            u'sliding_window': {
-                u'sliding_window_min_quality': u'15',
-                u'sliding_window_size': u'4'
+            'crop_length': None,
+            'head_crop_length': '0',
+            'input_reads_ref': None,
+            'leading_min_quality': '3',
+            'min_length': '36',
+            'output_reads_name': None,
+            'sliding_window': {
+                'sliding_window_min_quality': '15',
+                'sliding_window_size': '4'
             },
-            u'trailing_min_quality': u'3',
-            u'translate_to_phred33': u'1'
+            'trailing_min_quality': '3',
+            'translate_to_phred33': '1'
         }
         self.assertEqual(scaffold_standard, scaffold)
 

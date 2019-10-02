@@ -64,7 +64,7 @@ div#notebook {
             underscore : 'components/underscore/underscore-min',
             backbone : 'components/backbone/backbone-min',
             bootstrap: 'components/bootstrap/js/bootstrap.min',
-            'jquery-ui': 'components/jquery-ui/ui/minified/jquery-ui.min',
+            'jquery-ui': 'components/jquery-ui/jquery-ui.min',
             kbaseAuthenticatedWidget: 'kbase/js/widgets/kbaseStaticAuthenticatedWidget'
         },
         shim: {

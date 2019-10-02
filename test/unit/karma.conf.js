@@ -94,7 +94,7 @@ module.exports = function (config) {
             '/test/': '/base/test/'
         },
         client: {
-          requireJsShowNoTimestampsError: '^(?!.*(^/narrative/static/))'
+            requireJsShowNoTimestampsError: '^(?!.*(^/narrative/static/))'
         },
         concurrency: Infinity
 

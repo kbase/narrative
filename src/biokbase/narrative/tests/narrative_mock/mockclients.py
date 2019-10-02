@@ -1,6 +1,7 @@
 from ..util import TestConfig
 from biokbase.workspace.baseclient import ServerError
 
+
 class MockClients(object):
     """
     Mock KBase service clients as needed for Narrative backend tests.
@@ -31,9 +32,10 @@ class MockClients(object):
     """
     def __init__(self, token=None):
         if token is not None:
-            assert isinstance(token, basestring)
+            assert isinstance(token, str)
         self.config = TestConfig()
         self.job_info = self.config.load_json_file(self.config.get('jobs', 'job_info_file'))
+        self.ee2_job_info = self.config.load_json_file(self.config.get('jobs', 'ee2_job_info_file'))
         self.test_job_id = self.config.get('app_tests', 'test_job_id')
 
     # ----- User and Job State functions -----
@@ -43,6 +45,9 @@ class MockClients(object):
 
     def delete_job(self, job):
         return "bar"
+
+    def check_workspace_jobs(self, params):
+        return self.ee2_job_info
 
     # ----- Narrative Method Store functions ------
 
@@ -54,7 +59,6 @@ class MockClients(object):
 
     def get_method_full_info(self, params):
         return self.config.load_json_file(self.config.get('specs', 'app_infos_file'))
-
 
     # ----- Workspace functions -----
 
@@ -89,50 +93,49 @@ class MockClients(object):
         But we introspect the params a little bit to return something crafted to the test.
         Add more to this if it's helpful.
         """
-        random_obj_info = [5, u'Sbicolor2', u'KBaseGenomes.Genome-12.3', u'2017-03-31T23:42:59+0000', 1,
-            u'wjriehl', 18836, u'wjriehl:1490995018528', u'278abf8f0dbf8ab5ce349598a8674a6e', 109180038, None]
+        random_obj_info = [5, 'Sbicolor2', 'KBaseGenomes.Genome-12.3', '2017-03-31T23:42:59+0000', 1,
+            'wjriehl', 18836, 'wjriehl:1490995018528', '278abf8f0dbf8ab5ce349598a8674a6e', 109180038, None]
 
         obj_info = random_obj_info
         infos = []
         for obj_ident in params.get('objects', [{'name': 'Sbicolor2', 'workspace': 'whatever'}]):
             if obj_ident.get('name') == 'rhodobacterium.art.q20.int.PE.reads':
                 infos.append([7,
-                    u'rhodobacterium.art.q20.int.PE.reads',
-                    u'KBaseFile.PairedEndLibrary-2.1',
-                    u'2018-06-26T19:31:41+0000',
+                    'rhodobacterium.art.q20.int.PE.reads',
+                    'KBaseFile.PairedEndLibrary-2.1',
+                    '2018-06-26T19:31:41+0000',
                     1,
-                    u'wjriehl',
+                    'wjriehl',
                     12345,
-                    u'random_workspace',
-                    u'a20f2df66f973de41b84164f2c2bedd3',
+                    'random_workspace',
+                    'a20f2df66f973de41b84164f2c2bedd3',
                     765,
                     None])
             elif obj_ident.get('name') == 'rhodobacterium.art.q10.PE.reads':
                 infos.append([8,
-                    u'rhodobacterium.art.q10.PE.reads',
-                    u'KBaseFile.PairedEndLibrary-2.1',
-                    u'2018-08-13T23:13:09+0000',
+                    'rhodobacterium.art.q10.PE.reads',
+                    'KBaseFile.PairedEndLibrary-2.1',
+                    '2018-08-13T23:13:09+0000',
                     1,
-                    u'wjriehl',
+                    'wjriehl',
                     12345,
-                    u'random_workspace',
-                    u'9f014a3c08368537a40fa2e4b90f9cab',
+                    'random_workspace',
+                    '9f014a3c08368537a40fa2e4b90f9cab',
                     757,
                     None])
             else:
                 infos.append(random_obj_info)
         return infos
 
-
-        infos = [[5, u'Sbicolor2', u'KBaseGenomes.Genome-12.3', u'2017-03-31T23:42:59+0000', 1,
-                  u'wjriehl', 18836, u'wjriehl:1490995018528', u'278abf8f0dbf8ab5ce349598a8674a6e',
+        infos = [[5, 'Sbicolor2', 'KBaseGenomes.Genome-12.3', '2017-03-31T23:42:59+0000', 1,
+                  'wjriehl', 18836, 'wjriehl:1490995018528', '278abf8f0dbf8ab5ce349598a8674a6e',
                   109180038, None]]
         ret_val = infos * len(params.get('objects', [0]))
         return ret_val
 
     def get_object_info3(self, params):
-        infos = [[5, u'Sbicolor2', u'KBaseGenomes.Genome-12.3', u'2017-03-31T23:42:59+0000', 1,
-                  u'wjriehl', 18836, u'wjriehl:1490995018528', u'278abf8f0dbf8ab5ce349598a8674a6e',
+        infos = [[5, 'Sbicolor2', 'KBaseGenomes.Genome-12.3', '2017-03-31T23:42:59+0000', 1,
+                  'wjriehl', 18836, 'wjriehl:1490995018528', '278abf8f0dbf8ab5ce349598a8674a6e',
                   109180038, None]]
         paths = [['18836/5/1']]
         num_objects = len(params.get('objects', [0]))
@@ -150,25 +153,14 @@ class MockClients(object):
         return "done"
 
     def get_job_params(self, job_id):
-        return [self.job_info.get('job_param_info', {}).get(job_id, None)]
+        return self.ee2_job_info.get(job_id, {}).get('job_input', {})
 
-    def check_job(self, job_id):
-        return self.job_info.get('job_status_info', {}).get(job_id, None)
+    def check_job(self, params):
+        return self.ee2_job_info.get(params.get('job_id'), {})
 
     def check_jobs(self, params):
-        states = dict()
-        job_params = dict()
-        for job_id in params['job_ids']:
-            states[job_id] = self.job_info.get('job_status_info', {}).get(job_id, {})
-        if params.get('with_job_params', 0) == 1:
-            for job_id in params['job_ids']:
-                job_params[job_id] = self.job_info.get('job_param_info', {}).get(job_id, None)
-        ret = {
-            'job_states': states
-        }
-        if len(job_params) > 0:
-            ret['job_params'] = job_params
-        return ret
+        job_ids = params.get('job_ids')
+        return {job_id: self.ee2_job_info[job_id] for job_id in job_ids}
 
     def get_job_logs(self, params):
         """

@@ -192,7 +192,7 @@ def update_method_cell(cell, format_ver):
         'type': 'app',
         'attributes': {
             'title': method_info.get('name', 'Unnamed App'),
-            'id': unicode(uuid.uuid4()),
+            'id': str(uuid.uuid4()),
             'status': 'new',
             'created': ts,          # default to last saved time
             'lastLoaded': ts,
@@ -227,12 +227,12 @@ def update_method_cell(cell, format_ver):
     source_key = 'input' if format_ver == 3 else 'source'
     exec_count_key = 'prompt_number' if format_ver == 3 else 'execution_count'
 
-    cell['cell_type'] = u'code'
+    cell['cell_type'] = 'code'
     cell[exec_count_key] = None
     cell['outputs'] = []
     cell['metadata']['kbase'] = new_meta
     del cell['metadata']['kb-cell']
-    cell[source_key] = u''
+    cell[source_key] = ''
     return cell
 
 
@@ -275,7 +275,7 @@ def obsolete_method_cell(cell, app_id, app_name, app_spec, params):
     else:
         format_sug = 'The following replacement apps might help and are available in the Apps menu:<br><ul>' + '\n'.join(['<li>{}</li>'.format(s['spec']['info']['name']) for s in suggestions]) + '</ul>'
 
-    cell['source'] = unicode(base_source.format(app_name, format_params, format_sug))
+    cell['source'] = str(base_source.format(app_name, format_params, format_sug))
     del cell['metadata']['kb-cell']
     return cell
 
@@ -352,7 +352,7 @@ def obsolete_app_cell(cell, app_id, app_name, app_spec, params):
             format_sug += ''.join(['<li>{}</li>'.format(s) for s in s_list['sug']]) + '</ul></li>'
         format_sug += '</ol>'
 
-    cell['source'] = unicode(base_source.format(app_name, format_params, format_sug))
+    cell['source'] = str(base_source.format(app_name, format_params, format_sug))
     del cell['metadata']['kb-cell']
     return cell
 
@@ -376,13 +376,13 @@ def update_output_cell(cell, format_ver):
         elem_output = '\n element.html("<div id=\'' + cell_id + '\' class=\'kb-vis-area\'></div>");\n\n require(["' + widget + '"], function(' + widget + ') { new ' + widget + '(' + cell_node + ', ' + widget_inputs + '); });'
         new_source = "from IPython.display import Javascript\nJavascript(\"\"\"" + elem_output + "\"\"\")"
         js_output = {
-            u'data': {
-                u'text/plain': u'<IPython.core.display.Javascript object>',
-                u'application/javascript': elem_output
+            'data': {
+                'text/plain': '<IPython.core.display.Javascript object>',
+                'application/javascript': elem_output
             },
-            u'execution_count': 1,
-            u'metadata': {},
-            u'output_type': u'execute_result'
+            'execution_count': 1,
+            'metadata': {},
+            'output_type': 'execute_result'
         }
 
         source_key = 'input' if format_ver == 3 else 'source'

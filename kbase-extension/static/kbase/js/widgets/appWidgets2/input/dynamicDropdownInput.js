@@ -188,7 +188,7 @@ define([
             searchTerm = searchTerm || '';
 
             if (!searchTerm && !dd_options.query_on_empty_input) {
-                return [];
+                return Promise.resolve([]);
             }
             if (dataSource === 'ftp_staging') {
                 return Promise.resolve(stagingService.search({query: searchTerm}))
@@ -230,7 +230,7 @@ define([
                             }
                             if (index >= results.length) {
                                 console.error(`Result array from ${dd_options.service_function} ` +
-                                    `has length ${results.length} but index ${index} ` + 
+                                    `has length ${results.length} but index ${index} ` +
                                     'was requested');
                                 return [];
                             }
@@ -370,8 +370,6 @@ define([
                     }
                 }).on('change', function() {
                     doChange();
-                }).on('advanced-shown.kbase', function(e) {
-                    $(e.target).select2({ width: 'resolve' });
                 });
                 events.attachEvents(container);
             });

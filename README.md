@@ -25,8 +25,8 @@ Requires the following:
 ```
 git clone https://github.com/kbase/narrative
 cd narrative
-./scripts/install_narrative.sh -v narr-venv
-source narr-venv/bin/activate
+./scripts/install_narrative.sh -v narrative_venv
+source narrative_venv/bin/activate
 kbase-narrative
 ```
 

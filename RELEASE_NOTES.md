@@ -3,6 +3,10 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
 
+### Version 3.11.3
+- PTV-1308 - Fix problem where users with a Globus account that's not linked to KBase will see an error when trying to access the Globus interface through the upload area.
+- Add GFF Metagenome object upload type.
+
 ### Version 3.11.2
 - Improve load times for the Data Panel and the browser in the data slideout (the "My Data" and "Shared with Me" tabs).
 - Set the Narratives tab to lazy load.

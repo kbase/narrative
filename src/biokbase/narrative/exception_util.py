@@ -1,5 +1,5 @@
 from requests.exceptions import HTTPError
-from biokbase.NarrativeJobService.baseclient import ServerError as NJSServerError
+from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 from biokbase.userandjobstate.baseclient import ServerError as UJSServerError
 
 
@@ -27,7 +27,7 @@ def transform_job_exception(e):
     ServerError - thrown by the server, usually due to a 500 (ish) exception
     HTTPError - a more mundane HTTP exception
     """
-    if isinstance(e, NJSServerError):
+    if isinstance(e, EEServerError):
         return NarrativeException(e.code, e.message, e.name, 'njs')
     elif isinstance(e, UJSServerError):
         return NarrativeException(e.code, e.message, e.name, 'ujs')

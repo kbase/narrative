@@ -241,8 +241,7 @@ class NarrIOTestCase(unittest.TestCase):
         self.assertTrue(result[1] == self.private_nar['ws'] and result[2] == self.private_nar['obj'])
         self.assertEquals(result[0]['metadata']['is_temporary'], 'false')
 
-        ws = Workspace(url=URLS.workspace, token=self.test_token)
-        ws_info = ws.get_workspace_info({'id': result[1]})
+        ws_info = clients.get('workspace').get_workspace_info({'id': result[1]})
         self.assertEquals(ws_info[8]['searchtags'], 'narrative')
         self.assertEquals(ws_info[8]['cell_count'], str(len(nar['cells'])))
         self.logout()
@@ -276,6 +275,7 @@ class NarrIOTestCase(unittest.TestCase):
         # logout
         self.login(token=self.private_token)
         ws_client = clients.get('workspace')
+        print(f"SETTING WRITE PERM FOR {self.test_user} ON WS {self.unauth_nar['ws']}")
         ws_client.set_permissions({'id': self.unauth_nar['ws'], 'new_permission': 'w', 'users': [self.test_user]})
         self.logout()
         # login as test_user

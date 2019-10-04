@@ -83,6 +83,16 @@ class JobManagerTest(unittest.TestCase):
     def test_list_jobs_html(self):
         jobs_html = self.jm.list_jobs()
         self.assertIsInstance(jobs_html, HTML)
+        html = jobs_html.data
+        print(html)
+        self.assertIn("<td>5d64935ab215ad4128de94d6</td>", html)
+        self.assertIn("<td>NarrativeTest/test_editor</td>", html)
+        self.assertIn("<td>2019-08-26 17:54:48+00:00</td>", html)
+        self.assertIn("<td>fake_test_user</td>", html)
+        self.assertIn("<td>finished</td>", html)
+        self.assertIn("<td>Not started</td>", html)
+        self.assertIn("<td>Incomplete</td>", html)
+
 
     @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     def test_cancel_job_good(self):

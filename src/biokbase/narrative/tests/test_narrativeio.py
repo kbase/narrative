@@ -275,7 +275,6 @@ class NarrIOTestCase(unittest.TestCase):
         # logout
         self.login(token=self.private_token)
         ws_client = clients.get('workspace')
-        print(f"SETTING WRITE PERM FOR {self.test_user} ON WS {self.unauth_nar['ws']}")
         ws_client.set_permissions({'id': self.unauth_nar['ws'], 'new_permission': 'w', 'users': [self.test_user]})
         self.logout()
         # login as test_user

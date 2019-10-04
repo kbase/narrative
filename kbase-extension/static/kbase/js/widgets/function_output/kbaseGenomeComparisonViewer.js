@@ -74,16 +74,20 @@ define (
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table"/>');
         		tabOverview.append(tableOver);
         		tableOver.append('<tr><td>Genome comparison object</td><td>'+info[1]+'</td></tr>');
-        		tableOver.append('<tr><td>Genome comparison workspace</td><td>'+info[7]+'</td></tr>');
-        		tableOver.append('<tr><td>Core functions</td><td>'+object.core_functions+'</td></tr>');
-        		tableOver.append('<tr><td>Core families</td><td>'+object.core_families+'</td></tr>');
-        		if (object.protcomp_ref) {
-        			tableOver.append('<tr><td>Protein Comparison</td><td>'+object.protcomp_ref+'</td></tr>');
+				if (object.protcomp_ref) {
+        			tableOver.append('<tr><td>Genome Comparison</td><td>'+object.protcomp_ref+'</td></tr>');
         		} else {
-        			tableOver.append('<tr><td>Protein Comparison</td><td>'+object.pangenome_ref+'</td></tr>');
+        			tableOver.append('<tr><td>Pangenome</td><td>'+object.pangenome_ref+'</td></tr>');
         		}
-        		tableOver.append('<tr><td>Owner</td><td>'+info[5]+'</td></tr>');
-        		tableOver.append('<tr><td>Creation</td><td>'+info[3]+'</td></tr>');
+				//tableOver.append('<tr><td>Genome comparison workspace</td><td>'+info[7]+'</td></tr>');
+        		tableOver.append('<tr><td>Core functions</td><td>'+object.core_functions+'</td></tr>');
+				tableOver.append('<tr><td>Total functions</td><td>'+object.functions.length+'</td></tr>');
+				tableOver.append('<tr><td>Core families</td><td>'+object.core_families+'</td></tr>');
+				tableOver.append('<tr><td>Total families</td><td>'+object.families.length+'</td></tr>');
+        		tableOver.append('<tr><td>Number of Genomes</td><td>'+info[10]["Number genomes"]+'</td></tr>');
+
+        		//tableOver.append('<tr><td>Owner</td><td>'+info[5]+'</td></tr>');
+        		//tableOver.append('<tr><td>Creation</td><td>'+info[3]+'</td></tr>');
         		///////////////////////////////////// Genomes table ////////////////////////////////////////////
         		var tabGenomes = $("<div/>");
     			tabObj.addTab({tab: 'Genome Comparison', content: tabGenomes, canDelete : false, show: false});
@@ -93,11 +97,12 @@ define (
         		var headings = [
 					"Genome","Legend"
 				];
-				for (var i in genomes) {
+				var numGenomes = genomes.length;
+				for (var i=0; i<numGenomes; i++) {
 					headings.push("G"+(i+1));
 				}
 				tableGenomes.append('<tr><th><b>'+headings.join('</b></th><th><b>')+'</b></th></tr>');
-				for (var i in genomes) {
+				for (var i=0; i<numGenomes; i++) {
             		var genome = genomes[i];
             		var row = [
             			"<b>G"+(i+1)+"</b>-"+genome.name,"# of families:<br># of functions:"

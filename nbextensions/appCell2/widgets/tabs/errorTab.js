@@ -17,6 +17,9 @@ define([
     function convertJobError(errorInfo) {
         var errorId = new Uuid(4).format(),
             errorType, errorMessage, errorDetail;
+        if (typeof errorInfo !== 'object') {
+            errorInfo = JSON.parse(errorInfo);
+        }
         if (errorInfo.error) {
             // Classic KBase rpc error message
             errorType = errorInfo.name;
@@ -49,7 +52,6 @@ define([
                 return li(adv);
             })),
             detail: errorInfo.detail
-                // info:  errorInfo ? html.makeObjTable(errorInfo.info, {rotated: true, classes: []}) : null
         };
     }
 

@@ -3,7 +3,7 @@ from biokbase.narrative.exception_util import (
     NarrativeException,
     transform_job_exception
 )
-from biokbase.NarrativeJobService.baseclient import ServerError as NJSServerError
+from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 from biokbase.userandjobstate.baseclient import ServerError as UJSServerError
 from requests.exceptions import HTTPError
 import requests
@@ -13,8 +13,8 @@ class ExceptionUtilTestCase(unittest.TestCase):
     def test_transform_njs_err(self):
         code = 1000
         message = "some error message"
-        name = "NJSError"
-        njs_err = NJSServerError(name, code, message)
+        name = "EEError"
+        njs_err = EEServerError(name, code, message)
         nar_err = transform_job_exception(njs_err)
         self.assertEqual(nar_err.code, code)
         self.assertEqual(nar_err.message, message)

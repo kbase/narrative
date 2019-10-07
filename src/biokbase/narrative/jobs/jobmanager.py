@@ -230,7 +230,7 @@ class JobManager(object):
                 </tr>
                 {% for j in jobs %}
                 <tr>
-                    <td>{{ j._id|e }}</td>
+                    <td>{{ j.job_id|e }}</td>
                     <td>{{ j.app_id|e }}</td>
                     <td>{{ j.creation_time|e }}</td>
                     <td>{{ j.owner|e }}</td>

@@ -49,7 +49,6 @@ define([
                 return li(adv);
             })),
             detail: errorInfo.detail
-                // info:  errorInfo ? html.makeObjTable(errorInfo.info, {rotated: true, classes: []}) : null
         };
     }
 

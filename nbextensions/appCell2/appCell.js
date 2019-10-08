@@ -66,7 +66,6 @@ define([
                     showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
 
                 if (showCode) {
-                    // inputArea.addClass('hidden');
                     inputArea.classList.remove('-show');
                 }
                 outputArea.addClass('hidden');
@@ -80,7 +79,6 @@ define([
                     showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
 
                 if (showCode) {
-                    // inputArea.removeClass('hidden');
                     if (!inputArea.classList.contains('-show')) {
                         inputArea.classList.add('-show');
                         cell.code_mirror.refresh();
@@ -109,8 +107,6 @@ define([
             };
             cell.toggleBatch = function() {
                 cellBus.emit('toggle-batch-mode');
-                // var isBatch = utils.getCellMeta(cell, 'kbase.appCell.user-settings.batchMode');
-                // utils.setCellMeta(cell, 'kbase.appCell.user-settings.batchMode', !isBatch, true);
             };
         }
 
@@ -141,8 +137,8 @@ define([
                 // TODO: the code cell input widget should instantiate its state
                 // from the cell!!!!
                 cellBus = runtime.bus().makeChannelBus({
-                        description: 'Parent comm for The Cell Bus'
-                    });
+                    description: 'Parent comm for The Cell Bus'
+                });
                 var dom = Dom.make({ node: cell.input[0] }),
                     kbaseNode = dom.createNode(div({ dataSubareaType: 'app-cell-input' }));
                 appCellWidget = AppCellWidget.make({
@@ -192,20 +188,6 @@ define([
                     })
                     .catch(function(err) {
                         console.error('ERROR starting app cell', err);
-                        // var ui = UI.make({
-                        //     node: document.body
-                        // });
-                        // return ui.showInfoDialog({
-                        //     title: 'Error Starting App Cell',
-                        //     body: div({
-                        //         class: 'alert alert-danger'
-                        //     }, [
-                        //         p('There was an error starting the app cell.'),
-                        //         p('The error is:'),
-                        //         p(err.message)
-                        //     ])
-                        // });
-                        // TODO:
                         return appCellWidget.stop()
                             .then(function() {
                                 return appCellWidget.detach();

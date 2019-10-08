@@ -787,6 +787,12 @@ define([
                     };
                     break;
                 case 'error':
+                    requestLatestJobLog();
+                    stopJobUpdates();
+                    newState = {
+                        mode: 'error'
+                    };
+                    break;
                 case 'terminated':
                     requestLatestJobLog();
                     stopJobUpdates();
@@ -820,6 +826,10 @@ define([
                     };
                     break;
                 case 'error':
+                    newState = {
+                        mode: 'error'
+                    };
+                    break;
                 case 'terminated':
                     newState = {
                         mode: 'canceled'
@@ -844,6 +854,10 @@ define([
                     };
                     break;
                 case 'error':
+                    newState = {
+                        mode: 'error'
+                    };
+                    break;
                 case 'terminated':
                     newState = {
                         mode: 'canceled'

@@ -1390,6 +1390,7 @@ define([
             fsm.bus.on('exit-error', function() {
                 doExitError();
             });
+
             fsm.bus.on('on-cancelling', function() {
                 doOnCancelling();
             });
@@ -1397,6 +1398,7 @@ define([
             fsm.bus.on('exit-cancelling', function() {
                 doExitCancelling();
             });
+
             fsm.bus.on('on-cancelled', function() {
                 doOnCancelled();
             });
@@ -1765,10 +1767,12 @@ define([
                     // messages, we don't can't rely on the prior state
                     // to inform us about what processing stage the
                     // error occurred in -- we need to inspect the job state.
-                    var errorStage;
-                    if (jobState.running) {
+                    var errorStage = 'running';
+                    if (jobState.finished || jobState.running) {
                         errorStage = 'running';
-                    } else if (jobState.updated) {
+                    } else if (jobState.estimating) {
+                        errorStage = 'estimating';
+                    } else if (jobState.created) {
                         errorStage = 'queued';
                     }
                     if (errorStage) {
@@ -2049,24 +2053,34 @@ define([
             ui.setContent('run-control-panel.status.execMessage', '');
         }
 
+        /**
+         * jobState is the job state object. Mostly, this uses the status field to develop
+         * the message string, but can also use other information (termination code, for
+         * example)
+         * @param {Object} jobState
+         */
         function niceState(jobState) {
+            const status = jobState.status;
             var label;
             var color;
-            switch (jobState) {
+            switch (status) {
             case 'completed':
+            case 'finished':
                 label = 'success';
                 color = 'green';
                 break;
             case 'suspend':
+            case 'error':
                 label = 'error';
                 color = 'red';
                 break;
             case 'canceled':
+            case 'terminated':
                 label = 'cancellation';
                 color = 'orange';
                 break;
             default:
-                label = jobState;
+                label = status;
                 color = 'black';
             }
 
@@ -2086,7 +2100,7 @@ define([
             // show either the clock, if < 24 hours, or the timestamp.
             var message = span([
                 'Finished with ',
-                niceState(jobState.status),
+                niceState(jobState),
                 ' ',
                 span({ dataElement: 'clock' })
             ]);
@@ -2185,7 +2199,7 @@ define([
             // show either the clock, if < 24 hours, or the timestamp.
             var message = span([
                 'Finished with ',
-                niceState(jobState.status),
+                niceState(jobState),
                 ' ',
                 span({ dataElement: 'clock' })
             ]);
@@ -2232,7 +2246,7 @@ define([
             var finish_time = Date.parse(jobState.finished + 'Z');
             var message = span([
                 'Finished with ',
-                niceState(jobState.status),
+                niceState(jobState),
                 ' on ',
                 format.niceTime(finish_time),
                 ' (',
@@ -2272,10 +2286,21 @@ define([
 
         function doOnCancelled() {
             var jobState = model.getItem('exec.jobState');
-            var finish_time = Date.parse(jobState.finished + 'Z');
+            var finish_time = Date.parse(jobState.updated + 'Z');
+
+            let label = 'Canceled';
+            if (jobState.termination_code) {
+                const code = jobState.termination_code;
+                if (code == 1 || code == 2 || code == 4) {
+                    label = 'Canceled automatically due to an error';
+                }
+                if (code == 3 || code == 5) {
+                    label = 'Timed out';
+                }
+            }
 
             var message = span([
-                span({ style: { color: 'orange' } }, 'Canceled'),
+                span({ style: { color: 'orange' } }, label),
                 ' on ',
                 format.niceTime(finish_time),
                 ' (',

@@ -227,7 +227,7 @@ define([
                     return this.searchAndCacheOrthologs(query, sortBy, pageNum * this.options.pFamsPerPage, this.options.pFamsPerPage);
                 }.bind(this),
                 decoration: [{
-                    col: 1,
+                    col: 0,
                     type: 'link',
                     clickFunction: function(id) {
                         this.addFamilyTab(this.dataCache[id]);

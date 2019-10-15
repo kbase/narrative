@@ -650,8 +650,8 @@ define ([
             }
 
             // setup the main search button and the results panel and layout
-            var $input = $('<input type="text" class="form-control" placeholder="Search Contigs">');
-            $input.prop('disabled', true);
+            // var $input = $('<input type="text" class="form-control" placeholder="Search Contigs">');
+            // $input.prop('disabled', true);
 
             var isLastQuery = function(result) {
 
@@ -675,8 +675,8 @@ define ([
             $div.append($container);
             var $headerRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-4').append($pagenateDiv) )
-                .append($('<div>').addClass('col-md-4').append($loadingDiv))
-                .append($('<div>').addClass('col-md-4').append($input));
+                .append($('<div>').addClass('col-md-4').append($loadingDiv));
+                // .append($('<div>').addClass('col-md-4').append($input));
             var $resultsRow = $('<div>').addClass('row').css({'margin-top':'15px'})
                 .append($('<div>').addClass('col-md-12').append($resultDiv));
             var $noResultsRow = $('<div>').addClass('row')
@@ -719,7 +719,7 @@ define ([
                 } , 2500);
             };
 
-            function search_contigs(query, start, limit, sort_by) {
+            function search_contigs(start, limit, sort_by) {
                 $errorDiv.empty();
                 return self.metagenomeAPI
                     .callFunc('search_contigs', [{
@@ -843,7 +843,7 @@ define ([
                     setToLoad($loadingDiv);
                     inFlight=true;
                     start=0;
-                    search_contigs($input.val(), start, limit, sort_by)
+                    search_contigs(start, limit, sort_by)
                         .then(function(result) {
                             if(isLastQuery(result)) { renderResult($table, result); }
                             inFlight=false;
@@ -881,9 +881,9 @@ define ([
             setToLoad($loadingDiv);
 
             // Perform the first search
-            search_contigs('', start, limit, sort_by).then(
+            search_contigs(start, limit, sort_by).then(
                 function(results) {
-                    $input.prop('disabled', false);
+                    // $input.prop('disabled', false);
                     renderResult($table, results);
                 });
 
@@ -897,7 +897,7 @@ define ([
                     start = start-limit;
                 }
                 setToLoad($loadingDiv);
-                search_contigs($input.val(),start, limit, sort_by)
+                search_contigs(start, limit, sort_by)
                     .then(function(result) {
                         if(isLastQuery(result)) { renderResult($table, result); }
                     });
@@ -908,7 +908,7 @@ define ([
                 }
                 start = start+limit;
                 setToLoad($loadingDiv);
-                search_contigs($input.val(),start, limit, sort_by)
+                search_contigs(start, limit, sort_by)
                     .then(function(result) {
                         if(isLastQuery(result)) { renderResult($table, result); }
                     });
@@ -918,19 +918,20 @@ define ([
             //put in a slight delay so on rapid typing we don't make a flood of calls
             var fetchTimeout = null;
             // var lastQuery = null;
-            $input.on('input', function() {
-                // if we were waiting on other input, cancel that request
-                if(fetchTimeout) { window.clearTimeout(fetchTimeout); }
-                fetchTimeout = window.setTimeout(function() {
-                    fetchTimeout = null;
-                    setToLoad($loadingDiv);
-                    start=0;
-                    search_contigs($input.val(),start, limit, sort_by)
-                        .then(function(result) {
-                            if(isLastQuery(result)) { renderResult($table, result); }
-                        });
-                }, 300);
-            });
+            /// We are disabling search ability for contigs
+            // $input.on('input', function() {
+            //     // if we were waiting on other input, cancel that request
+            //     if(fetchTimeout) { window.clearTimeout(fetchTimeout); }
+            //     fetchTimeout = window.setTimeout(function() {
+            //         fetchTimeout = null;
+            //         setToLoad($loadingDiv);
+            //         start=0;
+            //         search_contigs(start, limit, sort_by)
+            //             .then(function(result) {
+            //                 if(isLastQuery(result)) { renderResult($table, result); }
+            //             });
+            //     }, 300);
+            // });
 
         },
 

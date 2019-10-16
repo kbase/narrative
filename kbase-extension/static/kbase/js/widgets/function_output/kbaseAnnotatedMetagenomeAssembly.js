@@ -338,43 +338,9 @@ define ([
                 if(rowData['function']) { hasFunc = true; }
 
                 var $td = $('<td>');
-                // if(rowData['ontology_terms']) {
-                //     var o_terms = rowData['ontology_terms'];
-                //     var $elem = $td;
-                //     if(Object.keys(rowData['ontology_terms']).length>2) {
-                //         $elem = $('<div>').css({'resize':'vertical', 'overflow':'auto', 'height':'3em'});
-                //         $td.append($elem);
-                //     }
-                //     var isFirst = true;
-                //     for (var term in o_terms) {
-                //         if(isFirst) isFirst=false;
-                //         else $elem.append('<br>');
-                //         if (o_terms.hasOwnProperty(term)) {
-                //             $elem.append(self.link_to_ontology(term)).append('- ' + o_terms[term]);
-                //             hasOntology = true;
-                //         }
-                //     }
-                // }
                 $tr.append($td);
 
                 $td = $('<td>');
-                // if(rowData['aliases']) {
-                //     var aliases = rowData['aliases'];
-                //     $elem = $td;
-                //     if(Object.keys(rowData['aliases']).length>4) {
-                //         $elem = $('<div>').css({'resize':'vertical', 'overflow':'auto', 'height':'3em'});
-                //         $td.append($elem);
-                //     }
-                //     isFirst = true;
-                //     for (var alias in aliases) {
-                //         if(isFirst) isFirst=false;
-                //         else $elem.append(', ');
-                //         if (aliases.hasOwnProperty(alias)) {
-                //             $elem.append(alias);
-                //             hasAlias = true;
-                //         }
-                //     }
-                // }
                 $tr.append($td);
 
                 if(rowData['global_location']['contig_id']) {
@@ -649,10 +615,6 @@ define ([
                 return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
             }
 
-            // setup the main search button and the results panel and layout
-            // var $input = $('<input type="text" class="form-control" placeholder="Search Contigs">');
-            // $input.prop('disabled', true);
-
             var isLastQuery = function(result) {
 
                 // if(start !== result['start']) {
@@ -676,13 +638,10 @@ define ([
             var $headerRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-4').append($pagenateDiv) )
                 .append($('<div>').addClass('col-md-4').append($loadingDiv));
-                // .append($('<div>').addClass('col-md-4').append($input));
             var $resultsRow = $('<div>').addClass('row').css({'margin-top':'15px'})
                 .append($('<div>').addClass('col-md-12').append($resultDiv));
             var $noResultsRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-12').append($noResultsDiv));
-            // var $errorRow = $('<div>').addClass('row')
-            //     .append($('<div>').addClass('col-md-8').append($errorDiv));
             var $infoRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-4').append($resultsInfoDiv))
                 .append($('<div>').addClass('col-md-8'));
@@ -707,7 +666,6 @@ define ([
 
             // define the functions that do everything
             var setToLoad = function($panel) {
-                //clearInfo();
                 $panel.empty();
                 var $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                 $panel.append($loadingDiv);
@@ -883,7 +841,6 @@ define ([
             // Perform the first search
             search_contigs(start, limit, sort_by).then(
                 function(results) {
-                    // $input.prop('disabled', false);
                     renderResult($table, results);
                 });
 
@@ -917,21 +874,6 @@ define ([
 
             //put in a slight delay so on rapid typing we don't make a flood of calls
             var fetchTimeout = null;
-            // var lastQuery = null;
-            /// We are disabling search ability for contigs
-            // $input.on('input', function() {
-            //     // if we were waiting on other input, cancel that request
-            //     if(fetchTimeout) { window.clearTimeout(fetchTimeout); }
-            //     fetchTimeout = window.setTimeout(function() {
-            //         fetchTimeout = null;
-            //         setToLoad($loadingDiv);
-            //         start=0;
-            //         search_contigs(start, limit, sort_by)
-            //             .then(function(result) {
-            //                 if(isLastQuery(result)) { renderResult($table, result); }
-            //             });
-            //     }, 300);
-            // });
 
         },
 
@@ -1025,7 +967,6 @@ define ([
 
                         var cgb = new ContigBrowserPanel();
                         cgb.data.options.contig = contigWindowData;
-                        //cgb.data.options.svgWidth = self.width - 28;
                         cgb.data.options.onClickFunction = function(svgElement, feature) {
                             self.showFeatureTab(metagenome_ref, feature['original_data']['raw'], pref, tabPane);
                         };
@@ -1385,58 +1326,6 @@ define ([
                 return $tabDiv;
             }
 
-            // function printProtein(sequence, charWrap) {
-            //     var $div = $('<div>').css({'font-family': '"Lucida Console", Monaco, monospace'});
-
-            //     $div.append($('<span>').css({color:'orange'}).append('Small Nonpolar'));
-            //     $div.append(' | ');
-            //     $div.append($('<span>').css({color:'green'}).append('Hydrophobic'));
-            //     $div.append(' | ');
-            //     $div.append($('<span>').css({color:'magenta'}).append('Polar'));
-            //     $div.append(' | ');
-            //     $div.append($('<span>').css({color:'red'}).append('Neg Charged'));
-            //     $div.append(' | ');
-            //     $div.append($('<span>').css({color:'blue'}).append('Pos Charged'));
-            //     $div.append('<br>');
-
-            //     var $posTD = $('<td>').css({'text-align': 'right', 'border':'0', 'color':'#777'});
-            //     var $seqTD = $('<td>').css({'border':'0'});
-            //     var lines = 1;
-            //     for (var i = 0; i < sequence.length; i++) {
-            //         if (i > 0 && i % charWrap === 0) {
-            //             $posTD.append('<br>').append(i+1).append(':&nbsp;');
-            //             $seqTD.append('<br>');
-            //             lines++;
-            //         } else if (i==0) {
-            //             $posTD.append(i+1).append(':&nbsp;');
-            //         }
-
-            //         var color = '#000';
-            //         /*http://www.bioinformatics.nl/~berndb/aacolour.html
-            //         The colour scheme in Lesk, Introduction to Bioinformatics, uses 5 groups (note Histidine):
-            //         Small nonpolar  G, A, S, T  Orange
-            //         Hydrophobic C, V, I, L, P, F, Y, M, W   Green
-            //         Polar   N, Q, H Magenta
-            //         Negatively charged  D, E    Red
-            //         Positively charged  K, R    Blue*/
-            //         var aa = sequence[i];
-            //         if(aa==='G' || aa==='A' || aa==='S' || aa==='T') color='orange';
-            //         if(aa==='C' || aa==='V' || aa==='I' || aa==='L' || aa==='P' ||
-            //            aa==='F' || aa==='Y' || aa==='M' || aa==='W' ) color='green';
-            //         if(aa==='N' || aa==='Q' || aa==='H') color='magenta';
-            //         if(aa==='D' || aa==='E') color='red';
-            //         if(aa==='K' || aa==='R') color='blue';
-            //         $seqTD.append($('<span>').css({'color':color}).append(aa));
-            //     }
-            //     $div.append($('<table>').css({'border':'0','border-collapse':'collapse'}).append(
-            //         $('<tr>').css({'border':'0'}).append($posTD).append($seqTD)));
-
-            //     if(lines>10) {
-            //         $div.css({'height':'10em', 'overflow':'auto', 'resize':'vertical'});
-            //     }
-            //     return $div;
-            // }
-
             function printDNA(sequence, charWrap) {
                 var $div = $('<div>').css({'font-family': '"Lucida Console", Monaco, monospace'});
 
@@ -1506,7 +1395,7 @@ define ([
 
                 tblLabels.push('Feature ID');
                 // Landing pages don't work for all features yet
-                //tblData.push('<a href="/#dataview/'+self.metagenome_ref+'?sub=Feature&subid='+fid+'" target="_blank">'+fid+'</a>');
+                // tblData.push('<a href="/#dataview/'+self.metagenome_ref+'?sub=Feature&subid='+fid+'" target="_blank">'+fid+'</a>');
                 tblData.push(fid);
 
                 tblLabels.push('Aliases');
@@ -1644,31 +1533,6 @@ define ([
                     return cbFormat;
                 };
 
-                // // returns a promise with an arg that gives you the contig length
-                // function getContigData(metagenome_ref, start, limit, sort_by) {
-                //     return self.metagenomeAPI
-                //         .callFunc('search_contigs', [{
-                //             ref: metagenome_ref,
-                //             sort_by: sort_by,
-                //             start: start,
-                //             limit: limit
-                //         }])
-                //         .spread(function (result) {
-                //             var contigData = {};
-                //             if (result['contigs'].length>0) {
-                //                 for(var c=0; c<result['contigs'].length; c++) {
-                //                     if(contig_id === result['contigs'][c]['contig_id']) {
-                //                         contigData = result['contigs'][c];
-                //                         break;
-                //                     }
-                //                 }
-                //             }
-                //             return contigData;
-                //         })
-                //         .catch(function(e) {
-                //             console.error(e);
-                //         });
-                // }
 
                 if (!featureData['global_location']['contig_id']) {
                     $contigBrowser.empty().append('Genomic context is not available.');
@@ -1735,20 +1599,6 @@ define ([
             }
             showGene(featureData);
         },
-
-        //-------------------------------------------------------
-        //-------------------------------------------------------
-        //-------------------------------------------------------
-        //-------------------------------------------------------
-        //-------------------------------------------------------
-        //-------------------------------------------------------
-        //-------------------------------------------------------
-        //-------------------------------------------------------
-        //-------------------------------------------------------
-        //-------------------------------------------------------
-        //-------------------------------------------------------
-        //-------------------------------------------------------
-        //-------------------------------------------------------
 
         loggedInCallback: function (event, auth) {
             if (!this.state.isOk()) {

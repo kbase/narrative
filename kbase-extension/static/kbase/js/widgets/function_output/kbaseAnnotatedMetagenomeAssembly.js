@@ -1692,9 +1692,6 @@ define ([
                         search_length = 40000;
                     }
 
-                    console.log('here are the variables:::')
-                    console.log(search_length, search_stop, search_start, bounds, )
-
                     self.metagenomeAPI
                         .callFunc('search_region', [{
                             ref: metagenome_ref,

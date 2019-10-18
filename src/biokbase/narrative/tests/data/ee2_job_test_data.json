@@ -1,0 +1,25 @@
+{
+    "5d64935ab215ad4128de94d6":
+    {
+        "job_id": "5d64935ab215ad4128de94d6",
+        "user": "fake_test_user",
+        "authstrat": "kbaseworkspace",
+        "wsid": "9999",
+        "status": "finished",
+        "updated": "2019-08-27 02:20:11.891000",
+        "created": "2019-08-26 17:54:48+00:00",
+        "job_input": {"wsid": 123, "method": "method", "requested_release": "requested_release", "params": [{"k_list": [], "k_max": null, "output_contigset_name": "MEGAHIT.contigs"}], "service_ver": "04a6fbf889a4e82a84a227e2d4770fae3fdd9f74", "app_id": "NarrativeTest/test_editor", "source_ws_objects": [], "narrative_cell_info": {"cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278ce", "tag": "dev", "run_id": "6546971e-757a-4a26-8439-325497c6d842"}},
+        "job_output": {"version": "1.1", "result": [{"new_number": 200}], "id": "5d7024304446f0da4ac7eac4"}
+    },
+    "5d64935cb215ad4128de94d7":
+    {
+        "job_id": "5d64935cb215ad4128de94d7",
+        "user": "tgu2",
+        "authstrat": "kbaseworkspace",
+        "wsid": "9999",
+        "status": "created",
+        "updated": "2019-08-27 02:20:12.923000",
+        "created": "2019-08-26 17:54:48+00:00",
+        "job_input": {"wsid": 9999, "method": "MEGAHIT.run_megahit", "params": [{"k_list": [], "k_max": null, "output_contigset_name": "MEGAHIT.contigs"}], "service_ver": "2.2.1", "app_id": "MEGAHIT/run_megahit", "source_ws_objects": ["a/b/c", "e/d"], "parent_job_id": "9998", "narrative_cell_info": {"cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278ce", "tag": "dev", "run_id": "6546971e-757a-4a26-8439-325497c6d842"}}
+    }
+}

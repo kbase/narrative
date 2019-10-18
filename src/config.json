@@ -8,6 +8,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://appdev.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
+        "execution_engine2": "https://appdev.kbase.us/services/ee2",
         "fba": "https://appdev.kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://appdev.kbase.us/services/kb-ftp-api/v0",
@@ -57,6 +58,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://ci.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
+        "execution_engine2": "https://ci.kbase.us/services/ee2",
         "fba": "https://ci.kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://ci.kbase.us/services/kb-ftp-api/v0",
@@ -115,6 +117,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://ci.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
+        "execution_engine2": "https://ci.kbase.us/services/ee2",
         "fba": "https://ci.kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://ci.kbase.us/services/kb-ftp-api/v0",
@@ -166,6 +169,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://next.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
+        "execution_engine2": "https://next.kbase.us/services/ee2",
         "fba": "https://next.kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://next.kbase.us/services/kb-ftp-api/v0",
@@ -213,6 +217,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
+        "execution_engine2": "https://kbase.us/services/ee2",
         "fba": "https://kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://kbase.us/services/kb-ftp-api/v0",
@@ -258,5 +263,5 @@
         "showDelay": 750
     },
     "use_local_widgets": true,
-    "version": "3.11.2"
+    "version": "4.0.0-alpha"
 }

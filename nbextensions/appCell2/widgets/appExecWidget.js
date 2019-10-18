@@ -918,11 +918,10 @@ define([
                     temporalState = 'queued';
                     executionState = 'processing';
                     break;
-                case 'in-progress':
+                case 'running':
                     temporalState = 'running';
                     executionState = 'processing';
                     break;
-                case 'suspend':
                 case 'error':
                     temporalState = 'finished';
                     executionState = 'error';
@@ -956,11 +955,11 @@ define([
                     };
 
                     break;
-                case 'canceled':
+                case 'terminated':
                     temporalState = 'finished';
                     executionState = 'canceled';
                     break;
-                case 'completed':
+                case 'finished':
                     temporalState = 'finished';
                     executionState = 'success';
                     success = {

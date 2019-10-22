@@ -5,7 +5,11 @@ import threading
 from biokbase.narrative.common import kblogging
 from IPython.display import HTML
 from jinja2 import Template
-import datetime
+from datetime import (
+    datetime,
+    timezone,
+    timedelta
+)
 import time
 from bson.objectid import ObjectId
 import dateutil.parser
@@ -200,19 +204,19 @@ class JobManager(object):
             status_set = sorted(status_set, key=lambda s: dateutil.parser.parse(s['created']).timestamp())
 
             for status in status_set:
-                status['creation_time'] = dateutil.parser.parse(status['created'])
+                status['creation_time'] = dateutil.parser.parse(status['created']).strftime("%Y-%m-%d %H:%M:%S")
                 exec_start = status.get('running', None)
                 if status.get('finished'):
-                    finished_time = datetime.datetime.strptime(status.get('finished'), '%Y-%m-%d %H:%M:%S.%f')
-                    exec_start_time = datetime.datetime.strptime(exec_start, '%Y-%m-%d %H:%M:%S.%f')
+                    finished_time = datetime.fromisoformat(status['finished'])
+                    exec_start_time = datetime.fromisoformat(exec_start)
                     delta = finished_time - exec_start_time
-                    delta = delta - datetime.timedelta(microseconds=delta.microseconds)
+                    delta = delta - timedelta(microseconds=delta.microseconds)
                     status['run_time'] = str(delta)
-                    status['finish_time'] = datetime.datetime.strftime(finished_time, "%Y-%m-%d %H:%M:%S")
+                    status['finish_time'] = finished_time.strftime("%Y-%m-%d %H:%M:%S")
                 elif exec_start:
-                    exec_start_time = datetime.datetime.strptime(exec_start, '%Y-%m-%d %H:%M:%S.%f')
-                    delta = datetime.datetime.utcnow() - exec_start_time
-                    delta = delta - datetime.timedelta(microseconds=delta.microseconds)
+                    exec_start_time = datetime.fromisoformat(exec_start)
+                    delta = datetime.now(timezone.utc) - exec_start_time
+                    delta = delta - timedelta(microseconds=delta.microseconds)
                     status['run_time'] = str(delta)
                 else:
                     status['run_time'] = 'Not started'

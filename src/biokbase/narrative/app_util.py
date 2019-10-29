@@ -62,11 +62,6 @@ def system_variable(var):
             return ws_info[0]
         except:
             return None
-    elif var == 'token':
-        token = biokbase.auth.get_auth_token()
-        if token == 'none':
-            return None
-        return token
     elif var == 'user_id':
         token = biokbase.auth.get_auth_token()
         if token is None:

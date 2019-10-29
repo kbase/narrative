@@ -62,11 +62,6 @@ class AppUtilTestCase(unittest.TestCase):
         os.environ['KB_WORKSPACE_ID'] = self.workspace
         self.assertEquals(system_variable('workspace'), self.workspace)
 
-    def test_sys_var_token(self):
-        if (self.user_token):
-            biokbase.auth.set_environ_token(self.user_token)
-        self.assertEquals(system_variable('token'), self.user_token)
-
     def test_sys_var_no_ws_id(self):
         if 'KB_WORKSPACE_ID' in os.environ:
             del os.environ['KB_WORKSPACE_ID']
@@ -81,11 +76,6 @@ class AppUtilTestCase(unittest.TestCase):
     def test_sys_var_workspace_id_except(self):
         os.environ['KB_WORKSPACE_ID'] = 'invalid_workspace'
         self.assertIsNone(system_variable('workspace_id'))
-
-    def test_sys_var_bad_token(self):
-        if 'KB_AUTH_TOKEN' in os.environ:
-            del os.environ['KB_AUTH_TOKEN']
-        self.assertIsNone(system_variable('token'))
 
     def test_sys_var_user_bad(self):
         biokbase.auth.set_environ_token(self.bad_fake_token)
@@ -134,8 +124,7 @@ class AppUtilTestCase(unittest.TestCase):
             'input1',
             {
                 'ws': 'my_workspace',
-                'foo': 'bar',
-                'auth_token': 'abcde'
+                'foo': 'bar'
             },
             'some_ref/obj_id',
             [
@@ -161,11 +150,6 @@ class AppUtilTestCase(unittest.TestCase):
                         'target_position': 1,
                         'target_property': 'foo',
                         'input_parameter': 'baz'
-                    },
-                    {
-                        'target_position': 1,
-                        'narrative_system_variable': 'token',
-                        'target_property': 'auth_token'
                     },
                     {
                         'target_position': 2,

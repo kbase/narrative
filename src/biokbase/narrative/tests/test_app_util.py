@@ -14,6 +14,7 @@ from narrative_mock.mockclients import get_mock_client
 import os
 import mock
 import util
+import time
 
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
@@ -85,6 +86,18 @@ class AppUtilTestCase(unittest.TestCase):
         if 'KB_AUTH_TOKEN' in os.environ:
             del os.environ['KB_AUTH_TOKEN']
         self.assertIsNone(system_variable('user_id'))
+
+    def test_sys_var_time_ms(self):
+        cur_t = int(time.time()*1000)
+        ts = system_variable('timestamp_epoch_ms')
+        self.assertTrue(cur_t <= ts)
+        self.assertTrue(ts - cur_t < 1000)
+
+    def test_sys_var_time_sec(self):
+        cur_t = int(time.time())
+        ts = system_variable('timestamp_epoch_sec')
+        self.assertTrue(cur_t <= ts)
+        self.assertTrue(ts - cur_t < 1)
 
     def test_sys_var_bad(self):
         self.assertIsNone(system_variable(self.bad_tag))

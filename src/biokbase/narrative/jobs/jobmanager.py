@@ -11,8 +11,6 @@ from datetime import (
     timedelta
 )
 import time
-from bson.objectid import ObjectId
-import dateutil.parser
 from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.exception_util import (
     transform_job_exception
@@ -201,20 +199,20 @@ class JobManager(object):
             if not len(status_set):
                 return "No running jobs!"
 
-            status_set = sorted(status_set, key=lambda s: dateutil.parser.parse(s['created']).timestamp())
+            status_set = sorted(status_set, key=lambda s: s['created'])
 
             for status in status_set:
-                status['creation_time'] = dateutil.parser.parse(status['created']).strftime("%Y-%m-%d %H:%M:%S")
+                status['creation_time'] = datetime.fromtimestamp(status['created'] / 1000.0).strftime("%Y-%m-%d %H:%M:%S")
                 exec_start = status.get('running', None)
                 if status.get('finished'):
-                    finished_time = datetime.fromisoformat(status['finished'])
-                    exec_start_time = datetime.fromisoformat(exec_start)
+                    finished_time = datetime.fromtimestamp(status['finished'] / 1000.0)
+                    exec_start_time = datetime.fromtimestamp(exec_start / 1000.0)
                     delta = finished_time - exec_start_time
                     delta = delta - timedelta(microseconds=delta.microseconds)
                     status['run_time'] = str(delta)
                     status['finish_time'] = finished_time.strftime("%Y-%m-%d %H:%M:%S")
                 elif exec_start:
-                    exec_start_time = datetime.fromisoformat(exec_start)
+                    exec_start_time = datetime.fromtimestamp(exec_start / 1000.0).replace(tzinfo=timezone.utc)
                     delta = datetime.now(timezone.utc) - exec_start_time
                     delta = delta - timedelta(microseconds=delta.microseconds)
                     status['run_time'] = str(delta)

@@ -120,13 +120,13 @@ define ([
                 errorMessage = 'Insufficient information for this widget';
                 console.error(errorMessage);
                 this.state.error({
-                    message: errorMessage;
+                    message: errorMessage
                 });
                 return;
             }
             this.state.ok();
             if (this.auth()) {
-                this.token = this.auth().token;
+                this.token = this.auth().token
             }
             this.attachClients();
             return this;
@@ -162,7 +162,7 @@ define ([
                 names : names,
                 ids : ids
             };
-        },s
+        },
 
         buildGeneSearchView: function(params) {
             var self = this;
@@ -1539,21 +1539,7 @@ define ([
             this.attachClients();
             this.render();
             return this;
-        },
-
-        loggedOutCallback: function () {
-            if (!this.state.isOk()) {
-                var errorMessage = 'Widget is in invalid state -- cannot render: ' + this.state.info().message;
-                console.error(errorMessage);
-                this.showError(errorMessage);
-                return;
-            }
-            this.token = null;
-            this.attachClients();
-            this.render();
-            return this;
         }
-
 
     })
 });

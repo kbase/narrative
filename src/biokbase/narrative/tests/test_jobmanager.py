@@ -87,7 +87,7 @@ class JobManagerTest(unittest.TestCase):
         print(html)
         self.assertIn("<td>5d64935ab215ad4128de94d6</td>", html)
         self.assertIn("<td>NarrativeTest/test_editor</td>", html)
-        self.assertIn("<td>2019-08-26 17:54:48+00:00</td>", html)
+        self.assertIn("<td>2019-08-26 17:54:48</td>", html)
         self.assertIn("<td>fake_test_user</td>", html)
         self.assertIn("<td>finished</td>", html)
         self.assertIn("<td>Not started</td>", html)

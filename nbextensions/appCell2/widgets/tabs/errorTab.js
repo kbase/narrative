@@ -12,7 +12,8 @@ define([
     var t = html.tag,
         div = t('div'),
         ul = t('ul'),
-        li = t('li');
+        li = t('li'),
+        pre = t('pre');
 
     function convertJobError(errorInfo) {
         var errorId = new Uuid(4).format(),
@@ -36,7 +37,8 @@ define([
             location: 'job execution',
             type: errorType,
             message: errorMessage,
-            detail: errorDetail
+            detail: errorDetail,
+            advice: 'If the app fails consistently, contact us at help@kbase.us',
         };
     }
 
@@ -49,7 +51,6 @@ define([
                 return li(adv);
             })),
             detail: errorInfo.detail
-                // info:  errorInfo ? html.makeObjTable(errorInfo.info, {rotated: true, classes: []}) : null
         };
     }
 
@@ -70,12 +71,11 @@ define([
             div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
                 'Detail'
             ]),
-            div({
+            pre({
                 dataElement: 'detail',
                 style: {
                     border: '0px silver solid',
                     padding: '4px',
-                    xoverflowY: 'auto',
                     wordBreak: 'break-word'
                 }
             }),
@@ -100,8 +100,8 @@ define([
                 ui = UI.make({ node: container });
 
                 var viewModel;
-                if (model.hasItem('exec.jobState.errormsg')) {
-                    viewModel = convertJobError(model.getItem('exec.jobState.errormsg'));
+                if (model.hasItem('exec.jobState.error')) {
+                    viewModel = convertJobError(model.getItem('exec.jobState.error'));
                 } else if (model.hasItem('internalError')) {
                     viewModel = convertInternalError(model.getItem('internalError'));
                 } else {

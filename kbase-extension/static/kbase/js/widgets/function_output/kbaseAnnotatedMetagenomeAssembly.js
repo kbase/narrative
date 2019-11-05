@@ -47,11 +47,11 @@ define ([
         return $('<div>')
             .addClass('alert alert-danger')
             .append(errorMessage);
-    }
+    };
 
     function numberWithCommas(x) {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    }
+    };
 
     function WidgetState() {
         var UNINITIALIZED = 0;
@@ -87,7 +87,7 @@ define ([
             isError: isError,
             info: info
         };
-    }
+    };
 
     return KBWidget({
         name: 'kbaseAnnotatedMetagenomeAssemblyView',
@@ -111,7 +111,7 @@ define ([
         init: function(options) {
             this._super(options);
             if (options.upas){
-                this.metagenome_ref = options.upas.id
+                this.metagenome_ref = options.upas.id;
             }
             else if (options.ws && options.id) {
                 this.metagenome_ref = [options.ws, options.id].join('/');
@@ -123,11 +123,11 @@ define ([
                     message: errorMessage
                 });
                 return;
-            }
+            };
             this.state.ok();
             if (this.auth()) {
-                this.token = this.auth().token
-            }
+                this.token = this.auth().token;
+            };
             this.attachClients();
             return this;
         },
@@ -600,7 +600,7 @@ define ([
             var $container = $('<div>').addClass('container-fluid').css({'margin':'15px 0px', 'max-width':'100%'});
             $div.append($container);
             var $headerRow = $('<div>').addClass('row')
-                .append($('<div>').addClass('col-md-4').append($pagenateDiv) )
+                .append($('<div>').addClass('col-md-4').append($pagenateDiv))
                 .append($('<div>').addClass('col-md-4').append($loadingDiv));
             var $resultsRow = $('<div>').addClass('row').css({'margin-top':'15px'})
                 .append($('<div>').addClass('col-md-12').append($resultDiv));
@@ -1058,9 +1058,9 @@ define ([
             }
             ///////// Overview Tab /////////
             var ready = function (metagenomeData) {
-                var mgnm = metagenomeData
+                var mgnm = metagenomeData;
 
-                container.empty()
+                container.empty();
                 var $tabPane = $('<div id="'+pref+'tab-content">');
                 container.append($tabPane);
                 var tabObj = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
@@ -1081,7 +1081,7 @@ define ([
                     .append($('<colgroup>')
                         .append($('<col span="1" style="width: 25%;">')));
 
-                var $tableDiv = $('<div>').append($overviewTable)//.addClass('col-md-8').append($overviewTable);
+                var $tableDiv = $('<div>').append($overviewTable); //.addClass('col-md-8').append($overviewTable);
                 var $layout = $('<div>')//.addClass('row')
                     .append($tableDiv);
 
@@ -1136,8 +1136,6 @@ define ([
                             self.buildGeneSearchView({
                                 $div: $('#'+pref+'browse_features'),
                                 ref: metagenome_ref,
-                                // idClick: null,
-                                // contigClick: null,
                                 idClick: function(featureData) {
                                     self.showFeatureTab(metagenome_ref, featureData, pref, tabObj);
                                 },
@@ -1151,7 +1149,6 @@ define ([
                             self.buildContigSearchView({
                                 $div: $('#'+pref+'browse_contigs'),
                                 ref: metagenome_ref,
-                                // contigClick: null
                                 contigClick: function(contigId) {
                                     self.showContigTab(metagenome_ref, contigId, pref, tabObj);
                                 }
@@ -1230,10 +1227,10 @@ define ([
                 genomeData.size = metadata['Size'];
             }
             if (metadata['GC Content']){
-                genomeData.gc_content = metadata['GC Content']
+                genomeData.gc_content = metadata['GC Content'];
             }
             if (metadata['Environment']){
-                genomeData.environment = metadata['Environment']
+                genomeData.environment = metadata['Environment'];
             }
 
             return genomeData;
@@ -1285,13 +1282,13 @@ define ([
                 var loc = {};
                 if(locationObject['strand'] && locationObject['strand'] === '-') {
                     loc['end'] = locationObject['start'];
-                    loc['start'] = loc['end'] - locationObject['stop']
+                    loc['start'] = loc['end'] - locationObject['stop'];
                     // loc['start'] = loc['end'] - locationObject['length'];
 
                 } else {
                     // assume it is on + strand
                     loc['start'] = locationObject['start'];
-                    loc['end'] =  loc['start'] + locationObject['stop']
+                    loc['end'] =  loc['start'] + locationObject['stop'];
                     // loc['end'] = loc['start'] + locationObject['length'];
                 }
                 return loc;
@@ -1475,14 +1472,14 @@ define ([
                     var search_start = bounds.start - range;
                     if (search_start < 0){
                         search_start = 0;
-                    }
+                    };
                     var search_stop = bounds.end + range;
                     var search_length = search_stop - search_start;
-                    contigDataForBrowser.length = search_stop
+                    contigDataForBrowser.length = search_stop;
 
                     if (search_length > 40000) {
                         search_length = 40000;
-                    }
+                    };
 
                     self.metagenomeAPI
                         .callFunc('search_region', [{

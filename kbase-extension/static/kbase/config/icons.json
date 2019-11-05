@@ -26,6 +26,7 @@
     "GenomeSet": ["fa-list-ul"],
     "Heatmap": ["fa-th"],
     "Media": ["fa-flask"],
+    "AnnotatedMetagenomeAssembly": ["icon icon-metagenome"],
     "Metagenome": ["icon icon-metagenome"],
     "Network": ["fa-code-fork"],
     "PairedEndLibrary": ["icon icon-reads"],
@@ -41,6 +42,7 @@
     "Tree": ["icon icon-tree"]
   },
   "colors": ["#F44336",
+             "#1D7EEA",
              "#E91E63",
              "#9C27B0",
              "#3F51B5",
@@ -84,6 +86,7 @@
       "Heatmap": "#795548",
       "Media": "#795548",
       "Metagenome": "#795548",
+      "AnnotatedMetagenomeAssembly": "#1D7EEA",
       "Network": "#795548",
       "PairedEndLibrary": "#795548",
       "Pangenome": "#795548",

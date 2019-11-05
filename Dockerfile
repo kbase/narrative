@@ -30,8 +30,8 @@ RUN echo Skip=$SKIP_MINIFY
 # install pyopenssl cryptography idna and requests is the same as installing
 # requests[security]
 RUN source activate base
-RUN conda install -c conda-forge ndg-httpsclient pyasn1 pyopenssl cryptography idna requests \
-          beautifulsoup4 html5lib
+RUN conda install -c conda-forge ndg-httpsclient==0.5.1 pyasn1==0.4.5 pyopenssl==19.0.0 cryptography==2.7 idna==2.8 requests==2.21.0 \
+          beautifulsoup4==4.8.1 html5lib==1.0.1
 
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative
@@ -60,7 +60,7 @@ RUN [ -n "$SKIP_MINIFY" ] || grunt minify
 RUN /bin/bash scripts/install_narrative_docker.sh
 
 # RUN ./fixupURL.sh && chmod 666 /kb/dev_container/narrative/src/config.json
-RUN pip install jupyter-console
+RUN pip install jupyter-console==6.0.0
 
 WORKDIR /tmp
 RUN mkdir /tmp/narrative && \

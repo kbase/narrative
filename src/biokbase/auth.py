@@ -12,7 +12,7 @@ tokenenv = 'KB_AUTH_TOKEN'
 token_api_url = URLS.auth + "/api/V2"
 endpt_token = "/token"
 endpt_token_revoke = "/tokens/revoke"
-
+endpt_user_display = "/users/?list="
 
 def validate_token():
     """
@@ -111,3 +111,11 @@ def revoke_token(auth_token, revoke_id):
     r = requests.delete(URLS.auth + endpt_token_revoke + "/" + revoke_id, headers=headers)
     if r.status_code != requests.codes.ok:
         r.raise_for_status()
+
+
+def get_display_names(auth_token: str, user_ids: list) -> dict:
+    headers = {"Authorization": auth_token}
+    r = requests.get(token_api_url + endpt_user_display + ",".join(user_ids), headers=headers)
+    if r.status_code != requests.codes.ok:
+        r.raise_for_status()
+    return r.json()

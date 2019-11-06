@@ -99,7 +99,7 @@ function(
                         a({
                             target: '_blank',
                             title: 'Go to existing static Narrative',
-                            href: info.url
+                            href: Config.url('static_narrative_root') + info.url
                         }, [
                             i({ class: 'fa fa-external-link fa-2x'})
                         ])
@@ -109,7 +109,6 @@ function(
             else {
                 return div({
                     style: {
-                        display: 'flex',
                         'border-bottom': '1px solid #eee',
                         'margin-bottom': '0.5em',
                         'padding-bottom': '0.5em'
@@ -194,11 +193,13 @@ function(
                         });
                     }
                     else {
-                        return Promise.resolve(staticInfo);
+                        return Promise.resolve([]);
                     }
                 })
                 .then((objInfo) => {
-                    staticInfo.narr_saved = objInfo[0][3];
+                    if (objInfo.length === 1 && objInfo[0].length > 3) {
+                        staticInfo.narr_saved = objInfo[0][3];
+                    }
                     return staticInfo;
                 });
         }
@@ -216,7 +217,8 @@ function(
             )
                 .then(() => { this.refresh(); })
                 .catch(error => {
-                    this.renderError(error);
+                    this.detach();
+                    this.container.appendChild(this.renderError(error)[0]);
                 });
         }
     }

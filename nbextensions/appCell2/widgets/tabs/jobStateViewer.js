@@ -61,7 +61,7 @@ define([
             viewModel.launch._attrib.hidden = true;
 
             if (jobState.updated) {
-                var creation_time = Date.parse(jobState.created + 'Z');
+                var creation_time = new Date(jobState.created);
                 // Queue status - at least in or has been in the queue
                 viewModel.queue._attrib.hidden = false;
                 if (jobState.running) {
@@ -70,7 +70,7 @@ define([
                     viewModel.queue._attrib.style = { fontWeight: 'normal' };
                     viewModel.queue.active = false;
                     viewModel.queue.label = 'Queued for';
-                    var exec_start_time = Date.parse(jobState.running + 'Z');
+                    var exec_start_time = new Date(jobState.running);
                     viewModel.queue.elapsed = format.niceDuration(exec_start_time - creation_time);
                     viewModel.queue.position.label = '';
                     viewModel.queue.position.number = '';
@@ -82,7 +82,7 @@ define([
                         viewModel.run._attrib.style = { fontWeight: 'normal' };
                         viewModel.run.active = false;
                         viewModel.run.label = 'Ran for';
-                        var finish_time = Date.parse(jobState.finished + 'Z');
+                        var finish_time = new Date(jobState.finished);
                         viewModel.run.elapsed = format.niceDuration(finish_time - exec_start_time);
 
                         viewModel.finish._attrib.hidden = false;
@@ -112,7 +112,7 @@ define([
                         viewModel.queue._attrib.style = { fontWeight: 'normal' };
                         viewModel.queue.active = false;
                         viewModel.queue.label = 'Queued for';
-                        var finish_time = Date.parse(jobState.finished + 'Z');
+                        var finish_time = new Date(jobState.finished);
                         viewModel.queue.elapsed = format.niceDuration(finish_time - creation_time);
                         viewModel.queue.position.label = '';
                         viewModel.queue.position.number = '';

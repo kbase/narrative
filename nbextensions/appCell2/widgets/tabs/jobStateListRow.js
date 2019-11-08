@@ -16,7 +16,7 @@ define([
     function niceState(jobState) {
         var label, icon, color;
         switch (jobState) {
-        case 'finished':
+        case 'completed':
             label = 'success';
             icon = 'fa fa-check';
             color = 'green';

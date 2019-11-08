@@ -495,7 +495,7 @@ define([
                 */
             switch (message.jobState.job_state) {
             case 'terminated':
-            case 'finished':
+            case 'completed':
                 if (this.requestedUpdates) {
                     this.requestedUpdates = false;
                     this.channel.emit('request-job-completion', {

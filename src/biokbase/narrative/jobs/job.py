@@ -82,7 +82,7 @@ class Job(object):
     @classmethod
     def map_viewer_params(Job, job_state, job_inputs, app_id, app_tag):
         # get app spec.
-        if job_state is None or job_state.get('status', '') != 'finished':
+        if job_state is None or job_state.get('status', '') != 'completed':
             return None
 
         spec = SpecManager().get_spec(app_id, app_tag)
@@ -135,7 +135,7 @@ class Job(object):
         Queries the job service to see the status of the current job.
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
-        if self._last_state is not None and self._last_state.get('status') in ['finished', 'terminated', 'error']:
+        if self._last_state is not None and self._last_state.get('status') in ['completed', 'terminated', 'error']:
             return self._last_state
         try:
             state = clients.get('execution_engine2').check_job({'job_id': self.job_id,
@@ -158,7 +158,7 @@ class Job(object):
         from biokbase.narrative.widgetmanager import WidgetManager
         if state is None:
             state = self.state()
-        if state['status'] == 'finished' and 'job_output' in state:
+        if state['status'] == 'completed' and 'job_output' in state:
             (output_widget, widget_params) = self._get_output_info(state)
             return WidgetManager().show_output_widget(output_widget, widget_params, tag=self.tag)
         else:
@@ -168,7 +168,7 @@ class Job(object):
         """
         Maps job state 'result' onto the inputs for a viewer.
         """
-        if state is None or state['status'] != 'finished':
+        if state is None or state['status'] != 'completed':
             return None
         (output_widget, widget_params) = self._get_output_info(state)
         return {
@@ -232,7 +232,7 @@ class Job(object):
         False if its running/queued.
         """
         status = self.status()
-        return status.lower() in ['finished', 'terminated', 'error']
+        return status.lower() in ['completed', 'terminated', 'error']
 
     def __repr__(self):
         return "KBase Narrative Job - " + str(self.job_id)
@@ -249,7 +249,7 @@ class Job(object):
         try:
             state = self.state()
             spec = self.app_spec()
-            if (state.get('status', '') == 'finished'):
+            if (state.get('status', '') == 'completed'):
                 (output_widget, widget_params) = self._get_output_info(state)
                 output_widget_info = {
                     'name': output_widget,

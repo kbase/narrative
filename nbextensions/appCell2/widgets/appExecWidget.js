@@ -959,7 +959,7 @@ define([
                     temporalState = 'finished';
                     executionState = 'canceled';
                     break;
-                case 'finished':
+                case 'completed':
                     temporalState = 'finished';
                     executionState = 'success';
                     success = {

@@ -232,7 +232,7 @@ class Job(object):
         False if its running/queued.
         """
         status = self.status()
-        return status.lower() in ['finished', 'terminated', 'error']
+        return status.lower() in ['completed', 'terminated', 'error']
 
     def __repr__(self):
         return "KBase Narrative Job - " + str(self.job_id)

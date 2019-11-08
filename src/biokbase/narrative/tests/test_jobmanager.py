@@ -90,7 +90,7 @@ class JobManagerTest(unittest.TestCase):
         self.assertIn("<td>2019-08-26 ", html)
         self.assertIn(":54:48</td>", html)
         self.assertIn("<td>fake_test_user</td>", html)
-        self.assertIn("<td>finished</td>", html)
+        self.assertIn("<td>completed</td>", html)
         self.assertIn("<td>Not started</td>", html)
         self.assertIn("<td>Incomplete</td>", html)
 

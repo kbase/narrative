@@ -91,7 +91,7 @@ class JobTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_job_info(self):
         job = self._mocked_job()
-        info_str = "App name (id): Test Editor\nVersion: 0.0.1\nStatus: finished\nInputs:\n------\n"
+        info_str = "App name (id): Test Editor\nVersion: 0.0.1\nStatus: completed\nInputs:\n------\n"
         with capture_stdout() as (out, err):
             job.info()
             self.assertIn(info_str, out.getvalue().strip())

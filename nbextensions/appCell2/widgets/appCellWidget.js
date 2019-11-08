@@ -1993,7 +1993,7 @@ define([
                 prefix: 'started ',
                 suffix: ' ago'
             });
-            var exec_start_time = new Date(jobState.running).getTime();
+            var exec_start_time = jobState.running;
 
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
@@ -2027,7 +2027,7 @@ define([
             widgets.runClock = RunClock.make({
                 prefix: 'for '
             });
-            var creation_time = new Date(jobState.created).getTime();
+            var creation_time = jobState.created;
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
                 startTime: creation_time
@@ -2100,7 +2100,7 @@ define([
                         var clock;
                         var day = 1000 * 60 * 60 * 24;
                         if (elapsed > day) {
-                            var finish_time = new Date(jobState.finished).getTime();
+                            var finish_time = jobState.finished;
                             clock = span([
                                 ' on ',
                                 format.niceTime(finish_time)
@@ -2118,7 +2118,7 @@ define([
                     }
                 }
             });
-            var finish_time = new Date(jobState.finished).getTime();
+            var finish_time = jobState.finished;
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
                 startTime: finish_time
@@ -2199,7 +2199,7 @@ define([
                         var clock;
                         var day = 1000 * 60 * 60 * 24;
                         if (elapsed > day) {
-                            var finish_time = new Date(jobState.finisheds).getTime();
+                            var finish_time = jobState.finisheds;
                             clock = span([
                                 ' on ',
                                 format.niceTime(finish_time)
@@ -2217,7 +2217,7 @@ define([
                     }
                 }
             });
-            var finish_time = new Date(jobState.finished).getTime();
+            var finish_time = jobState.finished;
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
                 startTime: finish_time
@@ -2230,7 +2230,7 @@ define([
 
         function doOnError() {
             var jobState = model.getItem('exec.jobState');
-            var finish_time = new Date(jobState.finished).getTime();
+            var finish_time = jobState.finished;
             var message = span([
                 'Finished with ',
                 niceState(jobState.status),
@@ -2273,7 +2273,7 @@ define([
 
         function doOnCancelled() {
             var jobState = model.getItem('exec.jobState');
-            var finish_time = new Date(jobState.finished).getTime();
+            var finish_time = jobState.finished;
 
             var message = span([
                 span({ style: { color: 'orange' } }, 'Canceled'),

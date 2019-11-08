@@ -429,7 +429,7 @@ class JobManager(object):
                 continue
             # if it's done, get the output mapping.
             state = job_state.get('status')
-            if state == 'finished':
+            if state == 'completed':
                 try:
                     widget_info = Job.map_viewer_params(
                         state,
@@ -779,7 +779,7 @@ class JobManager(object):
 
         try:
             state = self._get_job_state(job_id, parent_job_id=parent_job_id)
-            if state.get('status') in ['finished', 'terminated', 'error']:
+            if state.get('status') in ['completed', 'terminated', 'error']:
                 # It's already finished, don't try to cancel it again.
                 return
         except Exception as e:
@@ -874,7 +874,7 @@ class JobManager(object):
             if status in ['created', 'queued', 'estimating', 'running', 'completed', 'error', 'terminated']:
                 state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
                 state['run_id'] = self._running_jobs[job_id]['job'].run_id
-                if status == 'finished':
+                if status == 'completed':
                     self._completed_job_states[state['job_id']] = dict(state)
                 state['job_input'] = state.get('job_input', {})
                 state['job_output'] = state.get('job_output', {})
@@ -893,6 +893,6 @@ class JobManager(object):
         if job_id in self._completed_job_states:
             return dict(self._completed_job_states[job_id])
         state = self._running_jobs[job_id]['job'].state()
-        if state.get('status') == 'finished':
+        if state.get('status') == 'completed':
             self._completed_job_states[job_id] = dict(state)
         return dict(state)

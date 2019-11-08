@@ -871,7 +871,7 @@ class JobManager(object):
         for job_id in jobs_to_lookup:
             state = fetched_states.get(job_id, {})
             status = state.get('status')
-            if status in ['created', 'queued', 'estimating', 'running', 'finished', 'error', 'terminated']:
+            if status in ['created', 'queued', 'estimating', 'running', 'completed', 'error', 'terminated']:
                 state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
                 state['run_id'] = self._running_jobs[job_id]['job'].run_id
                 if status == 'finished':

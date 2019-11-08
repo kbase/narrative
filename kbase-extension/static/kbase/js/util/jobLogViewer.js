@@ -779,7 +779,7 @@ define([
                         auto: true
                     };
                     break;
-                case 'finished':
+                case 'completed':
                     requestLatestJobLog();
                     stopJobUpdates();
                     newState = {
@@ -820,7 +820,7 @@ define([
                     };
                     break;
                     // may happen that the job state jumps over in-progress...
-                case 'finished':
+                case 'completed':
                     newState = {
                         mode: 'complete'
                     };
@@ -848,7 +848,7 @@ define([
                 case 'running':
                     startAutoFetch();
                     break;
-                case 'finished':
+                case 'completed':
                     newState = {
                         mode: 'complete'
                     };
@@ -870,7 +870,7 @@ define([
                 break;
             case 'complete':
                 switch (jobStatus) {
-                case 'finished':
+                case 'completed':
                     return;
                 default:
                     // technically, an error, what to do?

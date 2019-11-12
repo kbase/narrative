@@ -24,14 +24,8 @@ document.nbjs_translations = {
     }
 };
 
-// hacks to spoof preact and preactCompat, needed by a Jupyter component we aren't testing.
-window.preact = {
-    render: function() { return null; }
-};
-window.preactCompat = {
-    createClass: function() { return {}; },
-    createElement: function() { return {}; }
-};
+// hack to spoof createReactClass, needed by a Jupyter component we aren't testing.
+window.createReactClass = () => {};
 
 requirejs.config({
     baseUrl: '/narrative/static/',

@@ -18,7 +18,7 @@ The following changes are required:
     This script starts the narrative image using features to integrate it with local kbase-ui.
 
     ```
-    env=ci bash scripts/local-dev-run.sh
+    env=ci mount=t bash scripts/local-dev-run.sh
     ```
 
     where env sets the CONFIG_ENV environment variable for the Docker container; ci is the environment in which you are working (needs to be same as the ui is running on.)

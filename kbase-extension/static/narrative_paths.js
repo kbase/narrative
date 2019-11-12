@@ -37,8 +37,8 @@ require.config({
         select2: 'ext_components/select2/dist/js/select2.full.min',
         uuid: 'ext_components/pure-uuid/uuid',
         'font-awesome': 'ext_components/font-awesome/css/font-awesome.min',
-        yaml : 'ext_components/require-yaml/yaml',
-        'js-yaml' : 'ext_components/js-yaml/dist/js-yaml.min',
+        yaml: 'ext_components/require-yaml/yaml',
+        'js-yaml': 'ext_components/js-yaml/dist/js-yaml.min',
 
         // not under bower control
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',
@@ -89,8 +89,8 @@ require.config({
         'SetAPI-client-api': 'kbase/js/api/SetAPIClient',
         'ExpressionUtils-client-api': 'kbase/js/api/ExpressionUtilsClient',
         'Taxonomy-client-api': 'kbase/js/api/TaxonomyAPIClient',
-        'RestAPIClient' : 'kbase/js/api/RestAPIClient',
-        'StagingServiceClient' : 'kbase/js/api/StagingServiceClient',
+        'RestAPIClient': 'kbase/js/api/RestAPIClient',
+        'StagingServiceClient': 'kbase/js/api/StagingServiceClient',
         'KBaseSearchEngineClient': 'kbase/js/api/KBaseSearchEngineClient',
 
         'njs-wrapper-client-api': 'kbase/js/api/NarrativeJobServiceWrapper',
@@ -341,6 +341,11 @@ require.config({
         'GenomeCategorizer': 'kbase/js/widgets/function_output/GenomeCategorizer',
         'code-cell': 'kbase/js/widgets/function_output/codeCellLauncher',
 
+        /*
+            preact components
+        */
+        preact_components: 'kbase/js/preact_components',
+
         /***
          * END CUSTOM OUTPUT WIDGETS
          ***/
@@ -485,6 +490,9 @@ require.config({
         },
         bootstrap: {
             deps: ['jquery', 'jqueryui']
+        },
+        preact: {
+            exports: 'preact'
         }
     }
 });

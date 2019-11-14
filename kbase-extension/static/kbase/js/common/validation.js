@@ -1,5 +1,3 @@
-/*global define, minLength*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_service/client/workspace',
@@ -9,6 +7,17 @@ define([
 
     function Validators() {
 
+        /**
+         * Converts a string to an integer.
+         * If it's not a string (or an integer already), this throws an Error.
+         * Floats are not reduced into integers, unless the decimal part === 0.
+         * @param {string|number} value
+         * @returns {number} the integer version of the value.
+         * @throws {*} an error if:
+         * - the value is a non-integer number,
+         * - if the value is a non-int-parseable string,
+         * - if value is anything else (like an Array or Object)
+         */
         function toInteger(value) {
             switch (typeof value) {
                 case 'number':
@@ -36,6 +45,18 @@ define([
             return false;
         }
 
+        /**
+         * This validates a single value against a set of acceptable values. For example, if
+         * value = 'a', and and options.values = ['a', 'b', 'c'], this will return
+         * {isValid: true}, since all the elements of value are present in options.values.
+         *
+         * This doesn't do any parsing, but will set an errorMessage in the return if a required
+         * value is undefined.
+         * @param {Array} value - the value to validate
+         * @param {Object} options
+         *  - required = boolean (default false)
+         *  - values = Array, the set of acceptable values
+         */
         function validateSet(value, options) {
             var errorMessage, diagnosis;
             // values are raw, no parsing.
@@ -68,41 +89,51 @@ define([
             };
         }
 
-        /*
-         * A workspace ref, but using names ...
+        // /*
+        //  * A workspace ref, but using names ...
+        //  */
+        // function validateWorkspaceObjectNameRef(value, options) {
+        //     var parsedValue,
+        //         errorMessage, diagnosis;
+
+        //     if (typeof value !== 'string') {
+        //         diagnosis = 'invalid';
+        //         errorMessage = 'value must be a string in workspace object name format';
+        //     } else {
+        //         parsedValue = value.trim();
+        //         if (!parsedValue) {
+        //             if (options.required) {
+        //                 diagnosis = 'required-missing';
+        //                 errorMessage = 'value is required';
+        //             } else {
+        //                 diagnosis = 'optional-empty';
+        //             }
+        //         } else if (!/^\d+\/\d+\/\d+/.test(value)) {
+        //             diagnosis = 'invalid';
+        //             errorMessage = 'Invalid object reference format (#/#/#)';
+        //         } else {
+        //             diagnosis = 'valid';
+        //         }
+        //     }
+        //     return {
+        //         isValid: errorMessage ? false : true,
+        //         errorMessage: errorMessage,
+        //         diagnosis: diagnosis,
+        //         value: value,
+        //         parsedValue: parsedValue
+        //     };
+        // }
+
+        /**
+         * Validates whether the value is a valid object data palette reference path,
+         * consisting of only numerical values in the reference (e.g.: 1/2/3;4/5/6;7/8/9)
+         * Note that this doesn't check to see if the path is real, just if it's syntactically
+         * valid.
+         * @param {string} value
+         * @param {Object} options
+         * - required - boolean
+         * @returns {Object}
          */
-        function validateWorkspaceObjectNameRef(value, options) {
-            var parsedValue,
-                errorMessage, diagnosis;
-
-            if (typeof value !== 'string') {
-                diagnosis = 'invalid';
-                errorMessage = 'value must be a string in workspace object name format';
-            } else {
-                parsedValue = value.trim();
-                if (!parsedValue) {
-                    if (options.required) {
-                        diagnosis = 'required-missing';
-                        errorMessage = 'value is required';
-                    } else {
-                        diagnosis = 'optional-empty';
-                    }
-                } else if (!/^\d+\/\d+\/\d+/.test(value)) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'Invalid object reference format (#/#/#)';
-                } else {
-                    diagnosis = 'valid';
-                }
-            }
-            return {
-                isValid: errorMessage ? false : true,
-                errorMessage: errorMessage,
-                diagnosis: diagnosis,
-                value: value,
-                parsedValue: parsedValue
-            };
-        }
-
         function validateWorkspaceDataPaletteRef(value, options) {
             var parsedValue,
                 errorMessage, diagnosis;
@@ -123,7 +154,7 @@ define([
                     } else {
                         diagnosis = 'optional-empty';
                     }
-                } else if (!/^\d+\/\d+(\/\d+)?(;\d+\/\d+(\/\d+)?)*/.test(value)) {
+                } else if (!/^\d+\/\d+(\/\d+)?(;\d+\/\d+(\/\d+)?)*$/.test(value)) {
                     diagnosis = 'invalid';
                     errorMessage = 'Invalid object reference path -  ( should be #/#/#;#/#/#;...)';
                 } else {
@@ -165,14 +196,13 @@ define([
                     diagnosis = 'valid';
                 }
             }
-            var result = {
+            return {
                 isValid: errorMessage ? false : true,
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
                 parsedValue: parsedValue
             };
-            return result;
         }
 
         function getObjectInfo(workspaceId, objectName, authToken, serviceUrl) {
@@ -228,61 +258,58 @@ define([
                 messageId, shortMessage, errorMessage, diagnosis = 'valid';
 
             return Promise.try(function() {
-                    if (typeof value !== 'string') {
-                        diagnosis = 'invalid';
-                        errorMessage = 'value must be a string in workspace object name format';
-                    } else {
-                        parsedValue = value.trim();
-                        if (parsedValue.length === 0) {
+                if (typeof value !== 'string') {
+                    diagnosis = 'invalid';
+                    errorMessage = 'value must be a string in workspace object name format';
+                } else {
+                    parsedValue = value.trim();
+                    if (!parsedValue) {
+                        if (options.required) {
+                            messageId = 'required-missing';
+                            diagnosis = 'required-missing';
+                            errorMessage = 'value is required';
+                        } else {
+                            diagnosis = 'optional-empty';
                             parsedValue = null;
                         }
-
-                        if (!parsedValue) {
-                            if (options.required) {
-                                messageId = 'required-missing';
-                                diagnosis = 'required-missing';
-                                errorMessage = 'value is required';
-                            } else {
-                                diagnosis = 'optional-empty';
-                            }
-                        } else if (/\s/.test(parsedValue)) {
-                            messageId = 'obj-name-no-spaces';
-                            diagnosis = 'invalid';
-                            errorMessage = 'an object name may not contain a space';
-                        } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
-                            messageId = 'obj-name-not-integer';
-                            diagnosis = 'invalid';
-                            errorMessage = 'an object name may not be in the form of an integer';
-                        } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
-                            messageId = 'obj-name-invalid-characters';
-                            diagnosis = 'invalid';
-                            errorMessage = 'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
-                        } else if (parsedValue.length > 255) {
-                            messageId = 'obj-name-too-long';
-                            diagnosis = 'invalid';
-                            errorMessage = 'an object name may not exceed 255 characters in length';
-                        } else if (options.shouldNotExist) {
-                            return getObjectInfo(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
-                                .then(function(objectInfo) {
-                                    if (objectInfo) {
-                                        var type = objectInfo.typeModule + '.' + objectInfo.typeName,
-                                            matchingType = options.types.some(function(typeId) {
-                                                if (typeId === type) {
-                                                    return true;
-                                                }
-                                                return false;
-                                            });
-                                        if (!matchingType) {
-                                            messageId = 'obj-overwrite-diff-type';
-                                            errorMessage = 'an object already exists with this name and is not of the same type';
-                                            diagnosis = 'invalid';
-                                        } else {
-                                            messageId = 'obj-overwrite-warning';
-                                            shortMessage = 'an object already exists with this name';
-                                            diagnosis = 'suspect';
-                                        }
+                    } else if (/\s/.test(parsedValue)) {
+                        messageId = 'obj-name-no-spaces';
+                        diagnosis = 'invalid';
+                        errorMessage = 'an object name may not contain a space';
+                    } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
+                        messageId = 'obj-name-not-integer';
+                        diagnosis = 'invalid';
+                        errorMessage = 'an object name may not be in the form of an integer';
+                    } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
+                        messageId = 'obj-name-invalid-characters';
+                        diagnosis = 'invalid';
+                        errorMessage = 'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
+                    } else if (parsedValue.length > 255) {
+                        messageId = 'obj-name-too-long';
+                        diagnosis = 'invalid';
+                        errorMessage = 'an object name may not exceed 255 characters in length';
+                    } else if (options.shouldNotExist) {
+                        return getObjectInfo(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
+                            .then(function(objectInfo) {
+                                if (objectInfo) {
+                                    var type = objectInfo.typeModule + '.' + objectInfo.typeName,
+                                        matchingType = options.types.some(function(typeId) {
+                                            if (typeId === type) {
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+                                    if (!matchingType) {
+                                        messageId = 'obj-overwrite-diff-type';
+                                        errorMessage = 'an object already exists with this name and is not of the same type';
+                                        diagnosis = 'invalid';
+                                    } else {
+                                        messageId = 'obj-overwrite-warning';
+                                        shortMessage = 'an object already exists with this name';
+                                        diagnosis = 'suspect';
                                     }
-                                });
+                                }
+                            });
                         }
                     }
                 })
@@ -458,12 +485,65 @@ define([
             };
         }
 
+        function validateWorkspaceObjectNameString(value, options) {
+            var parsedValue,
+                messageId, shortMessage, errorMessage, diagnosis = 'valid';
+
+            if (typeof value !== 'string') {
+                diagnosis = 'invalid';
+                errorMessage = 'value must be a string in workspace object name format';
+            } else {
+                parsedValue = value.trim();
+                if (!parsedValue) {
+                    if (options.required) {
+                        messageId = 'required-missing';
+                        diagnosis = 'required-missing';
+                        errorMessage = 'value is required';
+                    } else {
+                        diagnosis = 'optional-empty';
+                    }
+                } else if (/\s/.test(parsedValue)) {
+                    messageId = 'obj-name-no-spaces';
+                    diagnosis = 'invalid';
+                    errorMessage = 'an object name may not contain a space';
+                } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
+                    messageId = 'obj-name-not-integer';
+                    diagnosis = 'invalid';
+                    errorMessage = 'an object name may not be in the form of an integer';
+                } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
+                    messageId = 'obj-name-invalid-characters';
+                    diagnosis = 'invalid';
+                    errorMessage = 'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
+                } else if (parsedValue.length > 255) {
+                    messageId = 'obj-name-too-long';
+                    diagnosis = 'invalid';
+                    errorMessage = 'an object name may not exceed 255 characters in length';
+                }
+            }
+            return {
+                isValid: errorMessage ? false : true,
+                messageId: messageId,
+                errorMessage: errorMessage,
+                shortMessage: shortMessage,
+                diagnosis: diagnosis,
+                value: value,
+                parsedValue: parsedValue
+            };
+        }
+
         function validateText(value, options) {
             var parsedValue,
                 errorMessage, diagnosis = 'valid',
                 minLength = options.min_length,
                 maxLength = options.max_length,
                 regexp = options.regexp_constraint ? new RegExp(regexp) : false;
+
+            if (options.type) {
+                switch (options.type) {
+                    case 'WorkspaceObjectName':
+                        return validateWorkspaceObjectNameString(value, options);
+                }
+            }
 
             if (isEmptyString(value)) {
                 if (options.required) {
@@ -602,6 +682,16 @@ define([
             };
         }
 
+        function validateTrue(value) {
+            return {
+                isValid: true,
+                errorMessage: null,
+                diagnosis: 'valid',
+                value: value,
+                parsedValue: value
+            };
+        }
+
         return {
             validateWorkspaceDataPaletteRef: validateWorkspaceDataPaletteRef,
             validateWorkspaceObjectName: validateWorkspaceObjectName,
@@ -617,7 +707,8 @@ define([
             validateSet: validateSet,
             validateStringSet: validateTextSet,
             validateTextSet: validateTextSet,
-            validateBoolean: validateBoolean
+            validateBoolean: validateBoolean,
+            validateTrue: validateTrue
         };
     }
 

@@ -39,17 +39,56 @@ define([
     // Get the workspace id from the URL
     var workspaceId = null,
         objectId = null,
-        narrativeRef = null,
-        m = window.location.href.match(/(ws\.)?(\d+)((\.obj\.(\d+))(\.ver\.(\d+))?)?$/);
+        narrativeRef = null;
+    // m = window.location.href.match(/(ws\.)?(\d+)((\.obj\.(\d+))(\.ver\.(\d+))?)?$/);
     // 2 = wsid
     // 5 = objid
     // 7 = ver
-    if (m && m.length > 2) {
-        workspaceId = parseInt(m[2]);
-        if (m[5] != undefined) {
-            objectId = parseInt(m[5]);
-            narrativeRef = workspaceId + '/' + objectId;
-        }
+
+    /*
+    Parse the workspace id from the URL.
+    Ignore the url up to the last path component.
+
+    The narrative url comes in two forms:
+    - the legacy form is ws.<wsid>.obj.<objid>
+      E.g. https://ci.kbase.us/narrative/ws.44905.obj.1
+    - the modern form is <wsid>
+      E.g. https://ci.kbase.us/narrative/44905
+
+    In both cases, we are only interested in the final path component, and only the
+    workspace id part of that.
+    Note that the url is always versionless. Although narratives have versions 
+    (as objects, of course they do!), they generally are not designed to be usable 
+    directly.
+    Later code performs a lookup of the narrative workspace object to get the 
+    object id if it is not provided in the url.
+    */
+
+    // Using the location's pathname, we don't get the fragment.
+    const path = window.location.pathname;
+    // The following regex pattern will match for ws.<wsid>.obj.<objid>, 
+    // ws.<wsid>.obj.<objid>.ver.<version>, and
+    // <wsid>
+    const narrativeIDRegex = /.*\/(?:(?:ws.(\d+).obj.(\d+)(?:.ver.(\d+))?)|(\d*))$/;
+    const pathMatchResults = path.match(narrativeIDRegex);
+    if (pathMatchResults) {
+        // Note that wsid1 will be populated for the legacy form, and 
+        // wsid2 for the modern form.
+        const [, workspaceId1, _objectId, _objectVersion, workspaceId2] = pathMatchResults;
+        workspaceId = parseInt(workspaceId1 || workspaceId2);
+        // Note that "narrativeRef" is not being constructed here.
+        // I think this is a remnant which should be removed from the codebase, but is
+        // out of scope for what I'm doing now which is ensuring that url fragments
+        // (the #hash part of the url) don't break the narrative.
+        // All code that I can find uses getNarrativeRef() from kbaseNarrative.js to 
+        // obtain a workspaceId/objectId narrative id. And that method gets the workspace
+        // info for the workspace id provided in the url, and uses the 'narrative' metadata
+        // field to discover the object id for the narrative object.
+        // Note also that the back end code ALSO checks this stuff, and will choke if the
+        // objectId is not a valid narrative, even though we don't care here,
+    } else {
+        // TODO: There doesn't appear to be a way to trigger an error on a bad url?
+        //       Not addressing this now.
     }
 
     // Build the config up from the configSet (from config.json)

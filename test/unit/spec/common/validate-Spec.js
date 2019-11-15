@@ -6,7 +6,140 @@ define([
 ], function (Promise, Validation) {
     'use strict';
 
-    describe('Props core functions', function () {
+    describe('Validator functions', function () {
+        /* map from wsid to objects that match the name
+         * used for mocking out the responses needed for validateWorkspaceObjectName,
+         * in the case where we want to ensure that the object
+         * doesn't already exist.
+         * These will be used across different mock workspaces, with the same name.
+         * ws 1 - it doesn't exist.
+         * ws 2 - it exists, of the same type
+         * ws 3 - it exists, of different type
+         */
+        const wsObjName = 'SomeObject',
+            wsObjType = 'SomeModule.SomeType',
+            wsObjMapping = {
+                '1': [null],
+                '2': [[1, wsObjName, wsObjType, '2019-07-23T22:42:44+0000', 1, 'someuser', 2, 'someworkspace', 'somehash', 123, null]],
+                '3': [[1, wsObjName, 'SomeOtherModule.SomeOtherType', '2019-07-23T22:42:44+0000', 1, 'someotheruser', 3, 'someotherworkspace', 'somehash', 123, null]]
+            },
+            fakeWsUrl = 'https://test.kbase.us/services/ws';
+
+        beforeEach(() => {
+            jasmine.Ajax.install();
+
+            jasmine.Ajax.stubRequest(
+                fakeWsUrl,
+                /wsid.\s*\:\s*1\s*,/
+            ).andReturn((function() {
+                return {
+                    status: 200,
+                    statusText: 'HTTP/1.1 200 OK',
+                    contentType: 'application/json',
+                    responseText: JSON.stringify({'result': [wsObjMapping['1']]})
+                }
+            })());
+            jasmine.Ajax.stubRequest(
+                fakeWsUrl,
+                /wsid.\s*:\s*2\s*,/
+            ).andReturn({
+                status: 200,
+                statusText: 'HTTP/1.1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify({'result': [wsObjMapping['2']]})
+            });
+            jasmine.Ajax.stubRequest(
+                fakeWsUrl,
+                /wsid.\s*:\s*3\s*,/
+            ).andReturn({
+                status: 200,
+                statusText: 'HTTP/1.1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify({'result': [wsObjMapping['3']]})
+            });
+        });
+
+        afterEach(() => {
+            jasmine.Ajax.uninstall();
+        });
+
+        it('validateWorkspaceObjectName - returns valid when they should not exist', (done) => {
+            Validation.validateWorkspaceObjectName(wsObjName, {
+                shouldNotExist: true,
+                workspaceId: 1,
+                workspaceServiceUrl: fakeWsUrl,
+                types:[wsObjType]
+            })
+                .then((result) => {
+                    expect(result).toEqual({
+                        isValid: true,
+                        messageId: undefined,
+                        errorMessage: undefined,
+                        shortMessage: undefined,
+                        diagnosis: 'valid',
+                        value: wsObjName,
+                        parsedValue: wsObjName
+                    });
+                    done();
+                });
+        });
+
+        it('validateWorkspaceObjectName - returns valid-ish when type exists of same type', (done) => {
+            Validation.validateWorkspaceObjectName(wsObjName, {
+                shouldNotExist: true,
+                workspaceId: 2,
+                workspaceServiceUrl: fakeWsUrl,
+                types: [wsObjType]
+            })
+                .then(result => {
+                    expect(result).toEqual({
+                        isValid: true,
+                        messageId: 'obj-overwrite-warning',
+                        shortMessage: 'an object already exists with this name',
+                        diagnosis: 'suspect',
+                        errorMessage: undefined,
+                        value: wsObjName,
+                        parsedValue: wsObjName
+                    });
+                    done();
+                })
+        });
+
+        it('validateWorkspaceObjectName - returns invalid when type exists of different type', (done) => {
+            Validation.validateWorkspaceObjectName(wsObjName, {
+                shouldNotExist: true,
+                workspaceId: 3,
+                workspaceServiceUrl: fakeWsUrl,
+                types: [wsObjType]
+            })
+                .then(result => {
+                    expect(result).toEqual({
+                        isValid: false,
+                        messageId: 'obj-overwrite-diff-type',
+                        errorMessage: 'an object already exists with this name and is not of the same type',
+                        diagnosis: 'invalid',
+                        shortMessage: undefined,
+                        value: wsObjName,
+                        parsedValue: wsObjName
+                    });
+                    done();
+                })
+        });
+
+        it('Can look up workspace names', (done) => {
+            Validation.validateWorkspaceObjectName('somename', {
+                shouldNotExist: true,
+                workspaceId: 1,
+                workspaceServiceUrl: 'https://test.kbase.us/services/ws',
+                types:[wsObjType]
+            })
+                .then((result) => {
+                    console.log(result);
+                    done();
+                });
+        });
+
+
         it('Is alive', function () {
             var alive;
             if (Validation) {
@@ -24,6 +157,17 @@ define([
                 return val;
             });
         }
+        it('validateTrue - should be an instant truthy no-op-ish response', () => {
+            const value = 'foo';
+            expect(Validation.validateTrue(value)).toEqual({
+                isValid: true,
+                errorMessage: null,
+                diagnosis: 'valid',
+                value: value,
+                parsedValue: value
+            });
+        });
+
         it('validateTextString - Validate a simple string without constraints', function () {
             expect(Validation.validateTextString('test', {}).isValid).toEqual(true);
         });
@@ -85,6 +229,33 @@ define([
                     done();
                 });
         });
+        it('validateTextString - Validate a regexp with matching string', () => {
+            const value = 'foobar';
+            const options = {
+                regexp_constraint: /^foo/
+            };
+            const result = Validation.validateTextString(value, options);
+            expect(result).toEqual({
+                isValid: true,
+                diagnosis: 'valid',
+                value: value,
+                parsedValue: value,
+                errorMessage: undefined
+            });
+        });
+        it('validateTextString - Validate a regexp with non-matching string', () => {
+            const value = 'barfoo';
+            const options = {
+                regexp_constraint: /^\d+$/
+            };
+            expect(Validation.validateTextString(value, options)).toEqual({
+                isValid: false,
+                diagnosis: 'invalid',
+                value: value,
+                parsedValue: value,
+                errorMessage: 'The text value did not match the regular expression constraint ' + options.regexp_constraint
+            });
+        })
 
         // INTEGER
         it('validateIntString - Validate an integer without constraints', function (done) {
@@ -241,9 +412,11 @@ define([
                 testSet.forEach(function (test) {
                     if (test.options.required === undefined) {
                         [true, false].forEach(function (required) {
-                            it(method + ' - ' + test.title, function (done) {
+                            it(method + ' - ' + test.title + ' - required: ' + required, function (done) {
                                 Promise.try(function () {
-                                    return Validation[method](test.value, {required: required});
+                                    let options = test.options;
+                                    options.required = required;
+                                    return Validation[method](test.value, options);
                                 })
                                     .then(function (result) {
                                         // console.log(result);
@@ -257,7 +430,7 @@ define([
                     } else {
                         it(method + ' - ' + test.title, function (done) {
                             Promise.try(function () {
-                                return Validation[method](test.value, {required: test.options.required});
+                                return Validation[method](test.value, test.options);
                             })
                                 .then(function (result) {
                                     // console.log(result);
@@ -454,11 +627,69 @@ define([
                     }
                     // could go on..
                 ],
+                validateRangeTests = [
+                    {
+                        title: 'value over max',
+                        value: '123.45',
+                        options: {
+                            max_float: 100
+                        },
+                        result: {
+                            isValid: false,
+                            diagnosis: 'invalid',
+                            errorMessage: 'the maximum value for this parameter is 100',
+                            value: '123.45',
+                            parsedValue: undefined
+                        }
+                    },
+                    {
+                        title: 'value under min',
+                        value: '5',
+                        options: {
+                            min_float: 10
+                        },
+                        result: {
+                            isValid: false,
+                            diagnosis: 'invalid',
+                            errorMessage: 'the minimum value for this parameter is 10',
+                            value: '5',
+                            parsedValue: undefined
+                        }
+                    },
+                    {
+                        title: 'within range',
+                        value: '5.5',
+                        options: {
+                            min_float: 0,
+                            max_float: 10
+                        },
+                        result: {
+                            isValid: true,
+                            diagnosis: 'valid',
+                            errorMessage: undefined,
+                            value: '5.5',
+                            parsedValue: 5.5
+                        }
+                    },
+                    {
+                        title: 'infinite',
+                        value: 'Infinity',
+                        options: {},
+                        result: {
+                            isValid: false,
+                            diagnosis: 'invalid',
+                            errorMessage: 'value must be a finite float',
+                            value: 'Infinity',
+                            parsedValue: undefined
+                        }
+                    }
+                ],
                 tests = [
                     emptyValues,
                     acceptableFormatTests,
                     badValueTests,
-                    typeTests
+                    typeTests,
+                    validateRangeTests
                 ];
 
             runTests('validateFloatString', tests);
@@ -980,13 +1211,355 @@ define([
             runTests('validateWorkspaceDataPaletteRef', testCases);
         }());
 
-        // Set of Strings
+        // Validate workspace object ref
+        (function () {
+            const nonStringValues = [1, 0, -1, undefined, null, [], {}],
+                nonStringCases = nonStringValues.map(value => {
+                    return {
+                        title: 'non string - ' + value,
+                        value: value,
+                        options: {},
+                        result: {
+                            isValid: false,
+                            errorMessage: 'value must be a string in workspace object reference format',
+                            diagnosis: 'invalid'
+                        }
+                    };
+                }),
+                emptyStringValues = ['', ' ', '\t'],
+                emptyStringCases = emptyStringValues.map((value, idx) => {
+                    return {
+                        title: 'empty string type ' + (idx+1) + ' - required',
+                        value: value,
+                        options: {required: true},
+                        result: {
+                            isValid: false,
+                            errorMessage: 'value is required',
+                            diagnosis: 'required-missing'
+                        }
+                    }
+                }).concat(emptyStringValues.map((value, idx) => {
+                    return {
+                        title: 'empty string type ' + (idx+1) + ' - not required',
+                        value: value,
+                        options: {required: false},
+                        result: {
+                            isValid: true,
+                            diagnosis: 'optional-empty'
+                        }
+                    }
+                })),
+                badStringValues = ['wat', '123/45/6/7', '123/456/789;123', '123/456/7;123/45/6/7', 'foo/bar/baz'],
+                badStringCases = badStringValues.map(value => {
+                    return {
+                        title: 'bad string - ' + value,
+                        value: value,
+                        options: {},
+                        result: {
+                            isValid: false,
+                            diagnosis: 'invalid',
+                            errorMessage: 'Invalid object reference format, should be #/#/#'
+                        }
+                    };
+                }),
+                goodStringValues = [
+                    '1/2/3', '123/45/678', '1234567890123/4576894876498756/192387129837198237198273'
+                ],
+                goodStringCases = goodStringValues.map(value => {
+                    return {
+                        title: 'good string - ' + value,
+                        value: value,
+                        options: {},
+                        result: {
+                            isValid: true,
+                            diagnosis: 'valid'
+                        }
+                    };
+                });
 
-        // Set of Ints
+            const testCases = [
+                nonStringCases,
+                emptyStringCases,
+                badStringCases,
+                goodStringCases
+            ];
+            runTests('validateWorkspaceObjectRef', testCases);
+        }());
 
-        // Set of Floats
+        (function() {
+            const nonStringValues = [1, 0, -1, undefined, [], {}],
+                nonStringCases = nonStringValues.map(value => {
+                    return {
+                        title: 'non string - ' + value,
+                        value: value,
+                        options: {},
+                        result: {
+                            isValid: false,
+                            errorMessage: 'value must be a string (it is of type "' + (typeof value) + '")',
+                            diagnosis: 'invalid'
+                        }
+                    };
+                }),
+                emptyStringValues = ['', ' ', '\t'],
+                emptyStringCases = emptyStringValues.map((value, idx) => {
+                    return {
+                        title: 'empty string type ' + (idx+1) + ' - required',
+                        value: value,
+                        options: {required: true},
+                        result: {
+                            isValid: false,
+                            errorMessage: 'value is required',
+                            diagnosis: 'required-missing'
+                        }
+                    }
+                }).concat(emptyStringValues.map((value, idx) => {
+                    return {
+                        title: 'empty string type ' + (idx+1) + ' - not required',
+                        value: value,
+                        options: {required: false},
+                        result: {
+                            isValid: true,
+                            diagnosis: 'optional-empty'
+                        }
+                    }
+                })),
+                badStringValues = ['wat', '123/45/6/7', '123/456/789;123', '123/456/7;123/45/6/7', 'foo/bar/baz'],
+                badStringCases = badStringValues.map(value => {
+                    return {
+                        title: 'bad string - ' + value,
+                        value: value,
+                        options: {},
+                        result: {
+                            isValid: false,
+                            diagnosis: 'invalid'
+                        }
+                    };
+                }),
+                goodStringValues = [
+                    'true', 'false', 'TRUE', 'FALSE', 'True', 'False', 't', 'f', 'T', 'F', 'yes', 'no', 'y', 'n'
+                ],
+                goodStringCases = goodStringValues.map(value => {
+                    return {
+                        title: 'good string - ' + value,
+                        value: value,
+                        options: {},
+                        result: {
+                            isValid: true,
+                            diagnosis: 'valid'
+                        }
+                    };
+                });
+
+            const testCases = [
+                nonStringCases,
+                emptyStringCases,
+                badStringCases,
+                goodStringCases
+            ];
+            runTests('validateBoolean', testCases);
+        }());
+
+        // validate workspace object name string -- a case of validateText/validateTextString
+        (function() {
+            const nonStringValues = [1, 0, -1, undefined, [], {}],
+                nonStringCases = nonStringValues.map(value => {
+                    return {
+                        title: 'non string - ' + value,
+                        value: value,
+                        options: {type: 'WorkspaceObjectName'},
+                        result: {
+                            isValid: false,
+                            errorMessage: 'value must be a string in workspace object name format',
+                            diagnosis: 'invalid'
+                        }
+                    };
+                }),
+                emptyStringValues = ['', ' ', '\t'],
+                emptyStringCases = emptyStringValues.map((value, idx) => {
+                    return {
+                        title: 'empty string type ' + (idx+1) + ' - required',
+                        value: value,
+                        options: {required: true, type: 'WorkspaceObjectName'},
+                        result: {
+                            isValid: false,
+                            errorMessage: 'value is required',
+                            diagnosis: 'required-missing'
+                        }
+                    }
+                }).concat(emptyStringValues.map((value, idx) => {
+                    return {
+                        title: 'empty string type ' + (idx+1) + ' - not required',
+                        value: value,
+                        options: {required: false, type: 'WorkspaceObjectName'},
+                        result: {
+                            isValid: true,
+                            diagnosis: 'optional-empty'
+                        }
+                    }
+                })),
+                spacedStringValues = ['foo bar', 'foo bar baz'],
+                spacedStringCases = spacedStringValues.map(value => {
+                    return {
+                        title: 'spaced string - ' + value,
+                        value: value,
+                        options: {type: 'WorkspaceObjectName'},
+                        result: {
+                            isValid: false,
+                            diagnosis: 'invalid',
+                            messageId: 'obj-name-no-spaces',
+                            errorMessage: 'an object name may not contain a space'
+                        }
+                    }
+                }),
+                intStringValues = ['1', '23', '-5', '123456789012345678901234567890'],
+                intStringCases = intStringValues.map(value => {
+                    return {
+                        title: 'int string - ' + value,
+                        value: value,
+                        options: {type: 'WorkspaceObjectName'},
+                        result: {
+                            isValid: false,
+                            diagnosis: 'invalid',
+                            messageId: 'obj-name-not-integer',
+                            errorMessage: 'an object name may not be in the form of an integer'
+                        }
+                    }
+                }),
+                invalidCharValues = ['foo!', 'bar@baz', 'a#a', '1$1', '%', '!@#$%^&*('],
+                invalidCharCases = invalidCharValues.map(value => {
+                    return {
+                        title: 'invalid char string - ' + value,
+                        value: value,
+                        options: {type: 'WorkspaceObjectName'},
+                        result: {
+                            isValid: false,
+                            diagnosis: 'invalid',
+                            messageId: 'obj-name-invalid-characters',
+                            errorMessage: 'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"'
+                        }
+                    }
+                }),
+                tooLongCase = [{
+                    title: 'string too long',
+                    value: Array(256).fill('a').join(''),
+                    options: {type: 'WorkspaceObjectName'},
+                    result: {
+                        isValid: false,
+                        diagnosis: 'invalid',
+                        messageId: 'obj-name-too-long',
+                        errorMessage: 'an object name may not exceed 255 characters in length'
+                    }
+                }],
+                goodStringValues = [
+                    'AGenome', 'Some_Object', 'another.object', '-foo', 'bar-', 'da5id', '3dog', '  foobar  '
+                ],
+                goodStringCases = goodStringValues.map(value => {
+                    return {
+                        title: 'good string - ' + value,
+                        value: value,
+                        options: {type: 'WorkspaceObjectName'},
+                        result: {
+                            isValid: true,
+                            diagnosis: 'valid',
+                            parsedValue: value.trim()
+                        }
+                    };
+                });
+
+            const testCases = [
+                nonStringCases,
+                emptyStringCases,
+                spacedStringCases,
+                intStringCases,
+                invalidCharCases,
+                tooLongCase,
+                goodStringCases
+            ];
+            runTests('validateText', testCases);
+            runTests('validateWorkspaceObjectName', testCases);  // covers all but the case where we have to see if the object exists
+        }());
+
+        (function() {
+            const emptySets = [null, [], [''], [' '], ['\t', '', '  ']],
+                emptySetCases = emptySets.map(set => {
+                    return {
+                        title: 'empty set - ' + JSON.stringify(set) + ' - not required',
+                        value: set,
+                        options: {required: false},
+                        result: {
+                            isValid: true,
+                            diagnosis: 'optional-empty'
+                        }
+                    };
+                }).concat(emptySets.map(set => {
+                    return {
+                        title: 'empty set' + JSON.stringify(set) + ' - required',
+                        value: set,
+                        options: {required: true},
+                        result: {
+                            isValid: false,
+                            diagnosis: 'required-missing',
+                            errorMessage: 'value is required'
+                        }
+                    }
+                })),
+                populatedSets = [['a', 'b'], ['a'], [1, 2]],
+                populatedOkCases = populatedSets.map(set => {
+                    return {
+                        title: 'set ok - ' + JSON.stringify(set),
+                        value: set,
+                        options: {values: ['a', 'b', 'c', 1, 2, 3]},
+                        result: {
+                            isValid: true,
+                            diagnosis: 'valid'
+                        }
+                    }
+                }),
+                populatedFailCases = populatedSets.map(set => {
+                    return {
+                        title: 'set not ok - ' + JSON.stringify(set),
+                        value: set,
+                        options: {values: ['b', 'd', 1, 4]},
+                        result: {
+                            isValid: false,
+                            diagnosis: 'invalid',
+                            errorMessage: 'Value not in the set'
+                        }
+                    }
+                }),
+                populatedNoopCase = [{
+                    title: 'set with no test',
+                    value: ['a', 'b', 'c'],
+                    options: {},
+                    result: {
+                        isValid: true,
+                        diagnosis: 'valid'
+                    }
+                }],
+                notArraySets = [undefined, 'foo', 1, {}],
+                notArrayCases = notArraySets.map(set => {
+                    return {
+                        title: 'not an array - ' + set,
+                        value: set,
+                        options: {},
+                        result: {
+                            isValid: false,
+                            diagnosis: 'invalid',
+                            errorMessage: 'value must be an array'
+                        }
+                    }
+                });
+
+            const testCases = [
+                emptySetCases,
+                populatedOkCases,
+                populatedFailCases,
+                populatedNoopCase,
+                notArrayCases
+            ];
+            runTests('validateTextSet', testCases);
+            runTests('validateStringSet', testCases);
+        }());
 
     });
-
-
 });

@@ -171,7 +171,7 @@ define([
                         max_length: spec.data.constraints.max_length,
                         required: spec.data.constraints.required
                     };
-                return Validation.validateText(selectedItem, validationConstraints);
+                return Validation.validateText(String(selectedItem), validationConstraints);
             });
         }
 

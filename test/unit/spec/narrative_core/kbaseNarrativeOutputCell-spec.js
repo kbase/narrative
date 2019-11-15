@@ -53,10 +53,8 @@ define([
         };
 
         beforeEach(function() {
-            // beforeEach(function () {
             history.pushState(null, null, '/narrative/ws.10.obj.1');
             Config.config.workspaceId = 10;
-            // });
             Jupyter.narrative = new Narrative();
             $('body').append($('<div id="notebook-container">').append($target));
             myWidget = new Widget($target, {

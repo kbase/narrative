@@ -116,10 +116,9 @@ define([
                 handler: function(e) {
                     channel.emit('touched');
                     cancelTouched();
-                    let target = e.target;
                     autoChangeTimer = window.setTimeout(function() {
                         autoChangeTimer = null;
-                        target.dispatchEvent(new Event('change'));
+                        e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
                 }
             };

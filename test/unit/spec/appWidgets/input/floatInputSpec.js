@@ -2,14 +2,10 @@
 define([
     'widgets/appWidgets2/input/floatInput',
     'common/runtime',
-    'base/js/namespace',
-    'kbaseNarrative',
     'testUtil'
 ], function(
     FloatInput,
     Runtime,
-    Jupyter,
-    Narrative,
     TestUtil
 ) {
     'use strict';
@@ -43,14 +39,8 @@ define([
                 },
                 channelName: bus.channelName,
             };
-
-            if (TestUtil.getAuthToken()) {
-                document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
-                Jupyter.narrative = new Narrative();
-                Jupyter.narrative.authToken = TestUtil.getAuthToken();
-                Jupyter.narrative.userId = TestUtil.getUserId();
-            }
         });
+
         afterEach(() => {
             bus.stop();
         })
@@ -118,8 +108,8 @@ define([
         it('should update model properly with keyup/touch event', (done) => {
             let widget = FloatInput.make(testConfig);
             let node = document.createElement('div');
-            bus.on('changed', (value) => {
-                expect(value).toEqual({newValue: 1.23});
+            bus.on('validation', (message) => {
+                expect(message.isValid).toBeTruthy();
                 widget.stop()
                     .then(done);
             });
@@ -128,6 +118,7 @@ define([
                     const input = node.querySelector('input[data-type="float"]');
                     input.setAttribute('value', 1.23);
                     input.dispatchEvent(new Event('keyup'));
+                    TestUtil.wait(500);
                 });
         });
 
@@ -151,7 +142,7 @@ define([
             widget.start({node: node})
                 .then(() => {
                     bus.emit('update', {value: '12345.6'});
-                    return TestUtil.wait(100);
+                    return TestUtil.wait(500);
                 })
                 .then(() => {
                     const input = node.querySelector('input[data-type="float"]');
@@ -159,13 +150,13 @@ define([
                     // console.log(node);
                     // expect(input.getAttribute('value')).toBe(12345.6);
                     bus.emit('reset-to-defaults');
-                    return TestUtil.wait(100);
+                    return TestUtil.wait(200);
                 })
-                .then(() => {
-                    // const input = node.querySelector('input[data-type="float"]');
-                    // expect(input.getAttribute('value')).toBe(1.0);
-                    return widget.stop();
-                })
+                // .then(() => {
+                //     // const input = node.querySelector('input[data-type="float"]');
+                //     // expect(input.getAttribute('value')).toBe(1.0);
+                //     return widget.stop();
+                // })
                 .then(done);
         });
     });

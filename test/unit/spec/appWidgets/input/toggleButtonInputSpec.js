@@ -44,13 +44,6 @@ define([
                 description: 'toggle button testing',
             });
             testConfig = buildTestConfig(required, defaultValue, bus);
-
-            if (TestUtil.getAuthToken()) {
-                document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
-                Jupyter.narrative = new Narrative();
-                Jupyter.narrative.authToken = TestUtil.getAuthToken();
-                Jupyter.narrative.userId = TestUtil.getUserId();
-            }
         });
 
         it('Should load the widget', () => {
@@ -110,16 +103,17 @@ define([
             widget.start().then(() => {bus.emit('run', {node: node})});
         });
 
-        it('Should respond to input change events with "changed"', (done) => {
+        it('Should respond to input change events with "changed"', (done, fail) => {
             let widget = ToggleButtonInput.make(testConfig);
             bus.on('sync', () => {
                 bus.emit('update', {value: defaultValue});
-                TestUtil.wait(100)
+                TestUtil.wait(200)
                     .then(() => {
                         let inputElem = node.querySelector('input[type="checkbox"]');
                         expect(inputElem.getAttribute('checked')).not.toBeNull();
                         inputElem.dispatchEvent(new Event('change'));
-                    });
+                    })
+                    .catch(fail);
             });
             bus.on('changed', (message) => {
                 expect(message.newValue).toBeTruthy();

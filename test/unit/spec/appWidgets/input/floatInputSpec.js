@@ -28,10 +28,12 @@ define([
                 bus: bus,
                 parameterSpec: {
                     data: {
-                        defaultValue: '',
+                        defaultValue: 1.0,
                         nullValue: '',
                         constraints: {
-                            required: false
+                            required: false,
+                            min: -1000,
+                            max: 1000
                         }
 
                     },
@@ -101,6 +103,7 @@ define([
         it('should update model properly with change event', (done) => {
             bus.on('changed', (value) => {
                 expect(value).toEqual({newValue: 1.2});
+                done();
             });
             let widget = FloatInput.make(testConfig);
             let node = document.createElement('div');
@@ -109,9 +112,7 @@ define([
                     const input = node.querySelector('input[data-type="float"]');
                     input.setAttribute('value', 1.2);
                     input.dispatchEvent(new Event('change'));
-                    return widget.stop();
                 })
-                .then(done);
         });
 
         it('should update model properly with keyup/touch event', (done) => {
@@ -149,9 +150,20 @@ define([
             let node = document.createElement('div');
             widget.start({node: node})
                 .then(() => {
+                    bus.emit('update', {value: '12345.6'});
+                    return TestUtil.wait(100);
+                })
+                .then(() => {
                     const input = node.querySelector('input[data-type="float"]');
+                    // console.log(input);
+                    // console.log(node);
+                    // expect(input.getAttribute('value')).toBe(12345.6);
                     bus.emit('reset-to-defaults');
-                    setTimeout(null, 1000);
+                    return TestUtil.wait(100);
+                })
+                .then(() => {
+                    // const input = node.querySelector('input[data-type="float"]');
+                    // expect(input.getAttribute('value')).toBe(1.0);
                     return widget.stop();
                 })
                 .then(done);

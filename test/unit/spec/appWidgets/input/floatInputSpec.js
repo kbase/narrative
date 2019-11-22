@@ -21,7 +21,8 @@ define([
 
         beforeEach(function() {
             bus = runtime.bus().makeChannelBus({
-                description: 'float testing'
+                description: 'float testing',
+                // name: 'float-test-' + Math.floor(Math.random()*10000)
             });
             testConfig = {
                 bus: bus,
@@ -48,6 +49,9 @@ define([
                 Jupyter.narrative.userId = TestUtil.getUserId();
             }
         });
+        afterEach(() => {
+            bus.stop();
+        })
 
         it('should be real!', function() {
             expect(FloatInput).not.toBeNull();
@@ -94,7 +98,7 @@ define([
                 });
         });
 
-        it('should update model properly', (done) => {
+        it('should update model properly with change event', (done) => {
             bus.on('changed', (value) => {
                 expect(value).toEqual({newValue: 1.2});
             });
@@ -110,6 +114,22 @@ define([
                 .then(done);
         });
 
+        it('should update model properly with keyup/touch event', (done) => {
+            let widget = FloatInput.make(testConfig);
+            let node = document.createElement('div');
+            bus.on('changed', (value) => {
+                expect(value).toEqual({newValue: 1.23});
+                widget.stop()
+                    .then(done);
+            });
+            widget.start({node: node})
+                .then(() => {
+                    const input = node.querySelector('input[data-type="float"]');
+                    input.setAttribute('value', 1.23);
+                    input.dispatchEvent(new Event('keyup'));
+                });
+        });
+
         it('should show message when configured', (done) => {
             testConfig.showOwnMessages = true;
             let widget = FloatInput.make(testConfig);
@@ -119,7 +139,6 @@ define([
                     const input = node.querySelector('input[data-type="float"]');
                     input.setAttribute('value', 5);
                     input.dispatchEvent(new Event('change'));
-                    console.log(node);
                     return widget.stop();
                 })
                 .then(done);
@@ -131,15 +150,11 @@ define([
             widget.start({node: node})
                 .then(() => {
                     const input = node.querySelector('input[data-type="float"]');
-                    input.setAttribute('value', 5);
-                    input.dispatchEvent(new Event('change'));
-                    console.log(node);
-                    bus.emit('update', {value: '123.45'});
+                    bus.emit('reset-to-defaults');
                     setTimeout(null, 1000);
                     return widget.stop();
                 })
                 .then(done);
-
         });
     });
 });

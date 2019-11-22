@@ -116,9 +116,10 @@ define([
                 handler: function(e) {
                     channel.emit('touched');
                     cancelTouched();
+                    let target = e.target;
                     autoChangeTimer = window.setTimeout(function() {
                         autoChangeTimer = null;
-                        e.target.dispatchEvent(new Event('change'));
+                        target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
                 }
             };
@@ -175,7 +176,7 @@ define([
             var initialControlValue,
                 min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
-                
+
             if (typeof currentValue === 'number') {
                 initialControlValue = String(currentValue);
             }

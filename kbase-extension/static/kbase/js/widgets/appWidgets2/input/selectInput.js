@@ -56,7 +56,7 @@ define([
                 return spec.data.nullValue;
             }
 
-            // we are modeling a single string value, so we always just get the 
+            // we are modeling a single string value, so we always just get the
             // first selected element, which is all there should be!
             return selected.item(0).value;
         }
@@ -153,9 +153,10 @@ define([
 
         function syncModelToControl() {
             // assuming the model has been modified...
-            var control = ui.getElement('input-control.input');
+            var control = ui.getElement('input-container.input');
             // loop through the options, selecting the one with the value.
             // unselect
+            console.log(control);
             if (control.selectedIndex >= 0) {
                 control.options.item(control.selectedIndex).selected = false;
             }
@@ -214,6 +215,7 @@ define([
 
                 setModelValue(config.initialValue);
                 autoValidate();
+                console.log(parent);
                 syncModelToControl();
             });
         }

@@ -137,27 +137,14 @@ define([
         });
 
         it('should respond to bus commands', (done) => {
+            bus.on('validation', done);
             let widget = FloatInput.make(testConfig);
             let node = document.createElement('div');
             widget.start({node: node})
                 .then(() => {
                     bus.emit('update', {value: '12345.6'});
                     return TestUtil.wait(500);
-                })
-                .then(() => {
-                    const input = node.querySelector('input[data-type="float"]');
-                    // console.log(input);
-                    // console.log(node);
-                    // expect(input.getAttribute('value')).toBe(12345.6);
-                    bus.emit('reset-to-defaults');
-                    return TestUtil.wait(200);
-                })
-                // .then(() => {
-                //     // const input = node.querySelector('input[data-type="float"]');
-                //     // expect(input.getAttribute('value')).toBe(1.0);
-                //     return widget.stop();
-                // })
-                .then(done);
+                });
         });
     });
 });

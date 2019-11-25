@@ -156,7 +156,6 @@ define([
             var control = ui.getElement('input-container.input');
             // loop through the options, selecting the one with the value.
             // unselect
-            console.log(control);
             if (control.selectedIndex >= 0) {
                 control.options.item(control.selectedIndex).selected = false;
             }
@@ -215,7 +214,6 @@ define([
 
                 setModelValue(config.initialValue);
                 autoValidate();
-                console.log(parent);
                 syncModelToControl();
             });
         }

@@ -98,65 +98,113 @@ define([
             widget.start().then(() => {bus.emit('run', {node: node})});
         });
 
-        it('Should update value via bus', (done) => { //and reset model properly via bus', (done) => {
+        it('Should update value via bus', (done) => {
             // start with one value, change it, then reset.
             // check along the way.
+            bus.respond({
+                key: {
+                    type: 'get-parameters'
+                },
+                handle: () => {
+                    return {
+                        p1: null,
+                        p2: 'banana',
+                        p3: 'bar2'
+                    }
+                }
+            });
+
+            bus.on('validation', (message) => {
+                expect(message.isValid).toBeTruthy();
+                let inputElem = node.querySelector('input[data-element="input"]');
+                if (inputElem) {
+                    expect(inputElem.value).toBe('foo');
+                    done();
+                }
+            });
+
             bus.on('sync', () => {
                 bus.emit('update', {value: 'foo'});
-                TestUtil.wait(500)
-                    .then(() => {
-                        let inputElem = node.querySelector('input[data-element="input"]');
-                        expect(inputElem.value).toBe('foo');
-                        bus.emit('update', {value: 'foo'})
-                        return TestUtil.wait(500);
-                    })
-                    .then(() => {
-                        let inputElem = node.querySelector('input[data-element="input"]');
-                        expect(inputElem.value).toBe('foo');
-                        done();
-                    });
             });
             let widget = NewObjectInput.make(testConfig);
             widget.start().then(() => {bus.emit('run', {node: node})});
         });
 
         it('Should reset to default via bus', (done) => {
-            bus.on('sync', () => {
-                bus.emit('update', {value: 'foobarbaz'})
-                TestUtil.wait(500)
-                    .then(() => {
+            let validationCount = 0;
+
+            bus.respond({
+                key: {
+                    type: 'get-parameters'
+                },
+                handle: () => {
+                    return {
+                        p1: null,
+                        p2: 'banana',
+                        p3: 'bar2'
+                    }
+                }
+            });
+
+            bus.on('validation', (message) => {
+                let inputElem = node.querySelector('input[data-element="input"]');
+                if (inputElem) {
+                    if (validationCount < 1) {
+                        expect(inputElem.value).toBe('foobarbaz');
+                        validationCount++;
                         bus.emit('reset-to-defaults');
-                        return TestUtil.wait(500);
-                    })
-                    .then(() => {
-                        let inputElem = node.querySelector('input[data-element="input"]');
+                    }
+                    else {
                         expect(inputElem.value).toBe('apple');
                         done();
-                    });
+                    }
+                }
             });
+            bus.on('sync', () => {
+                bus.emit('update', {value: 'foobarbaz'});
+            });
+
             let widget = NewObjectInput.make(testConfig);
             widget.start().then(() => {bus.emit('run', {node: node})});
         });
 
         it('Should reset to empty string via bus without default', (done) => {
             testConfig = buildTestConfig(false, undefined, bus);
-            bus.on('sync', () => {
-                bus.emit('update', {value: 'foobarbaz'})
-                TestUtil.wait(500)
-                    .then(() => {
+            let validationCount = 0;
+            bus.respond({
+                key: {
+                    type: 'get-parameters'
+                },
+                handle: () => {
+                    return {
+                        p1: null,
+                        p2: 'banana',
+                        p3: 'bar2'
+                    }
+                }
+            });
+
+            bus.on('validation', (message) => {
+                let inputElem = node.querySelector('input[data-element="input"]');
+                if (inputElem) {
+                    if (validationCount < 1) {
+                        expect(inputElem.value).toBe('foobarbaz');
+                        validationCount++;
                         bus.emit('reset-to-defaults');
-                        return TestUtil.wait(500);
-                    })
-                    .then(() => {
-                        let inputElem = node.querySelector('input[data-element="input"]');
+                    }
+                    else {
                         expect(inputElem.value).toBe('');
                         done();
-                    });
+                    }
+                }
+            });
+
+            bus.on('sync', () => {
+                bus.emit('update', {value: 'foobarbaz'});
             });
             let widget = NewObjectInput.make(testConfig);
             widget.start().then(() => {bus.emit('run', {node: node})});
         });
-
 
         it('Should respond to duplicate parameter change events with "validation"', (done) => {
             let widget = NewObjectInput.make(testConfig);
@@ -182,11 +230,11 @@ define([
             });
             bus.on('sync', () => {
                 bus.emit('update', {value: inputStr});
-                TestUtil.wait(500)
-                    .then(() => {
-                        let inputElem = node.querySelector('input[data-element="input"]');
-                        inputElem.dispatchEvent(new Event('change'));
-                    });
+                // TestUtil.wait(500)
+                //     .then(() => {
+                //         let inputElem = node.querySelector('input[data-element="input"]');
+                //         inputElem.dispatchEvent(new Event('change'));
+                //     });
             });
             widget.start().then(() => {bus.emit('run', {node: node})});
         });
@@ -209,16 +257,17 @@ define([
             });
 
             bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                done();
+                let inputElem = node.querySelector('input[data-element="input"]');
+                if (inputElem) {
+                    inputElem.dispatchEvent(new Event('change'));
+                }
             });
             bus.on('sync', () => {
                 bus.emit('update', {value: inputStr});
-                TestUtil.wait(500)
-                    .then(() => {
-                        let inputElem = node.querySelector('input[data-element="input"]');
-                        inputElem.dispatchEvent(new Event('change'));
-                    });
+            });
+            bus.on('changed', (message) => {
+                expect(message.newValue).toBe('banana');
+                done();
             });
             widget.start().then(() => {bus.emit('run', {node: node})});
         });
@@ -248,11 +297,11 @@ define([
             });
             bus.on('sync', () => {
                 bus.emit('update', {value: inputStr});
-                TestUtil.wait(500)
-                    .then(() => {
-                        let inputElem = node.querySelector('input[data-element="input"]');
-                        inputElem.dispatchEvent(new Event('change'));
-                    });
+                // TestUtil.wait(500)
+                //     .then(() => {
+                //         let inputElem = node.querySelector('input[data-element="input"]');
+                //         inputElem.dispatchEvent(new Event('change'));
+                //     });
             });
             widget.start().then(() => {bus.emit('run', {node: node})});
         });

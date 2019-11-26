@@ -105,20 +105,18 @@ define([
                 })
         });
 
-        it('should update model properly with keyup/touch event', (done) => {
+        xit('should update model properly with keyup/touch event', (done) => {
             let widget = FloatInput.make(testConfig);
             let node = document.createElement('div');
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeTruthy();
-                widget.stop()
-                    .then(done);
+                done();
             });
             widget.start({node: node})
                 .then(() => {
                     const input = node.querySelector('input[data-type="float"]');
                     input.setAttribute('value', 1.23);
                     input.dispatchEvent(new Event('keyup'));
-                    TestUtil.wait(500);
                 });
         });
 
@@ -126,14 +124,13 @@ define([
             testConfig.showOwnMessages = true;
             let widget = FloatInput.make(testConfig);
             let node = document.createElement('div');
+            bus.on('validation', done);
             widget.start({node: node})
                 .then(() => {
                     const input = node.querySelector('input[data-type="float"]');
                     input.setAttribute('value', 5);
                     input.dispatchEvent(new Event('change'));
-                    return widget.stop();
-                })
-                .then(done);
+                });
         });
 
         it('should respond to bus commands', (done) => {
@@ -143,7 +140,6 @@ define([
             widget.start({node: node})
                 .then(() => {
                     bus.emit('update', {value: '12345.6'});
-                    return TestUtil.wait(500);
                 });
         });
     });

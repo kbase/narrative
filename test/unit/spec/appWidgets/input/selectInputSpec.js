@@ -105,14 +105,13 @@ define([
             let widget = SelectInput.make(testConfig);
             bus.on('changed', (message) => {
                 expect(message.newValue).toEqual('banana');
-                widget.stop().then(done);
+                done();
             });
             widget.start({node: node})
                 .then(() => {
                     let inputElem = node.querySelector('select[data-element="input"]');
                     inputElem.selectedIndex=2;
                     inputElem.dispatchEvent(new Event('change'));
-                    return TestUtil.wait(100);
                 });
         });
 
@@ -128,24 +127,6 @@ define([
                     let inputElem = node.querySelector('select[data-element="input"]');
                     inputElem.selectedIndex = 1
                     inputElem.dispatchEvent(new Event('change'));
-                    return TestUtil.wait(100);
-                });
-        });
-
-        it('Should respond to keyup change events with "validation"', (done) => {
-            let widget = SelectInput.make(testConfig);
-            const inputText = 'here is some text';
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                expect(message.errorMessage).toBeUndefined();
-                done();
-            });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('select[data-element="input"]');
-                    inputElem.value = inputText;
-                    inputElem.dispatchEvent(new Event('keyup'));
-                    return TestUtil.wait(500);
                 });
         });
 
@@ -162,7 +143,6 @@ define([
                     let inputElem = node.querySelector('select[data-element="input"]');
                     inputElem.value = 'banana';
                     inputElem.dispatchEvent(new Event('change'));
-                    return TestUtil.wait(100);
                 });
         });
 
@@ -193,18 +173,7 @@ define([
                     let inputElem = node.querySelector('select[data-element="input"]');
                     inputElem.selectedIndex = -1;
                     inputElem.dispatchEvent(new Event('change'));
-                    return TestUtil.wait(500);
                 });
-        });
-
-        it('Should focus when commanded', (done) => {
-            let widget = SelectInput.make(testConfig);
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('focus');
-                    return TestUtil.wait(500);
-                })
-                .then(done);
         });
     });
 })

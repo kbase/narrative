@@ -98,6 +98,7 @@ define([
         it('should update model properly', (done) => {
             bus.on('changed', (value) => {
                 expect(value).toEqual({newValue: 1});
+                done();
             });
             let widget = CheckboxInput.make(testConfig);
             let node = document.createElement('div');
@@ -106,23 +107,22 @@ define([
                     const input = node.querySelector('input[type="checkbox"]');
                     input.setAttribute('checked', true);
                     input.dispatchEvent(new Event('change'));
-                    return widget.stop();
-                })
-                .then(done);
+                });
         });
 
         it('should show message when configured', (done) => {
             testConfig.showOwnMessaged = true;
             let widget = CheckboxInput.make(testConfig);
             let node = document.createElement('div');
+            bus.on('changed', (value) => {
+                done();
+            });
             widget.start({node: node})
                 .then(() => {
                     const input = node.querySelector('input[type="checkbox"]');
                     input.setAttribute('checked', true);
                     input.dispatchEvent(new Event('change'));
-                    return widget.stop();
-                })
-                .then(done);
+                });
         });
     });
 });

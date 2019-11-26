@@ -75,7 +75,6 @@ define([
             widget.start({node: node})
                 .then(() => {
                     bus.emit('update', {value: 'some text'});
-                    return TestUtil.wait(500);
                 });
         });
 
@@ -88,7 +87,6 @@ define([
             widget.start({node: node})
                 .then(() => {
                     bus.emit('reset-to-defaults');
-                    return TestUtil.wait(500);
                 });
         });
 
@@ -97,14 +95,13 @@ define([
             const inputText = 'here is some text';
             bus.on('changed', (message) => {
                 expect(message.newValue).toEqual(inputText);
-                widget.stop().then(done);
+                done();
             });
             widget.start({node: node})
                 .then(() => {
                     let inputElem = node.querySelector('input[data-element="input"]');
                     inputElem.value = inputText;
                     inputElem.dispatchEvent(new Event('change'));
-                    return TestUtil.wait(100);
                 });
         });
 
@@ -121,11 +118,10 @@ define([
                     let inputElem = node.querySelector('input[data-element="input"]');
                     inputElem.value = inputText;
                     inputElem.dispatchEvent(new Event('change'));
-                    return TestUtil.wait(100);
                 });
         });
 
-        it('Should respond to keyup change events with "validation"', (done) => {
+        xit('Should respond to keyup change events with "validation"', (done) => {
             let widget = TextInput.make(testConfig);
             const inputText = 'here is some text';
             bus.on('validation', (message) => {
@@ -138,7 +134,6 @@ define([
                     let inputElem = node.querySelector('input[data-element="input"]');
                     inputElem.value = inputText;
                     inputElem.dispatchEvent(new Event('keyup'));
-                    return TestUtil.wait(500);
                 });
         });
 
@@ -156,7 +151,6 @@ define([
                     let inputElem = node.querySelector('input[data-element="input"]');
                     inputElem.value = inputText;
                     inputElem.dispatchEvent(new Event('change'));
-                    return TestUtil.wait(100);
                 });
         });
 
@@ -175,18 +169,8 @@ define([
                     let inputElem = node.querySelector('input[data-element="input"]');
                     inputElem.value = inputText;
                     inputElem.dispatchEvent(new Event('change'));
-                    return TestUtil.wait(100);
                 });
         });
 
-        it('Should focus when commanded', (done) => {
-            let widget = TextInput.make(testConfig);
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('focus');
-                    return TestUtil.wait(1000);
-                })
-                .then(done);
-        });
     });
 })

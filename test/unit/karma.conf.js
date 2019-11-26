@@ -5,6 +5,12 @@ module.exports = function (config) {
     config.set({
         basePath: '../../',
         frameworks: ['jasmine', 'requirejs', 'es6-shim'],
+        client: {
+            jasmine: {
+                failFast: false,
+                DEFAULT_TIMEOUT_INTERVAL: 20000
+            }
+        },
         plugins: [
             'karma-jasmine',
             'karma-chrome-launcher',
@@ -94,7 +100,8 @@ module.exports = function (config) {
             '/test/': '/base/test/'
         },
         client: {
-          requireJsShowNoTimestampsError: '^(?!.*(^/narrative/static/))'
+          requireJsShowNoTimestampsError: '^(?!.*(^/narrative/static/))',
+          clearContext: false
         },
         concurrency: Infinity
 

@@ -86,9 +86,7 @@ define('testUtil', [
     }
 
     function wait(timeMs) {
-        return new Promise((resolve) => {
-            setTimeout(resolve, timeMs);
-        });
+        return Promise.delay(timeMs);
     }
 
     return {

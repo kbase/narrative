@@ -74,46 +74,58 @@ define([
                 });
         });
 
-        it('Should update value and reset properly via bus', (done, fail) => {
+        it('Should update value via bus', (done, fail) => {
             // start with one value, change it, then reset.
             // check along the way.
             let widget = ToggleButtonInput.make(testConfig);
+
+            bus.on('validation', () => {
+                let inputElem = node.querySelector('input[type="checkbox"]');
+                expect(inputElem.getAttribute('checked')).not.toBeNull();
+                done();
+            });
+
             bus.on('sync', () => {
                 bus.emit('update', {value: defaultValue}); // no change, just verify it's there.
-                TestUtil.wait(100)
-                    .then(() => {
-                        let inputElem = node.querySelector('input[type="checkbox"]');
-                        expect(inputElem.getAttribute('checked')).not.toBeNull();
-                        bus.emit('update', {value: 0});
-                        return TestUtil.wait(100);
-                    })
-                    .then(() => {
-                        let inputElem = node.querySelector('input[type="checkbox"]');
-                        expect(inputElem.getAttribute('checked')).toBeNull();
-                        bus.emit('reset-to-defaults');
-                        return TestUtil.wait(100);
-                    })
-                    .then(() => {
-                        let inputElem = node.querySelector('input[type="checkbox"]');
-                        expect(inputElem.getAttribute('checked')).not.toBeNull();
-                        done();
-                    })
-                    .catch(fail);
             });
             widget.start().then(() => {bus.emit('run', {node: node})});
         });
 
-        it('Should respond to input change events with "changed"', (done, fail) => {
+        it('should reset value via bus', (done) => {
             let widget = ToggleButtonInput.make(testConfig);
+            let validationCount = 0;
+            bus.on('validation', () => {
+                let inputElem = node.querySelector('input[type="checkbox"]');
+                if (inputElem) {
+                    if (validationCount < 1) {
+                        expect(inputElem.getAttribute('checked')).toBeNull();
+                        validationCount++;
+                        bus.emit('reset-to-defaults');
+                    }
+                    else {
+                        expect(inputElem.getAttribute('checked')).not.toBeNull();
+                        done();
+                    }
+                }
+            });
+            bus.on('sync', () => {
+                bus.emit('update', {value: false});
+            });
+            widget.start().then(() => {bus.emit('run', {node: node})});
+        });
+
+        it('Should respond to input change events with "changed"', (done) => {
+            let widget = ToggleButtonInput.make(testConfig);
+
             bus.on('sync', () => {
                 bus.emit('update', {value: defaultValue});
-                TestUtil.wait(200)
-                    .then(() => {
-                        let inputElem = node.querySelector('input[type="checkbox"]');
-                        expect(inputElem.getAttribute('checked')).not.toBeNull();
-                        inputElem.dispatchEvent(new Event('change'));
-                    })
-                    .catch(fail);
+            });
+            bus.on('validation', () => {
+                let inputElem = node.querySelector('input[type="checkbox"]');
+                if (inputElem) {
+                    expect(inputElem.getAttribute('checked')).not.toBeNull();
+                    inputElem.dispatchEvent(new Event('change'));
+                }
             });
             bus.on('changed', (message) => {
                 expect(message.newValue).toBeTruthy();
@@ -123,21 +135,26 @@ define([
             widget.start().then(() => {bus.emit('run', {node: node})});
         });
 
-        it('Should respond to input change events with "validation"', (done) => {
+        it('Should respond to input change events', (done) => {
             let widget = ToggleButtonInput.make(testConfig);
-            bus.on('sync', () => {
-                bus.emit('update', {value: defaultValue});
-                TestUtil.wait(100)
-                    .then(() => {
-                        let inputElem = node.querySelector('input[type="checkbox"]');
-                        expect(inputElem.getAttribute('checked')).not.toBeNull();
-                        inputElem.dispatchEvent(new Event('change'));
-                    });
-            });
+
             bus.on('validation', (message) => {
                 expect(message.errorMessage).toBeUndefined();
                 expect(message.diagnosis).toBe('valid');
+                let inputElem = node.querySelector('input[type="checkbox"]');
+                if (inputElem) {
+                    expect(inputElem.getAttribute('checked')).not.toBeNull();
+                    inputElem.dispatchEvent(new Event('change'));
+                }
+            });
+
+            bus.on('changed', (message) => {
+                expect(message.newValue).toBeTruthy();
                 done();
+            });
+
+            bus.on('sync', () => {
+                bus.emit('update', {value: defaultValue});
             });
 
             widget.start().then(() => {bus.emit('run', {node: node})});

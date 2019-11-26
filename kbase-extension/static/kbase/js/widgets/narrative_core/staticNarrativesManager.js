@@ -164,43 +164,14 @@ function(
         }
 
         getStaticNarratives() {
-            // ask NarrativeService (well, Workspace right now) for any static narratives associated
-            // with this Narrative
-            let staticInfo = {
-                url: null,
-                version: null,
-                static_saved: null,
-                narr_saved: null
-            };
-
-            return this.workspace.get_workspace_info({id: this.workspaceId})
-                .then((info) => {
-                    const meta = info[8] || {};
-                    staticInfo.url = meta['static_narrative'] || null;
-                    staticInfo.version = meta['static_narrative_ver'] || null;
-                    staticInfo.static_saved = meta['static_narrative_saved'] || null;
-                    if (staticInfo.version) {
-                        staticInfo.version = parseInt(staticInfo.version);
-                    }
-                    if (staticInfo.static_saved) {
-                        staticInfo.static_saved = parseInt(staticInfo.static_saved);
-                    }
-                    if (staticInfo.version) {
-                        return this.workspace.get_object_info_new({
-                            objects: [{
-                                ref: this.workspaceId + '/' + meta['narrative'] + '/' + staticInfo.version
-                            }]
-                        });
-                    }
-                    else {
-                        return Promise.resolve([]);
-                    }
-                })
-                .then((objInfo) => {
-                    if (objInfo.length === 1 && objInfo[0].length > 3) {
-                        staticInfo.narr_saved = objInfo[0][3];
-                    }
-                    return staticInfo;
+            return Promise.resolve(this.serviceClient.sync_call(
+                'StaticNarrative.get_static_narrative_info',
+                [{ws_id: this.workspaceId}]
+            ))
+                .then(info => info[0])
+                .catch(error => {
+                    this.detach();
+                    this.container.appendChild(this.renderError(error)[0]);
                 });
         }
 

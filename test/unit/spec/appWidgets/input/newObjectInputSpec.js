@@ -192,6 +192,7 @@ define([
         });
 
         it('Should respond to non-unique parameter change events with "validation"', (done) => {
+            TestUtil.pendingIfNoToken();
             let widget = NewObjectInput.make(testConfig);
             const inputStr = 'banana';
             bus.respond({
@@ -223,6 +224,7 @@ define([
         });
 
         it('Should validate against workspace with non-unique parameter change events with "validation"', (done) => {
+            TestUtil.pendingIfNoToken();
             let widget = NewObjectInput.make(testConfig);
             const inputStr = wsObjName;
             bus.respond({

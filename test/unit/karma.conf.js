@@ -20,8 +20,8 @@ module.exports = function (config) {
         },
         files: [
             'kbase-extension/static/narrative_paths.js',
-            // {pattern: 'test/unit/spec/**/*.js', included: false},
-            {pattern: 'test/unit/spec/appWidgets/input/floatInputSpec.js', included: false},
+            {pattern: 'test/unit/spec/**/*.js', included: false},
+            // {pattern: 'test/unit/spec/appWidgets/input/newObjectInputSpec.js', included: false},
             // {pattern: 'test/unit/spec/common/validate-Spec.js', included: false},
             {pattern: 'node_modules/string.prototype.startswith/startswith.js', included: true},
             {pattern: 'node_modules/string.prototype.endswith/endswith.js', included: true},

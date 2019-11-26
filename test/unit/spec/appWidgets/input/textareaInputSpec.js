@@ -69,25 +69,34 @@ define([
                 });
         });
 
-        it('Should update value and reset model properly via bus', (done) => {
+        it('Should update value via bus', (done) => {
             // start with one value, change it, then reset.
             // check along the way.
+            bus.on('validation', (message) => {
+                expect(message.isValid).toBeTruthy();
+                done();
+            });
             let widget = TextareaInput.make(testConfig);
             widget.start({node: node})
                 .then(() => {
                     bus.emit('update', {value: 'some text'});
                     return TestUtil.wait(500);
-                })
+                });
+        });
+
+        it('Should reset to default via bus', (done) => {
+            bus.on('validation', (message) => {
+                expect(message.isValid).toBeTruthy();
+                done();
+            });
+            let widget = TextareaInput.make(testConfig);
+            widget.start({node: node})
                 .then(() => {
                     bus.emit('reset-to-defaults');
                     return TestUtil.wait(500);
-                })
-                .then(() => {
-                    let textarea = node.querySelector('textarea');
-                    expect(textarea.value).toBe('');
-                    done();
                 });
         });
+
 
         it('Should respond to input change events with "changed"', (done) => {
             let widget = TextareaInput.make(testConfig);

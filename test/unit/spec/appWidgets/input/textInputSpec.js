@@ -64,7 +64,7 @@ define([
                 });
         });
 
-        it('Should update value via bus', (done) => { //and reset model properly via bus', (done) => {
+        it('Should update value via bus', (done) => {
             // start with one value, change it, then reset.
             // check along the way.
             bus.on('validation', (message) => {
@@ -75,6 +75,7 @@ define([
             widget.start({node: node})
                 .then(() => {
                     bus.emit('update', {value: 'some text'});
+                    return TestUtil.wait(500);
                 });
         });
 
@@ -87,6 +88,7 @@ define([
             widget.start({node: node})
                 .then(() => {
                     bus.emit('reset-to-defaults');
+                    return TestUtil.wait(500);
                 });
         });
 
@@ -182,7 +184,7 @@ define([
             widget.start({node: node})
                 .then(() => {
                     bus.emit('focus');
-                    return TestUtil.wait(500);
+                    return TestUtil.wait(1000);
                 })
                 .then(done);
         });

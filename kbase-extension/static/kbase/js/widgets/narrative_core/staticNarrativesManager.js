@@ -69,9 +69,8 @@ function(
          * Clears out this DOM node by setting its HTML to empty string.
          */
         detach() {
-            if (this.container) {
-                this.container.innerHTML = '';
-            }
+            this.hostNode.innerHTML = '';
+            this.container = this.hostNode.appendChild(document.createElement('div'));
         }
 
         /**
@@ -80,10 +79,11 @@ function(
          */
         render() {
             let events = Events.make();
-            this.container = this.hostNode.appendChild(document.createElement('div'));
+            this.detach();
             this.ui = UI.make({node: this.container});
             const loadingDiv = DisplayUtil.loadingDiv();
             this.container.appendChild(loadingDiv.div[0]);
+
             return this.getStaticNarratives()
                 .then(info => {
                     this.container.innerHTML = this.renderNarrativeInfo(info) +
@@ -161,7 +161,12 @@ function(
             let self = this;
             const docInfo = Jupyter.narrative.documentVersionInfo;
             if (!docInfo) {
-                return this.renderError('Unable to find current Narrative version!');
+                throw new Error({
+                    code: -1,
+                    error: docInfo,
+                    name: 'Narrative error',
+                    message: 'Unable to find current Narrative version!'
+                });
             }
             return div([
                 div(b('This is version ' + docInfo[4] + ' of this Narrative, and was saved ' + TimeFormat.prettyTimestamp(docInfo[3]))),
@@ -212,7 +217,6 @@ function(
                     name: error.error.error.name
                 };
             }
-            console.error(error);
             return DisplayUtil.createError('Static Narrative Error', error);
         }
 
@@ -232,6 +236,7 @@ function(
                 .catch(error => {
                     this.detach();
                     this.container.appendChild(this.renderError(error)[0]);
+                    throw error;
                 });
         }
 

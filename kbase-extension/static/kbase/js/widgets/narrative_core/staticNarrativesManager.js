@@ -161,12 +161,12 @@ function(
             let self = this;
             const docInfo = Jupyter.narrative.documentVersionInfo;
             if (!docInfo) {
-                throw new Error({
+                throw {
                     code: -1,
                     error: docInfo,
                     name: 'Narrative error',
                     message: 'Unable to find current Narrative version!'
-                });
+                };
             }
             return div([
                 div(b('This is version ' + docInfo[4] + ' of this Narrative, and was saved ' + TimeFormat.prettyTimestamp(docInfo[3]))),

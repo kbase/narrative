@@ -22,7 +22,8 @@ module.exports = function (config) {
             'karma-es6-shim'
         ],
         preprocessors: {
-            'kbase-extension/static/kbase/js/**/*.js': ['coverage']
+            'kbase-extension/static/kbase/js/*/!(api)/**/*.js': ['coverage'],
+            'kbase-extension/static/kbase/js/api/!(*[Cc]*)*.js': ['coverage']
         },
         files: [
             'kbase-extension/static/narrative_paths.js',

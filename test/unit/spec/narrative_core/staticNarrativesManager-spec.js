@@ -331,7 +331,6 @@ define([
             widget.render()
                 .then(() => {
                     validateHtmlError(node);
-                    console.log(node.html());
                     done();
                 });
         });

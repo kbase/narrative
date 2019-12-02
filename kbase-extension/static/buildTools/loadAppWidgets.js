@@ -19,7 +19,6 @@ define([
     'widgets/appWidgets2/display/undefinedDisplay',
     'widgets/appWidgets2/editors/readsSetEditor',
     'widgets/appWidgets2/editors/readsSetEditorView',
-    'widgets/appWidgets2/input/autocompleteInput',
     'widgets/appWidgets2/input/checkboxInput',
     'widgets/appWidgets2/input/customSubdataInput',
     'widgets/appWidgets2/input/fileInput',

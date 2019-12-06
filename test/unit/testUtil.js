@@ -85,11 +85,16 @@ define('testUtil', [
         });
     }
 
+    function wait(timeMs) {
+        return Promise.delay(timeMs);
+    }
+
     return {
         make: factory,
         getAuthToken: getAuthToken,
         getCurrentNarrative: getCurrentNarrative,
         pendingIfNoToken: pendingIfNoToken,
-        getUserId: getUserId
+        getUserId: getUserId,
+        wait: wait
     };
 });

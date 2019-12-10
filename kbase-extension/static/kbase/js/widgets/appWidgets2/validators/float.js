@@ -29,10 +29,10 @@ define([
         if (!isFinite(value)) {
             return 'value must be a finite float';
         }
-        if (max && max < value) {
+        if (max !== null && !isNaN(max) && max < value) {
             return 'the maximum value for this parameter is ' + max;
         }
-        if (min && min > value) {
+        if (min !== null && !isNaN(min) && min > value) {
             return 'the minimum value for this parameter is ' + min;
         }
     }
@@ -68,7 +68,7 @@ define([
         });
     }
 
-    // For text values, there is 
+    // For text values, there is
     // function validate(value, spec) {
     //     try {
     //         var nativeValue = importString(value);

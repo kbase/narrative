@@ -42,7 +42,9 @@ define ([
         it('Should hide on command', function() {
             simpleDialog.show();
             simpleDialog.hide();
-            expect($($.find('.modal.fade.in')).is(':visible')).toBeFalsy();
+            simpleDialog.$modal.on('hidden.bs.modal', () => {
+                expect(simpleDialog.$modal.is(':visible')).toBeFalsy();
+            });
         });
 
         it('Should get a title string back', function() {

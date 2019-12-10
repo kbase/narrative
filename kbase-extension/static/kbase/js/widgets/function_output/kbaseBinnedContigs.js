@@ -105,7 +105,7 @@ define([
                     isSortable: true
                 }, {
                     id: 'cov',
-                    text: 'Read Coverage',
+                    text: 'Marker Completeness',
                     isSortable: true
                 }, {
                     id: 'gc',

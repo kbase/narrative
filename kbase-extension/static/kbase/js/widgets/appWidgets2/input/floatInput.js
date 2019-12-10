@@ -175,7 +175,7 @@ define([
             var initialControlValue,
                 min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
-                
+
             if (typeof currentValue === 'number') {
                 initialControlValue = String(currentValue);
             }

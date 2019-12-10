@@ -5,6 +5,12 @@ module.exports = function (config) {
     config.set({
         basePath: '../../',
         frameworks: ['jasmine', 'requirejs', 'es6-shim'],
+        client: {
+            jasmine: {
+                failFast: false,
+                DEFAULT_TIMEOUT_INTERVAL: 20000
+            }
+        },
         plugins: [
             'karma-jasmine',
             'karma-chrome-launcher',
@@ -16,13 +22,15 @@ module.exports = function (config) {
             'karma-es6-shim'
         ],
         preprocessors: {
-            'kbase-extension/static/kbase/js/**/*.js': ['coverage']
+            'kbase-extension/static/kbase/js/**/!(api)/*.js': ['coverage'],
+            'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js': ['coverage'],
+            'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage']
         },
         files: [
             'kbase-extension/static/narrative_paths.js',
             {pattern: 'test/unit/spec/**/*.js', included: false},
-            // {pattern: 'test/unit/spec/narrative_core/staticNarrativesManager-spec.js', included: false},
-            // {pattern: 'test/unit/spec/narrative_core/upload/fileUploadWidget-spec.js', included: false},
+            // {pattern: 'test/unit/spec/appWidgets/input/taxonomyRefInputSpec.js', included: false},
+            // {pattern: 'test/unit/spec/common/validate-Spec.js', included: false},
             {pattern: 'node_modules/string.prototype.startswith/startswith.js', included: true},
             {pattern: 'node_modules/string.prototype.endswith/endswith.js', included: true},
             {pattern: 'node_modules/jasmine-ajax/lib/mock-ajax.js', included: true},
@@ -94,7 +102,8 @@ module.exports = function (config) {
             '/test/': '/base/test/'
         },
         client: {
-            requireJsShowNoTimestampsError: '^(?!.*(^/narrative/static/))'
+          requireJsShowNoTimestampsError: '^(?!.*(^/narrative/static/))',
+          clearContext: false
         },
         concurrency: Infinity
 

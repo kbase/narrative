@@ -71,6 +71,10 @@ define([
             userId = runtime.userId(),
             eventListeners = [];
 
+        if (dd_options.query_on_empty_input === undefined) {
+            dd_options.query_on_empty_input = 1;
+        }
+
         /**
          * This function takes a nested return and returns a flat key-value pairing for use with
          * handlebar replacement for example {"foo":{"bar": "meh"}} becomes {"foo.bar": "meh"}
@@ -171,6 +175,13 @@ define([
                         max_length: spec.data.constraints.max_length,
                         required: spec.data.constraints.required
                     };
+                // selected item might be either a string or a number.
+                // if it's a number, we want it to be a string
+                // if it's something else, we should raise an error, since that's
+                // something fishy coming from the data-providing service
+                if (typeof selectedItem === 'number') {
+                    selectedItem = String(selectedItem);
+                }
                 return Validation.validateText(selectedItem, validationConstraints);
             });
         }

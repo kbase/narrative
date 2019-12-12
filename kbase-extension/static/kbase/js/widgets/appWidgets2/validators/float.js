@@ -23,16 +23,16 @@ define([
     }
 
     function validateFloat(value, min, max) {
-        if (isNaN(value)) {
+        if (typeof value !== 'number') {
             return 'value must be numeric';
         }
         if (!isFinite(value)) {
             return 'value must be a finite float';
         }
-        if (max !== null && !isNaN(max) && max < value) {
+        if (typeof max === 'number' && value > max) {
             return 'the maximum value for this parameter is ' + max;
         }
-        if (min !== null && !isNaN(min) && min > value) {
+        if (typeof min === 'number' && value < min) {
             return 'the minimum value for this parameter is ' + min;
         }
     }

@@ -71,7 +71,7 @@ define([
             userId = runtime.userId(),
             eventListeners = [];
 
-        if (dd_options.query_on_empty_input === undefined) {
+        if (typeof dd_options.query_on_empty_input === 'undefined') {
             dd_options.query_on_empty_input = 1;
         }
 

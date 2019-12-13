@@ -279,10 +279,6 @@ control with padding, and then scooting the icon back into its column.
 
 /* tweaks to elemnts that should be dimmed when the cell is not selected */
 
-.unselected .kb-app-cell {
-    opacity: 0.5;
-}
-
 .kb-app-cell .advanced-parameter-showing {
     display: block;
 }

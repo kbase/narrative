@@ -11,6 +11,7 @@ define([
 
     var t = html.tag,
         div = t('div'),
+        pre = t('pre'),
         ul = t('ul'),
         li = t('li'),
         pre = t('pre');
@@ -74,7 +75,9 @@ define([
             pre({
                 dataElement: 'detail',
                 style: {
-                    border: '0px silver solid',
+                    border: '0px',
+                    maxHeight: '100rem',
+                    overflowY: 'auto',
                     padding: '4px',
                     wordBreak: 'break-word'
                 }

@@ -62,11 +62,6 @@ class AppUtilTestCase(unittest.TestCase):
         os.environ['KB_WORKSPACE_ID'] = self.workspace
         self.assertEqual(system_variable('workspace'), self.workspace)
 
-    def test_sys_var_token(self):
-        if (self.user_token):
-            biokbase.auth.set_environ_token(self.user_token)
-        self.assertEqual(system_variable('token'), self.user_token)
-
     def test_sys_var_no_ws_id(self):
         if 'KB_WORKSPACE_ID' in os.environ:
             del os.environ['KB_WORKSPACE_ID']
@@ -82,11 +77,6 @@ class AppUtilTestCase(unittest.TestCase):
         os.environ['KB_WORKSPACE_ID'] = 'invalid_workspace'
         self.assertIsNone(system_variable('workspace_id'))
 
-    def test_sys_var_bad_token(self):
-        if 'KB_AUTH_TOKEN' in os.environ:
-            del os.environ['KB_AUTH_TOKEN']
-        self.assertIsNone(system_variable('token'))
-
     def test_sys_var_user_bad(self):
         biokbase.auth.set_environ_token(self.bad_fake_token)
         self.assertIsNone(system_variable('user_id'))
@@ -95,6 +85,18 @@ class AppUtilTestCase(unittest.TestCase):
         if 'KB_AUTH_TOKEN' in os.environ:
             del os.environ['KB_AUTH_TOKEN']
         self.assertIsNone(system_variable('user_id'))
+
+    def test_sys_var_time_ms(self):
+        cur_t = int(time.time()*1000)
+        ts = system_variable('timestamp_epoch_ms')
+        self.assertTrue(cur_t <= ts)
+        self.assertTrue(ts - cur_t < 1000)
+
+    def test_sys_var_time_sec(self):
+        cur_t = int(time.time())
+        ts = system_variable('timestamp_epoch_sec')
+        self.assertTrue(cur_t <= ts)
+        self.assertTrue(ts - cur_t < 1)
 
     def test_sys_var_bad(self):
         self.assertIsNone(system_variable(self.bad_tag))
@@ -134,8 +136,7 @@ class AppUtilTestCase(unittest.TestCase):
             'input1',
             {
                 'ws': 'my_workspace',
-                'foo': 'bar',
-                'auth_token': 'abcde'
+                'foo': 'bar'
             },
             'some_ref/obj_id',
             [
@@ -161,11 +162,6 @@ class AppUtilTestCase(unittest.TestCase):
                         'target_position': 1,
                         'target_property': 'foo',
                         'input_parameter': 'baz'
-                    },
-                    {
-                        'target_position': 1,
-                        'narrative_system_variable': 'token',
-                        'target_property': 'auth_token'
                     },
                     {
                         'target_position': 2,

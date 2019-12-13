@@ -17,6 +17,10 @@
             "name": "GFF Genome"
         },
         {
+            "id": "gff_metagenome",
+            "name": "GFF Metagenome"
+        },
+        {
             "id": "expression_matrix",
             "name": "Expression Matrix"
         },
@@ -84,6 +88,15 @@
             "app_static_params": {},
             "app_output_param": "genome_name",
             "app_output_suffix": "_genome",
+            "multiselect": false
+        },
+        "gff_metagenome": {
+            "app_id": "kb_uploadmethods/import_gff_fasta_as_metagenome_from_staging",
+            "app_input_param": "gff_file",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "genome_name",
+            "app_output_suffix": "_metagenome",
             "multiselect": false
         },
         "expression_matrix": {

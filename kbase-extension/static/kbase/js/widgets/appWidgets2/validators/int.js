@@ -56,10 +56,19 @@ define([
 
     function validateInt(value, min, max) {
         if (typeof value !== 'number') {
-            return {
-                id: 'non-numeric',
-                message: 'value must be numeric'
-            };
+            try {
+                value = toInteger(value);
+            }
+            catch(error) {
+                return {
+                    id: 'non-numeric',
+                    message: 'value must be numeric'
+                }
+            }
+            // return {
+            //     id: 'non-numeric',
+            //     message: 'value must be numeric'
+            // };
         }
         if (isNaN(value)) {
             return {

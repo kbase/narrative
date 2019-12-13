@@ -1,6 +1,7 @@
 *.DS_Store
 *.pyc
 /bin
+kbase-extension/migrated
 kbase-extension/static/kbase/config/config.json
 kbase-extension/ipython/profile_default/history.sqlite
 kbase-extension/history.sqlite
@@ -20,6 +21,7 @@ static/dist
 my_narrative_venv/
 narrative_venv/
 new_narrative_env_2/
+js-coverage
 
 # From https://github.com/github/gitignore/blob/master/Python.gitignore
 

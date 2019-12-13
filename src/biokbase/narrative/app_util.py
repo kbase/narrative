@@ -3,6 +3,7 @@ import re
 import json
 import biokbase.narrative.clients as clients
 import biokbase.auth
+import time
 
 """
 Some utility functions for running KBase Apps or Methods or whatever they are this week.
@@ -62,11 +63,6 @@ def system_variable(var):
             return ws_info[0]
         except:
             return None
-    elif var == 'token':
-        token = biokbase.auth.get_auth_token()
-        if token == 'none':
-            return None
-        return token
     elif var == 'user_id':
         token = biokbase.auth.get_auth_token()
         if token is None:
@@ -77,6 +73,12 @@ def system_variable(var):
         except:
             return None
         # TODO: make this better with more exception handling.
+    elif var == 'timestamp_epoch_ms':
+        # get epoch time in milliseconds
+        return int(time.time()*1000)
+    elif var == 'timestamp_epoch_sec':
+        # get epoch time in seconds
+        return int(time.time())
     else:
         return None
 

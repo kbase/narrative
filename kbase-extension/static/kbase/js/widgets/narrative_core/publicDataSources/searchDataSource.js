@@ -22,47 +22,18 @@ define([
 ) {
     'use strict';
 
-    function objectGuidToRef (guid) {
-        var m = guid.match(/^WS:(\d+)\/(\d+)\/(\d+)$/);
-        var objectRef = m.slice(1, 4).join('/');
-        return {
-            workspaceId: parseInt(m[1]),
-            objectId: parseInt(m[2]),
-            version: parseInt(m[3]),
-            ref: objectRef,
-            dataviewId: objectRef
-        };
-    }
-
     function parseGenomeIndexV1 (item) {
-        return {
-            genome_id: item.data.id,
-            genome_source: item.data.source,
-            genome_source_id: item.data.source_id,
-            scientific_name: item.data.scientific_name,
-            domain: item.data.domain,
-            num_contigs: item.data.num_contigs,
-            num_cds: item.data.cdss,
-            num_features: item.data.features,
-            ws_ref: objectGuidToRef(item.guid),
-            workspace_name: null,
-            taxonomy: item.data.taxonomy,
-            object_name: item.object_name
-        };
-    }
-
-    function parseGenomeIndexV2 (item) {
         // oh, lordy, people messing with the metadata...
         return {
-            genome_id: item.data.id,
+            genome_id: item.kbase_id,
             genome_source: item.data.source,
             genome_source_id: item.data.source_id,
             scientific_name: item.data.scientific_name,
             domain: item.data.domain,
             num_contigs: item.data.num_contigs,
-            num_cds: item.data.cdss,
-            num_features: item.data.feature_counts.gene,
-            ws_ref: objectGuidToRef(item.guid),
+            num_cds: item.data.cds_count,
+            num_features: item.data.feature_counts && item.data.feature_counts.gene,
+            ws_ref: item.kbase_id,
             workspace_name: null,
             taxonomy: item.data.taxonomy,
             object_name: item.object_name
@@ -81,8 +52,6 @@ define([
         switch (indexTypeVersion) {
         case 1:
             return parseGenomeIndexV1(item);
-        case 2:
-            return parseGenomeIndexV2(item);
         default:
             throw new Error('Unsupported genome index version: ' + indexTypeVersion);
         }

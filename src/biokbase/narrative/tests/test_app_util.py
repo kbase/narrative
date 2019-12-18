@@ -14,6 +14,7 @@ from .narrative_mock.mockclients import get_mock_client
 import os
 import mock
 from . import util
+import time
 
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 

@@ -11,6 +11,7 @@ define([
 
     var t = html.tag,
         div = t('div'),
+        pre = t('pre'),
         ul = t('ul'),
         li = t('li');
 
@@ -70,10 +71,12 @@ define([
             div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
                 'Detail'
             ]),
-            div({
+            pre({
                 dataElement: 'detail',
                 style: {
-                    border: '0px silver solid',
+                    border: '0px',
+                    maxHeight: '100rem',
+                    overflowY: 'auto',
                     padding: '4px',
                     xoverflowY: 'auto',
                     wordBreak: 'break-word'

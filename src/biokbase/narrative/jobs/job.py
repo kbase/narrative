@@ -138,8 +138,7 @@ class Job(object):
         if self._last_state is not None and self._last_state.get('status') in ['completed', 'terminated', 'error']:
             return self._last_state
         try:
-            state = clients.get('execution_engine2').check_job({'job_id': self.job_id,
-                                                                'projection': []})
+            state = clients.get('execution_engine2').check_job({'job_id': self.job_id})
             state['job_input'] = state.get('job_input', {})
             state['job_output'] = state.get('job_output', {})
             state[u'cell_id'] = self.cell_id

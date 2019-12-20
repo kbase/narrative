@@ -69,7 +69,7 @@ class JobManager(object):
 
         try:
             job_states = clients.get('execution_engine2').check_workspace_jobs({
-                'workspace_id': ws_id, 'projection': [], 'return_list': 0})
+                'workspace_id': ws_id, 'return_list': 0})
         except Exception as e:
             kblogging.log_event(self._log, 'init_error', {'err': str(e)})
             new_e = transform_job_exception(e)
@@ -157,7 +157,6 @@ class JobManager(object):
         Just slaps them all into _running_jobs
         """
         job_states = clients.get('execution_engine2').check_jobs({'job_ids': job_ids,
-                                                                  'projection': [],
                                                                   'return_list': 0})
         for job_id in job_ids:
             if job_id in job_ids and job_id not in self._running_jobs:
@@ -416,7 +415,6 @@ class JobManager(object):
         sub_job_list = sorted(sub_job_list)
 
         job_states = clients.get('execution_engine2').check_jobs({'job_ids': sub_job_list,
-                                                                  'projection': [],
                                                                   'return_list': 0})
         child_job_states = list()
 
@@ -865,7 +863,6 @@ class JobManager(object):
         # 3. Lookup those jobs what need it. Cache 'em as we go, if finished.
         try:
             fetched_states = clients.get('execution_engine2').check_jobs({'job_ids': jobs_to_lookup,
-                                                                          'projection': [],
                                                                           'return_list': 0})
         except Exception as e:
             kblogging.log_event(self._log, 'get_all_job_states_error', {'err': str(e)})

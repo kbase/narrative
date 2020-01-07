@@ -3,9 +3,7 @@ define ([
     'kbwidget',
     'kbaseAuthenticatedWidget',
     'narrativeConfig',
-
     'jquery-dataTables',
-
     'kbaseTable',
     'kbaseTabs',
     'ContigBrowserPanel',
@@ -353,7 +351,6 @@ define ([
                 $loadingDiv.empty();
                 $noResultsDiv.hide();
                 clearInfo();
-
                 var features = results['features'];
                 if(features.length>0) {
                     var hasFunc = false;

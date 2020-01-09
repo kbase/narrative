@@ -24,13 +24,12 @@ module.exports = function (config) {
         preprocessors: {
             'kbase-extension/static/kbase/js/**/!(api)/*.js': ['coverage'],
             'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js': ['coverage'],
-            'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage']
+            'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage'],
+            'kbase-extension/static/kbase/js/*.js': ['coverage']
         },
         files: [
             'kbase-extension/static/narrative_paths.js',
             {pattern: 'test/unit/spec/**/*.js', included: false},
-            // {pattern: 'test/unit/spec/appWidgets/input/taxonomyRefInputSpec.js', included: false},
-            // {pattern: 'test/unit/spec/common/validate-Spec.js', included: false},
             {pattern: 'node_modules/string.prototype.startswith/startswith.js', included: true},
             {pattern: 'node_modules/string.prototype.endswith/endswith.js', included: true},
             {pattern: 'node_modules/jasmine-ajax/lib/mock-ajax.js', included: true},

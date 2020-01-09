@@ -635,6 +635,9 @@ define([
         } else {
             errorText = 'An unknown error occurred!';
         }
+        errorText += '<br>This may occur because you have recently lost a connection to the ' +
+            'Narrative server. Please try restarting the kernel by navigating to the Kernel ' +
+            'menu -> Restart. If this problem persists, contact KBase through the Help menu.';
 
         Jupyter.dialog.modal({
             title: 'Narrative save failed!',

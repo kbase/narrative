@@ -104,7 +104,33 @@ define([
     }
 
     function mockNoToken() {
-
+        const error = JSON.stringify({
+            error: {
+                httpcode: 400,
+                httpstatus: 'Bad Request',
+                appcode: 10010,
+                apperror: 'No authentication token',
+                message: '10010 No authentication token: No user token provided',
+                callid: '5753458997874970',
+                time: 1578603882613
+            }
+        });
+        jasmine.Ajax.stubRequest(
+            Config.url('auth') + '/api/V2/me'
+        ).andReturn({
+            status: 401,
+            statusText: 'Bad Request',
+            contentType: 'application/json',
+            responseText: error
+        });
+        jasmine.Ajax.stubRequest(
+            Config.url('auth') + '/api/V2/token'
+        ).andReturn({
+            status: 401,
+            statusText: 'Bad Request',
+            contentType: 'application/json',
+            responseText: error
+        });
     }
 
     describe('Test the kbaseNarrative module', () => {
@@ -155,7 +181,17 @@ define([
                     expect(loggedInKBase).toBeTruthy();
                     done();
                 });
+        });
 
+        it('Should run a token validation timer when inited with a valid token', (done) => {
+            mockValidToken('valid_token');
+            let $node = $('<div>');
+            Login.init($node)
+                .then(() => {
+                    setTimeout(() => {
+                        done();
+                    }, 2000)
+                });
         });
 
         it('Should fail to instantiate without a valid auth token', (done) => {
@@ -164,10 +200,11 @@ define([
                 .then(done);
         });
 
-        // it('Should fail to instantiate without any login token', (done) => {
-        //     Login.init($('<div>'))
-        //         .then(done);
-        // });
+        it('Should fail to instantiate without any login token', (done) => {
+            mockNoToken();
+            Login.init($('<div>'))
+                .then(done);
+        });
 
         it('Should re-log in to Jupyter server on request', (done) => {
             mockValidToken('valid_token');

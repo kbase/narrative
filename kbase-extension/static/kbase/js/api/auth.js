@@ -1,14 +1,14 @@
 define([
     'bluebird',
     'jquery',
-    'util/string',
     'jqueryCookie'
-], function(Promise, $, StringUtil) {
+], function(Promise, $) {
     'use strict';
 
     function factory(config) {
-        var url = config.url;
-        var cookieName = 'kbase_session';
+        const url = config.url,
+            cookieName = 'kbase_session',
+            cookieRegex = new RegExp('(^| )' + cookieName + '=([^;]+)');
 
         /**
          * Does a GET request to get the profile of the currently logged in user.
@@ -42,14 +42,19 @@ define([
             return null;
         }
 
+        function getTokenCookie() {
+            let match = document.cookie.match(cookieRegex);
+            if (match) {
+                return match[2];
+            }
+            return null;
+        }
+
         /* Returns the current auth token that's stuffed in a cookie.
          * Returns null if not logged in.
          */
         function getAuthToken() {
-            if (!$.cookie(cookieName)) {
-                return null;
-            }
-            return $.cookie(cookieName);
+            return getTokenCookie();
         }
 
         /* Sets the given auth token into the browser's cookie.

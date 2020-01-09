@@ -29,25 +29,25 @@ define ([
     var baseUrl = JupyterUtils.get_body_data('baseUrl'),
         authClient = Auth.make({url: Config.url('auth')}),
         sessionInfo = null,
-        tokenCheckTimer = null,
-        tokenWarningTimer = null;
+        tokenCheckTimer,
+        tokenWarningTimer;
 
-    /* set the auth token by calling the kernel execute method on a function in
-     * the magics module
+    /**
+     * Sets the auth token in the Tornado server environment that runs the Narrative. This
+     * effectively goes to the notebook server /login path, which invokes the auth handler,
+     * that handles cookie validation and management.
+     * @param {string} token
      */
     function ipythonLogin(token) {
         window.kb = new KBCacheClient(token);
-        $.ajax({
+        return Promise.resolve($.ajax({
             url: JupyterUtils.url_join_encode(baseUrl, 'login')
-        }).then(
-            function(ret) {
+        }))
+            .then(ret => {
                 // console.log(ret);
-            }
-        ).fail(
-            function(err) {
+            }).catch(err => {
                 // console.err(err);
-            }
-        );
+            });
     }
 
     function ipythonLogout() {
@@ -145,15 +145,21 @@ define ([
             browserSleepValidateTime = Config.get('auth_sleep_recheck_ms'),
             validateOnCheck = false,
             validationInProgress = false;
-        tokenCheckTimer = setInterval(function() {
-            var token = authClient.getAuthToken();
+        clearTokenCheckTimers();
+        tokenCheckTimer = setInterval(() => {
+            // fetch the token, timeout right away if it's null (i.e., been timed out in another
+            // window, had the cookie deleted by the user, etc.)
+            const token = authClient.getAuthToken();
             if (!token) {
                 tokenTimeout();
             }
-            var lastCheckInterval = new Date().getTime() - lastCheckTime;
+            // Shouldn't spam the Auth service with validation every second, just in some
+            // interval set by the config.
+            const lastCheckInterval = new Date().getTime() - lastCheckTime;
             if (lastCheckInterval > browserSleepValidateTime) {
                 validateOnCheck = true;
             }
+            // Only revalidate if it's required (Config currently set to 1 minute)
             if (validateOnCheck && !validationInProgress) {
                 validationInProgress = true;
                 authClient.validateToken(token)
@@ -161,9 +167,7 @@ define ([
                         validateOnCheck = false;
                         if (info !== true) {
                             tokenTimeout(true);
-                            // console.warn('Auth is invalid! Logging out.');
                         } else {
-                            // console.warn('Auth is still valid after ' + (lastCheckInterval/1000) + 's.');
                         }
                     })
                     .catch(function(error) {
@@ -197,9 +201,11 @@ define ([
     function clearTokenCheckTimers() {
         if (tokenCheckTimer) {
             clearInterval(tokenCheckTimer);
+            tokenCheckTimer = null;
         }
         if (tokenWarningTimer) {
             clearInterval(tokenWarningTimer);
+            tokenWarningTimer = null;
         }
     }
 
@@ -243,7 +249,7 @@ define ([
         clearTokenCheckTimers();
         var sessionToken = authClient.getAuthToken();
         return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])
-            .then(function(results) {
+            .then((results) => {
                 var tokenInfo = results[0];
                 sessionInfo = tokenInfo;
                 this.sessionInfo = tokenInfo;
@@ -264,8 +270,8 @@ define ([
                 }
                 $(document).trigger('loggedIn', this.sessionInfo);
                 $(document).trigger('loggedIn.kbase', this.sessionInfo);
-            }.bind(this))
-            .catch(function(error) {
+            })
+            .catch((error) => {
                 console.error(error);
                 if (document.location.hostname.indexOf('localhost') !== -1 ||
                     document.location.hostname.indexOf('0.0.0.0') !== -1) {
@@ -277,9 +283,15 @@ define ([
             });
     }
 
+    function restartSession() {
+        let token = authClient.getAuthToken();
+        return ipythonLogin(token);
+    }
+
     return {
         init: init,
         sessionInfo: sessionInfo,
-        getAuthToken: getAuthToken
+        getAuthToken: getAuthToken,
+        restartSession: restartSession
     };
 });

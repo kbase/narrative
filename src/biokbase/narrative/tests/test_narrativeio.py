@@ -241,10 +241,10 @@ class NarrIOTestCase(unittest.TestCase):
         self.assertTrue(result[1] == self.private_nar['ws'] and result[2] == self.private_nar['obj'])
         self.assertEquals(result[0]['metadata']['is_temporary'], 'false')
 
-        ws = Workspace(url=URLS.workspace, token=self.test_token)
+        ws = clients.get('workspace')
         ws_info = ws.get_workspace_info({'id': result[1]})
         self.assertEquals(ws_info[8]['searchtags'], 'narrative')
-        self.assertEquals(ws_info[8]['cell_count'], str(len(nar['cells'])))
+        # self.assertEquals(ws_info[8]['cell_count'], str(len(nar['cells'])))
         self.logout()
 
     def test_write_narrative_valid_anon(self):

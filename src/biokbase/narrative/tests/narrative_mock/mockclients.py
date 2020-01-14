@@ -31,7 +31,7 @@ class MockClients(object):
     """
     def __init__(self, token=None):
         if token is not None:
-            assert isinstance(token, basestring)
+            assert isinstance(token, str)
         self.config = TestConfig()
         self.job_info = self.config.load_json_file(self.config.get('jobs', 'job_info_file'))
         self.test_job_id = self.config.get('app_tests', 'test_job_id')
@@ -89,34 +89,34 @@ class MockClients(object):
         But we introspect the params a little bit to return something crafted to the test.
         Add more to this if it's helpful.
         """
-        random_obj_info = [5, u'Sbicolor2', u'KBaseGenomes.Genome-12.3', u'2017-03-31T23:42:59+0000', 1,
-            u'wjriehl', 18836, u'wjriehl:1490995018528', u'278abf8f0dbf8ab5ce349598a8674a6e', 109180038, None]
+        random_obj_info = [5, 'Sbicolor2', 'KBaseGenomes.Genome-12.3', '2017-03-31T23:42:59+0000', 1,
+            'wjriehl', 18836, 'wjriehl:1490995018528', '278abf8f0dbf8ab5ce349598a8674a6e', 109180038, None]
 
         obj_info = random_obj_info
         infos = []
         for obj_ident in params.get('objects', [{'name': 'Sbicolor2', 'workspace': 'whatever'}]):
             if obj_ident.get('name') == 'rhodobacterium.art.q20.int.PE.reads':
                 infos.append([7,
-                    u'rhodobacterium.art.q20.int.PE.reads',
-                    u'KBaseFile.PairedEndLibrary-2.1',
-                    u'2018-06-26T19:31:41+0000',
+                    'rhodobacterium.art.q20.int.PE.reads',
+                    'KBaseFile.PairedEndLibrary-2.1',
+                    '2018-06-26T19:31:41+0000',
                     1,
-                    u'wjriehl',
+                    'wjriehl',
                     12345,
-                    u'random_workspace',
-                    u'a20f2df66f973de41b84164f2c2bedd3',
+                    'random_workspace',
+                    'a20f2df66f973de41b84164f2c2bedd3',
                     765,
                     None])
             elif obj_ident.get('name') == 'rhodobacterium.art.q10.PE.reads':
                 infos.append([8,
-                    u'rhodobacterium.art.q10.PE.reads',
-                    u'KBaseFile.PairedEndLibrary-2.1',
-                    u'2018-08-13T23:13:09+0000',
+                    'rhodobacterium.art.q10.PE.reads',
+                    'KBaseFile.PairedEndLibrary-2.1',
+                    '2018-08-13T23:13:09+0000',
                     1,
-                    u'wjriehl',
+                    'wjriehl',
                     12345,
-                    u'random_workspace',
-                    u'9f014a3c08368537a40fa2e4b90f9cab',
+                    'random_workspace',
+                    '9f014a3c08368537a40fa2e4b90f9cab',
                     757,
                     None])
             else:
@@ -124,15 +124,15 @@ class MockClients(object):
         return infos
 
 
-        infos = [[5, u'Sbicolor2', u'KBaseGenomes.Genome-12.3', u'2017-03-31T23:42:59+0000', 1,
-                  u'wjriehl', 18836, u'wjriehl:1490995018528', u'278abf8f0dbf8ab5ce349598a8674a6e',
+        infos = [[5, 'Sbicolor2', 'KBaseGenomes.Genome-12.3', '2017-03-31T23:42:59+0000', 1,
+                  'wjriehl', 18836, 'wjriehl:1490995018528', '278abf8f0dbf8ab5ce349598a8674a6e',
                   109180038, None]]
         ret_val = infos * len(params.get('objects', [0]))
         return ret_val
 
     def get_object_info3(self, params):
-        infos = [[5, u'Sbicolor2', u'KBaseGenomes.Genome-12.3', u'2017-03-31T23:42:59+0000', 1,
-                  u'wjriehl', 18836, u'wjriehl:1490995018528', u'278abf8f0dbf8ab5ce349598a8674a6e',
+        infos = [[5, 'Sbicolor2', 'KBaseGenomes.Genome-12.3', '2017-03-31T23:42:59+0000', 1,
+                  'wjriehl', 18836, 'wjriehl:1490995018528', '278abf8f0dbf8ab5ce349598a8674a6e',
                   109180038, None]]
         paths = [['18836/5/1']]
         num_objects = len(params.get('objects', [0]))

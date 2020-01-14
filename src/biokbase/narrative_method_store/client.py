@@ -13,10 +13,10 @@ except ImportError:
     import simplejson as _json
 
 import requests as _requests
-import urlparse as _urlparse
+import urllib.parse as _urlparse
 import random as _random
 import base64 as _base64
-from ConfigParser import ConfigParser as _ConfigParser
+from configparser import ConfigParser as _ConfigParser
 import os as _os
 
 _CT = 'content-type'
@@ -54,8 +54,8 @@ def _read_rcfile(file=_os.environ['HOME'] + '/.authrc'):  # @ReservedAssignment
                 authdata = {x: rawdata.get(x) for x in (
                     'user_id', 'token', 'client_secret', 'keyfile',
                     'keyfile_passphrase', 'password')}
-        except Exception, e:
-            print "Error while reading authrc file %s: %s" % (file, e)
+        except Exception as e:
+            print("Error while reading authrc file %s: %s" % (file, e))
     return authdata
 
 
@@ -74,8 +74,8 @@ def _read_inifile(file=_os.environ.get(  # @ReservedAssignment
                         else None for x in ('user_id', 'token',
                                             'client_secret', 'keyfile',
                                             'keyfile_passphrase', 'password')}
-        except Exception, e:
-            print "Error while reading INI file %s: %s" % (file, e)
+        except Exception as e:
+            print("Error while reading INI file %s: %s" % (file, e))
     return authdata
 
 

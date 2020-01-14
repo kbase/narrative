@@ -9,7 +9,7 @@ from biokbase.narrative.common.kblogging import (
 from biokbase.narrative.common.util import kbase_env
 import tornado.log
 import os
-import urllib
+import urllib.parse
 import logging
 from biokbase.auth import (
     get_user_info,
@@ -56,7 +56,7 @@ class KBaseLoginHandler(LoginHandler):
 
         auth_cookie = self.cookies.get(auth_cookie_name, None)
         if auth_cookie:
-            token = urllib.unquote(auth_cookie.value)
+            token = urllib.parse.unquote(auth_cookie.value)
             auth_info = dict()
             try:
                 auth_info = get_user_info(token)
@@ -98,7 +98,7 @@ class KBaseLoginHandler(LoginHandler):
 
     @classmethod
     def password_from_settings(cls, settings):
-        return u''
+        return ''
 
     @classmethod
     def login_available(cls, settings):

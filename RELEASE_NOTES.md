@@ -1,7 +1,13 @@
 ### OVERVIEW
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
+This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
+
+### Version 4.0.0
+- Update various software packages
+    - Python to 3.6.9
+    - Jupyter Notebook to 6.0.2
+    - IPython to 7.9.0
 
 ### Version 3.11.4
 - Add Annotated Metagenome Assembly viewer widget

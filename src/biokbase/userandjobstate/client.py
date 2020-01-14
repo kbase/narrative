@@ -5,7 +5,6 @@
 #
 ############################################################
 
-from __future__ import print_function
 # the following is a hack to get the baseclient to import whether we're in a
 # package or not. This makes pep8 unhappy hence the annotations.
 try:

@@ -2,14 +2,14 @@
 Tests for job management
 """
 import unittest
-import mock
+from unittest import mock
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.job import Job
-from util import TestConfig
+from .util import TestConfig
 import os
 from IPython.display import HTML
-from narrative_mock.mockclients import get_mock_client
-from narrative_mock.mockcomm import MockComm
+from .narrative_mock.mockclients import get_mock_client
+from .narrative_mock.mockcomm import MockComm
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
@@ -43,7 +43,7 @@ class JobManagerTest(unittest.TestCase):
     def setUpClass(self):
         self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
         self.jm._comm = MockComm()
-        self.job_ids = job_info.get('job_param_info', {}).keys()
+        self.job_ids = [j[0] for j in job_info.get('job_info')]
         os.environ['KB_WORKSPACE_ID'] = config.get('jobs', 'job_test_wsname')
 
         self.jm.initialize_jobs(start_lookup_thread=False)
@@ -105,10 +105,10 @@ class JobManagerTest(unittest.TestCase):
         self.jm._handle_comm_message(create_jm_message("all_status"))
         msg = self.jm._comm.last_message
         job_data = msg.get('data', {}).get('content', {})
-        job_ids = job_data.keys()
+        job_ids = list(job_data.keys())
         # assert that each job info that's flagged for lookup gets returned
         jobs_to_lookup = [j for j in self.jm._running_jobs.keys()]
-        self.assertItemsEqual(job_ids, jobs_to_lookup)
+        self.assertCountEqual(job_ids, jobs_to_lookup)
         for job_id in job_ids:
             self.assertTrue(self.validate_status_message(job_data[job_id]))
         self.jm._comm.clear_message_cache()
@@ -119,7 +119,7 @@ class JobManagerTest(unittest.TestCase):
         self.jm.register_new_job(new_job)
         self.jm._handle_comm_message(create_jm_message("job_status", new_job.job_id))
         msg = self.jm._comm.last_message
-        self.assertEquals(msg['data']['msg_type'], "job_status")
+        self.assertEqual(msg['data']['msg_type'], "job_status")
         self.assertTrue(self.validate_status_message(msg['data']['content']))
         self.jm.delete_job(new_job.job_id)
         self.jm._comm.clear_message_cache()
@@ -128,7 +128,7 @@ class JobManagerTest(unittest.TestCase):
     def test_job_message_bad_id(self):
         self.jm._handle_comm_message(create_jm_message("foo", job_id="not_a_real_job"))
         msg = self.jm._comm.last_message
-        self.assertEquals(msg['data']['msg_type'], 'job_does_not_exist')
+        self.assertEqual(msg['data']['msg_type'], 'job_does_not_exist')
 
     def test_cancel_job_lookup(self):
         pass
@@ -145,7 +145,7 @@ class JobManagerTest(unittest.TestCase):
         self.jm._lookup_all_job_status()
         msg = self.jm._comm.last_message
         self.assertTrue(phony_id in msg['data']['content'])
-        self.assertEquals(msg['data']['content'][phony_id].get('listener_count', 0), 1)
+        self.assertEqual(msg['data']['content'][phony_id].get('listener_count', 0), 1)
         self.jm._comm.clear_message_cache()
         self.jm._handle_comm_message(create_jm_message("stop_job_update", job_id=phony_id))
         self.jm._lookup_all_job_status()

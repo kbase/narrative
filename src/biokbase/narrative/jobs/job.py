@@ -234,7 +234,7 @@ class Job(object):
         return status.lower() in ['completed', 'error', 'suspend', 'cancelled']
 
     def __repr__(self):
-        return u"KBase Narrative Job - " + unicode(self.job_id)
+        return "KBase Narrative Job - " + str(self.job_id)
 
     def _repr_javascript_(self):
         tmpl = """

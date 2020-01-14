@@ -1,14 +1,13 @@
 appdirs
-# beautifulsoup
 biopython
 certifi
 chardet
 configobj
 gitpython
 jinja2
-jsonrpcbase
 jsonschema
 markdown
+ncurses
 networkx
 nose
 pexpect
@@ -31,4 +30,3 @@ thrift>=0.9.2
 tornado>=4.0
 virtualenv
 xlutils
-#olk

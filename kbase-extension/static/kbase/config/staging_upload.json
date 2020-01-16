@@ -39,6 +39,9 @@
         {
             "id": "phenotype_set",
             "name": "Phenotype Set"
+        },{
+            "id": "sample_set",
+            "name": "Sample Set"
         }
     ],
     "app_info": {
@@ -142,6 +145,15 @@
             "app_static_params": {},
             "app_output_param": "phenotype_set_name",
             "app_output_suffix": "_phenotype_set",
+            "multiselect": false
+        },
+        "sample_set": {
+            "app_id": "sample_uploader/import_samples",
+            "app_input_param": "sample_file",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "set_name",
+            "app_output_suffix": "_sample_set",
             "multiselect": false
         }
     }

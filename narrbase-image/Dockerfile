@@ -1,20 +1,22 @@
 FROM kbase/kb_python:python3
 
-ENV NOTEBOOK_VERSION 5.7.4
-ENV IPYTHON_VERSION 7.3.0
-ENV IPYWIDGETS_VERSION 7.4.2
+ENV NOTEBOOK_VERSION 6.0.2
+ENV IPYTHON_VERSION 7.9.0
+ENV IPYWIDGETS_VERSION 7.5.0
 # ENV NODEJS_VERSION 11
 
 RUN mkdir -p /kb/installers
 
 # Install Base libraries, Node, R and Jupyter Notebook and ipywidgets from distinct channels
 ADD ./conda-requirements /root/conda
-RUN conda update -n base conda && \
-    conda install --file /root/conda/base && \
+
+RUN conda update -n base -c defaults conda && \
+    conda install conda && \
+    conda install -c conda-forge --file /root/conda/base && \
     conda install -c etetoolkit ete3 && \
     conda install -c anaconda-platform --file /root/conda/base.anaconda-platform && \
     conda install -c javascript --file /root/conda/base.javascript && \
-    conda install -c wakari --file /root/conda/base.wakari && \
+    # conda install -c wakari --file /root/conda/base.wakari && \
     conda install --file /root/conda/biokbase-requirements.txt && \
     conda install -c r r-base && \
     conda install -c conda-forge --file /root/conda/r.conda-forge && \
@@ -31,6 +33,7 @@ RUN apt-get update && \
 
 # Install misc R packages not available on Conda
 ADD ./r-packages-postconda.R /root/r-packages.R
+ENV TAR /bin/tar
 RUN R --vanilla < /root/r-packages.R
 
 # Install IPython, Jupyter Notebook, and ipywidgets at controlled versions

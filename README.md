@@ -94,9 +94,14 @@ Note: **DO NOT CHECK YOUR TOKEN FILE IN TO GITHUB**. You'll be shamed without me
 
 ## Manual Testing
 
-It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. 
-For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with kbase-narrative
+* It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`
 
+* For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with kbase-narrative. You can print messages to the terminal using 
+
+```
+log = logging.getLogger("tornado.application")
+log.info("Your Logs Go Here")
+```
 
 ## Submitting code
 

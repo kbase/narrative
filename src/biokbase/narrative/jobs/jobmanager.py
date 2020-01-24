@@ -200,24 +200,27 @@ class JobManager(object):
                 return "No running jobs!"
 
             status_set = sorted(status_set, key=lambda s: s['created'])
-
             for status in status_set:
-                status['creation_time'] = datetime.fromtimestamp(status['created'] / 1000.0).strftime("%Y-%m-%d %H:%M:%S")
+                status['creation_time'] = datetime.fromtimestamp(
+                    status['created'] / 1000.0).strftime("%Y-%m-%d %H:%M:%S")
+                status['run_time'] = 'Not started'
                 exec_start = status.get('running', None)
+
                 if status.get('finished'):
-                    finished_time = datetime.fromtimestamp(status['finished'] / 1000.0)
-                    exec_start_time = datetime.fromtimestamp(exec_start / 1000.0)
-                    delta = finished_time - exec_start_time
-                    delta = delta - timedelta(microseconds=delta.microseconds)
-                    status['run_time'] = str(delta)
+                    finished_time = datetime.fromtimestamp(status.get('finished') / 1000.0)
                     status['finish_time'] = finished_time.strftime("%Y-%m-%d %H:%M:%S")
+                    if exec_start:
+                        exec_start_time = datetime.fromtimestamp(exec_start / 1000.0)
+                        delta = finished_time - exec_start_time
+                        delta = delta - timedelta(microseconds=delta.microseconds)
+                        status['run_time'] = str(delta)
                 elif exec_start:
-                    exec_start_time = datetime.fromtimestamp(exec_start / 1000.0).replace(tzinfo=timezone.utc)
+                    exec_start_time = datetime.fromtimestamp(exec_start / 1000.0).replace(
+                        tzinfo=timezone.utc)
                     delta = datetime.now(timezone.utc) - exec_start_time
                     delta = delta - timedelta(microseconds=delta.microseconds)
                     status['run_time'] = str(delta)
-                else:
-                    status['run_time'] = 'Not started'
+
 
             tmpl = """
             <table class="table table-bordered table-striped table-condensed">

@@ -192,7 +192,7 @@ define ([
             var $input = $('<input type="text" class="form-control" placeholder="Search Features">');
             $input.prop('disabled', true);
 
-            var isLastQuery = function (result) {
+            var isLastQuery = function () {
                 // establish edge condition
                 return true;
                 // if(start !== result['start']) {
@@ -249,7 +249,7 @@ define ([
             var setToLoad = function ($panel) {
                 //clearInfo();
                 $panel.empty();
-                var $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+                $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                 $panel.append($loadingDiv);
                 window.setTimeout(function () {
                     $loadingDiv.append('&nbsp; Building cache...');
@@ -369,7 +369,7 @@ define ([
                     var hasOntology = false;
                     var hasAlias = false;
                     for (let k = 0; k < features.length; k += 1) {
-                        row = buildRow(features[k]);
+                        let row = buildRow(features[k]);
                         $table.append(row.$tr);
                         if (row.hasFunc) {
                             hasFunc = true;
@@ -606,7 +606,7 @@ define ([
 
             var n_results = 0;
 
-            var isLastQuery = function (result) {
+            var isLastQuery = function () {
 
                 // if(start !== result['start']) {
                 //     return false;
@@ -886,7 +886,7 @@ define ([
 
 
             //put in a slight delay so on rapid typing we don't make a flood of calls
-            var fetchTimeout = null;
+            // var fetchTimeout = null;
 
         },
 
@@ -939,9 +939,9 @@ define ([
                 cbFormat.id = featureData.feature_id;
                 cbFormat.location = [];
                 if (featureData.global_location.contig_id) {
-                    for(k = 0; k < featureData.location.length; k += 1) {
+                    for(let k = 0; k < featureData.location.length; k += 1) {
                         // only show things on the main contig
-                        loc = featureData.location[k];
+                        var loc = featureData.location[k];
                         if(featureData.global_location.contig_id === loc.contig_id) {
                             cbFormat.location.push([
                                 loc.contig_id,
@@ -1120,7 +1120,7 @@ define ([
                 var tabIds = tabData.ids;
 
                 for (let i = 0; i < tabIds.length; i += 1) {
-                    tabDiv = $('<div id="' + pref + tabIds[i] + '"> ');
+                    var tabDiv = $('<div id="' + pref + tabIds[i] + '"> ');
                     tabObj.addTab({tab: tabNames[i], content: tabDiv, canDelete: false, show: (i == 0)});
                 }
                 var $overviewPanel = $('#' + pref + 'overview');
@@ -1175,7 +1175,7 @@ define ([
 
                 var liElems = $tabPane.find('li');
 
-                browse_features_func = function (metagenome_ref) {
+                var browse_features_func = function (metagenome_ref) {
                     self.buildGeneSearchView({
                         $div: $('#' + pref + 'browse_features'),
                         ref: metagenome_ref,
@@ -1188,7 +1188,7 @@ define ([
                     });
                 };
 
-                browse_contig_func = function (metagenome_ref) {
+                var browse_contig_func = function (metagenome_ref) {
                     self.buildContigSearchView({
                         $div: $('#' + pref + 'browse_contigs'),
                         ref: metagenome_ref,
@@ -1201,16 +1201,16 @@ define ([
 
                 for (let liElemPos = 0; liElemPos < liElems.length; liElemPos += 1) {
                     // was var
-                    liElem = $(liElems.get(liElemPos));
+                    var liElem = $(liElems.get(liElemPos));
                     // was var
-                    aElem = liElem.find('a');
+                    var aElem = liElem.find('a');
                     if (aElem.length != 1) {
                         continue;
                     }
                     // was var
-                    dataTab = aElem.attr('data-tab');
+                    var dataTab = aElem.attr('data-tab');
                     // was var
-                    metagenome_ref = self.metagenome_ref;
+                    var metagenome_ref = self.metagenome_ref;
                     if (dataTab === 'Browse Features' ) {
                         aElem.on('click', browse_features_func(metagenome_ref));
                     } else if (dataTab === 'Browse Contigs' ) {
@@ -1248,25 +1248,25 @@ define ([
 
         },
 
-        normalizeMetagenomeDataFromQuery: function (wsReturnedData, metagenome_ref, noDataCallback) {
+        normalizeMetagenomeDataFromQuery: function (wsReturnedData) {
             var info = wsReturnedData.info;
             var metadata = info[10];
-            var genomeData = this.normalizeMetagenomeMetadata(metadata, metagenome_ref, noDataCallback);
+            var genomeData = this.normalizeMetagenomeMetadata(metadata);
             genomeData.ws_obj_name = info[1];
             genomeData.version = info[4];
             genomeData.ref = info[6] + '/' + info[1] + '/' + info[4];
             return genomeData;
         },
 
-        normalizeMetagenomeDataFromNarrative: function (metagenome_info, metagenome_ref, noDataCallback) {
-            var genomeData = this.normalizeMetagenomeMetadata(metagenome_info.meta, metagenome_ref, noDataCallback);
+        normalizeMetagenomeDataFromNarrative: function (metagenome_info) {
+            var genomeData = this.normalizeMetagenomeMetadata(metagenome_info.meta);
             genomeData.ws_obj_name = metagenome_info.name;
             genomeData.version = metagenome_info.version;
             genomeData.ref = metagenome_info.ws_id + '/' + metagenome_info.name + '/' + metagenome_info.version;
             return genomeData;
         },
 
-        normalizeMetagenomeMetadata: function (metadata, metagenome_ref, noDataCallback) {
+        normalizeMetagenomeMetadata: function (metadata) {
             var genomeData = {
                 genetic_code: '',
                 source: '',
@@ -1328,7 +1328,7 @@ define ([
                     } else if (i == 0) {
                         $posTD.append(i + 1).append(':&nbsp;');
                     }
-                    base = sequence[i];
+                    var base = sequence[i];
                     $seqTD.append(base);
                 }
                 $div.append($('<table>').css({border: '0', 'border-collapse': 'collapse'}).append(
@@ -1390,12 +1390,13 @@ define ([
                 if (featureData.aliases) {
                     var aliases = featureData.aliases;
                     var isFirst = true;
-                    for (alias in aliases) {
-                        if (aliases.hasOwnProperty(alias)) {
-                            if (isFirst) {isFirst = false;}
-                            else {$aliases.append(', ');}
-                            $aliases.append(alias);
-                        }
+                    for (let alias in aliases) {
+
+                        // if (aliases.hasOwnProperty(alias)) {
+                        if (isFirst) {isFirst = false;}
+                        else {$aliases.append(', ');}
+                        $aliases.append(alias);
+                        // }
                     }
                     if (isFirst) {
                         $aliases.append('None');
@@ -1434,7 +1435,7 @@ define ([
                         for (let i = 0; i < locs.length; i += 1) {
                             if (i > 0) { $locDiv.append('<br>'); }
                             if (i > 6) { crop=true; }
-                            loc = locs[i];
+                            var loc = locs[i];
                             bounds = getFeatureLocationBounds(loc);
                             $locDiv.append(numberWithCommas(bounds.start) + '&nbsp;-&nbsp;' + numberWithCommas(bounds.end) + '&nbsp;(' + loc.strand + '&nbsp;Strand)');
                         }
@@ -1553,28 +1554,28 @@ define ([
                             page_limit: 100
                         }])
                         .spread( function (result) {
-                        $contigBrowser.empty();
-                        for (let f = 0; f < result.features.length; f += 1) {
-                            contigDataForBrowser.genes.push(translate_feature_data(result.features[f]));
-                        }
+                            $contigBrowser.empty();
+                            for (let f = 0; f < result.features.length; f += 1) {
+                                contigDataForBrowser.genes.push(translate_feature_data(result.features[f]));
+                            }
 
-                        var cgb = new ContigBrowserPanel();
-                        cgb.data.options.contig = contigDataForBrowser;
-                        //cgb.data.options.svgWidth = self.width - 28;
-                        cgb.data.options.onClickFunction = function (svgElement, feature) {
-                            self.showFeatureTab(metagenome_ref, feature.original_data.raw, pref, tabPane);
-                        };
-                        cgb.data.options.start = search_start;
-                        cgb.data.options.length = search_length;
-                        cgb.data.options.centerFeature = featureData.feature_id;
-                        cgb.data.options.showButtons = false;
-                        cgb.data.options.token = self.token;
-                        cgb.data.$elem = $('<div style="width:100%; height: 200px; overflow: auto"/>');
-                        cgb.data.$elem.show(function (){
-                            cgb.data.update();
-                        });
-                        $contigBrowser.append(cgb.data.$elem);
-                        cgb.data.init();
+                            var cgb = new ContigBrowserPanel();
+                            cgb.data.options.contig = contigDataForBrowser;
+                            //cgb.data.options.svgWidth = self.width - 28;
+                            cgb.data.options.onClickFunction = function (svgElement, feature) {
+                                self.showFeatureTab(metagenome_ref, feature.original_data.raw, pref, tabPane);
+                            };
+                            cgb.data.options.start = search_start;
+                            cgb.data.options.length = search_length;
+                            cgb.data.options.centerFeature = featureData.feature_id;
+                            cgb.data.options.showButtons = false;
+                            cgb.data.options.token = self.token;
+                            cgb.data.$elem = $('<div style="width:100%; height: 200px; overflow: auto"/>');
+                            cgb.data.$elem.show(function (){
+                                cgb.data.update();
+                            });
+                            $contigBrowser.append(cgb.data.$elem);
+                            cgb.data.init();
                         })
                         .catch(function (err) {
                             console.error(err);

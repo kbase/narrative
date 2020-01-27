@@ -35,6 +35,17 @@ source activate my_narrative_environment
 ./scripts/install_narrative.sh
 kbase-narrative
 ```
+If the previous instructions do not work, try
+```
+# source ~/anaconda3/bin/activate or wherever you have python installed
+conda create -n my_narrative_environment 
+conda activate my_narrative_environment
+sh scripts/install_narrative.sh
+# scripts/install_narrative.sh
+kbase-narrative
+```
+
+
 
 ### Or, without conda - this installs lots of requirements of specific versions and may clobber things on your PYTHONPATH.
 ```
@@ -81,6 +92,16 @@ To run authenticated tests, you'll need to get an auth token from KBase servers,
 
 Note: **DO NOT CHECK YOUR TOKEN FILE IN TO GITHUB**. You'll be shamed without mercy.
 
+## Manual Testing
+
+* It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`
+
+* For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with kbase-narrative. You can print messages to the terminal using 
+
+```
+log = logging.getLogger("tornado.application")
+log.info("Your Logs Go Here")
+```
 
 ## Submitting code
 

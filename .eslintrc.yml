@@ -3,7 +3,7 @@ env:
   amd: true
 extends: 'eslint:recommended'
 parserOptions:
-    ecmaVersion: 5
+    ecmaVersion: 7
 rules:
   strict:
     - error

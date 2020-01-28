@@ -4,9 +4,9 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
-    'kbaseNarrativeJobsPanel'
+    'jobCommChannel'
 ], function(Widget) {
-    describe('Test the kbaseNarrativeJobsPanel widget', function() {
+    describe('Test the jobCommChannel widget', function() {
         it('Should do things', function() {
 
         });

@@ -1,0 +1,493 @@
+/*global define*/
+define([
+    'bluebird',
+    'jquery',
+    'handlebars',
+    'kbaseAccordion',
+    'util/bootstrapDialog',
+    'base/js/namespace',
+    'common/runtime',
+    'services/kernels/comm',
+    'common/semaphore',
+    'text!kbase/templates/job_panel/job_init_error.html'
+], function (
+    Promise,
+    $,
+    Handlebars,
+    kbaseAccordion,
+    BootstrapDialog,
+    Jupyter,
+    Runtime,
+    JupyterComm,
+    Semaphore,
+    JobInitErrorTemplate
+) {
+    'use strict';
+
+    const COMM_NAME = 'KBaseJobs',
+        ALL_STATUS = 'all_status',
+        JOB_STATUS = 'job_status',
+        STOP_UPDATE_LOOP = 'stop_update_loop',
+        START_UPDATE_LOOP = 'start_update_loop',
+        STOP_JOB_UPDATE = 'stop_job_update',
+        START_JOB_UPDATE = 'start_job_update',
+        DELETE_JOB = 'delete_job',
+        CANCEL_JOB = 'cancel_job',
+        JOB_LOGS = 'job_logs',
+        JOB_LOGS_LATEST = 'job_logs_latest',
+        JOB_INFO = 'job_info';
+
+    class JobCommChannel {
+
+        constructor() {
+            this.runtime = Runtime.make();
+            this.jobStates = {};
+        }
+
+        sendJobMessage(msgType, jobId, message) {
+            this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
+                channel: {
+                    jobId: jobId
+                },
+                key: {
+                    type: msgType
+                }
+            });
+        }
+
+        /*
+         * Messages sent directly to cells.
+         */
+        sendCellMessage(messageType, cellId, message) {
+            this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
+                channel: {
+                    cell: cellId
+                },
+                key: {
+                    type: messageType
+                }
+            });
+        }
+
+        handleBusMessages() {
+            var bus = this.runtime.bus();
+
+            bus.on('ping-comm-channel', (message) => {
+                this.sendCommMessage('ping', null, {
+                    ping_id: message.pingId
+                });
+            });
+
+            // Cancels the job.
+            bus.on('request-job-cancellation', (message) => {
+                this.sendCommMessage(CANCEL_JOB, message.jobId);
+            });
+
+            // Fetches job status from kernel.
+            bus.on('request-job-status', (message) => {
+                // console.log('requesting job status for ' + message.jobId);
+                this.sendCommMessage(JOB_STATUS, message.jobId, { parent_job_id: message.parentJobId });
+            });
+
+            // Requests job status updates for this job via the job channel, and also
+            // ensures that job polling is running.
+            bus.on('request-job-update', (message) => {
+                // console.log('requesting job updates for ' + message.jobId);
+                this.sendCommMessage(START_JOB_UPDATE, message.jobId, { parent_job_id: message.parentJobId });
+            });
+
+            // Tells kernel to stop including a job in the lookup loop.
+            bus.on('request-job-completion', (message) => {
+                // console.log('cancelling job updates for ' + message.jobId);
+                this.sendCommMessage(STOP_JOB_UPDATE, message.jobId, { parent_job_id: message.parentJobId });
+            });
+
+            // Fetches job logs from kernel.
+            bus.on('request-job-log', (message) => {
+                this.sendCommMessage(JOB_LOGS, message.jobId, message.options);
+            });
+
+            // Fetches most recent job logs from kernel.
+            bus.on('request-latest-job-log', (message) => {
+                this.sendCommMessage(JOB_LOGS_LATEST, message.jobId, message.options);
+            });
+
+            // Fetches info (not state) about a job. Like the app id, name, and inputs.
+            bus.on('request-job-info', (message) => {
+                this.sendCommMessage(JOB_INFO, message.jobId, { parent_job_id: message.parentJobId });
+            });
+        }
+
+        /**
+         * Sends a comm message to the JobManager in the kernel.
+         * If there's no comm channel ready, tries to set one up first.
+         * @param msgType {string} - one of (prepend with this.)
+         *   ALL_STATUS,
+         *   STOP_UPDATE_LOOP,
+         *   START_UPDATE_LOOP,
+         *   STOP_JOB_UPDATE,
+         *   START_JOB_UPDATE,
+         *   DELETE_JOB,
+         *   JOB_LOGS
+         * @param jobId {string} - optional - a job id to send along with the
+         * message, where appropriate.
+         */
+        sendCommMessage(msgType, jobId, options) {
+            return Promise.try(() => {
+                // TODO: send specific error so that client can retry.
+                if (!this.comm) {
+                    console.error('Comm channel not initialized, not sending message.');
+                    throw new Error('Comm channel not initialized, not sending message.');
+                }
+
+                var msg = {
+                    target_name: COMM_NAME,
+                    request_type: msgType
+                };
+                if (jobId) {
+                    msg.job_id = jobId;
+                }
+                if (options) {
+                    msg = $.extend({}, msg, options);
+                }
+                this.comm.send(msg);
+            })
+            .catch((err) => {
+                console.error('ERROR sending comm message', err, msgType, jobId, options);
+                // alert('Error sending comm message! ' + err.message);
+            });
+        }
+
+        handleCommMessages(msg) {
+            var msgType = msg.content.data.msg_type;
+            var msgData = msg.content.data.content;
+            var jobId = null;
+            switch (msgType) {
+            case 'start':
+                // console.log('START', msgData.time);
+                break;
+            case 'new_job':
+                Jupyter.notebook.save_checkpoint();
+                break;
+                /*
+                 * The job status for one or more jobs. See job_status_all
+                 * for a message which covers all active jobs.
+                 * Note that these messages are additive to the job panel
+                 * cache, but the reverse logic does not apply.
+                 */
+            case 'job_status':
+                jobId = msgData.state.job_id;
+                // We could just copy the entire message into the job
+                // states cache, but referencing each individual property
+                // is more explicit about the structure.
+                this.jobStates[msgData.state.job_id] = {
+                    state: msgData.state,
+                    spec: msgData.spec,
+                    widgetParameters: msgData.widget_info
+                };
+
+                /*
+                 * Notify the front end about the changed or new job
+                 * states.
+                 */
+                // console.log('sending job status', msgData);
+                this.sendJobMessage('job-status', jobId, {
+                    jobId: jobId,
+                    jobState: msgData.state,
+                    outputWidgetInfo: msgData.widget_info
+                });
+                break;
+                /*
+                 * This message must carry all jobs linked to this narrative.
+                 * The "job-deleted" logic, specifically, requires that the job
+                 * actually not exist in the job service.
+                 * NB there is logic in the job management back end to allow
+                 * job notification to be turned off per job -- this would
+                 * be incompatible with the logic here and we should address
+                 * that.
+                 * E.g. if that behavior is allowed, then deletion detection
+                 * would need to move to the back end, since that is the only
+                 * place that would truly know about all jobs for this narrative.
+                 */
+            case 'job_status_all':
+                /*
+                 * Ensure there is a locally cached copy of each job.
+                 *
+                 */
+                for (jobId in msgData) {
+                    const jobStateMessage = msgData[jobId];
+                    // We could just copy the entire message into the job
+                    // states cache, but referencing each individual property
+                    // is more explicit about the structure.
+                    this.jobStates[jobId] = {
+                        state: jobStateMessage.state,
+                        spec: jobStateMessage.spec,
+                        widgetParameters: jobStateMessage.widget_info,
+                        owner: jobStateMessage.owner
+                    };
+
+                    this.sendJobMessage('job-status', jobId, {
+                        jobId: jobId,
+                        jobState: jobStateMessage.state,
+                        outputWidgetInfo: jobStateMessage.widget_info
+                    });
+                }
+
+                // Remove jobs which are in the local cache but not in the
+                // job_status message.
+                /*
+                 * This is for maintenance of the local job state cache.
+                 * This loop used to take care of the case in which a
+                 * cached job is not found in the incoming notifications.
+                 * This would signal a "job-deleted" message.
+                 * Although it could be the case that a+++
+                 */
+                Object.keys(this.jobStates).forEach((jobId) => {
+                    if (!msgData[jobId]) {
+                        // If ths job is not found in the incoming list of all
+                        // jobs, then we must both delete it locally, and
+                        // notify any interested parties.
+                        this.sendJobMessage('job-deleted', jobId, {
+                            jobId: jobId,
+                            via: 'no_longer_exists'
+                        });
+                        // it is safe to delete properties here
+                        delete this.jobStates[jobId];
+                    }
+                });
+                break;
+            case 'job_info':
+                jobId = msgData.job_id;
+                this.sendJobMessage('job-info', jobId, {
+                    jobId: jobId,
+                    jobInfo: msgData
+                });
+                break;
+            case 'run_status':
+                // Send job status notifications on the default channel,
+                // with a key on the message type and the job id, sending
+                // a copy of the original message.
+                // This allows widgets which are interested in the job
+                // to subscribe to just that job, and nothing else.
+                // If there is a need for a generic broadcast message, we
+                // can either send a second message or implement key
+                // filtering.
+
+                // TODO: make sure we are catching these ... perhaps they need to be run-status...
+                // this.sendJobMessage('job-status', msg.content.data.content.job_id, msg.content.data.content);
+
+                this.sendCellMessage('run-status', msgData.cell_id, msgData);
+                break;
+            case 'job_err':
+                this.sendJobMessage('job-error', msg.content.job_id, {
+                    jobId: msg.content.job_id,
+                    message: msg.content.message
+                });
+                console.error('Job Error', msg);
+                break;
+
+            case 'job_canceled':
+                var canceledId = msgData.job_id;
+                this.sendJobMessage('job-canceled', canceledId,
+                                    { jobId: canceledId, via: 'job_canceled' });
+                break;
+
+            case 'job_does_not_exist':
+                this.sendJobMessage('job-does-not-exist', msgData.job_id,
+                                    { jobId: msgData.job_id, source: msgData.source });
+                break;
+
+            case 'job_logs':
+                jobId = msgData.job_id;
+                this.sendJobMessage('job-logs', jobId, {
+                    jobId: jobId,
+                    logs: msgData,
+                    latest: msgData.latest
+                });
+                break;
+
+            case 'job_comm_error':
+                if (msgData) {
+                    switch (msgData.request_type) {
+                    case 'delete_job':
+                        var modal = new BootstrapDialog({
+                            title: 'Job Deletion Error',
+                            body: $('<div>').append('<b>An error occurred while deleting your job:</b><br>' + msgData.message),
+                            buttons: [
+                                $('<a type="button" class="btn btn-default">')
+                                .append('OK')
+                                .click(() => modal.hide())
+                            ]
+                        });
+                        modal.getElement().on('hidden.bs.modal', () => modal.destroy());
+                        modal.show();
+                        break;
+                    case 'cancel_job':
+                        this.sendJobMessage('job-cancel-error', msgData.job_id, {
+                            jobId: msgData.job_id,
+                            message: msgData.message
+                        });
+                        break;
+                    case 'job_logs':
+                        this.sendJobMessage('job-log-deleted', msgData.job_id, {
+                            jobId: msgData.job_id,
+                            message: msgData.message
+                        });
+                        break;
+                    case 'job_logs_latest':
+                        this.sendJobMessage('job-log-deleted', msgData.job_id, {
+                            jobId: msgData.job_id,
+                            message: msgData.message
+                        });
+                        break;
+                    case 'job_status':
+                        this.sendJobMessage('job-status-error', msgData.job_id, {
+                            jobId: msgData.job_id,
+                            message: msgData.message
+                        });
+                        break;
+                    default:
+                        this.sendJobMessage('job-error', msgData.job_id, {
+                            jobId: msgData.job_id,
+                            message: msgData.message,
+                            request: msgData.requestType
+                        });
+                        break;
+                    }
+                }
+                console.error('Error from job comm:', msg);
+                break;
+
+            case 'job_init_partial_err':
+                const jobErrors = msgData.job_errors;
+                for (jobId in jobErrors) {
+                    if (jobErrors.hasOwnProperty(jobId)) {
+                        this.sendJobMessage('job-status', jobId, {
+                            jobId: jobId,
+                            jobState: jobErrors[jobId],
+                            outputWidgetInfo: {}
+                        });
+                    }
+                }
+                console.warn('Job initialization in kernel resulted in errors!');
+                console.warn(msg);
+                break;
+
+            case 'job_init_err':
+            case 'job_init_lookup_err':
+                /*
+                 code, error, job_id (opt), message, name, source
+                 */
+                var $modalBody = $(Handlebars.compile(JobInitErrorTemplate)(msgData));
+                var modal = new BootstrapDialog({
+                    title: 'Job Initialization Error',
+                    body: $modalBody,
+                    buttons: [
+                        $('<a type="button" class="btn btn-default">')
+                        .append('OK')
+                        .click(function (event) {
+                            modal.hide();
+                        })
+                    ]
+                });
+                new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
+                    elements: [{
+                        title: 'Detailed Error Information',
+                        body: $('<table class="table table-bordered"><tr><th>code:</th><td>' + msgData.code + '</td></tr>' +
+                            '<tr><th>error:</th><td>' + msgData.message + '</td></tr>' +
+                            (function () {
+                                if (msgData.service) {
+                                    return '<tr><th>service:</th><td>' + msgData.service + '</td></tr>';
+                                }
+                                return '';
+                            }()) +
+                            '<tr><th>type:</th><td>' + msgData.name + '</td></tr>' +
+                            '<tr><th>source:</th><td>' + msgData.source + '</td></tr></table>')
+                    }]
+                });
+
+                $modalBody.find('button#kb-job-err-report').click(function (e) {
+
+                });
+                modal.getElement().on('hidden.bs.modal', function () {
+                    modal.destroy();
+                });
+                modal.show();
+                break;
+            case 'result':
+                this.sendCellMessage('result', msgData.address.cell_id, msgData);
+                break;
+            default:
+                console.warn('Unhandled KBaseJobs message from kernel (type=\'' + msgType + '\'):');
+                console.warn(msg);
+            }
+        }
+
+        /**
+         * Initializes the comm channel to the back end.
+         */
+        initCommChannel() {
+            const _this = this;
+            _this.comm = null;
+            let commSemaphore = Semaphore.make();
+            commSemaphore.add('comm', false);
+            return new Promise((resolve, reject) => {
+                // First we check to see if our comm channel already
+                // exists. If so, we do some funny business to create a
+                // new client side for it, register it, and set up our
+                // handler on it.
+                Jupyter.notebook.kernel.comm_info(COMM_NAME, (msg) => {
+                    if (msg.content && msg.content.comms) {
+                        // skim the reply for the right id
+                        for (const id in msg.content.comms) {
+                            if (msg.content.comms[id].target_name === COMM_NAME) {
+                                _this.comm = new JupyterComm.Comm(COMM_NAME, id);
+                                Jupyter.notebook.kernel.comm_manager.register_comm(_this.comm);
+                                _this.comm.on_msg(_this.handleCommMessages.bind(_this));
+                            }
+                        }
+                    }
+                    resolve();
+                });
+            })
+            .then(() => {
+                // If no existing comm channel could be hooked up to, we have an alternative
+                // strategy, apparently. We register our channel endpoint, even though there is
+                // no back end yet, and our next call to utilize it below will create it.
+                if (_this.comm) {
+                    commSemaphore.set('comm', 'ready');
+                    return;
+                }
+                return new Promise((resolve, reject) => {
+                    Jupyter.notebook.kernel.comm_manager.register_target(COMM_NAME, (comm, msg) => {
+                        _this.comm = comm;
+                        comm.on_msg(_this.handleCommMessages);
+                        commSemaphore.set('comm', 'ready');
+                    });
+                    const callbacks = {
+                        shell: {
+                            reply: function (reply) {
+                                if (reply.content.error) {
+                                    console.error('ERROR executing jobInit', reply);
+                                    commSemaphore.set('comm', 'error');
+                                    reject(new Error(reply.content.name + ':' + reply.content.evalue));
+                                } else {
+                                    resolve();
+                                }
+                            }
+                        }
+                    };
+                    Jupyter.notebook.kernel.execute(_this.getJobInitCode(), callbacks);
+                });
+            });
+        }
+
+        getJobInitCode() {
+            return ['from biokbase.narrative.jobs.jobmanager import JobManager',
+                'JobManager().initialize_jobs()'
+            ].join('\n');
+        }
+    }
+
+    return JobCommChannel;
+});

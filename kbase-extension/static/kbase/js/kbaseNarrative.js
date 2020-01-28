@@ -15,6 +15,7 @@ define([
     'bluebird',
     'handlebars',
     'narrativeConfig',
+    'jobCommChannel',
     'kbaseNarrativeSidePanel',
     'kbaseNarrativeOutputCell',
     'kbaseNarrativeWorkspace',
@@ -49,6 +50,7 @@ define([
     Promise,
     Handlebars,
     Config,
+    JobCommChannel,
     KBaseNarrativeSidePanel,
     KBaseNarrativeOutputCell,
     KBaseNarrativeWorkspace,
@@ -778,17 +780,18 @@ define([
                     this.sidePanel.render();
                 }.bind(this));
 
-            $([Jupyter.events]).trigger('loaded.Narrative');
             $([Jupyter.events]).on('kernel_ready.Kernel',
-                function () {
+                function (e) {
+                    console.log("kernel ready event", e);
                     console.log('Kernel Ready! Initializing Job Channel...');
                     this.loadingWidget.updateProgress('kernel', true);
+                    this.jobCommChannel = new JobCommChannel();
+                    this.jobCommChannel.initCommChannel()
+
                     // TODO: This should be an event "kernel-ready", perhaps broadcast
                     // on the default bus channel.
-                    this.sidePanel.$jobsWidget.initCommChannel()
-                        .then(function () {
-                            this.loadingWidget.updateProgress('jobs', true);
-                        }.bind(this))
+                    // this.sidePanel.$jobsWidget.initCommChannel()
+                        .then(() => this.loadingWidget.updateProgress('jobs', true))
                         .catch(function (err) {
                             // TODO: put the narrative into a terminal state
                             console.error('ERROR initializing kbase comm channel', err);

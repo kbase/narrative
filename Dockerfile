@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM kbase/narrbase:5.2
+FROM kbase/narrbase:6.1
 
 # These ARGs values are passed in via the docker build command
 ARG BUILD_DATE
@@ -29,24 +29,9 @@ RUN echo Skip=$SKIP_MINIFY
 
 # install pyopenssl cryptography idna and requests is the same as installing
 # requests[security]
-RUN pip install \
-    ndg-httpsclient==0.5.1 \
-    pyasn1==0.4.5 \
-    pyopenssl==19.0.0 \
-    cryptography==2.7 \
-    idna==2.7 \
-    requests==2.20.0 \
-    beautifulsoup4==4.7.1 \
-    html5lib==1.0.1
-
-# TEMPORARY!
-# Update bs4 and pandas to resolve inability to run them
-#RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev libffi-dev libssl-dev \
-#    && pip install pyopenssl ndg-httpsclient pyasn1 \
-#    && pip install requests --upgrade \
-#    && pip install 'requests[security]' --upgrade \
-#    && pip install 'beautifulsoup4' --upgrade \
-#    && pip install 'html5lib' --upgrade
+RUN source activate base
+RUN conda install -c conda-forge ndg-httpsclient==0.5.1 pyasn1==0.4.5 pyopenssl==19.0.0 cryptography==2.7 idna==2.8 requests==2.21.0 \
+          beautifulsoup4==4.8.1 html5lib==1.0.1
 
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative
@@ -58,12 +43,11 @@ WORKDIR /kb/dev_container/narrative
 RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version
 
 # Install Javascript dependencies
-RUN npm install && ./node_modules/.bin/bower install --allow-root --config.interactive=false
+RUN npm install -g grunt-cli && \
+    npm install && \
+    ./node_modules/.bin/bower install --allow-root --config.interactive=false
 
 # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
-# (commented out for now)
-# RUN cd kbase-extension/
-# src/notebook/ipython_profiles/profile_narrative/kbase_templates && npm install && grunt build
 RUN [ -n "$SKIP_MINIFY" ] || grunt minify
 
 # Add Tini. Tini operates as a process subreaper for jupyter. This prevents
@@ -76,10 +60,11 @@ RUN [ -n "$SKIP_MINIFY" ] || grunt minify
 RUN /bin/bash scripts/install_narrative_docker.sh
 
 # RUN ./fixupURL.sh && chmod 666 /kb/dev_container/narrative/src/config.json
-RUN pip install jupyter-console
+RUN pip install jupyter-console==6.0.0
 
 WORKDIR /tmp
-RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_profiles /tmp/narrative /kb/dev_container/narrative/kbase-extension; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
+RUN mkdir /tmp/narrative && \
+    chown -R nobody:www-data /tmp/narrative /kb/dev_container/narrative/kbase-extension; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
 
 # Set a default value for the environment variable VERSION_CHECK that gets expanded in the config.json.templ
 # into the location to check for a new narrative version. Normally we would put this in the template itself

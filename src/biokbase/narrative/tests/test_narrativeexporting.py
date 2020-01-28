@@ -1,11 +1,10 @@
-from __future__ import print_function
 from biokbase.narrative.common.exceptions import WorkspaceError
 from biokbase.workspace.baseclient import ServerError
 from biokbase.narrative.exporter.exporter import NarrativeExporter
 import unittest
 import os
 import mock
-from util import TestConfig
+from .util import TestConfig
 
 """
 Some tests for narrative exporting.

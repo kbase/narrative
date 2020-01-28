@@ -94,7 +94,7 @@ def _kbase_log_name(name):
     return "biokbase." + name
 
 def _has_handler_type(log, type_):
-    return any(map(lambda h: isinstance(h, type_), log.handlers))
+    return any([isinstance(h, type_) for h in log.handlers])
 
 ## Custom handlers
 

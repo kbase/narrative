@@ -32,7 +32,7 @@ c = get_config()
 # c.IPKernelApp.verbose_crash = False
 
 # The Kernel subclass to be used.
-# 
+#
 # This should allow easy re-use of the IPKernelApp entry point to configure and
 # launch kernels other than IPython's own.
 # c.IPKernelApp.kernel_class = <class 'IPython.kernel.zmq.ipkernel.IPythonKernel'>
@@ -62,10 +62,10 @@ c = get_config()
 # c.IPKernelApp.log_level = 30
 
 # lines of code to run at IPython startup.
-c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.narrative.services import *' ]
+c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics' ]
 
 # Path to an extra config file to load.
-# 
+#
 # If specified, load this config file in addition to any other IPython config.
 # c.IPKernelApp.extra_config_file = u''
 
@@ -78,7 +78,7 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 # set the heartbeat port [default: random]
 # c.IPKernelApp.hb_port = 0
 
-# 
+#
 # c.IPKernelApp.transport = 'tcp'
 
 # redirect stdout to the null device
@@ -102,7 +102,7 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 # c.IPKernelApp.parent_handle = 0
 
 # JSON file in which to store connection info [default: kernel-<pid>.json]
-# 
+#
 # This file will contain the IP, ports, and authentication key needed to connect
 # clients to this kernel. By default, this file will be created in the security
 # dir of the current profile, but can be specified by absolute path.
@@ -110,7 +110,7 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 
 # If true, IPython will populate the user namespace with numpy, pylab, etc. and
 # an ``import *`` is done from numpy and pylab, when using pylab mode.
-# 
+#
 # When False, pylab mode should not import any names into the user namespace.
 # c.IPKernelApp.pylab_import_all = True
 
@@ -161,14 +161,14 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 # IPythonKernel will inherit config from: Kernel
 
 # Whether to use appnope for compatiblity with OS X App Nap.
-# 
+#
 # Only affects OS X >= 10.9.
 # c.IPythonKernel._darwin_app_nap = True
 
-# 
+#
 # c.IPythonKernel._execute_sleep = 0.0005
 
-# 
+#
 # c.IPythonKernel._poll_interval = 0.05
 
 #------------------------------------------------------------------------------
@@ -188,7 +188,7 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 # user input before code is run.
 # c.ZMQInteractiveShell.ast_transformers = []
 
-# 
+#
 # c.ZMQInteractiveShell.history_length = 10000
 
 # Don't call post-execute functions that have failed in the past.
@@ -204,7 +204,7 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 # regular output instead.
 # c.ZMQInteractiveShell.display_page = False
 
-# 
+#
 # c.ZMQInteractiveShell.separate_in = '\n'
 
 # Enable magic commands to be called without the leading %.
@@ -213,7 +213,7 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 # Deprecated, use PromptManager.in2_template
 # c.ZMQInteractiveShell.prompt_in2 = '   .\\D.: '
 
-# 
+#
 # c.ZMQInteractiveShell.separate_out = ''
 
 # Deprecated, use PromptManager.in_template
@@ -235,7 +235,7 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 # no arguments are present).
 # c.ZMQInteractiveShell.autocall = 0
 
-# 
+#
 # c.ZMQInteractiveShell.separate_out2 = ''
 
 # Deprecated, use PromptManager.justify
@@ -244,22 +244,22 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 # The part of the banner to be printed before the profile
 # c.ZMQInteractiveShell.banner1 = 'Python 2.7.6 (default, Nov 18 2013, 15:12:51) \nType "copyright", "credits" or "license" for more information.\n\nIPython 3.2.0-dev -- An enhanced Interactive Python.\n?         -> Introduction and overview of IPython\'s features.\n%quickref -> Quick reference.\nhelp      -> Python\'s own help system.\nobject?   -> Details about \'object\', use \'object??\' for extra details.\n'
 
-# 
+#
 # c.ZMQInteractiveShell.readline_parse_and_bind = ['tab: complete', '"\\C-l": clear-screen', 'set show-all-if-ambiguous on', '"\\C-o": tab-insert', '"\\C-r": reverse-search-history', '"\\C-s": forward-search-history', '"\\C-p": history-search-backward', '"\\C-n": history-search-forward', '"\\e[A": history-search-backward', '"\\e[B": history-search-forward', '"\\C-k": kill-line', '"\\C-u": unix-line-discard']
 
 # The part of the banner to be printed after the profile
 # c.ZMQInteractiveShell.banner2 = ''
 
-# 
+#
 # c.ZMQInteractiveShell.debug = False
 
-# 
+#
 # c.ZMQInteractiveShell.object_info_string_level = 0
 
-# 
+#
 # c.ZMQInteractiveShell.ipython_dir = ''
 
-# 
+#
 # c.ZMQInteractiveShell.readline_remove_delims = '-/~'
 
 # Start logging to the default log file in overwrite mode. Use `logappend` to
@@ -269,7 +269,7 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 # The name of the logfile to use.
 # c.ZMQInteractiveShell.logfile = ''
 
-# 
+#
 # c.ZMQInteractiveShell.wildcards_case_sensitive = True
 
 # Save multi-line entries as one entry in readline history
@@ -279,10 +279,10 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 # file to **overwrite** logs to.
 # c.ZMQInteractiveShell.logappend = ''
 
-# 
+#
 # c.ZMQInteractiveShell.xmode = 'Context'
 
-# 
+#
 # c.ZMQInteractiveShell.quiet = False
 
 # Deprecated, use PromptManager.out_template
@@ -308,10 +308,10 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 #------------------------------------------------------------------------------
 
 # An object to manage the profile directory and its resources.
-# 
+#
 # The profile directory is used by all IPython applications, to manage
 # configuration, logging and security.
-# 
+#
 # This object knows how to find, create and manage these directories. This
 # should be used by any code that wants to handle profiles.
 
@@ -324,27 +324,27 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 #------------------------------------------------------------------------------
 
 # Object for handling serialization and sending of messages.
-# 
+#
 # The Session object handles building messages and sending them with ZMQ sockets
 # or ZMQStream objects.  Objects can communicate with each other over the
 # network via Session objects, and only need to work with the dict-based IPython
 # message spec. The Session will handle serialization/deserialization, security,
 # and metadata.
-# 
+#
 # Sessions support configurable serialization via packer/unpacker traits, and
 # signing with HMAC digests via the key/keyfile traits.
-# 
+#
 # Parameters ----------
-# 
+#
 # debug : bool
 #     whether to trigger extra debugging statements
 # packer/unpacker : str : 'json', 'pickle' or import_string
 #     importstrings for methods to serialize message parts.  If just
 #     'json' or 'pickle', predefined JSON and pickle packers will be used.
 #     Otherwise, the entire importstring must be used.
-# 
+#
 #     The functions must accept at least valid JSON input, and output *bytes*.
-# 
+#
 #     For example, to use msgpack:
 #     packer = 'msgpack.packb', unpacker='msgpack.unpackb'
 # pack/unpack : callables
@@ -375,7 +375,7 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.
 # c.Session.packer = 'json'
 
 # The maximum number of digests to remember.
-# 
+#
 # The digest history will be culled when it exceeds this value.
 # c.Session.digest_history_size = 65536
 

@@ -95,7 +95,7 @@ define([
                 },
                 sorting_rules: [{
                     is_object_property: 1,
-                    property: 'scientific_name_keyword',
+                    property: 'scientific_name',
                     ascending: 1
                 }]
             };

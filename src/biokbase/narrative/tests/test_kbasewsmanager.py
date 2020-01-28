@@ -1,7 +1,7 @@
 import unittest
 import mock
 from biokbase.narrative.contents.kbasewsmanager import KBaseWSManager
-from narrative_mock.mockclients import get_mock_client
+from .narrative_mock.mockclients import get_mock_client
 from biokbase.narrative.common.narrative_ref import NarrativeRef
 from tornado.web import HTTPError
 

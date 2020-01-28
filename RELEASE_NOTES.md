@@ -1,7 +1,19 @@
 ### OVERVIEW
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v5.6.0 (more notes will follow).
+This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
+
+### Version 4.0.0
+- Update various software packages
+    - Python to 3.6.9
+    - Jupyter Notebook to 6.0.2
+    - IPython to 7.9.0
+
+### Version 3.11.4
+- Add Annotated Metagenome Assembly viewer widget
+- PTV-1214 - Fix Binned Contig Viewer labels
+- PTV-1341 - Fix column and row labeling in GenomeComparison viewer
+- Improve functionality and options for dynamic dropdowns in apps.
 
 ### Version 3.11.3
 - PTV-1308 - Fix problem where users with a Globus account that's not linked to KBase will see an error when trying to access the Globus interface through the upload area.

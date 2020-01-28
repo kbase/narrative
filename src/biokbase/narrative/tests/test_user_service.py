@@ -6,7 +6,7 @@ phase of the project.
 """
 import unittest
 from biokbase.narrative.services.user import UserService
-from util import TestConfig
+from .util import TestConfig
 
 
 class UserServiceTestCase(unittest.TestCase):

@@ -19,7 +19,7 @@ def format_kvps(mapping, prefix=''):
     e.g.: host.ip=0.0.0.1 host.name=the.dude.abides.
     """
     kvp_list = []
-    for k, v in mapping.iteritems():
+    for k, v in mapping.items():
         if hasattr(v, 'keys'):  # nested mapping
             new_prefix = prefix + '.' + k if prefix else k
             kvps = format_kvps(v, prefix=new_prefix) # format as string

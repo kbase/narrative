@@ -6,7 +6,7 @@ from biokbase.narrative.appeditor import (
     generate_app_cell
 )
 import json
-from util import TestConfig
+from .util import TestConfig
 
 
 class AppEditorTestCase(unittest.TestCase):

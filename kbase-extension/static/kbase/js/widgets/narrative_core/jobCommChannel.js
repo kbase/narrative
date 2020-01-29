@@ -42,6 +42,7 @@ define([
         constructor() {
             this.runtime = Runtime.make();
             this.jobStates = {};
+            this.handleBusMessages();
         }
 
         sendJobMessage(msgType, jobId, message) {

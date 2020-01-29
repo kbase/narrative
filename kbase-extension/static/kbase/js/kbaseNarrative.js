@@ -781,24 +781,19 @@ define([
                 }.bind(this));
 
             $([Jupyter.events]).on('kernel_ready.Kernel',
-                function (e) {
-                    console.log("kernel ready event", e);
-                    console.log('Kernel Ready! Initializing Job Channel...');
+                (e) => {
                     this.loadingWidget.updateProgress('kernel', true);
                     this.jobCommChannel = new JobCommChannel();
-                    this.jobCommChannel.initCommChannel()
-
                     // TODO: This should be an event "kernel-ready", perhaps broadcast
                     // on the default bus channel.
-                    // this.sidePanel.$jobsWidget.initCommChannel()
+                    this.jobCommChannel.initCommChannel()
                         .then(() => this.loadingWidget.updateProgress('jobs', true))
-                        .catch(function (err) {
+                        .catch((err) => {
                             // TODO: put the narrative into a terminal state
                             console.error('ERROR initializing kbase comm channel', err);
                             KBFatal('Narrative.ini', 'KBase communication channel could not be initiated with the back end. TODO');
-                            // this.loadingWidget.remove();
-                        }.bind(this));
-                }.bind(this)
+                        });
+                }
             );
         }.bind(this));
     };

@@ -1,4 +1,34 @@
 /*global define*/
+/**
+ * This is the Communication Channel that handles talking between the front end and the kernel.
+ * It's used by creating a new JobCommChannel(), then running initCommChannel() on it.
+ *
+ * i.e.
+ * let channel = new JobCommChannel();
+ * channel.initCommChannel();
+ *
+ * This creates a handle on a Jupyter Kernel Comm channel object and holds it.
+ * Note that this should only be run once the Kernel is ready (see kbaseNarrative.js for
+ * implementation).
+ *
+ * Communication can flow in two directions. From the front end to the back, that goes
+ * like this:
+ * 1. An App Cell (or other controller) sends a message over the global bus with some
+ *    request.
+ * 2. This gets captured by one of the callbacks in handleBusMessages()
+ * 3. These all invoke sendCommMessage(). This builds a message packet and sends it across the
+ *    comm channel where it gets heard by a capturing function in biokbase.narrative.jobmanager.
+ * ...that's it. These messages are asynchronous by design. They're meant to be requests that
+ * get responses eventually.
+ *
+ * From the back end to the front, the flow is slightly different. On Comm channel creation time,
+ * the handleCommMessages function is set up as the callback for anything that comes across the
+ * channel to the front end. Each of these has a message type associated with it.
+ * 1. The type is interepreted (a big ol' switch statement) and responded to.
+ * 2. Most responses (job status updates, log messages) are parceled out to the App Cells that
+ *    invoked them. Or, really, anything listening on the appropriate channel (either the cell,
+ *    or the job id)
+ */
 define([
     'bluebird',
     'jquery',
@@ -31,7 +61,6 @@ define([
         START_UPDATE_LOOP = 'start_update_loop',
         STOP_JOB_UPDATE = 'stop_job_update',
         START_JOB_UPDATE = 'start_job_update',
-        DELETE_JOB = 'delete_job',
         CANCEL_JOB = 'cancel_job',
         JOB_LOGS = 'job_logs',
         JOB_LOGS_LATEST = 'job_logs_latest',
@@ -39,12 +68,23 @@ define([
 
     class JobCommChannel {
 
+        /**
+         * Grabs the runtime, inits the set of job states, and registers callbacks against the
+         * main Bus.
+         */
         constructor() {
             this.runtime = Runtime.make();
             this.jobStates = {};
             this.handleBusMessages();
         }
 
+        /**
+         * Sends a message to a job id channel. Anything that wants to know about the job status
+         * is likely listening to this channel.
+         * @param {string} msgType
+         * @param {string} jobId
+         * @param {any} message
+         */
         sendJobMessage(msgType, jobId, message) {
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
                 channel: {
@@ -56,8 +96,11 @@ define([
             });
         }
 
-        /*
-         * Messages sent directly to cells.
+        /**
+         * Sends a message to a cell channel.
+         * @param {string} messageType
+         * @param {string} cellId
+         * @param {any} message
          */
         sendCellMessage(messageType, cellId, message) {
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
@@ -70,8 +113,13 @@ define([
             });
         }
 
+        /**
+         * Registers callbacks for handling bus messages. This listens to the global runtime bus.
+         * Mostly, it relays bus messages into comm channel requests that are satisfied by the
+         * kernel.
+         */
         handleBusMessages() {
-            var bus = this.runtime.bus();
+            let bus = this.runtime.bus();
 
             bus.on('ping-comm-channel', (message) => {
                 this.sendCommMessage('ping', null, {
@@ -128,7 +176,6 @@ define([
          *   START_UPDATE_LOOP,
          *   STOP_JOB_UPDATE,
          *   START_JOB_UPDATE,
-         *   DELETE_JOB,
          *   JOB_LOGS
          * @param jobId {string} - optional - a job id to send along with the
          * message, where appropriate.
@@ -155,10 +202,27 @@ define([
             })
             .catch((err) => {
                 console.error('ERROR sending comm message', err, msgType, jobId, options);
-                // alert('Error sending comm message! ' + err.message);
             });
         }
 
+        /**
+         * Callback attached to the comm channel. This gets called with the message when
+         * a message is passed.
+         * The message is expected to have the following structure (at a minimum):
+         * {
+         *   content: {
+         *     data: {
+         *       msg_type: string,
+         *       content: object
+         *     }
+         *   }
+         * }
+         * Where msg_type is one of:
+         * start, new_job, job_status, job_status_all, job_info, run_status, job_err, job_canceled,
+         * job_does_not_exist, job_logs, job_comm_err, job_init_err, job_init_partial_err,
+         * job_init_lookup_err, result.
+         * @param {object} msg
+         */
         handleCommMessages(msg) {
             var msgType = msg.content.data.msg_type;
             var msgData = msg.content.data.content;
@@ -234,18 +298,9 @@ define([
                     });
                 }
 
-                // Remove jobs which are in the local cache but not in the
-                // job_status message.
-                /*
-                 * This is for maintenance of the local job state cache.
-                 * This loop used to take care of the case in which a
-                 * cached job is not found in the incoming notifications.
-                 * This would signal a "job-deleted" message.
-                 * Although it could be the case that a+++
-                 */
                 Object.keys(this.jobStates).forEach((jobId) => {
                     if (!msgData[jobId]) {
-                        // If ths job is not found in the incoming list of all
+                        // If this job is not found in the incoming list of all
                         // jobs, then we must both delete it locally, and
                         // notify any interested parties.
                         this.sendJobMessage('job-deleted', jobId, {
@@ -273,10 +328,6 @@ define([
                 // If there is a need for a generic broadcast message, we
                 // can either send a second message or implement key
                 // filtering.
-
-                // TODO: make sure we are catching these ... perhaps they need to be run-status...
-                // this.sendJobMessage('job-status', msg.content.data.content.job_id, msg.content.data.content);
-
                 this.sendCellMessage('run-status', msgData.cell_id, msgData);
                 break;
             case 'job_err':
@@ -310,19 +361,6 @@ define([
             case 'job_comm_error':
                 if (msgData) {
                     switch (msgData.request_type) {
-                    case 'delete_job':
-                        var modal = new BootstrapDialog({
-                            title: 'Job Deletion Error',
-                            body: $('<div>').append('<b>An error occurred while deleting your job:</b><br>' + msgData.message),
-                            buttons: [
-                                $('<a type="button" class="btn btn-default">')
-                                .append('OK')
-                                .click(() => modal.hide())
-                            ]
-                        });
-                        modal.getElement().on('hidden.bs.modal', () => modal.destroy());
-                        modal.show();
-                        break;
                     case 'cancel_job':
                         this.sendJobMessage('job-cancel-error', msgData.job_id, {
                             jobId: msgData.job_id,
@@ -425,7 +463,19 @@ define([
         }
 
         /**
-         * Initializes the comm channel to the back end.
+         * Initializes the comm channel to the back end. Stores the generated
+         * channel in this.comm.
+         * Returns a Promise that should resolve when the channel's ready. But
+         * the nature of setting these up means that a nested Promise gets made by
+         * the Jupyter kernel front-end and not necessarily returned.
+         *
+         * Thus, it uses a semaphore lock. When the semaphore becomes ready, it
+         * gets signaled.
+         *
+         * Once ready, this starts a kernel call (over the main channel, not the
+         * new comm) to initialize the JobManager and have it fetch the set of
+         * running jobs from the execution engine. If it's already running, this
+         * overwrites everything.
          */
         initCommChannel() {
             const _this = this;

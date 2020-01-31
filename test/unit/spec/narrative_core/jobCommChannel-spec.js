@@ -5,10 +5,21 @@
 /*jslint white: true*/
 define([
     'jobCommChannel'
-], function(Widget) {
-    describe('Test the jobCommChannel widget', function() {
-        it('Should do things', function() {
+], function(JobCommChannel) {
+    describe('Test the jobCommChannel widget', () => {
+        it('Should load properly', () => {
+            expect(JobCommChannel).not.toBeNull();
+        });
 
+        it('Should be instantiable and contain the right components', () => {
+            let comm = new JobCommChannel();
+            expect(comm.initCommChannel).toBeDefined();
+            expect(comm.jobStates).toEqual({});
+        });
+
+        it('Should initialize correctly on request', () => {
+            let comm = new JobCommChannel();
+            comm.initCommChannel();
         });
     });
 });

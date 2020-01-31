@@ -4,9 +4,45 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
-    'jobCommChannel'
-], function(JobCommChannel) {
+    'jobCommChannel',
+    'base/js/namespace'
+], (
+    JobCommChannel,
+    Jupyter
+) => {
+    'use strict';
+
+    const DEFAULT_COMM_INFO = {
+        content: {
+            comms: []
+        }
+    };
+    const DEFAULT_COMM = {
+        on_msg: () => { },
+        send: () => { }
+    };
+
+    function makeMockNotebook(commInfoReturn, registerTargetReturn) {
+        commInfoReturn = commInfoReturn || DEFAULT_COMM_INFO;
+        registerTargetReturn = registerTargetReturn || DEFAULT_COMM;
+        return {
+            save_checkpoint: () => { /* no op */ },
+            kernel: {
+                comm_info: (name, cb) => cb(commInfoReturn),
+                execute: (code, cb) => cb.shell.reply({content: {}}),
+                comm_manager: {
+                    register_comm: () => {},
+                    register_target: (name, cb) => cb(registerTargetReturn, {})
+                }
+            }
+        };
+    }
+
     describe('Test the jobCommChannel widget', () => {
+        beforeEach(() => {
+            Jupyter.notebook = makeMockNotebook();
+        });
+
         it('Should load properly', () => {
             expect(JobCommChannel).not.toBeNull();
         });
@@ -17,9 +53,14 @@ define([
             expect(comm.jobStates).toEqual({});
         });
 
-        it('Should initialize correctly on request', () => {
+        it('Should initialize correctly on request', (done, fail) => {
             let comm = new JobCommChannel();
-            comm.initCommChannel();
+            comm.initCommChannel()
+                .then(done)
+                .catch((err) => {
+                    console.error(err);
+                    fail();
+                });
         });
     });
 });

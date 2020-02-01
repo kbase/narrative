@@ -114,22 +114,47 @@ define([
                 });
         });
 
-        it('Should handle messages to the bus by sending them to the kernel', (done) => {
-            let comm = new JobCommChannel();
-            comm.initCommChannel()
-                .then(() => {
-                    expect(comm.comm).not.toBeNull();
-                    spyOn(comm.comm, 'send');
-                    runtime.bus().emit('request-job-cancellation', {
-                        jobId: 'someJob'
+        let busMsgCases = [
+            ['ping-comm-channel', {pingId: 'ping!'}],
+            ['request-job-cancellation', {jobId: 'someJob'}],
+            ['request-job-status', {jobId: 'someJob', parentJobId: 'someParent'}],
+            ['request-job-update', {jobId: 'someJob', parentJobId: 'someParent'}],
+            ['request-job-completion', {jobId: 'someJob'}],
+            ['request-job-log', {jobId: 'someJob', options: {}}],
+            ['request-latest-job-log', {jobId: 'someJob', options: {}}],
+            ['request-job-info', {jobId: 'someJob', parentJobId: 'someParent'}]
+        ];
+        busMsgCases.forEach(function (testCase) {
+            it('Should handle ' + testCase[0] + 'bus message', (done) => {
+                let comm = new JobCommChannel();
+                comm.initCommChannel()
+                    .then(() => {
+                        expect(comm.comm).not.toBeNull();
+                        spyOn(comm.comm, 'send');
+                        runtime.bus().emit(testCase[0], testCase[1]);
+                        return new Promise(resolve => setTimeout(resolve, 100));
+                    })
+                    .then(() => {
+                        expect(comm.comm.send).toHaveBeenCalled();
+                        done();
                     });
-                    return new Promise(resolve => setTimeout(resolve, 1000));
-                })
-                .then(() => {
-                    expect(comm.comm.send).toHaveBeenCalled();
-                    done();
-                });
+            });
         });
+
+        it('Should error properly when trying to send a comm with an uninited channel', (done) => {
+            let comm = new JobCommChannel();
+            let prom = comm.sendCommMessage('some_msg', 'foo', {});
+            prom.then(() => {
+                fail('This should have failed');
+            }).catch((err) => {
+                expect(err.message).toContain('ERROR sending comm message');
+                done();
+            });
+        });
+
+        /* Mocking out comm messages coming back over the channel is gruesome. Just
+         * calling the handleCommMessage function directly.
+         */
 
     });
 });

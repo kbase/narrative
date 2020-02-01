@@ -181,11 +181,11 @@ define([
          * message, where appropriate.
          */
         sendCommMessage(msgType, jobId, options) {
-            return Promise.try(() => {
+            return new Promise((resolve, reject) => {
                 // TODO: send specific error so that client can retry.
                 if (!this.comm) {
                     console.error('Comm channel not initialized, not sending message.');
-                    throw new Error('Comm channel not initialized, not sending message.');
+                    reject(new Error('Comm channel not initialized, not sending message.'));
                 }
 
                 var msg = {
@@ -199,9 +199,11 @@ define([
                     msg = $.extend({}, msg, options);
                 }
                 this.comm.send(msg);
+                resolve();
             })
             .catch((err) => {
                 console.error('ERROR sending comm message', err, msgType, jobId, options);
+                throw new Error('ERROR sending comm message', err, msgType, jobId, options);
             });
         }
 

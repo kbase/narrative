@@ -64,7 +64,9 @@ define([
         CANCEL_JOB = 'cancel_job',
         JOB_LOGS = 'job_logs',
         JOB_LOGS_LATEST = 'job_logs_latest',
-        JOB_INFO = 'job_info';
+        JOB_INFO = 'job_info',
+        JOB = 'jobId',
+        CELL = 'cell';
 
     class JobCommChannel {
 
@@ -79,36 +81,20 @@ define([
         }
 
         /**
-         * Sends a message to a job id channel. Anything that wants to know about the job status
-         * is likely listening to this channel.
-         * @param {string} msgType
-         * @param {string} jobId
+         * Sends a message over the bus. The channel should have a single key of either
+         * cell or jobId.
+         * @param {string} channel - either CELL or JOB
+         * @param {string} channelId - id for the channel
+         * @param {string} msgType - one of the msg types
          * @param {any} message
          */
-        sendJobMessage(msgType, jobId, message) {
+        sendBusMessage(channelName, channelId, msgType, message) {
+            let channel = {};
+            channel[channelName] = channelId;
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
-                channel: {
-                    jobId: jobId
-                },
+                channel: channel,
                 key: {
                     type: msgType
-                }
-            });
-        }
-
-        /**
-         * Sends a message to a cell channel.
-         * @param {string} messageType
-         * @param {string} cellId
-         * @param {any} message
-         */
-        sendCellMessage(messageType, cellId, message) {
-            this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
-                channel: {
-                    cell: cellId
-                },
-                key: {
-                    type: messageType
                 }
             });
         }
@@ -257,8 +243,7 @@ define([
                  * Notify the front end about the changed or new job
                  * states.
                  */
-                // console.log('sending job status', msgData);
-                this.sendJobMessage('job-status', jobId, {
+                this.sendBusMessage(JOB, jobId, 'job-status', {
                     jobId: jobId,
                     jobState: msgData.state,
                     outputWidgetInfo: msgData.widget_info
@@ -293,7 +278,7 @@ define([
                         owner: jobStateMessage.owner
                     };
 
-                    this.sendJobMessage('job-status', jobId, {
+                    this.sendBusMessage(JOB, jobId, 'job-status', {
                         jobId: jobId,
                         jobState: jobStateMessage.state,
                         outputWidgetInfo: jobStateMessage.widget_info
@@ -305,7 +290,7 @@ define([
                         // If this job is not found in the incoming list of all
                         // jobs, then we must both delete it locally, and
                         // notify any interested parties.
-                        this.sendJobMessage('job-deleted', jobId, {
+                        this.sendBusMessage(JOB, jobId, 'job-deleted', {
                             jobId: jobId,
                             via: 'no_longer_exists'
                         });
@@ -316,7 +301,7 @@ define([
                 break;
             case 'job_info':
                 jobId = msgData.job_id;
-                this.sendJobMessage('job-info', jobId, {
+                this.sendBusMessage(JOB, jobId, 'job-info', {
                     jobId: jobId,
                     jobInfo: msgData
                 });
@@ -330,10 +315,10 @@ define([
                 // If there is a need for a generic broadcast message, we
                 // can either send a second message or implement key
                 // filtering.
-                this.sendCellMessage('run-status', msgData.cell_id, msgData);
+                this.sendBusMessage(CELL, msgData.cell_id, 'run-status', msgData);
                 break;
             case 'job_err':
-                this.sendJobMessage('job-error', msg.content.job_id, {
+                this.sendBusMessage(JOB, msg.content.job_id, 'job-error', {
                     jobId: msg.content.job_id,
                     message: msg.content.message
                 });
@@ -342,18 +327,18 @@ define([
 
             case 'job_canceled':
                 var canceledId = msgData.job_id;
-                this.sendJobMessage('job-canceled', canceledId,
+                this.sendBusMessage(JOB, canceledId, 'job-canceled',
                                     { jobId: canceledId, via: 'job_canceled' });
                 break;
 
             case 'job_does_not_exist':
-                this.sendJobMessage('job-does-not-exist', msgData.job_id,
+                this.sendBusMessage(JOB, msgData.job_id, 'job-does-not-exist',
                                     { jobId: msgData.job_id, source: msgData.source });
                 break;
 
             case 'job_logs':
                 jobId = msgData.job_id;
-                this.sendJobMessage('job-logs', jobId, {
+                this.sendBusMessage(JOB, jobId, 'job-logs', {
                     jobId: jobId,
                     logs: msgData,
                     latest: msgData.latest
@@ -362,36 +347,37 @@ define([
 
             case 'job_comm_error':
                 if (msgData) {
+                    jobId = msgData.job_id;
                     switch (msgData.request_type) {
                     case 'cancel_job':
-                        this.sendJobMessage('job-cancel-error', msgData.job_id, {
-                            jobId: msgData.job_id,
+                        this.sendBusMessage(JOB, jobId, 'job-cancel-error', {
+                            jobId: jobId,
                             message: msgData.message
                         });
                         break;
                     case 'job_logs':
-                        this.sendJobMessage('job-log-deleted', msgData.job_id, {
-                            jobId: msgData.job_id,
+                        this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
+                            jobId: jobId,
                             message: msgData.message
                         });
                         break;
                     case 'job_logs_latest':
-                        this.sendJobMessage('job-log-deleted', msgData.job_id, {
-                            jobId: msgData.job_id,
+                        this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
+                            jobId: jobId,
                             message: msgData.message
                         });
                         break;
                     case 'job_status':
-                        this.sendJobMessage('job-status-error', msgData.job_id, {
-                            jobId: msgData.job_id,
+                        this.sendBusMessage(JOB, jobId, 'job-status-error', {
+                            jobId: jobId,
                             message: msgData.message
                         });
                         break;
                     default:
-                        this.sendJobMessage('job-error', msgData.job_id, {
-                            jobId: msgData.job_id,
+                        this.sendBusMessage(JOB, jobId, 'job-error', {
+                            jobId: jobId,
                             message: msgData.message,
-                            request: msgData.requestType
+                            request: msgData.request_type
                         });
                         break;
                     }
@@ -403,7 +389,7 @@ define([
                 const jobErrors = msgData.job_errors;
                 for (jobId in jobErrors) {
                     if (jobErrors.hasOwnProperty(jobId)) {
-                        this.sendJobMessage('job-status', jobId, {
+                        this.sendBusMessage(JOB, jobId, 'job-status', {
                             jobId: jobId,
                             jobState: jobErrors[jobId],
                             outputWidgetInfo: {}
@@ -456,7 +442,7 @@ define([
                 modal.show();
                 break;
             case 'result':
-                this.sendCellMessage('result', msgData.address.cell_id, msgData);
+                this.sendBusMessage(CELL, msgData.address.cell_id, 'result', msgData);
                 break;
             default:
                 console.warn('Unhandled KBaseJobs message from kernel (type=\'' + msgType + '\'):');

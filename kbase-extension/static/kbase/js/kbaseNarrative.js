@@ -21,7 +21,7 @@ define([
     'kbaseNarrativeMethodCell',
     'kbaseAccordion',
     'kbaseNarrativeSharePanel',
-    'widgets/narrative_core/staticNarrrativesManager',
+    'widgets/narrative_core/staticNarrativesManager',
     'kbaseNarrativePrestart',
     'ipythonCellMenu',
     'base/js/namespace',

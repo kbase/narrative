@@ -211,7 +211,7 @@ class KBaseWSManagerMixin(object):
                     'narrative_nice_name': nb['metadata']['name'],
                     'searchtags': 'narrative'
                 }
-                self.ws_client().alter_workspace_metadata({'wsi': {'id': ws_id}, 'new':updated_metadata})
+                self.ws_client().alter_workspace_metadata({'wsi': {'id': ws_id}, 'new': updated_metadata})
             except ServerError as err:
                 raise WorkspaceError(err, ws_id, message="Error adjusting Narrative metadata", http_code=500)
 

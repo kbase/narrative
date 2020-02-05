@@ -21,6 +21,7 @@ define([
     'kbaseNarrativeMethodCell',
     'kbaseAccordion',
     'kbaseNarrativeSharePanel',
+    'widgets/narrative_core/staticNarrativesManager',
     'kbaseNarrativePrestart',
     'ipythonCellMenu',
     'base/js/namespace',
@@ -54,6 +55,7 @@ define([
     KBaseNarrativeMethodCell,
     KBaseAccordion,
     KBaseNarrativeSharePanel,
+    StaticNarrativesPanel,
     KBaseNarrativePrestart,
     KBaseCellToolbar,
     Jupyter,
@@ -347,6 +349,20 @@ define([
             }
             shareDialog.show();
         }.bind(this));
+    };
+
+    Narrative.prototype.initStaticNarrativesPanel = function () {
+        const staticPanel = $('<div>'),
+            staticDialog = new BootstrapDialog({
+                title: 'Static Narratives',
+                body: staticPanel,
+                closeButton: true
+            }),
+            staticWidget = new StaticNarrativesPanel(staticPanel);
+        $('#kb-static-btn').click(() => {
+            staticWidget.refresh();
+            staticDialog.show();
+        });
     };
 
     /**
@@ -752,6 +768,7 @@ define([
                 return;
             }
             this.initSharePanel();
+            this.initStaticNarrativesPanel();
             this.updateDocumentVersion()
                 .then(function() {
                     // init the controller

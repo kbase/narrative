@@ -14,7 +14,9 @@ define([
     'util/timeFormat',
     'kbase-generic-client-api',
     'kb_common/html',
-    'base/js/namespace'
+    'base/js/namespace',
+    'handlebars',
+    'text!kbase/templates/static_narrative.html'
 ],
 function(
     Promise,
@@ -26,7 +28,9 @@ function(
     TimeFormat,
     GenericClient,
     HTML,
-    Jupyter
+    Jupyter,
+    Handlebars,
+    StaticNarrativeTmpl
 ) {
     'use strict';
 
@@ -109,43 +113,14 @@ function(
          * - static_saved - the time (ms since epoch) that the Static Narrative was saved.
          */
         renderNarrativeInfo(info) {
+            let tmpl = Handlebars.compile(StaticNarrativeTmpl);
             if (info.url) {
-                return div({
-                    style: {
-                        display: 'flex',
-                        'border-bottom': '1px solid #eee',
-                        'margin-bottom': '0.5em',
-                        'padding-bottom': '0.5em'
-                    }}, [
-                    div([
-                        div(b('A static version of this Narrative exists.')),
-                        div('Based on version ' + info.version),
-                        div('Originally saved ' + TimeFormat.prettyTimestamp(info.narr_saved)),
-                        div('And made static ' + TimeFormat.prettyTimestamp(info.static_saved))
-                    ]),
-                    div({style: {'margin-left': 'auto'}}, [
-                        a({
-                            target: '_blank',
-                            title: 'Go to existing static Narrative',
-                            href: Config.url('static_narrative_root') + info.url
-                        }, [
-                            i({ class: 'fa fa-external-link fa-2x'})
-                        ])
-                    ]),
-                ]);
+                info.narr_saved = TimeFormat.prettyTimestamp(info.narr_saved);
+                info.static_saved = TimeFormat.prettyTimestamp(info.static_saved);
+                info.url = Config.url('static_narrative_root') + info.url;
             }
-            else {
-                return div({
-                    style: {
-                        'border-bottom': '1px solid #eee',
-                        'margin-bottom': '0.5em',
-                        'padding-bottom': '0.5em'
-                    }
-                }, [
-                    div(b('No static version exists for this Narrative yet!')),
-                    div('You can create one by clicking below.')
-                ]);
-            }
+            console.log(info);
+            return tmpl(info);
         }
 
         /**

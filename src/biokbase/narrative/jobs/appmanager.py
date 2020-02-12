@@ -715,7 +715,11 @@ class AppManager(object):
                 target_key = id_map.get(param_id, param_id)
                 # Sets either the raw value, or if the parameter is an object
                 # reference the full object refernce (see the method).
-                target_val = resolve_ref_if_typed(value[param_id], spec_params[param_id])
+                if value[param_id] is None:
+                    target_val = None
+                else:
+                    target_val = resolve_ref_if_typed(value[param_id], spec_params[param_id])
+
                 mapped_value[target_key] = target_val
             return mapped_value
 

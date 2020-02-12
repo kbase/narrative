@@ -30,8 +30,8 @@ Requires the following:
 ```
 git clone https://github.com/kbase/narrative
 cd narrative
-conda env -n my_narrative_environment
-source activate my_narrative_environment
+conda create -n my_narrative_environment
+conda activate my_narrative_environment
 ./scripts/install_narrative.sh
 kbase-narrative
 ```

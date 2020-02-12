@@ -169,7 +169,7 @@ define([
                                     ws: this.config.workspaceName,
                                     type: this.config.type,
                                     attached: false,
-                                    workspaceReference: genomeRecord.ws_ref
+                                    workspaceReference: {ref: genomeRecord.ws_ref}
                                 };
                             }.bind(this));
                             // for now assume that all items before the page have been fetched

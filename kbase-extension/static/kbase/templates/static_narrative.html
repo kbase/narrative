@@ -1,0 +1,20 @@
+<div style="display: flex; border-bottom: 1px solid #eee; margin-bottom: 0.5rem; padding-bottom: 0.5rem;">
+    {{#if url }}
+    <div>
+        <div><b>A static version of this Narrative exists.</b></div>
+        <div>Based on version {{ version }}</div>
+        <div>Originally saved {{{ narr_saved }}}</div>
+        <div>And made static {{{ static_saved }}}</div>
+    </div>
+    <div style="margin-left: auto">
+        <a target="_blank" title="Go to existing static Narrative" href="{{ url }}">
+            <i class="fa fa-external-link fa-2x"></i>
+        </a>
+    </div>
+    {{else}}
+    <div>
+        <div><b>No static version exists for this Narrative yet!</b></div>
+        <div>You can create one by clicking below.</div>
+    </div>
+    {{/if}}
+</div>

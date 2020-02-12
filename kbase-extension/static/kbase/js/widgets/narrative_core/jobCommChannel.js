@@ -500,7 +500,7 @@ define([
                 return new Promise((resolve, reject) => {
                     Jupyter.notebook.kernel.comm_manager.register_target(COMM_NAME, (comm, msg) => {
                         _this.comm = comm;
-                        comm.on_msg(_this.handleCommMessages);
+                        comm.on_msg(_this.handleCommMessages.bind(_this));
                         commSemaphore.set('comm', 'ready');
                     });
                     const callbacks = {

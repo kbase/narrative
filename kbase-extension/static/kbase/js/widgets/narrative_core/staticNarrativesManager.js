@@ -8,12 +8,10 @@ define([
     'bluebird',
     'narrativeConfig',
     'common/runtime',
-    'common/events',
-    'common/ui',
     'util/display',
     'util/timeFormat',
     'kbase-generic-client-api',
-    'kb_common/html',
+    'kb_service/client/workspace',
     'base/js/namespace',
     'handlebars',
     'text!kbase/templates/static_narrative.html'
@@ -22,25 +20,15 @@ function(
     Promise,
     Config,
     Runtime,
-    Events,
-    UI,
     DisplayUtil,
     TimeFormat,
     GenericClient,
-    HTML,
+    Workspace,
     Jupyter,
     Handlebars,
     StaticNarrativeTmpl
 ) {
     'use strict';
-
-    let t=HTML.tag,
-        div=t('div'),
-        a=t('a'),
-        i=t('i'),
-        b=t('b'),
-        button=t('button'),
-        span=t('span');
 
     class StaticNarrativesPanel {
         /**
@@ -55,8 +43,13 @@ function(
             const runtime = Runtime.make();
             const token = runtime.authToken();
             this.workspaceId = runtime.workspaceId();
+            this.userId = runtime.userId();
             this.serviceClient = new GenericClient(
                 Config.url('service_wizard'),
+                {token: token}
+            );
+            this.wsClient = new Workspace(
+                Config.url('workspace'),
                 {token: token}
             );
         }
@@ -82,21 +75,40 @@ function(
          * rendering. If any errors happen, an error panel gets rendered.
          */
         render() {
-            let events = Events.make();
             this.detach();
-            this.ui = UI.make({node: this.container});
             const loadingDiv = DisplayUtil.loadingDiv();
             this.container.appendChild(loadingDiv.div[0]);
+            const docInfo = Jupyter.narrative.documentVersionInfo;
+            if (!docInfo) {
+                return renderError({
+                    code: -1,
+                    error: docInfo,
+                    name: 'Narrative error',
+                    message: 'Unable to find current Narrative version!'
+                });
+            }
 
-            return this.getStaticNarratives()
-                .then(info => {
-                    this.container.innerHTML = this.renderNarrativeInfo(info) +
-                        this.renderNewStatic(events);
-                    events.attachEvents(this.container);
-                })
+            Promise.all([
+                this.getStaticNarratives(),
+                this.getPermissionInfo()
+            ]).spread((narrativeInfo, permissions) => {
+                const info = Object.assign(narrativeInfo, permissions);
+                if (info.url) {
+                    info.narr_saved = TimeFormat.prettyTimestamp(info.narr_saved);
+                    info.static_saved = TimeFormat.prettyTimestamp(info.static_saved);
+                    info.url = Config.url('static_narrative_root') + info.url;
+                }
+                info.canMakeStatic = info.isAdmin && info.isPublic;
+                info.currentVersion = docInfo[4];
+                info.currentVersionSaved = TimeFormat.prettyTimestamp(docInfo[3]);
+                let tmpl = Handlebars.compile(StaticNarrativeTmpl);
+                this.container.innerHTML = tmpl(info);
+
+                this.hostNode.querySelector('button.btn-primary')
+                    .addEventListener('click', this.saveStaticNarrative.bind(this));
+            })
                 .catch(error => {
-                    this.container.innerHTML = '';
-                    this.container.appendChild(this.renderError(error)[0]);
+                    alert(error);
                 });
         }
 
@@ -119,52 +131,7 @@ function(
                 info.static_saved = TimeFormat.prettyTimestamp(info.static_saved);
                 info.url = Config.url('static_narrative_root') + info.url;
             }
-            console.log(info);
             return tmpl(info);
-        }
-
-        /**
-         * Renders the panel that invites the user to create a new static narrative.
-         * This uses the documentVersionInfo available in the main Narrative object
-         * (maybe that should be in Runtime?).
-         * This returns a DIV DOM element that can be put in place by the main
-         * renderer function.
-         * @param {Object} events - the Events object used to add click events to the
-         *      create static narrative button.
-         */
-        renderNewStatic(events) {
-            let self = this;
-            const docInfo = Jupyter.narrative.documentVersionInfo;
-            if (!docInfo) {
-                throw {
-                    code: -1,
-                    error: docInfo,
-                    name: 'Narrative error',
-                    message: 'Unable to find current Narrative version!'
-                };
-            }
-            return div([
-                div(b('This is version ' + docInfo[4] + ' of this Narrative, and was saved ' + TimeFormat.prettyTimestamp(docInfo[3]))),
-                div(b('Make a new static narrative?')),
-                div([
-                    button({
-                        class: 'btn btn-sm btn-primary',
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: () => self.saveStaticNarrative()
-                        })
-                    }, [
-                        span('Create new Static Narrative')
-                    ]),
-                    span({
-                        dataElement: 'saving-spinner',
-                        class: 'hidden fa fa-spinner fa-pulse fa-ex fa-fw',
-                        style: {
-                            'margin-left': '0.5em'
-                        }
-                    })
-                ])
-            ]);
         }
 
         /**
@@ -216,6 +183,25 @@ function(
         }
 
         /**
+         * Returns permissions for the current user on this narrative (workspace).
+         * @returns {Promise} - resolves into an object with two boolean keys:
+         *  isAdmin - true if user has admin (sharing) rights
+         *  isPublic - true if the narrative has public access
+         *
+         * Note that errors will propagate and not be caught here.
+         */
+        getPermissionInfo() {
+            return this.wsClient.get_permissions_mass({'workspaces': [{'id': this.workspaceId}]})
+                .then(perms => {
+                    const perm = perms.perms[0];
+                    return {
+                        isAdmin: perm[this.userId] && perm[this.userId] === 'a',
+                        isPublic: perm['*'] && perm['*'] === 'r'
+                    };
+                })
+        }
+
+        /**
          * Calls out to the StaticNarrative service to create a new Static Narrative
          * from the currently loaded Narrative document.
          * Returns a Promise that resolves when it's finished.
@@ -223,7 +209,7 @@ function(
         saveStaticNarrative() {
             const docInfo = Jupyter.narrative.documentVersionInfo;
             const narrativeRef = docInfo[6] + '/' + docInfo[0] + '/' + docInfo[4];
-            this.ui.showElement('saving-spinner');
+            this.hostNode.querySelector('span[data-element="saving-spinner"]').classList.toggle('hidden');
             return Promise.resolve(this.serviceClient.sync_call(
                 'StaticNarrative.create_static_narrative',
                 [{'narrative_ref': narrativeRef}])

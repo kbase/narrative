@@ -14,7 +14,40 @@
     {{else}}
     <div>
         <div><b>No static version exists for this Narrative yet!</b></div>
+        {{#if canMakeStatic}}
         <div>You can create one by clicking below.</div>
+        {{/if}}
     </div>
     {{/if}}
 </div>
+{{#if canMakeStatic}}
+    <div>
+        <div>
+            <b>This is version {{currentVersion}} of this Narrative and was saved {{{currentVersionSaved}}}</b>
+        </div>
+        <div>
+            <b>Make a new static narrative?</b>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-primary">Create new static narrative</button>
+            <span data-element="saving-spinner" class="hidden fa fa-spinner fa-pulse fa-ex fa-fw" style="margin-left: 0.5rem"></span>
+        </div>
+    </div>
+{{else}}
+<div class="alert alert-danger">
+    {{#unless isAdmin}}
+    <div>
+        <strong>Not an admin</strong>
+        <br>
+        You must have sharing rights to create a static Narrative.
+    </div>
+    {{/unless}}
+    {{#unless isPublic}}
+    <div {{#unless isAdmin}}style="padding-top: 0.5rem"{{/unless}}>
+        <strong>Not public</strong>
+        <br>
+        Narratives must be publicly viewable to be made static.
+    </div>
+    {{/unless}}
+</div>
+{{/if}}

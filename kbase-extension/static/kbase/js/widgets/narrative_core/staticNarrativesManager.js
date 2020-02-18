@@ -101,37 +101,17 @@ function(
                 info.canMakeStatic = info.isAdmin && info.isPublic;
                 info.currentVersion = docInfo[4];
                 info.currentVersionSaved = TimeFormat.prettyTimestamp(docInfo[3]);
+                info.isCurrentVersion = info.currentVersion === info.version;
                 let tmpl = Handlebars.compile(StaticNarrativeTmpl);
                 this.container.innerHTML = tmpl(info);
 
                 this.hostNode.querySelector('button.btn-primary')
                     .addEventListener('click', this.saveStaticNarrative.bind(this));
+                $(this.hostNode.querySelector('#kb-sn-help')).popover();
             })
                 .catch(error => {
                     alert(error);
                 });
-        }
-
-        /**
-         * Renders the block containing static Narrative information, if available.
-         * This judges that by seeing if info.url is defined or not.
-         * This returns a DIV DOM element that can be put in place by the main
-         * renderer function.
-         * @param {Object} info - a data object, expected to contain the following:
-         * - version - the version of the narrative saved
-         * - url - the path to the static Narrative, based on the configured URL.
-         * - narr_saved - the time (ms since epoch) that the Narrative used to create a
-         *      static narrative was saved.
-         * - static_saved - the time (ms since epoch) that the Static Narrative was saved.
-         */
-        renderNarrativeInfo(info) {
-            let tmpl = Handlebars.compile(StaticNarrativeTmpl);
-            if (info.url) {
-                info.narr_saved = TimeFormat.prettyTimestamp(info.narr_saved);
-                info.static_saved = TimeFormat.prettyTimestamp(info.static_saved);
-                info.url = Config.url('static_narrative_root') + info.url;
-            }
-            return tmpl(info);
         }
 
         /**

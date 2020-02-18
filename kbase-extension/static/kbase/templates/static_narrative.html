@@ -1,35 +1,43 @@
 <div style="display: flex; border-bottom: 1px solid #eee; margin-bottom: 0.5rem; padding-bottom: 0.5rem;">
     {{#if url }}
     <div>
-        <div><b>A static version of this Narrative exists.</b></div>
-        <div>Based on version {{ version }}</div>
-        <div>Originally saved {{{ narr_saved }}}</div>
-        <div>And made static {{{ static_saved }}}</div>
-    </div>
-    <div style="margin-left: auto">
-        <a target="_blank" title="Go to existing static Narrative" href="{{ url }}">
-            <i class="fa fa-external-link fa-2x"></i>
-        </a>
+        <div>
+            <a href="{{ url }}" target="_blank">
+                <b>Existing static Narrative</b>
+                <i class="fa fa-external-link"></i>
+            </a>
+        </div>
+        <div>
+            <ul>
+                <li>Made from version {{ version }}</li>
+                <li>Narrative was saved {{{ narr_saved }}}</li>
+            </ul>
+        </div>
     </div>
     {{else}}
     <div>
         <div><b>No static version exists for this Narrative yet!</b></div>
-        {{#if canMakeStatic}}
-        <div>You can create one by clicking below.</div>
-        {{/if}}
     </div>
     {{/if}}
+    <div style="margin-left: auto">
+        <a tabindex="0"
+            role="button" id="kb-sn-help" data-placement="bottom" data-trigger="focus"
+            data-toggle="popover" title="Static Narrative"
+            data-content="A static Narrative is a publicly viewable, non-interactive version of your Narrative. It has all the same content, and you can view the results of Apps, but cannot run any more.">
+            <i class="fa fa-question-circle fa-2x"></i>
+        </a>
+    </div>
 </div>
 {{#if canMakeStatic}}
     <div>
-        <div>
+        <div style="margin-bottom: 2rem">
             <b>This is version {{currentVersion}} of this Narrative and was saved {{{currentVersionSaved}}}</b>
         </div>
+        {{#if isCurrentVersion}}
+        <div>No recent changes have been made to the Narrative, but you can still make a new Static Narrative.</div>
+        {{/if}}
         <div>
-            <b>Make a new static narrative?</b>
-        </div>
-        <div>
-            <button class="btn btn-sm btn-primary">Create new static narrative</button>
+            <button class="btn btn-sm btn-primary">Create static narrative</button>
             <span data-element="saving-spinner" class="hidden fa fa-spinner fa-pulse fa-ex fa-fw" style="margin-left: 0.5rem"></span>
         </div>
     </div>

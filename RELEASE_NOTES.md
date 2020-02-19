@@ -3,6 +3,9 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Version 4.1.0
+- Introduce Static Narratives, available under the Share menu. First release!
+
 ### Version 4.0.0
 - Update various software packages
     - Python to 3.6.9

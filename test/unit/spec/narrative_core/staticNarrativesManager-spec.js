@@ -106,6 +106,13 @@ define([
             }));
     }
 
+    function mockPermissions(isAdmin, isPublic) {
+        let permsResponse = { '*': isPublic ? 'r' : 'n' };
+        permsResponse[userId] = isAdmin ? 'a' : 'r';
+        jasmine.Ajax.stubRequest(Config.url('workspace'), /get_permissions_mass/)
+            .andReturn(mockOkResponse([{perms: [permsResponse]}]));
+    }
+
     function mockGetStaticNarrativeInfo(withInfo, withError) {
         if (!withError) {
             const response = withInfo ? staticInfo : [{}];
@@ -160,13 +167,12 @@ define([
     }
 
     function validateHtmlStatic(node) {
-        expect(node.html()).toContain('A static version of this Narrative exists.');
-        expect(node.html()).toContain('Based on version ' + staticVer);
+        expect(node.html()).toContain('Existing static Narrative');
+        expect(node.html()).toContain('Made from version ' + staticVer);
     }
 
     function validateHtmlError(node) {
         expect(node.html()).toContain('Static Narrative Error');
-        // console.log(node.html());
     }
 
     describe('Test the Static Narrative manager widget', () => {
@@ -193,42 +199,58 @@ define([
             expect(widget.refresh).toBeDefined();
         });
 
-        it('Should render normally when no info static info exists', (done) => {
+        it('Should render normally when no info static info exists', (done, fail) => {
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(false);
+            mockPermissions(true, true);
             let widget = new StaticNarrativesManager(node);
             widget.render()
                 .then(() => {
                     validateHtmlNoStatic(node);
                     done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
                 });
         });
 
-        it('Should render when static info exists', (done) => {
+        it('Should render when static info exists', (done, fail) => {
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(true);
+            mockPermissions(true, true);
             let widget = new StaticNarrativesManager(node);
             widget.render()
                 .then(() => {
                     validateHtmlStatic(node);
                     done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
                 });
         });
 
-        it('Should refresh before a render', (done) => {
+        it('Should refresh before a render', (done, fail) => {
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(false);
+            mockPermissions(true, true);
             let widget = new StaticNarrativesManager(node);
             widget.refresh()
                 .then(() => {
                     validateHtmlNoStatic(node);
                     done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
                 });
         });
 
-        it('Should detach after rendering', (done) => {
+        it('Should detach after rendering', (done, fail) => {
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(false);
+            mockPermissions(true, true);
             expect(node.html()).toBe('');
             let widget = new StaticNarrativesManager(node);
             widget.render()
@@ -238,12 +260,17 @@ define([
                 .then(() => {
                     expect(node.html()).toBe('<div></div>');
                     done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
                 });
         });
 
-        it('Should maintain base dom structure after several detaches', (done) => {
+        it('Should maintain base dom structure after several detaches', (done, fail) => {
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(false);
+            mockPermissions(true, true);
             expect(node.html()).toBe('');
             let widget = new StaticNarrativesManager(node);
             widget.render()
@@ -255,12 +282,17 @@ define([
                 .then(() => {
                     expect(node.html()).toBe('<div></div>');
                     done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
                 });
         });
 
-        it('Should call saveStaticNarrative on click', (done) => {
+        it('Should call saveStaticNarrative on click', (done, fail) => {
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(true);
+            mockPermissions(true, true);
             mockCreateStaticNarrative();
             let widget = new StaticNarrativesManager(node);
             spyOn(widget, 'saveStaticNarrative');
@@ -269,12 +301,17 @@ define([
                     node.find('button').click();
                     expect(widget.saveStaticNarrative).toHaveBeenCalled();
                     done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
                 });
         });
 
-        it('saveStaticNarrative should work in ok case and re-render', (done) => {
+        it('saveStaticNarrative should work in ok case and re-render', (done, fail) => {
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(true);
+            mockPermissions(true, true);
             mockCreateStaticNarrative();
             let widget = new StaticNarrativesManager(node);
             widget.render()
@@ -284,12 +321,17 @@ define([
                 .then(() => {
                     validateHtmlStatic(node);
                     done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
                 });
         });
 
-        it('saveStaticNarrative should handle errors with rendering them', (done) => {
+        it('saveStaticNarrative should handle errors with rendering them', (done, fail) => {
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(true);
+            mockPermissions(true, true);
             mockCreateStaticNarrative(true);
             let widget = new StaticNarrativesManager(node);
             widget.render()
@@ -299,20 +341,30 @@ define([
                 .then(() => {
                     validateHtmlError(node);
                     done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
                 });
         });
 
-        xit('render should create an error when service wizard is unavailable', (done) => {
+        xit('render should create an error when service wizard is unavailable', (done, fail) => {
+            mockPermissions(true, true);
             mockErrorServiceWizard();
             let widget = new StaticNarrativesManager(node);
             widget.render()
                 .then(() => {
                     validateHtmlError(node);
                     done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
                 });
         });
 
-        it('render should create an error when StaticNarrative dynserv fails', (done) => {
+        it('render should create an error when StaticNarrative dynserv fails', (done, fail) => {
+            mockPermissions(true, true);
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(true, true);
             let widget = new StaticNarrativesManager(node);
@@ -320,10 +372,15 @@ define([
                 .then(() => {
                     validateHtmlError(node);
                     done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
                 });
         });
 
-        it('render should create an error when narrative doc info is not available', (done) => {
+        it('render should create an error when narrative doc info is not available', (done, fail) => {
+            mockPermissions(true, true);
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(true);
             Jupyter.narrative.documentVersionInfo = null;
@@ -332,6 +389,64 @@ define([
                 .then(() => {
                     validateHtmlError(node);
                     done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
+                });
+        });
+
+        it('should render a warning if user is not an admin', (done, fail) => {
+            mockPermissions(false, true);
+            mockGoodServiceWizard();
+            mockGetStaticNarrativeInfo(true);
+            let widget = new StaticNarrativesManager(node);
+            widget.render()
+                .then(() => {
+                    expect(node.html()).toContain('Not an admin');
+                    expect(node.html()).not.toContain('Not public');
+                    expect(node.html()).not.toContain('Create static narrative');
+                    done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
+                });
+        });
+
+        it('should render a warning if narrative is not public', (done, fail) => {
+            mockPermissions(true, false);
+            mockGoodServiceWizard();
+            mockGetStaticNarrativeInfo(true);
+            let widget = new StaticNarrativesManager(node);
+            widget.render()
+                .then(() => {
+                    expect(node.html()).not.toContain('Not an admin');
+                    expect(node.html()).toContain('Not public');
+                    expect(node.html()).not.toContain('Create static narrative');
+                    done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
+                });
+        });
+
+        it('should render two warnings if user is not an admin and narrative is not public', (done, fail) => {
+            mockPermissions(false, false);
+            mockGoodServiceWizard();
+            mockGetStaticNarrativeInfo(true);
+            let widget = new StaticNarrativesManager(node);
+            widget.render()
+                .then(() => {
+                    expect(node.html()).toContain('Not an admin');
+                    expect(node.html()).toContain('Not public');
+                    expect(node.html()).not.toContain('Create static narrative');
+                    done();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    fail('Should have succeeded');
                 });
         });
     });

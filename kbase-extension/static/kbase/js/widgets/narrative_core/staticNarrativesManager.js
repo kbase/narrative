@@ -5,6 +5,7 @@
  * A more global manager for all Narratives a user owns might be here later.
  */
 define([
+    'jquery',  // needed to set up Bootstrap popover
     'bluebird',
     'narrativeConfig',
     'common/runtime',
@@ -17,6 +18,7 @@ define([
     'text!kbase/templates/static_narrative.html'
 ],
 function(
+    $,
     Promise,
     Config,
     Runtime,
@@ -80,15 +82,18 @@ function(
             this.container.appendChild(loadingDiv.div[0]);
             const docInfo = Jupyter.narrative.documentVersionInfo;
             if (!docInfo) {
-                return renderError({
-                    code: -1,
-                    error: docInfo,
-                    name: 'Narrative error',
-                    message: 'Unable to find current Narrative version!'
+                return Promise.try(() => {
+                    this.container.innerHTML = '';
+                    this.container.appendChild(this.renderError({
+                        code: -1,
+                        error: 'Narrative document info not found',
+                        name: 'Narrative error',
+                        message: 'Unable to find current Narrative version!'
+                    }));
                 });
             }
 
-            Promise.all([
+            return Promise.all([
                 this.getStaticNarratives(),
                 this.getPermissionInfo()
             ]).spread((narrativeInfo, permissions) => {
@@ -105,18 +110,21 @@ function(
                 let tmpl = Handlebars.compile(StaticNarrativeTmpl);
                 this.container.innerHTML = tmpl(info);
 
-                this.hostNode.querySelector('button.btn-primary')
-                    .addEventListener('click', this.saveStaticNarrative.bind(this));
+                let createBtn = this.hostNode.querySelector('button.btn-primary');
+                if (createBtn) {
+                    createBtn.addEventListener('click', this.saveStaticNarrative.bind(this));
+                }
                 $(this.hostNode.querySelector('#kb-sn-help')).popover();
             })
                 .catch(error => {
-                    alert(error);
+                    console.error(JSON.stringify(error));
+                    this.container.innerHTML = '';
+                    this.container.appendChild(this.renderError(error));
                 });
         }
 
         /**
          * Renders an error panel if something bad occurs.
-         * Also dumps the error to console.error.
          * @param {Object} error - the error to render. Often a JSON-RPC error from some
          *      KBase service, so it'll have a wacky format, like:
          *      {
@@ -139,7 +147,7 @@ function(
                     name: error.error.error.name
                 };
             }
-            return DisplayUtil.createError('Static Narrative Error', error);
+            return DisplayUtil.createError('Static Narrative Error', error)[0];
         }
 
         /**
@@ -157,7 +165,7 @@ function(
                 .then(info => info[0])
                 .catch(error => {
                     this.detach();
-                    this.container.appendChild(this.renderError(error)[0]);
+                    this.container.appendChild(this.renderError(error));
                     throw error;
                 });
         }
@@ -179,6 +187,7 @@ function(
                         isPublic: perm['*'] && perm['*'] === 'r'
                     };
                 })
+                .catch((error) => { return {isAdmin: false, isPublic: false} });
         }
 
         /**
@@ -197,7 +206,7 @@ function(
                 .then(() => this.refresh() )
                 .catch(error => {
                     this.detach();
-                    this.container.appendChild(this.renderError(error)[0]);
+                    this.container.appendChild(this.renderError(error));
                 });
         }
     }

@@ -1,6 +1,7 @@
 # Configuration file for ipython.
 
 c = get_config()
+c.Completer.use_jedi = False
 
 #------------------------------------------------------------------------------
 # InteractiveShellApp configuration

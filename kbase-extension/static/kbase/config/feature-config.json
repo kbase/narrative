@@ -6,5 +6,5 @@
     "lazyWidgetRender": true,
     "batchAppMode": true,
     "hierarchicalDataView": false,
-    "staticNarratives": false
+    "staticNarratives": true
 }

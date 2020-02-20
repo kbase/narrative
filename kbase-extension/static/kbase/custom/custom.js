@@ -1001,6 +1001,13 @@ define([
             nbUtils.encode_uri_components(path)));
     };
 
+    // Patch the save widget to change the "Jupyter Notebook" part of the title to
+    // "KBase Narrative".
+    saveWidget.SaveWidget.prototype.update_document_title = function () {
+        var nbname = this.notebook.get_notebook_name();
+        document.title = nbname + ' - KBase Narrative';
+    }
+
     // Patch the save widget to take in options at save time
     saveWidget.SaveWidget.prototype.rename_notebook = function (options) {
         Jupyter.narrative.getUserPermissions()

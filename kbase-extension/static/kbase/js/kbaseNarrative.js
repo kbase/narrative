@@ -354,6 +354,10 @@ define([
     };
 
     Narrative.prototype.initStaticNarrativesPanel = function () {
+        if (!Config.get('features').staticNarratives) {
+            $('#kb-static-btn').remove();
+            return;
+        }
         const staticPanel = $('<div>'),
             staticDialog = new BootstrapDialog({
                 title: 'Static Narratives',

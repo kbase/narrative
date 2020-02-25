@@ -1,5 +1,6 @@
 /*jslint white: true*/
 /*global module */
+// process.env.CHROME_BIN = require('puppeteer').executablePath();
 module.exports = function (config) {
     'use strict';
     config.set({
@@ -79,7 +80,14 @@ module.exports = function (config) {
         autoWatch: false,
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: ['ChromeHeadless'], //['PhantomJS', 'Firefox', 'ChromeHeadless'],
+        browsers: ['ChromeHeadless'],
+        // customLaunchers: {
+        //     HeadlessChrome: {
+        //         base: 'ChromeHeadless',
+        //         flags: ['--no-sandbox']
+        //     }
+        // },
+
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
         // phantomjsLauncher: {

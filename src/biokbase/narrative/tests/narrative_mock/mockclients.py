@@ -2,7 +2,7 @@ from ..util import TestConfig
 from biokbase.workspace.baseclient import ServerError
 
 
-class MockClients(object):
+class MockClients:
     """
     Mock KBase service clients as needed for Narrative backend tests.
     Use this with the Python mock library to mock the biokbase.narrative.clients.get call
@@ -273,7 +273,17 @@ class MockClients(object):
 def get_mock_client(client_name, token=None):
     return MockClients(token=token)
 
-class MockStagingHelper():
+def get_failing_mock_client(client_name, token=None):
+    return FailingMockClient(token=token)
+
+class FailingMockClient:
+    def __init__(self, token=None):
+        pass
+
+    def check_workspace_jobs(self, params):
+        raise ServerError("JSONRPCError", -32000, "Job lookup failed.")
+
+class MockStagingHelper:
     def list(self):
         """
         Mock the call to the staging service to get the "user's" files.

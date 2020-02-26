@@ -8,8 +8,9 @@ from biokbase.narrative.jobs.job import Job
 from .util import TestConfig
 import os
 from IPython.display import HTML
-from .narrative_mock.mockclients import get_mock_client
+from .narrative_mock.mockclients import get_mock_client, get_failing_mock_client
 from .narrative_mock.mockcomm import MockComm
+from biokbase.narrative.exception_util import NarrativeException
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
@@ -40,13 +41,13 @@ class JobManagerTest(unittest.TestCase):
     @classmethod
     @mock.patch('biokbase.narrative.jobs.jobmanager.Comm', MockComm)
     @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
-    def setUpClass(self):
-        self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
-        self.jm._comm = MockComm()
-        self.job_ids = list(job_info.keys())
+    def setUpClass(cls):
+        cls.jm = biokbase.narrative.jobs.jobmanager.JobManager()
+        cls.jm._comm = MockComm()
+        cls.job_ids = list(job_info.keys())
         os.environ['KB_WORKSPACE_ID'] = config.get('jobs', 'job_test_wsname')
 
-        self.jm.initialize_jobs(start_lookup_thread=False)
+        cls.jm.initialize_jobs(start_lookup_thread=False)
 
     def validate_status_message(self, msg):
         core_keys = set(['widget_info', 'owner', 'state', 'spec'])
@@ -164,6 +165,16 @@ class JobManagerTest(unittest.TestCase):
         self.assertTrue(self.jm._running_jobs[phony_id]['refresh'] == 0)
         self.assertIsNone(msg)
 
+    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_failing_mock_client)
+    def test_initialize_jobs_ee2_fail(self):
+        # init jobs should fail. specifically, ee2.check_workspace_jobs should error.
+        # need an "error" mock client here.
+        with self.assertRaises(NarrativeException) as e:
+            self.jm.initialize_jobs(start_lookup_thread=False)
+        self.assertIn('Job lookup failed', str(e.exception))
+        msg = self.jm._comm.last_message
+        self.assertEqual(msg['data']['msg_type'], 'job_init_err')
+        self.assertEqual(msg['data']['content']['error'], 'Unable to get initial jobs list')
 
 if __name__ == "__main__":
     unittest.main()

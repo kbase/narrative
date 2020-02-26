@@ -22,8 +22,8 @@ The main class here defines a manager for running jobs (as Job objects).
 This class knows how to fetch job status, kill jobs, etc.
 It also communicates with the front end over the KBaseJobs channel.
 
-It is intended for use as a singleton - use the get_manager() function
-to fetch it.
+This is a singleton - instantiating a new JobManager will return the existing
+instance in its current state.
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
@@ -45,7 +45,6 @@ class JobManager(object):
     _lookup_timer = None
     _comm = None
     _log = kblogging.get_logger(__name__)
-    # TODO: should this not be done globally?
     _running_lookup_loop = False
 
     def __new__(cls):
@@ -84,61 +83,28 @@ class JobManager(object):
             self._send_comm_message('job_init_err', error)
             raise new_e
 
-        error_jobs = dict()
         for job_id, job_state in job_states.items():
             user = job_state.get('user')
             job_input = job_state.get('job_input', {})
             job_meta = job_input.get('narrative_cell_info', {})
             status = job_state.get('status')
-            try:
-                job = Job.from_state(job_id,
-                                     job_input,
-                                     user,
-                                     app_id=job_input.get('app_id'),
-                                     tag=job_meta.get('tag', 'release'),
-                                     cell_id=job_meta.get('cell_id', None),
-                                     run_id=job_meta.get('run_id', None),
-                                     token_id=job_meta.get('token_id', None),
-                                     meta=job_meta)
-                # Note that when jobs for this narrative are initially loaded,
-                # they are set to not be refreshed. Rather, if a client requests
-                # updates via the start_job_update message, the refresh flag will
-                # be set to True.
-                self._running_jobs[job_id] = {
-                    'refresh': 0,
-                    'job': job
-                }
-            except Exception as e:
-                kblogging.log_event(self._log, 'init_error', {'err': str(e)})
-                new_e = transform_job_exception(e)
-                error = {
-                    'error': 'Unable to get job info on initial lookup',
-                    'job_id': job_id,
-                    'message': getattr(new_e, 'message', 'Unknown reason'),
-                    'code': getattr(new_e, 'code', -1),
-                    'source': getattr(new_e, 'source', 'jobmanager'),
-                    'name': getattr(new_e, 'name', type(e).__name__),
-                    'service': 'job_service'
-                }
-                self._send_comm_message('job_init_lookup_err', error)
-                raise new_e  # should crash and burn on any of these.
-
-        if len(error_jobs):
-            err_str = 'Unable to find info for some jobs on initial lookup'
-            err_type = 'job_init_partial_err'
-            if len(error_jobs) == len(job_states):
-                err_str = 'Unable to get info for any job on initial lookup'
-                err_type = 'job_init_lookup_err'
-            error = {
-                'error': err_str,
-                'job_errors': error_jobs,
-                'message': 'Job information was unavailable from the server',
-                'code': -2,
-                'source': 'jobmanager',
-                'name': 'jobmanager',
-                'service': 'job_service',
+            job = Job.from_state(job_id,
+                                    job_input,
+                                    user,
+                                    app_id=job_input.get('app_id'),
+                                    tag=job_meta.get('tag', 'release'),
+                                    cell_id=job_meta.get('cell_id', None),
+                                    run_id=job_meta.get('run_id', None),
+                                    token_id=job_meta.get('token_id', None),
+                                    meta=job_meta)
+            # Note that when jobs for this narrative are initially loaded,
+            # they are set to not be refreshed. Rather, if a client requests
+            # updates via the start_job_update message, the refresh flag will
+            # be set to True.
+            self._running_jobs[job_id] = {
+                'refresh': 0,
+                'job': job
             }
-            self._send_comm_message(err_type, error)
 
         if not self._running_lookup_loop and start_lookup_thread:
             # only keep one loop at a time in case this gets called again!
@@ -316,11 +282,6 @@ class JobManager(object):
                 'widget_info': widget_info,
                 'owner': None
             }
-
-        # try:
-        #     app_spec = job.app_spec()
-        # except Exception as e:
-        #     kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
 
         if state is None:
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': 'Unable to get job state for job {}'.format(job.job_id)})
@@ -864,27 +825,30 @@ class JobManager(object):
             else:
                 jobs_to_lookup.append(job_id)
         # 3. Lookup those jobs what need it. Cache 'em as we go, if finished.
-        try:
-            fetched_states = clients.get('execution_engine2').check_jobs({'job_ids': jobs_to_lookup,
-                                                                          'return_list': 0})
-        except Exception as e:
-            kblogging.log_event(self._log, 'get_all_job_states_error', {'err': str(e)})
-            return {}
+        if len(jobs_to_lookup):
+            try:
+                fetched_states = clients.get('execution_engine2').check_jobs({
+                    'job_ids': jobs_to_lookup,
+                    'return_list': 0
+                })
+            except Exception as e:
+                kblogging.log_event(self._log, 'get_all_job_states_error', {'err': str(e)})
+                return {}
 
-        for job_id in jobs_to_lookup:
-            state = fetched_states.get(job_id, {})
-            status = state.get('status')
-            if status in ['created', 'queued', 'estimating', 'running', 'completed', 'error', 'terminated']:
-                state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
-                state['run_id'] = self._running_jobs[job_id]['job'].run_id
-                if status == 'completed':
-                    self._completed_job_states[state['job_id']] = dict(state)
-                state['job_input'] = state.get('job_input', {})
-                state['job_output'] = state.get('job_output', {})
-                job_states[state['job_id']] = state
-            else:
-                error = state
-                job_states[state['job_id']] = {'lookup_error': error}
+            for job_id in jobs_to_lookup:
+                state = fetched_states.get(job_id, {})
+                status = state.get('status')
+                if status in ['created', 'queued', 'estimating', 'running', 'completed', 'error', 'terminated']:
+                    state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
+                    state['run_id'] = self._running_jobs[job_id]['job'].run_id
+                    if status == 'completed':
+                        self._completed_job_states[state['job_id']] = dict(state)
+                    state['job_input'] = state.get('job_input', {})
+                    state['job_output'] = state.get('job_output', {})
+                    job_states[state['job_id']] = state
+                else:
+                    error = state
+                    job_states[state['job_id']] = {'lookup_error': error}
 
         return job_states
 

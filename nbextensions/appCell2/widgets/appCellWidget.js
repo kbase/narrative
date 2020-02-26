@@ -1479,16 +1479,13 @@ define([
                     'but the new one may include new features. Add a new "' +
                     model.getItem('newAppName') +
                     '" app cell for the update.');
-                // outdatedBtn.classList.remove('hidden');
             }
 
             var indicatorNode = ui.getElement('run-control-panel.status.indicator');
             var iconNode = ui.getElement('run-control-panel.status.indicator.icon');
             if (iconNode) {
                 // clear the classes
-
                 indicatorNode.className = state.ui.appStatus.classes.join(' ');
-
                 iconNode.className = '';
                 iconNode.classList.add('fa', 'fa-' + state.ui.appStatus.icon.type, 'fa-3x');
             }
@@ -1570,7 +1567,7 @@ define([
         /*
         setReadOnly is called to put the cell into read-only mode when it is loaded.
         This is different than view-only, which for read/write mode is toggleable.
-        Read-only does  imply view-only as well.!
+        Read-only does imply view-only as well!
          */
         function setReadOnly() {
             readOnly = true;
@@ -2669,11 +2666,13 @@ define([
                     case 'editing':
                         break;
                     case 'processing':
+                    case 'error':
                         startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
                         requestJobStatus(model.getItem('exec.jobState.job_id'));
                         break;
                     case 'success':
-                    case 'error':
+                        break;
+                    // case 'error':
                             // do nothing for now
                     }
                 })

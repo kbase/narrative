@@ -89,14 +89,14 @@ class JobManager(object):
             job_meta = job_input.get('narrative_cell_info', {})
             status = job_state.get('status')
             job = Job.from_state(job_id,
-                                    job_input,
-                                    user,
-                                    app_id=job_input.get('app_id'),
-                                    tag=job_meta.get('tag', 'release'),
-                                    cell_id=job_meta.get('cell_id', None),
-                                    run_id=job_meta.get('run_id', None),
-                                    token_id=job_meta.get('token_id', None),
-                                    meta=job_meta)
+                                 job_input,
+                                 user,
+                                 app_id=job_input.get('app_id'),
+                                 tag=job_meta.get('tag', 'release'),
+                                 cell_id=job_meta.get('cell_id', None),
+                                 run_id=job_meta.get('run_id', None),
+                                 token_id=job_meta.get('token_id', None),
+                                 meta=job_meta)
             # Note that when jobs for this narrative are initially loaded,
             # they are set to not be refreshed. Rather, if a client requests
             # updates via the start_job_update message, the refresh flag will
@@ -106,12 +106,8 @@ class JobManager(object):
                 'job': job
             }
 
-        if not self._running_lookup_loop and start_lookup_thread:
-            # only keep one loop at a time in case this gets called again!
-            if self._lookup_timer is not None:
-                self._lookup_timer.cancel()
-            self._running_lookup_loop = True
-            self._lookup_job_status_loop()
+        if start_lookup_thread:
+            self._start_job_status_loop()
         else:
             self._lookup_all_job_status()
 
@@ -217,12 +213,6 @@ class JobManager(object):
         except Exception as e:
             kblogging.log_event(self._log, "list_jobs.error", {'err': str(e)})
             raise
-
-    def get_jobs_list(self):
-        """
-        A convenience method for fetching an unordered list of all running Jobs.
-        """
-        return [j['job'] for j in self._running_jobs.values()]
 
     def _construct_job_status(self, job, state):
         """
@@ -501,24 +491,25 @@ class JobManager(object):
 
     def _start_job_status_loop(self):
         kblogging.log_event(self._log, 'starting job status loop', {})
+        self._running_lookup_loop = True
         if self._lookup_timer is None:
             self._lookup_job_status_loop()
 
-    def _lookup_job_status_loop(self):
+    def _lookup_job_status_loop(self) -> None:
         """
         Initialize a loop that will look up job info. This uses a Timer thread on a 10
         second loop to update things.
         """
+        with threading.RLock():
+            refreshing_jobs = self._lookup_all_job_status()
+            # Automatically stop when there are no more jobs requesting a refresh.
+            if refreshing_jobs == 0 or not self._running_lookup_loop:
+                self.cancel_job_lookup_loop()
+            else:
+                self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
+                self._lookup_timer.start()
 
-        refreshing_jobs = self._lookup_all_job_status()
-        # Automatically stop when there are no more jobs requesting a refresh.
-        if refreshing_jobs == 0:
-            self.cancel_job_lookup_loop()
-        else:
-            self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
-            self._lookup_timer.start()
-
-    def cancel_job_lookup_loop(self):
+    def cancel_job_lookup_loop(self) -> None:
         """
         Cancels a running timer if one's still alive.
         """
@@ -527,7 +518,7 @@ class JobManager(object):
             self._lookup_timer = None
         self._running_lookup_loop = False
 
-    def register_new_job(self, job):
+    def register_new_job(self, job: Job) -> None:
         """
         Registers a new Job with the manager - should only be invoked when a new Job gets
         started. This stores the Job locally and pushes it over the comm channel to the

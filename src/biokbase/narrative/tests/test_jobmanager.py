@@ -75,11 +75,6 @@ class JobManagerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.jm.get_job('not_a_job_id')
 
-    def test_get_jobs_list(self):
-        running_jobs = self.jm.get_jobs_list()
-        self.assertIsInstance(running_jobs, list)
-        self.assertCountEqual(self.job_ids, [job.job_id for job in running_jobs])
-
     @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     def test_list_jobs_html(self):
         jobs_html = self.jm.list_jobs()

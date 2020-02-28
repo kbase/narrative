@@ -27,6 +27,9 @@ class JobCommTestCase(unittest.TestCase):
         cls.jc = biokbase.narrative.jobs.jobcomm.JobComm()
         cls.jc._comm = MockComm()
 
+    def setUp(self):
+        self.jc._comm.clear_message_cache()
+
     def test_send_comm_msg_ok(self):
         self.jc.send_comm_message("some_msg", {"foo": "bar"})
         msg = self.jc._comm.last_message
@@ -34,20 +37,61 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._comm.clear_message_cache()
 
     def test_start_stop_job_status_loop(self):
-        self.jc._comm.clear_message_cache()
         self.assertFalse(self.jc._running_lookup_loop)
         self.assertIsNone(self.jc._lookup_timer)
 
         self.jc.start_job_status_loop()
         msg = self.jc._comm.last_message
         self.assertIsNotNone(msg)
-        print(msg)
         self.assertTrue(self.jc._running_lookup_loop)
         self.assertIsNotNone(self.jc._lookup_timer)
 
         self.jc.stop_job_status_loop()
         self.assertFalse(self.jc._running_lookup_loop)
         self.assertIsNone(self.jc._lookup_timer)
+
+    def test_lookup_all_job_states_ok(self):
+        req = JobRequest({
+            "content": {
+                "data": {
+                    "request_type": "all_status"
+                }
+            }
+        })
+        states = self.jc.lookup_all_job_states(req)
+
+        self.assertIsNone(self.jc._comm.last_message)
+        states = self.jc.lookup_all_job_states(req, send_message=True)
+        msg = self.jc._comm.last_message
+        self.assertEqual(states, msg["data"]["content"])
+        self.assertEqual("job_status_all", msg["data"]["msg_type"])
+
+    def test_handle_comm_message_bad(self):
+        with self.assertRaises(ValueError) as e:
+            self.jc._handle_comm_message({"foo": "bar"})
+        self.assertIn("Improperly formatted job channel message!", str(e.exception))
+        with self.assertRaises(ValueError) as e:
+            self.jc._handle_comm_message({"content": {"data": {"request_type": None}}})
+        self.assertIn("Missing request type in job channel message!", str(e.exception))
+
+    def test_handle_comm_message_unknown(self):
+        unknown = "NotAJobRequest"
+        with self.assertRaises(ValueError) as e:
+            self.jc._handle_comm_message({"content": {"data": {"request_type": unknown}}})
+        self.assertIn(f"Unknown KBaseJobs message '{unknown}'", str(e.exception))
+
+    def test_handle_all_states_msg(self):
+        req = {
+            "content": {
+                "data": {
+                    "request_type": "all_status"
+                }
+            }
+        }
+        self.jc._handle_comm_message(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(msg["data"]["msg_type"], "job_status_all")
+
 
 
 class JobRequestTestCase(unittest.TestCase):

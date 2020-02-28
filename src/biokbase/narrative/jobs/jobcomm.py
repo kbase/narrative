@@ -124,7 +124,7 @@ class JobComm:
             self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
             self._lookup_timer.start()
 
-    def lookup_all_job_states(self, msg: dict, send_message=False) -> None:
+    def lookup_all_job_states(self, req: JobRequest, send_message=False) -> dict:
         """
         Fetches status of all jobs in the current workspace and sends them to the front end.
 

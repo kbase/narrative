@@ -4,6 +4,7 @@ A module for managing apps, specs, requirements, and for starting jobs.
 import biokbase.auth as auth
 from .job import Job
 from .jobmanager import JobManager
+from .jobcomm import JobComm
 from . import specmanager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager
@@ -836,4 +837,4 @@ class AppManager(object):
         return ret
 
     def _send_comm_message(self, msg_type, content):
-        JobManager()._send_comm_message(msg_type, content)
+        JobComm().send_comm_message(msg_type, content)

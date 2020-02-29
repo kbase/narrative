@@ -28,6 +28,8 @@ instance in its current state.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
+TERMINAL_STATES = ["completed", "terminated", "error"]
+ALL_STATES = ["created", "estimating", "queued", "running", "completed", "error", "terminated"]
 
 class JobManager(object):
     """
@@ -101,11 +103,6 @@ class JobManager(object):
                 'refresh': 1 if status not in ['completed', 'errored', 'terminated'] else 0,
                 'job': job
             }
-
-        # if start_lookup_thread:
-        #     self._start_job_status_loop()
-        # else:
-        #     self._lookup_all_job_status()
 
     def _create_jobs(self, job_ids):
         """
@@ -393,7 +390,10 @@ class JobManager(object):
             child_job_states.append(state)
         return child_job_states
 
-    def _construct_job_status_set(self, job_ids):
+    def _construct_job_status_set(self, job_ids: list) -> dict:
+        """
+        Builds a set of job states for the list of job ids.
+        """
         job_states = self._get_all_job_states(job_ids)
 
         status_set = dict()
@@ -508,120 +508,6 @@ class JobManager(object):
         else:
             raise ValueError('No job present with id {}'.format(job_id))
 
-    # def _handle_comm_message(self, msg):
-    #     """
-    #     Handles comm messages that come in from the other end of the KBaseJobs channel.
-    #     All messages (of any use) should have a 'request_type' property.
-    #     Possible types:
-    #     * all_status
-    #         refresh all jobs that are flagged to be looked up. Will send a
-    #         message back with all lookup status.
-    #     * job_status
-    #         refresh the single job given in the 'job_id' field. Sends a message
-    #         back with that single job's status, or an error message.
-    #     * stop_update_loop
-    #         stop the running refresh loop, if there's one going (might be
-    #         one more pass, depending on the thread state)
-    #     * start_update_loop
-    #         reinitialize the refresh loop.
-    #     * stop_job_update
-    #         flag the given job id (should be an accompanying 'job_id' field) that the front
-    #         end knows it's in a terminal state and should no longer have its status looked
-    #         up in the refresh cycle.
-    #     * start_job_update
-    #         remove the flag that gets set by stop_job_update (needs an accompanying 'job_id'
-    #         field)
-    #     * job_info
-    #         from the given 'job_id' field, returns some basic info about the job, including the app
-    #         id, version, app name, and key-value pairs for inputs and parameters (in the parameters
-    #         id namespace specified by the app spec).
-    #     """
-
-    #     if 'request_type' in msg['content']['data']:
-    #         r_type = msg['content']['data']['request_type']
-    #         job_id = msg['content']['data'].get('job_id', None)
-    #         parent_job_id = msg['content']['data'].get('parent_job_id', None)
-    #         if job_id is not None and job_id not in self._running_jobs and not parent_job_id:
-    #             # If it's not a real job, just silently ignore the request.
-    #             # Unless it has a parent job id, then its a child job, so things get muddled. If there's 100+ child jobs,
-    #             # then this might get tricky to look up all of them. Let it pass through and fail if it's not real.
-    #             #
-    #             # TODO: perhaps we should implement request/response here. All we really need is to thread a message
-    #             # id through
-                # self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'request_type': r_type})
-    #             return
-    #         elif parent_job_id is not None:
-    #             try:
-    #                 self._verify_job_parentage(parent_job_id, job_id)
-    #             except ValueError as e:
-                    # self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'parent_job_id': parent_job_id, 'request_type': r_type})
-
-    #         if r_type == 'all_status':
-    #             self._lookup_all_job_status(ignore_refresh_flag=True)
-
-    #         elif r_type == 'job_status':
-    #             if job_id is not None:
-    #                 self._lookup_job_status(job_id, parent_job_id=parent_job_id)
-
-    #         elif r_type == 'job_info':
-    #             if job_id is not None:
-    #                 self._lookup_job_info(job_id, parent_job_id=parent_job_id)
-
-    #         elif r_type == 'stop_update_loop':
-    #             self.cancel_job_lookup_loop()
-
-    #         elif r_type == 'start_update_loop':
-    #             self._start_job_status_loop()
-
-    #         elif r_type == 'stop_job_update':
-    #             if job_id is not None:
-    #                 if self._running_jobs[job_id]['refresh'] > 0:
-    #                     self._running_jobs[job_id]['refresh'] -= 1
-
-    #         elif r_type == 'start_job_update':
-    #             if job_id is not None:
-    #                 self._running_jobs[job_id]['refresh'] += 1
-    #                 self._start_job_status_loop()
-
-    #         elif r_type == 'delete_job':
-    #             if job_id is not None:
-    #                 try:
-    #                     self.delete_job(job_id, parent_job_id=parent_job_id)
-    #                 except Exception as e:
-                        # self._send_comm_message('job_comm_error', {'message': str(e), 'request_type': r_type, 'job_id': job_id})
-
-    #         elif r_type == 'cancel_job':
-    #             if job_id is not None:
-    #                 try:
-    #                     self.cancel_job(job_id, parent_job_id=parent_job_id)
-    #                 except Exception as e:
-                        # self._send_comm_message('job_comm_error', {'message': str(e), 'request_type': r_type, 'job_id': job_id})
-
-    #         elif r_type == 'job_logs':
-    #             if job_id is not None:
-    #                 first_line = msg['content']['data'].get('first_line', 0)
-    #                 num_lines = msg['content']['data'].get('num_lines', None)
-    #                 self._get_job_logs(job_id, parent_job_id=parent_job_id, first_line=first_line, num_lines=num_lines)
-    #             else:
-    #                 raise ValueError('Need a job id to fetch jobs!')
-
-    #         elif r_type == 'job_logs_latest':
-    #             if job_id is not None:
-    #                 num_lines = msg['content']['data'].get('num_lines', None)
-    #                 try:
-    #                     self._get_latest_job_logs(job_id, parent_job_id=parent_job_id, num_lines=num_lines)
-    #                 except Exception as e:
-                        # self._send_comm_message('job_comm_error', {
-    #                         'job_id': job_id,
-    #                         'message': str(e),
-    #                         'request_type': r_type})
-    #             else:
-    #                 raise ValueError('Need a job id to fetch jobs!')
-
-    #         else:
-                # self._send_comm_message('job_comm_error', {'message': 'Unknown message', 'request_type': r_type})
-    #             raise ValueError('Unknown KBaseJobs message "{}"'.format(r_type))
-
     def _get_latest_job_logs(self, job_id, parent_job_id=None, num_lines=None):
         job = self.get_job(job_id)
         if job is None:
@@ -725,39 +611,30 @@ class JobManager(object):
         # Rather than a separate message, how about triggering a job-status message:
         self._lookup_job_status(job_id, parent_job_id=parent_job_id)
 
-    def _get_all_job_states(self, job_ids=None):
+    def _get_all_job_states(self, job_ids: list=None) -> dict:
         """
         Returns the state for all running jobs.
-        Returns a list where each element has this structure:
-        {
-            cell_id: (optional) id of the cell that spawned the job
-            run_id: (optional) id of the job run
-            awe_job_state: string
-            creation_time: timestamp (ms since epoch)
-            finished: 0/1
-            job_id: string
-            job_state: string
-            status: [ timestamp, _, _, _, _, _, _ ], (7-tuple)
-            sub_jobs: [],
-            ujs_url: string,
-            child_jobs: []
-        }
+        Returns a dict keyed on job id where each element has this structure:
+        { TBD }
+
+        If an error happens while looking up job states, it gets raised.
         """
         # 1. Get list of ids
         if job_ids is None:
             job_ids = self._running_jobs.keys()
-        # 1.5 Go through job ids and remove ones that aren't found.
-        job_ids = [j for j in job_ids if j in self._running_jobs]
+
         # 2. Foreach, check if in completed cache. If so, grab the status. If not, enqueue id
         # for batch lookup.
         job_states = dict()
+
         jobs_to_lookup = list()
         for job_id in job_ids:
             if job_id in self._completed_job_states:
                 job_states[job_id] = dict(self._completed_job_states[job_id])
             else:
                 jobs_to_lookup.append(job_id)
-        # 3. Lookup those jobs what need it. Cache 'em as we go, if finished.
+
+        # 3. Lookup those jobs that need it. Cache those in a terminal state.
         if len(jobs_to_lookup):
             try:
                 fetched_states = clients.get('execution_engine2').check_jobs({
@@ -771,7 +648,7 @@ class JobManager(object):
             for job_id in jobs_to_lookup:
                 state = fetched_states.get(job_id, {})
                 status = state.get('status')
-                if status in ['created', 'queued', 'estimating', 'running', 'completed', 'error', 'terminated']:
+                if status in ALL_STATES:
                     state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
                     state['run_id'] = self._running_jobs[job_id]['job'].run_id
                     if status == 'completed':
@@ -782,7 +659,6 @@ class JobManager(object):
                 else:
                     error = state
                     job_states[state['job_id']] = {'lookup_error': error}
-
         return job_states
 
     def _get_job_state(self, job_id, parent_job_id=None):

@@ -56,11 +56,6 @@ class JobManagerTest(unittest.TestCase):
             return False
         return True
 
-    # def test_send_comm_msg(self):
-    #     self.jm._send_comm_message('foo', 'bar')
-    #     msg = self.jm._comm.last_message
-    #     self.assertDictEqual(msg, {'content': None, 'data': {'content': 'bar', 'msg_type': 'foo'}})
-    #     self.jm._comm.clear_message_cache()
 
     def test_get_job_good(self):
         job_id = self.job_ids[0]
@@ -97,6 +92,15 @@ class JobManagerTest(unittest.TestCase):
     def test_cancel_job_bad(self):
         with self.assertRaises(ValueError):
             self.jm.cancel_job(None)
+
+    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
+    def test_lookup_all_job_states(self):
+        states = self.jm.lookup_all_job_states()
+        self.assertEqual(len(states), 2)
+
+        states = self.jm.lookup_all_job_states(ignore_refresh_flag=True)
+        self.assertEqual(len(states), 3)
+
 
     # @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     # def test_job_status_control(self):
@@ -159,13 +163,9 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_failing_mock_client)
     def test_initialize_jobs_ee2_fail(self):
         # init jobs should fail. specifically, ee2.check_workspace_jobs should error.
-        # need an "error" mock client here.
         with self.assertRaises(NarrativeException) as e:
             self.jm.initialize_jobs(start_lookup_thread=False)
         self.assertIn('Job lookup failed', str(e.exception))
-        # msg = self.jm._comm.last_message
-        # self.assertEqual(msg['data']['msg_type'], 'job_init_err')
-        # self.assertEqual(msg['data']['content']['error'], 'Unable to get initial jobs list')
 
 if __name__ == "__main__":
     unittest.main()

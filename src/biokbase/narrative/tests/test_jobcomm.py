@@ -50,6 +50,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertFalse(self.jc._running_lookup_loop)
         self.assertIsNone(self.jc._lookup_timer)
 
+    @mock.patch('biokbase.narrative.jobs.jobcomm.jobmanager.clients.get', get_mock_client)
     def test_lookup_all_job_states_ok(self):
         req = JobRequest({
             "content": {

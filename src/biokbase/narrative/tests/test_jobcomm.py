@@ -13,6 +13,20 @@ from .narrative_mock.mockclients import get_mock_client
 config = TestConfig()
 job_info = config.load_json_file(config.get('jobs', 'ee2_job_info_file'))
 
+def make_comm_msg(msg_type: str, job_id: str, as_job_request: bool):
+    msg = {
+        "content": {
+            "data": {
+                "request_type": msg_type,
+                "job_id": job_id
+            }
+        }
+    }
+    if as_job_request:
+        return JobRequest(msg)
+    else:
+        return msg
+
 
 class JobCommTestCase(unittest.TestCase):
     @classmethod
@@ -52,20 +66,74 @@ class JobCommTestCase(unittest.TestCase):
 
     @mock.patch('biokbase.narrative.jobs.jobcomm.jobmanager.clients.get', get_mock_client)
     def test_lookup_all_job_states_ok(self):
-        req = JobRequest({
-            "content": {
-                "data": {
-                    "request_type": "all_status"
-                }
-            }
-        })
+        req = make_comm_msg("all_status", None, True)
         states = self.jc.lookup_all_job_states(req)
-
-        self.assertIsNone(self.jc._comm.last_message)
-        states = self.jc.lookup_all_job_states(req, send_message=True)
         msg = self.jc._comm.last_message
         self.assertEqual(states, msg["data"]["content"])
         self.assertEqual("job_status_all", msg["data"]["msg_type"])
+
+    def test_lookup_job_state_direct_ok(self):
+        job_id = "5d64935ab215ad4128de94d6"
+        req = make_comm_msg("job_state", job_id, True)
+        state = self.jc.lookup_job_state(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(state, msg["data"]["content"])
+        self.assertEqual("job_status", msg["data"]["msg_type"])
+        #TODO test correctness
+
+    def test_lookup_job_state_no_job(self):
+        job_id = None
+        req = make_comm_msg("job_state", job_id, True)
+
+        with self.assertRaises(ValueError) as e:
+            state = self.jc.lookup_job_state(req)
+        self.assertIn("Job id required to process job_state request", str(e.exception))
+        msg = self.jc._comm.last_message
+        self.assertEqual({"job_id": None, "source": "job_state"}, msg["data"]["content"])
+        self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
+
+    def test_lookup_job_state_bad_job(self):
+        job_id = "nope"
+        req = make_comm_msg("job_state", job_id, True)
+        with self.assertRaises(ValueError) as e:
+            state = self.jc.lookup_job_state(req)
+        self.assertIn(f"No job present with id {job_id}", str(e.exception))
+        msg = self.jc._comm.last_message
+        self.assertEqual({"job_id": job_id, "source": "job_state"}, msg["data"]["content"])
+        self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
+
+    def test_lookup_job_info_ok(self):
+        job_id = "5d64935ab215ad4128de94d6"
+        req = make_comm_msg("job_info", job_id, True)
+        job_info = self.jc.lookup_job_info(req)
+        expected = {
+            "app_id": "NarrativeTest/test_editor",
+            "app_name": "Test Editor",
+            "job_id": job_id,
+            "job_params": [{"k_list": [], "k_max": None, "output_contigset_name": "MEGAHIT.contigs"}],
+        }
+        for k in expected:
+            self.assertIn(k, job_info)
+            self.assertEqual(expected[k], job_info[k])
+
+    def test_lookup_job_info_no_job(self):
+        req = make_comm_msg("job_info", None, True)
+        with self.assertRaises(ValueError) as e:
+            self.jc.lookup_job_info(req)
+        self.assertIn("Job id required to process job_info request", str(e.exception))
+        msg = self.jc._comm.last_message
+        self.assertEqual({"job_id": None, "source": "job_info"}, msg["data"]["content"])
+        self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
+
+    def test_lookup_job_info_bad_job(self):
+        job_id = "nope"
+        req = make_comm_msg("job_info", job_id, True)
+        with self.assertRaises(ValueError) as e:
+            self.jc.lookup_job_info(req)
+        self.assertIn(f"No job present with id {job_id}", str(e.exception))
+        msg = self.jc._comm.last_message
+        self.assertEqual({"job_id": job_id, "source": "job_info"}, msg["data"]["content"])
+        self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
 
     def test_handle_comm_message_bad(self):
         with self.assertRaises(ValueError) as e:
@@ -81,21 +149,38 @@ class JobCommTestCase(unittest.TestCase):
             self.jc._handle_comm_message({"content": {"data": {"request_type": unknown}}})
         self.assertIn(f"Unknown KBaseJobs message '{unknown}'", str(e.exception))
 
+    # From here, this test the ability for the _handle_comm_message function to
+    # deal with the various types of messages that will get passed to it. While
+    # the majority of the tests above are sent directly to the function to be
+    # tested, these just craft the message and pass it to the message handler.
     def test_handle_all_states_msg(self):
-        req = {
-            "content": {
-                "data": {
-                    "request_type": "all_status"
-                }
-            }
-        }
+        req = make_comm_msg("all_status", None, False)
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
         self.assertEqual(msg["data"]["msg_type"], "job_status_all")
 
+    @mock.patch('biokbase.narrative.jobs.jobcomm.jobmanager.clients.get', get_mock_client)
+    def test_handle_job_status_msg(self):
+        job_id = "5d64935ab215ad4128de94d6"
+        req = make_comm_msg("job_status", job_id, False)
+        self.jc._handle_comm_message(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(msg["data"]["msg_type"], "job_status")
+
+    def test_handle_job_info_msg(self):
+        job_id = "5d64935ab215ad4128de94d6"
+        req = make_comm_msg("job_info", job_id, False)
+        self.jc._handle_comm_message(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(msg["data"]["msg_type"], "job_info")
 
 
 class JobRequestTestCase(unittest.TestCase):
+    """
+    Test the JobRequest module.
+    This makes sure that it knows what to do with ok requests, bad requests,
+    etc.
+    """
     def test_request_ok(self):
         rq_msg = {
             "msg_id": "some_id",

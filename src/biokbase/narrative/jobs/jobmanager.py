@@ -146,7 +146,7 @@ class JobManager(object):
             status_set = list()
             for job_id in self._running_jobs:
                 job = self._running_jobs[job_id]['job']
-                job_state = self._get_job_state(job_id)
+                job_state = self.get_job_state(job_id)
                 job_state['app_id'] = job.app_id
                 job_state['owner'] = job.owner
                 status_set.append(job_state)
@@ -436,11 +436,11 @@ class JobManager(object):
         if parent_job_id is not None:
             self._verify_job_parentage(parent_job_id, job_id)
         job = self._running_jobs.get(job_id, {}).get('job', None)
-        state = self._get_job_state(job_id)
+        state = self.get_job_state(job_id)
         status = self._construct_job_status(job, state)
         # self._send_comm_message('job_status', status)
 
-    def _lookup_job_info(self, job_id, parent_job_id=None):
+    def lookup_job_info(self, job_id, parent_job_id=None):
         """
         Will raise a ValueError if job_id doesn't exist.
         Sends the info over the comm channel as this packet:
@@ -462,6 +462,7 @@ class JobManager(object):
             'job_id': job_id,
             'job_params': job.inputs
         }
+        return info
         # self._send_comm_message('job_info', info)
 
     def lookup_all_job_states(self, ignore_refresh_flag=False):
@@ -575,7 +576,7 @@ class JobManager(object):
             return
 
         try:
-            state = self._get_job_state(job_id, parent_job_id=parent_job_id)
+            state = self.get_job_state(job_id, parent_job_id=parent_job_id)
             if state.get('status') in ['completed', 'terminated', 'error']:
                 # It's already finished, don't try to cancel it again.
                 return
@@ -661,11 +662,11 @@ class JobManager(object):
                     job_states[state['job_id']] = {'lookup_error': error}
         return job_states
 
-    def _get_job_state(self, job_id, parent_job_id=None):
+    def get_job_state(self, job_id, parent_job_id=None):
         if parent_job_id is not None:
             self._verify_job_parentage(parent_job_id, job_id)
         if job_id is None or job_id not in self._running_jobs:
-            raise ValueError('job_id {} not found'.format(job_id))
+            raise ValueError(f"No job present with id {job_id}")
         if job_id in self._completed_job_states:
             return dict(self._completed_job_states[job_id])
         state = self._running_jobs[job_id]['job'].state()

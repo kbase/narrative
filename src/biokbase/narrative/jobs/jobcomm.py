@@ -80,14 +80,28 @@ class JobComm:
 
     def __init__(self):
         if self._comm is None:
-            self._comm = Comm(target_name='KBaseJobs', data={})
+            self._comm = Comm(target_name="KBaseJobs", data={})
             self._comm.on_msg(self._handle_comm_message)
         if self._jm is None:
             self._jm = jobmanager.JobManager()
         if self._msg_map is None:
             self._msg_map = {
-               "all_status": self.lookup_all_job_states
+               "all_status": self.lookup_all_job_states,
+               "job_status": self.lookup_job_state,
+               "job_info": self.lookup_job_info,
+               "start_update_loop": self.start_job_status_loop,
+               "stop_update_loop": self.stop_job_status_loop,
+            #    "start_job_update": self.start_job_update,
+            #    "stop_job_update": self.stop_job_update,
+            #    "cancel_job": self.cancel_job,
+            #    "job_logs": self.job_logs,
+            #    "job_logs_latest": self.job_logs
             }
+
+    def _verify_job_id(self, req: JobRequest) -> None:
+        if req.job_id is None:
+            self.send_error_message("job_does_not_exist", req)
+            raise ValueError(f"Job id required to process {req.request} request")
 
     def send_comm_message(self, msg_type: str, content: dict) -> None:
         """
@@ -100,12 +114,22 @@ class JobComm:
         }
         self._comm.send(msg)
 
-    def start_job_status_loop(self) -> None:
+    def send_error_message(self, err_type: str, req: JobRequest) -> None:
+        self.send_comm_message(err_type, {"job_id": req.job_id, "source": req.request})
+
+    def start_job_status_loop(self, *args, **kwargs) -> None:
+        """
+        Starts the job status lookup loop. This runs every 10 seconds.
+        """
         self._running_lookup_loop = True
         if self._lookup_timer is None:
             self._lookup_job_status_loop()
 
-    def stop_job_status_loop(self) -> None:
+    def stop_job_status_loop(self, *args, **kwargs) -> None:
+        """
+        Stops the job status lookup loop if it's running. Otherwise, this effectively
+        does nothing.
+        """
         if self._lookup_timer:
             self._lookup_timer.cancel()
             self._lookup_timer = None
@@ -116,23 +140,55 @@ class JobComm:
         Run a loop that will look up job info. After running, this spawns a Timer thread on a 10
         second loop to run itself again.
         """
-        job_statuses = self._jm.lookup_all_job_states()
-        self.send_comm_message("job_status_all", job_statuses)
+        job_statuses = self.lookup_all_job_states(None)
         if len(job_statuses) == 0 or not self._running_lookup_loop:
             self.stop_job_status_loop()
         else:
             self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
             self._lookup_timer.start()
 
-    def lookup_all_job_states(self, req: JobRequest, send_message=False) -> dict:
+    def lookup_all_job_states(self, req: JobRequest) -> dict:
         """
         Fetches status of all jobs in the current workspace and sends them to the front end.
-
+        req can be None, as it's not used.
         """
         job_statuses = self._jm.lookup_all_job_states(ignore_refresh_flag=True)
-        if send_message:
-            self.send_comm_message("job_status_all", job_statuses)
+        self.send_comm_message("job_status_all", job_statuses)
         return job_statuses
+
+    def lookup_job_info(self, req: JobRequest) -> dict:
+        """
+        Looks up job info. This is just some high-level generic information about the running
+        job, including the app id, name, and job parameters.
+        :param req: a JobRequest with the job_id of interest
+        :returns: a dict with the following keys:
+            - app_id - str - module/name,
+            - app_name - str - name of the app as it shows up in the Narrative interface
+            - job_id - str - just re-reporting the id string
+            - job_params - dict - the params that were passed to that particular job
+        """
+        self._verify_job_id(req)
+        try:
+            job_info = self._jm.lookup_job_info(req.job_id)
+            self.send_comm_message("job_info", job_info)
+            return job_info
+        except ValueError as e:
+            self.send_error_message("job_does_not_exist", req)
+            raise
+
+    def lookup_job_state(self, req: JobRequest) -> dict:
+        """
+        Look up job state.
+        """
+        self._verify_job_id(req)
+        try:
+            job_state = self._jm.get_job_state(req.job_id)
+            self.send_comm_message("job_status", job_state)
+            return job_state
+        except ValueError as e:
+            # kblogging.log_event(self._log, "lookup_job_state_error", {"err": str(e)})
+            self.send_error_message("job_does_not_exist", req)
+            raise
 
     def _handle_comm_message(self, msg: dict) -> None:
         """
@@ -164,7 +220,7 @@ class JobComm:
         """
         request = JobRequest(msg)
         if request.request in self._msg_map:
-            self._msg_map[request.request](request, True)
+            self._msg_map[request.request](request)
         else:
             self.send_comm_message("job_comm_error", {"message": "Unknown message", "request_type": request.request})
             raise ValueError(f"Unknown KBaseJobs message '{request.request}'")

@@ -193,7 +193,7 @@ define (
             $titleSpan.append($('<div>').addClass('kbcb-app-card-title').append(info.name));
             if(info['module_name']) {
                 $titleSpan.append($('<div>').addClass('kbcb-app-card-module').append(
-                                        $('<a href="/#appcatalog/module/'+info.module_name+'" target="_blank">')
+                                        $('<a href="/#catalog/modules/'+info.module_name+'" target="_blank">')
                                             .append(info.module_name)
                                             .on('click',function(event) {
                                                 // have to stop propagation so we don't go to the app page first

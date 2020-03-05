@@ -67,7 +67,7 @@ define([
             title: 'Apps',
             methodStoreURL: Config.url('narrative_method_store'),
             catalogURL: Config.url('catalog'),
-            moduleLink: '/#appcatalog/module/',
+            moduleLink: '/#catalog/modules/',
             methodHelpLink: '/#appcatalog/app/',
             appHelpLink: '/#appcatalog/app/l.a/'
         },

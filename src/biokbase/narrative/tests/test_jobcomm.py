@@ -241,6 +241,27 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(msg["data"]["msg_type"], "job_status")
 
+    @mock.patch('biokbase.narrative.jobs.jobcomm.jobmanager.clients.get', get_mock_client)
+    def test_handle_start_job_update_msg(self):
+        job_id = "5d64935ab215ad4128de94d6"
+        refresh_count = self.jm._running_jobs[job_id]["refresh"]
+        req = make_comm_msg("start_job_update", job_id, False)
+        self.jc._handle_comm_message(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(msg["data"]["msg_type"], "job_status_all")
+        self.assertEqual(self.jm._running_jobs[job_id]["refresh"], refresh_count + 1)
+        self.assertTrue(self.jc._running_lookup_loop)
+        self.jc.stop_job_status_loop()
+
+    def test_handle_stop_job_update_msg(self):
+        job_id = "5d64935ab215ad4128de94d6"
+        refresh_count = self.jm._running_jobs[job_id]["refresh"]
+        req = make_comm_msg("stop_job_update", job_id, False)
+        self.jc._handle_comm_message(req)
+        msg = self.jc._comm.last_message
+        self.assertIsNone(msg)
+        self.assertEqual(self.jm._running_jobs[job_id]["refresh"], max(refresh_count - 1, 0))
+
 class JobRequestTestCase(unittest.TestCase):
     """
     Test the JobRequest module.

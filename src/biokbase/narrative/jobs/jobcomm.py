@@ -92,8 +92,8 @@ class JobComm:
                "job_info": self.lookup_job_info,
                "start_update_loop": self.start_job_status_loop,
                "stop_update_loop": self.stop_job_status_loop,
-            #    "start_job_update": self.start_job_update,
-            #    "stop_job_update": self.stop_job_update,
+               "start_job_update": self.modify_job_update,
+               "stop_job_update": self.modify_job_update,
                "cancel_job": self.cancel_job,
             #    "job_logs": self.job_logs,
             #    "job_logs_latest": self.job_logs
@@ -196,6 +196,24 @@ class JobComm:
             # kblogging.log_event(self._log, "lookup_job_state_error", {"err": str(e)})
             self.send_error_message("job_does_not_exist", req)
             raise
+
+    def modify_job_update(self, req: JobRequest) -> None:
+        """
+        Modifies how many things want to listen to a job update.
+        If this is a request to start a job update, then this starts the update loop that
+        returns update messages across the job channel.
+        If this is a request to stop a job update, then this sends that request to the
+        JobManager, which might have the side effect of shutting down the update loop if there's
+        no longer anything requesting job status.
+
+        If the given job_id in the request doesn't exist in the current Narrative, or is None,
+        this raises a ValueError.
+        """
+        self._verify_job_id(req)
+        update_adjust = 1 if req.request == "start_job_update" else -1
+        self._jm.modify_job_refresh(req.job_id, update_adjust)
+        if update_adjust == 1:
+            self.start_job_status_loop()
 
     def cancel_job(self, req: JobRequest) -> None:
         """

@@ -584,18 +584,6 @@ class JobManager(object):
                 return
         except Exception as e:
             raise transform_job_exception(e)
-            # new_e = transform_job_exception(e)
-            # error = {
-            #     'error': 'Unable to get cancel job',
-            #     'message': getattr(new_e, 'message', 'Unknown reason'),
-            #     'code': getattr(new_e, 'code', -1),
-            #     'source': getattr(new_e, 'source', 'jobmanager'),
-            #     'name': getattr(new_e, 'name', type(e).__name__),
-            #     'request_type': 'cancel_job',
-            #     'job_id': job_id
-            # }
-            # raise(e)
-
 
         # Stop updating the job status while we try to cancel.
         # Also, set it to have a special state of 'canceling' while we're doing the cancel
@@ -662,7 +650,7 @@ class JobManager(object):
                     job_states[state['job_id']] = {'lookup_error': error}
         return job_states
 
-    def get_job_state(self, job_id, parent_job_id=None):
+    def get_job_state(self, job_id: str, parent_job_id: str=None) -> dict:
         if parent_job_id is not None:
             self._verify_job_parentage(parent_job_id, job_id)
         if job_id is None or job_id not in self._running_jobs:
@@ -673,3 +661,17 @@ class JobManager(object):
         if state.get('status') == 'completed':
             self._completed_job_states[job_id] = dict(state)
         return dict(state)
+
+    def modify_job_refresh(self, job_id: str, update_adjust: int, parent_job_id: str=None) -> None:
+        """
+        Modifies how many things want to get the job updated.
+        If this sets the current "refresh" key to be less than 0, it gets reset to 0.
+        If the job isn't present or None, a ValueError is raised.
+        """
+        if parent_job_id is not None:
+            self._verify_job_parentage(parent_job_id, job_id)
+        if job_id is None or job_id not in self._running_jobs:
+            raise ValueError(f"No job present with id {job_id}")
+        self._running_jobs[job_id]["refresh"] += update_adjust
+        if self._running_jobs[job_id]["refresh"] < 0:
+            self._running_jobs[job_id]["refresh"] = 0

@@ -54,7 +54,7 @@ class JobManager(object):
             JobManager.__instance = object.__new__(cls)
         return JobManager.__instance
 
-    def initialize_jobs(self, start_lookup_thread=True):
+    def initialize_jobs(self):
         """
         Initializes this JobManager.
         This is expected to be run by a running Narrative, and naturally linked to a workspace.
@@ -562,26 +562,40 @@ class JobManager(object):
             del self._completed_job_states[job_id]
         # self._send_comm_message('job_deleted', {'job_id': job_id})
 
-    def cancel_job(self, job_id, parent_job_id=None):
+    def cancel_job(self, job_id: str, parent_job_id: str=None) -> None:
         """
         Cancels a running job, placing it in a canceled state.
         Does NOT delete the job.
-        Raises an exception if the current user doesn't have permission to cancel the job.
+        if the job_id is None or not found in this Narrative, a ValueError is raised.
+        This then checks the job to see if it is already canceled/finished,
+        then attempts to cancel it.
+        If either of those steps fail, a NarrativeException is raised.
         """
 
         if job_id is None:
             raise ValueError('Job id required for cancellation!')
         if not parent_job_id and job_id not in self._running_jobs:
-            # self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'source': 'cancel_job'})
-            return
+            raise ValueError(f"No job present with id {job_id}")
 
         try:
-            state = self.get_job_state(job_id, parent_job_id=parent_job_id)
-            if state.get('status') in ['completed', 'terminated', 'error']:
+            cancel_status = clients.get("execution_engine2").check_job_canceled({"job_id": job_id})
+            if cancel_status.get("finished", 0) == 1 or cancel_status.get("canceled", 0) == 1:
                 # It's already finished, don't try to cancel it again.
                 return
         except Exception as e:
-            raise ValueError('Unable to get Job state')
+            raise transform_job_exception(e)
+            # new_e = transform_job_exception(e)
+            # error = {
+            #     'error': 'Unable to get cancel job',
+            #     'message': getattr(new_e, 'message', 'Unknown reason'),
+            #     'code': getattr(new_e, 'code', -1),
+            #     'source': getattr(new_e, 'source', 'jobmanager'),
+            #     'name': getattr(new_e, 'name', type(e).__name__),
+            #     'request_type': 'cancel_job',
+            #     'job_id': job_id
+            # }
+            # raise(e)
+
 
         # Stop updating the job status while we try to cancel.
         # Also, set it to have a special state of 'canceling' while we're doing the cancel
@@ -592,25 +606,11 @@ class JobManager(object):
         try:
             clients.get('execution_engine2').cancel_job({'job_id': job_id})
         except Exception as e:
-            new_e = transform_job_exception(e)
-            error = {
-                'error': 'Unable to get cancel job',
-                'message': getattr(new_e, 'message', 'Unknown reason'),
-                'code': getattr(new_e, 'code', -1),
-                'source': getattr(new_e, 'source', 'jobmanager'),
-                'name': getattr(new_e, 'name', type(e).__name__),
-                'request_type': 'cancel_job',
-                'job_id': job_id
-            }
-            # self._send_comm_message('job_comm_error', error)
-            raise(e)
+            raise transform_job_exception(e)
         finally:
             if not parent_job_id:
                 self._running_jobs[job_id]['refresh'] = is_refreshing
                 del self._running_jobs[job_id]['canceling']
-
-        # Rather than a separate message, how about triggering a job-status message:
-        self._lookup_job_status(job_id, parent_job_id=parent_job_id)
 
     def _get_all_job_states(self, job_ids: list=None) -> dict:
         """

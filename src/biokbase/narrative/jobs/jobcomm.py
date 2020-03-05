@@ -1,6 +1,7 @@
 import threading
 from ipykernel.comm import Comm
 import biokbase.narrative.jobs.jobmanager as jobmanager
+from biokbase.narrative.exception_util import NarrativeException
 
 
 class JobRequest:
@@ -93,7 +94,7 @@ class JobComm:
                "stop_update_loop": self.stop_job_status_loop,
             #    "start_job_update": self.start_job_update,
             #    "stop_job_update": self.stop_job_update,
-            #    "cancel_job": self.cancel_job,
+               "cancel_job": self.cancel_job,
             #    "job_logs": self.job_logs,
             #    "job_logs_latest": self.job_logs
             }
@@ -114,8 +115,14 @@ class JobComm:
         }
         self._comm.send(msg)
 
-    def send_error_message(self, err_type: str, req: JobRequest) -> None:
-        self.send_comm_message(err_type, {"job_id": req.job_id, "source": req.request})
+    def send_error_message(self, err_type: str, req: JobRequest, content: dict = None) -> None:
+        error_content = {
+            "job_id": req.job_id,
+            "source": req.request
+        }
+        if content is not None:
+            error_content.update(content)
+        self.send_comm_message(err_type, error_content)
 
     def start_job_status_loop(self, *args, **kwargs) -> None:
         """
@@ -189,6 +196,31 @@ class JobComm:
             # kblogging.log_event(self._log, "lookup_job_state_error", {"err": str(e)})
             self.send_error_message("job_does_not_exist", req)
             raise
+
+    def cancel_job(self, req: JobRequest) -> None:
+        """
+        This cancels a running job. If the job has already been canceled, then nothing is
+        done.
+        If the job doesn't exist (or the job id in the request is None), this raises a ValueError.
+        If there's an error while attempting to cancel, this raises a NarrativeError.
+        In the end, after a successful cancel, this finishes up by fetching and returning the
+        job state with the new status.
+        """
+        self._verify_job_id(req)
+        try:
+            self._jm.cancel_job(req.job_id)
+        except ValueError as e:
+            self.send_error_message("job_does_not_exist", req)
+            raise
+        except NarrativeException as e:
+            self.send_error_message("job_comm_error", req, {
+                "error": "Unable to cancel job",
+                "message": getattr(e, "message", "Unknown reason"),
+                "code": getattr(e, "code", -1),
+                "name": getattr(e, "name", type(e).__name__)
+            })
+            raise
+        self.lookup_job_state(req)
 
     def _handle_comm_message(self, msg: dict) -> None:
         """

@@ -152,6 +152,13 @@ class MockClients:
     def cancel_job(self, job_id):
         return "done"
 
+    def check_job_canceled(self, params):
+        return {
+            "finished": 0,
+            "canceled": 0,
+            "job_id": params.get("job_id")
+        }
+
     def get_job_params(self, job_id):
         return self.ee2_job_info.get(job_id, {}).get('job_input', {})
 
@@ -282,6 +289,12 @@ class FailingMockClient:
 
     def check_workspace_jobs(self, params):
         raise ServerError("JSONRPCError", -32000, "Job lookup failed.")
+
+    def cancel_job(self, params):
+        raise ServerError("JSONRPCError", -32000, "Can't cancel job")
+
+    def check_job_canceled(self, params):
+        raise ServerError("JSONRPCError", 1, "Can't cancel job")
 
 class MockStagingHelper:
     def list(self):

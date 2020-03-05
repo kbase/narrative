@@ -43,7 +43,10 @@ class JobManagerTest(unittest.TestCase):
         cls.jm = biokbase.narrative.jobs.jobmanager.JobManager()
         cls.job_ids = list(job_info.keys())
         os.environ['KB_WORKSPACE_ID'] = config.get('jobs', 'job_test_wsname')
-        cls.jm.initialize_jobs(start_lookup_thread=False)
+
+    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
+    def setUp(self):
+        self.jm.initialize_jobs()
 
     def validate_status_message(self, msg):
         core_keys = set(['widget_info', 'owner', 'state', 'spec'])
@@ -164,7 +167,7 @@ class JobManagerTest(unittest.TestCase):
     def test_initialize_jobs_ee2_fail(self):
         # init jobs should fail. specifically, ee2.check_workspace_jobs should error.
         with self.assertRaises(NarrativeException) as e:
-            self.jm.initialize_jobs(start_lookup_thread=False)
+            self.jm.initialize_jobs()
         self.assertIn('Job lookup failed', str(e.exception))
 
 if __name__ == "__main__":

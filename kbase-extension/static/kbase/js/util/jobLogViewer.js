@@ -414,8 +414,9 @@ define([
         }
 
         function requestLatestJobLog() {
-            // while job is running 
+            // only while job is running 
             // load numLines at a time
+            // otherwise load entire log
             let autoState = fsm.getCurrentState().state.auto;
             if(autoState){
                 linesPerPage = numLines; // set it to 10
@@ -429,42 +430,16 @@ define([
             });
         }
 
-        function fetchNewLogs(currentLine) {
-            var $panel = $(ui.getElements('panel')[0]),
-                first = Number($panel.children().first().attr('class'));
-            if (currentLine === 0 && first === 0) {
-                return;
-            }
-            var newFirstLine = currentLine - Number(linesPerPage),
-                numLines = linesPerPage;
-
-            if (newFirstLine < 0) {
-                newFirstLine = 0;
-                numLines = currentLine;
-            }
-            requestJobLog(newFirstLine, Number(numLines));
-            currentSection = newFirstLine;
-        }
-
-        function scrollToLog($panel, target, scrollTime){
-            if(target.length){
-                scrollTime = (scrollTime !== undefined) ? scrollTime : 500;
-                $panel.animate({
-                    scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
-                }, scrollTime, function () {
-                    currentSection = target.parent().attr('class');
-                });
-            }else{
-                fetchNewLogs(Number(model.getItem('currentLine')));
-            }
-
-        }
         /**
          * Scroll to the top of the job log
          */
         function doFetchFirstLogChunk() {
             doStopPlayLogs();
-            panel.scrollTo(0, 0)
+            panel.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: 'smooth'
+              })
         }
 
         /**
@@ -472,9 +447,12 @@ define([
          */
         function doFetchLastLogChunk() {
             doStopPlayLogs();
-            var $panel = $(ui.getElements('panel')[0]);
-            var target = $panel.children().last().children().last();
-            scrollToLog($panel, target);
+            const lastChildElement = panel.lastChild
+            lastChildElement.scrollIntoView({
+                alignToTop: false,
+                behavior: 'smooth',
+                block: 'center'
+            })
         }
 
         function test(){
@@ -611,33 +589,6 @@ define([
         }
 
         /**
-         * build and return div that contains
-         * individual job log line
-         * @param {string} line 
-         */
-        function renderLine(line) {
-            var errorClass = line.isError ? ' kb-error' : '';
-
-            return div({
-                class: 'kblog-line' + errorClass
-            }, [
-                div({ class: 'kblog-num-wrapper' }, [
-                    div({ class: 'kblog-line-num' }, [
-                        String(line.lineNumber)
-                    ])
-                ]),
-                div({
-                    class: 'kblog-text',
-                    style: {
-                        overflow: 'auto'
-                    }
-                }, [
-                    div({ style: { marginBottom: '6px' } }, sanitize(line.text))
-                ])
-            ]);
-        }
-
-        /**
          * build and return div that displays
          * individual job log line
          * <div class="kblog-line">
@@ -676,15 +627,14 @@ define([
         }
 
         /**
-         * build and return div that displays job log lines
+         * Append div that displays job log lines
+         * to the panel
          * @param {array} lines 
          */
         function makeLogChunkDiv(lines) {
-            let div = document.createElement('div'); 
             for (let i=0; i<lines.length; i+= 1){
-                div.appendChild(buildLine(lines[i]))
+                panel.appendChild(buildLine(lines[i]))
             }
-            return div;
         }
 
         // onUpdate callback function (under model)
@@ -711,11 +661,16 @@ define([
 
                 var autoState = fsm.getCurrentState().state.auto;
                 if (!autoState){
-                    panel.appendChild(makeLogChunkDiv(viewLines));
+                    // not sure when this happens
+                    makeLogChunkDiv(viewLines)
                 } else {
-                    panel.appendChild(makeLogChunkDiv(viewLines))
+                    makeLogChunkDiv(viewLines)
                     const lastChildElement = panel.lastElementChild
-                    lastChildElement.scrollIntoView()
+                    lastChildElement.scrollIntoView({
+                        alignToTop: false,
+                        behavior: 'smooth',
+                        block: 'center'
+                    })
                 }
             } else {
                 ui.setContent('panel', 'Sorry, no log yet...');
@@ -877,20 +832,6 @@ define([
         var externalEventListeners = [];
 
         function startEventListeners() {
-            // var $panel = $(ui.getElements('panel')[0])
-            //     .on('scroll', function () {
-            //         //at begining
-
-            //         var autoState = fsm.getCurrentState().state.auto;
-            //         var top = $(this).scrollTop();
-            //         //when not on autoplay then scrolling to top will fetch new logs
-            //         if (!autoState &&  top === 0) {
-            //             var $panel = $(ui.getElements('panel')[0]),
-            //                 $currentSection = $panel.children(':first'),
-            //                 currentLine = Number($currentSection.attr('class'));
-            //             fetchNewLogs(currentLine);
-            //         }
-            //     });
             var ev;
 
             ev = runtime.bus().listen({
@@ -911,7 +852,6 @@ define([
                         }
                     } else {
                         var lines = model.getItem('lines');
-
                         model.setItem('lines', message.logs.lines);
                         model.setItem('currentLine', message.logs.first);
                         model.setItem('latest', true);
@@ -1013,17 +953,14 @@ define([
             }
         }
 
+        // I'm not sure where this shows up
         function doOnQueued(message) {
-            ui.setContent('kb-log.panel', renderLine({
-                lineNumber: '',
+            const noLogYet = {
+                lineNumber: undefined,
                 text: 'Job is queued, logs will be available when the job is running.'
-            }));
-            // const noLogYet = {
-            //     lineNumber: undefined,
-            //     text: 'Job is queued, logs will be available when the job is running.'
-            // }
-            // const line = buildLine(noLogYet);
-            // ui.setContent('kb-log.panel', line);
+            }
+            const line = buildLine(noLogYet);
+            ui.setContent('kb-log.panel', line);
         }
 
         function doExitQueued(message) {

@@ -449,7 +449,6 @@ define([
         // Job Logs
 
         function showJobLog(args) {
-            console.log('showJobLog-appExecWidget', showJobLog, args)
             var logViewer = LogViewer.make();
             widgets.logViewer = logViewer;
             logViewer.start()

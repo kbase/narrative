@@ -143,6 +143,7 @@ define([
         }
 
         function startBatch(arg) {
+            console.log('startBatch - logTabs', startBatch)
             return Promise.try(function() {
                 container.innerHTML = batchLayout();
 

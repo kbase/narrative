@@ -29,10 +29,10 @@ define([
         p = t('p'),
         fsm,
         currentSection,
-        renderAbove = true,
         smallPanelHeight = '300px',
         largePanelHeight = '600px',
         numLines = 10,
+        panel,
         panelHeight = smallPanelHeight,
         appStates = [{
             state: {
@@ -44,7 +44,7 @@ define([
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
+                    disabled: ['play', 'stop', 'top', 'bottom']
                 }
             },
             next: [{
@@ -81,7 +81,7 @@ define([
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
+                    disabled: ['play', 'stop', 'top', 'bottom']
                 }
             },
             next: [{
@@ -131,7 +131,7 @@ define([
             ui: {
                 buttons: {
                     enabled: ['stop'],
-                    disabled: ['play', 'top', 'back', 'forward', 'bottom']
+                    disabled: ['play', 'top', 'bottom']
                 }
             },
             next: [{
@@ -180,7 +180,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['play', 'top', 'back', 'forward', 'bottom'],
+                    enabled: ['play', 'top', 'bottom'],
                     disabled: ['stop']
                 }
             },
@@ -223,7 +223,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['top', 'back',  'forward', 'bottom'],
+                    enabled: ['top', 'bottom'],
                     disabled: ['play', 'stop']
                 }
             },
@@ -251,7 +251,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['top', 'back', 'forward', 'bottom'],
+                    enabled: ['top', 'bottom'],
                     disabled: ['play', 'stop']
                 }
             },
@@ -279,7 +279,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['top', 'back', 'forward', 'bottom'],
+                    enabled: ['top', 'bottom'],
                     disabled: ['play', 'stop']
                 }
             },
@@ -311,7 +311,7 @@ define([
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
+                    disabled: ['play', 'stop', 'top', 'bottom']
                 }
             },
             on: {
@@ -340,7 +340,8 @@ define([
             jobId,
             model,
             ui,
-            linesPerPage = config.linesPerPage || numLines,
+            startingLine = 0,
+            linesPerPage = null,
             loopFrequency = 5000,
             looping = false,
             stopped = false,
@@ -413,6 +414,12 @@ define([
         }
 
         function requestLatestJobLog() {
+            // while job is running 
+            // load numLines at a time
+            let autoState = fsm.getCurrentState().state.auto;
+            if(autoState){
+                linesPerPage = numLines; // set it to 10
+            }
             ui.showElement('spinner');
             runtime.bus().emit('request-latest-job-log', {
                 jobId: jobId,
@@ -421,6 +428,7 @@ define([
                 }
             });
         }
+
         function fetchNewLogs(currentLine) {
             var $panel = $(ui.getElements('panel')[0]),
                 first = Number($panel.children().first().attr('class'));
@@ -451,69 +459,24 @@ define([
             }
 
         }
-
+        /**
+         * Scroll to the top of the job log
+         */
         function doFetchFirstLogChunk() {
             doStopPlayLogs();
-            renderAbove = true;
-
-            var currentLine = currentSection ? currentSection : Number(model.getItem('currentLine')),
-                $currentSection = $('.' + String(currentLine));
-
-            if ($currentSection.is(':first-child')) {
-                fetchNewLogs(currentLine);
-            } else {
-                var $panel = $(ui.getElements('panel')[0]),
-                    target = $panel.children().first().children().first();
-
-                scrollToLog($panel, target);
-
-            }
+            panel.scrollTo(0, 0)
         }
 
-
-        function doFetchPreviousLogChunk() {
-            doStopPlayLogs();
-            renderAbove = true;
-
-            var currentLine = currentSection ? currentSection : Number(model.getItem('currentLine')),
-                $currentSection = $('.' + String(currentLine));
-            if (!$currentSection.is(':first-child')) {
-                var $panel = $(ui.getElements('panel')[0]),
-                    target = $currentSection.prev().children().first();
-                scrollToLog($panel, target);
-            } else {
-                fetchNewLogs(currentLine);
-            }
-
-        }
-
-        function doFetchNextLogChunk() {
-            renderAbove = false;
-
-            doStopPlayLogs();
-            var currentLine = currentSection ? currentSection : Number(model.getItem('currentLine')),
-                lastLine = model.getItem('lastLine'),
-                $panel = $(ui.getElements('panel')[0]);
-
-            var $currentSection = $('.' + String(currentLine));
-            currentSection = currentLine;
-
-            if ($currentSection.is(':last-child')) {
-                requestJobLog(lastLine);
-            } else {
-                var target = $currentSection.next().children().last();
-                scrollToLog($panel, target);
-            }
-        }
-
+        /**
+         * scroll to the bottom of the job log
+         */
         function doFetchLastLogChunk() {
-            renderAbove = false;
-
             doStopPlayLogs();
             var $panel = $(ui.getElements('panel')[0]);
             var target = $panel.children().last().children().last();
             scrollToLog($panel, target);
         }
+
         function test(){
             if(panelHeight === smallPanelHeight){
                 panelHeight = largePanelHeight;
@@ -524,8 +487,11 @@ define([
         }
 
         // VIEW
-
-        function renderControls(events) {
+        /**
+         * builds contents of panel-heading div
+         * @param {??} events 
+         */
+        function renderControls(events) { 
             return div({ dataElement: 'header', style: { margin: '0 0 10px 0' } }, [
                 button({
                     class: 'btn btn-sm btn-default',
@@ -581,32 +547,6 @@ define([
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
-                    dataButton: 'back',
-                    dataToggle: 'tooltip',
-                    dataPlacement: 'top',
-                    title: 'Fetch previous log chunk',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: doFetchPreviousLogChunk
-                    })
-                }, [
-                    span({ class: 'fa fa-angle-up' })
-                ]),
-                button({
-                    class: 'btn btn-sm btn-default',
-                    dataButton: 'forward',
-                    dataToggle: 'tooltip',
-                    dataPlacement: 'top',
-                    title: 'Fetch next log chunk',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: doFetchNextLogChunk
-                    })
-                }, [
-                    span({ class: 'fa fa-angle-down' })
-                ]),
-                button({
-                    class: 'btn btn-sm btn-default',
                     dataButton: 'bottom',
                     dataToggle: 'tooltip',
                     dataPlacement: 'top',
@@ -625,7 +565,11 @@ define([
             ]);
         }
 
-        function renderLayout() {
+        /**
+         * builds contents of panel-body class
+         * @param {number} jobId 
+         */
+        function renderLayout(jobId) {
             var events = Events.make(),
                 content = div({ dataElement: 'kb-log', style: { marginTop: '10px'}}, [
                     div({ class: 'kblog-header' }, [
@@ -633,10 +577,10 @@ define([
                             div({ class: 'kblog-line-num' }, [])
                         ]),
                         div({ class: 'kblog-text' }, [
-                            renderControls(events)
+                            renderControls(events) // header
                         ])
                     ]),
-                    div({ dataElement: 'panel',
+                    div({ dataElement: 'panel', class: jobId,
                         style: {
                             'overflow-y': 'scroll', height: panelHeight
                         } })
@@ -665,12 +609,17 @@ define([
 
             return fixed.join(' ');
         }
-        //left in because oher methods depend on it
+
+        /**
+         * build and return div that contains
+         * individual job log line
+         * @param {string} line 
+         */
         function renderLine(line) {
-            var extraClass = line.isError ? ' kb-error' : '';
+            var errorClass = line.isError ? ' kb-error' : '';
 
             return div({
-                class: 'kblog-line' + extraClass
+                class: 'kblog-line' + errorClass
             }, [
                 div({ class: 'kblog-num-wrapper' }, [
                     div({ class: 'kblog-line-num' }, [
@@ -687,66 +636,86 @@ define([
                 ])
             ]);
         }
-        function renderLine2(line) {
-            var extraClass = line.isError ? ' kb-error' : '';
-            var $line = $('<div />')
-                .addClass('kblog-num-wrapper' )
-                .append($('<span />')
-                    .addClass('kblog-line-num')
-                    .append(String(line.lineNumber)))
-                .append($('<span />')
-                    .addClass('kblog-text')
-                    .append(sanitize(line.text)));
-            return $('<div />')
-                .addClass('kblog-line' + extraClass)
-                .append($line);
 
+        /**
+         * build and return div that displays
+         * individual job log line
+         * <div class="kblog-line">
+         *     <div class="kblog-num-wrapper">
+         *        <span class="kblog-line-num">###</span>
+         *        <span class="kblog-text">foobarbaz</span>
+         *     </div>
+         * </div>
+         * @param {object} line 
+         */
+        function buildLine(line) {
+            // kblog-line wrapper div
+            const errorClass = line.isError ? ' kb-error' : '';
+            const kblogLine = document.createElement('div')
+            kblogLine.setAttribute('class', 'kblog-line' + errorClass);
+            // kblog-num-wrapper div
+            const warpperDiv = document.createElement('div');
+            warpperDiv.setAttribute('class', 'kblog-num-wrapper');
+            // number 
+            const numSpan = document.createElement('span');
+            numSpan.setAttribute('class', 'kblog-line-num');
+            const lineNumber = document.createTextNode(line.lineNumber);
+            numSpan.appendChild(lineNumber);
+            // text 
+            const textSpan = document.createElement('span');
+            textSpan.setAttribute('class', 'kblog-text');
+            const lineText = document.createTextNode(line.text)
+            textSpan.appendChild(lineText);
+            // append line number and text 
+            warpperDiv.appendChild(numSpan);
+            warpperDiv.appendChild(textSpan);
+            // append wrapper to line div
+            kblogLine.appendChild(warpperDiv)
+
+            return kblogLine;
         }
 
-        function renderLines(lines) {
-            var $section = $('<div/>');
-            for(var i = lines.length-1; i>=0; i--){
-                $section.prepend(renderLine2(lines[i]));
+        /**
+         * build and return div that displays job log lines
+         * @param {array} lines 
+         */
+        function makeLogChunkDiv(lines) {
+            let div = document.createElement('div'); 
+            for (let i=0; i<lines.length; i+= 1){
+                div.appendChild(buildLine(lines[i]))
             }
-            $section.addClass(String(model.getItem('currentLine')))
-                .mouseenter(function(){
-                    currentSection = Number($section.attr('class'));
-                });
-            return $section;
+            return div;
         }
 
+        // onUpdate callback function (under model)
         function render() {
-            var startingLine = model.getItem('currentLine'),
-                lines = model.getItem('lines'),
-                viewLines,
-                $panel;
+            const lines = model.getItem('lines');
 
             if (lines) {
                 if (lines.length === 0) {
                     ui.setContent('panel', 'Sorry, no log entries to show');
                     return;
                 }
-                viewLines = lines.map(function(line, index) {
+
+                // new array of log texts
+                // this should be a separate function(?)
+                const viewLines = lines.map(function(line, index) {
+                    startingLine += 1;
+                    const text = sanitize(line.line)
                     return {
-                        text: line.line,
+                        text: text,
                         isError: (line.is_error === 1 ? true : false),
-                        lineNumber: startingLine + index + 1
+                        lineNumber: startingLine
                     };
                 });
-                $panel = $(ui.getElements('panel')[0]);
+
                 var autoState = fsm.getCurrentState().state.auto;
                 if (!autoState){
-                    var target = renderLines(viewLines).css('font-color', 'white');
-                    if(renderAbove){
-                        var scrollTarget = $panel.children().first();
-                        target.prependTo($panel);
-                        scrollToLog($panel, scrollTarget, 0);
-                        target.css('font-color', 'black');
-                    }else{
-                        target.appendTo($panel).show();
-                    }
-                }else{
-                    $panel.html(renderLines(viewLines)[0]);
+                    panel.appendChild(makeLogChunkDiv(viewLines));
+                } else {
+                    panel.appendChild(makeLogChunkDiv(viewLines))
+                    const lastChildElement = panel.lastElementChild
+                    lastChildElement.scrollIntoView()
                 }
             } else {
                 ui.setContent('panel', 'Sorry, no log yet...');
@@ -908,20 +877,20 @@ define([
         var externalEventListeners = [];
 
         function startEventListeners() {
-            var $panel = $(ui.getElements('panel')[0])
-                .on('scroll', function () {
-                    //at begining
+            // var $panel = $(ui.getElements('panel')[0])
+            //     .on('scroll', function () {
+            //         //at begining
 
-                    var autoState = fsm.getCurrentState().state.auto;
-                    var top = $(this).scrollTop();
-                    //when not on autoplay then scrolling to top will fetch new logs
-                    if (!autoState &&  top === 0) {
-                        var $panel = $(ui.getElements('panel')[0]),
-                            $currentSection = $panel.children(':first'),
-                            currentLine = Number($currentSection.attr('class'));
-                        fetchNewLogs(currentLine);
-                    }
-                });
+            //         var autoState = fsm.getCurrentState().state.auto;
+            //         var top = $(this).scrollTop();
+            //         //when not on autoplay then scrolling to top will fetch new logs
+            //         if (!autoState &&  top === 0) {
+            //             var $panel = $(ui.getElements('panel')[0]),
+            //                 $currentSection = $panel.children(':first'),
+            //                 currentLine = Number($currentSection.attr('class'));
+            //             fetchNewLogs(currentLine);
+            //         }
+            //     });
             var ev;
 
             ev = runtime.bus().listen({
@@ -1049,6 +1018,12 @@ define([
                 lineNumber: '',
                 text: 'Job is queued, logs will be available when the job is running.'
             }));
+            // const noLogYet = {
+            //     lineNumber: undefined,
+            //     text: 'Job is queued, logs will be available when the job is running.'
+            // }
+            // const line = buildLine(noLogYet);
+            // ui.setContent('kb-log.panel', line);
         }
 
         function doExitQueued(message) {
@@ -1122,10 +1097,12 @@ define([
             ui = UI.make({ node: container });
 
             jobId = arg.jobId;
-
-            var layout = renderLayout();
+            // passing jobId allows the panel to be found by Job ID
+            // with getElementsByClassName
+            var layout = renderLayout(jobId); 
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
+            panel = document.getElementsByClassName(jobId)[0]
 
             initializeFSM();
             renderFSM();

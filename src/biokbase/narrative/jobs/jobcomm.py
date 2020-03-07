@@ -95,8 +95,8 @@ class JobComm:
                "start_job_update": self.modify_job_update,
                "stop_job_update": self.modify_job_update,
                "cancel_job": self.cancel_job,
-            #    "job_logs": self.job_logs,
-            #    "job_logs_latest": self.job_logs
+               "job_logs": self.get_job_logs,
+               "job_logs_latest": self.get_job_logs
             }
 
     def _verify_job_id(self, req: JobRequest) -> None:
@@ -239,6 +239,36 @@ class JobComm:
             })
             raise
         self.lookup_job_state(req)
+
+    def get_job_logs(self, req: JobRequest) -> None:
+        """
+        This returns a set of job logs based on the info in the request.
+        """
+        self._verify_job_id(req)
+        first_line = req.rq_data.get("first_line", 0)
+        num_lines = req.rq_data.get("num_lines", None)
+        latest_only = req.request == "job_logs_latest"
+        try:
+            (first_line, max_lines, logs) = self._jm.get_job_logs(
+                req.job_id, num_lines=num_lines, first_line=first_line, latest_only=latest_only)
+            self.send_comm_message("job_logs", {
+                "job_id": req.job_id,
+                "first": first_line,
+                "max_lines": max_lines,
+                "lines": logs,
+                "latest": latest_only
+            })
+        except ValueError as e:
+            self.send_error_message("job_does_not_exist", req)
+            raise
+        except NarrativeException as e:
+            self.send_error_message("job_comm_error", req, {
+                "error": "Unable to retrieve job logs",
+                "message": getattr(e, "message", "Unknown reason"),
+                "code": getattr(e, "code", -1),
+                "name": getattr(e, "name", type(e).__name__)
+            })
+            raise
 
     def _handle_comm_message(self, msg: dict) -> None:
         """

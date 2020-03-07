@@ -296,6 +296,9 @@ class FailingMockClient:
     def check_job_canceled(self, params):
         raise ServerError("JSONRPCError", 1, "Can't cancel job")
 
+    def get_job_logs(self, params):
+        raise ServerError("JSONRPCError", 2, "Can't get job logs")
+
 class MockStagingHelper:
     def list(self):
         """

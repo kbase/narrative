@@ -505,32 +505,51 @@ class JobManager(object):
         Raises a ValueError if not found.
         """
         if job_id in self._running_jobs:
-            return self._running_jobs[job_id]['job']
+            return self._running_jobs[job_id]["job"]
         else:
-            raise ValueError('No job present with id {}'.format(job_id))
+            raise ValueError(f"No job present with id {job_id}")
 
-    def _get_latest_job_logs(self, job_id, parent_job_id=None, num_lines=None):
+    def get_job_logs(self, job_id: str, parent_job_id: str=None, first_line: int=0,
+                     num_lines: int=None, latest_only: bool=False) -> tuple:
+        """
+        Raises a Value error if the job_id doesn't exist or is not present.
+        :param job_id: str - the job id from the execution engine
+        :param parent_job_id: if the job is a child job, this is its parent (optional)
+        :param first_line: int - the first line to be requested by the log. 0-indexed. If < 0,
+            this will be set to 0
+        :param max_lines: int - the maximum number of lines to return.
+            if < 0, will be reset to 0.
+            if None, then will not be considered, and just return all the lines.
+        :param latest_only: bool - if True, will only return the most recent max_lines
+            of logs. This overrides the first_line parameter if set to True. So if the call made
+            is get_job_logs(id, first_line=0, num_lines=5, latest_only=True), and there are 100
+            log lines available, then lines 96-100 will be returned.
+        :returns: 3-tuple. elements in order:
+            int - the first line returned
+            int - the number of logs lines currently available for that job
+            list - the lines themselves, fresh from the server. These are all tiny dicts
+                with key "is_error" (either 0 or 1) and "line" - the log line string
+
+        """
         job = self.get_job(job_id)
-        if job is None:
-            raise ValueError('job "{}" not found while fetching logs!'.format(job_id))
 
-        (max_lines, logs) = job.log()
+        if first_line < 0:
+            first_line = 0
+        if num_lines is not None and num_lines < 0:
+            num_lines = 0
 
-        first_line = 0
-        if num_lines is not None and max_lines > num_lines:
-            first_line = max_lines - num_lines
-            logs = logs[first_line:]
+        try:
+            if latest_only:
+                (max_lines, logs) = job.log()
+                if num_lines is not None and max_lines > num_lines:
+                    first_line = max_lines - num_lines
+                    logs = logs[first_line:]
+            else:
+                (max_lines, logs) = job.log(first_line=first_line, num_lines=num_lines)
 
-    def _get_job_logs(self, job_id, parent_job_id=None, first_line=0, num_lines=None):
-        # if parent_job is real, and job_id (the child) is not, just add it to the
-        # list of running jobs and work as normal.
-
-        job = self.get_job(job_id)
-        if job is None:
-            raise ValueError('job "{}" not found!'.format(job_id))
-
-        (max_lines, log_slice) = job.log(first_line=first_line, num_lines=num_lines)
-        # self._send_comm_message('job_logs', {'job_id': job_id, 'first': first_line, 'max_lines': max_lines, 'lines': log_slice, 'latest': False})
+            return (first_line, max_lines, logs)
+        except Exception as e:
+            raise transform_job_exception(e)
 
     def delete_job(self, job_id, parent_job_id=None):
         """

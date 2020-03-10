@@ -44,10 +44,7 @@ class JobManager(object):
     # keys = job_id, values = state from either Job object or NJS (these are identical)
     _completed_job_states = dict()
 
-    _lookup_timer = None
-    _comm = None
     _log = kblogging.get_logger(__name__)
-    _running_lookup_loop = False
 
     def __new__(cls):
         if JobManager.__instance is None:
@@ -64,10 +61,7 @@ class JobManager(object):
         3. initialize the Job objects by running NJS.get_job_params (also gets app_id)
         4. start the status lookup loop.
         """
-
-        # self._send_comm_message("start", {"time": int(round(time.time() * 1000))})
         ws_id = system_variable("workspace_id")
-
         try:
             job_states = clients.get('execution_engine2').check_workspace_jobs({
                 'workspace_id': ws_id, 'return_list': 0})
@@ -83,7 +77,6 @@ class JobManager(object):
                 'name': getattr(new_e, 'name', type(e).__name__),
                 'service': 'execution_engine2'
             }
-            # self._send_comm_message('job_init_err', error)
             raise new_e
 
         for job_id, job_state in job_states.items():
@@ -219,7 +212,6 @@ class JobManager(object):
                 error (if present): dict of error info,
                 cell_id: string/None,
                 run_id: string/None,
-                awe_job_id: string/None,
                 canceled: 0/1
                 creation_time: epoch second
                 exec_start_time: epoch/none,
@@ -425,21 +417,6 @@ class JobManager(object):
                 child_job.app_id = parent_job.meta.get('batch_app')
                 child_job.tag = parent_job.meta.get('batch_tag', 'release')
 
-    def _lookup_job_status(self, job_id, parent_job_id=None):
-        """
-        Will raise a ValueError if job_id doesn't exist.
-        Sends the status over the comm channel as the usual job_status message.
-        """
-
-        # if parent_job is real, and job_id (the child) is not, just add it to the
-        # list of running jobs and work as normal.
-        if parent_job_id is not None:
-            self._verify_job_parentage(parent_job_id, job_id)
-        job = self._running_jobs.get(job_id, {}).get('job', None)
-        state = self.get_job_state(job_id)
-        status = self._construct_job_status(job, state)
-        # self._send_comm_message('job_status', status)
-
     def lookup_job_info(self, job_id, parent_job_id=None):
         """
         Will raise a ValueError if job_id doesn't exist.
@@ -496,8 +473,9 @@ class JobManager(object):
         job : biokbase.narrative.jobs.job.Job object
             The new Job that was started.
         """
+        kblogging.log_event(self._log, "register_new_job", {"job_id": job.job_id})
         self._running_jobs[job.job_id] = {'job': job, 'refresh': 0}
-        self._lookup_job_status(job.job_id)
+        # self._lookup_job_status(job.job_id)
 
     def get_job(self, job_id):
         """
@@ -550,36 +528,6 @@ class JobManager(object):
             return (first_line, max_lines, logs)
         except Exception as e:
             raise transform_job_exception(e)
-
-    def delete_job(self, job_id, parent_job_id=None):
-        """
-        If the job_id doesn't exist, raises a ValueError.
-        Attempts to delete a job, and cancels it first. If the job cannot be canceled,
-        raises an exception. If it can be canceled but not deleted, it gets canceled, then raises
-        an exception.
-        """
-        if job_id is None:
-            raise ValueError('Job id required for deletion!')
-        if not parent_job_id and job_id not in self._running_jobs:
-            # self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'source': 'delete_job'})
-            return
-            # raise ValueError('Attempting to cancel a Job that does not exist!')
-
-        try:
-            self.cancel_job(job_id, parent_job_id=parent_job_id)
-        except Exception:
-            raise
-
-        try:
-            clients.get('user_and_job_state').delete_job(job_id)
-        except Exception:
-            raise
-
-        if job_id in self._running_jobs:
-            del self._running_jobs[job_id]
-        if job_id in self._completed_job_states:
-            del self._completed_job_states[job_id]
-        # self._send_comm_message('job_deleted', {'job_id': job_id})
 
     def cancel_job(self, job_id: str, parent_job_id: str=None) -> None:
         """

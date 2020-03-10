@@ -90,7 +90,6 @@ class JobManagerTest(unittest.TestCase):
         job_id = new_job.job_id
         self.jm.register_new_job(new_job)
         self.jm.cancel_job(job_id)
-        self.jm.delete_job(job_id)
 
     def test_cancel_job_bad(self):
         with self.assertRaises(ValueError):
@@ -131,7 +130,6 @@ class JobManagerTest(unittest.TestCase):
     #     msg = self.jm._comm.last_message
     #     self.assertEqual(msg['data']['msg_type'], "job_status")
     #     # self.assertTrue(self.validate_status_message(msg['data']['content']))
-    #     self.jm.delete_job(new_job.job_id)
     #     self.jm._comm.clear_message_cache()
 
     # Should "fail" based on sent message.

@@ -77,7 +77,7 @@ class JobCommTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.jobs.jobcomm.jobmanager.clients.get', get_mock_client)
     def test_lookup_all_job_states_ok(self):
         req = make_comm_msg("all_status", None, True)
-        states = self.jc.lookup_all_job_states(req)
+        states = self.jc._lookup_all_job_states(req)
         msg = self.jc._comm.last_message
         self.assertEqual(states, msg["data"]["content"])
         self.assertEqual("job_status_all", msg["data"]["msg_type"])
@@ -89,9 +89,9 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_state_direct_ok(self):
         job_id = "5d64935ab215ad4128de94d6"
         req = make_comm_msg("job_state", job_id, True)
-        state = self.jc.lookup_job_state(req)
+        state = self.jc._lookup_job_state(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(state, msg["data"]["content"])
+        self.assertEqual(state, msg["data"]["content"]["state"])
         self.assertEqual("job_status", msg["data"]["msg_type"])
         #TODO test correctness
 
@@ -100,7 +100,7 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("job_state", job_id, True)
 
         with self.assertRaises(ValueError) as e:
-            state = self.jc.lookup_job_state(req)
+            state = self.jc._lookup_job_state(req)
         self.assertIn("Job id required to process job_state request", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual({"job_id": None, "source": "job_state"}, msg["data"]["content"])
@@ -110,7 +110,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id = "nope"
         req = make_comm_msg("job_state", job_id, True)
         with self.assertRaises(ValueError) as e:
-            state = self.jc.lookup_job_state(req)
+            state = self.jc._lookup_job_state(req)
         self.assertIn(f"No job present with id {job_id}", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual({"job_id": job_id, "source": "job_state"}, msg["data"]["content"])
@@ -122,7 +122,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_info_ok(self):
         job_id = "5d64935ab215ad4128de94d6"
         req = make_comm_msg("job_info", job_id, True)
-        job_info = self.jc.lookup_job_info(req)
+        job_info = self.jc._lookup_job_info(req)
         expected = {
             "app_id": "NarrativeTest/test_editor",
             "app_name": "Test Editor",
@@ -136,7 +136,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_info_no_job(self):
         req = make_comm_msg("job_info", None, True)
         with self.assertRaises(ValueError) as e:
-            self.jc.lookup_job_info(req)
+            self.jc._lookup_job_info(req)
         self.assertIn("Job id required to process job_info request", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual({"job_id": None, "source": "job_info"}, msg["data"]["content"])
@@ -146,7 +146,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id = "nope"
         req = make_comm_msg("job_info", job_id, True)
         with self.assertRaises(ValueError) as e:
-            self.jc.lookup_job_info(req)
+            self.jc._lookup_job_info(req)
         self.assertIn(f"No job present with id {job_id}", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual({"job_id": job_id, "source": "job_info"}, msg["data"]["content"])
@@ -159,14 +159,14 @@ class JobCommTestCase(unittest.TestCase):
     def test_cancel_job_ok(self):
         job_id = "5d64935ab215ad4128de94d6"
         req = make_comm_msg("cancel_job", job_id, True)
-        self.jc.cancel_job(req)
+        self.jc._cancel_job(req)
         msg = self.jc._comm.last_message
         self.assertEqual("job_status", msg["data"]["msg_type"])
 
     def test_cancel_job_no_job(self):
         req = make_comm_msg("cancel_job", None, True)
         with self.assertRaises(ValueError) as e:
-            self.jc.cancel_job(req)
+            self.jc._cancel_job(req)
         self.assertIn("Job id required to process cancel_job request", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual({"job_id": None, "source": "cancel_job"}, msg["data"]["content"])
@@ -176,7 +176,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id = "nope"
         req = make_comm_msg("cancel_job", job_id, True)
         with self.assertRaises(ValueError) as e:
-            self.jc.cancel_job(req)
+            self.jc._cancel_job(req)
         self.assertIn(f"No job present with id {job_id}", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual({"job_id": job_id, "source": "cancel_job"}, msg["data"]["content"])
@@ -187,7 +187,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id = "5d64935ab215ad4128de94d6"
         req = make_comm_msg("cancel_job", job_id, True)
         with self.assertRaises(NarrativeException) as e:
-            self.jc.cancel_job(req)
+            self.jc._cancel_job(req)
         self.assertIn(f"Can't cancel job", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual("job_comm_error", msg["data"]["msg_type"])
@@ -217,7 +217,7 @@ class JobCommTestCase(unittest.TestCase):
             }
             req_type = "job_logs_latest" if c[2] else "job_logs"
             req = make_comm_msg(req_type, job_id, True, content)
-            self.jc.get_job_logs(req)
+            self.jc._get_job_logs(req)
             msg = self.jc._comm.last_message
             self.assertEqual("job_logs", msg["data"]["msg_type"])
             self.assertEqual(lines_available, msg["data"]["content"]["max_lines"])
@@ -239,7 +239,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id = "5d64935ab215ad4128de94d6"
         req = make_comm_msg("job_logs", job_id, True)
         with self.assertRaises(NarrativeException) as e:
-            self.jc.get_job_logs(req)
+            self.jc._get_job_logs(req)
         self.assertIn(f"Can't get job logs", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual("job_comm_error", msg["data"]["msg_type"])
@@ -249,7 +249,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id = None
         req = make_comm_msg("job_logs", job_id, True)
         with self.assertRaises(ValueError) as e:
-            self.jc.get_job_logs(req)
+            self.jc._get_job_logs(req)
         self.assertIn("Job id required to process job_logs request", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual({"job_id": job_id, "source": "job_logs"}, msg["data"]["content"])
@@ -259,7 +259,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id = "bad_job"
         req = make_comm_msg("job_logs", job_id, True)
         with self.assertRaises(ValueError) as e:
-            self.jc.get_job_logs(req)
+            self.jc._get_job_logs(req)
         self.assertIn(f"No job present with id {job_id}", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual({"job_id": job_id, "source": "job_logs"}, msg["data"]["content"])

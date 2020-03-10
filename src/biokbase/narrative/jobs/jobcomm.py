@@ -2,6 +2,7 @@ import threading
 from ipykernel.comm import Comm
 import biokbase.narrative.jobs.jobmanager as jobmanager
 from biokbase.narrative.exception_util import NarrativeException
+from biokbase.narrative.common import kblogging
 
 
 class JobRequest:
@@ -43,6 +44,7 @@ class JobRequest:
         self.job_id = self.rq_data.get("job_id")
 
 
+
 class JobComm:
     """
     The main JobComm channel. This is the kernel-side of the connection, and routes
@@ -73,6 +75,7 @@ class JobComm:
     _msg_map = None
     _running_lookup_loop = False
     _lookup_timer = None
+    _log = kblogging.get_logger(__name__)
 
     def __new__(cls):
         if JobComm.__instance is None:
@@ -87,16 +90,16 @@ class JobComm:
             self._jm = jobmanager.JobManager()
         if self._msg_map is None:
             self._msg_map = {
-               "all_status": self.lookup_all_job_states,
-               "job_status": self.lookup_job_state,
-               "job_info": self.lookup_job_info,
+               "all_status": self._lookup_all_job_states,
+               "job_status": self._lookup_job_state,
+               "job_info": self._lookup_job_info,
                "start_update_loop": self.start_job_status_loop,
                "stop_update_loop": self.stop_job_status_loop,
-               "start_job_update": self.modify_job_update,
-               "stop_job_update": self.modify_job_update,
-               "cancel_job": self.cancel_job,
-               "job_logs": self.get_job_logs,
-               "job_logs_latest": self.get_job_logs
+               "start_job_update": self._modify_job_update,
+               "stop_job_update": self._modify_job_update,
+               "cancel_job": self._cancel_job,
+               "job_logs": self._get_job_logs,
+               "job_logs_latest": self._get_job_logs
             }
 
     def _verify_job_id(self, req: JobRequest) -> None:
@@ -147,14 +150,14 @@ class JobComm:
         Run a loop that will look up job info. After running, this spawns a Timer thread on a 10
         second loop to run itself again.
         """
-        job_statuses = self.lookup_all_job_states(None)
+        job_statuses = self._lookup_all_job_states(None)
         if len(job_statuses) == 0 or not self._running_lookup_loop:
             self.stop_job_status_loop()
         else:
             self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
             self._lookup_timer.start()
 
-    def lookup_all_job_states(self, req: JobRequest) -> dict:
+    def _lookup_all_job_states(self, req: JobRequest) -> dict:
         """
         Fetches status of all jobs in the current workspace and sends them to the front end.
         req can be None, as it's not used.
@@ -163,7 +166,7 @@ class JobComm:
         self.send_comm_message("job_status_all", job_statuses)
         return job_statuses
 
-    def lookup_job_info(self, req: JobRequest) -> dict:
+    def _lookup_job_info(self, req: JobRequest) -> dict:
         """
         Looks up job info. This is just some high-level generic information about the running
         job, including the app id, name, and job parameters.
@@ -183,21 +186,40 @@ class JobComm:
             self.send_error_message("job_does_not_exist", req)
             raise
 
-    def lookup_job_state(self, req: JobRequest) -> dict:
+    def lookup_job_state(self, job_id: str) -> dict:
+        """
+        This differs from the _lookup_job_state (underscored version) in that
+        it just takes a job_id string, not a JobRequest. It, however, functions the
+        same, by creating a JobRequest and forwarding it to the request version.
+
+        Therefore, it sends the job message to the browser over the right channel,
+        and also returns the job state (or raises a ValueError if not found).
+        """
+        req = JobRequest({
+            "content": {
+                "data": {
+                    "request_type": "job_status",
+                    "job_id": job_id
+                }
+            }
+        })
+        return self._lookup_job_state(req)
+
+    def _lookup_job_state(self, req: JobRequest) -> dict:
         """
         Look up job state.
         """
         self._verify_job_id(req)
         try:
             job_state = self._jm.get_job_state(req.job_id)
-            self.send_comm_message("job_status", job_state)
+            self.send_comm_message("job_status", {"state": job_state})
             return job_state
         except ValueError as e:
             # kblogging.log_event(self._log, "lookup_job_state_error", {"err": str(e)})
             self.send_error_message("job_does_not_exist", req)
             raise
 
-    def modify_job_update(self, req: JobRequest) -> None:
+    def _modify_job_update(self, req: JobRequest) -> None:
         """
         Modifies how many things want to listen to a job update.
         If this is a request to start a job update, then this starts the update loop that
@@ -215,7 +237,7 @@ class JobComm:
         if update_adjust == 1:
             self.start_job_status_loop()
 
-    def cancel_job(self, req: JobRequest) -> None:
+    def _cancel_job(self, req: JobRequest) -> None:
         """
         This cancels a running job. If the job has already been canceled, then nothing is
         done.
@@ -238,9 +260,9 @@ class JobComm:
                 "name": getattr(e, "name", type(e).__name__)
             })
             raise
-        self.lookup_job_state(req)
+        self._lookup_job_state(req)
 
-    def get_job_logs(self, req: JobRequest) -> None:
+    def _get_job_logs(self, req: JobRequest) -> None:
         """
         This returns a set of job logs based on the info in the request.
         """
@@ -299,6 +321,7 @@ class JobComm:
             id namespace specified by the app spec).
         """
         request = JobRequest(msg)
+        kblogging.log_event(self._log, "handle_comm_message", {"msg": request.request})
         if request.request in self._msg_map:
             self._msg_map[request.request](request)
         else:

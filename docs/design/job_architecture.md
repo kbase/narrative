@@ -16,29 +16,31 @@ This is mostly linear.
 4. Get response from `NarrativeJobService.run_job`
   * Combine with info from step 3, create `biokbase.narrative.jobs.job.Job` object.
   * submit new `Job` to `biokbase.narrative.jobs.jobmanager.JobManager` singleton object.
-5. `JobManager` fetches job status and pushes it to browser.
+5. `AppManager` tells the `JobComm` channel to (1) fetch the new job status and push it to the browser, and (2) start the job lookup loop for the newly created job. (calls `AppManager.register_new_job`)
 
 JobManager initialization and startup.
 1. User starts kernel (opens a Narrative, or clicks Kernel -> Restart)
-2. `kbaseNarrativeJobPanel` (invisible front end widget) executes kernel call to `JobManager().initialize_jobs()`
+2. `jobCommsChannel` (front end widget) executes the following kernel call: `JobManager().initialize_jobs(); JobComm().start_update_loop`
 3. `JobManager` does:
   * Get current user and workspace id.
-  * `UserAndJobState.list_jobs2` with the workspace id - gets the list of jobs in that workspace
-  * `NarrativeJobService.check_jobs` with the list of job ids, and request for job params, esp. metadata.
-  * Call `_lookup_all_job_status` to push status of all jobs forward to front end.
-  * (optional) Call `_lookup_job_status_loop` to start a lookup thread (uses a Python `Timer` to lookup job status)
+  * `ExecutionEngine2.check_workspace_jobs` with the workspace id - gets the set of jobs in that workspace, and builds them into `Job` objects.
+4. `JobComm` does:
+  * Starts the lookup loop thread.
+  * On the first pass, this looks up status of all jobs and pushes them forward to the browser.
+  * If any jobs are in a terminal state, they'll stopped being looked up automatically. If all jobs are terminated, then the loop thread itself stops.
 
-JobManager status lookup loop.
-1. Calls either `_lookup_all_job_status` or `_lookup_job_status_loop` (which itself calls the former)
-2. Build a list of job ids to lookup - those that are flagged for lookup.
-3. Calls `_construct_job_status_set`
-  * Calls `_get_all_job_states`
+JobComm status lookup loop.
+1. Calls `JobComm._lookup_job_status_loop`, which in turn calls `JobComm.lookup_all_job_states`. This gets forwarded to `JobManager.lookup_all_job_states`, and the results pushed to the browser as a comm channel message.
+2. Internal to `JobManager.lookup_all_job_states`, the following steps happen:
+  * Build a list of job ids to lookup - those that are flagged for lookup.
+  * Call `_construct_job_status_set`
+  * Call `_get_all_job_states`
     * Gets list of all job ids the JM is tracking.
     * Retrieves some states from cache (cache is used for finalized jobs).
     * Calls `NarrativeJobService.check_jobs` on everything that's not finalized.
     * Injects `run_id` and `cell_id` into states
     * Returns dict of states.
-4. Sends result to browser over comm channel
+3. Sends result to browser over comm channel
 
 
 ## Data Structures
@@ -59,10 +61,8 @@ In kernel, as retrieved from NJS.check_job
     "job_id": "5cd209dcaa5a4d298c5dc1c2", 
     "job_state": "queued", 
     "creation_time": 1557268961909, 
-    "ujs_url": "https://ci.kbase.us/services/userandjobstate/", 
     "finished": 0, 
     "sub_jobs": [], 
-    "awe_job_state": "queued"
 }
 ```
 
@@ -77,7 +77,6 @@ As sent to browser, includes cell info and run info
         error (if present): dict of error info,
         cell_id: string/None,
         run_id: string/None,
-        awe_job_id: string/None,
         canceled: 0/1
         creation_time: epoch second
         exec_start_time: epoch/none,
@@ -93,7 +92,6 @@ As sent to browser, includes cell info and run info
             complete (0/1),
             error (0/1)
         ],
-        ujs_url: string
     }
 }
 ```
@@ -156,3 +154,84 @@ User deletes job - either in App Cell or Job Panel
   JobManager tries to delete the job:
     sends job_deleted if successful
     sends job_err if not
+
+
+Messages
+to kernel:
+* all_status
+* job_status
+* start_update_loop
+* stop_update_loop
+* start_job_update
+* stop_job_update
+* job_info
+
+to browser:
+* job_does_not_exist - 
+{
+  job_id: string,
+  source: string
+}
+* job_comm_error 
+{
+
+}
+* job_status_all
+{
+  <job_id>: {
+    state: {
+
+    },
+    spec: {
+
+    },
+    widget_info: {
+
+    },
+    owner: string
+  }
+}
+* job_info
+{
+
+}
+* job_status
+{
+  state: {
+    job_id: string,
+
+  },
+  spec: {
+
+  },
+  widget_info: {
+
+  }
+}
+* job_logs
+{
+  job_id: string,
+  latest: boolean,
+  first: int,
+  max_lines: int,
+  lines: [{
+    line: str,
+    is_error: 0 or 1
+  }, ...]
+}
+
+
+* new_job --> save_checkpoint
+* run_status
+{
+
+}
+* job_err
+{
+
+}
+* job_canceled
+* job_init_err
+* job_init_partial_err --> no-op (can't have partial errors anymore)
+* start --> no-op
+* result

@@ -45,53 +45,77 @@ JobComm status lookup loop.
 
 ## Data Structures
 ### Job state
-In kernel, as retrieved from NJS.check_job
+In kernel, as retrieved from EE2.check_job
 (described by example)
 ```json
 {
-    "status": [
-        "2019-05-07T22:42:41+0000", 
-        "started", 
-        "queued", 
-        null, 
-        null, 
-        0, 
-        0
-    ], 
-    "job_id": "5cd209dcaa5a4d298c5dc1c2", 
-    "job_state": "queued", 
-    "creation_time": 1557268961909, 
-    "finished": 0, 
-    "sub_jobs": [], 
+    "user": "wjriehl",
+    "authstrat": "kbaseworkspace",
+    "wsid": 46214,
+    "status": "queued",
+    "updated": 1583863267977,
+    "queued": 1583863267977,
+    "scheduler_type": "condor",
+    "scheduler_id": "14221",
+    "job_input": {
+        "wsid": 46214,
+        "method": "simpleapp.simple_add",
+        "params": [
+            {
+                "workspace_name": "wjriehl:narrative_1580237536246",
+                "base_number": 5
+            }
+        ],
+        "service_ver": "f5a7586776c31b05ae3cc6923c2d46c25990d20a",
+        "app_id": "simpleapp/example_method",
+        "source_ws_objects": [],
+        "parent_job_id": "None",
+        "requirements": {
+            "clientgroup": "njs",
+            "cpu": 4,
+            "memory": 23000,
+            "disk": 100
+        },
+        "narrative_cell_info": {
+            "run_id": "d7558838-a712-42d3-9511-c4b95f3651fe",
+            "token_id": "e80f4f81-b7bb-4483-a92b-b1e0200f8a20",
+            "tag": "beta",
+            "cell_id": "c04c19bd-20ce-41be-b793-50f84de8f60b"
+        }
+    },
+    "job_id": "5e67d5e395d1f00a7cf4ea21",
+    "created": 1583863267000
 }
 ```
 
 As sent to browser, includes cell info and run info
 ```
 {
-    owner: string (username),
+    owner: string (username, who started the job),
     spec: app spec (optional)
     widget_info: (if not finished, None, else...) job.get_viewer_params result
     state: {
-        job_state: string,
-        error (if present): dict of error info,
-        cell_id: string/None,
-        run_id: string/None,
-        canceled: 0/1
-        creation_time: epoch second
-        exec_start_time: epoch/none,
-        finish_time: epoch/none,
-        finished: 0/1,
         job_id: string,
-        status: (from UJS) [
-            timestamp(last_update, string),
-            stage (string),
-            status (string),
-            progress (string/None),
-            est_complete (string/None),
-            complete (0/1),
-            error (0/1)
-        ],
+        status: string,
+        created: epoch ms,
+        updated: epoch ms,
+        queued: optional - epoch ms,
+        finished: optional - epoc ms,
+        terminated_code: optional - int,
+        app_id: string,
+        tag: string (release, beta, dev),
+        service_version: string 
+        parent_job_id: optional - string or null,
+        run_id: string,
+        cell_id: string,
+        errormsg: optional - string,
+        error (optional): {
+          code: int,
+          name: string,
+          message: string (should be for the user to read),
+          error: string, (likely a stacktrace)
+        },
+        error_code: optional - int
     }
 }
 ```
@@ -156,18 +180,82 @@ User deletes job - either in App Cell or Job Panel
     sends job_err if not
 
 
-Messages
-to kernel:
-* all_status
-* job_status
-* start_update_loop
-* stop_update_loop
-* start_job_update
-* stop_job_update
-* job_info
+## Message formats
+Messages sent to the kernel from the front end are mostly pretty simple. They all have a request string, and most involve a job id and that's it. The job logs request also have which line to start with and how many lines to get back.
+
+Most of these also trigger a response, though not all.
+
+The actual message that the JobComm sees in the kernel has this format:
+```
+{
+  "msg_id": "some random string",
+  "content": {
+    "data": {
+      "request_type": "a string - see below",
+      "job_id": "not required, but present in most"
+      ... other keys, depending on message ...
+    }
+  }
+}
+```
+The point here is that all messages have a `request_type`, most are accompanied by a `job_id`, and a few have some extra info. But they're in a flat structure that's formatted by the Jupyter kernel.
+
+
+### Messages sent to the kernel
+These are organized by the `request_type` field, followed by the expected response message. Additional parameters and their formats are given as a list below the request name. E.g. the `job_status` message will be sent as:
+```json
+{
+  "msg_id": "some string",
+  "content": {
+    "data": {
+      "request_type": "job_status",
+      "job_id": "a_job_id",
+      "parent_job_id": "another_job_id"
+    }
+  }
+}
+```
+
+`all_status` -- responds with `job_status_all`  
+
+`job_status` -- responds with job_status
+* `job_id` - string,
+* `parent_job_id` - optional string
+
+`start_update_loop` -- no specific response, but generally with `job_status_all`  
+`stop_update_loop` -- no response  
+`start_job_update` -- no specific response, but generally with `job_status`
+* `job_id` - string
+* `parent_job_id` - optional string
+
+`stop_job_update` -- no response
+* `job_id` - string
+* `parent_job_id` - optional string
+
+`job_info` -- responds with `job_info`
+* `job_id` - string
+* `parent_job_id` - optional string
+
+`job_logs` -- responds with `job_logs`
+* `job_id` - string
+* `parent_job_id` - optional string
+* `first_line` - int >= 0,
+* `num_lines` - int > 0
+
+`job_logs_latest` -- responds with `job_logs`
+* `job_id` - string
+* `parent_job_id` - optional string
+* `num_lines` - int > 0
+
+
+### Messages sent to the browser:
+
 
 to browser:
-* job_does_not_exist - 
+
+In the error 
+
+* job_does_not_exist - this is an error message triggered when trying to get info/state/logs on a job that either doesn't exist in EE2 or that the JobManager doesn't have associated with the running narrative.
 {
   job_id: string,
   source: string
@@ -199,7 +287,21 @@ to browser:
 {
   state: {
     job_id: string,
-
+    user: string,
+    authstrat: string,
+    wsid: int,
+    status: string,
+    updated: int,
+    queued: int,
+    running: int,
+    finished: int,
+    scheduler_type: string,
+    scheduler_id: string,
+    job_input: object,
+    job_output: object,
+    created: int,
+    cell_id: string,
+    run_id: string
   },
   spec: {
 

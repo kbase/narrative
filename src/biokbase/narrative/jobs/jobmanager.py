@@ -146,7 +146,6 @@ class JobManager(object):
 
             if not len(status_set):
                 return "No running jobs!"
-            print(status_set)
             status_set = sorted(status_set, key=lambda s: s.get('created', 0))
             for status in status_set:
                 status['creation_time'] = datetime.fromtimestamp(
@@ -200,7 +199,7 @@ class JobManager(object):
             kblogging.log_event(self._log, "list_jobs.error", {'err': str(e)})
             raise
 
-    def _construct_job_status(self, job, state):
+    def _construct_job_status(self, job: Job, state: dict) -> dict:
         """
         Creates a Job status dictionary with structure:
         {

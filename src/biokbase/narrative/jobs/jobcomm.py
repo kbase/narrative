@@ -60,6 +60,19 @@ class JobComm:
     It also maintains the lookup loop thread. This is a threading.Timer that, after
     some interval, will lookup the status of all running jobs. If there are no jobs to
     look up, this cancels itself.
+
+    Allowed messages:
+    * all_status - return job state for all jobs in this Narrative.
+    * job_status - return the job state for a single job (requires a job_id)
+    * job_info - return basic job info for a single job (requires a job_id)
+    * start_update_loop - starts a looping thread that runs returns all job info
+        for running jobs
+    * stop_update_loop - stops the automatic update loop
+    * start_job_update - tells the update loop to include a job when updating (requires a job_id)
+    * stop_job_update - has the update loop not include a job when updating (requires a job_id)
+    * cancel_job - cancels a running job, if it hasn't otherwise terminated (requires a job_id)
+    * job_logs - sends job logs back over the comm channel (requires a job id and first line)
+    * job_logs_latest - sends the most recent job logs over the comm channel (requires a job_id)
     """
 
     # An instance of this class. It's meant to be a singleton, so this just gets created and
@@ -106,26 +119,6 @@ class JobComm:
         if req.job_id is None:
             self.send_error_message("job_does_not_exist", req)
             raise ValueError(f"Job id required to process {req.request} request")
-
-    def send_comm_message(self, msg_type: str, content: dict) -> None:
-        """
-        Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
-        and content. These just get encoded into the message itself.
-        """
-        msg = {
-            "msg_type": msg_type,
-            "content": content
-        }
-        self._comm.send(msg)
-
-    def send_error_message(self, err_type: str, req: JobRequest, content: dict = None) -> None:
-        error_content = {
-            "job_id": req.job_id,
-            "source": req.request
-        }
-        if content is not None:
-            error_content.update(content)
-        self.send_comm_message(err_type, error_content)
 
     def start_job_status_loop(self, *args, **kwargs) -> None:
         """
@@ -295,30 +288,13 @@ class JobComm:
     def _handle_comm_message(self, msg: dict) -> None:
         """
         Handles comm messages that come in from the other end of the KBaseJobs channel.
-        All messages (of any use) should have a 'request_type' property.
-        Possible types:
-        * all_status
-            refresh all jobs that are flagged to be looked up. Will send a
-            message back with all lookup status.
-        * job_status
-            refresh the single job given in the 'job_id' field. Sends a message
-            back with that single job's status, or an error message.
-        * stop_update_loop
-            stop the running refresh loop, if there's one going (might be
-            one more pass, depending on the thread state)
-        * start_update_loop
-            reinitialize the refresh loop.
-        * stop_job_update
-            flag the given job id (should be an accompanying 'job_id' field) that the front
-            end knows it's in a terminal state and should no longer have its status looked
-            up in the refresh cycle.
-        * start_job_update
-            remove the flag that gets set by stop_job_update (needs an accompanying 'job_id'
-            field)
-        * job_info
-            from the given 'job_id' field, returns some basic info about the job, including the app
-            id, version, app name, and key-value pairs for inputs and parameters (in the parameters
-            id namespace specified by the app spec).
+        Messages get translated into a JobRequest object, which is then passed to the
+        right handler, based on the request.
+
+        A handler dictionary is created on JobComm creation.
+
+        Any unknown request is returned over the channel as a job_comm_error, and a
+        ValueError is raised.
         """
         request = JobRequest(msg)
         kblogging.log_event(self._log, "handle_comm_message", {"msg": request.request})
@@ -327,3 +303,24 @@ class JobComm:
         else:
             self.send_comm_message("job_comm_error", {"message": "Unknown message", "request_type": request.request})
             raise ValueError(f"Unknown KBaseJobs message '{request.request}'")
+
+    def send_comm_message(self, msg_type: str, content: dict) -> None:
+        """
+        Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
+        and content. These just get encoded into the message itself.
+        """
+        msg = {
+            "msg_type": msg_type,
+            "content": content
+        }
+        self._comm.send(msg)
+
+    def send_error_message(self, err_type: str, req: JobRequest, content: dict = None) -> None:
+        error_content = {
+            "job_id": req.job_id,
+            "source": req.request
+        }
+        if content is not None:
+            error_content.update(content)
+        self.send_comm_message(err_type, error_content)
+

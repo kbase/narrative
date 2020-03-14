@@ -141,9 +141,9 @@ class Job(object):
             state = clients.get('execution_engine2').check_job({'job_id': self.job_id})
             state['job_input'] = state.get('job_input', {})
             state['job_output'] = state.get('job_output', {})
-            state[u'cell_id'] = self.cell_id
-            state[u'run_id'] = self.run_id
-            state[u'token_id'] = self.token_id
+            state['cell_id'] = self.cell_id
+            state['run_id'] = self.run_id
+            state['token_id'] = self.token_id
             self._last_state = state
             return dict(state)
         except Exception as e:

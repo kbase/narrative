@@ -205,7 +205,7 @@ class JobComm:
         self._verify_job_id(req)
         try:
             job_state = self._jm.get_job_state(req.job_id)
-            self.send_comm_message("job_status", {"state": job_state})
+            self.send_comm_message("job_status", job_state)
             return job_state
         except ValueError as e:
             # kblogging.log_event(self._log, "lookup_job_state_error", {"err": str(e)})

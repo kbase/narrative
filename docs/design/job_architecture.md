@@ -102,9 +102,7 @@ As sent to browser, includes cell info and run info
         queued: optional - epoch ms,
         finished: optional - epoc ms,
         terminated_code: optional - int,
-        app_id: string,
         tag: string (release, beta, dev),
-        service_version: string 
         parent_job_id: optional - string or null,
         run_id: string,
         cell_id: string,

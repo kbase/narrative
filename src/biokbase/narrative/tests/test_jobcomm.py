@@ -6,7 +6,10 @@ import biokbase.narrative.jobs.jobcomm
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.jobcomm import JobRequest
 from biokbase.narrative.exception_util import NarrativeException
-from .util import TestConfig
+from .util import (
+    TestConfig,
+    validate_job_state
+)
 from .narrative_mock.mockcomm import MockComm
 from .narrative_mock.mockclients import (
     get_mock_client,
@@ -81,6 +84,10 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(states, msg["data"]["content"])
         self.assertEqual("job_status_all", msg["data"]["msg_type"])
+        self.assertIsInstance(states, dict)
+        for job_id in states:
+            self.assertIsInstance(job_id, str)
+            validate_job_state(states[job_id])
 
     # -----------------------
     # Lookup single job state
@@ -91,9 +98,9 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("job_state", job_id, True)
         state = self.jc._lookup_job_state(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(state, msg["data"]["content"]["state"])
+        self.assertEqual(state, msg["data"]["content"])
         self.assertEqual("job_status", msg["data"]["msg_type"])
-        #TODO test correctness
+        validate_job_state(state)
 
     def test_lookup_job_state_no_job(self):
         job_id = None
@@ -292,6 +299,12 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
         self.assertEqual(msg["data"]["msg_type"], "job_status_all")
+        states = msg["data"]["content"]
+        self.assertIsInstance(states, dict)
+        for job_id in states:
+            print("ALL JOB STATE TESTING")
+            print(states[job_id])
+            validate_job_state(states[job_id])
 
     @mock.patch('biokbase.narrative.jobs.jobcomm.jobmanager.clients.get', get_mock_client)
     def test_handle_job_status_msg(self):
@@ -300,6 +313,7 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
         self.assertEqual(msg["data"]["msg_type"], "job_status")
+        validate_job_state(msg["data"]["content"])
 
     def test_handle_job_info_msg(self):
         job_id = "5d64935ab215ad4128de94d6"

@@ -136,13 +136,6 @@ class JobManager(object):
         """
         try:
             all_statuses = self.lookup_all_job_states(ignore_refresh_flag=True)
-            # for job_id in self._running_jobs:
-            #     job = self._running_jobs[job_id]['job']
-            #     job_state = self.get_job_state(job_id)
-            #     job_state['app_id'] = job.app_id
-            #     job_state['owner'] = job.owner
-            #     status_set.append(job_state)
-
             state_list = [s["state"] for s in all_statuses.values()]
 
             if not len(state_list):
@@ -172,7 +165,6 @@ class JobManager(object):
                     delta = datetime.now(timezone.utc) - exec_start_time
                     delta = delta - timedelta(microseconds=delta.microseconds)
                     state['run_time'] = str(delta)
-
 
             tmpl = """
             <table class="table table-bordered table-striped table-condensed">
@@ -233,7 +225,6 @@ class JobManager(object):
             "created": 0,
             "updated": 0
         }
-
 
     def _construct_job_status(self, job: Job, state: dict) -> dict:
         """

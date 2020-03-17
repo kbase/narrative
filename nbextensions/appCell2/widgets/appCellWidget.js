@@ -2196,7 +2196,7 @@ define([
                         var clock;
                         var day = 1000 * 60 * 60 * 24;
                         if (elapsed > day) {
-                            var finish_time = jobState.finisheds;
+                            var finish_time = jobState.finished;
                             clock = span([
                                 ' on ',
                                 format.niceTime(finish_time)

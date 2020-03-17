@@ -326,29 +326,6 @@ define([
                 });
         });
 
-        it('Should send job errors to the bus', (done) => {
-            let jobId = 'foo',
-                msg = {
-                    content: {
-                        job_id: jobId,
-                        message: 'an error happened',
-                        data: {
-                            msg_type: 'job_err',
-                            content: {}
-                        }
-                    }
-                };
-            channelChecker('jobId', jobId, 'job-error', done, {
-                jobId: jobId,
-                message: 'an error happened'
-            });
-            let comm = new JobCommChannel();
-            comm.initCommChannel()
-                .then(() => {
-                    comm.handleCommMessages(msg);
-                });
-        });
-
         it('Should send job_canceled message to the bus', (done) => {
             let jobId = 'foo-canceled',
                 msg = makeCommMsg('job_canceled', {

@@ -3,7 +3,7 @@ The Narrative job manager is based on a data flow that operates between the brow
 
 In general, there's a single point of information flow on the front end and one on the backend. 
 
-## Comm channels
+# Comm channels
 Jupyter provides a "Comm" object that allows for custom messaging between the frontend and the kernel ([details and documentation here](https://jupyter-notebook.readthedocs.io/en/stable/comms.html)). This provides an interface for the frontend to directly request information from the kernel, and to listen to asynchronous responses. On the kernel-side, it allows one or more modules to register message handlers to process those requests out of the band of the usual kernel invocation. These are used to implement the Jupyter Notebook's ipywidgets, for example.
 
 The Narrative Interface uses one of these channels to manage job information. These are funneled through an interface on the frontend side and a matching one in the kernel. 
@@ -13,35 +13,42 @@ On the frontend, there's a `jobCommChannel.js` module that uses the MiniBus syst
 
 This section is broken into two parts - kernel requests and kernel responses. Both of these are from the perspective of the frontend Javascript stack, using an AMD module and the Runtime object. The request parameters and examples are given first, then the responses below.
 
-# Bus requests
+## Bus requests
 These messages are sent to the `JobCommChannel` on the front end, to get processed into messages sent to the kernel.
-  * `ping-comm-channel` - sees that the comm channel is open through the websocket
-  * `request-job-status` - gets the status for a job, one time
-    * `jobId` - a string, the job id
-    * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
-  * `request-job-update` - request the status for a job, but start an update cycle so that it's continually requested.
-    * `jobId` - a string, the job id
-    * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
-  * `request-job-completion` - signal that the front end doesn't need any more updates for that job, so stop sending them for each loop cycle. Doesn't actually end the job, only requests for updates.
-    * `jobId` - a string, the job id
-    * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
-  * `request-job-info` - request information about the job, specifically app id, spec, input parameters and (if finished) outputs
-    * `jobId` - a string, the job id
-    * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
-  * `request-job-cancellation` - request that the server cancel the running job.
-    * `jobId` - a string, the job id
-    * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
-  * `request-job-log` - request the job logs starting at some given line.
-    * `jobId` - a string, the job id
-    * `options` - an object, with attributes:
-      * `first_line` - the first line (0-indexed) to request
-      * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
-  * `request-latest-job-log` - request the latest several job log lines
-    * `jobId` - a string, the job id
-    * `options` - an object, with attributes:
-      * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
+`ping-comm-channel` - sees that the comm channel is open through the websocket
 
-# Usage Example
+`request-job-status` - gets the status for a job, one time
+  * `jobId` - a string, the job id
+  * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+
+`request-job-update` - request the status for a job, but start an update cycle so that it's continually requested.
+  * `jobId` - a string, the job id
+  * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+
+`request-job-completion` - signal that the front end doesn't need any more updates for that job, so stop sending them for each loop cycle. Doesn't actually end the job, only requests for updates.
+  * `jobId` - a string, the job id
+  * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+
+`request-job-info` - request information about the job, specifically app id, spec, input parameters and (if finished) outputs
+  * `jobId` - a string, the job id
+  * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+
+`request-job-cancellation` - request that the server cancel the running job.
+  * `jobId` - a string, the job id
+  * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+
+`request-job-log` - request the job logs starting at some given line.
+  * `jobId` - a string, the job id
+  * `options` - an object, with attributes:
+    * `first_line` - the first line (0-indexed) to request
+    * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
+
+`request-latest-job-log` - request the latest several job log lines
+  * `jobId` - a string, the job id
+  * `options` - an object, with attributes:
+    * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
+
+### Usage Example
 The comm channel is used through the main Bus object that's instantiated through the global `Runtime` object. That needs to be included in the `define` statement for all AMD modules. The bus is then used with its `emit` function (you have the bus *emit* a message to its listeners), and any inputs are passed along with it.
 
 Generally, this is used as follows (without much detail. For a readable real example, check out the `jobLogViewer.js` module):
@@ -75,42 +82,53 @@ define(
 );
 ```
 
-# Bus responses
+## Bus responses
 When the kernel sends a message to the front end, the only module set up to listen to them is the `JobCommChannel` as mentioned above. This takes the responses, unpacks them, and turns them into a response message that is passed back over the bus to any frontend Javascript module that listens to them. The message types are described below, along with the content that gets sent, followed by an example of how to make use of them.
-  * `job-status` - contains the current job state
-    * `jobId` - string, the job id
-    * `jobState` - object, describes the job state (see the **Data Structures** section below for the structure)
-    * `outputWidgetInfo` - object, contains the parameters to be sent to an output widget. This will be different for all widgets, depending on the App that invokes them.
-  * `job-deleted` - sent when a job has been deleted, but some information about it has been requested
-    * `jobId` - the id of the deleted job
-    * `via` - a string about why it's been deleted (generally "no_longer_exists")
-  * `job-info` - contains information about the current job
-    * `jobId` - string, the job id
-    * `jobInfo` - object, the job information object (see the **Data Structures** section below)
-  * `run-status` - updates the run status of the job - this is part of the initial flow of starting a job through the AppManager.
-    * TODO
-  * `job-canceled` - sent when a job has been canceled in the kernel, as a response to other messages
-    * `jobId` - string, the job id
-    * `via` - string, generally "job_canceled"
-  * `job-logs` - sent with information about some job logs.
-    * `jobId` - string, the job id
-    * `logs` - the raw message data from the kernel. (see the **Data Structures** section below)
-    * `latest` - if truthy, then these are the latest logs, if falsy, then they don't have to be the latest logs. 
-  * `job-error` - sent in response to an error that happened on job information lookup, or another error that happened while processing some other message to the JobManager.
-    * `jobId` - string, the job id
-    * `message` - string, some message about the error
-  * `job-cancel-error` - a cancel request has thrown an error
-    * `jobId` - string, the job id
-    * `message` - string, a reason for the error
-  * `job-log-deleted` - a log request has thrown an error
-    * `jobId` - string, the job id
-    * `message` - string, a reason for the error
-  * `job-status-error` - a status request as thrown an error
-    * `jobId` - string, the job id
-    * `message` - string, a reason for the error
-  * `job-does-not-exist` - sent in response to a request for information about a job that doesn't exist. Jobs might not exist if (1) they have been previously canceled, or (2) a malformed request was sent.
-    * `jobId` - string, the job id
-    * `source` - string, the source of the message in the kernel (what service, or module, was invoked. Usually "JobManager" or "ExecutionEngine2")
+
+`job-status` - contains the current job state
+  * `jobId` - string, the job id
+  * `jobState` - object, describes the job state (see the **Data Structures** section below for the structure)
+  * `outputWidgetInfo` - object, contains the parameters to be sent to an output widget. This will be different for all widgets, depending on the App that invokes them.
+
+`job-deleted` - sent when a job has been deleted, but some information about it has been requested
+  * `jobId` - the id of the deleted job
+  * `via` - a string about why it's been deleted (generally "no_longer_exists")
+
+`job-info` - contains information about the current job
+  * `jobId` - string, the job id
+  * `jobInfo` - object, the job information object (see the **Data Structures** section below)
+
+`run-status` - updates the run status of the job - this is part of the initial flow of starting a job through the AppManager.
+  * TODO
+
+`job-canceled` - sent when a job has been canceled in the kernel, as a response to other messages
+  * `jobId` - string, the job id
+  * `via` - string, generally "job_canceled"
+
+`job-logs` - sent with information about some job logs.
+  * `jobId` - string, the job id
+  * `logs` - the raw message data from the kernel. (see the **Data Structures** section below)
+  * `latest` - if truthy, then these are the latest logs, if falsy, then they don't have to be the latest logs. 
+
+`job-error` - sent in response to an error that happened on job information lookup, or another error that happened while processing some other message to the JobManager.
+  * `jobId` - string, the job id
+  * `message` - string, some message about the error
+
+`job-cancel-error` - a cancel request has thrown an error
+  * `jobId` - string, the job id
+  * `message` - string, a reason for the error
+
+`job-log-deleted` - a log request has thrown an error
+  * `jobId` - string, the job id
+  * `message` - string, a reason for the error
+
+`job-status-error` - a status request as thrown an error
+  * `jobId` - string, the job id
+  * `message` - string, a reason for the error
+
+`job-does-not-exist` - sent in response to a request for information about a job that doesn't exist. Jobs might not exist if (1) they have been previously canceled, or (2) a malformed request was sent.
+  * `jobId` - string, the job id
+  * `source` - string, the source of the message in the kernel (what service, or module, was invoked. Usually "JobManager" or "ExecutionEngine2")
 
 ### Usage example
 As in the Bus requests section above, the front end response handling is done through the Runtime bus. The bus provides both an `on` and a `listen` function, examples will show how to use both. Generally, the `listen` function is more specific and binds the listener to a specific bus channel. These channels can invoke the jobId, or the cellId, to make sure that only information about specific jobs is listened for.
@@ -154,6 +172,219 @@ define(['common/runtime'],
 ```
 Note that both of these create events that get bound to the DOM, and when the widget is removed, they should be cleaned up. This can be done by calling `bus.removeListener(id)` with the created `listenerId`. If you created a channel bus, then that bus should be used, otherwise the main runtime.bus() object should be used.
 
+## Kernel Comm Channel
+On the kernel side, a complementary comm channel is used. This is set up in the `biokbase.narrative.jobs.jobcomm.JobComm` class. On Narrative load, page reload, or kernel restart, this is initialized to handle any messages sent to the kernel. The structure here is slightly different than the structure used on the front end. Likewise, all the message names are different. They all have a request string, most involve a job id, and that's it. The job logs request also have which line to start with and how many lines to get back.
+
+Note that these are autogenerated by the frontend `JobCommChannel` object, using the `Jupyter.kernel.comm` package.
+
+The actual message that the JobComm sees in the kernel has this format:
+```
+{
+  "msg_id": "some random string",
+  "content": {
+    "data": {
+      "request_type": "a string - see below",
+      "job_id": "not required, but present in most"
+      ... other keys, depending on message ...
+    }
+  }
+}
+```
+The point here is that all messages have a `request_type`, most are accompanied by a `job_id`, and a few have some extra info. But they're in a flat structure that's formatted by the Jupyter kernel.
+
+## Messages sent to the kernel
+These are organized by the `request_type` field, followed by the expected response message. Additional parameters and their formats are given as a list below the request name. E.g. the `job_status` message will be sent as:
+```json
+{
+  "msg_id": "some string",
+  "content": {
+    "data": {
+      "request_type": "job_status",
+      "job_id": "a_job_id",
+      "parent_job_id": "another_job_id"
+    }
+  }
+}
+```
+
+`all_status` - request the status of all currently running jobs, responds with `job_status_all`  
+
+`job_status` - request a single job status, responds with `job_status`
+* `job_id` - string,
+* `parent_job_id` - optional string
+
+`start_update_loop` - request starting the global job status update thread, no specific response, but generally with `job_status_all`  
+
+`stop_update_loop` - request stopping the global job status update thread, no response  
+
+`start_job_update` - request updating a single job during the update thread, no specific response, but generally with `job_status`
+* `job_id` - string
+* `parent_job_id` - optional string
+
+`stop_job_update` - request halting update for a single job during the update thread, no response
+* `job_id` - string
+* `parent_job_id` - optional string
+
+`job_info` - request general information about a job, responds with `job_info`
+* `job_id` - string
+* `parent_job_id` - optional string
+
+`job_logs` - request job log information, responds with `job_logs`
+* `job_id` - string
+* `parent_job_id` - optional string
+* `first_line` - int >= 0,
+* `num_lines` - int > 0
+
+`job_logs_latest` - request the latest set of lines from job logs, responds with `job_logs`
+* `job_id` - string
+* `parent_job_id` - optional string
+* `num_lines` - int > 0
+
+
+## Messages sent from the kernel to the browser
+These are all caught by the `JobCommChannel` on the browser side, then parsed and sent as the bus messages described above. Like other kernel messages, they have a `msg_type` field, and a `content` field containing data meant for the frontend to use. They have a rough structure like this:
+
+```json
+{
+  "data": {
+    "msg_type": "some_message",
+    "content": {
+      "key1": "value1",
+      "key2": "value2"
+    }
+  }
+}
+```
+
+a specific example:
+```json
+{
+  "msg_id": "some_string",
+  "data": {
+    "msg_type": "job_status",
+    "content": {
+      "state": {
+        "status": "running",
+        ... other state keys ...
+      },
+      "spec": {},
+      "widget_info": {}
+    }
+  }
+}
+```
+
+These are described below. The name (`msg_type`) is given, followed by the keys given in the `content` block.
+
+By design, these should only be seen by the `JobCommChannel` instance, then sent into bus messages that get sent on specific channels. That information is also given in each block.
+
+### `job_does_not_exist`
+This is an error message triggered when trying to get info/state/logs on a job that either doesn't exist in EE2 or that the JobManager doesn't have associated with the running narrative.
+
+**content**
+  * `job_id` - a string, the job id
+  * `source` - string, the source of the error
+
+**bus** `job-does-not-exist`
+
+### `job_comm_error`
+A general job comm error, capturing most errors that get thrown by the kernel
+
+**content** (this varies, but usually includes the below)
+  * `request_type` - the original request message that wound up in an error
+  * `job_id` - string, the job id (if present)
+  * `message` - string, an error message
+
+**bus** one of `job-cancel-error`, `job-log-deleted`, `job-status-error`, `job-error`
+
+### `job_status_all`
+The set of all job states for all running jobs, or at least the set that should be updated (those that are complete and not requested by the front end are not included - if a job is sitting in an error or finished state, it doesn't need ot have its app cell updated)
+
+**content** - all of the below are included, but the top-level keys are all job id strings, e.g.:
+```json
+{
+  "job_id_1": { ...contents... },
+  "job_id_2": { ...contents... }
+}
+```
+  * `state` - the job state (see the **Data Structures** section below for details
+  * `widget_info` - the parameters to send to output widgets, only available for a completed job
+  * `owner` - string, username of user who submitted the job
+
+**bus** - a series of `job-status` or `job-deleted` messages
+
+### `job_info`
+Includes information about the running job
+
+**content**
+  * `app_id` - string, the app id (format = `module_name/app_name`)
+  * `app_name` - string, the human-readable app name
+  * `job_id` - string, the job id
+  * `job_params` - the unstructured set of parameters sent to the execution engine
+
+**bus** - `job-info`
+
+### `job_status`
+The current job state. This one is probably most common.
+
+**content**
+  * `state` - see **Data Structures** below for details (it's big and shouldn't be repeated all over this document)
+  * `widget_info` - the parameters to send to output widgets, only available for a completed job
+  * `owner` - string, username of user who submitted the job
+
+**bus** - `job-status`
+
+### `job_logs`
+Includes log statement information for a given job.
+
+**content**
+  * `job_id` - string, the job id
+  * `latest` - boolean, `true` if this is just the latest set of logs
+  * `first` - int, the index of first line included in the set
+  * `max_lines` - int, the total log lines available in the server
+  * `lines` - list of log line objects, each one has the following keys:
+    * `line` - string, the log line
+    * `is_error` - 0 or 1, if 1 then the line is an "error" as reported by the server
+
+**bus** `job-logs`
+
+### `new_job`
+Sent when a new job is launched and serialized. This just triggers a save/checkpoint on the frontend - no other bus message is sent
+
+### `run_status`
+Sent during the job startup process. There are a few of these containing various startup status, including errors (if they happen).
+
+**content**
+All cases:
+  * `event` - string, what's the run status
+  * `event_at` - string, timestamp
+  * `cell_id` - the app cell id (used for routing)
+  * `run_id` - the run id of the app (autogenerated by the cell)
+
+(if error)
+  * `event` - string, "error",
+  * `event_at` - string, timestamp
+  * `error_message` - string, the error
+  * `error_type` - string, the type of Exception that was raised.
+  * `error_stacktrace` - string, a stacktrace
+  * `error_code` - int, an error code
+  * `error_source` - string, the "source" of the error (generally "appmanager")
+
+(if ok)
+  * `job_id` - if the job was launched successfully
+
+**bus** `run-status`
+
+### `result`
+Sent at the end of a `AppManager.run_dynamic_service` call (of which there aren't many). 
+
+**content**
+  * `cell_id` - the app cell id (used for routing)
+  * `run_id` - the run id of the app (autogenerated by the cell)
+  * `event_at` - string, timestamp
+  * `result` - the result of the dynamic service call (some unspecified object)
+
+**bus** `result` - sent to `cell_id` channel
 
 ## Job Management flow on backend (in IPython kernel, biokbase.narrative.jobs package)
 These steps define the process of creating a new app running job.
@@ -198,9 +429,6 @@ These steps take place whenever the user loads a narrative, or when the kernel i
     * Returns dict of states.
 3. Sends result to browser over comm channel
 4. Since this runs in the background on the kernel-side, it removes any need for the browser to constantly poll.
-
-## App cell (and other) job log presentation.
-1. 
 
 ## Data Structures
 ### Job state
@@ -276,221 +504,3 @@ As sent to browser, includes cell info and run info
     }
 }
 ```
-
-
-## Application, execution cycle notes:
-
-User clicks App Panel -> App Cell inserted. Done!
-
-User clicks "Run" on App Cell (or otherwise executes a function with a cell_id stuck to it) ->
-App Cell executes code (should disable the Run button) ->
-Kernel goes through AppManager.run_app steps:
-  sends over comm channel:
-  1. run_status with serialized events:
-    a. validating_app
-    b. validated_app
-    c. launching_job
-    d. launched_job
-  2. job_status
-  3. new_job (empty, triggers a save)
-  4. run_app_error (on NJSW.run_job failure)
-->
-Job Panel catches these and translates messages before sending out over Bus:
-  run_status -> run-status
-  job_status -> job-status
-  new_job -> null
-  run_app_error -> ... nothing? Should get a message.
-
-App Cell catching messages:
-run-status -> updates FSM from launching..... launched Job (with an id in job-status), now listens to jobId channel
-job-status -> updates copy of job state, elapsed time, display of state
-job-status (with terminal status) -> updates job state, expectes no more changes, creates output cell and area
-
-JobManager kernel loop:
-  loops over all jobs, gets state, sends job_status for all
-  sends job_err for individual jobs if 
-    1. job is missing (e.g. JobManager maintains a handle, but job.state() fails because NJS can't find it
-    2. Network error
-  JobPanel translates messages
-
-Job Canceling:
-Permissions!
-  View permissions - no permission to touch jobs
-  Edit permissions - can cancel jobs, start jobs, delete own started job, not delete other's started jobs
-  Admin - can cancel, delete, view, start
-
-User cancels job - either in App Cell Cancel button or Job Panel Cancel button
-  sends cancel-job to JobPanel
-  sends cancel_job to kernel
-  JobManager tries to cancel the job
-    sends job_canceled if successful (or already canceled)
-    sends job_err if not - with sensible reason
-
-User deletes job - either in App Cell or Job Panel
-  sends delete-job to JobPanel
-  sends delete_job to kernel
-  JobManager tries to cancel the job (if not in a completed state):
-    sends job_canceled if successful
-    sends job_err if not
-  JobManager tries to delete the job:
-    sends job_deleted if successful
-    sends job_err if not
-
-
-## Message formats
-Messages sent to the kernel from the front end are mostly pretty simple. They all have a request string, and most involve a job id and that's it. The job logs request also have which line to start with and how many lines to get back.
-
-Most of these also trigger a response, though not all.
-
-The actual message that the JobComm sees in the kernel has this format:
-```
-{
-  "msg_id": "some random string",
-  "content": {
-    "data": {
-      "request_type": "a string - see below",
-      "job_id": "not required, but present in most"
-      ... other keys, depending on message ...
-    }
-  }
-}
-```
-The point here is that all messages have a `request_type`, most are accompanied by a `job_id`, and a few have some extra info. But they're in a flat structure that's formatted by the Jupyter kernel.
-
-
-### Messages sent to the kernel
-These are organized by the `request_type` field, followed by the expected response message. Additional parameters and their formats are given as a list below the request name. E.g. the `job_status` message will be sent as:
-```json
-{
-  "msg_id": "some string",
-  "content": {
-    "data": {
-      "request_type": "job_status",
-      "job_id": "a_job_id",
-      "parent_job_id": "another_job_id"
-    }
-  }
-}
-```
-
-`all_status` -- responds with `job_status_all`  
-
-`job_status` -- responds with job_status
-* `job_id` - string,
-* `parent_job_id` - optional string
-
-`start_update_loop` -- no specific response, but generally with `job_status_all`  
-`stop_update_loop` -- no response  
-`start_job_update` -- no specific response, but generally with `job_status`
-* `job_id` - string
-* `parent_job_id` - optional string
-
-`stop_job_update` -- no response
-* `job_id` - string
-* `parent_job_id` - optional string
-
-`job_info` -- responds with `job_info`
-* `job_id` - string
-* `parent_job_id` - optional string
-
-`job_logs` -- responds with `job_logs`
-* `job_id` - string
-* `parent_job_id` - optional string
-* `first_line` - int >= 0,
-* `num_lines` - int > 0
-
-`job_logs_latest` -- responds with `job_logs`
-* `job_id` - string
-* `parent_job_id` - optional string
-* `num_lines` - int > 0
-
-
-### Messages sent to the browser:
-
-
-to browser:
-
-In the error 
-
-* job_does_not_exist - this is an error message triggered when trying to get info/state/logs on a job that either doesn't exist in EE2 or that the JobManager doesn't have associated with the running narrative.
-{
-  job_id: string,
-  source: string
-}
-* job_comm_error 
-{
-
-}
-* job_status_all
-{
-  <job_id>: {
-    state: {
-
-    },
-    spec: {
-
-    },
-    widget_info: {
-
-    },
-    owner: string
-  }
-}
-* job_info
-{
-
-}
-* job_status
-{
-  state: {
-    job_id: string,
-    user: string,
-    authstrat: string,
-    wsid: int,
-    status: string,
-    updated: int,
-    queued: int,
-    running: int,
-    finished: int,
-    scheduler_type: string,
-    scheduler_id: string,
-    job_input: object,
-    job_output: object,
-    created: int,
-    cell_id: string,
-    run_id: string
-  },
-  spec: {
-
-  },
-  widget_info: {
-
-  }
-}
-* job_logs
-{
-  job_id: string,
-  latest: boolean,
-  first: int,
-  max_lines: int,
-  lines: [{
-    line: str,
-    is_error: 0 or 1
-  }, ...]
-}
-
-
-* new_job --> save_checkpoint
-* run_status
-{
-
-}
-* job_err
-{
-
-}
-* job_canceled
-* job_init_err
-* job_init_partial_err --> no-op (can't have partial errors anymore)
-* start --> no-op
-* result

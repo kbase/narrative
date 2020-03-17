@@ -317,14 +317,6 @@ define([
                 // filtering.
                 this.sendBusMessage(CELL, msgData.cell_id, 'run-status', msgData);
                 break;
-            case 'job_err':
-                this.sendBusMessage(JOB, msg.content.job_id, 'job-error', {
-                    jobId: msg.content.job_id,
-                    message: msg.content.message
-                });
-                console.error('Job Error', msg);
-                break;
-
             case 'job_canceled':
                 var canceledId = msgData.job_id;
                 this.sendBusMessage(JOB, canceledId, 'job-canceled',

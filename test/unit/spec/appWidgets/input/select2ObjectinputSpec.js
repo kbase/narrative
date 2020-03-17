@@ -24,7 +24,7 @@ define([
         ],
         dummyData = [readsItem, readsItem2],
         dummyObjInfo = [objectify(readsItem), objectify(readsItem2)];
-    let runtime = Runtime.make();
+    let runtime;
 
     function objectify(infoArr) {
         let splitType = infoArr[2].split('-');
@@ -90,6 +90,7 @@ define([
             fakeServiceUrl = 'https://ci.kbase.us/services/fake_taxonomy_service';
 
         beforeEach(() => {
+            runtime = Runtime.make();
             if (TestUtil.getAuthToken()) {
                 document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
                 Jupyter.narrative = new Narrative();

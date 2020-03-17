@@ -1,24 +1,180 @@
 # Job Management Architecture
+The Narrative job manager is based on a data flow that operates between the browser, the IPython Kernel behind the Narrative, and the KBase Execution Engine (EE2) behind that. In general, each bit of data flows between those three stops.
+
+In general, there's a single point of information flow on the front end and one on the backend. 
+
+## Comm channels
+Jupyter provides a "Comm" object that allows for custom messaging between the frontend and the kernel ([details and documentation here](https://jupyter-notebook.readthedocs.io/en/stable/comms.html)). This provides an interface for the frontend to directly request information from the kernel, and to listen to asynchronous responses. On the kernel-side, it allows one or more modules to register message handlers to process those requests out of the band of the usual kernel invocation. These are used to implement the Jupyter Notebook's ipywidgets, for example.
+
+The Narrative Interface uses one of these channels to manage job information. These are funneled through an interface on the frontend side and a matching one in the kernel. 
+
+## Frontend Comm Channel
+On the frontend, there's a `jobCommChannel.js` module that uses the MiniBus system to communicate. So, the following happens. Frontend modules use the bus system to send one of the following messages over the main channel, which then get interpreted and crafted into a message that gets passed through a kernel comm object. Most of these take one or more inputs. These are listed below the command, where applicable.
+
+This section is broken into two parts - kernel requests and kernel responses. Both of these are from the perspective of the frontend Javascript stack, using an AMD module and the Runtime object. The request parameters and examples are given first, then the responses below.
+
+# Bus requests
+These messages are sent to the `JobCommChannel` on the front end, to get processed into messages sent to the kernel.
+  * `ping-comm-channel` - sees that the comm channel is open through the websocket
+  * `request-job-status` - gets the status for a job, one time
+    * `jobId` - a string, the job id
+    * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+  * `request-job-update` - request the status for a job, but start an update cycle so that it's continually requested.
+    * `jobId` - a string, the job id
+    * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+  * `request-job-completion` - signal that the front end doesn't need any more updates for that job, so stop sending them for each loop cycle. Doesn't actually end the job, only requests for updates.
+    * `jobId` - a string, the job id
+    * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+  * `request-job-info` - request information about the job, specifically app id, spec, input parameters and (if finished) outputs
+    * `jobId` - a string, the job id
+    * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+  * `request-job-cancellation` - request that the server cancel the running job.
+    * `jobId` - a string, the job id
+    * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+  * `request-job-log` - request the job logs starting at some given line.
+    * `jobId` - a string, the job id
+    * `options` - an object, with attributes:
+      * `first_line` - the first line (0-indexed) to request
+      * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
+  * `request-latest-job-log` - request the latest several job log lines
+    * `jobId` - a string, the job id
+    * `options` - an object, with attributes:
+      * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
+
+# Usage Example
+The comm channel is used through the main Bus object that's instantiated through the global `Runtime` object. That needs to be included in the `define` statement for all AMD modules. The bus is then used with its `emit` function (you have the bus *emit* a message to its listeners), and any inputs are passed along with it.
+
+Generally, this is used as follows (without much detail. For a readable real example, check out the `jobLogViewer.js` module):
+
+```Javascript
+define(
+  ['common/runtime', ... other modules ...],
+  function(Runtime, ...others...) {
+    let runtime = Runtime.make();
+    runtime.bus().emit('some-request', {
+      inputKey: 'value'
+    });
+  }
+);
+```
+
+Or, a more specific usage that requests the first 10 job log lines:
+```Javascript
+define(
+  ['common/runtime'],
+  function(Runtime) {
+    let runtime = Runtime.make();
+    runtime.bus().emit('request-job-log', {
+      jobId: 'some_job_id',
+      options: {
+        first_line: 0,
+        num_lines: 10
+      }
+    });
+  }
+);
+```
+
+# Bus responses
+When the kernel sends a message to the front end, the only module set up to listen to them is the `JobCommChannel` as mentioned above. This takes the responses, unpacks them, and turns them into a response message that is passed back over the bus to any frontend Javascript module that listens to them. The message types are described below, along with the content that gets sent, followed by an example of how to make use of them.
+  * `job-status` - contains the current job state
+    * `jobId` - string, the job id
+    * `jobState` - object, describes the job state (see the **Data Structures** section below for the structure)
+    * `outputWidgetInfo` - object, contains the parameters to be sent to an output widget. This will be different for all widgets, depending on the App that invokes them.
+  * `job-deleted` - sent when a job has been deleted, but some information about it has been requested
+    * `jobId` - the id of the deleted job
+    * `via` - a string about why it's been deleted (generally "no_longer_exists")
+  * `job-info` - contains information about the current job
+    * `jobId` - string, the job id
+    * `jobInfo` - object, the job information object (see the **Data Structures** section below)
+  * `run-status` - updates the run status of the job - this is part of the initial flow of starting a job through the AppManager.
+    * TODO
+  * `job-canceled` - sent when a job has been canceled in the kernel, as a response to other messages
+    * `jobId` - string, the job id
+    * `via` - string, generally "job_canceled"
+  * `job-logs` - sent with information about some job logs.
+    * `jobId` - string, the job id
+    * `logs` - the raw message data from the kernel. (see the **Data Structures** section below)
+    * `latest` - if truthy, then these are the latest logs, if falsy, then they don't have to be the latest logs. 
+  * `job-error` - sent in response to an error that happened on job information lookup, or another error that happened while processing some other message to the JobManager.
+    * `jobId` - string, the job id
+    * `message` - string, some message about the error
+  * `job-cancel-error` - a cancel request has thrown an error
+    * `jobId` - string, the job id
+    * `message` - string, a reason for the error
+  * `job-log-deleted` - a log request has thrown an error
+    * `jobId` - string, the job id
+    * `message` - string, a reason for the error
+  * `job-status-error` - a status request as thrown an error
+    * `jobId` - string, the job id
+    * `message` - string, a reason for the error
+  * `job-does-not-exist` - sent in response to a request for information about a job that doesn't exist. Jobs might not exist if (1) they have been previously canceled, or (2) a malformed request was sent.
+    * `jobId` - string, the job id
+    * `source` - string, the source of the message in the kernel (what service, or module, was invoked. Usually "JobManager" or "ExecutionEngine2")
+
+### Usage example
+As in the Bus requests section above, the front end response handling is done through the Runtime bus. The bus provides both an `on` and a `listen` function, examples will show how to use both. Generally, the `listen` function is more specific and binds the listener to a specific bus channel. These channels can invoke the jobId, or the cellId, to make sure that only information about specific jobs is listened for.
+
+The `listen` function takes an object with three attributes as input - a channel (either the cellId or jobId), a key (with the type of message to listen for), and a handle, which is a function to process the message. This is probably the easiest way to handle messages. A usage would look like this:
+
+```Javascript
+define(['common/runtime'],
+  function(Runtime) {
+    let runtime = Runtime.make();
+    let listenerId = runtime.bus().listen({
+      channel: {
+        jobId: 'some_job_id'
+      },
+      key: {
+        type: 'job-status'
+      },
+      handle: (message) => {
+        ...process the message...
+      }
+    })
+  }
+);
+```
+
+The `on` function requires a constructed channel bus, premade and reusable for a given channel. So you would make a channel bus that would always receive messages for that channel, and instruct it on what to do when a message of a given type arrives. That looks like this:
+```Javascript
+define(['common/runtime'],
+  function(Runtime) {
+    let runtime = Runtime.make();
+    let cellBus = runtime.bus().makeChannelBus({
+      name: {
+        cell: 'some_cell_id'
+      }
+    });
+    let listenerId = cellBus.on('run-status', (message) => {
+      ...process the message...
+    });
+  }
+);
+```
+Note that both of these create events that get bound to the DOM, and when the widget is removed, they should be cleaned up. This can be done by calling `bus.removeListener(id)` with the created `listenerId`. If you created a channel bus, then that bus should be used, otherwise the main runtime.bus() object should be used.
+
 
 ## Job Management flow on backend (in IPython kernel, biokbase.narrative.jobs package)
-This is mostly linear.
+These steps define the process of creating a new app running job.
 1. User clicks "Run" on App Cell in browser.
   * Cell provides app_id, cell_id, run_id, and parameters.
   * Invokes biokbase.narrative.appmanager.AppManager.run_app.
-2. `AppManager.run_app` validation:
+2. `AppManager.run_app` validates the following bits of information before passing them on to EE2:
   * App (based on id, version, and spec).
-  * Parameters.
+  * Parameters (based on the app spec).
 3. `AppManager.run_app` preparation and start:
-  * Convert app params from user-readable to machine-understandable (via spec input_mapping).
+  * Convert app params from user-readable to machine-understandable (via the spec input_mapping).
   * Fetch cell id, run id, workspace id, user token.
-  * Create an agent token on behalf of the user.
+  * Create an agent token on behalf of the user. This effectively makes a new authentication token that has a two-week lifetime, separate from the current login token. For example, if the user's current login token has a remaining lifespan of 1 hour, then the new job will be able to continue long past that.
   * Submit all of the above to `NarrativeJobService.run_job`.
 4. Get response from `NarrativeJobService.run_job`
   * Combine with info from step 3, create `biokbase.narrative.jobs.job.Job` object.
   * submit new `Job` to `biokbase.narrative.jobs.jobmanager.JobManager` singleton object.
 5. `AppManager` tells the `JobComm` channel to (1) fetch the new job status and push it to the browser, and (2) start the job lookup loop for the newly created job. (calls `AppManager.register_new_job`)
 
-JobManager initialization and startup.
+## JobManager initialization and startup.
+These steps take place whenever the user loads a narrative, or when the kernel is restarted. This ensures that the JobManager in the kernel is kept up-to-date on Job status.
 1. User starts kernel (opens a Narrative, or clicks Kernel -> Restart)
 2. `jobCommsChannel` (front end widget) executes the following kernel call: `JobManager().initialize_jobs(); JobComm().start_update_loop`
 3. `JobManager` does:
@@ -29,7 +185,7 @@ JobManager initialization and startup.
   * On the first pass, this looks up status of all jobs and pushes them forward to the browser.
   * If any jobs are in a terminal state, they'll stopped being looked up automatically. If all jobs are terminated, then the loop thread itself stops.
 
-JobComm status lookup loop.
+## JobComm status lookup loop.
 1. Calls `JobComm._lookup_job_status_loop`, which in turn calls `JobComm.lookup_all_job_states`. This gets forwarded to `JobManager.lookup_all_job_states`, and the results pushed to the browser as a comm channel message.
 2. Internal to `JobManager.lookup_all_job_states`, the following steps happen:
   * Build a list of job ids to lookup - those that are flagged for lookup.
@@ -41,7 +197,10 @@ JobComm status lookup loop.
     * Injects `run_id` and `cell_id` into states
     * Returns dict of states.
 3. Sends result to browser over comm channel
+4. Since this runs in the background on the kernel-side, it removes any need for the browser to constantly poll.
 
+## App cell (and other) job log presentation.
+1. 
 
 ## Data Structures
 ### Job state
@@ -100,7 +259,7 @@ As sent to browser, includes cell info and run info
         created: epoch ms,
         updated: epoch ms,
         queued: optional - epoch ms,
-        finished: optional - epoc ms,
+        finished: optional - epoch ms,
         terminated_code: optional - int,
         tag: string (release, beta, dev),
         parent_job_id: optional - string or null,

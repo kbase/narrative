@@ -448,43 +448,6 @@ define([
                 });
         });
 
-        it('Should handle partial init errors', (done) => {
-            let msgCounter = 0,
-                msg = makeCommMsg('job_init_partial_err', {
-                job_errors: {
-                    'id1': {
-                        state: {
-                            'err': 'nope'
-                        }
-                    },
-                    'id2': {
-                        state: {
-                            'err': 'also nope'
-                        }
-                    }
-                }
-            }),
-                comm = new JobCommChannel();
-            ['id1', 'id2'].forEach((jobId) => {
-                channelChecker('jobId', jobId, 'job-status', () => {
-                    msgCounter++;
-                    if (msgCounter === 2) {
-                        done();
-                    }
-                }, {
-                    jobId: jobId,
-                    jobState: msg.content.data.content.job_errors[jobId],
-                    outputWidgetInfo: {}
-                });
-            });
-            spyOn(console, 'warn');
-            comm.initCommChannel()
-                .then(() => {
-                    comm.handleCommMessages(msg);
-                    expect(console.warn).toHaveBeenCalled();
-                });
-        });
-
         it('Should handle job_init_err and job_init_lookup_err', (done) => {
             let count = 0;
             ['job_init_err', 'job_init_lookup_err'].forEach((errType) => {

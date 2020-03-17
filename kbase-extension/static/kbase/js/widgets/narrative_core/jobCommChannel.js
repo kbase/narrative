@@ -356,11 +356,6 @@ define([
                         });
                         break;
                     case 'job_logs':
-                        this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
-                            jobId: jobId,
-                            message: msgData.message
-                        });
-                        break;
                     case 'job_logs_latest':
                         this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
                             jobId: jobId,
@@ -383,21 +378,6 @@ define([
                     }
                 }
                 console.error('Error from job comm:', msg);
-                break;
-
-            case 'job_init_partial_err':
-                const jobErrors = msgData.job_errors;
-                for (jobId in jobErrors) {
-                    if (jobErrors.hasOwnProperty(jobId)) {
-                        this.sendBusMessage(JOB, jobId, 'job-status', {
-                            jobId: jobId,
-                            jobState: jobErrors[jobId],
-                            outputWidgetInfo: {}
-                        });
-                    }
-                }
-                console.warn('Job initialization in kernel resulted in errors!');
-                console.warn(msg);
                 break;
 
             case 'job_init_err':

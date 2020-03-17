@@ -38,13 +38,14 @@ define([
         let bus,
             testConfig,
             required = false,
-            runtime = Runtime.make(),
+            runtime,
             node,
             defaultValue = 'apple',
             fakeServiceUrl = 'https://ci.kbase.us/services/fake_taxonomy_service';
 
 
         beforeEach(() => {
+            runtime = Runtime.make();
             if (TestUtil.getAuthToken()) {
                 document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
                 Jupyter.narrative = new Narrative();

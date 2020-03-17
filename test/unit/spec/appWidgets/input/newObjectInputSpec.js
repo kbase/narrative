@@ -15,7 +15,7 @@ define([
     let bus,
         testConfig,
         required = false,
-        runtime = Runtime.make(),
+        runtime,
         node,
         defaultValue = 'apple';
     const wsObjName = 'SomeObject',
@@ -48,6 +48,7 @@ define([
 
     describe('New Object Input tests', () => {
         beforeEach(() => {
+            runtime = Runtime.make();
             if (TestUtil.getAuthToken()) {
                 document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
                 Jupyter.narrative = new Narrative();
@@ -57,7 +58,7 @@ define([
 
             node = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
-                description: 'select input testing',
+                description: 'select input testing - ' + Math.random().toString(36).substring(2)
             });
             testConfig = buildTestConfig(required, defaultValue, bus);
 

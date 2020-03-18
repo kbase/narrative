@@ -28,7 +28,7 @@ define([
     /*
      * Strip out console commands from text captured from console:
      * http://search.cpan.org/~jlmorel/Win32-Console-ANSI-1.10/lib/Win32/Console/ANSI.pm
-     * 
+     *
      */
     function consoleToText(consoleText) {
         return consoleText.replace(/\[([\s\S]*?)m/g, '');
@@ -95,7 +95,7 @@ define([
     }
 
     /*
-     * For a given job, returns the log lines after "skip" lines, as an Promise 
+     * For a given job, returns the log lines after "skip" lines, as an Promise
      * which will deliver an array of strings.
      */
     function getLogData(jobId, skip) {
@@ -112,9 +112,28 @@ define([
         throw new Error("Method is not supported anymore");
     }
 
+    /**
+     * A jobState is deemed valid if
+     * 1. It's an object (not an array or atomic type)
+     * 2. It has a created key
+     * 3. It has a job_id key
+     * 4. There's others that are necessary, but the top two are sufficient to judge if it's valid
+     *    enough and up to date. This function should be updated as necessary.
+     *
+     * This is intended to be used to make sure that jobStates are of the latest version of the
+     * execution engine.
+     * @param {object} jobState
+     */
+    function isValidJobState(jobState) {
+        if (typeof jobState === 'object' && jobState !== null) {
+            return jobState.hasOwnProperty('created') && jobState.hasOwnProperty('job_id');
+        }
+        return false;
+    }
 
     return {
         getLogData: getLogData,
-        deleteJob: deleteJob
+        deleteJob: deleteJob,
+        isValidJobState: isValidJobState
     };
 });

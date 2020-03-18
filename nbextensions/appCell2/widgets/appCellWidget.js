@@ -23,6 +23,7 @@ define([
     'common/spec',
     'common/semaphore',
     'common/lang',
+    'common/jobs',
     'narrativeConfig',
     'google-code-prettify/prettify',
     './appCellWidget-fsm',
@@ -57,6 +58,7 @@ define([
     Spec,
     Semaphore,
     lang,
+    Jobs,
     Config,
     PR,
     AppStates,
@@ -1782,6 +1784,9 @@ define([
                 }
             }());
             fsm.newState(newFsmState);
+            if (forceRender) {
+                initializeFSM();
+            }
             renderUI();
         }
 
@@ -1861,7 +1866,8 @@ define([
                     var existingState = model.getItem('exec.jobState'),
                         newJobState = message.jobState,
                         outputWidgetInfo = message.outputWidgetInfo,
-                        forceRender = !existingState.created && newJobState.created;
+                        forceRender = !Jobs.isValidJobState(existingState) &&
+                                      Jobs.isValidJobState(newJobState);
                     if (!existingState || !utils2.isEqual(existingState, newJobState)) {
                         model.setItem('exec.jobState', newJobState);
                         if (outputWidgetInfo) {
@@ -2546,6 +2552,18 @@ define([
             return messages;
         }
 
+        /**
+         * Evaluates the state the app is in. It does this by validating the current model, gathers
+         * all validation messages from the parameters, and renders them as needed.
+         *
+         * If there are no errors from the state and we're not definitely in an error case already,
+         * then just build the Python code and set the state so that the params are complete and the
+         * code is built.
+         *
+         * If there are errors, then we clear the Python code from the code area, and set the state to
+         * be incomplete.
+         * @param {boolean} isError
+         */
         function evaluateAppState(isError) {
             validateModel()
                 .then(function(result) {
@@ -2662,7 +2680,7 @@ define([
                      * Or render some intermediate state?
                      */
                     let curState = model.getItem('exec.jobState');
-                    if (curState && !curState.created) {  // use the 'created' key to see if it's an updated jobState
+                    if (curState && !Jobs.isValidJobState(curState)) {  // use the 'created' key to see if it's an updated jobState
                         startListeningForJobMessages(curState.job_id);
                         requestJobStatus(curState.job_id);
                     }

@@ -1731,7 +1731,7 @@ define([
             renderUI();
         }
 
-        function updateFromJobState(jobState) {
+        function updateFromJobState(jobState, forceRender) {
             var newFsmState = (function() {
                 switch (jobState.status) {
                 case 'created':
@@ -1860,7 +1860,8 @@ define([
                 handle: function(message) {
                     var existingState = model.getItem('exec.jobState'),
                         newJobState = message.jobState,
-                        outputWidgetInfo = message.outputWidgetInfo;
+                        outputWidgetInfo = message.outputWidgetInfo,
+                        forceRender = !existingState.created && newJobState.created;
                     if (!existingState || !utils2.isEqual(existingState, newJobState)) {
                         model.setItem('exec.jobState', newJobState);
                         if (outputWidgetInfo) {
@@ -1882,7 +1883,7 @@ define([
 
                     model.setItem('exec.jobStateUpdated', new Date().getTime());
 
-                    updateFromJobState(newJobState);
+                    updateFromJobState(newJobState, forceRender);
                 }
             });
             jobListeners.push(ev);
@@ -2656,7 +2657,18 @@ define([
                         evaluateAppState();
                     }
 
-                    renderUI();
+                    /* Here, check the job state. If it looks outdated, then request an update and a new job state.
+                     * Should also pause rendering until we get it?
+                     * Or render some intermediate state?
+                     */
+                    let curState = model.getItem('exec.jobState');
+                    if (curState && !curState.created) {  // use the 'created' key to see if it's an updated jobState
+                        startListeningForJobMessages(curState.job_id);
+                        requestJobStatus(curState.job_id);
+                    }
+                    else {
+                        renderUI();
+                    }
 
                     // Initial job state listening.
                     switch (fsm.getCurrentState().state.mode) {
@@ -2672,8 +2684,6 @@ define([
                         break;
                     case 'success':
                         break;
-                    // case 'error':
-                            // do nothing for now
                     }
                 })
                 .catch(function(err) {

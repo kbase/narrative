@@ -32,7 +32,9 @@ define([
                 },
                 {
                     foobar: 'baz'
-                }
+                },
+                null,
+                undefined
             ];
             badJsList.forEach(elem => {
                 expect(Jobs.isValidJobState(elem)).toBeFalse();

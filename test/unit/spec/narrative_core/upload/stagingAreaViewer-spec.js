@@ -18,6 +18,7 @@ define ([
     TestUtil
 ) {
     'use strict';
+
     describe('Test the staging area viewer widget', function() {
         let stagingViewer,
             $targetNode = $('<div>'),
@@ -27,7 +28,7 @@ define ([
 
         beforeEach(function() {
             jasmine.Ajax.install();
-            jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/.*/).andReturn({
+            jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/?/).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'text/plain',
@@ -82,7 +83,7 @@ define ([
             expect(stagingViewer).not.toBeNull();
         });
 
-        it('Should render properly with a Globus linked account', () => {
+        it('Should render properly with a Globus linked account', (done) => {
             let $node = $('<div>'),
                 linkedStagingViewer = new StagingAreaViewer($node, {
                     path: startingPath,
@@ -92,9 +93,12 @@ define ([
                         globusLinked: true
                     }
                 });
-            linkedStagingViewer.render();
-            expect($node.html()).toContain('Or upload to this staging area by using');
-            expect($node.html()).toContain('https://app.globus.org/file-manager?destination_id=3aca022a-5e5b-11e6-8309-22000b97daec&amp;destination_path=%2F' + fakeUser);
+            linkedStagingViewer.render()
+                .then(() => {
+                    expect($node.html()).toContain('Or upload to this staging area by using');
+                    expect($node.html()).toContain('https://app.globus.org/file-manager?destination_id=3aca022a-5e5b-11e6-8309-22000b97daec&amp;destination_path=%2F' + fakeUser);
+                    done();
+                });
         });
 
         it('Should render properly without a Globus linked account', () => {
@@ -120,9 +124,42 @@ define ([
                 .then(function() {
                     done();
                 })
-                .fail(err => {
+                .catch(err => {
                     console.log(err);
                     fail();
+                });
+        });
+
+        it('Should show an error when a path does not exist', (done, fail) => {
+            const errorText = 'directory not found';
+            jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/foo?/).andReturn({
+                status: 404,
+                statusText: 'success',
+                contentType: 'text/plain',
+                responseHeaders: '',
+                responseText: errorText
+            });
+
+            stagingViewer.setPath('//foo')
+                .then(() => {
+                    expect($targetNode.find('#kb-data-staging-table').html()).toContain(errorText);
+                    done();
+                });
+        });
+
+        it('Should show a "no files" next when a path has no files', (done) => {
+            jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/empty?/).andReturn({
+                status: 200,
+                statusText: 'success',
+                contentType: 'text/plain',
+                responseHeaders: '',
+                responseText: JSON.stringify([])
+            });
+
+            stagingViewer.setPath('//empty')
+                .then(() => {
+                    expect($targetNode.find('#kb-data-staging-table').html()).toContain('No files found.');
+                    done();
                 });
         });
     });

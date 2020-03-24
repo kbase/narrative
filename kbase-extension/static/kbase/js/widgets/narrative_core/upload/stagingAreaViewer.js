@@ -89,19 +89,24 @@ define([
             }
         },
 
+        /**
+         * Returns a Promise that resolves once the rendering is done.
+         */
         render: function () {
-            this.updateView();
+            return this.updateView();
         },
 
         updateView: function () {
-            return this.stagingServiceClient.list({
+            return Promise.resolve(this.stagingServiceClient.list({
                 path: this.subpath
-            })
+            }))
                 .then(function (data) {
                     //list is recursive, so it'd show all files in all subdirectories. This filters 'em out.
                     var files = JSON.parse(data).filter(function (f) {
-                        // this is less complicated than you think. The path is the username, subpath, and name concatenated. The subpath may be empty
-                        // so we filter it out and only join defined things. If that's the same as the file's path, we're at the right level. If not, we're not.
+                        // this is less complicated than you think. The path is the username,
+                        // subpath, and name concatenated. The subpath may be empty so we
+                        // filter it out and only join defined things. If that's the same as
+                        //the file's path, we're at the right level. If not, we're not.
                         if ([this.userInfo.user, this.subpath, f.name].filter(function (p) {
                             return p.length > 0;
                         }).join('/') === f.path) {
@@ -119,18 +124,15 @@ define([
                     $('.staging-area-file-metadata').detach();
                     this.$elem.empty();
                     this.renderFileHeader();
-                    this.renderFiles(files);
+                    this.renderFiles({ files: files });
                     setTimeout(function () {
                         this.$elem.parent().scrollTop(scrollTop)
                     }.bind(this), 0);
                 }.bind(this))
-                .fail(function (xhr) {
+                .catch(function (xhr) {
                     this.$elem.empty();
-                    this.$elem.append(
-                        $.jqElem('div')
-                            .addClass('alert alert-danger')
-                            .append('Error ' + xhr.status + '<br/>' + xhr.responseText)
-                    );
+                    this.renderFileHeader();
+                    this.renderFiles({ error: xhr.responseText });
                 }.bind(this));
         },
 
@@ -147,7 +149,7 @@ define([
                 subpathTokens--;
             }
             this.subpath = subpath.slice(subpath.length - subpathTokens).join('/');
-            this.updateView();
+            return this.updateView();
         },
 
         renderFileHeader: function () {
@@ -215,7 +217,6 @@ define([
         },
 
         downloadFile: function(url) {
-        	console.log("Downloading url=" + url);
         	const hiddenIFrameID = 'hiddenDownloader';
             let iframe = document.getElementById(hiddenIFrameID);
         	if (iframe === null) {
@@ -227,16 +228,24 @@ define([
         	iframe.src = url;
         },
 
-        renderFiles: function (files) {
-
-            var parent = this.$elem.parent().get(0);
-
+        /**
+         * This renders the files datatable. If there's no data, it gives a message
+         * about no files being present. If there's an error, that gets put in the table instead.
+         * @param {object} data
+         * keys: files (list of file info) and error (optional error)
+         */
+        renderFiles: function (data) {
+            const files = data.files || [];
+            let emptyMsg = data.error ? data.error : 'No files found.';
             var $fileTable = $(this.ftpFileTableTmpl({
                 files: files,
                 uploaders: this.uploaders.dropdown_order
             }));
             this.$elem.append($fileTable);
             this.$elem.find('table').dataTable({
+                language: {
+                    emptyTable: emptyMsg
+                },
                 dom: '<"file-path pull-left">frtip',
                 bAutoWidth: false,
                 aaSorting: [
@@ -413,7 +422,7 @@ define([
                                 this.updateView();
                             }.bind(this))
                             .fail(function (xhr) {
-                                console.log("FAILED", xhr);
+                                console.error("FAILED", xhr);
                                 alert(xhr.responseText);
                             }.bind(this));
 
@@ -546,7 +555,6 @@ define([
 
                 })
                 .fail(function (xhr) {
-                    console.log("FAILED TO LOAD METADATA : ", fileData, xhr);
                     $tabsDiv.empty();
                     $tabsDiv.append(
                         $.jqElem('div')

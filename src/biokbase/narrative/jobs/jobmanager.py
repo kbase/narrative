@@ -196,7 +196,8 @@ class JobManager(object):
             kblogging.log_event(self._log, "list_jobs.error", {'err': str(e)})
             raise
 
-    def _create_error_state(self, error: str, error_msg: str, code: int, cell_id=None, run_id=None, job_id=None) -> dict:
+    def _create_error_state(self, error: str, error_msg: str, code: int, cell_id=None,
+                            run_id=None, job_id=None) -> dict:
         """
         Creates an error state to return if
         1. the state is missing or unretrievable
@@ -262,11 +263,18 @@ class JobManager(object):
         widget_info = None
         app_spec = {}
 
-        if job is None:
-            state = self._create_error_state(
-                "Job does not seem to exist, or it is otherwise unavailable.",
-                "Job does not exist",
-                -1)
+        # If there's no job, but the state is valid, then that (likely) means the job was started
+        # by either running AppManager.run_app directly without cell_id or run_id info, or that
+        # it was started outside of the biokbase.narrative.jobs setup. This could be done through
+        # direct calls to EE2.
+        #
+        # This could also be triggered by manually looking up job state for some job that doesn't
+        # exist in the Narrative. Which is borderline, but still probably ok.
+        if job is None and state is not None:
+            state.update({
+                "cell_id": None,
+                "run_id": None,
+            })
             return {
                 'state': state,
                 'app_spec': app_spec,

@@ -655,6 +655,9 @@ define([
         } else {
             errorText = 'An unknown error occurred!';
         }
+        errorText += '<br>This may occur because you have recently lost a connection to the ' +
+            'Narrative server. Please try restarting the kernel by navigating to the Kernel ' +
+            'menu -> Restart. If this problem persists, contact KBase through the Help menu.';
 
         Jupyter.dialog.modal({
             title: 'Narrative save failed!',
@@ -735,17 +738,17 @@ define([
             }
         };
 
-        $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
+        $([Jupyter.events]).on('notebook_loaded.Notebook', () => {
             this.loadingWidget.updateProgress('narrative', true);
             $('#notification_area').find('div#notification_trusted').hide();
 
-            $(document).one('dataUpdated.Narrative', function () {
+            $(document).one('dataUpdated.Narrative', () => {
                 this.loadingWidget.updateProgress('data', true);
-            }.bind(this));
+            });
 
-            $(document).one('appListUpdated.Narrative', function () {
+            $(document).one('appListUpdated.Narrative', () => {
                 this.loadingWidget.updateProgress('apps', true);
-            }.bind(this));
+            });
 
             // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
             this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
@@ -774,34 +777,36 @@ define([
             this.initSharePanel();
             this.initStaticNarrativesPanel();
             this.updateDocumentVersion()
-                .then(function() {
+                .then(() => {
                     // init the controller
                     return this.narrController.render();
-                }.bind(this))
-                .finally(function () {
+                })
+                .finally(() => {
                     this.sidePanel.render();
-                }.bind(this));
+                });
 
-            $([Jupyter.events]).trigger('loaded.Narrative');
-            $([Jupyter.events]).on('kernel_ready.Kernel',
-                function () {
-                    console.log('Kernel Ready! Initializing Job Channel...');
-                    this.loadingWidget.updateProgress('kernel', true);
-                    // TODO: This should be an event "kernel-ready", perhaps broadcast
-                    // on the default bus channel.
-                    this.sidePanel.$jobsWidget.initCommChannel()
-                        .then(function () {
-                            this.loadingWidget.updateProgress('jobs', true);
-                        }.bind(this))
-                        .catch(function (err) {
-                            // TODO: put the narrative into a terminal state
-                            console.error('ERROR initializing kbase comm channel', err);
-                            KBFatal('Narrative.ini', 'KBase communication channel could not be initiated with the back end. TODO');
-                            // this.loadingWidget.remove();
-                        }.bind(this));
-                }.bind(this)
-            );
-        }.bind(this));
+            $([Jupyter.events]).on('kernel_ready.Kernel', () => {
+                NarrativeLogin.restartSession();
+                Jupyter.notebook.kernel.execute(
+                    'import os;' +
+                    'os.environ["KB_AUTH_TOKEN"]="' + this.getAuthToken() + '";' +
+                    'os.environ["KB_WORKSPACE_ID"]="' + Jupyter.notebook.metadata.ws_name + '"'
+                );
+
+                console.log('Kernel Ready! Initializing Job Channel...');
+                this.loadingWidget.updateProgress('kernel', true);
+                // TODO: This should be an event "kernel-ready", perhaps broadcast
+                // on the default bus channel.
+                this.sidePanel.$jobsWidget.initCommChannel()
+                    .then(() => {
+                        this.loadingWidget.updateProgress('jobs', true);
+                    })
+                    .catch((err) => {
+                        console.error('ERROR initializing kbase comm channel', err);
+                        KBFatal('Narrative.ini', 'KBase communication channel could not be initiated with the back end.');
+                    });
+            });
+        });
     };
 
     /**

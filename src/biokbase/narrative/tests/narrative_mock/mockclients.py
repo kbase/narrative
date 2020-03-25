@@ -2,7 +2,7 @@ from ..util import TestConfig
 from biokbase.workspace.baseclient import ServerError
 
 
-class MockClients(object):
+class MockClients:
     """
     Mock KBase service clients as needed for Narrative backend tests.
     Use this with the Python mock library to mock the biokbase.narrative.clients.get call
@@ -152,6 +152,13 @@ class MockClients(object):
     def cancel_job(self, job_id):
         return "done"
 
+    def check_job_canceled(self, params):
+        return {
+            "finished": 0,
+            "canceled": 0,
+            "job_id": params.get("job_id")
+        }
+
     def get_job_params(self, job_id):
         return self.ee2_job_info.get(job_id, {}).get('job_input', {})
 
@@ -273,7 +280,26 @@ class MockClients(object):
 def get_mock_client(client_name, token=None):
     return MockClients(token=token)
 
-class MockStagingHelper():
+def get_failing_mock_client(client_name, token=None):
+    return FailingMockClient(token=token)
+
+class FailingMockClient:
+    def __init__(self, token=None):
+        pass
+
+    def check_workspace_jobs(self, params):
+        raise ServerError("JSONRPCError", -32000, "Job lookup failed.")
+
+    def cancel_job(self, params):
+        raise ServerError("JSONRPCError", -32000, "Can't cancel job")
+
+    def check_job_canceled(self, params):
+        raise ServerError("JSONRPCError", 1, "Can't cancel job")
+
+    def get_job_logs(self, params):
+        raise ServerError("JSONRPCError", 2, "Can't get job logs")
+
+class MockStagingHelper:
     def list(self):
         """
         Mock the call to the staging service to get the "user's" files.

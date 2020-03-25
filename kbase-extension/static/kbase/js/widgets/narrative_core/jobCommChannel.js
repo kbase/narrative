@@ -317,14 +317,6 @@ define([
                 // filtering.
                 this.sendBusMessage(CELL, msgData.cell_id, 'run-status', msgData);
                 break;
-            case 'job_err':
-                this.sendBusMessage(JOB, msg.content.job_id, 'job-error', {
-                    jobId: msg.content.job_id,
-                    message: msg.content.message
-                });
-                console.error('Job Error', msg);
-                break;
-
             case 'job_canceled':
                 var canceledId = msgData.job_id;
                 this.sendBusMessage(JOB, canceledId, 'job-canceled',
@@ -356,11 +348,6 @@ define([
                         });
                         break;
                     case 'job_logs':
-                        this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
-                            jobId: jobId,
-                            message: msgData.message
-                        });
-                        break;
                     case 'job_logs_latest':
                         this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
                             jobId: jobId,
@@ -383,21 +370,6 @@ define([
                     }
                 }
                 console.error('Error from job comm:', msg);
-                break;
-
-            case 'job_init_partial_err':
-                const jobErrors = msgData.job_errors;
-                for (jobId in jobErrors) {
-                    if (jobErrors.hasOwnProperty(jobId)) {
-                        this.sendBusMessage(JOB, jobId, 'job-status', {
-                            jobId: jobId,
-                            jobState: jobErrors[jobId],
-                            outputWidgetInfo: {}
-                        });
-                    }
-                }
-                console.warn('Job initialization in kernel resulted in errors!');
-                console.warn(msg);
                 break;
 
             case 'job_init_err':
@@ -522,8 +494,11 @@ define([
         }
 
         getJobInitCode() {
-            return ['from biokbase.narrative.jobs.jobmanager import JobManager',
-                'JobManager().initialize_jobs()'
+            return [
+                'from biokbase.narrative.jobs.jobmanager import JobManager',
+                'from biokbase.narrative.jobs.jobcomm import JobComm',
+                'JobManager().initialize_jobs()',
+                'JobComm().start_update_loop()'
             ].join('\n');
         }
     }

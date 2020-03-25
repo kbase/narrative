@@ -4,6 +4,7 @@ A module for managing apps, specs, requirements, and for starting jobs.
 import biokbase.auth as auth
 from .job import Job
 from .jobmanager import JobManager
+from .jobcomm import JobComm
 from . import specmanager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager
@@ -271,7 +272,7 @@ class AppManager(object):
             'run_id': run_id,
             'job_id': job_id
         })
-        JobManager().register_new_job(new_job)
+        self.register_new_job(new_job)
         if cell_id is not None:
             return
         else:
@@ -447,7 +448,7 @@ class AppManager(object):
             'run_id': run_id,
             'job_id': job_id
         })
-        JobManager().register_new_job(new_job)
+        self.register_new_job(new_job)
         if cell_id is not None:
             return
         else:
@@ -840,4 +841,10 @@ class AppManager(object):
         return ret
 
     def _send_comm_message(self, msg_type, content):
-        JobManager()._send_comm_message(msg_type, content)
+        JobComm().send_comm_message(msg_type, content)
+
+    def register_new_job(self, job: Job) -> None:
+        JobManager().register_new_job(job)
+        self._send_comm_message("new_job", {"job_id": job.job_id})
+        JobComm().lookup_job_state(job.job_id)
+        JobComm().start_job_status_loop()

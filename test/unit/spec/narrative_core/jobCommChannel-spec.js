@@ -326,29 +326,6 @@ define([
                 });
         });
 
-        it('Should send job errors to the bus', (done) => {
-            let jobId = 'foo',
-                msg = {
-                    content: {
-                        job_id: jobId,
-                        message: 'an error happened',
-                        data: {
-                            msg_type: 'job_err',
-                            content: {}
-                        }
-                    }
-                };
-            channelChecker('jobId', jobId, 'job-error', done, {
-                jobId: jobId,
-                message: 'an error happened'
-            });
-            let comm = new JobCommChannel();
-            comm.initCommChannel()
-                .then(() => {
-                    comm.handleCommMessages(msg);
-                });
-        });
-
         it('Should send job_canceled message to the bus', (done) => {
             let jobId = 'foo-canceled',
                 msg = makeCommMsg('job_canceled', {
@@ -445,43 +422,6 @@ define([
             comm.initCommChannel()
                 .then(() => {
                     comm.handleCommMessages(msg);
-                });
-        });
-
-        it('Should handle partial init errors', (done) => {
-            let msgCounter = 0,
-                msg = makeCommMsg('job_init_partial_err', {
-                job_errors: {
-                    'id1': {
-                        state: {
-                            'err': 'nope'
-                        }
-                    },
-                    'id2': {
-                        state: {
-                            'err': 'also nope'
-                        }
-                    }
-                }
-            }),
-                comm = new JobCommChannel();
-            ['id1', 'id2'].forEach((jobId) => {
-                channelChecker('jobId', jobId, 'job-status', () => {
-                    msgCounter++;
-                    if (msgCounter === 2) {
-                        done();
-                    }
-                }, {
-                    jobId: jobId,
-                    jobState: msg.content.data.content.job_errors[jobId],
-                    outputWidgetInfo: {}
-                });
-            });
-            spyOn(console, 'warn');
-            comm.initCommChannel()
-                .then(() => {
-                    comm.handleCommMessages(msg);
-                    expect(console.warn).toHaveBeenCalled();
                 });
         });
 

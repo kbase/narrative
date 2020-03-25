@@ -103,12 +103,6 @@ class JobManagerTest(unittest.TestCase):
         states = self.jm.lookup_all_job_states(ignore_refresh_flag=True)
         self.assertEqual(len(states), 3)
 
-
-    # @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
-    # def test_job_status_control(self):
-    #     self.jm._handle_comm_message(create_jm_message("start_update_loop"))
-    #     self.jm._handle_comm_message(create_jm_message("stop_update_loop"))
-
     # @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     # def test_job_status_fetching(self):
     #     self.jm._handle_comm_message(create_jm_message("all_status"))

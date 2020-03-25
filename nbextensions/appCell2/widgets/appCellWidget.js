@@ -23,6 +23,7 @@ define([
     'common/spec',
     'common/semaphore',
     'common/lang',
+    'common/jobs',
     'narrativeConfig',
     'google-code-prettify/prettify',
     './appCellWidget-fsm',
@@ -57,6 +58,7 @@ define([
     Spec,
     Semaphore,
     lang,
+    Jobs,
     Config,
     PR,
     AppStates,
@@ -1731,7 +1733,7 @@ define([
             renderUI();
         }
 
-        function updateFromJobState(jobState) {
+        function updateFromJobState(jobState, forceRender) {
             var newFsmState = (function() {
                 switch (jobState.status) {
                 case 'created':
@@ -1782,6 +1784,9 @@ define([
                 }
             }());
             fsm.newState(newFsmState);
+            if (forceRender) {
+                initializeFSM();
+            }
             renderUI();
         }
 
@@ -1860,7 +1865,9 @@ define([
                 handle: function(message) {
                     var existingState = model.getItem('exec.jobState'),
                         newJobState = message.jobState,
-                        outputWidgetInfo = message.outputWidgetInfo;
+                        outputWidgetInfo = message.outputWidgetInfo,
+                        forceRender = !Jobs.isValidJobState(existingState) &&
+                                      Jobs.isValidJobState(newJobState);
                     if (!existingState || !utils2.isEqual(existingState, newJobState)) {
                         model.setItem('exec.jobState', newJobState);
                         if (outputWidgetInfo) {
@@ -1882,7 +1889,7 @@ define([
 
                     model.setItem('exec.jobStateUpdated', new Date().getTime());
 
-                    updateFromJobState(newJobState);
+                    updateFromJobState(newJobState, forceRender);
                 }
             });
             jobListeners.push(ev);
@@ -2196,7 +2203,7 @@ define([
                         var clock;
                         var day = 1000 * 60 * 60 * 24;
                         if (elapsed > day) {
-                            var finish_time = jobState.finisheds;
+                            var finish_time = jobState.finished;
                             clock = span([
                                 ' on ',
                                 format.niceTime(finish_time)
@@ -2545,6 +2552,18 @@ define([
             return messages;
         }
 
+        /**
+         * Evaluates the state the app is in. It does this by validating the current model, gathers
+         * all validation messages from the parameters, and renders them as needed.
+         *
+         * If there are no errors from the state and we're not definitely in an error case already,
+         * then just build the Python code and set the state so that the params are complete and the
+         * code is built.
+         *
+         * If there are errors, then we clear the Python code from the code area, and set the state to
+         * be incomplete.
+         * @param {boolean} isError
+         */
         function evaluateAppState(isError) {
             validateModel()
                 .then(function(result) {
@@ -2656,7 +2675,18 @@ define([
                         evaluateAppState();
                     }
 
-                    renderUI();
+                    /* Here, check the job state. If it looks outdated, then request an update and a new job state.
+                     * Should also pause rendering until we get it?
+                     * Or render some intermediate state?
+                     */
+                    let curState = model.getItem('exec.jobState');
+                    if (curState && !Jobs.isValidJobState(curState)) {  // use the 'created' key to see if it's an updated jobState
+                        startListeningForJobMessages(curState.job_id);
+                        requestJobStatus(curState.job_id);
+                    }
+                    else {
+                        renderUI();
+                    }
 
                     // Initial job state listening.
                     switch (fsm.getCurrentState().state.mode) {
@@ -2672,8 +2702,6 @@ define([
                         break;
                     case 'success':
                         break;
-                    // case 'error':
-                            // do nothing for now
                     }
                 })
                 .catch(function(err) {

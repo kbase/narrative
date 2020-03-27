@@ -95,7 +95,7 @@ class JobComm:
             JobComm.__instance = object.__new__(cls)
         return JobComm.__instance
 
-    def __init__(self):
+    def __init__(self, init_jobs=True):
         if self._comm is None:
             self._comm = Comm(target_name="KBaseJobs", data={})
             self._comm.on_msg(self._handle_comm_message)
@@ -114,6 +114,19 @@ class JobComm:
                "job_logs": self._get_job_logs,
                "job_logs_latest": self._get_job_logs
             }
+        if init_jobs:
+            try:
+                self._jm.initialize_jobs()
+            except Exception as e:
+                error = {
+                    'error': 'Unable to get initial jobs list',
+                    'message': getattr(e, 'message', 'Unknown reason'),
+                    'code': getattr(e, 'code', -1),
+                    'source': getattr(e, 'source', 'jobmanager'),
+                    'name': getattr(e, 'name', type(e).__name__),
+                    'service': 'execution_engine2'
+                }
+                self.send_comm_message("job_init_err", error)
 
     def _verify_job_id(self, req: JobRequest) -> None:
         if req.job_id is None:

@@ -61,6 +61,7 @@ class JobManager(object):
         4. start the status lookup loop.
         """
         ws_id = system_variable("workspace_id")
+        job_states = dict()
         try:
             job_states = clients.get('execution_engine2').check_workspace_jobs({
                 'workspace_id': ws_id, 'return_list': 0})
@@ -68,14 +69,6 @@ class JobManager(object):
         except Exception as e:
             kblogging.log_event(self._log, 'init_error', {'err': str(e)})
             new_e = transform_job_exception(e)
-            error = {
-                'error': 'Unable to get initial jobs list',
-                'message': getattr(new_e, 'message', 'Unknown reason'),
-                'code': getattr(new_e, 'code', -1),
-                'source': getattr(new_e, 'source', 'jobmanager'),
-                'name': getattr(new_e, 'name', type(e).__name__),
-                'service': 'execution_engine2'
-            }
             raise new_e
 
         for job_id, job_state in job_states.items():

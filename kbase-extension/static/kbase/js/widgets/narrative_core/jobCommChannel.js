@@ -495,9 +495,7 @@ define([
 
         getJobInitCode() {
             return [
-                'from biokbase.narrative.jobs.jobmanager import JobManager',
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
-                'JobManager().initialize_jobs()',
                 'JobComm().start_update_loop()'
             ].join('\n');
         }

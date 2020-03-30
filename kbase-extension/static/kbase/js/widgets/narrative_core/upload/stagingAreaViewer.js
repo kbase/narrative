@@ -76,9 +76,9 @@ define([
         activate: function () {
             this.render();
             if (!this.refreshInterval) {
-                this.refreshInterval = setInterval(function () {
+                this.refreshInterval = setInterval(() => {
                     this.render();
-                }.bind(this), this.options.refreshIntervalDuration);
+                }, this.options.refreshIntervalDuration);
             }
         },
 
@@ -100,22 +100,18 @@ define([
             return Promise.resolve(this.stagingServiceClient.list({
                 path: this.subpath
             }))
-                .then(function (data) {
+                .then(data => {
                     //list is recursive, so it'd show all files in all subdirectories. This filters 'em out.
-                    let files = JSON.parse(data).filter(function (f) {
+                    let files = JSON.parse(data).filter(f => {
                         // this is less complicated than you think. The path is the username,
                         // subpath, and name concatenated. The subpath may be empty so we
                         // filter it out and only join defined things. If that's the same as
                         // the file's path, we're at the right level. If not, we're not.
-                        if ([this.userInfo.user, this.subpath, f.name].filter(function (p) {
-                            return p.length > 0;
-                        }).join('/') === f.path) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }.bind(this));
-                    files.forEach(function (f) {
+                        return [this.userInfo.user, this.subpath, f.name]
+                            .filter(p => p.length > 0)
+                            .join('/') === f.path;
+                    });
+                    files.forEach(f => {
                         if (!f.isFolder) {
                             f.imported = {};
                         }
@@ -124,16 +120,19 @@ define([
                     $('.staging-area-file-metadata').detach();
                     this.$elem.empty();
                     this.renderFileHeader();
-                    this.renderFiles({ files: files });
-                    setTimeout(function () {
+                    this.renderFiles(files);
+                    setTimeout(() => {
                         this.$elem.parent().scrollTop(scrollTop)
-                    }.bind(this), 0);
-                }.bind(this))
-                .catch(function (xhr) {
+                    }, 0);
+                })
+                .catch(xhr => {
                     this.$elem.empty();
                     this.renderFileHeader();
-                    this.renderFiles({ error: xhr.responseText ? xhr.responseText : 'An unknown error happened while fetching the contents of your staging area' });
-                }.bind(this));
+                    this.renderError(xhr.responseText ? xhr.responseText : 'Unknown error - directory was not found, or may have been deleted');
+                })
+                .finally(() => {
+                    this.renderPath();
+                });
         },
 
         /**
@@ -157,9 +156,9 @@ define([
 
 
             // Set up the link to the web upload app.
-            this.$elem.find('.web_upload_div').click(function () {
+            this.$elem.find('.web_upload_div').click(() => {
                 this.initImportApp('web_upload');
-            }.bind(this));
+            });
 
             // Add ACL before going to the staging area
             // If it fails, it'll just do so silently.
@@ -177,9 +176,9 @@ define([
             });
 
             // Bind the help button to start the tour.
-            this.$elem.find('button#help').click(function () {
+            this.$elem.find('button#help').click(() => {
                 this.startTour();
-            }.bind(this));
+            });
         },
 
         renderPath: function () {
@@ -188,9 +187,7 @@ define([
                 splitPath = splitPath.substring(1);
             }
             // the staging service doesn't want the username as part of the path, but we still want to display it to the user for navigation purposes
-            splitPath = splitPath.split('/').filter(function (p) {
-                return p.length
-            });
+            splitPath = splitPath.split('/').filter(p => p.length);
             splitPath.unshift(this.userInfo.user);
             var pathTerms = [];
             for (var i = 0; i < splitPath.length; i++) {
@@ -208,24 +205,34 @@ define([
             this.$elem.find('div.file-path').append(this.filePathTmpl({
                 path: pathTerms
             }));
-            this.$elem.find('div.file-path a').click(function (e) {
+            this.$elem.find('div.file-path a').click(e => {
                 this.updatePathFn($(e.currentTarget).data().element);
-            }.bind(this));
-            this.$elem.find('button#refresh').click(function () {
+            });
+            this.$elem.find('button#refresh').click(() => {
                 this.updateView();
-            }.bind(this));
+            });
         },
 
         downloadFile: function(url) {
-        	const hiddenIFrameID = 'hiddenDownloader';
+            const hiddenIFrameID = 'hiddenDownloader';
             let iframe = document.getElementById(hiddenIFrameID);
-        	if (iframe === null) {
-        		iframe = document.createElement('iframe');
-        		iframe.id = hiddenIFrameID;
-        		iframe.style.display = 'none';
-        		document.body.appendChild(iframe);
-        	}
-        	iframe.src = url;
+            if (iframe === null) {
+                iframe = document.createElement('iframe');
+                iframe.id = hiddenIFrameID;
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+            }
+            iframe.src = url;
+        },
+
+        renderError: function (error) {
+            const errorElem = `
+                <div class="file-path pull-left"></div>
+                <div style="margin-top:2em" class="alert alert-danger">
+                    <b>An error occurred while fetching your files:</b> ${error}
+                </div>
+            `;
+            this.$elem.append(errorElem);
         },
 
         /**
@@ -234,208 +241,198 @@ define([
          * @param {object} data
          * keys: files (list of file info) and error (optional error)
          */
-        renderFiles: function (data) {
-            const files = data.files || [];
-            const emptyMsg = 'No files found.'; //data.error ? data.error : 'No files found.';
-            if (!data.error) {
-                var $fileTable = $(this.ftpFileTableTmpl({
-                    files: files,
-                    uploaders: this.uploaders.dropdown_order
-                }));
-                this.$elem.append($fileTable);
-                this.$elem.find('table').dataTable({
-                    language: {
-                        emptyTable: emptyMsg
-                    },
-                    dom: '<"file-path pull-left">frtip',
-                    bAutoWidth: false,
-                    aaSorting: [
-                        [3, 'desc']
-                    ],
-                    aoColumnDefs: [{
-                        aTargets: [0],
-                        mRender: function (data, type, full) {
-                            if (type === 'display') {
-                                var isFolder = data === 'true' ? true : false;
-                                var icon = isFolder ? 'folder' : 'file-o';
-                                var disp = '<span><i class="fa fa-' + icon + '"></i></span>';
-                                if (isFolder) {
-                                    disp = '<button data-name="' + full[1] + '" class="btn btn-xs btn-default">' + disp + '</button>';
-                                } else {
-                                    disp = "<i class='fa fa-caret-right' data-caret='" + full[1] + "' style='cursor : pointer'></i> " + disp;
-                                }
-                                return disp;
+        renderFiles: function (files) {
+            files = files || [];
+            const emptyMsg = 'No files found.';
+            var $fileTable = $(this.ftpFileTableTmpl({
+                files: files,
+                uploaders: this.uploaders.dropdown_order
+            }));
+            this.$elem.append($fileTable);
+            this.$elem.find('table').dataTable({
+                language: {
+                    emptyTable: emptyMsg
+                },
+                dom: '<"file-path pull-left">frtip',
+                bAutoWidth: false,
+                aaSorting: [
+                    [3, 'desc']
+                ],
+                aoColumnDefs: [{
+                    aTargets: [0],
+                    mRender: function (data, type, full) {
+                        if (type === 'display') {
+                            var isFolder = data === 'true' ? true : false;
+                            var icon = isFolder ? 'folder' : 'file-o';
+                            var disp = '<span><i class="fa fa-' + icon + '"></i></span>';
+                            if (isFolder) {
+                                disp = '<button data-name="' + full[1] + '" class="btn btn-xs btn-default">' + disp + '</button>';
                             } else {
-                                return data;
+                                disp = "<i class='fa fa-caret-right' data-caret='" + full[1] + "' style='cursor : pointer'></i> " + disp;
                             }
-                        }
-                    }, {
-                        aTargets: [1],
-                        sClass: 'staging-name',
-                        mRender: function (data, type, full) {
-                            if (type === 'display') {
-
-                                var decompressButton = '';
-
-                                if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
-                                    decompressButton = "<button class='btn btn-default btn-xs' style='border : 1px solid #cccccc; border-radius : 1px' data-decompress='" + data + "'><i class='fa fa-expand'></i></button> ";
-                                }
-
-                                return '<div class="kb-data-staging-table-name">' + decompressButton +
-                                    data +
-                                    '</div>';
-                            }
+                            return disp;
+                        } else {
                             return data;
                         }
-                    }, {
-                        aTargets: [2],
-                        mRender: function (data, type) {
-                            if (type === 'display') {
-                                return StringUtil.readableBytes(Number(data));
-                            } else {
-                                return Number(data);
+                    }
+                }, {
+                    aTargets: [1],
+                    sClass: 'staging-name',
+                    mRender: function (data, type, full) {
+                        if (type === 'display') {
+
+                            var decompressButton = '';
+
+                            if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
+                                decompressButton = "<button class='btn btn-default btn-xs' style='border : 1px solid #cccccc; border-radius : 1px' data-decompress='" + data + "'><i class='fa fa-expand'></i></button> ";
                             }
-                        },
-                        sType: 'numeric'
-                    }, {
-                        aTargets: [3],
-                        mRender: function (data, type) {
-                            if (type === 'display') {
-                                return TimeFormat.getShortTimeStampStr(Number(data));
-                            } else {
-                                return data;
-                            }
-                        },
-                        sType: 'numeric'
-                    }],
-                    rowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
-                        var getFileFromName = function (fileName) {
-                            return files.filter(function (file) {
-                                return file.name === fileName;
-                            })[0];
-                        };
 
-                        $('td:eq(1)', nRow).find('.kb-data-staging-table-name').tooltip({
-                            title: $('td:eq(1)', nRow).find('.kb-data-staging-table-name').text(),
-                            placement: 'top',
-                            delay: {
-                                show: Config.get('tooltip').showDelay,
-                                hide: Config.get('tooltip').hideDelay
-                            }
-                        });
-                        $('td:eq(4)', nRow).find('select').select2({
-                            placeholder: 'Select format'
-                        });
-                        $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', function (e) {
-                            var importType = $(e.currentTarget).prevAll('#import-type').val();
-                            var importFile = getFileFromName($(e.currentTarget).data().import);
-                            this.initImportApp(importType, importFile);
-                            this.updateView();
-                        }.bind(this));
-
-                        $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', (e) => {
-                            let file = $(e.currentTarget).data('download');
-                            if (this.subpath) {
-                                file = this.subpath + '/' + file;
-                            }
-                            const url = Config.url('staging_api_url') + '/download/' + file;
-                            this.downloadFile(url);
-                        });
-
-                        $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', function (e) {
-                            var file = $(e.currentTarget).data('delete');
-                            if (window.confirm('Really delete ' + file + '?')) {
-                                this.stagingServiceClient.delete({
-                                    path: this.subpath + '/' + file
-                                }).then(function (d, s, x) {
-                                    this.updateView();
-                                }.bind(this))
-                                    .fail(function (xhr) {
-                                        alert('Error ' + xhr.status + '\r' + xhr.responseText);
-                                    }.bind(this));
-                            }
-                        }.bind(this));
-
-
-                        $('td:eq(0)', nRow).find('button[data-name]').off('click').on('click', function (e) {
-                            this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
-                        }.bind(this));
-
-                        $('td:eq(0)', nRow).find('i[data-caret]').off('click');
-
-                        // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
-                        var $caret = $('td:eq(0)', nRow).find('i[data-caret]'),
-                            fileName,
-                            myFile;
-                        if ($caret.length) {
-                            //next, we use that caret to find the fileName, and the file Data.
-                            fileName = $caret.data().caret;
-                            myFile = getFileFromName(fileName);
+                            return '<div class="kb-data-staging-table-name">' + decompressButton +
+                                data +
+                                '</div>';
                         }
-
-
-                        //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
-                        if (fileName && this.openFileInfo[fileName]) {
-                            //so we note that we've already loaded the info.
-                            myFile.loaded = this.openFileInfo[fileName].loaded;
-                            //toggle the caret
-                            $caret.toggleClass('fa-caret-down fa-caret-right');
-                            //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
-                            setTimeout(function () {
-                                $caret.parent().parent().after(
-                                    this.renderMoreFileInfo(myFile)
-                                )
-                            }.bind(this), 0);
-
+                        return data;
+                    }
+                }, {
+                    aTargets: [2],
+                    mRender: function (data, type) {
+                        if (type === 'display') {
+                            return StringUtil.readableBytes(Number(data));
+                        } else {
+                            return Number(data);
                         }
+                    },
+                    sType: 'numeric'
+                }, {
+                    aTargets: [3],
+                    mRender: function (data, type) {
+                        if (type === 'display') {
+                            return TimeFormat.getShortTimeStampStr(Number(data));
+                        } else {
+                            return data;
+                        }
+                    },
+                    sType: 'numeric'
+                }],
+                rowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                    var getFileFromName = function (fileName) {
+                        return files.filter(function (file) {
+                            return file.name === fileName;
+                        })[0];
+                    };
 
-                        $('td:eq(0)', nRow).find('i[data-caret]').on('click', function (e) {
+                    $('td:eq(1)', nRow).find('.kb-data-staging-table-name').tooltip({
+                        title: $('td:eq(1)', nRow).find('.kb-data-staging-table-name').text(),
+                        placement: 'top',
+                        delay: {
+                            show: Config.get('tooltip').showDelay,
+                            hide: Config.get('tooltip').hideDelay
+                        }
+                    });
+                    $('td:eq(4)', nRow).find('select').select2({
+                        placeholder: 'Select format'
+                    });
+                    $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', e => {
+                        var importType = $(e.currentTarget).prevAll('#import-type').val();
+                        var importFile = getFileFromName($(e.currentTarget).data().import);
+                        this.initImportApp(importType, importFile);
+                        this.updateView();
+                    });
 
-                            $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
-                            var $tr = $(e.currentTarget).parent().parent();
+                    $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', e => {
+                        let file = $(e.currentTarget).data('download');
+                        if (this.subpath) {
+                            file = this.subpath + '/' + file;
+                        }
+                        const url = Config.url('staging_api_url') + '/download/' + file;
+                        this.downloadFile(url);
+                    });
 
-                            if ($(e.currentTarget).hasClass('fa-caret-down')) {
-                                $('.kb-dropzone').css('min-height', '75px');
-                                $('.dz-message').css('margin', '0em 0');
-                                this.openFileInfo[fileName] = myFile;
-                                $tr.after(
-                                    this.renderMoreFileInfo(myFile)
-                                );
-                            } else {
-                                $('.kb-dropzone').css('min-height', '200px');
-                                $('.dz-message').css('margin', '3em 0');
-                                $tr.next().detach();
-                                delete this.openFileInfo[fileName];
-                            }
-                        }.bind(this));
+                    $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', e => {
+                        var file = $(e.currentTarget).data('delete');
+                        if (window.confirm('Really delete ' + file + '?')) {
+                            this.stagingServiceClient.delete({
+                                path: this.subpath + '/' + file
+                            }).then(() => {
+                                this.updateView();
+                            }).fail(xhr => {
+                                alert('Error ' + xhr.status + '\r' + xhr.responseText);
+                            });
+                        }
+                    });
 
-                        $('td:eq(1)', nRow).find('button[data-decompress]').off('click');
-                        $('td:eq(1)', nRow).find('button[data-decompress]').on('click', function (e) {
-                            var fileName = $(e.currentTarget).data().decompress;
-                            var myFile = getFileFromName(fileName);
 
-                            $(e.currentTarget).replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
+                    $('td:eq(0)', nRow).find('button[data-name]').off('click').on('click', e => {
+                        this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
+                    });
 
-                            this.stagingServiceClient.decompress({
-                                path: myFile.name
-                            })
-                                .then(function () {
-                                    this.updateView();
-                                }.bind(this))
-                                .fail(function (xhr) {
-                                    console.error("FAILED", xhr);
-                                    alert(xhr.responseText);
-                                }.bind(this));
+                    $('td:eq(0)', nRow).find('i[data-caret]').off('click');
 
-                        }.bind(this));
-                    }.bind(this)
-                });
-            }
-            else {
-                this.$elem.append($('<div>').addClass('file-path pull-left'));
-                this.$elem.append($('<div>').addClass('alert alert-danger').append(data.error));
-            }
-            this.renderPath();
+                    // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
+                    var $caret = $('td:eq(0)', nRow).find('i[data-caret]'),
+                        fileName,
+                        myFile;
+                    if ($caret.length) {
+                        //next, we use that caret to find the fileName, and the file Data.
+                        fileName = $caret.data().caret;
+                        myFile = getFileFromName(fileName);
+                    }
+
+
+                    //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
+                    if (fileName && this.openFileInfo[fileName]) {
+                        //so we note that we've already loaded the info.
+                        myFile.loaded = this.openFileInfo[fileName].loaded;
+                        //toggle the caret
+                        $caret.toggleClass('fa-caret-down fa-caret-right');
+                        //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
+                        setTimeout(() => {
+                            $caret.parent().parent().after(
+                                this.renderMoreFileInfo(myFile)
+                            )
+                        }, 0);
+
+                    }
+
+                    $('td:eq(0)', nRow).find('i[data-caret]').on('click', e => {
+
+                        $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
+                        var $tr = $(e.currentTarget).parent().parent();
+
+                        if ($(e.currentTarget).hasClass('fa-caret-down')) {
+                            $('.kb-dropzone').css('min-height', '75px');
+                            $('.dz-message').css('margin', '0em 0');
+                            this.openFileInfo[fileName] = myFile;
+                            $tr.after(
+                                this.renderMoreFileInfo(myFile)
+                            );
+                        } else {
+                            $('.kb-dropzone').css('min-height', '200px');
+                            $('.dz-message').css('margin', '3em 0');
+                            $tr.next().detach();
+                            delete this.openFileInfo[fileName];
+                        }
+                    });
+
+                    $('td:eq(1)', nRow).find('button[data-decompress]').off('click');
+                    $('td:eq(1)', nRow).find('button[data-decompress]').on('click', e => {
+                        var fileName = $(e.currentTarget).data().decompress;
+                        var myFile = getFileFromName(fileName);
+
+                        $(e.currentTarget).replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
+
+                        this.stagingServiceClient.decompress({
+                            path: myFile.name
+                        })
+                            .then(() => this.updateView())
+                            .fail(xhr => {
+                                console.error("FAILED", xhr);
+                                alert(xhr.responseText);
+                            });
+
+                    });
+                }.bind(this)
+            });
         },
 
         renderMoreFileInfo: function (fileData) {

@@ -76,9 +76,9 @@ define([
         activate: function () {
             this.render();
             if (!this.refreshInterval) {
-                this.refreshInterval = setInterval(function () {
+                this.refreshInterval = setInterval(() => {
                     this.render();
-                }.bind(this), this.options.refreshIntervalDuration);
+                }, this.options.refreshIntervalDuration);
             }
         },
 
@@ -89,28 +89,29 @@ define([
             }
         },
 
+        /**
+         * Returns a Promise that resolves once the rendering is done.
+         */
         render: function () {
-            this.updateView();
+            return this.updateView();
         },
 
         updateView: function () {
-            return this.stagingServiceClient.list({
+            return Promise.resolve(this.stagingServiceClient.list({
                 path: this.subpath
-            })
-                .then(function (data) {
+            }))
+                .then(data => {
                     //list is recursive, so it'd show all files in all subdirectories. This filters 'em out.
-                    var files = JSON.parse(data).filter(function (f) {
-                        // this is less complicated than you think. The path is the username, subpath, and name concatenated. The subpath may be empty
-                        // so we filter it out and only join defined things. If that's the same as the file's path, we're at the right level. If not, we're not.
-                        if ([this.userInfo.user, this.subpath, f.name].filter(function (p) {
-                            return p.length > 0;
-                        }).join('/') === f.path) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }.bind(this));
-                    files.forEach(function (f) {
+                    let files = JSON.parse(data).filter(f => {
+                        // this is less complicated than you think. The path is the username,
+                        // subpath, and name concatenated. The subpath may be empty so we
+                        // filter it out and only join defined things. If that's the same as
+                        // the file's path, we're at the right level. If not, we're not.
+                        return [this.userInfo.user, this.subpath, f.name]
+                            .filter(p => p.length > 0)
+                            .join('/') === f.path;
+                    });
+                    files.forEach(f => {
                         if (!f.isFolder) {
                             f.imported = {};
                         }
@@ -120,18 +121,18 @@ define([
                     this.$elem.empty();
                     this.renderFileHeader();
                     this.renderFiles(files);
-                    setTimeout(function () {
+                    setTimeout(() => {
                         this.$elem.parent().scrollTop(scrollTop)
-                    }.bind(this), 0);
-                }.bind(this))
-                .fail(function (xhr) {
+                    }, 0);
+                })
+                .catch(xhr => {
                     this.$elem.empty();
-                    this.$elem.append(
-                        $.jqElem('div')
-                            .addClass('alert alert-danger')
-                            .append('Error ' + xhr.status + '<br/>' + xhr.responseText)
-                    );
-                }.bind(this));
+                    this.renderFileHeader();
+                    this.renderError(xhr.responseText ? xhr.responseText : 'Unknown error - directory was not found, or may have been deleted');
+                })
+                .finally(() => {
+                    this.renderPath();
+                });
         },
 
         /**
@@ -147,7 +148,7 @@ define([
                 subpathTokens--;
             }
             this.subpath = subpath.slice(subpath.length - subpathTokens).join('/');
-            this.updateView();
+            return this.updateView();
         },
 
         renderFileHeader: function () {
@@ -155,9 +156,9 @@ define([
 
 
             // Set up the link to the web upload app.
-            this.$elem.find('.web_upload_div').click(function () {
+            this.$elem.find('.web_upload_div').click(() => {
                 this.initImportApp('web_upload');
-            }.bind(this));
+            });
 
             // Add ACL before going to the staging area
             // If it fails, it'll just do so silently.
@@ -175,9 +176,9 @@ define([
             });
 
             // Bind the help button to start the tour.
-            this.$elem.find('button#help').click(function () {
+            this.$elem.find('button#help').click(() => {
                 this.startTour();
-            }.bind(this));
+            });
         },
 
         renderPath: function () {
@@ -186,9 +187,7 @@ define([
                 splitPath = splitPath.substring(1);
             }
             // the staging service doesn't want the username as part of the path, but we still want to display it to the user for navigation purposes
-            splitPath = splitPath.split('/').filter(function (p) {
-                return p.length
-            });
+            splitPath = splitPath.split('/').filter(p => p.length);
             splitPath.unshift(this.userInfo.user);
             var pathTerms = [];
             for (var i = 0; i < splitPath.length; i++) {
@@ -206,37 +205,54 @@ define([
             this.$elem.find('div.file-path').append(this.filePathTmpl({
                 path: pathTerms
             }));
-            this.$elem.find('div.file-path a').click(function (e) {
+            this.$elem.find('div.file-path a').click(e => {
                 this.updatePathFn($(e.currentTarget).data().element);
-            }.bind(this));
-            this.$elem.find('button#refresh').click(function () {
+            });
+            this.$elem.find('button#refresh').click(() => {
                 this.updateView();
-            }.bind(this));
+            });
         },
 
         downloadFile: function(url) {
-        	console.log("Downloading url=" + url);
-        	const hiddenIFrameID = 'hiddenDownloader';
+            const hiddenIFrameID = 'hiddenDownloader';
             let iframe = document.getElementById(hiddenIFrameID);
-        	if (iframe === null) {
-        		iframe = document.createElement('iframe');
-        		iframe.id = hiddenIFrameID;
-        		iframe.style.display = 'none';
-        		document.body.appendChild(iframe);
-        	}
-        	iframe.src = url;
+            if (iframe === null) {
+                iframe = document.createElement('iframe');
+                iframe.id = hiddenIFrameID;
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+            }
+            iframe.src = url;
         },
 
+        renderError: function (error) {
+            const errorElem = `
+                <div class="file-path pull-left"></div>
+                <div style="margin-top:2em" class="alert alert-danger">
+                    <b>An error occurred while fetching your files:</b> ${error}
+                </div>
+            `;
+            this.$elem.append(errorElem);
+        },
+
+        /**
+         * This renders the files datatable. If there's no data, it gives a message
+         * about no files being present. If there's an error, that gets put in the table instead.
+         * @param {object} data
+         * keys: files (list of file info) and error (optional error)
+         */
         renderFiles: function (files) {
-
-            var parent = this.$elem.parent().get(0);
-
+            files = files || [];
+            const emptyMsg = 'No files found.';
             var $fileTable = $(this.ftpFileTableTmpl({
                 files: files,
                 uploaders: this.uploaders.dropdown_order
             }));
             this.$elem.append($fileTable);
             this.$elem.find('table').dataTable({
+                language: {
+                    emptyTable: emptyMsg
+                },
                 dom: '<"file-path pull-left">frtip',
                 bAutoWidth: false,
                 aaSorting: [
@@ -316,14 +332,14 @@ define([
                     $('td:eq(4)', nRow).find('select').select2({
                         placeholder: 'Select format'
                     });
-                    $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', function (e) {
+                    $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', e => {
                         var importType = $(e.currentTarget).prevAll('#import-type').val();
                         var importFile = getFileFromName($(e.currentTarget).data().import);
                         this.initImportApp(importType, importFile);
                         this.updateView();
-                    }.bind(this));
+                    });
 
-                    $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', (e) => {
+                    $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', e => {
                         let file = $(e.currentTarget).data('download');
                         if (this.subpath) {
                             file = this.subpath + '/' + file;
@@ -332,24 +348,23 @@ define([
                         this.downloadFile(url);
                     });
 
-                    $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', function (e) {
+                    $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', e => {
                         var file = $(e.currentTarget).data('delete');
                         if (window.confirm('Really delete ' + file + '?')) {
                             this.stagingServiceClient.delete({
                                 path: this.subpath + '/' + file
-                            }).then(function (d, s, x) {
+                            }).then(() => {
                                 this.updateView();
-                            }.bind(this))
-                                .fail(function (xhr) {
-                                    alert('Error ' + xhr.status + '\r' + xhr.responseText);
-                                }.bind(this));
+                            }).fail(xhr => {
+                                alert('Error ' + xhr.status + '\r' + xhr.responseText);
+                            });
                         }
-                    }.bind(this));
+                    });
 
 
-                    $('td:eq(0)', nRow).find('button[data-name]').off('click').on('click', function (e) {
+                    $('td:eq(0)', nRow).find('button[data-name]').off('click').on('click', e => {
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
-                    }.bind(this));
+                    });
 
                     $('td:eq(0)', nRow).find('i[data-caret]').off('click');
 
@@ -371,15 +386,15 @@ define([
                         //toggle the caret
                         $caret.toggleClass('fa-caret-down fa-caret-right');
                         //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
-                        setTimeout(function () {
+                        setTimeout(() => {
                             $caret.parent().parent().after(
                                 this.renderMoreFileInfo(myFile)
                             )
-                        }.bind(this), 0);
+                        }, 0);
 
                     }
 
-                    $('td:eq(0)', nRow).find('i[data-caret]').on('click', function (e) {
+                    $('td:eq(0)', nRow).find('i[data-caret]').on('click', e => {
 
                         $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
                         var $tr = $(e.currentTarget).parent().parent();
@@ -397,10 +412,10 @@ define([
                             $tr.next().detach();
                             delete this.openFileInfo[fileName];
                         }
-                    }.bind(this));
+                    });
 
                     $('td:eq(1)', nRow).find('button[data-decompress]').off('click');
-                    $('td:eq(1)', nRow).find('button[data-decompress]').on('click', function (e) {
+                    $('td:eq(1)', nRow).find('button[data-decompress]').on('click', e => {
                         var fileName = $(e.currentTarget).data().decompress;
                         var myFile = getFileFromName(fileName);
 
@@ -409,18 +424,15 @@ define([
                         this.stagingServiceClient.decompress({
                             path: myFile.name
                         })
-                            .then(function () {
-                                this.updateView();
-                            }.bind(this))
-                            .fail(function (xhr) {
-                                console.log("FAILED", xhr);
+                            .then(() => this.updateView())
+                            .fail(xhr => {
+                                console.error("FAILED", xhr);
                                 alert(xhr.responseText);
-                            }.bind(this));
+                            });
 
-                    }.bind(this));
+                    });
                 }.bind(this)
             });
-            this.renderPath();
         },
 
         renderMoreFileInfo: function (fileData) {
@@ -546,7 +558,6 @@ define([
 
                 })
                 .fail(function (xhr) {
-                    console.log("FAILED TO LOAD METADATA : ", fileData, xhr);
                     $tabsDiv.empty();
                     $tabsDiv.append(
                         $.jqElem('div')

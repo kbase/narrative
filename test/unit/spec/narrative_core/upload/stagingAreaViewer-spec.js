@@ -55,9 +55,14 @@ define ([
                 sidePanel: {
                     '$dataWidget': {
                         '$overlayPanel': {}
+                    },
+                    '$methodsWidget': {
+                        currentTag: 'release'
                     }
                 },
-                showDataOverlay: () => {}
+                showDataOverlay: () => {},
+                addAndPopulateApp: (id, tag, inputs) => {},
+                hideOverlay: () => {},
             };
             stagingViewer = new StagingAreaViewer($targetNode, {
                 path: startingPath,
@@ -72,6 +77,7 @@ define ([
         afterEach(() => {
             jasmine.Ajax.uninstall();
             $targetNode.remove();
+            stagingViewer = null;
         });
 
         it('Should initialize properly', function() {
@@ -111,14 +117,6 @@ define ([
             expect(stagingViewer.tour).not.toBeNull();
         });
 
-        xit('Should try to create a new import app with missing info', function() {
-            stagingViewer.initImportApp('foo', 'i_am_a_file');
-        });
-
-        xit('Should try to create a new import app with appropriate info', function() {
-            stagingViewer.initImportApp('fba_model', 'i_am_a_file');
-        });
-
         it('Should update its view with a proper subpath', function(done) {
             stagingViewer.updateView()
                 .then(function() {
@@ -131,7 +129,7 @@ define ([
         });
 
         it('Should show an error when a path does not exist', (done, fail) => {
-            const errorText = 'directory not found';
+            const errorText = 'An error occurred while fetching your files';
             jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/foo?/).andReturn({
                 status: 404,
                 statusText: 'success',
@@ -142,7 +140,9 @@ define ([
 
             stagingViewer.setPath('//foo')
                 .then(() => {
-                    expect($targetNode.find('#kb-data-staging-table').html()).toContain(errorText);
+                    expect($targetNode.find('.alert.alert-danger').html()).toContain(errorText);
+                    // reset path. something gets cached with how async tests run.
+                    stagingViewer.setPath('/');
                     done();
                 });
         });
@@ -159,8 +159,52 @@ define ([
             stagingViewer.setPath('//empty')
                 .then(() => {
                     expect($targetNode.find('#kb-data-staging-table').html()).toContain('No files found.');
+                    // reset path. something gets cached with how async tests run.
+                    stagingViewer.setPath('/');
                     done();
                 });
         });
+
+        it('Should respond to activate and deactivate commands', () => {
+            expect(stagingViewer.refreshInterval).toBeFalsy();
+            stagingViewer.activate();
+            expect(stagingViewer.refreshInterval).toBeDefined();
+            stagingViewer.deactivate();
+            expect(stagingViewer.refreshInterval).toBeUndefined();
+        });
+
+        it('Should initialize an import app with the expected inputs', () => {
+            const fileType = 'fastq_reads',
+                fileName = 'foobar.txt',
+                appId = 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
+                tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag,
+                inputs = {
+                    fastq_fwd_staging_file_name: fileName,
+                    name: fileName + '_reads',
+                    import_type: 'FASTQ/FASTA'
+                };
+            spyOn(Jupyter.narrative, 'addAndPopulateApp');
+            spyOn(Jupyter.narrative, 'hideOverlay');
+            stagingViewer.initImportApp(fileType, {name: fileName});
+            expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(appId, tag, inputs);
+            expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
+        });
+
+        it('Should NOT initialize an import app with an unknown type', () => {
+            spyOn(Jupyter.narrative, 'addAndPopulateApp');
+            spyOn(Jupyter.narrative, 'hideOverlay');
+            stagingViewer.initImportApp('some_unknown_type', 'foobar.txt');
+            expect(Jupyter.narrative.addAndPopulateApp).not.toHaveBeenCalled();
+            expect(Jupyter.narrative.hideOverlay).not.toHaveBeenCalled();
+        });
+
+        xit('Should try to create a new import app with missing info', function() {
+            stagingViewer.initImportApp('foo', 'i_am_a_file');
+        });
+
+        xit('Should try to create a new import app with appropriate info', function() {
+            stagingViewer.initImportApp('fba_model', 'i_am_a_file');
+        });
+
     });
 });

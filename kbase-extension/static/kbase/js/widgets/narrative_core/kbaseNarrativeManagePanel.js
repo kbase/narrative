@@ -219,11 +219,7 @@ define([
             if (b.error) {
                 return -1;
             }
-            if (a.nar[3] > b.nar[3])
-                return -1; // sort by date
-            if (a.nar[3] < b[3])
-                return 1;  // sort by date
-            return 0;
+            return b.nar[3].localeCompare(a.nar[3]);
         },
 
         renderPanel: function () {

@@ -198,12 +198,11 @@ define ([
             expect(Jupyter.narrative.hideOverlay).not.toHaveBeenCalled();
         });
 
-        xit('Should try to create a new import app with missing info', function() {
-            stagingViewer.initImportApp('foo', 'i_am_a_file');
-        });
-
-        xit('Should try to create a new import app with appropriate info', function() {
-            stagingViewer.initImportApp('fba_model', 'i_am_a_file');
+        it('Creates a downloader iframe when requested', () => {
+            stagingViewer.downloadFile('some_url');
+            let dlNode = document.getElementById('hiddenDownloader');
+            expect(dlNode).toBeDefined();
+            expect(dlNode.getAttribute('src')).toEqual('some_url');
         });
 
     });

@@ -1,5 +1,5 @@
 {
-    "config": "dev",
+    "config": "prod",
     "appdev": {
         "auth": "https://appdev.kbase.us/services/auth",
         "awe": "https://appdev.kbase.us/services/awe-api",

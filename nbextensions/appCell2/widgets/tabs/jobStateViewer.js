@@ -36,7 +36,7 @@ define([
                 break;
             case 'does_not_exist':
                 label = 'does_not_exist';
-                color: 'orange';
+                color = 'orange';
                 break;
             default:
                 label = jobState;

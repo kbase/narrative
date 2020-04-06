@@ -65,7 +65,6 @@ define([
                     classes: ['kb-panel-container'],
                     body: div({ }, [
                         ui.buildPanel({
-                            // title: 'Job Params',
                             name: 'params',
                             classes: [
                                 'kb-panel-light'
@@ -82,7 +81,6 @@ define([
                     classes: ['kb-panel-container'],
                     body: div({ }, [
                         ui.buildPanel({
-                            // title: 'Job Status',
                             name: 'jobState',
                             classes: [
                                 'kb-panel-light'
@@ -99,7 +97,6 @@ define([
                     classes: ['kb-panel-container'],
                     body: div({}, [
                         ui.buildPanel({
-                            // title: 'Job Log',
                             name: 'log',
                             classes: [
                                 'kb-panel-light'

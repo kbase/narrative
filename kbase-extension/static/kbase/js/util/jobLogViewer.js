@@ -330,9 +330,13 @@ define([
         }
         ];
 
-    function factory(config) {
-        var config = config || {},
-            runtime = Runtime.make(),
+    /**
+     * The entrypoint to this widget. This creates the job log viewer and initializes it.
+     * Starting it is left as a lifecycle method for the calling object.
+     *
+     */
+    function factory() {
+        let runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({ description: 'Log Viewer Bus' }),
             container,
             jobId,
@@ -606,20 +610,20 @@ define([
             const wrapperDiv = document.createElement('div');
             wrapperDiv.setAttribute('class', 'kblog-num-wrapper');
             // number
-            const numSpan = document.createElement('span');
-            numSpan.setAttribute('class', 'kblog-line-num');
+            const numDiv = document.createElement('div');
+            numDiv.setAttribute('class', 'kblog-line-num');
             const lineNumber = document.createTextNode(line.lineNumber);
-            numSpan.appendChild(lineNumber);
+            numDiv.appendChild(lineNumber);
             // text
-            const textSpan = document.createElement('span');
-            textSpan.setAttribute('class', 'kblog-text');
+            const textDiv = document.createElement('div');
+            textDiv.setAttribute('class', 'kblog-text');
             const lineText = document.createTextNode(line.text)
-            textSpan.appendChild(lineText);
+            textDiv.appendChild(lineText);
             // append line number and text
-            wrapperDiv.appendChild(numSpan);
-            wrapperDiv.appendChild(textSpan);
+            wrapperDiv.appendChild(numDiv);
+            wrapperDiv.appendChild(textDiv);
             // append wrapper to line div
-            kblogLine.appendChild(wrapperDiv)
+            kblogLine.appendChild(wrapperDiv);
 
             return kblogLine;
         }
@@ -1025,6 +1029,14 @@ define([
             return document.getElementById(panelId);
         }
 
+        /**
+         * The main lifecycle event, called when its container node exists, and we want to start
+         * running this widget.
+         * This detaches itself first, if it exists, then recreates itself in its host node.
+         * @param {object} arg - should have attributes:
+         *   - node - a DOM node where it will be hosted.
+         *   - jobId - string, a job id for this log
+         */
         function start(arg) {
             detach();  // if we're alive, remove ourselves before restarting
             var hostNode = arg.node;
@@ -1098,7 +1110,7 @@ define([
 
     return {
         make: function(config) {
-            return factory(config);
+            return factory();
         }
     };
 });

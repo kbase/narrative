@@ -1,5 +1,13 @@
 /*global define*/
 /*jslint white:true,browser:true*/
+/**
+ * Usage:
+ * let viewer = JobLogViewer.make();
+ * viewer.start({
+ *     jobId: <some job id>,
+ *     node: <a DOM node>
+ * })
+ */
 define([
     'bluebird',
     'common/runtime',
@@ -1040,10 +1048,17 @@ define([
         function start(arg) {
             detach();  // if we're alive, remove ourselves before restarting
             var hostNode = arg.node;
+            if (!hostNode) {
+                throw new Error('Requires a node to start');
+            }
+            jobId = arg.jobId;
+            if (!jobId) {
+                throw new Error('Requires a job id to start');
+            }
+
             container = hostNode.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
 
-            jobId = arg.jobId;
             panelId = html.genId();
             var layout = renderLayout(panelId);
             container.innerHTML = layout.content;
@@ -1079,7 +1094,7 @@ define([
         function detach() {
             stop();
             if (container) {
-                container.innerHTML = '';
+                container.remove();
             }
         }
 

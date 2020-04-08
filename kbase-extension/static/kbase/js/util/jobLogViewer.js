@@ -1,5 +1,13 @@
 /*global define*/
 /*jslint white:true,browser:true*/
+/**
+ * Usage:
+ * let viewer = JobLogViewer.make();
+ * viewer.start({
+ *     jobId: <some job id>,
+ *     node: <a DOM node>
+ * })
+ */
 define([
     'bluebird',
     'common/runtime',
@@ -8,7 +16,6 @@ define([
     'common/events',
     'common/fsm',
     'kb_common/html',
-    'jquery',
     'css!kbase/css/kbaseJobLog.css'
 ], function(
     Promise,
@@ -17,12 +24,11 @@ define([
     UI,
     Events,
     Fsm,
-    html,
-    $
+    html
 ) {
     'use strict';
 
-    var t = html.tag,
+    let t = html.tag,
         div = t('div'),
         button = t('button'),
         span = t('span'),
@@ -332,12 +338,17 @@ define([
         }
         ];
 
-    function factory(config) {
-        var config = config || {},
-            runtime = Runtime.make(),
+    /**
+     * The entrypoint to this widget. This creates the job log viewer and initializes it.
+     * Starting it is left as a lifecycle method for the calling object.
+     *
+     */
+    function factory() {
+        let runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({ description: 'Log Viewer Bus' }),
             container,
             jobId,
+            panelId,
             model,
             ui,
             startingLine = 0,
@@ -414,7 +425,7 @@ define([
         }
 
         function requestLatestJobLog() {
-            // only while job is running 
+            // only while job is running
             // load numLines at a time
             // otherwise load entire log
             let autoState = fsm.getCurrentState().state.auto;
@@ -455,31 +466,27 @@ define([
             })
         }
 
-        function test(){
-            if(panelHeight === smallPanelHeight){
-                panelHeight = largePanelHeight;
-            }else{
-                panelHeight = smallPanelHeight;
-            }
-            $(ui.getElements('panel')[0]).animate({height: panelHeight}, 500);
+        function toggleViewerSize() {
+            panelHeight = panelHeight === smallPanelHeight ? largePanelHeight : smallPanelHeight;
+            getPanelNode().style.height = panelHeight;
         }
 
         // VIEW
         /**
          * builds contents of panel-heading div
-         * @param {??} events 
+         * @param {??} events
          */
-        function renderControls(events) { 
+        function renderControls(events) {
             return div({ dataElement: 'header', style: { margin: '0 0 10px 0' } }, [
                 button({
                     class: 'btn btn-sm btn-default',
                     dataButton: 'expand',
                     dataToggle: 'tooltip',
                     dataPlacement: 'top',
-                    title: 'Start fetching logs',
+                    title: 'Toggle log viewer size',
                     id: events.addEvent({
                         type: 'click',
-                        handler: test
+                        handler: toggleViewerSize
                     })
                 }, [
                     span({ class: 'fa fa-expand' })
@@ -545,10 +552,10 @@ define([
 
         /**
          * builds contents of panel-body class
-         * @param {number} jobId 
+         * @param {string} panelId
          */
-        function renderLayout(jobId) {
-            var events = Events.make(),
+        function renderLayout(panelId) {
+            const events = Events.make(),
                 content = div({ dataElement: 'kb-log', style: { marginTop: '10px'}}, [
                     div({ class: 'kblog-header' }, [
                         div({ class: 'kblog-num-wrapper' }, [
@@ -558,10 +565,13 @@ define([
                             renderControls(events) // header
                         ])
                     ]),
-                    div({ dataElement: 'panel', class: jobId,
+                    div({ dataElement: 'panel', id: panelId,
                         style: {
-                            'overflow-y': 'scroll', height: panelHeight
-                        } })
+                            'overflow-y': 'scroll',
+                            height: panelHeight,
+                            transition: 'height 0.5s'
+                        }
+                    })
                 ]);
 
             return {
@@ -597,7 +607,7 @@ define([
          *        <span class="kblog-text">foobarbaz</span>
          *     </div>
          * </div>
-         * @param {object} line 
+         * @param {object} line
          */
         function buildLine(line) {
             // kblog-line wrapper div
@@ -605,23 +615,23 @@ define([
             const kblogLine = document.createElement('div')
             kblogLine.setAttribute('class', 'kblog-line' + errorClass);
             // kblog-num-wrapper div
-            const warpperDiv = document.createElement('div');
-            warpperDiv.setAttribute('class', 'kblog-num-wrapper');
-            // number 
-            const numSpan = document.createElement('span');
-            numSpan.setAttribute('class', 'kblog-line-num');
+            const wrapperDiv = document.createElement('div');
+            wrapperDiv.setAttribute('class', 'kblog-num-wrapper');
+            // number
+            const numDiv = document.createElement('div');
+            numDiv.setAttribute('class', 'kblog-line-num');
             const lineNumber = document.createTextNode(line.lineNumber);
-            numSpan.appendChild(lineNumber);
-            // text 
-            const textSpan = document.createElement('span');
-            textSpan.setAttribute('class', 'kblog-text');
+            numDiv.appendChild(lineNumber);
+            // text
+            const textDiv = document.createElement('div');
+            textDiv.setAttribute('class', 'kblog-text');
             const lineText = document.createTextNode(line.text)
-            textSpan.appendChild(lineText);
-            // append line number and text 
-            warpperDiv.appendChild(numSpan);
-            warpperDiv.appendChild(textSpan);
+            textDiv.appendChild(lineText);
+            // append line number and text
+            wrapperDiv.appendChild(numDiv);
+            wrapperDiv.appendChild(textDiv);
             // append wrapper to line div
-            kblogLine.appendChild(warpperDiv)
+            kblogLine.appendChild(wrapperDiv);
 
             return kblogLine;
         }
@@ -629,7 +639,7 @@ define([
         /**
          * Append div that displays job log lines
          * to the panel
-         * @param {array} lines 
+         * @param {array} lines
          */
         function makeLogChunkDiv(lines) {
             for (let i=0; i<lines.length; i+= 1){
@@ -637,7 +647,9 @@ define([
             }
         }
 
-        // onUpdate callback function (under model)
+        /**
+         * onUpdate callback function (under model)
+         */
         function render() {
             const lines = model.getItem('lines');
 
@@ -659,18 +671,13 @@ define([
                     };
                 });
 
-                var autoState = fsm.getCurrentState().state.auto;
-                if (!autoState){
-                    // not sure when this happens
-                    makeLogChunkDiv(viewLines)
-                } else {
-                    makeLogChunkDiv(viewLines)
-                    const lastChildElement = panel.lastElementChild
-                    lastChildElement.scrollIntoView({
+                makeLogChunkDiv(viewLines);
+                if (fsm.getCurrentState().state.auto) {
+                    panel.lastElementChild.scrollIntoView({
                         alignToTop: false,
                         behavior: 'smooth',
                         block: 'center'
-                    })
+                    });
                 }
             } else {
                 ui.setContent('panel', 'Sorry, no log yet...');
@@ -953,7 +960,6 @@ define([
             }
         }
 
-        // I'm not sure where this shows up
         function doOnQueued(message) {
             const noLogYet = {
                 lineNumber: undefined,
@@ -1027,19 +1033,37 @@ define([
             }
         }
 
+        function getPanelNode() {
+            return document.getElementById(panelId);
+        }
+
+        /**
+         * The main lifecycle event, called when its container node exists, and we want to start
+         * running this widget.
+         * This detaches itself first, if it exists, then recreates itself in its host node.
+         * @param {object} arg - should have attributes:
+         *   - node - a DOM node where it will be hosted.
+         *   - jobId - string, a job id for this log
+         */
         function start(arg) {
             detach();  // if we're alive, remove ourselves before restarting
             var hostNode = arg.node;
+            if (!hostNode) {
+                throw new Error('Requires a node to start');
+            }
+            jobId = arg.jobId;
+            if (!jobId) {
+                throw new Error('Requires a job id to start');
+            }
+
             container = hostNode.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
 
-            jobId = arg.jobId;
-            // passing jobId allows the panel to be found by Job ID
-            // with getElementsByClassName
-            var layout = renderLayout(jobId); 
+            panelId = html.genId();
+            var layout = renderLayout(panelId);
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
-            panel = document.getElementsByClassName(jobId)[0]
+            panel = getPanelNode();
 
             initializeFSM();
             renderFSM();
@@ -1070,7 +1094,7 @@ define([
         function detach() {
             stop();
             if (container) {
-                container.innerHTML = '';
+                container.remove();
             }
         }
 
@@ -1101,7 +1125,7 @@ define([
 
     return {
         make: function(config) {
-            return factory(config);
+            return factory();
         }
     };
 });

@@ -50,7 +50,7 @@ define([
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'bottom']
+                    disabled: ['play', 'stop', 'top', 'bottom', 'expand']
                 }
             },
             next: [{
@@ -87,7 +87,7 @@ define([
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'bottom']
+                    disabled: ['play', 'stop', 'top', 'bottom', 'expand']
                 }
             },
             next: [{
@@ -136,7 +136,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['stop'],
+                    enabled: ['stop', 'expand'],
                     disabled: ['play', 'top', 'bottom']
                 }
             },
@@ -186,7 +186,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['play', 'top', 'bottom'],
+                    enabled: ['play', 'top', 'bottom', 'expand'],
                     disabled: ['stop']
                 }
             },
@@ -229,7 +229,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['top', 'bottom'],
+                    enabled: ['top', 'bottom', 'expand'],
                     disabled: ['play', 'stop']
                 }
             },
@@ -257,7 +257,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['top', 'bottom'],
+                    enabled: ['top', 'bottom', 'expand'],
                     disabled: ['play', 'stop']
                 }
             },
@@ -285,7 +285,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['top', 'bottom'],
+                    enabled: ['top', 'bottom', 'expand'],
                     disabled: ['play', 'stop']
                 }
             },
@@ -317,7 +317,7 @@ define([
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'bottom']
+                    disabled: ['play', 'stop', 'top', 'bottom', 'expand']
                 }
             },
             on: {

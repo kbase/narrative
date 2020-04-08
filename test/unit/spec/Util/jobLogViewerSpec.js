@@ -106,9 +106,24 @@ define([
                         }
                     }
                 );
+                viewer.detach();
                 done();
             });
             viewer.start(arg);
+        });
+
+        it('Should start with all buttons disabled', () => {
+            let viewer = JobLogViewer.make();
+            const jobId = 'testBtnState';
+            const arg = {
+                node: hostNode,
+                jobId: jobId
+            };
+            viewer.start(arg);
+            let btns = hostNode.querySelectorAll('div[data-element="header"] button');
+            btns.forEach(btn => {
+                expect(btn.classList.contains('disabled')).toBeTruthy();
+            });
         });
     });
 })

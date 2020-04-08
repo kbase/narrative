@@ -1,19 +1,24 @@
 /*global define, describe, it, expect, jasmine, beforeEach, afterEach*/
 /*jslint white: true*/
 define([
-    'util/jobLogViewer'
+    'util/jobLogViewer',
+    'common/runtime'
 ], (
-    JobLogViewer
+    JobLogViewer,
+    Runtime
 ) => {
     describe('Test the job log viewer module', () => {
-        let hostNode = null;
+        let hostNode = null,
+            runtimeBus = null;
         beforeEach(() => {
             hostNode = document.createElement('div');
             document.body.appendChild(hostNode);
+            runtimeBus = Runtime.make().bus();
         });
 
         afterEach(() => {
             hostNode.remove();
+            window.kbaseRuntime = null;
         });
 
         it('Should load the module code successfully', () => {
@@ -59,6 +64,51 @@ define([
             expect(hostNode.querySelector('div[data-element="kb-log"]')).toBeDefined();
             viewer.detach();
             expect(hostNode.innerHTML).toBe('');
+        });
+
+        it('Should send a bus messages requesting job status information at startup', (done) => {
+            let viewer = JobLogViewer.make();
+            const jobId = 'testJob1';
+            const arg = {
+                node: hostNode,
+                jobId: jobId
+            };
+            runtimeBus.on('request-job-status', (msg) => {
+                expect(msg).toEqual({jobId: jobId});
+                viewer.detach();
+                done();
+            });
+            viewer.start(arg);
+        });
+
+        it('Should react to job status messages', (done) => {
+            let viewer = JobLogViewer.make();
+            const jobId = 'testJobStatusMsg';
+            const arg = {
+                node: hostNode,
+                jobId: jobId
+            };
+            runtimeBus.on('request-job-status', (msg) => {
+                expect(msg).toEqual({jobId: jobId});
+                runtimeBus.send(
+                    {
+                        jobId: jobId,
+                        jobState: {
+                            job_state: 'in-progress'
+                        }
+                    },
+                    {
+                        channel: {
+                            jobId: jobId
+                        },
+                        key: {
+                            type: 'job-status'
+                        }
+                    }
+                );
+                done();
+            });
+            viewer.start(arg);
         });
     });
 })

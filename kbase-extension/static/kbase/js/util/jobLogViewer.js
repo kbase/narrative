@@ -446,11 +446,7 @@ define([
          */
         function doFetchFirstLogChunk() {
             doStopPlayLogs();
-            panel.scrollTo({
-                top: 0,
-                left: 0,
-                behavior: 'smooth'
-              })
+            panel.scrollTo(0, 0);
         }
 
         /**
@@ -458,12 +454,7 @@ define([
          */
         function doFetchLastLogChunk() {
             doStopPlayLogs();
-            const lastChildElement = panel.lastChild
-            lastChildElement.scrollIntoView({
-                alignToTop: false,
-                behavior: 'smooth',
-                block: 'center'
-            })
+            panel.scrollTo(0, panel.lastChild.offsetTop);
         }
 
         function toggleViewerSize() {
@@ -673,11 +664,7 @@ define([
 
                 makeLogChunkDiv(viewLines);
                 if (fsm.getCurrentState().state.auto) {
-                    panel.lastElementChild.scrollIntoView({
-                        alignToTop: false,
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
+                    panel.scrollTo(0, panel.lastChild.offsetTop);
                 }
             } else {
                 ui.setContent('panel', 'Sorry, no log yet...');

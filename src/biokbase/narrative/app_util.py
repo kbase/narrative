@@ -236,7 +236,7 @@ def map_outputs_from_state(state, params, app_spec):
             input_param_id = out_param['input_parameter']
             value = params.get(input_param_id, None)
         elif 'service_method_output_path' in out_param:
-            value = get_result_sub_path(state['result'], out_param['service_method_output_path'])
+            value = get_result_sub_path(state['job_output']['result'], out_param['service_method_output_path'])
 
         spec_param = None
         if input_param_id:

@@ -40,7 +40,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-default'],
                     icon: {
-                        xcolor: 'black',
                         type: 'minus'
                     }
                 },
@@ -123,7 +122,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-warning'],
                     icon: {
-                        xcolor: 'orange',
                         type: 'pencil'
                     }
                 },
@@ -217,7 +215,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-ok'],
                     icon: {
-                        xcolor: 'green',
                         type: 'pencil'
                     }
                 },
@@ -447,7 +444,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-ok'],
                     icon: {
-                        xcolor: 'green',
                         type: 'pencil'
                     }
                 },
@@ -642,7 +638,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-ok'],
                     icon: {
-                        xcolor: 'green',
                         type: 'rocket'
                     }
                 },
@@ -743,7 +738,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-ok'],
                     icon: {
-                        xcolor: 'green',
                         type: 'list'
                     }
                 },
@@ -851,7 +845,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-ok'],
                     icon: {
-                        xcolor: 'green',
                         type: 'bolt'
                     }
                 },
@@ -1036,7 +1029,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-warning'],
                     icon: {
-                        xcolor: 'orange',
                         type: 'bolt'
                     }
                 },
@@ -1122,7 +1114,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-error'],
                     icon: {
-                        xcolor: 'red',
                         type: 'ban'
                     }
                 },
@@ -1191,7 +1182,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-ok'],
                     icon: {
-                        xcolor: 'green',
                         type: 'check'
                     }
                 },
@@ -1265,7 +1255,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-danger'],
                     icon: {
-                        xcolor: 'red',
                         type: 'exclamation-circle'
                     }
                 },
@@ -1323,7 +1312,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-danger'],
                     icon: {
-                        xcolor: 'red',
                         type: 'exclamation-circle'
                     }
                 },
@@ -1398,7 +1386,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-app-status-danger'],
                     icon: {
-                        xcolor: 'red',
                         type: 'exclamation-circle'
                     }
                 },
@@ -1473,7 +1460,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-status-danger'],
                     icon: {
-                        xcolor: 'red',
                         type: 'exclamation-circle'
                     }
                 },
@@ -1529,7 +1515,6 @@ define([], function() {
                 appStatus: {
                     classes: ['kb-status-danger'],
                     icon: {
-                        xcolor: 'red',
                         type: 'exclamation-circle'
                     }
                 },

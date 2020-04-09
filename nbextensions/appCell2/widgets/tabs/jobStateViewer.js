@@ -1,3 +1,8 @@
+/**
+ * This widget shows a simple job state viewer for the app cell.
+ * The viewer updates based on changes to the job state and view model.
+ * It reports the current job state, runtime, and how long it has been / was queued for.
+ */
 define([
     'bluebird',
     'common/runtime',
@@ -13,30 +18,39 @@ define([
 ) {
     'use strict';
 
-    var t = html.tag,
+    let t = html.tag,
         div = t('div'),
         p = t('p'),
         span = t('span');
 
+    /**
+     * Translate from EE2's job status (or other job state strings interpreted by the app cell)
+     * to a presentable string. This returns a span with the text colored and bolded, and the
+     * "nice" readable state string.
+     *
+     * Translated strings = completed, error, terminated, and does_not_exist. Those all get
+     * different colors. Other strings are rendered black.
+     * @param {string} jobState
+     */
     function niceState(jobState) {
-        var label;
-        var color;
+        let label,
+            color;
         switch (jobState) {
             case 'completed':
                 label = 'success';
                 color = 'green';
                 break;
-            case 'suspend':
+            case 'error':
                 label = 'error';
                 color = 'red';
                 break;
-            case 'canceled':
+            case 'terminated':
                 label = 'cancellation';
                 color = 'orange';
                 break;
             case 'does_not_exist':
                 label = 'does_not_exist';
-                color: 'orange';
+                color = 'orange';
                 break;
             default:
                 label = jobState;
@@ -51,50 +65,64 @@ define([
         }, label);
     }
 
+    /**
+     * Updates the view stats.
+     * If there's no jobState, this just posts a message saying we're waiting for info, and stops.
+     * Otherwise, if the jobState has an updated time (which all EE2 job states should), we do
+     * the calculations and re-render here.
+     *
+     * In essence, this does all the calculation of what fields to render and passes it on to
+     * ui.renderFromViewModel
+     * @param {object} ui - the current UI object
+     * @param {object} viewModel - the app cell's view model
+     * @param {object} jobState - the app cell's current job state
+     */
     function updateRunStats(ui, viewModel, jobState) {
         if (!jobState) {
             viewModel.launch._attrib.hidden = false;
             viewModel.launch.label = 'Determining Job State...';
         } else {
-            var now = new Date().getTime();
+            const now = new Date().getTime();
 
             viewModel.launch._attrib.hidden = true;
 
-            if (jobState.creation_time) {
+            if (jobState.updated) {
+                const creationTime = jobState.created;
                 // Queue status - at least in or has been in the queue
                 viewModel.queue._attrib.hidden = false;
-
-                if (jobState.exec_start_time) {
+                if (jobState.running) {
                     // Queue Status - show it, and it has finished, so show static elapsed time and
-                    //   done't show position in queue.
+                    //   don't show position in queue.
                     viewModel.queue._attrib.style = { fontWeight: 'normal' };
                     viewModel.queue.active = false;
                     viewModel.queue.label = 'Queued for';
-                    viewModel.queue.elapsed = format.niceDuration(jobState.exec_start_time - jobState.creation_time);
+                    const execStartTime = jobState.running;
+                    viewModel.queue.elapsed = format.niceDuration(execStartTime - creationTime);
                     viewModel.queue.position.label = '';
                     viewModel.queue.position.number = '';
 
                     // Run Status -- by definition it is running or ran, so show it.
                     viewModel.run._attrib.hidden = false;
 
-                    if (jobState.finish_time) {
+                    if (jobState.finished) {
                         viewModel.run._attrib.style = { fontWeight: 'normal' };
                         viewModel.run.active = false;
                         viewModel.run.label = 'Ran for';
-                        viewModel.run.elapsed = format.niceDuration(jobState.finish_time - jobState.exec_start_time);
+                        const finishTime = jobState.finished;
+                        viewModel.run.elapsed = format.niceDuration(finishTime - execStartTime);
 
                         viewModel.finish._attrib.hidden = false;
                         viewModel.finish._attrib.style = { fontWeight: 'bold' };
                         viewModel.finish.active = true;
-                        viewModel.finish.state = niceState(jobState.job_state);
-                        viewModel.finish.time = format.niceTime(jobState.finish_time);
-                        viewModel.finish.elapsed = format.niceDuration(now - jobState.finish_time);
+                        viewModel.finish.state = niceState(jobState.status);
+                        viewModel.finish.time = format.niceTime(finishTime);
+                        viewModel.finish.elapsed = format.niceDuration(now - finishTime);
 
                     } else {
                         viewModel.run._attrib.style = { fontWeight: 'bold' };
                         viewModel.run.active = true;
                         viewModel.run.label = 'Running ' + ui.loading({ size: null, color: 'green' });
-                        viewModel.run.elapsed = format.niceDuration(now - jobState.exec_start_time);
+                        viewModel.run.elapsed = format.niceDuration(now - execStartTime);
 
                         viewModel.finish._attrib.hidden = true;
                     }
@@ -103,14 +131,15 @@ define([
                     viewModel.run._attrib.hidden = true;
                     viewModel.run.active = false;
 
-                    if (jobState.finish_time) {
+                    if (jobState.finished) {
                         // This can only happen when a job has been cancelled or errored out during queueing.
 
                         // Queue Status - it is out of the queue
                         viewModel.queue._attrib.style = { fontWeight: 'normal' };
                         viewModel.queue.active = false;
                         viewModel.queue.label = 'Queued for';
-                        viewModel.queue.elapsed = format.niceDuration(jobState.finish_time - jobState.creation_time);
+                        const finishTime = jobState.finished;
+                        viewModel.queue.elapsed = format.niceDuration(finishTime - creationTime);
                         viewModel.queue.position.label = '';
                         viewModel.queue.position.number = '';
 
@@ -118,9 +147,9 @@ define([
                         viewModel.finish._attrib.hidden = false;
                         viewModel.finish._attrib.style = { fontWeight: 'bold' };
                         viewModel.finish.active = true;
-                        viewModel.finish.state = niceState(jobState.job_state);
-                        viewModel.finish.time = format.niceTime(jobState.finish_time);
-                        viewModel.finish.elapsed = format.niceDuration(now - jobState.finish_time);
+                        viewModel.finish.state = niceState(jobState.status);
+                        viewModel.finish.time = format.niceTime(finishTime);
+                        viewModel.finish.elapsed = format.niceDuration(now - finishTime);
                     } else {
                         // Queue Status - in the queue
                         viewModel.queue._attrib.style = { fontWeight: 'bold' };
@@ -133,7 +162,7 @@ define([
                             viewModel.queue.position.label = '';
                             viewModel.queue.position.number = '';
                         }
-                        viewModel.queue.elapsed = format.niceDuration(now - jobState.creation_time);
+                        viewModel.queue.elapsed = format.niceDuration(now - creationTime);
 
                         // Finished status -- ensure not showing
                         viewModel.finish._attrib.hidden = true;
@@ -152,6 +181,10 @@ define([
         }
     }
 
+    /**
+     * Does the initial rendering set up for the run stats area. Creates rows
+     * for each of the various run state possibilities.
+     */
     function renderRunStats() {
         return div({ dataElement: 'run-stats', style: { paddingTop: '6px' } }, [
             div({
@@ -232,15 +265,20 @@ define([
         ]);
     }
 
+    /**
+     * Initializes this state viewer widget.
+     * Inits the internal viewModel as well.
+     * @param {object} config - the config passed to this widget (not used, but in the format)
+     */
     function factory(config) {
-        var container, ui, listeners = [],
+        let container, ui, listeners = [],
             jobState = null,
             runtime = Runtime.make(),
             listeningForJob = false,
             jobId,
             parentJobId;
 
-        var viewModel = {
+        let viewModel = {
             lastUpdated: {
                 elapsed: null,
                 time: null
@@ -292,8 +330,7 @@ define([
                 },
                 message: div([
                     p([
-                        'This job was not found. It was probably started by another user. Only the ',
-                        'user who started a job may view it\'s status or associated job logs.'
+                        'This job was not found, or may not have been registered with this Narrative.'
                     ]),
                     p([
                         'You will not be able to inspect the job status or view the job log'
@@ -302,6 +339,9 @@ define([
             }
         };
 
+        /**
+         * Starts listening for job updates and requests the most recent job state for this app cell.
+         */
         function startJobUpdates() {
             if (listeningForJob) {
                 return;
@@ -313,45 +353,59 @@ define([
             listeningForJob = true;
         }
 
+        /**
+         * Stops listening for job updates
+         */
         function stopJobUpdates() {
-            if (listeningForJob) {
-                runtime.bus().emit('request-job-completion', {
-                    jobId: jobId,
-                    parentJobId: parentJobId
-                });
-                listeningForJob = false;
-            }
+            listeningForJob = false;
         }
 
+        /**
+         * If the job doesn't exist, then we need to set a different job state.
+         * We don't care what the message is, but it's passed here anyway.
+         * @param {object} message
+         */
         function handleJobDoesNotExistUpdate(message) {
-            stopJobUpdates();
             jobState = {
                 job_state: 'does_not_exist'
             };
         }
 
+        /**
+         * Called when the job-status message is received.
+         * This parses the job status message. Takes into account both NJS and EE2 style messages.
+         * @param {object} message
+         */
         function handleJobStatusUpdate(message) {
             jobState = message.jobState;
-            switch (jobState.job_state) {
+            switch (jobState.status) {
                 case 'queued':
-                case 'in-progress':
+                case 'created':
+                case 'estimating':
+                case 'running':
                     startJobUpdates();
                     break;
                 case 'completed':
                 case 'error':
-                case 'suspend':
-                case 'canceled':
+                case 'terminated':
                     stopJobUpdates();
                     break;
                 default:
                     stopJobUpdates();
-                    console.error('Unknown job status', jobState.job_state, message);
-                    throw new Error('Unknown job status ' + jobState.job_state);
+                    console.error('Unknown job status', jobState.status, message);
+                    throw new Error('Unknown job status ' + jobState.status);
             }
         }
 
+        /**
+         * Sets up handlers and listeners for job status updates.
+         * Listens on the jobId channel for these messages:
+         *  - job-status -> respond to job update
+         *  - job-canceled -> no-op
+         *  - job-does-not-exist -> respond to the not found exception
+         */
         function listenForJobStatus() {
-            var ev = runtime.bus().listen({
+            let ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId
                 },
@@ -369,9 +423,7 @@ define([
                 key: {
                     type: 'job-canceled'
                 },
-                handle: function() {
-                    console.warn('job cancelled');
-                }
+                handle: () => {}
             });
             listeners.push(ev);
 
@@ -387,6 +439,9 @@ define([
             listeners.push(ev);
         }
 
+        /**
+         * Removes job status update listeners.
+         */
         function stopListeningForJobStatus() {
             runtime.bus().removeListeners(listeners);
         }
@@ -407,11 +462,13 @@ define([
                     jobId = arg.jobId;
                     parentJobId = arg.parentJobId ? arg.parentJobId : null;
 
-                    listeners.push(runtime.bus().on('clock-tick', function() {
+                    listeners.push(runtime.bus().on('clock-tick', () => {
                         updateRunStats(ui, viewModel, jobState);
                     }));
 
                     listenForJobStatus();
+
+                    // request a new job status update from the kernel on start
                     runtime.bus().emit('request-job-status', {
                         jobId: jobId,
                         parentJobId: parentJobId
@@ -419,17 +476,25 @@ define([
                     listeningForJob = true;
 
                     ui.updateFromViewModel(viewModel);
-
                 });
             });
         }
 
+        /**
+         * Lifecycle method.
+         * On widget stop, this removes all listeners for job status to clean itself up.
+         */
         function stop() {
             return Promise.try(function() {
                 stopListeningForJobStatus();
             });
         }
 
+        /**
+         * Lifecycle method.
+         * When told to detach, this widget cleans itself up with a call to stop(),
+         * then removes itself from the DOM.
+         */
         function detach() {
             return stop()
                 .then(() => {

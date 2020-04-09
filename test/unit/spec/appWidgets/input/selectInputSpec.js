@@ -11,7 +11,7 @@ define([
     let bus,
         testConfig,
         required = false,
-        runtime = Runtime.make(),
+        runtime,
         node,
         defaultValue = 'apple';
 
@@ -45,6 +45,7 @@ define([
 
     describe('Select Input tests', () => {
         beforeEach(() => {
+            runtime = Runtime.make();
             node = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'select input testing',

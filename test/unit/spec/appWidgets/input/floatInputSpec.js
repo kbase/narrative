@@ -12,10 +12,11 @@ define([
 
     describe('Test float data input widget', function() {
         let testConfig = {},
-            runtime = Runtime.make(),
+            runtime,
             bus;
 
         beforeEach(function() {
+            runtime = Runtime.make();
             bus = runtime.bus().makeChannelBus({
                 description: 'float testing',
                 // name: 'float-test-' + Math.floor(Math.random()*10000)

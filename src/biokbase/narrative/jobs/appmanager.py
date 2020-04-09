@@ -4,6 +4,7 @@ A module for managing apps, specs, requirements, and for starting jobs.
 import biokbase.auth as auth
 from .job import Job
 from .jobmanager import JobManager
+from .jobcomm import JobComm
 from . import specmanager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager
@@ -247,7 +248,7 @@ class AppManager(object):
         kblogging.log_event(self._log, "run_batch_app", log_info)
 
         try:
-            job_id = clients.get("job_service", token=agent_token['token']).run_job(job_runner_inputs)
+            job_id = clients.get("execution_engine2", token=agent_token['token']).run_job(job_runner_inputs)
         except Exception as e:
             log_info.update({'err': str(e)})
             kblogging.log_event(self._log, "run_batch_app_error", log_info)
@@ -271,7 +272,7 @@ class AppManager(object):
             'run_id': run_id,
             'job_id': job_id
         })
-        JobManager().register_new_job(new_job)
+        self.register_new_job(new_job)
         if cell_id is not None:
             return
         else:
@@ -424,7 +425,7 @@ class AppManager(object):
         kblogging.log_event(self._log, "run_app", log_info)
 
         try:
-            job_id = clients.get("job_service", token=agent_token['token']).run_job(job_runner_inputs)
+            job_id = clients.get("execution_engine2", token=agent_token['token']).run_job(job_runner_inputs)
         except Exception as e:
             log_info.update({'err': str(e)})
             kblogging.log_event(self._log, "run_app_error", log_info)
@@ -447,7 +448,7 @@ class AppManager(object):
             'run_id': run_id,
             'job_id': job_id
         })
-        JobManager().register_new_job(new_job)
+        self.register_new_job(new_job)
         if cell_id is not None:
             return
         else:
@@ -715,7 +716,11 @@ class AppManager(object):
                 target_key = id_map.get(param_id, param_id)
                 # Sets either the raw value, or if the parameter is an object
                 # reference the full object refernce (see the method).
-                target_val = resolve_ref_if_typed(value[param_id], spec_params[param_id])
+                if value[param_id] is None:
+                    target_val = None
+                else:
+                    target_val = resolve_ref_if_typed(value[param_id], spec_params[param_id])
+
                 mapped_value[target_key] = target_val
             return mapped_value
 
@@ -836,4 +841,10 @@ class AppManager(object):
         return ret
 
     def _send_comm_message(self, msg_type, content):
-        JobManager()._send_comm_message(msg_type, content)
+        JobComm().send_comm_message(msg_type, content)
+
+    def register_new_job(self, job: Job) -> None:
+        JobManager().register_new_job(job)
+        self._send_comm_message("new_job", {"job_id": job.job_id})
+        JobComm().lookup_job_state(job.job_id)
+        JobComm().start_job_status_loop()

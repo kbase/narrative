@@ -494,8 +494,7 @@ define([
                    3. userEngaged - if at end of log, same as autoplay?
                 */
             switch (message.jobState.job_state) {
-            case 'canceled':
-            case 'suspend':
+            case 'terminated':
             case 'completed':
                 if (this.requestedUpdates) {
                     this.requestedUpdates = false;
@@ -513,7 +512,7 @@ define([
                 this.requestedUpdates = true;
                 this.requestJobStatus();
                 break;
-            case 'in-progress':
+            case 'running':
                 this.requestedUpdates = true;
                 this.requestJobStatus();
                 break;

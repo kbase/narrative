@@ -23,6 +23,7 @@ define([
     'common/spec',
     'common/semaphore',
     'common/lang',
+    'common/jobs',
     'narrativeConfig',
     'google-code-prettify/prettify',
     './appCellWidget-fsm',
@@ -57,6 +58,7 @@ define([
     Spec,
     Semaphore,
     lang,
+    Jobs,
     Config,
     PR,
     AppStates,
@@ -1479,16 +1481,13 @@ define([
                     'but the new one may include new features. Add a new "' +
                     model.getItem('newAppName') +
                     '" app cell for the update.');
-                // outdatedBtn.classList.remove('hidden');
             }
 
             var indicatorNode = ui.getElement('run-control-panel.status.indicator');
             var iconNode = ui.getElement('run-control-panel.status.indicator.icon');
             if (iconNode) {
                 // clear the classes
-
                 indicatorNode.className = state.ui.appStatus.classes.join(' ');
-
                 iconNode.className = '';
                 iconNode.classList.add('fa', 'fa-' + state.ui.appStatus.icon.type, 'fa-3x');
             }
@@ -1570,7 +1569,7 @@ define([
         /*
         setReadOnly is called to put the cell into read-only mode when it is loaded.
         This is different than view-only, which for read/write mode is toggleable.
-        Read-only does  imply view-only as well.!
+        Read-only does imply view-only as well!
          */
         function setReadOnly() {
             readOnly = true;
@@ -1734,14 +1733,14 @@ define([
             renderUI();
         }
 
-        function updateFromJobState(jobState) {
+        function updateFromJobState(jobState, forceRender) {
             var newFsmState = (function() {
-                switch (jobState.job_state) {
+                switch (jobState.status) {
+                case 'created':
+                    return { mode: 'processing', stage: 'queued' };
                 case 'queued':
                     return { mode: 'processing', stage: 'queued' };
-                case 'job_started':
-                    return { mode: 'processing', stage: 'running' };
-                case 'in-progress':
+                case 'running':
                     // see if any subjobs are done, if so, set the stage to 'partial-complete'
                     if (jobState.child_jobs && jobState.child_jobs.length) {
                         let childDone = jobState.child_jobs.some((childState) => {
@@ -1755,10 +1754,9 @@ define([
                 case 'completed':
                     stopListeningForJobMessages();
                     return { mode: 'success' };
-                case 'canceled':
+                case 'terminated':
                     stopListeningForJobMessages();
                     return { mode: 'canceled' };
-                case 'suspend':
                 case 'error':
                     stopListeningForJobMessages();
 
@@ -1767,9 +1765,9 @@ define([
                     // to inform us about what processing stage the
                     // error occurred in -- we need to inspect the job state.
                     var errorStage;
-                    if (jobState.exec_start_time) {
+                    if (jobState.running) {
                         errorStage = 'running';
-                    } else if (jobState.creation_time) {
+                    } else if (jobState.updated) {
                         errorStage = 'queued';
                     }
                     if (errorStage) {
@@ -1782,10 +1780,13 @@ define([
                         mode: 'error'
                     };
                 default:
-                    throw new Error('Invalid job state ' + jobState.job_state);
+                    throw new Error('Invalid job state ' + jobState.status);
                 }
             }());
             fsm.newState(newFsmState);
+            if (forceRender) {
+                initializeFSM();
+            }
             renderUI();
         }
 
@@ -1864,7 +1865,9 @@ define([
                 handle: function(message) {
                     var existingState = model.getItem('exec.jobState'),
                         newJobState = message.jobState,
-                        outputWidgetInfo = message.outputWidgetInfo;
+                        outputWidgetInfo = message.outputWidgetInfo,
+                        forceRender = !Jobs.isValidJobState(existingState) &&
+                                      Jobs.isValidJobState(newJobState);
                     if (!existingState || !utils2.isEqual(existingState, newJobState)) {
                         model.setItem('exec.jobState', newJobState);
                         if (outputWidgetInfo) {
@@ -1886,7 +1889,7 @@ define([
 
                     model.setItem('exec.jobStateUpdated', new Date().getTime());
 
-                    updateFromJobState(newJobState);
+                    updateFromJobState(newJobState, forceRender);
                 }
             });
             jobListeners.push(ev);
@@ -1994,9 +1997,11 @@ define([
                 prefix: 'started ',
                 suffix: ' ago'
             });
+            var exec_start_time = jobState.running;
+
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                startTime: jobState.exec_start_time
+                startTime: exec_start_time
             })
                 .catch(function(err) {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
@@ -2026,9 +2031,10 @@ define([
             widgets.runClock = RunClock.make({
                 prefix: 'for '
             });
+            var creation_time = jobState.created;
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                startTime: jobState.creation_time
+                startTime: creation_time
             })
                 .catch(function(err) {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
@@ -2056,11 +2062,11 @@ define([
                 label = 'success';
                 color = 'green';
                 break;
-            case 'suspend':
+            case 'error':
                 label = 'error';
                 color = 'red';
                 break;
-            case 'canceled':
+            case 'terminated':
                 label = 'cancellation';
                 color = 'orange';
                 break;
@@ -2085,7 +2091,7 @@ define([
             // show either the clock, if < 24 hours, or the timestamp.
             var message = span([
                 'Finished with ',
-                niceState(jobState.job_state),
+                niceState(jobState.status),
                 ' ',
                 span({ dataElement: 'clock' })
             ]);
@@ -2098,9 +2104,10 @@ define([
                         var clock;
                         var day = 1000 * 60 * 60 * 24;
                         if (elapsed > day) {
+                            var finish_time = jobState.finished;
                             clock = span([
                                 ' on ',
-                                format.niceTime(jobState.finish_time)
+                                format.niceTime(finish_time)
                             ]);
                             return {
                                 content: clock,
@@ -2115,9 +2122,10 @@ define([
                     }
                 }
             });
+            var finish_time = jobState.finished;
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                startTime: jobState.finish_time
+                startTime: finish_time
             })
                 .catch(function(err) {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
@@ -2182,7 +2190,7 @@ define([
             // show either the clock, if < 24 hours, or the timestamp.
             var message = span([
                 'Finished with ',
-                niceState(jobState.job_state),
+                niceState(jobState.status),
                 ' ',
                 span({ dataElement: 'clock' })
             ]);
@@ -2195,9 +2203,10 @@ define([
                         var clock;
                         var day = 1000 * 60 * 60 * 24;
                         if (elapsed > day) {
+                            var finish_time = jobState.finished;
                             clock = span([
                                 ' on ',
-                                format.niceTime(jobState.finish_time)
+                                format.niceTime(finish_time)
                             ]);
                             return {
                                 content: clock,
@@ -2212,9 +2221,10 @@ define([
                     }
                 }
             });
+            var finish_time = jobState.finished;
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                startTime: jobState.finish_time
+                startTime: finish_time
             })
                 .catch(function(err) {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
@@ -2224,12 +2234,12 @@ define([
 
         function doOnError() {
             var jobState = model.getItem('exec.jobState');
-
+            var finish_time = jobState.finished;
             var message = span([
                 'Finished with ',
-                niceState(jobState.job_state),
+                niceState(jobState.status),
                 ' on ',
-                format.niceTime(jobState.finish_time),
+                format.niceTime(finish_time),
                 ' (',
                 span({ dataElement: 'clock' }),
                 ')'
@@ -2243,7 +2253,7 @@ define([
             });
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                startTime: jobState.finish_time
+                startTime: finish_time
             })
                 .catch(function(err) {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
@@ -2267,11 +2277,12 @@ define([
 
         function doOnCancelled() {
             var jobState = model.getItem('exec.jobState');
+            var finish_time = jobState.finished;
 
             var message = span([
                 span({ style: { color: 'orange' } }, 'Canceled'),
                 ' on ',
-                format.niceTime(jobState.finish_time),
+                format.niceTime(finish_time),
                 ' (',
                 span({ dataElement: 'clock' }),
                 ')'
@@ -2285,7 +2296,7 @@ define([
             });
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                startTime: jobState.finish_time
+                startTime: finish_time
             })
                 .catch(function(err) {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
@@ -2541,6 +2552,18 @@ define([
             return messages;
         }
 
+        /**
+         * Evaluates the state the app is in. It does this by validating the current model, gathers
+         * all validation messages from the parameters, and renders them as needed.
+         *
+         * If there are no errors from the state and we're not definitely in an error case already,
+         * then just build the Python code and set the state so that the params are complete and the
+         * code is built.
+         *
+         * If there are errors, then we clear the Python code from the code area, and set the state to
+         * be incomplete.
+         * @param {boolean} isError
+         */
         function evaluateAppState(isError) {
             validateModel()
                 .then(function(result) {
@@ -2652,7 +2675,18 @@ define([
                         evaluateAppState();
                     }
 
-                    renderUI();
+                    /* Here, check the job state. If it looks outdated, then request an update and a new job state.
+                     * Should also pause rendering until we get it?
+                     * Or render some intermediate state?
+                     */
+                    let curState = model.getItem('exec.jobState');
+                    if (curState && !Jobs.isValidJobState(curState)) {  // use the 'created' key to see if it's an updated jobState
+                        startListeningForJobMessages(curState.job_id);
+                        requestJobStatus(curState.job_id);
+                    }
+                    else {
+                        renderUI();
+                    }
 
                     // Initial job state listening.
                     switch (fsm.getCurrentState().state.mode) {
@@ -2662,12 +2696,12 @@ define([
                     case 'editing':
                         break;
                     case 'processing':
+                    case 'error':
                         startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
                         requestJobStatus(model.getItem('exec.jobState.job_id'));
                         break;
                     case 'success':
-                    case 'error':
-                            // do nothing for now
+                        break;
                     }
                 })
                 .catch(function(err) {

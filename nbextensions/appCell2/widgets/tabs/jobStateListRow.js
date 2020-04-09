@@ -26,22 +26,17 @@ define([
             icon = 'fa fa-angle-double-right';
             color = 'green';
             break;
-        case 'in-progress':
+        case 'running':
             label = jobState;
             icon = 'fa fa-spinner';
             color = 'green';
-            break;
-        case 'suspend':
-            label = 'suspended';
-            icon = 'fa fa-pause';
-            color = 'red';
             break;
         case 'error':
             label = jobState;
             icon = 'fa fa-times';
             color = 'red';
             break;
-        case 'canceled':
+        case 'terminated':
             label = jobState;
             icon = 'fa fa-times';
             color = 'orange';

@@ -62,6 +62,7 @@ class JobManager(object):
         """
         ws_id = system_variable("workspace_id")
         job_states = dict()
+        kblogging.log_event(self._log, "JobManager.initialize_jobs", {'ws_id': ws_id})
         try:
             job_states = clients.get('execution_engine2').check_workspace_jobs({
                 'workspace_id': ws_id, 'return_list': 0})

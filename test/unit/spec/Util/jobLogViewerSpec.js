@@ -124,6 +124,7 @@ define([
             btns.forEach(btn => {
                 expect(btn.classList.contains('disabled')).toBeTruthy();
             });
+            viewer.detach();
         });
     });
 })

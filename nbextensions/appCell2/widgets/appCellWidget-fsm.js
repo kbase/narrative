@@ -526,7 +526,7 @@ define([], function() {
                         selected: false
                     },
                     logs: {
-                        enabled: true,
+                        enabled: false,
                         selected: false
                     },
                     results: {
@@ -617,7 +617,7 @@ define([], function() {
                         enabled: true
                     },
                     logs: {
-                        enabled: true
+                        enabled: false
                     },
                     results: {
                         enabled: false

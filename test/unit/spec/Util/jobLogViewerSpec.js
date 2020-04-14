@@ -94,7 +94,7 @@ define([
                     {
                         jobId: jobId,
                         jobState: {
-                            job_state: 'in-progress'
+                            status: 'in-progress'
                         }
                     },
                     {

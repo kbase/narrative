@@ -1,6 +1,9 @@
 /*global define*/
 /*jslint white:true,browser:true,nomen:true*/
 
+/**
+ * This is the entrypoint module for the job status / log viewer tab of the app cell.
+ */
 define([
     'bluebird',
     'kb_common/html',
@@ -24,27 +27,24 @@ define([
     'use strict';
 
     var t = html.tag,
-        div = t('div'),
-        table = t('table'),
-        tr = t('tr'),
-        td = t('td'),
-        th = t('th');
+        div = t('div');
 
     function factory(config) {
         // The top level node used by this widget.
-        var container;
+        let container;
 
         // The handy UI module interface to this container.
-        var ui;
+        let ui;
 
         // A cheap widget collection.
-        var widgets = {};
+        let widgets = {},
+            queueListener,
+            model = config.model,
+            selectedJobId = config.jobId;
 
-        var queueListener;
-
-        var model = config.model;
-        var selectedJobId = config.jobId;
-
+        /**
+         * Used only if we're in Batch mode.
+         */
         function batchLayout() {
             var list = div({ class: 'col-md-3 batch-mode-col', dataElement: 'kb-job-list-wrapper' }, [
                 ui.buildPanel({
@@ -200,13 +200,20 @@ define([
             });
         }
 
+        /**
+         * Can start in 2 modes.
+         * 1. If the app is running, or has ever been running (so, )
+         * @param {object} arg
+         *  - node - the node to attach this tab to
+         *  -
+         */
         function start(arg) {
             container = arg.node.appendChild(document.createElement('div'));
             ui = UI.make({
                 node: container
             });
 
-            if (model.getItem('exec.jobState.job_state') === 'queued') {
+            if (model.getItem('exec.jobState.status') === 'queued') {
                 container.innerHTML = queueLayout();
                 queueListener = Runtime.make().bus().listen({
                     channel: {
@@ -216,7 +223,7 @@ define([
                         type: 'job-status'
                     },
                     handle: (message) => {
-                        if (message.jobState.job_state !== 'queued') {
+                        if (message.jobState.status !== 'queued') {
                             container.innerHTML = '';
                             Runtime.make().bus().removeListener(queueListener);
                             startNonQueued(arg);

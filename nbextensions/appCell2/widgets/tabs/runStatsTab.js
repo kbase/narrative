@@ -9,7 +9,7 @@ define([
     'kb_common/html'
 ], function (Promise, Runtime, UI, format, html) {
     'use strict';
-    
+
     var t = html.tag,
         div = t('div'), span = t('span');
 
@@ -60,7 +60,7 @@ define([
                     viewModel.run.elapsed = format.elapsedTime(jobState.finish_time - jobState.exec_start_time);
 
                     viewModel.finish.active = true;
-                    viewModel.finish.state = jobState.job_state;
+                    viewModel.finish.state = jobState.status;
                     viewModel.finish.when = format.niceElapsedTime(jobState.finish_time);
 
                 } else {

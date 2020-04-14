@@ -2690,18 +2690,18 @@ define([
 
                     // Initial job state listening.
                     switch (fsm.getCurrentState().state.mode) {
-                    case 'execute-requested':
-                        // alert('started in "sending" state?');
-                        break;
-                    case 'editing':
-                        break;
-                    case 'processing':
-                    case 'error':
-                        startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
-                        requestJobStatus(model.getItem('exec.jobState.job_id'));
-                        break;
-                    case 'success':
-                        break;
+                        case 'execute-requested':
+                            // alert('started in "sending" state?');
+                            break;
+                        case 'editing':
+                            break;
+                        case 'processing':
+                        case 'error':
+                            startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
+                            requestJobStatus(model.getItem('exec.jobState.job_id'));
+                            break;
+                        case 'success':
+                            break;
                     }
                 })
                 .catch(function(err) {

@@ -28,7 +28,7 @@ define([
     'google-code-prettify/prettify',
     './appCellWidget-fsm',
     './tabs/resultsTab',
-    './tabs/logTab',
+    './tabs/status/logTab',
     './tabs/errorTab',
     './runClock',
     'css!google-code-prettify/prettify.css',
@@ -1744,7 +1744,7 @@ define([
                     // see if any subjobs are done, if so, set the stage to 'partial-complete'
                     if (jobState.child_jobs && jobState.child_jobs.length) {
                         let childDone = jobState.child_jobs.some((childState) => {
-                            return ['completed', 'canceled', 'suspend', 'error'].indexOf(childState.job_state) !== -1;
+                            return ['completed', 'terminated', 'error'].indexOf(childState.status) !== -1;
                         });
                         if (childDone) {
                             return { mode: 'processing', stage: 'partial-complete' };

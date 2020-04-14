@@ -95,7 +95,7 @@ class JobComm:
             JobComm.__instance = object.__new__(cls)
         return JobComm.__instance
 
-    def __init__(self, init_jobs=True):
+    def __init__(self):
         if self._comm is None:
             self._comm = Comm(target_name="KBaseJobs", data={})
             self._comm.on_msg(self._handle_comm_message)
@@ -114,19 +114,6 @@ class JobComm:
                "job_logs": self._get_job_logs,
                "job_logs_latest": self._get_job_logs
             }
-        if init_jobs:
-            try:
-                self._jm.initialize_jobs()
-            except Exception as e:
-                error = {
-                    'error': 'Unable to get initial jobs list',
-                    'message': getattr(e, 'message', 'Unknown reason'),
-                    'code': getattr(e, 'code', -1),
-                    'source': getattr(e, 'source', 'jobmanager'),
-                    'name': getattr(e, 'name', type(e).__name__),
-                    'service': 'execution_engine2'
-                }
-                self.send_comm_message("job_init_err", error)
 
     def _verify_job_id(self, req: JobRequest) -> None:
         if req.job_id is None:
@@ -136,8 +123,26 @@ class JobComm:
     def start_job_status_loop(self, *args, **kwargs) -> None:
         """
         Starts the job status lookup loop. This runs every 10 seconds.
+        This has the bare *args and **kwargs to handle the case where this comes in as a job
+        channel request (gets a JobRequest arg), or has the "init_jobs" kwarg.
+
+        If init_jobs=True, this attempts to reinitialize the JobManager's list of known jobs
+        from the workspace.
         """
         self._running_lookup_loop = True
+        if kwargs.get("init_jobs", False):
+            try:
+                self._jm.initialize_jobs()
+            except Exception as e:
+                error = {
+                    "error": "Unable to get initial jobs list",
+                    "message": getattr(e, "message", "Unknown reason"),
+                    "code": getattr(e, "code", -1),
+                    "source": getattr(e, "source", "jobmanager"),
+                    "name": getattr(e, "name", type(e).__name__),
+                    "service": "execution_engine2"
+                }
+                self.send_comm_message("job_init_err", error)
         if self._lookup_timer is None:
             self._lookup_job_status_loop()
 

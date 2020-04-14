@@ -469,12 +469,16 @@ define([
                     commSemaphore.set('comm', 'ready');
                     return;
                 }
-                return new Promise((resolve, reject) => {
+                return Promise.try(() => {
                     Jupyter.notebook.kernel.comm_manager.register_target(COMM_NAME, (comm, msg) => {
                         _this.comm = comm;
                         comm.on_msg(_this.handleCommMessages.bind(_this));
                         commSemaphore.set('comm', 'ready');
                     });
+                });
+            })
+            .then(() => {
+                return new Promise((resolve, reject) => {
                     const callbacks = {
                         shell: {
                             reply: function (reply) {
@@ -496,7 +500,7 @@ define([
         getJobInitCode() {
             return [
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
-                'JobComm().start_update_loop()'
+                'JobComm().start_job_status_loop(init_jobs=True)'
             ].join('\n');
         }
     }

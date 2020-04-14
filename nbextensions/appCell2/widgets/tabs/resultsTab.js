@@ -6,7 +6,7 @@ define([
     'uuid',
     'common/ui',
     'kb_common/html',
-    './jobStateList',
+    './status/jobStateList',
     './resultsViewer'
 ], function (
     Promise,
@@ -169,7 +169,7 @@ define([
                         // branch based on jobState.
                         // If there's an error, we should show the error widget instead.
                         let resultNode = ui.getElement('child-result.body');
-                        switch(jobState.job_state) {
+                        switch(jobState.status) {
                             case 'completed':
                                 return resultsViewer.start({
                                     node: resultNode,

@@ -102,7 +102,7 @@ define([
             if (!jobId) {
                 jobId = newState.job_id;
             }
-            let status = newState.job_state ? newState.job_state : null;
+            let status = newState.status ? newState.status : null;
             updateRowStatus(status);
         }
 

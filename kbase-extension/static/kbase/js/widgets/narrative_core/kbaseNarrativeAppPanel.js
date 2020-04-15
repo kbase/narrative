@@ -742,7 +742,7 @@ define([
                 });
             };
 
-            // 1. Go through filterString and keep those that pass the filter (not yet).
+            // 1. Go through filterString and keep those that pass the filter.
             appSet = this.filterApps(filterString, appSet);
 
             // 2. Switch over panelStyle and build the view based on that.
@@ -809,7 +809,8 @@ define([
                     return [
                         app.info.name,
                         app.info.input_types.join(';'),
-                        app.info.output_types.join(';')
+                        app.info.output_types.join(';'),
+                        app.info.module_name
                     ].join(';').toLowerCase().indexOf(filterString) !== -1;
                 }
                 var lowerSearchSet = searchSet.map(function(val) { return val.toLowerCase(); });

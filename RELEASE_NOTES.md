@@ -6,6 +6,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 ### Version 4.1.2
 - Improve display of job logs.
 - Prevent App cell elements from overflowing the page.
+- Job status is now inaccessible before a job enters the queue.
 
 ### Version 4.1.1
 - Fix sort order in Narratives panel - should be by most recently saved.

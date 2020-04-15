@@ -16,7 +16,6 @@
 .kblog-header {
     display: flex;
     font-family: monospace;
-    font-size: 85%;
 }
 
 .kblog-line {
@@ -49,7 +48,7 @@
 }
 
 .kblog-text {
-    word-wrap: break-word;
+    /* word-wrap: break-word; */
     flex: 1;
     margin-left: 6px;
 }

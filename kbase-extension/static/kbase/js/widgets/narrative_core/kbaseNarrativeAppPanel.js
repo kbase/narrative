@@ -18,7 +18,6 @@ define([
     'util/display',
     'util/bootstrapDialog',
     'util/bootstrapSearch',
-    'util/icon',
     'text!kbase/templates/beta_warning_body.html',
     'yaml!ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml',
     'kbaseAccordion',
@@ -43,7 +42,6 @@ define([
     DisplayUtil,
     BootstrapDialog,
     BootstrapSearch,
-    Icon,
     BetaWarningTemplate,
     Categories,
     kbaseAccordion,
@@ -95,24 +93,8 @@ define([
 
             this.getIgnoreCategories();
 
-            this.icon_colors = Config.get('icons').colors;
-
             this.$searchDiv = $('<div>').hide();
 
-            this.$numHiddenSpan = $('<span>0</span>');
-            this.$showHideSpan = $('<span>show</span>');
-            this.$toggleHiddenDiv = $('<div>')
-                .append(this.$showHideSpan)
-                .append(' ')
-                .append(this.$numHiddenSpan)
-                .append(' filtered out')
-                .addClass('kb-function-toggle')
-                .hide()
-                .click($.proxy(function() {
-                    var curText = this.$showHideSpan.text();
-                    this.toggleHiddenMethods(curText === 'show');
-                    this.$showHideSpan.text(curText === 'show' ? 'hide' : 'show');
-                }, this));
 
             // placeholder for apps and methods once they're loaded.
             this.$methodList = $('<div>')
@@ -126,8 +108,7 @@ define([
             this.$functionPanel = $('<div>')
                 .addClass('kb-function-body')
                 .append($('<div>')
-                    .append(this.$searchDiv)
-                    .append(this.$toggleHiddenDiv))
+                    .append(this.$searchDiv))
                 .append(this.$methodList);
 
             this.bsSearch = new BootstrapSearch(this.$searchDiv, {

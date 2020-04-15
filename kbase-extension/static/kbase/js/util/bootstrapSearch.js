@@ -89,7 +89,7 @@ define([
             if (Jupyter && Jupyter.narrative) {
                 Jupyter.narrative.disableKeyboardManager();
             }
-        }).on('input change', function (e) {
+        }).on('input', function (e) {
             if ($input.val()) {
                 $addonIcon.removeClass(self.options.emptyIcon);
                 $addonIcon.addClass(self.options.filledIcon);
@@ -99,6 +99,7 @@ define([
                 $addonIcon.addClass(self.options.emptyIcon);
             }
             if (self.options.inputFunction) {
+                console.log('triggering search');
                 self.options.inputFunction(e);
             }
         }).on('keyup', function (e) {

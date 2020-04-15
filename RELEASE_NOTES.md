@@ -3,6 +3,10 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Version 4.1.2
+- Improve display of job logs.
+- Prevent App cell elements from overflowing the page.
+
 ### Version 4.1.1
 - Fix sort order in Narratives panel - should be by most recently saved.
 - Add better error support in data staging uploader - if an upload directory is not available, you should be able to return to the root directory without trouble.

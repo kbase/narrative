@@ -14,6 +14,7 @@
  * inputFunction - gets fired off when a user inputs something.
  * addonFunction - gets fired off when a user clicks the addon area. default = clear input.
  * escFunction - gets fired off if escape (key 27) is hit while the input is focused.
+ * delay - time in ms before firing the input function (default 300)
  */
 
 define([
@@ -45,6 +46,9 @@ define([
         }
         if (!options.filledIcon.startsWith('fa-')) {
             options.filledIcon = 'fa-' + options.filledIcon;
+        }
+        if (!options.delay) {
+            options.delay = 300;
         }
 
         this.options = options;
@@ -99,8 +103,12 @@ define([
                 $addonIcon.addClass(self.options.emptyIcon);
             }
             if (self.options.inputFunction) {
-                console.log('triggering search');
-                self.options.inputFunction(e);
+                if (self.delayTimeout) {
+                    clearTimeout(self.delayTimeout);
+                }
+                self.delayTimeout = setTimeout(() => {
+                    self.options.inputFunction(e)
+                }, self.options.delay);
             }
         }).on('keyup', function (e) {
             if (e.keyCode === 27) {

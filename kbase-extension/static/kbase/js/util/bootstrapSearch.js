@@ -93,7 +93,7 @@ define([
             if (Jupyter && Jupyter.narrative) {
                 Jupyter.narrative.disableKeyboardManager();
             }
-        }).on('input', function (e) {
+        }).on('input', function (e, ignoreDelay) {
             if ($input.val()) {
                 $addonIcon.removeClass(self.options.emptyIcon);
                 $addonIcon.addClass(self.options.filledIcon);
@@ -106,9 +106,13 @@ define([
                 if (self.delayTimeout) {
                     clearTimeout(self.delayTimeout);
                 }
-                self.delayTimeout = setTimeout(() => {
-                    self.options.inputFunction(e)
-                }, self.options.delay);
+                if (ignoreDelay) {
+                    return self.options.inputFunction(e);
+                }
+                self.delayTimeout = setTimeout(
+                    () => self.options.inputFunction(e),
+                    self.options.delay
+                );
             }
         }).on('keyup', function (e) {
             if (e.keyCode === 27) {
@@ -121,7 +125,7 @@ define([
         $addonBtn.click(function(e) {
             if (!self.options.addonFunction) {
                 $input.val('');
-                $input.trigger('input');
+                $input.trigger('input', [true]);
             }
             else {
                 self.options.addonFunction(e);
@@ -139,7 +143,7 @@ define([
         }
         else {
             retVal = this.$input.val(val);
-            this.$input.trigger('input');
+            this.$input.trigger('input', [true]);
         }
         return retVal;
     };

@@ -176,9 +176,7 @@ define([
              */
             $(document).on('getFunctionSpecs.Narrative',
                 $.proxy(function(e, specSet, callback) {
-                    //console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
                     if (callback) {
-                        //console.debug("Trigger: specSet=",specSet);
                         this.getFunctionSpecs(specSet, callback);
                     }
                 }, this)
@@ -375,17 +373,17 @@ define([
 
             this.addButton(this.$slideoutBtn);
 
-            if (!NarrativeMethodStore || !Catalog) {
-                this.showError('Sorry, an error occurred while loading Apps.',
-                    'Unable to connect to the Catalog or Narrative Method Store! ' +
-                    'Apps are currently unavailable.');
-                return this;
-            }
-
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
             this.catalog = new Catalog(this.options.catalogURL, {token: Runtime.make().authToken()});
             this.refreshFromService();
             return this;
+        },
+
+        detach: function () {
+            $(document).off('filterMethods.Narrative');
+            $(document).off('removeFilterMethods.Narrative');
+            $(document).off('getFunctionSpecs.Narrative');
+            this.$bodyDiv.detach();
         },
 
         refreshKernelSpecManager: function() {
@@ -403,9 +401,9 @@ define([
         setListHeight: function(height, animate) {
             if (this.$methodList) {
                 if (animate) {
-                    this.$methodList.animate({ 'height': height}, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
+                    this.$methodList.animate({'height': height}, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
                 } else {
-                    this.$methodList.css({ 'height': height});
+                    this.$methodList.css({'height': height});
                 }
             }
         },
@@ -966,11 +964,6 @@ define([
             this.$functionPanel.hide();
             this.$loadingPanel.hide();
             this.$errorPanel.show();
-            return;
         },
-
-        toggleOverlay: function() {
-            this.trigger('toggleSidePanelOverlay.Narrative');
-        }
     });
 });

@@ -83,7 +83,7 @@ define([
         /**
          * Sends a message over the bus. The channel should have a single key of either
          * cell or jobId.
-         * @param {string} channel - either CELL or JOB
+         * @param {string} channelName - either CELL or JOB
          * @param {string} channelId - id for the channel
          * @param {string} msgType - one of the msg types
          * @param {any} message

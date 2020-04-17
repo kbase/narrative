@@ -37,7 +37,7 @@ define([
         currentSection,
         smallPanelHeight = '300px',
         largePanelHeight = '600px',
-        numLines = 10,
+        numLines = 100,
         panel,
         panelHeight = smallPanelHeight,
         appStates = [{
@@ -345,10 +345,8 @@ define([
      */
     function factory() {
         let runtime = Runtime.make(),
-            bus = runtime.bus().makeChannelBus({ description: 'Log Viewer Bus' }),
             container,
             jobId,
-            panelId,
             model,
             ui,
             startingLine = 0,
@@ -365,7 +363,7 @@ define([
             if (!looping) {
                 return;
             }
-            requestLoop = window.setTimeout(function() {
+            requestLoop = window.setTimeout(() => {
                 if (!looping) {
                     return;
                 }
@@ -378,10 +376,7 @@ define([
         }
 
         function startAutoFetch() {
-            if (looping) {
-                return;
-            }
-            if (stopped) {
+            if (looping || stopped) {
                 return;
             }
             var state = fsm.getCurrentState().state;
@@ -397,6 +392,9 @@ define([
             }
         }
 
+        /**
+         * Start automatically fetching logs - triggered by hitting the play button.
+         */
         function doPlayLogs() {
             fsm.updateState({
                 auto: true
@@ -405,7 +403,10 @@ define([
             startAutoFetch();
         }
 
-        function doStopPlayLogs() {
+        /**
+         * Stop automatically fetching logs - triggered by hitting the stop button.
+         */
+        function doStopLogs() {
             fsm.updateState({
                 auto: false
             });
@@ -429,8 +430,8 @@ define([
             // load numLines at a time
             // otherwise load entire log
             let autoState = fsm.getCurrentState().state.auto;
-            if(autoState){
-                linesPerPage = numLines; // set it to 10
+            if (autoState) {
+                linesPerPage = numLines;
             }
             ui.showElement('spinner');
             runtime.bus().emit('request-latest-job-log', {
@@ -445,7 +446,7 @@ define([
          * Scroll to the top of the job log
          */
         function doFetchFirstLogChunk() {
-            doStopPlayLogs();
+            doStopLogs();
             panel.scrollTo(0, 0);
         }
 
@@ -453,13 +454,13 @@ define([
          * scroll to the bottom of the job log
          */
         function doFetchLastLogChunk() {
-            doStopPlayLogs();
+            doStopLogs();
             panel.scrollTo(0, panel.lastChild.offsetTop);
         }
 
         function toggleViewerSize() {
             panelHeight = panelHeight === smallPanelHeight ? largePanelHeight : smallPanelHeight;
-            getPanelNode().style.height = panelHeight;
+            ui.getElement('log-panel').style.height = panelHeight;
         }
 
         // VIEW
@@ -503,7 +504,7 @@ define([
                     title: 'Stop fetching logs',
                     id: events.addEvent({
                         type: 'click',
-                        handler: doStopPlayLogs
+                        handler: doStopLogs
                     })
                 }, [
                     span({ class: 'fa fa-stop' })
@@ -543,12 +544,14 @@ define([
 
         /**
          * builds contents of panel-body class
-         * @param {string} panelId
          */
-        function renderLayout(panelId) {
+        function renderLayout() {
             const events = Events.make(),
                 content = div({ dataElement: 'kb-log', style: { marginTop: '10px'}}, [
                     div({ class: 'kblog-header' }, [
+                        div([
+                            'job id: ' + jobId
+                        ]),
                         div({ class: 'kblog-num-wrapper' }, [
                             div({ class: 'kblog-line-num' }, [])
                         ]),
@@ -556,7 +559,7 @@ define([
                             renderControls(events) // header
                         ])
                     ]),
-                    div({ dataElement: 'panel', id: panelId,
+                    div({ dataElement: 'log-panel',
                         style: {
                             'overflow-y': 'scroll',
                             height: panelHeight,
@@ -633,8 +636,9 @@ define([
          * @param {array} lines
          */
         function makeLogChunkDiv(lines) {
-            for (let i=0; i<lines.length; i+= 1){
-                panel.appendChild(buildLine(lines[i]))
+            const panel = ui.getElement('log-panel');
+            for (let i=0; i<lines.length; i+= 1) {
+                panel.appendChild(buildLine(lines[i]));
             }
         }
 
@@ -646,7 +650,7 @@ define([
 
             if (lines) {
                 if (lines.length === 0) {
-                    ui.setContent('panel', 'Sorry, no log entries to show');
+                    ui.setContent('log-panel', 'Sorry, no log entries to show');
                     return;
                 }
 
@@ -654,7 +658,7 @@ define([
                 // this should be a separate function(?)
                 const viewLines = lines.map(function(line, index) {
                     startingLine += 1;
-                    const text = sanitize(line.line)
+                    const text = sanitize(line.line);
                     return {
                         text: text,
                         isError: (line.is_error === 1 ? true : false),
@@ -842,7 +846,6 @@ define([
                     if (message.logs.lines.length === 0) {
                         // TODO: add an alert area and show a dismissable alert.
                         if (!looping) {
-                            // alert('No log entries returned');
                             console.warn('No log entries returned', message);
                         }
                     } else {
@@ -1021,10 +1024,6 @@ define([
             }
         }
 
-        function getPanelNode() {
-            return document.getElementById(panelId);
-        }
-
         /**
          * The main lifecycle event, called when its container node exists, and we want to start
          * running this widget.
@@ -1047,11 +1046,9 @@ define([
             container = hostNode.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
 
-            panelId = html.genId();
-            var layout = renderLayout(panelId);
+            var layout = renderLayout();
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
-            panel = getPanelNode();
 
             initializeFSM();
             renderFSM();
@@ -1069,9 +1066,6 @@ define([
             stopAutoFetch();
             if (requestLoop) {
                 clearTimeout(requestLoop);
-            }
-            if (bus) {
-                bus.stop();
             }
             if (fsm) {
                 fsm.stop();
@@ -1106,7 +1100,6 @@ define([
         return Object.freeze({
             start: start,
             stop: stop,
-            bus: bus,
             detach: detach
         });
     }

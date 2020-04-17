@@ -166,7 +166,7 @@ define([
                     isParentJob: true
                 });
 
-                function startDetails(arg) { //jobId, isParentJob) {
+                function startDetails(arg) {
                     var selectedJobId = arg.jobId ? arg.jobId : model.getItem('exec.jobState.job_id');
                     config.clickedId = selectedJobId;
                     return Promise.all([

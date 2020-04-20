@@ -34,12 +34,12 @@ define([
         span = t('span'),
         p = t('p'),
         fsm,
-        currentSection,
         smallPanelHeight = '300px',
         largePanelHeight = '600px',
         numLines = 100,
         panel,
         panelHeight = smallPanelHeight,
+        // all the states possible, to be fed into the FSM.
         appStates = [{
             state: {
                 mode: 'new'
@@ -340,7 +340,7 @@ define([
 
     /**
      * The entrypoint to this widget. This creates the job log viewer and initializes it.
-     * Starting it is left as a lifecycle method for the calling object.
+     * Starting it is left as a lifecycle method for the caller.
      *
      */
     function factory() {
@@ -349,7 +349,6 @@ define([
             jobId,
             model,
             ui,
-            startingLine = 0,
             linesPerPage = null,
             loopFrequency = 5000,
             looping = false,
@@ -375,6 +374,9 @@ define([
             looping = false;
         }
 
+        /**
+         * Starts the autofetch loop. After the first request, this starts a timeout that calls it again.
+         */
         function startAutoFetch() {
             if (looping || stopped) {
                 return;
@@ -447,7 +449,7 @@ define([
          */
         function doFetchFirstLogChunk() {
             doStopLogs();
-            panel.scrollTo(0, 0);
+            getLogPanel().scrollTo(0, 0);
         }
 
         /**
@@ -455,12 +457,13 @@ define([
          */
         function doFetchLastLogChunk() {
             doStopLogs();
+            const panel = getLogPanel();
             panel.scrollTo(0, panel.lastChild.offsetTop);
         }
 
         function toggleViewerSize() {
             panelHeight = panelHeight === smallPanelHeight ? largePanelHeight : smallPanelHeight;
-            ui.getElement('log-panel').style.height = panelHeight;
+            getLogPanel().style.height = panelHeight;
         }
 
         // VIEW
@@ -635,11 +638,15 @@ define([
          * to the panel
          * @param {array} lines
          */
-        function makeLogChunkDiv(lines) {
-            const panel = ui.getElement('log-panel');
-            for (let i=0; i<lines.length; i+= 1) {
-                panel.appendChild(buildLine(lines[i]));
-            }
+        // function makeLogChunkDiv(lines) {
+        //     const panel = getLogPanel();
+        //     for (let i=0; i<lines.length; i+= 1) {
+        //         panel.appendChild(buildLine(lines[i]));
+        //     }
+        // }
+
+        function getLogPanel() {
+            return ui.getElement('log-panel');
         }
 
         /**
@@ -654,20 +661,13 @@ define([
                     return;
                 }
 
-                // new array of log texts
-                // this should be a separate function(?)
-                const viewLines = lines.map(function(line, index) {
-                    startingLine += 1;
-                    const text = sanitize(line.line);
-                    return {
-                        text: text,
-                        isError: (line.is_error === 1 ? true : false),
-                        lineNumber: startingLine
-                    };
-                });
+                // makeLogChunkDiv(lines);
+                const panel = getLogPanel();
+                panel.innerHTML = '';
+                lines.forEach(line => panel.appendChild(buildLine(line)));
 
-                makeLogChunkDiv(viewLines);
                 if (fsm.getCurrentState().state.auto) {
+                    const panel = getLogPanel();
                     panel.scrollTo(0, panel.lastChild.offsetTop);
                 }
             } else {
@@ -842,18 +842,45 @@ define([
                 },
                 handle: function(message) {
                     ui.hideElement('spinner');
+                    /* message has structure:
+                     * {
+                     *   jobId: string,
+                     *   latest: bool,
+                     *   logs: {
+                     *      first: int (first line of the log batch), 0-indexed
+                     *      job_id: string,
+                     *      latest: bool,
+                     *      max_lines: int (total logs available - if job is done, so is this),
+                     *      lines: [{
+                     *          is_error: 0 or 1,
+                     *          line: string,
+                     *          linepos: int, position in log. helpful!
+                     *          ts: timestamp
+                     *      }]
+                     *   }
+                     * }
+                     */
 
                     if (message.logs.lines.length === 0) {
-                        // TODO: add an alert area and show a dismissable alert.
                         if (!looping) {
                             console.warn('No log entries returned', message);
                         }
                     } else {
-                        var lines = model.getItem('lines');
-                        model.setItem('lines', message.logs.lines);
-                        model.setItem('currentLine', message.logs.first);
-                        model.setItem('latest', true);
-                        model.setItem('fetchedAt', new Date().toUTCString());
+                        const viewLines = message.logs.lines.map(function(line, index) {
+                            const text = sanitize(line.line);
+                            return {
+                                text: text,
+                                isError: (line.is_error === 1 ? true : false),
+                                lineNumber: line.linepos
+                            };
+                        });
+
+
+
+
+                        model.setItem('lines', viewLines);
+                        model.setItem('firstLine', message.logs.first + 1);
+                        model.setItem('latest', message.logs.latest);
                         // Detect end of log.
                         var lastLine = model.getItem('lastLine'),
                             batchLastLine = message.logs.first + message.logs.lines.length;
@@ -865,7 +892,7 @@ define([
                             }
                         }
                         model.setItem('lastLine', lastLine);
-
+                        render();
                     }
                     if (looping) {
                         scheduleNextRequest();
@@ -1081,17 +1108,17 @@ define([
         }
 
         // MAIN
+        /* The data model for this widget contains all lines currently being shown, along with the indices for
+         * the first and last lines known.
+         * It also tracks the total lines currently available for the app, if returned.
+         * Lines is a list of small objects. Each object
+         */
         model = Props.make({
             data: {
-                cache: [],
                 lines: [],
-                currentLine: null,
+                firstLine: null,
                 lastLine: null,
-                linesPerPage: linesPerPage,
-                fetchedAt: null
-            },
-            onUpdate: function() {
-                render();
+                totalLines: null
             }
         });
 

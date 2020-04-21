@@ -369,6 +369,9 @@ define([
 
         function stopAutoFetch() {
             looping = false;
+            if (ui) {
+                ui.hideElement('spinner');
+            }
         }
 
         /**
@@ -382,6 +385,10 @@ define([
             if (state.mode === 'active' && state.auto) {
                 looping = true;
                 fsm.newState({ mode: 'active', auto: true });
+                // stop the current timer if we have one.
+                if (requestLoop) {
+                    clearTimeout(requestLoop);
+                }
                 runtime.bus().emit('request-latest-job-log', {
                     jobId: jobId,
                     options: {
@@ -411,6 +418,9 @@ define([
             });
             stopped = true;
             stopAutoFetch();
+            if (requestLoop) {
+                clearTimeout(requestLoop);
+            }
         }
 
         function requestJobLog(firstLine, numLines, params) {
@@ -436,7 +446,7 @@ define([
             runtime.bus().emit('request-latest-job-log', {
                 jobId: jobId,
                 options: {
-                    num_lines: linesPerPage
+                    // num_lines: linesPerPage
                 }
             });
         }
@@ -630,18 +640,6 @@ define([
             return kblogLine;
         }
 
-        /**
-         * Append div that displays job log lines
-         * to the panel
-         * @param {array} lines
-         */
-        // function makeLogChunkDiv(lines) {
-        //     const panel = getLogPanel();
-        //     for (let i=0; i<lines.length; i+= 1) {
-        //         panel.appendChild(buildLine(lines[i]));
-        //     }
-        // }
-
         function getLogPanel() {
             return ui.getElement('log-panel');
         }
@@ -654,11 +652,10 @@ define([
 
             if (lines) {
                 if (lines.length === 0) {
-                    ui.setContent('log-panel', 'Sorry, no log entries to show');
+                    ui.setContent('log-panel', 'No log entries to show.');
                     return;
                 }
 
-                // makeLogChunkDiv(lines);
                 const panel = getLogPanel();
                 panel.innerHTML = '';
                 lines.forEach(line => panel.appendChild(buildLine(line)));
@@ -668,7 +665,7 @@ define([
                     panel.scrollTo(0, panel.lastChild.offsetTop);
                 }
             } else {
-                ui.setContent('panel', 'Sorry, no log yet...');
+                ui.setContent('log-panel', 'No log entries to show.');
             }
         }
 
@@ -913,7 +910,7 @@ define([
                 },
                 handle: function() {
                     stopAutoFetch();
-                    console.warn('No job log :( -- it has been deleted');
+                    render();
                 }
             });
             externalEventListeners.push(ev);

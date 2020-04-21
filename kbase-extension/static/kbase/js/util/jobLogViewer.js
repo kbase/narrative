@@ -363,9 +363,6 @@ define([
                 return;
             }
             requestLoop = window.setTimeout(() => {
-                if (!looping) {
-                    return;
-                }
                 requestLatestJobLog();
             }, loopFrequency);
         }

@@ -3,6 +3,9 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Version 4.1.2
+- Redirect to the interstitial loading page after shutting down a Narrative session, instead of letting the backend server do the redirect.
+
 ### Version 4.1.1
 - Fix sort order in Narratives panel - should be by most recently saved.
 - Add better error support in data staging uploader - if an upload directory is not available, you should be able to return to the root directory without trouble.

@@ -811,7 +811,7 @@ define([
      * If it can't, or if this is being run locally, it pops up an alert saying so.
      */
     Narrative.prototype.updateVersion = function () {
-        var user = NarrativeLogin.sessionInfo.user; //.loginWidget($('#signin-button')).session('user_id');
+        var user = NarrativeLogin.sessionInfo.user;
         Promise.resolve(
             $.ajax({
                 contentType: 'application/json',
@@ -819,12 +819,12 @@ define([
                 type: 'DELETE',
                 crossDomain: true
             }))
-            .then(function () {
-                setTimeout(function () {
-                    location.reload(true);
+            .then(() => {
+                setTimeout(() => {
+                    location.replace(`/load-narrative.html?n=${this.workspaceId}&check=true`);
                 }, 200);
             })
-            .catch(function (error) {
+            .catch((error) => {
                 window.alert('Unable to update your Narrative session\nError: ' + error.status + ': ' + error.statusText);
                 console.error(error);
             });

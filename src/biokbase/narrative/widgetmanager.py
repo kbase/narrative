@@ -127,7 +127,7 @@ class WidgetManager(object):
                 widget_name = method['widgets']['output']
             if widget_name == 'null':
                 if verbose:
-                    print("Ignoring a widget named 'null' in {} - {}".format(tag, method['info']['id']))
+                    print(f"Ignoring a widget named 'null' in {tag} - {method['info']['id']}")
                 continue
             out_mapping = method['behavior'].get('kb_service_output_mapping', method['behavior'].get('output_mapping', None))
             if out_mapping is not None:
@@ -321,7 +321,7 @@ class WidgetManager(object):
         input_data.update(params)
 
         if cell_id is not None:
-            cell_id = "\"{}\"".format(cell_id)
+            cell_id = f"\"{cell_id}\""
 
         if upas is None:
             # infer what it is based on mapping and inputs
@@ -396,7 +396,7 @@ class WidgetManager(object):
         obj_ref_list = list()   # list of tuples, but second is a list of upas
         ws = None
         for param in params.keys():
-            if param in param_to_context:
+            if param in param_to_context and params.get(param) is not None:
                 context = param_to_context[param]
                 if context == "ws_id" or context == "ws_name":
                     ws = params[param]
@@ -431,7 +431,7 @@ class WidgetManager(object):
                 info_params.append({"ref": ref})
                 lookup_params.append(param)
             else:
-                raise ValueError('Parameter {} has value {} which was expected to refer to an object'.format(param, ref))
+                raise ValueError(f'Parameter {param} has value {ref} which was expected to refer to an object')
 
         # params for get_object_info3
         for (param, name) in obj_names:
@@ -443,7 +443,7 @@ class WidgetManager(object):
                 info_params.append({"ref": name})
                 lookup_params.append(param)
             else:
-                info_params.append({"ref": "{}/{}".format(ws, name)})
+                info_params.append({"ref": f"{ws}/{name}"})
                 lookup_params.append(param)
 
         if (len(lookup_params)):
@@ -461,7 +461,7 @@ class WidgetManager(object):
             # actually uniform.
             for ref in ref_list:
                 if not is_ref(str(ref)):
-                    raise ValueError('Parameter {} has value {} which contains an item that is not a valid object reference'.format(param, ref_list))
+                    raise ValueError(f'Parameter {param} has value {ref_list} which contains an item that is not a valid object reference')
             lookup_params.append(param)
             info_params.append([{'ref': ref} for ref in ref_list])
 
@@ -471,7 +471,7 @@ class WidgetManager(object):
                 if is_ref(str(name)):
                     info_param.append({'ref': name})
                 else:
-                    info_param.append({'ref': "{}/{}".format(ws, name)})
+                    info_param.append({'ref': f"{ws}/{name}"})
             info_params.append(info_param)
             lookup_params.append(param)
 
@@ -518,7 +518,7 @@ class WidgetManager(object):
         input_data.update(params)
 
         if cell_id is not None:
-            cell_id = "\"{}\"".format(cell_id)
+            cell_id = f"\"{cell_id}\""
 
         input_template = """
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
@@ -583,15 +583,15 @@ class WidgetManager(object):
         if type_spec is None:
             widget_data = {
                 "error": {
-                    "msg": "Unable to find viewer specification for objects of type {}.".format(bare_type),
+                    "msg": f"Unable to find viewer specification for objects of type {bare_type}.",
                     "method_name": "WidgetManager.show_data_widget",
-                    "traceback": "Can't find type spec info for type {}".format(bare_type)
+                    "traceback": f"Can't find type spec info for type {bare_type}"
                 }
             }
             upas['upas'] = [upa]  # doompety-doo
         else:
             if not type_spec.get('view_method_ids'):
-                return "No viewer found for objects of type {}".format(bare_type)
+                return f"No viewer found for objects of type {bare_type}"
             app_id = type_spec['view_method_ids'][0]
             app_spec = None
             try:
@@ -599,7 +599,7 @@ class WidgetManager(object):
             except Exception as e:
                 widget_data = {
                     "error": {
-                        "msg": "Unable to find specification for viewer app {}".format(app_id),
+                        "msg": f"Unable to find specification for viewer app {app_id}",
                         "method_name": "WidgetManager.show_data_widget",
                         "traceback": e.message
                     }

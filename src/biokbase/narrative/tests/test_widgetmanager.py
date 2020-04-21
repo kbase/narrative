@@ -191,6 +191,36 @@ class WidgetManagerTestCase(unittest.TestCase):
         self.assertFalse(upas)
 
     @mock.patch('biokbase.narrative.widgetmanager.clients.get', get_mock_client)
+    def test_infer_upas_nulls(self):
+        """
+        Test infer_upas when None is passed to it as an object name. Fields with None
+        as input should not map to an UPA.
+        """
+        test_result_upa = "18836/5/1"
+        upas = self.wm.infer_upas("testCrazyExample", {
+            "obj_id1": None,
+            "obj_id2": None,
+            "obj_name1": "foo",
+            "obj_name2": "bar/baz",
+            "obj_names": ["a", "b", "c"],
+            "obj_ref1": "1/2/3",
+            "obj_ref2": "foo/bar",
+            "obj_refs": ["7/8/9", "0/1/2"],
+            "ws_name": "some_ws",
+            "extra_param": "extra_value",
+            "other_extra_param": 0
+        })
+        self.assertIsInstance(upas, dict)
+        self.assertNotIn("obj_id1", upas)
+        self.assertNotIn("obj_id2", upas)
+        self.assertEqual(upas['obj_name1'], test_result_upa)
+        self.assertEqual(upas['obj_name2'], test_result_upa)
+        self.assertEqual(upas['obj_names'], [test_result_upa]*3)
+        self.assertEqual(upas['obj_ref1'], "1/2/3")
+        self.assertEqual(upas['obj_ref2'], test_result_upa)
+        self.assertEqual(upas['obj_refs'], [test_result_upa]*2)
+
+    @mock.patch('biokbase.narrative.widgetmanager.clients.get', get_mock_client)
     def test_missing_env_path(self):
         backup_dir = os.environ["NARRATIVE_DIR"]
         del os.environ["NARRATIVE_DIR"]

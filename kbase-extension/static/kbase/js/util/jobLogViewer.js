@@ -33,11 +33,9 @@ define([
         button = t('button'),
         span = t('span'),
         p = t('p'),
-        fsm,
         smallPanelHeight = '300px',
         largePanelHeight = '600px',
         numLines = 100,
-        panel,
         panelHeight = smallPanelHeight,
         // all the states possible, to be fed into the FSM.
         appStates = [{
@@ -349,12 +347,14 @@ define([
             jobId,
             model,
             ui,
-            linesPerPage = null,
+            linesPerPage = numLines,
+            fsm,
             loopFrequency = 5000,
             looping = false,
             stopped = false,
             listeningForJob = false,
-            requestLoop = null;
+            requestLoop = null,
+            scrollToEndOnNext = false;
 
         // VIEW ACTIONS
 
@@ -391,9 +391,6 @@ define([
                 }
                 runtime.bus().emit('request-latest-job-log', {
                     jobId: jobId,
-                    options: {
-                        num_lines: linesPerPage
-                    }
                 });
             }
         }
@@ -423,13 +420,17 @@ define([
             }
         }
 
-        function requestJobLog(firstLine, numLines, params) {
+        /**
+         * Requests numLines (set in the factory method) log lines starting from the given firstLine.
+         * @param {int} firstLine
+         */
+        function requestJobLog(firstLine) {
             ui.showElement('spinner');
             runtime.bus().emit('request-job-log', {
                 jobId: jobId,
                 options: {
                     first_line: firstLine,
-                    num_lines: linesPerPage
+                    // num_lines: linesPerPage
                 }
             });
         }
@@ -439,9 +440,7 @@ define([
             // load numLines at a time
             // otherwise load entire log
             let autoState = fsm.getCurrentState().state.auto;
-            if (autoState) {
-                linesPerPage = numLines;
-            }
+            scrollToEndOnNext = true;
             ui.showElement('spinner');
             runtime.bus().emit('request-latest-job-log', {
                 jobId: jobId,
@@ -456,6 +455,7 @@ define([
          */
         function doFetchFirstLogChunk() {
             doStopLogs();
+            requestJobLog(0);
             getLogPanel().scrollTo(0, 0);
         }
 
@@ -464,8 +464,7 @@ define([
          */
         function doFetchLastLogChunk() {
             doStopLogs();
-            const panel = getLogPanel();
-            panel.scrollTo(0, panel.lastChild.offsetTop);
+            requestLatestJobLog();
         }
 
         function toggleViewerSize() {
@@ -553,6 +552,36 @@ define([
         }
 
         /**
+         * This is a step toward having scrollahead/scrollbehind. It doesn't work right, and we
+         * have to move on, but I'm leaving this in here for now.
+         * There's something minor that I'm missing, I think, about how the scrolling gets
+         * managed.
+         * @param {ScrollEvent} e
+         */
+        function handlePanelScrolling(e) {
+            const panel = getLogPanel();
+            // if scroll is at the bottom, and there are more lines,
+            // get the next chunk.
+            if (panel.scrollTop === (panel.scrollHeight - panel.offsetHeight)) {
+                const curLast = model.getItem('lastLine');
+                if (curLast < model.getItem('totalLines')) {
+                    requestJobLog(curLast);
+                }
+            }
+            // if it's at the top, and we're not at line 0, get
+            // the previous chunk.
+            else if (panel.scrollTop === 0) {
+                const curFirst = model.getItem('firstLine');
+                if (curFirst > 0) {
+                    const reqLine = Math.max(0, curFirst - numLines);
+                    if (reqLine < curFirst) {
+                        requestJobLog(reqLine);
+                    }
+                }
+            }
+        }
+
+        /**
          * builds contents of panel-body class
          */
         function renderLayout() {
@@ -570,6 +599,10 @@ define([
                         ])
                     ]),
                     div({ dataElement: 'log-panel',
+                        // id: events.addEvent({
+                        //     type: 'scroll',
+                        //     handler: handlePanelScrolling
+                        // }),
                         style: {
                             'overflow-y': 'scroll',
                             height: panelHeight,
@@ -660,9 +693,10 @@ define([
                 panel.innerHTML = '';
                 lines.forEach(line => panel.appendChild(buildLine(line)));
 
-                if (fsm.getCurrentState().state.auto) {
-                    const panel = getLogPanel();
+                // if we're autoscrolling, scroll to the bottom
+                if (fsm.getCurrentState().state.auto || scrollToEndOnNext) {
                     panel.scrollTo(0, panel.lastChild.offsetTop);
+                    scrollToEndOnNext = false;
                 }
             } else {
                 ui.setContent('log-panel', 'No log entries to show.');
@@ -696,21 +730,21 @@ define([
                     };
                     break;
                 case 'completed':
-                    requestLatestJobLog();
+                    requestJobLog(0);
                     stopJobUpdates();
                     newState = {
                         mode: 'complete'
                     };
                     break;
                 case 'error':
-                    requestLatestJobLog();
+                    requestJobLog(0);
                     stopJobUpdates();
                     newState = {
                         mode: 'error'
                     };
                     break;
                 case 'terminated':
-                    requestLatestJobLog();
+                    requestJobLog(0);
                     stopJobUpdates();
                     newState = {
                         mode: 'canceled'
@@ -855,11 +889,7 @@ define([
                      * }
                      */
 
-                    if (message.logs.lines.length === 0) {
-                        if (!looping) {
-                            console.warn('No log entries returned', message);
-                        }
-                    } else {
+                    if (message.logs.lines.length !== 0) {
                         const viewLines = message.logs.lines.map(function(line, index) {
                             const text = sanitize(line.line);
                             return {
@@ -868,24 +898,10 @@ define([
                                 lineNumber: line.linepos
                             };
                         });
-
-
-
-
                         model.setItem('lines', viewLines);
                         model.setItem('firstLine', message.logs.first + 1);
-                        model.setItem('latest', message.logs.latest);
-                        // Detect end of log.
-                        var lastLine = model.getItem('lastLine'),
-                            batchLastLine = message.logs.first + message.logs.lines.length;
-                        if (!lastLine) {
-                            lastLine = batchLastLine;
-                        } else {
-                            if (batchLastLine > lastLine) {
-                                lastLine = batchLastLine;
-                            }
-                        }
-                        model.setItem('lastLine', lastLine);
+                        model.setItem('lastLine', message.logs.first + viewLines.length);
+                        model.setItem('totalLines', message.logs.max_lines);
                         render();
                     }
                     if (looping) {
@@ -1106,6 +1122,14 @@ define([
          * the first and last lines known.
          * It also tracks the total lines currently available for the app, if returned.
          * Lines is a list of small objects. Each object
+         * lines - list, each is a small object with keys (these are all post-processed after fetching):
+         *      line - string, the line text
+         *      isError - boolean, true if that line denotes an error
+         *      ts - int timestamp
+         *      lineNumber - int, what line this is
+         * firstLine - int, the first line we're tracking (inclusive)
+         * lastLine - int, the last line we're tracking (inclusive)
+         * totalLines - int, the total number of lines available from the server as of the last message.
          */
         model = Props.make({
             data: {

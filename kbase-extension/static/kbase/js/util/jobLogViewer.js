@@ -588,9 +588,6 @@ define([
             const events = Events.make(),
                 content = div({ dataElement: 'kb-log', style: { marginTop: '10px'}}, [
                     div({ class: 'kblog-header' }, [
-                        div([
-                            'job id: ' + jobId
-                        ]),
                         div({ class: 'kblog-num-wrapper' }, [
                             div({ class: 'kblog-line-num' }, [])
                         ]),

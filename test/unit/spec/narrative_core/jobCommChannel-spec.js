@@ -388,7 +388,7 @@ define([
                 let jobId = 'job-' + errCase,
                     errMsg = errCase + ' error happened!',
                     msg = makeCommMsg('job_comm_error', {
-                        request_type: errCase,
+                        source: errCase,
                         job_id: jobId,
                         message: errMsg
                     }),
@@ -409,7 +409,7 @@ define([
                 errMsg = 'some random error',
                 requestType = 'some-error',
                 msg = makeCommMsg('job_comm_error', {
-                    request_type: requestType,
+                    source: requestType,
                     job_id: jobId,
                     message: errMsg
                 }),

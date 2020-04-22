@@ -334,6 +334,18 @@ class JobComm:
         self._comm.send(msg)
 
     def send_error_message(self, err_type: str, req: JobRequest, content: dict = None) -> None:
+        """
+        Sends a comm message over the KBaseJobs channel as an error. This will have msg_type as
+        whatever the error type is, and include the original request in the message content as
+        "source".
+
+        This sends a packet that looks like:
+        {
+            job_id: (string, if relevant),
+            source: the original message that spawned the error,
+            other fields about the error, dependent on the content.
+        }
+        """
         error_content = {
             "job_id": req.job_id,
             "source": req.request

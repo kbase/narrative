@@ -83,7 +83,7 @@ define([
         /**
          * Sends a message over the bus. The channel should have a single key of either
          * cell or jobId.
-         * @param {string} channel - either CELL or JOB
+         * @param {string} channelName - either CELL or JOB
          * @param {string} channelId - id for the channel
          * @param {string} msgType - one of the msg types
          * @param {any} message
@@ -340,7 +340,7 @@ define([
             case 'job_comm_error':
                 if (msgData) {
                     jobId = msgData.job_id;
-                    switch (msgData.request_type) {
+                    switch (msgData.source) {
                     case 'cancel_job':
                         this.sendBusMessage(JOB, jobId, 'job-cancel-error', {
                             jobId: jobId,
@@ -364,7 +364,7 @@ define([
                         this.sendBusMessage(JOB, jobId, 'job-error', {
                             jobId: jobId,
                             message: msgData.message,
-                            request: msgData.request_type
+                            request: msgData.source
                         });
                         break;
                     }

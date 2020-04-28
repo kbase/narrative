@@ -1,9 +1,7 @@
 define([
     'bluebird',
-    'jquery',
-    'kb_common/cookie',
-    'jqueryCookie'
-], function(Promise, $, Cookie) {
+    'jquery'
+], function(Promise, $) {
     'use strict';
 
     function factory(config) {
@@ -13,8 +11,7 @@ define([
                 narrativeSession: 'narrative_session',  // session token - used by the router, not set, but should be deleted
                 backup: 'kbase_session_backup'          // used by the reports HTML server, should get deleted
             },
-            cookieManager = Object.create(Cookie).init({ doc: document }),
-            tokenAge = 14*86400; // 14 days in seconds
+            tokenAge = 14; // days
 
         /**
          * Meant for managing auth or session cookies (mainly auth cookies as set by
@@ -26,7 +23,7 @@ define([
          * expires is expected to be in days
          * auto set fields are:
          *  - path = '/'
-         *  - expires = 14 days
+         *  - expires = tokenAge (default 14) days
          * @param {object} cookie
          *  - has the cookie keys: name, value, path, expires, max-age, domain
          *  - adds secure=true, samesite=none for KBase use.
@@ -38,7 +35,7 @@ define([
             let name = encodeURIComponent(cookie.name);
             let value = encodeURIComponent(cookie.value || '');
             let props = {
-                expires: 14,        // gets translated to GMT string
+                expires: tokenAge,        // gets translated to GMT string
                 path: '/',
                 samesite: 'none'
             };
@@ -284,8 +281,7 @@ define([
             getTokenInfo: getTokenInfo,
             getUserNames: getUserNames,
             searchUserNames: searchUserNames,
-            validateToken: validateToken,
-            cookieManager: cookieManager
+            validateToken: validateToken
         };
 
     }

@@ -44,7 +44,6 @@ require.config({
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',
         // copied from the cdn
         'google-code-prettify': 'ext_packages/google-code-prettify/1.2.0/',
-        jqueryCookie: 'ext_packages/jquery-extensions/js/jquery.cookie.min',
         'jquery-svg': 'ext_packages/jquery-extensions/js/jquery.svg',
         'knhx': 'ext_packages/knhxtree/js/knhx',
         'knhx_menu': 'ext_packages/knhxtree/js/menu',
@@ -372,9 +371,6 @@ require.config({
         },
         jquery: {
             exports: '$'
-        },
-        jqueryCookie: {
-            deps: ['jquery']
         },
         'jquery-nearest': {
             deps: ['jquery']

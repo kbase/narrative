@@ -100,7 +100,11 @@ define ([
             $overviewTable.append(get_table_row('Number of Samples', self.ss_obj_data['samples'].length ));
             $overviewTable.append(get_table_row('Description', self.ss_obj_data['description']));
 
-            self.metadata_headers = [];
+            self.metadata_headers = [{
+                id: "sample_version",
+                text: "version",
+                isSortable: true
+            }]; // version not in metadata, but included in visualization.
             // get the metadata_keys
             self.client.sync_call('SampleService.get_sample', [{
                 id: self.ss_obj_data['samples'][0]['id']
@@ -161,11 +165,16 @@ define ([
                     var sample_queries = [];
                     var sample_data = [];
                     sample_slice.forEach(function (sample_info) {
+                        var sample_query_params = {
+                            id: sample_info['id']
+                        }
+                        if ("version" in sample_info){
+                            sample_query_params['version'] = sample_info['version']
+                        }
                         sample_queries.push(
-                            Promise.resolve(self.client.sync_call('SampleService.get_sample', [{
-                                id: sample_info['id']
-                            }])).then(function(sample){
+                            Promise.resolve(self.client.sync_call('SampleService.get_sample', [sample_query_params])).then(function(sample){
                                 let samp_data = {};
+                                samp_data['version'] = String(sample[0]['version'])
                                 for (let i = 0; i < sample[0]['node_tree'].length; i++){
                                     for (const meta_key in sample[0]['node_tree'][i]['meta_controlled']){
                                         samp_data[meta_key] = self.unpack_metadata_to_string(

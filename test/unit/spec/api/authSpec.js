@@ -17,140 +17,231 @@ define ([
 
     var authClient,
         token;
+    const cookieKeys = ['kbase_session', 'kbase_session_backup', 'narrative_session'];
 
-    beforeEach(function() {
+    function setToken(token) {
+        cookieKeys.forEach(key => document.cookie = `${key}=${token}`);
+    }
+
+    function clearToken() {
+        cookieKeys.forEach(key => document.cookie = `${key}=`);
+    }
+
+    beforeEach(() => {
         token = TestUtil.getAuthToken();
-        document.cookie='kbase_session=' + token;
+        setToken(token);
         authClient = Auth.make({url: Config.url('auth')});
     });
 
-    describe('Test the Auth API module', function() {
-        it('Should make a new Auth client on request', function() {
-            TestUtil.pendingIfNoToken();
+    afterEach(() => {
+        clearToken();
+    });
 
+    describe('Test the Auth API module', () => {
+        it('Should make a new Auth client on request', () => {
             var auth = Auth.make({url: Config.url('auth')});
             expect(auth).not.toBeNull();
         });
 
-        it('Should get auth token info', function(done) {
+        it('Should get auth token info', (done) => {
             TestUtil.pendingIfNoToken();
 
             authClient.getTokenInfo(token)
-                .then(function(response) {
+                .then((response) => {
                     expect(Object.keys(response)).toContain('expires');
                     done();
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     expect(error).toBeNull();
                     done();
                 });
         });
 
-        it('Should fail to get auth token info from a fake token', function(done) {
+        it('Should fail to get auth token info from a fake token', (done) => {
             TestUtil.pendingIfNoToken();
 
             authClient.getTokenInfo('faketoken')
-                .then(function(response) {
+                .then((response) => {
                     expect(response).toBeNull();
                     done();
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     expect(error).not.toBeNull();
                     expect(Object.keys(error)).toContain('error');
                     done();
                 });
         });
 
-        it('Should return my profile', function(done) {
+        it('Should return my profile', (done) => {
             TestUtil.pendingIfNoToken();
 
             authClient.getUserProfile()
-                .then(function(response) {
+                .then((response) => {
                     expect(response).not.toBeNull();
                     expect(Object.keys(response)).toContain('display');
                     done();
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     expect(error).toBeNull();
                     done();
                 });
         });
 
-        it('Should fail to get profile with a bad token', function(done) {
-            // TODO
-            done();
+        it('Should fail to get profile with a missing token', (done) => {
+            clearToken();
+            authClient.getCurrentProfile()
+                .then((profile) => {
+                    done.fail('Should have failed!');
+                })
+                .catch((error) => {
+                    done();
+                });
         });
 
-        it('Should fail to get profile with an expired token', function(done) {
-            // TODO
-            done();
+        it('Should fail to get profile with a bad token', (done) => {
+            clearToken();
+            setToken('someBadToken');
+            authClient.getCurrentProfile()
+                .then(() => {
+                    done.fail('Should have failed!');
+                })
+                .catch(() => {
+                    done();
+                });
         });
 
-        it('Should return a list of users', function(done) {
+        it('Should return a list of users', (done) => {
             TestUtil.pendingIfNoToken();
 
             var badName = 'not_a_user_name';
             authClient.getUserNames(token, ['wjriehl', badName])
-                .then(function(names) {
+                .then((names) => {
                     expect(names.wjriehl).toEqual('William Riehl');
                     expect(Object.keys(names)).not.toContain(badName);
                     done();
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     expect(error).toBeNull();
                     done();
                 });
         });
 
-        it('Should fail to get users with a bad token', function(done) {
-            //TODO
-            done();
+        it('Should fail to get users with a bad token', (done) => {
+            const token = 'someBadToken';
+            clearToken();
+            setToken(token);
+            authClient.getUserNames(token, ['wjriehl'])
+                .then(() => {
+                    done.fail('Should have failed!');
+                })
+                .catch(() => {
+                    done();
+                });
         });
 
-        it('Should fail to get users with an expired token', function(done) {
-            //TODO
-            done();
+        it('Should fail to get users with a missing token', (done) => {
+            clearToken();
+            authClient.getUserNames(null, ['wjriehl'])
+                .then(() => {
+                    done.fail('Should have failed!');
+                })
+                .catch(() => {
+                    done();
+                });
         });
 
-        it('Should search for users', function(done) {
+        it('Should search for users', (done) => {
             TestUtil.pendingIfNoToken();
 
             var query = 'ie';
             authClient.searchUserNames(token, query)
-                .then(function(results) {
+                .then((results) => {
                     expect(results).not.toBeNull();
                     done();
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     expect(error).toBeNull();
                     done();
                 });
         });
 
-        it('Should search for users with extra options', function(done) {
+        it('Should search for users with extra options', (done) => {
             TestUtil.pendingIfNoToken();
 
             var query = 'ie';
             var options = [''];
             authClient.searchUserNames(token, query, options)
-                .then(function(results) {
+                .then((results) => {
                     expect(results).not.toBeNull();
                     done();
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     expect(error).toBeNull();
                     done();
                 });
         });
 
-        it('Should fail to search for users with a bad token', function(done) {
-            //TODO
-            done();
+        it('Should fail to search for users with a bad token', (done) => {
+            authClient.searchUserNames('someBadToken', 'ie', [''])
+                .then(() => {
+                    done.fail('Should have failed!');
+                })
+                .catch(() => {
+                    done();
+                });
         });
 
-        it('Should fail to search for users with an expired token', function(done) {
-            //TODO
-            done();
+        it('Should fail to search for users with a missing token', (done) => {
+            clearToken();
+            authClient.searchUserNames(null, 'ie', [''])
+                .then(() => {
+                    done.fail('Should have failed!');
+                })
+                .catch(() => {
+                    done();
+                });
+        });
+
+        it('Should set an auth token cookie', () => {
+            clearToken();
+            const newToken = 'someRandomToken';
+            authClient.setAuthToken(newToken);
+            expect(authClient.getAuthToken()).toEqual(newToken);
+        });
+
+        it('Should validate an auth token on request', (done) => {
+            let doneCount = 0;
+            let trials = [{
+                token: null,
+                isValid: true  // should get it from cookie
+            }, {
+                token: 'someRandomToken',
+                isValid: false
+            }]
+            trials.forEach(trial => {
+                authClient.validateToken(trial.token)
+                    .then(isValid => {
+                        expect(isValid).toBe(trial.isValid);
+                        doneCount++;
+                        if (doneCount === trials.length) {
+                            done();
+                        }
+                    })
+                    .catch(error => {
+                        done();
+                    });
+            });
+        });
+
+        it('Should clear all auth token cookies on request', () => {
+            setToken('someToken');
+            expect(authClient.getAuthToken()).toEqual('someToken');
+            authClient.clearAuthToken();
+            expect(authClient.getAuthToken()).toBeNull();
+        });
+
+        it('Should revoke an auth token on request', () => {
+            // This deletes the token. Should be mocked?
         });
     });
 });

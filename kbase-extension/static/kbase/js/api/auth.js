@@ -230,6 +230,7 @@ define([
                 url: callString,
                 method: callParams.method,
                 dataType: 'json',
+                crossDomain: true,
                 headers: {
                     'Authorization': token,
                     'Content-Type': 'application/json'

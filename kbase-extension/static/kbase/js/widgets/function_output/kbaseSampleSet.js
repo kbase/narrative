@@ -122,7 +122,6 @@ define ([
                     console.error('Error: Could not load the first sample for metadata headers: ' + err);
                 }
             })
-
             // Build the tabs
             var $tabs = new kbaseTabs($tabPane, {
                 tabPosition : 'top',

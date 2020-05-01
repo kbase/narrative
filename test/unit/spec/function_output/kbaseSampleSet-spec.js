@@ -5,24 +5,20 @@
 /*jslint white: true*/
 define([
     'jquery',
-    'common/runtime',
     'kbaseSampleSetView',
     'base/js/namespace',
     'kbaseNarrative',
     'narrativeConfig'
 ], (
     $,
-    Runtime,
     Widget,
     Jupyter,
     Narrative,
     Config
 ) => {
-    let runtime;
     describe('Test the kbaseSampleSet viewer widget', () => {
         let $div = null;
         beforeEach(() => {
-            runtime = Runtime.make();
             jasmine.Ajax.install();
             $div = $('<div>');
             Jupyter.narrative = new Narrative();

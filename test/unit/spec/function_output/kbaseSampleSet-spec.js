@@ -111,24 +111,29 @@ define([
                 })
             });
             let w = new Widget($div, {upas: {id: 'fake'}});
-            [
-                'Description',
-                'KBase Object Name',
-                "This is a test sample set."
-            ].forEach((str) => {
-                expect($div.html()).toContain(str);
-            });
-            [
-                "Sample ID",
-                "Sample Name",
-                "madeup",
-                "idtwo",
-                "two units"
-            ].forEach((str) => {
-                expect(samples_tab.html()).toContain(str);
-            });
+            setTimeout(() => {
+                [
+                    'Description',
+                    'KBase Object Name',
+                    "This is a test sample set."
+                ].forEach((str) => {
+                    expect($div.html()).toContain(str);
+                });
+                $div.find('a[data-tab="Samples"]').click();
+                setTimeout(() => {
+                    [
+                        "Sample ID",
+                        "Sample Name",
+                        "madeup",
+                        "idtwo",
+                        "two units"
+                    ].forEach((str) => {
+                        expect($div.html()).toContain(str);
+                    });
+                    done();
+                }, 50);
+            }, 50);
 
-            done();
         });
     });
 });

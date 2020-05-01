@@ -1,14 +1,95 @@
 define([
     'bluebird',
-    'jquery',
-    'util/string',
-    'jqueryCookie'
-], function(Promise, $, StringUtil) {
+    'jquery'
+], function(Promise, $) {
     'use strict';
 
     function factory(config) {
-        var url = config.url;
-        var cookieName = 'kbase_session';
+        const url = config.url,
+            cookieNames = {
+                auth: 'kbase_session',                  // main auth token, use this
+                narrativeSession: 'narrative_session',  // session token - used by the router, not set, but should be deleted
+                backup: 'kbase_session_backup'          // used by the reports HTML server, should get deleted
+            },
+            tokenAge = 14; // days
+
+        /**
+         * Meant for managing auth or session cookies (mainly auth cookies as set by
+         * a developer working locally - which is why this is very very simple).
+         * Get a cookie "object" (key-value pairs) as input.
+         * If it's missing name or value, does nothing.
+         * Default expiration time is 14 days.
+         * domain, expires, and max-age are optional
+         * expires is expected to be in days
+         * auto set fields are:
+         *  - path = '/'
+         *  - expires = tokenAge (default 14) days
+         * @param {object} cookie
+         *  - has the cookie keys: name, value, path, expires, max-age, domain
+         *  - adds secure=true, samesite=none for KBase use.
+         */
+        function setCookie(cookie) {
+            if (!cookie.name) {
+                return;
+            }
+            let name = encodeURIComponent(cookie.name);
+            let value = encodeURIComponent(cookie.value || '');
+            let props = {
+                expires: tokenAge,        // gets translated to GMT string
+                path: '/',
+                samesite: 'none'
+            };
+            if (Number.isInteger(cookie.expires)) {
+                props.expires = cookie.expires;
+            }
+            if (cookie.domain) {
+                props.domain = cookie.domain;
+                props.secure = 'true';
+            }
+            props['max-age'] = 86400 * props.expires;
+            if (props.expires === 0) {
+                props.expires = new Date(0).toUTCString();
+            }
+            else {
+                props.expires = new Date(new Date().getTime() + (86400000*props.expires)).toUTCString();
+            }
+            let propStr = Object.keys(props).map(key => `${key}=${props[key]}`).join('; ');
+            let newCookie = `${name}=${value}; ${propStr}`;
+            document.cookie=newCookie;
+        }
+
+        /**
+         * If present in the browser, returns the value for the cookie. If not present, returns undefined.
+         * @param {string} name
+         */
+        function getCookie(name) {
+            let allCookies = {};
+            document.cookie.split(';').forEach(cookie => {
+                const parts = cookie.trim().split('=');
+                allCookies[parts[0]] = parts[1];
+            });
+            return allCookies[name];
+        }
+
+        /**
+         * Removes a cookie from the browser. Meant for removing auth token and narrative session
+         * cookies on logout.
+         * @param {string} name
+         * @param {string} path
+         * @param {string || undefined} domain
+         */
+        function removeCookie(name, path, domain) {
+            let removedCookie = {
+                name: name,
+                value: '',
+                path: path,
+                expires: 0
+            };
+            if (domain) {
+                removedCookie.domain = domain;
+            }
+            setCookie(removedCookie);
+        }
 
         /**
          * Does a GET request to get the profile of the currently logged in user.
@@ -46,10 +127,11 @@ define([
          * Returns null if not logged in.
          */
         function getAuthToken() {
-            if (!$.cookie(cookieName)) {
-                return null;
+            const token = getCookie(cookieNames.auth);
+            if (token) {
+                return token;
             }
-            return $.cookie(cookieName);
+            return null;
         }
 
         /* Sets the given auth token into the browser's cookie.
@@ -57,15 +139,22 @@ define([
          */
         function setAuthToken(token) {
             if (token) {
-                $.cookie(cookieName, token, {path: '/', domain: 'kbase.us', expires: 60});
-                $.cookie(cookieName, token, {path: '/', expires: 60});
+                ['auth', 'backup'].forEach((name) => {
+                    let cookie = {
+                        name: cookieNames[name],
+                        value: token
+                    }
+                    setCookie(cookie);
+                    cookie.domain='.kbase.us';
+                    setCookie(cookie);
+                });
             }
         }
 
-        /* Deletes the auth token cookie */
+        /* Deletes the auth cookies */
         function clearAuthToken() {
-            $.removeCookie(cookieName, {path: '/'});
-            $.removeCookie(cookieName, {path: '/', domain: 'kbase.us'});
+            Object.keys(cookieNames).forEach(name => removeCookie(cookieNames[name], '/', '.kbase.us'));
+            Object.keys(cookieNames).forEach(name => removeCookie(cookieNames[name], '/'));
         }
 
         function revokeAuthToken(token, id) {
@@ -141,6 +230,7 @@ define([
                 url: callString,
                 method: callParams.method,
                 dataType: 'json',
+                crossDomain: true,
                 headers: {
                     'Authorization': token,
                     'Content-Type': 'application/json'

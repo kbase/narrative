@@ -283,6 +283,7 @@ require.config({
         'kbaseAttributeMapping': 'kbase/js/widgets/function_output/kbaseAttributeMapping',
         'kbaseConditionSetViewer': 'kbase/js/widgets/function_output/kbaseAttributeMapping',
         'kbaseFeatureSet': 'kbase/js/widgets/function_output/kbaseFeatureSet',
+        'kbaseSampleSetView': 'kbase/js/widgets/function_output/kbaseSampleSet',
 
         'kbaseExpressionMatrix': 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
         'kbaseExpressionGenesetBaseWidget': 'kbase/js/widgets/function_output/kbaseExpressionGenesetBaseWidget',

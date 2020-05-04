@@ -45,7 +45,7 @@ class Job(object):
         self.meta = meta
 
     @classmethod
-    def from_state(Job, job_id, job_info, owner, app_id, tag='release',
+    def from_state(cls, job_id, job_info, owner, app_id, tag='release',
                    cell_id=None, run_id=None, token_id=None, meta=dict()):
         """
         Parameters:
@@ -68,9 +68,9 @@ class Job(object):
         run_id - the front-end id associated with the job (optional)
         token_id - the id of the authentication token used to start the job (optional)
         """
-        return Job(job_id,
+        return cls(job_id,
                    app_id,
-                   job_info['params'],
+                   job_info.get('params', {}),
                    owner,
                    tag=tag,
                    app_version=job_info.get('service_ver', None),
@@ -80,7 +80,7 @@ class Job(object):
                    meta=meta)
 
     @classmethod
-    def map_viewer_params(Job, job_state, job_inputs, app_id, app_tag):
+    def map_viewer_params(cls, job_state, job_inputs, app_id, app_tag):
         # get app spec.
         if job_state is None or job_state.get('status', '') != 'completed':
             return None

@@ -40,7 +40,7 @@ define([
             message: errorMessage,
             detail: errorDetail,
             advice: 'For more info please consult the logs in the Job Status tab. If the app fails consistently, ' + 
-            'create a ticket on our help board at http://kbase.us/contact-us/',
+            'please create a ticket on our help board at https://kbase.us/contact-us ',
         };
     }
 

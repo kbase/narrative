@@ -39,7 +39,8 @@ define([
             type: errorType,
             message: errorMessage,
             detail: errorDetail,
-            advice: 'If the app fails consistently, contact us at help@kbase.us',
+            advice: 'For more info please consult the logs in the Job Status tab. If the app fails consistently, ' + 
+            'create a ticket on our help board at http://kbase.us/contact-us/',
         };
     }
 

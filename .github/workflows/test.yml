@@ -46,12 +46,14 @@ jobs:
         npm install bower
         ./node_modules/bower/bin/bower install
 
-    - name: Install Python deps
+    - name: Install Narrative Application
       shell: bash -l {0}
       run: |
-        conda info
-        conda list
-        conda env list
+          bash ./scripts/install_narrative.sh
+          grunt minify
+          sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/"
+          sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json
+          jupyter notebook --version
 
     # Runs a single command using the runners shell
     - name: Run a one-line script

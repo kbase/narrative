@@ -21,6 +21,14 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
+    - uses: goanpeca/setup-miniconda@v1
+      with:
+        miniconda-version: 'latest'
+        activate-environment: test-environment
+        python-version: 3.6.10
+        auto-activate-base: false
+        auto-update-conda: true
+        condarc-file: test/condarc.yml
 
     - name: Use Node js 10.x
       uses: actions/setup-node@v1
@@ -38,16 +46,12 @@ jobs:
         npm install bower
         ./node_modules/bower/bin/bower install
 
-    - name: Create conda environment
+    - name: Install Python deps
+      shell: bash -l {0}
       run: |
-        conda config --set always_yes yes --set changeps1 no
-        conda update -q conda
-        conda info -a
-        conda create -q -n test-environment python=3.6.10
-        conda init
-        conda activate test-environment
-
-
+        conda info
+        conda list
+        conda env list
 
     # Runs a single command using the runners shell
     - name: Run a one-line script

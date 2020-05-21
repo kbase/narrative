@@ -35,7 +35,8 @@ jobs:
     - name: Install JS dependencies
       run: |
         npm ci
-        bower install
+        npm install bower
+        ./node_modules/bower/bin/bower install
 
     - name: Create conda environment
       run: |

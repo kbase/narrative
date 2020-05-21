@@ -44,7 +44,8 @@ jobs:
         conda update -q conda
         conda info -a
         conda create -q -n test-environment python=3.6.10
-        source activate test-environment
+        conda init
+        conda activate test-environment
 
 
 

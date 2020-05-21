@@ -22,11 +22,10 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
+    # gem install coveralls-lcov
+    # pip install coveralls
     - name: Install dependencies
       run: |
-        gem install coveralls-lcov
-        pip install coveralls
-        nvm install $TRAVIS_NODE_VERSION
         npm install -g bower
         npm install -g grunt-cli
         npm install -g karma-cli

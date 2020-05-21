@@ -34,8 +34,8 @@ jobs:
     # npm install -g karma-cli
     - name: Install JS dependencies
       run: |
-        bower install
         npm ci
+        bower install
 
     - name: Create conda environment
       run: |

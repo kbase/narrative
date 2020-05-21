@@ -24,11 +24,21 @@ jobs:
 
     # gem install coveralls-lcov
     # pip install coveralls
-    - name: Install dependencies
+    # npm install -g bower
+    # npm install -g grunt-cli
+    # npm install -g karma-cli
+    - name: Install JS dependencies
       run: |
-        npm install -g bower
-        npm install -g grunt-cli
-        npm install -g karma-cli
+        bower install
+        npm ci
+
+    - name: Create conda environment
+      run: |
+        conda config --set always_yes yes --set changeps1 no
+        conda update -q conda
+        conda info -a
+        conda create -q -n test-environment python=3.6.10
+        conda activate test-environment
 
 
 

@@ -58,3 +58,15 @@ jobs:
     - name: Run Narrative Test Suite
       shell: bash -l {0}
       run: make test
+
+    - name: Combine coverage results
+      uses:
+      shell: bash -l {0}
+      run: |
+        coveralls-lcov -v -n js-coverage/lcov/lcov.info > js-coverage.json
+        coveralls --merge js-coverage.json
+
+    - name: Send to coveralls.io
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}

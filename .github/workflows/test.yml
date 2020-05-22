@@ -60,9 +60,10 @@ jobs:
       run: make test
 
     - name: Combine coverage results
-      uses:
+      uses: actions/setup-ruby@v1
       shell: bash -l {0}
       run: |
+        gem install coveralls-lcov
         coveralls-lcov -v -n js-coverage/lcov/lcov.info > js-coverage.json
         coveralls --merge js-coverage.json
 

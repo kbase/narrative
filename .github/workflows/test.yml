@@ -13,12 +13,8 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build-and-test:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
     - uses: goanpeca/setup-miniconda@v1
       with:
@@ -29,16 +25,11 @@ jobs:
         auto-update-conda: true
         condarc-file: test/condarc.yml
 
-    - name: Use Node js 10.x
+    - name: Use Node JS 10.x
       uses: actions/setup-node@v1
       with:
         node-version: 10.x
 
-    # gem install coveralls-lcov
-    # pip install coveralls
-    # npm install -g bower
-    # npm install -g grunt-cli
-    # npm install -g karma-cli
     - name: Install JS dependencies
       run: |
         npm ci
@@ -65,37 +56,3 @@ jobs:
           ./coverage.xml
           ./js-coverage/lcov/lcov.info
         fail_ci_if_error: true
-
-    # - name: Run Narrative Backend Unit Tests
-    #   shell: bash -l {0}
-    #   run: make test-backend
-
-    # - name: Coveralls Backend
-    #   uses: coverallsapp/github-action@master
-    #   with:
-    #     github-token: ${{ secrets.GITHUB_TOKEN }}
-    #     flag-name: run-backend
-    #     parallel: true
-    #     path-to-lcov: ./cover/status.json
-
-    # - name: Run Narrative Frontend Unit Tests
-    #   shell: bash -l {0}
-    #   run: make test-frontend-unit
-
-    # - name: Coveralls Frontend
-    #   uses: coverallsapp/github-action@master
-    #   with:
-    #     github-token: ${{ secrets.GITHUB_TOKEN }}
-    #     flag-name: run-frontend-unit
-    #     parallel: true
-    #     path-to-lcov: ./js-coverage/lcov/lcov.info
-
-#   finish:
-#     needs: build-and-test
-#     runs-on: ubuntu-latest
-#     steps:
-#     - name: Coveralls Finished
-#       uses: coverallsapp/github-action@master
-#       with:
-#         github-token: ${{ secrets.github_token }}
-#         parallel-finished: true

@@ -54,36 +54,49 @@ jobs:
           sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json
           jupyter notebook --version
 
-    - name: Run Narrative Backend Unit Tests
+    - name: Run Narrative Test Suite
       shell: bash -l {0}
-      run: make test-backend
+      run: make test
 
-    - name: Coveralls Backend
-      uses: coverallsapp/github-action@master
+    - name: Send to Codecov
+      uses: codecov/codecov-action@v1
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        flag-name: run-backend
-        parallel: true
-        path-to-lcov: ./cover/status.json
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: |
+          ./coverage.xml
+          ./js-coverage/lcov/lcov.info
+        fail_ci_if_error: true
 
-    - name: Run Narrative Frontend Unit Tests
-      shell: bash -l {0}
-      run: make test-frontend-unit
+    # - name: Run Narrative Backend Unit Tests
+    #   shell: bash -l {0}
+    #   run: make test-backend
 
-    - name: Coveralls Frontend
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        flag-name: run-frontend-unit
-        parallel: true
-        path-to-lcov: ./js-coverage/lcov/lcov.info
+    # - name: Coveralls Backend
+    #   uses: coverallsapp/github-action@master
+    #   with:
+    #     github-token: ${{ secrets.GITHUB_TOKEN }}
+    #     flag-name: run-backend
+    #     parallel: true
+    #     path-to-lcov: ./cover/status.json
 
-  finish:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Coveralls Finished
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.github_token }}
-        parallel-finished: true
+    # - name: Run Narrative Frontend Unit Tests
+    #   shell: bash -l {0}
+    #   run: make test-frontend-unit
+
+    # - name: Coveralls Frontend
+    #   uses: coverallsapp/github-action@master
+    #   with:
+    #     github-token: ${{ secrets.GITHUB_TOKEN }}
+    #     flag-name: run-frontend-unit
+    #     parallel: true
+    #     path-to-lcov: ./js-coverage/lcov/lcov.info
+
+#   finish:
+#     needs: build-and-test
+#     runs-on: ubuntu-latest
+#     steps:
+#     - name: Coveralls Finished
+#       uses: coverallsapp/github-action@master
+#       with:
+#         github-token: ${{ secrets.github_token }}
+#         parallel-finished: true

@@ -59,8 +59,12 @@ jobs:
       shell: bash -l {0}
       run: make test
 
-    - name: Combine coverage results
+    - name: Setup Ruby for coverage mapping
       uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.6
+
+    - name: Combine coverage results
       shell: bash -l {0}
       run: |
         gem install coveralls-lcov

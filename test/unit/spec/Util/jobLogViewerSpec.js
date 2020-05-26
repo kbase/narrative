@@ -127,7 +127,7 @@ define([
             viewer.detach();
         });
 
-        it('Should render on job-logs messages', (done) => {
+        it('Should render on job-logs messages immediately on startup', (done) => {
             let viewer = JobLogViewer.make();
             const jobId = 'testJobLogMsgResp';
             const arg = {
@@ -155,7 +155,7 @@ define([
             });
 
             runtimeBus.on('request-latest-job-log', (msg) => {
-                expect(msg).toEqual({jobId: jobId});
+                expect(msg).toEqual({jobId: jobId, options: {}});
                 runtimeBus.send(
                     {
                         jobId: jobId,
@@ -201,6 +201,80 @@ define([
                 }, 500);
             });
             viewer.start(arg);
+        });
+
+        it('Should render a queued message for queued jobs', (done) => {
+            let viewer = JobLogViewer.make();
+            const jobId = 'testJobQueued';
+            const arg = {
+                node: hostNode,
+                jobId: jobId
+            };
+            runtimeBus.on('request-job-status', (msg) => {
+                expect(msg).toEqual({jobId: jobId});
+                runtimeBus.send(
+                    {
+                        jobId: jobId,
+                        jobState: {
+                            status: 'queued'
+                        }
+                    },
+                    {
+                        channel: {
+                            jobId: jobId
+                        },
+                        key: {
+                            type: 'job-status'
+                        }
+                    }
+                );
+            });
+            runtimeBus.on('request-job-update', (msg) => {
+                expect(msg).toEqual({jobId: jobId});
+                runtimeBus.send(
+                    {
+                        jobId: jobId,
+                        jobState: {
+                            status: 'queued'
+                        }
+                    },
+                    {
+                        channel: {
+                            jobId: jobId
+                        },
+                        key: {
+                            type: 'job-status'
+                        }
+                    }
+                );
+                setTimeout(() => {
+                    const panel = hostNode.querySelector('[data-element="log-panel"]');
+                    console.log(panel);
+                    expect(panel.children.length).toEqual(1);
+                    expect(panel.children[0].innerHTML).toContain('Job is queued'); //, logs will be available when the job is running.');
+                    done();
+                }, 500);
+            });
+            viewer.start(arg);
+        });
+
+        xit('Should render a canceled message for canceled jobs', (done) => {
+        });
+
+        xit('Should render an error message for errored jobs', (done) => {
+
+        });
+
+        xit('Should have the top button go to the top', (done) => {
+
+        });
+
+        xit('Should have the bottom button go to the end', (done) => {
+
+        });
+
+        xit('Should have the stop button make sure it stops', (done) => {
+
         });
     });
 })

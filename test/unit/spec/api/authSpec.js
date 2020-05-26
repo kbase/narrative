@@ -48,21 +48,21 @@ define([
         });
     }
 
-    beforeEach(() => {
-        token = TestUtil.getAuthToken();
-        setToken(token);
-        authClient = Auth.make({
-            url: Config.url('auth'),
-            // Can't use secure cookies for testing.
-            secureCookies: false
-        });
-    });
-
-    afterEach(() => {
-        clearToken();
-    });
-
     describe('Test the Auth API module', () => {
+        beforeEach(() => {
+            token = TestUtil.getAuthToken();
+            setToken(token);
+            authClient = Auth.make({
+                url: Config.url('auth'),
+                // Can't use secure cookies for testing.
+                secureCookies: false
+            });
+        });
+
+        afterEach(() => {
+            clearToken();
+        });
+
         it('Should make a new Auth client on request', () => {
             var auth = Auth.make({url: Config.url('auth')});
             expect(auth).not.toBeNull();

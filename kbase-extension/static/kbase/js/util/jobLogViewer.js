@@ -614,11 +614,6 @@ define([
             };
         }
 
-        function sanitize(text) {
-            const encoded = ui.htmlEncode(text);
-            return encoded;
-        }
-
         /**
          * build and return div that displays
          * individual job log line
@@ -646,7 +641,7 @@ define([
             // text
             const textDiv = document.createElement('div');
             textDiv.setAttribute('class', 'kblog-text');
-            const lineText = document.createTextNode(line.text)
+            const lineText = document.createTextNode(line.text);
             textDiv.appendChild(lineText);
             // append line number and text
             wrapperDiv.appendChild(numDiv);
@@ -879,9 +874,8 @@ define([
 
                     if (message.logs.lines.length !== 0) {
                         const viewLines = message.logs.lines.map(function(line, index) {
-                            const text = sanitize(line.line);
                             return {
-                                text: text,
+                                text: line.line,
                                 isError: (line.is_error === 1 ? true : false),
                                 lineNumber: line.linepos
                             };

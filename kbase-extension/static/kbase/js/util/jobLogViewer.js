@@ -615,21 +615,8 @@ define([
         }
 
         function sanitize(text) {
-            var longWord = 80;
-            var encoded = ui.htmlEncode(text);
-
-            // try to make sane word length not break things.
-            var words = encoded.split(/ /);
-
-            var fixed = words.map(function(word) {
-                if (word.length < longWord) {
-                    return word;
-                }
-                return word.replace(/\//, '/<wbr>')
-                    .replace(/\./, '.<wbr>');
-            });
-
-            return fixed.join(' ');
+            const encoded = ui.htmlEncode(text);
+            return encoded;
         }
 
         /**

@@ -11,7 +11,7 @@ define([
     let bus,
         testConfig,
         required = false,
-        runtime = Runtime.make(),
+        runtime,
         node,
         defaultValue = 'some test text';
 
@@ -34,6 +34,7 @@ define([
 
     describe('Text Input tests', () => {
         beforeEach(() => {
+            runtime = Runtime.make();
             node = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'text input testing',

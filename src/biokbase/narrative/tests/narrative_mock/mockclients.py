@@ -1,7 +1,8 @@
 from ..util import TestConfig
 from biokbase.workspace.baseclient import ServerError
 
-class MockClients(object):
+
+class MockClients:
     """
     Mock KBase service clients as needed for Narrative backend tests.
     Use this with the Python mock library to mock the biokbase.narrative.clients.get call
@@ -34,6 +35,7 @@ class MockClients(object):
             assert isinstance(token, str)
         self.config = TestConfig()
         self.job_info = self.config.load_json_file(self.config.get('jobs', 'job_info_file'))
+        self.ee2_job_info = self.config.load_json_file(self.config.get('jobs', 'ee2_job_info_file'))
         self.test_job_id = self.config.get('app_tests', 'test_job_id')
 
     # ----- User and Job State functions -----
@@ -43,6 +45,9 @@ class MockClients(object):
 
     def delete_job(self, job):
         return "bar"
+
+    def check_workspace_jobs(self, params):
+        return self.ee2_job_info
 
     # ----- Narrative Method Store functions ------
 
@@ -54,7 +59,6 @@ class MockClients(object):
 
     def get_method_full_info(self, params):
         return self.config.load_json_file(self.config.get('specs', 'app_infos_file'))
-
 
     # ----- Workspace functions -----
 
@@ -123,7 +127,6 @@ class MockClients(object):
                 infos.append(random_obj_info)
         return infos
 
-
         infos = [[5, 'Sbicolor2', 'KBaseGenomes.Genome-12.3', '2017-03-31T23:42:59+0000', 1,
                   'wjriehl', 18836, 'wjriehl:1490995018528', '278abf8f0dbf8ab5ce349598a8674a6e',
                   109180038, None]]
@@ -149,26 +152,33 @@ class MockClients(object):
     def cancel_job(self, job_id):
         return "done"
 
-    def get_job_params(self, job_id):
-        return [self.job_info.get('job_param_info', {}).get(job_id, None)]
+    def check_job_canceled(self, params):
+        return {
+            "finished": 0,
+            "canceled": 0,
+            "job_id": params.get("job_id")
+        }
 
-    def check_job(self, job_id):
-        return self.job_info.get('job_status_info', {}).get(job_id, None)
+    def get_job_params(self, job_id):
+        return self.ee2_job_info.get(job_id, {}).get('job_input', {})
+
+    def check_job(self, params):
+        job_id = params.get('job_id')
+        if not job_id:
+            return {}
+        info = self.ee2_job_info.get(job_id, {})
+        if "exclude_fields" in params:
+            for f in params["exclude_fields"]:
+                if f in info:
+                    del info[f]
+        return info
 
     def check_jobs(self, params):
-        states = dict()
-        job_params = dict()
-        for job_id in params['job_ids']:
-            states[job_id] = self.job_info.get('job_status_info', {}).get(job_id, {})
-        if params.get('with_job_params', 0) == 1:
-            for job_id in params['job_ids']:
-                job_params[job_id] = self.job_info.get('job_param_info', {}).get(job_id, None)
-        ret = {
-            'job_states': states
-        }
-        if len(job_params) > 0:
-            ret['job_params'] = job_params
-        return ret
+        job_ids = params.get('job_ids')
+        infos = dict()
+        for job in job_ids:
+            infos[job] = self.check_job({'job_id': job, 'exclude_fields': params.get('exclude_fields', [])})
+        return infos
 
     def get_job_logs(self, params):
         """
@@ -281,7 +291,26 @@ class MockClients(object):
 def get_mock_client(client_name, token=None):
     return MockClients(token=token)
 
-class MockStagingHelper():
+def get_failing_mock_client(client_name, token=None):
+    return FailingMockClient(token=token)
+
+class FailingMockClient:
+    def __init__(self, token=None):
+        pass
+
+    def check_workspace_jobs(self, params):
+        raise ServerError("JSONRPCError", -32000, "Job lookup failed.")
+
+    def cancel_job(self, params):
+        raise ServerError("JSONRPCError", -32000, "Can't cancel job")
+
+    def check_job_canceled(self, params):
+        raise ServerError("JSONRPCError", 1, "Can't cancel job")
+
+    def get_job_logs(self, params):
+        raise ServerError("JSONRPCError", 2, "Can't get job logs")
+
+class MockStagingHelper:
     def list(self):
         """
         Mock the call to the staging service to get the "user's" files.

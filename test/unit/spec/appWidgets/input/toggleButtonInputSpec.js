@@ -15,7 +15,7 @@ define([
     let bus,
         testConfig,
         required = false,
-        runtime = Runtime.make(),
+        runtime,
         node,
         defaultValue = true;
 
@@ -39,6 +39,7 @@ define([
 
     describe('ToggleButtonInput tests', () => {
         beforeEach(() => {
+            runtime = Runtime.make();
             node = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'toggle button testing',

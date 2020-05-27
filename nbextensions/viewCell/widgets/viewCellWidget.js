@@ -302,7 +302,7 @@ define([
                 .then(function(data) {
                     if (!data[0]) {
                         throw new Error('App not found');
-                    }                   
+                    }
                 });
         }
 
@@ -507,7 +507,7 @@ define([
                     div({
                         class: 'body',
                         dataElement: 'body',
-                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1' }
+                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1', width: '100%' }
                     }, [
                         div({ dataElement: 'widget', style: { display: 'block', width: '100%' } }, [
                             div({ class: 'container-fluid' }, [
@@ -855,7 +855,7 @@ define([
                 return null;
             });
         }
-       
+
         function start() {
             return Promise.try(function() {
                 // DOM EVENTS
@@ -965,7 +965,7 @@ define([
             });
         }
 
-        // TODO: handle raciness of the paramsWidget... 
+        // TODO: handle raciness of the paramsWidget...
         function loadInputParamsWidget() {
             pRequire('nbextensions/viewCell/widgets/appParamsWidget')
                 .then(function(Widget) {

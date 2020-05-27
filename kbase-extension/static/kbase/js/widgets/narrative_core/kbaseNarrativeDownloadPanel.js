@@ -44,7 +44,7 @@ define ([
         exportURL: Config.url('data_import_export'),
         useDynamicDownloadSupport: false,
         nmsURL: Config.url('narrative_method_store'),
-        eeURL: Config.url('job_service'),
+        eeURL: Config.url('execution_engine2'),
         srvWizURL: Config.url('service_wizard'),
         timer: null,
         downloadSpecCache: null,    // {'lastUpdateTime': <millisec.>, 'types': {<type>: <spec>}}
@@ -182,12 +182,14 @@ define ([
             var tag = this.getVersionTag();
             var method = descr.local_function.replace('/', '.');
             var genericClient = new GenericClient(this.eeURL, {token: this.token}, null, false);
+
             Promise.resolve(genericClient.sync_call(
-                "NarrativeJobService.run_job",
+                "execution_engine2.run_job",
                 [{
                     method: method,
                     params: [{input_ref: ref}],
                     service_ver: tag,
+                    app_id: method,
                 }]))
                 .then(data => {
                     var jobId = data[0];
@@ -207,49 +209,51 @@ define ([
             var skipLogLines = 0;
             var lastLogLine = null;
             var timeLst = function(event) {
-                genericClient.sync_call("NarrativeJobService.check_job", [jobId], function(data) {
+                genericClient.sync_call("execution_engine2.check_job", [{"job_id": jobId}], function(data) {
                     var jobState = data[0];
-                    genericClient.sync_call("NarrativeJobService.get_job_logs",
-                            [{"job_id": jobId, "skip_lines": skipLogLines}], function(data2) {
-                        var logLines = data2[0].lines;
-                        for (var i = 0; i < logLines.length; i++) {
-                            lastLogLine = logLines[i];
-                            if (lastLogLine.is_error) {
-                                console.error("Export logging: " + lastLogLine.line);
-                            } else {
-                                console.log("Export logging: " + lastLogLine.line);
+                    if (jobState['running']) {
+                        genericClient.sync_call("execution_engine2.get_job_logs",
+                                [{"job_id": jobId, "skip_lines": skipLogLines}], function(data2) {
+                            var logLines = data2[0].lines;
+                            for (var i = 0; i < logLines.length; i++) {
+                                lastLogLine = logLines[i];
+                                if (lastLogLine.is_error) {
+                                    console.error("Export logging: " + lastLogLine.line);
+                                } else {
+                                    console.log("Export logging: " + lastLogLine.line);
+                                }
                             }
-                        }
-                        skipLogLines += logLines.length;
-                        var complete = jobState['finished'];
-                        var error = jobState['error'];
-                        if (complete) {
+                            skipLogLines += logLines.length;
+                            var complete = jobState['finished'];
+                            var error = jobState['error'];
+                            if (complete) {
+                                self.stopTimer();
+                                if (error) {
+                                    console.error(error);
+                                    self.showError(error['message']);
+                                } else {
+                                    console.log("Export is complete");
+                                    // Starting download from Shock
+                                    self.$statusDiv.hide();
+                                    self.$elem.find('.kb-data-list-btn').prop('disabled', false);
+                                    var result = jobState['job_output']['result'];
+                                    self.downloadUJSResults(result[0].shock_id, self.shockURL,
+                                            wsObjectName);
+                                }
+                            } else {
+                                var status = skipLogLines == 0 ? jobState['job_state'] :
+                                    lastLogLine.line;
+                                if (skipLogLines == 0)
+                                    console.log("Export status: " + status);
+                                self.showMessage('<img src="'+self.loadingImage+'" /> ' +
+                                        'Export status: ' + status);
+                            }
+                        }, function(data) {
                             self.stopTimer();
-                            if (error) {
-                                console.error(error);
-                                self.showError(error['message']);
-                            } else {
-                                console.log("Export is complete");
-                                // Starting download from Shock
-                                self.$statusDiv.hide();
-                                self.$elem.find('.kb-data-list-btn').prop('disabled', false);
-                                var result = jobState['result'];
-                                self.downloadUJSResults(result[0].shock_id, self.shockURL,
-                                        wsObjectName);
-                            }
-                        } else {
-                            var status = skipLogLines == 0 ? jobState['job_state'] :
-                                lastLogLine.line;
-                            if (skipLogLines == 0)
-                                console.log("Export status: " + status);
-                            self.showMessage('<img src="'+self.loadingImage+'" /> ' +
-                                    'Export status: ' + status);
-                        }
-                    }, function(data) {
-                        self.stopTimer();
-                        console.log(data.error.message);
-                        self.showError(data.error.message);
-                    });
+                            console.log(data.error.message);
+                            self.showError(data.error.message);
+                        })
+                    };
                 }, function(data) {
                     self.stopTimer();
                     console.log(data.error.message);

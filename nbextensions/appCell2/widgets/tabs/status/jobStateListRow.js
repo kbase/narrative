@@ -26,22 +26,17 @@ define([
             icon = 'fa fa-angle-double-right';
             color = 'green';
             break;
-        case 'in-progress':
+        case 'running':
             label = jobState;
             icon = 'fa fa-spinner';
             color = 'green';
-            break;
-        case 'suspend':
-            label = 'suspended';
-            icon = 'fa fa-pause';
-            color = 'red';
             break;
         case 'error':
             label = jobState;
             icon = 'fa fa-times';
             color = 'red';
             break;
-        case 'canceled':
+        case 'terminated':
             label = jobState;
             icon = 'fa fa-times';
             color = 'orange';
@@ -107,7 +102,7 @@ define([
             if (!jobId) {
                 jobId = newState.job_id;
             }
-            let status = newState.job_state ? newState.job_state : null;
+            let status = newState.status ? newState.status : null;
             updateRowStatus(status);
         }
 

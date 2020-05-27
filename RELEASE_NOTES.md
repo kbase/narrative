@@ -3,8 +3,17 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Version 4.2.0
+- Updated the Narrative interface to connect to the remade Execution Engine.
+- Updated the Narrative interface to streamline events and cookies connected to the Traefik update.
+- Fixed an issue where job log browser state (running, stopped, scrolling) could cross browser sessions.
+- Added a viewer for the SampleSet object.
+- PTV-1446 - fix bug preventing KBaseFeatureValues viewer apps from working and displaying data
+
 ### Version 4.1.2
-- Redirect to the interstitial loading page after shutting down a Narrative session, instead of letting the backend server do the redirect.
+- Improve display of job logs.
+- Prevent App cell elements from overflowing the page.
+- Job status is now inaccessible before a job enters the queue.
 
 ### Version 4.1.1
 - Fix sort order in Narratives panel - should be by most recently saved.

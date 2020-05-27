@@ -3,7 +3,6 @@ REPO_NAME = narrative
 
 # Installer script
 INSTALLER = ./scripts/install_narrative.sh
-INSTALL_VENV = narrative-venv
 BACKEND_TEST_SCRIPT = scripts/narrative_backend_tests.sh
 FRONTEND_TEST_DIR = test
 
@@ -18,12 +17,14 @@ build-narrative-container:
 docker_image: build-narrative-container
 
 # Per PR #1328, adding an option to skip minification
-dev_image:
+dev-image:
 	SKIP_MINIFY=1 DOCKER_TAG=dev sh $(DOCKER_INSTALLER)
 
+run-dev-image:
+	ENV=$(ENV) bash scripts/local-dev-run.sh
+
 install:
-	@echo "Installing local Narrative in the $(INSTALL_VENV) virtual environment"
-	bash $(INSTALLER) -v $(INSTALL_VENV)
+	bash $(INSTALLER)
 
 # runs the installer to locally build the Narrative in a
 # local venv.

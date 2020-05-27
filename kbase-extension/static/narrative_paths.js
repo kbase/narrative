@@ -44,7 +44,6 @@ require.config({
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',
         // copied from the cdn
         'google-code-prettify': 'ext_packages/google-code-prettify/1.2.0/',
-        jqueryCookie: 'ext_packages/jquery-extensions/js/jquery.cookie.min',
         'jquery-svg': 'ext_packages/jquery-extensions/js/jquery.svg',
         'knhx': 'ext_packages/knhxtree/js/knhx',
         'knhx_menu': 'ext_packages/knhxtree/js/menu',
@@ -122,7 +121,7 @@ require.config({
         'kbaseNarrativeDataPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeDataPanel',
         'kbaseNarrativeDataList': 'kbase/js/widgets/narrative_core/kbaseNarrativeDataList',
         'kbaseNarrativeSidePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
-        'kbaseNarrativeJobsPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeJobsPanel',
+        'jobCommChannel': 'kbase/js/widgets/narrative_core/jobCommChannel',
         'kbaseNarrativeAppPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeAppPanel',
         'kbaseNarrativeManagePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
         'kbaseNarrativeDownloadPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel',
@@ -284,6 +283,7 @@ require.config({
         'kbaseAttributeMapping': 'kbase/js/widgets/function_output/kbaseAttributeMapping',
         'kbaseConditionSetViewer': 'kbase/js/widgets/function_output/kbaseAttributeMapping',
         'kbaseFeatureSet': 'kbase/js/widgets/function_output/kbaseFeatureSet',
+        'kbaseSampleSetView': 'kbase/js/widgets/function_output/kbaseSampleSet',
 
         'kbaseExpressionMatrix': 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
         'kbaseExpressionGenesetBaseWidget': 'kbase/js/widgets/function_output/kbaseExpressionGenesetBaseWidget',
@@ -372,9 +372,6 @@ require.config({
         },
         jquery: {
             exports: '$'
-        },
-        jqueryCookie: {
-            deps: ['jquery']
         },
         'jquery-nearest': {
             deps: ['jquery']

@@ -4,7 +4,6 @@ from biokbase.narrative.app_util import (
     map_inputs_from_job,
     map_outputs_from_state
 )
-from .util import sanitize_state
 import json
 import uuid
 from jinja2 import Template
@@ -15,6 +14,7 @@ KBase job class
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
+EXCLUDED_JOB_STATE_FIELDS = ["authstrat", "job_input", "condor_job_ads"]
 
 class Job(object):
     job_id = None
@@ -46,7 +46,7 @@ class Job(object):
         self.meta = meta
 
     @classmethod
-    def from_state(Job, job_id, job_info, owner, app_id, tag='release',
+    def from_state(cls, job_id, job_info, owner, app_id, tag='release',
                    cell_id=None, run_id=None, token_id=None, meta=dict()):
         """
         Parameters:
@@ -69,9 +69,9 @@ class Job(object):
         run_id - the front-end id associated with the job (optional)
         token_id - the id of the authentication token used to start the job (optional)
         """
-        return Job(job_id,
+        return cls(job_id,
                    app_id,
-                   job_info['params'],
+                   job_info.get('params', {}),
                    owner,
                    tag=tag,
                    app_version=job_info.get('service_ver', None),
@@ -81,9 +81,9 @@ class Job(object):
                    meta=meta)
 
     @classmethod
-    def map_viewer_params(Job, job_state, job_inputs, app_id, app_tag):
+    def map_viewer_params(cls, job_state, job_inputs, app_id, app_tag):
         # get app spec.
-        if job_state is None or job_state['job_state'] != 'completed':
+        if job_state is None or job_state.get('status', '') != 'completed':
             return None
 
         spec = SpecManager().get_spec(app_id, app_tag)
@@ -94,15 +94,14 @@ class Job(object):
             'params': widget_params
         }
 
-
     def info(self):
         spec = self.app_spec()
-        print("App name (id): {}".format(spec['info']['name'], self.app_id))
-        print("Version: {}".format(spec['info']['ver']))
+        print(f"App name (id): {spec['info']['name']} ({self.app_id})")
+        print(f"Version: {spec['info']['ver']}")
 
         try:
             state = self.state()
-            print("Status: {}".format(state['job_state']))
+            print(f"Status: {state['status']}")
             # inputs = map_inputs_from_state(state, spec)
             print("Inputs:\n------")
             pprint(self.inputs)
@@ -113,7 +112,7 @@ class Job(object):
         return SpecManager().get_spec(self.app_id, self.tag)
 
     def status(self):
-        return self.state().get('job_state', 'unknown')
+        return self.state().get('status', 'unknown')
 
     def parameters(self):
         """
@@ -127,27 +126,30 @@ class Job(object):
             return self.inputs
         else:
             try:
-                self.inputs = clients.get("job_service").get_job_params(self.job_id)[0]['params']
+                self.inputs = clients.get("execution_engine2").get_job_params(self.job_id)['params']
                 return self.inputs
             except Exception as e:
-                raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
+                raise Exception(f"Unable to fetch parameters for job {self.job_id} - {e}")
 
     def state(self):
         """
         Queries the job service to see the status of the current job.
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
-        if self._last_state is not None and self._last_state.get('finished', 0) == 1:
+        if self._last_state is not None and self._last_state.get('status') in ['completed', 'terminated', 'error']:
             return self._last_state
         try:
-            state = sanitize_state(clients.get("job_service").check_job(self.job_id))
-            state[u'cell_id'] = self.cell_id
-            state[u'run_id'] = self.run_id
-            state[u'token_id'] = self.token_id
+            state = clients.get('execution_engine2').check_job({
+                'job_id': self.job_id, 'exclude_fields': EXCLUDED_JOB_STATE_FIELDS
+            })
+            state['job_output'] = state.get('job_output', {})
+            state['cell_id'] = self.cell_id
+            state['run_id'] = self.run_id
+            state['token_id'] = self.token_id
             self._last_state = state
             return dict(state)
         except Exception as e:
-            raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))
+            raise Exception(f"Unable to fetch info for job {self.job_id} - {e}")
 
     def show_output_widget(self, state=None):
         """
@@ -157,17 +159,17 @@ class Job(object):
         from biokbase.narrative.widgetmanager import WidgetManager
         if state is None:
             state = self.state()
-        if state['job_state'] == 'completed' and 'result' in state:
+        if state['status'] == 'completed' and 'job_output' in state:
             (output_widget, widget_params) = self._get_output_info(state)
             return WidgetManager().show_output_widget(output_widget, widget_params, tag=self.tag)
         else:
-            return "Job is incomplete! It has status '{}'".format(state['job_state'])
+            return f"Job is incomplete! It has status '{state['status']}'"
 
     def get_viewer_params(self, state):
         """
         Maps job state 'result' onto the inputs for a viewer.
         """
-        if state is None or state['job_state'] != 'completed':
+        if state is None or state['status'] != 'completed':
             return None
         (output_widget, widget_params) = self._get_output_info(state)
         return {
@@ -219,7 +221,7 @@ class Job(object):
         return (num_available_lines, self._job_logs[first_line:first_line+num_lines])
 
     def _update_log(self):
-        log_update = clients.get("job_service").get_job_logs(
+        log_update = clients.get("execution_engine2").get_job_logs(
             {'job_id': self.job_id,
              'skip_lines': len(self._job_logs)})
         if log_update['lines']:
@@ -231,7 +233,7 @@ class Job(object):
         False if its running/queued.
         """
         status = self.status()
-        return status.lower() in ['completed', 'error', 'suspend', 'cancelled']
+        return status.lower() in ['completed', 'terminated', 'error']
 
     def __repr__(self):
         return "KBase Narrative Job - " + str(self.job_id)
@@ -248,7 +250,7 @@ class Job(object):
         try:
             state = self.state()
             spec = self.app_spec()
-            if (state.get('job_state', '') == 'completed'):
+            if (state.get('status', '') == 'completed'):
                 (output_widget, widget_params) = self._get_output_info(state)
                 output_widget_info = {
                     'name': output_widget,
@@ -268,7 +270,7 @@ class Job(object):
                 'name': 'Unknown App'
             }
         return Template(tmpl).render(job_id=self.job_id,
-                                     elem_id='kb-job-{}-{}'.format(self.job_id, uuid.uuid4()),
+                                     elem_id=f'kb-job-{self.job_id}-{uuid.uuid4()}',
                                      state=json.dumps(state),
                                      info=json.dumps(info),
                                      output_widget_info=json.dumps(output_widget_info))

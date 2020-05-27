@@ -16,10 +16,11 @@ define([
 
     describe('Test checkbox data input widget', function() {
         let testConfig = {},
-            runtime = Runtime.make(),
+            runtime,
             bus;
 
         beforeEach(function() {
+            runtime = Runtime.make();
             bus = runtime.bus().makeChannelBus({
                 description: 'checkbox testing'
             });

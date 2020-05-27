@@ -58,7 +58,7 @@ define([
                 parentJobId = arg.parentJobId;
 
                 return Promise.try(() => {
-                    createJobStateWidget('parent', parentJobId, model.getItem('exec.jobState.job_state'), arg.clickFunction, true);
+                    createJobStateWidget('parent', parentJobId, model.getItem('exec.jobState.status'), arg.clickFunction, true);
                     container.getElementsByTagName('tr')[0].classList.add('job-selected'); // start with the parent selected
 
                     for (var i=0; i<Math.max(arg.batchSize, arg.childJobs.length); i++) {
@@ -66,7 +66,7 @@ define([
                             initialState = null;
                         if (i < arg.childJobs.length) {
                             jobId = arg.childJobs[i].job_id;
-                            initialState = arg.childJobs[i].job_state;
+                            initialState = arg.childJobs[i].status;
                         }
                         createJobStateWidget(i, jobId, initialState, arg.clickFunction);  // can make null ones. these need to be updated.
                     }

@@ -29,6 +29,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
 TERMINAL_STATES = ["completed", "terminated", "error"]
+EXCLUDED_JOB_STATE_FIELDS = ["authstrat", "job_input", "condor_job_ads"]
 
 class JobManager(object):
     """
@@ -342,8 +343,11 @@ class JobManager(object):
 
         sub_job_list = sorted(sub_job_list)
 
-        job_states = clients.get('execution_engine2').check_jobs({'job_ids': sub_job_list,
-                                                                  'return_list': 0})
+        job_states = clients.get('execution_engine2').check_jobs({
+            'job_ids': sub_job_list,
+            'exclude_fields': EXCLUDED_JOB_STATE_FIELDS,
+            'return_list': 0
+        })
         child_job_states = list()
 
         for job_id in sub_job_list:
@@ -402,6 +406,7 @@ class JobManager(object):
             try:
                 fetched_states = clients.get("execution_engine2").check_jobs({
                     "job_ids": jobs_to_lookup,
+                    "exclude_fields": EXCLUDED_JOB_STATE_FIELDS,
                     "return_list": 0
                 })
             except Exception as e:

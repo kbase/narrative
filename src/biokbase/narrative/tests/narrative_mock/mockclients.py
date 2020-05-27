@@ -163,11 +163,23 @@ class MockClients:
         return self.ee2_job_info.get(job_id, {}).get('job_input', {})
 
     def check_job(self, params):
-        return self.ee2_job_info.get(params.get('job_id'), {})
+        job_id = params.get('job_id')
+        if not job_id:
+            return {}
+        info = self.ee2_job_info.get(job_id, {})
+        if "exclude_fields" in params:
+            for f in params["exclude_fields"]:
+                if f in info:
+                    del info[f]
+        return info
 
     def check_jobs(self, params):
         job_ids = params.get('job_ids')
-        return {job_id: self.ee2_job_info[job_id] for job_id in job_ids}
+        infos = dict()
+        for job in job_ids:
+            infos[job] = self.check_job({'job_id': job, 'exclude_fields': params.get('exclude_fields', [])})
+        return infos
+        # return {job_id: self.ee2_job_info[job_id] for job_id in job_ids}
 
     def get_job_logs(self, params):
         """

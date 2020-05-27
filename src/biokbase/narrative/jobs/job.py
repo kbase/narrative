@@ -14,6 +14,7 @@ KBase job class
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
+EXCLUDED_JOB_STATE_FIELDS = ["authstrat", "job_input", "condor_job_ads"]
 
 class Job(object):
     job_id = None
@@ -95,12 +96,12 @@ class Job(object):
 
     def info(self):
         spec = self.app_spec()
-        print("App name (id): {}".format(spec['info']['name'], self.app_id))
-        print("Version: {}".format(spec['info']['ver']))
+        print(f"App name (id): {spec['info']['name']} ({self.app_id})")
+        print(f"Version: {spec['info']['ver']}")
 
         try:
             state = self.state()
-            print("Status: {}".format(state['status']))
+            print(f"Status: {state['status']}")
             # inputs = map_inputs_from_state(state, spec)
             print("Inputs:\n------")
             pprint(self.inputs)
@@ -128,7 +129,7 @@ class Job(object):
                 self.inputs = clients.get("execution_engine2").get_job_params(self.job_id)['params']
                 return self.inputs
             except Exception as e:
-                raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
+                raise Exception(f"Unable to fetch parameters for job {self.job_id} - {e}")
 
     def state(self):
         """
@@ -138,8 +139,9 @@ class Job(object):
         if self._last_state is not None and self._last_state.get('status') in ['completed', 'terminated', 'error']:
             return self._last_state
         try:
-            state = clients.get('execution_engine2').check_job({'job_id': self.job_id})
-            state['job_input'] = state.get('job_input', {})
+            state = clients.get('execution_engine2').check_job({
+                'job_id': self.job_id, 'exclude_fields': EXCLUDED_JOB_STATE_FIELDS
+            })
             state['job_output'] = state.get('job_output', {})
             state['cell_id'] = self.cell_id
             state['run_id'] = self.run_id
@@ -147,7 +149,7 @@ class Job(object):
             self._last_state = state
             return dict(state)
         except Exception as e:
-            raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))
+            raise Exception(f"Unable to fetch info for job {self.job_id} - {e}")
 
     def show_output_widget(self, state=None):
         """
@@ -161,7 +163,7 @@ class Job(object):
             (output_widget, widget_params) = self._get_output_info(state)
             return WidgetManager().show_output_widget(output_widget, widget_params, tag=self.tag)
         else:
-            return "Job is incomplete! It has status '{}'".format(state['status'])
+            return f"Job is incomplete! It has status '{state['status']}'"
 
     def get_viewer_params(self, state):
         """
@@ -268,7 +270,7 @@ class Job(object):
                 'name': 'Unknown App'
             }
         return Template(tmpl).render(job_id=self.job_id,
-                                     elem_id='kb-job-{}-{}'.format(self.job_id, uuid.uuid4()),
+                                     elem_id=f'kb-job-{self.job_id}-{uuid.uuid4()}',
                                      state=json.dumps(state),
                                      info=json.dumps(info),
                                      output_widget_info=json.dumps(output_widget_info))

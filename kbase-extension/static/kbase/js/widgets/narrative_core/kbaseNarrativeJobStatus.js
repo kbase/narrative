@@ -260,7 +260,7 @@ define([
             this.view.statusPanel = this.updateJobStatusPanel();
             this.view.body.append($(this.view.statusPanel));
 
-            if (this.state.job_state === 'completed') {
+            if (this.state.status === 'completed') {
                 // If job's complete, and we have a report, show that.
                 if (this.outputWidgetInfo && this.outputWidgetInfo.params &&
                         this.outputWidgetInfo.params.report_ref && !this.showingReport) {
@@ -493,9 +493,8 @@ define([
                       with the buttons (this.userEngaged), play the log when in-progress.
                    3. userEngaged - if at end of log, same as autoplay?
                 */
-            switch (message.jobState.job_state) {
-            case 'canceled':
-            case 'suspend':
+            switch (message.jobState.status) {
+            case 'terminated':
             case 'completed':
                 if (this.requestedUpdates) {
                     this.requestedUpdates = false;
@@ -513,7 +512,7 @@ define([
                 this.requestedUpdates = true;
                 this.requestJobStatus();
                 break;
-            case 'in-progress':
+            case 'running':
                 this.requestedUpdates = true;
                 this.requestJobStatus();
                 break;
@@ -568,7 +567,7 @@ define([
 
             var info = {
                 jobId: this.jobId,
-                status: this.state.job_state === 'suspend' ? 'error' : this.state.job_state,
+                status: this.state.status === 'suspend' ? 'error' : this.state.status,
                 creationTime: TimeFormat.readableTimestamp(this.state.creation_time),
                 queueTime: elapsedQueueTime,
                 queuePos: this.state.position ? this.state.position : null,

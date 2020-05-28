@@ -36,21 +36,17 @@ define([
 
         render: function() {
             var $dropzoneElem = $(this.dropzoneTmpl({userInfo: this.userInfo}));
-            $dropzoneElem.find('#clear-completed > button').click(function(e) {
+            $dropzoneElem.find('#clear-completed > button').click(e => {
                 e.preventDefault();
                 e.stopPropagation();
                 this.dropzone.removeAllFiles();
                 $dropzoneElem.find('#clear-completed').css({'display': 'none'});
-            }.bind(this));
+            });
 
-            // $dropzoneElem.find('a').click((e) => {
-            //     e.stopPropagation();
-            // });
-            
             // there are two anchor elements with same class name .globus_link.
-            // One link takes the user to globus site, 
-            // and the other link takes user to how to link globus account. 
-            $dropzoneElem.find('a.globus_link').click((e) => {
+            // One link takes the user to globus site,
+            // and the other link takes user to how to link globus account.
+            $dropzoneElem.find('a.globus_link').click(e => {
                 e.stopPropagation();
                 e.preventDefault();
                 if((e.target.href).includes("app.globus.org")) {
@@ -83,14 +79,14 @@ define([
                 parallelUploads: 10,
                 maxFilesize: 20480  //20GB
             })
-                .on('totaluploadprogress', function(progress) {
+                .on('totaluploadprogress', (progress) => {
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
-                }.bind(this))
-                .on('addedFile', function(file) {
+                })
+                .on('addedFile', (file) => {
                     $dropzoneElem.find('#global-info').css({'display': 'inline'});
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
-                }.bind(this))
-                .on('success', function(file, serverResponse) {
+                })
+                .on('success', (file, serverResponse) => {
                     $dropzoneElem.find('#clear-completed').css({'display': 'inline'});
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                     file.previewElement.querySelector('#status-message').textContent = 'Completed';
@@ -107,9 +103,8 @@ define([
                     $(file.previewElement).fadeOut(1000, function() {
                         $(file.previewElement.querySelector('.btn')).trigger('click');
                     });
-                }.bind(this))
-                .on('sending', function(file, xhr, data) {
-
+                })
+                .on('sending', (file, xhr, data) => {
                     $dropzoneElem.find('#global-info').css({'display': 'inline'});
                     //okay, if we've been given a full path, then we pull out the pieces (ignoring the filename at the end) and then
                     //tack it onto our set path, then set that as the destPath form param.
@@ -123,10 +118,17 @@ define([
                     }
                     $($dropzoneElem.find('#total-progress')).show();
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
-                }.bind(this))
+                })
                 .on('reset', function() {
                     $dropzoneElem.find('#global-info').css({'display': 'none'});
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
+                })
+                .on('error', (err) => {
+                    let errorText = 'unable to upload file!';
+                    if (err && err.xhr && err.xhr.responseText) {
+                        errorText = err.xhr.responseText;
+                    }
+                    $dropzoneElem.find('.error.text-danger').text('Error: ' + errorText);
                 });
         },
 

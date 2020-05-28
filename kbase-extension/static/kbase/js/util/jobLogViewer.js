@@ -1,5 +1,13 @@
 /*global define*/
 /*jslint white:true,browser:true*/
+/**
+ * Usage:
+ * let viewer = JobLogViewer.make();
+ * viewer.start({
+ *     jobId: <some job id>,
+ *     node: <a DOM node>
+ * })
+ */
 define([
     'bluebird',
     'common/runtime',
@@ -8,7 +16,6 @@ define([
     'common/events',
     'common/fsm',
     'kb_common/html',
-    'jquery',
     'css!kbase/css/kbaseJobLog.css'
 ], function(
     Promise,
@@ -17,23 +24,20 @@ define([
     UI,
     Events,
     Fsm,
-    html,
-    $
+    html
 ) {
     'use strict';
 
-    var t = html.tag,
+    let t = html.tag,
         div = t('div'),
         button = t('button'),
         span = t('span'),
         p = t('p'),
-        fsm,
-        currentSection,
-        renderAbove = true,
         smallPanelHeight = '300px',
         largePanelHeight = '600px',
-        numLines = 10,
+        numLines = 100,
         panelHeight = smallPanelHeight,
+        // all the states possible, to be fed into the FSM.
         appStates = [{
             state: {
                 mode: 'new'
@@ -44,7 +48,7 @@ define([
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
+                    disabled: ['play', 'stop', 'top', 'bottom', 'expand']
                 }
             },
             next: [{
@@ -81,7 +85,7 @@ define([
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
+                    disabled: ['play', 'stop', 'top', 'bottom', 'expand']
                 }
             },
             next: [{
@@ -130,8 +134,8 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['stop'],
-                    disabled: ['play', 'top', 'back', 'forward', 'bottom']
+                    enabled: ['stop', 'expand'],
+                    disabled: ['play', 'top', 'bottom']
                 }
             },
             next: [{
@@ -180,7 +184,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['play', 'top', 'back', 'forward', 'bottom'],
+                    enabled: ['play', 'top', 'bottom', 'expand'],
                     disabled: ['stop']
                 }
             },
@@ -223,7 +227,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['top', 'back',  'forward', 'bottom'],
+                    enabled: ['top', 'bottom', 'expand'],
                     disabled: ['play', 'stop']
                 }
             },
@@ -251,7 +255,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['top', 'back', 'forward', 'bottom'],
+                    enabled: ['top', 'bottom', 'expand'],
                     disabled: ['play', 'stop']
                 }
             },
@@ -279,7 +283,7 @@ define([
             },
             ui: {
                 buttons: {
-                    enabled: ['top', 'back', 'forward', 'bottom'],
+                    enabled: ['top', 'bottom', 'expand'],
                     disabled: ['play', 'stop']
                 }
             },
@@ -311,7 +315,7 @@ define([
             ui: {
                 buttons: {
                     enabled: [],
-                    disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
+                    disabled: ['play', 'stop', 'top', 'bottom', 'expand']
                 }
             },
             on: {
@@ -332,20 +336,26 @@ define([
         }
         ];
 
-    function factory(config) {
-        var config = config || {},
-            runtime = Runtime.make(),
-            bus = runtime.bus().makeChannelBus({ description: 'Log Viewer Bus' }),
+    /**
+     * The entrypoint to this widget. This creates the job log viewer and initializes it.
+     * Starting it is left as a lifecycle method for the caller.
+     *
+     */
+    function factory() {
+        let runtime = Runtime.make(),
             container,
             jobId,
             model,
             ui,
-            linesPerPage = config.linesPerPage || numLines,
+            linesPerPage = numLines,
+            fsm,
             loopFrequency = 5000,
             looping = false,
             stopped = false,
-            listeningForJob = false,
-            requestLoop = null;
+            listeningForJob = false,    // if true, this means we're listening for job updates
+            awaitingLog = false,        // if true, there's a log request fired that we're awaiting
+            requestLoop = null,         // the timeout object
+            scrollToEndOnNext = false;
 
         // VIEW ACTIONS
 
@@ -353,38 +363,43 @@ define([
             if (!looping) {
                 return;
             }
-            requestLoop = window.setTimeout(function() {
-                if (!looping) {
-                    return;
-                }
+            requestLoop = window.setTimeout(() => {
                 requestLatestJobLog();
             }, loopFrequency);
         }
 
         function stopAutoFetch() {
             looping = false;
+            if (ui) {
+                ui.hideElement('spinner');
+            }
         }
 
+        /**
+         * Starts the autofetch loop. After the first request, this starts a timeout that calls it again.
+         */
         function startAutoFetch() {
-            if (looping) {
-                return;
-            }
-            if (stopped) {
+            if (looping || stopped) {
                 return;
             }
             var state = fsm.getCurrentState().state;
             if (state.mode === 'active' && state.auto) {
                 looping = true;
                 fsm.newState({ mode: 'active', auto: true });
-                runtime.bus().emit('request-latest-job-log', {
-                    jobId: jobId,
-                    options: {
-                        num_lines: linesPerPage
-                    }
-                });
+                // stop the current timer if we have one.
+                if (requestLoop) {
+                    clearTimeout(requestLoop);
+                }
+                requestLatestJobLog();
+                // runtime.bus().emit('request-latest-job-log', {
+                //     jobId: jobId,
+                // });
             }
         }
 
+        /**
+         * Start automatically fetching logs - triggered by hitting the play button.
+         */
         function doPlayLogs() {
             fsm.updateState({
                 auto: true
@@ -393,138 +408,79 @@ define([
             startAutoFetch();
         }
 
-        function doStopPlayLogs() {
+        /**
+         * Stop automatically fetching logs - triggered by hitting the stop button.
+         */
+        function doStopLogs() {
             fsm.updateState({
                 auto: false
             });
             stopped = true;
             stopAutoFetch();
+            if (requestLoop) {
+                clearTimeout(requestLoop);
+            }
         }
 
-        function requestJobLog(firstLine, numLines, params) {
+        /**
+         * Requests numLines (set in the factory method) log lines starting from the given firstLine.
+         * @param {int} firstLine
+         */
+        function requestJobLog(firstLine) {
             ui.showElement('spinner');
+            awaitingLog = true;
             runtime.bus().emit('request-job-log', {
                 jobId: jobId,
                 options: {
                     first_line: firstLine,
-                    num_lines: linesPerPage
+                    // num_lines: linesPerPage
                 }
             });
         }
 
         function requestLatestJobLog() {
+            // only while job is running
+            // load numLines at a time
+            // otherwise load entire log
+            let autoState = fsm.getCurrentState().state.auto;
+            scrollToEndOnNext = true;
+            awaitingLog = true;
             ui.showElement('spinner');
             runtime.bus().emit('request-latest-job-log', {
                 jobId: jobId,
                 options: {
-                    num_lines: linesPerPage
+                    // num_lines: linesPerPage
                 }
             });
         }
-        function fetchNewLogs(currentLine) {
-            var $panel = $(ui.getElements('panel')[0]),
-                first = Number($panel.children().first().attr('class'));
-            if (currentLine === 0 && first === 0) {
-                return;
-            }
-            var newFirstLine = currentLine - Number(linesPerPage),
-                numLines = linesPerPage;
 
-            if (newFirstLine < 0) {
-                newFirstLine = 0;
-                numLines = currentLine;
-            }
-            requestJobLog(newFirstLine, Number(numLines));
-            currentSection = newFirstLine;
-        }
-
-        function scrollToLog($panel, target, scrollTime){
-            if(target.length){
-                scrollTime = (scrollTime !== undefined) ? scrollTime : 500;
-                $panel.animate({
-                    scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
-                }, scrollTime, function () {
-                    currentSection = target.parent().attr('class');
-                });
-            }else{
-                fetchNewLogs(Number(model.getItem('currentLine')));
-            }
-
-        }
-
+        /**
+         * Scroll to the top of the job log
+         */
         function doFetchFirstLogChunk() {
-            doStopPlayLogs();
-            renderAbove = true;
-
-            var currentLine = currentSection ? currentSection : Number(model.getItem('currentLine')),
-                $currentSection = $('.' + String(currentLine));
-
-            if ($currentSection.is(':first-child')) {
-                fetchNewLogs(currentLine);
-            } else {
-                var $panel = $(ui.getElements('panel')[0]),
-                    target = $panel.children().first().children().first();
-
-                scrollToLog($panel, target);
-
-            }
+            doStopLogs();
+            requestJobLog(0);
+            getLogPanel().scrollTo(0, 0);
         }
 
-
-        function doFetchPreviousLogChunk() {
-            doStopPlayLogs();
-            renderAbove = true;
-
-            var currentLine = currentSection ? currentSection : Number(model.getItem('currentLine')),
-                $currentSection = $('.' + String(currentLine));
-            if (!$currentSection.is(':first-child')) {
-                var $panel = $(ui.getElements('panel')[0]),
-                    target = $currentSection.prev().children().first();
-                scrollToLog($panel, target);
-            } else {
-                fetchNewLogs(currentLine);
-            }
-
-        }
-
-        function doFetchNextLogChunk() {
-            renderAbove = false;
-
-            doStopPlayLogs();
-            var currentLine = currentSection ? currentSection : Number(model.getItem('currentLine')),
-                lastLine = model.getItem('lastLine'),
-                $panel = $(ui.getElements('panel')[0]);
-
-            var $currentSection = $('.' + String(currentLine));
-            currentSection = currentLine;
-
-            if ($currentSection.is(':last-child')) {
-                requestJobLog(lastLine);
-            } else {
-                var target = $currentSection.next().children().last();
-                scrollToLog($panel, target);
-            }
-        }
-
+        /**
+         * scroll to the bottom of the job log
+         */
         function doFetchLastLogChunk() {
-            renderAbove = false;
-
-            doStopPlayLogs();
-            var $panel = $(ui.getElements('panel')[0]);
-            var target = $panel.children().last().children().last();
-            scrollToLog($panel, target);
+            doStopLogs();
+            requestLatestJobLog();
         }
-        function test(){
-            if(panelHeight === smallPanelHeight){
-                panelHeight = largePanelHeight;
-            }else{
-                panelHeight = smallPanelHeight;
-            }
-            $(ui.getElements('panel')[0]).animate({height: panelHeight}, 500);
+
+        function toggleViewerSize() {
+            panelHeight = panelHeight === smallPanelHeight ? largePanelHeight : smallPanelHeight;
+            getLogPanel().style.height = panelHeight;
         }
 
         // VIEW
-
+        /**
+         * builds contents of panel-heading div
+         * @param {??} events
+         */
         function renderControls(events) {
             return div({ dataElement: 'header', style: { margin: '0 0 10px 0' } }, [
                 button({
@@ -532,10 +488,10 @@ define([
                     dataButton: 'expand',
                     dataToggle: 'tooltip',
                     dataPlacement: 'top',
-                    title: 'Start fetching logs',
+                    title: 'Toggle log viewer size',
                     id: events.addEvent({
                         type: 'click',
-                        handler: test
+                        handler: toggleViewerSize
                     })
                 }, [
                     span({ class: 'fa fa-expand' })
@@ -561,7 +517,7 @@ define([
                     title: 'Stop fetching logs',
                     id: events.addEvent({
                         type: 'click',
-                        handler: doStopPlayLogs
+                        handler: doStopLogs
                     })
                 }, [
                     span({ class: 'fa fa-stop' })
@@ -578,32 +534,6 @@ define([
                     })
                 }, [
                     span({ class: 'fa fa-angle-double-up' })
-                ]),
-                button({
-                    class: 'btn btn-sm btn-default',
-                    dataButton: 'back',
-                    dataToggle: 'tooltip',
-                    dataPlacement: 'top',
-                    title: 'Fetch previous log chunk',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: doFetchPreviousLogChunk
-                    })
-                }, [
-                    span({ class: 'fa fa-angle-up' })
-                ]),
-                button({
-                    class: 'btn btn-sm btn-default',
-                    dataButton: 'forward',
-                    dataToggle: 'tooltip',
-                    dataPlacement: 'top',
-                    title: 'Fetch next log chunk',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: doFetchNextLogChunk
-                    })
-                }, [
-                    span({ class: 'fa fa-angle-down' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -625,21 +555,57 @@ define([
             ]);
         }
 
+        /**
+         * This is a step toward having scrollahead/scrollbehind. It doesn't work right, and we
+         * have to move on, but I'm leaving this in here for now.
+         * There's something minor that I'm missing, I think, about how the scrolling gets
+         * managed.
+         * @param {ScrollEvent} e
+         */
+        function handlePanelScrolling(e) {
+            const panel = getLogPanel();
+            // if scroll is at the bottom, and there are more lines,
+            // get the next chunk.
+            if (panel.scrollTop === (panel.scrollHeight - panel.offsetHeight)) {
+                const curLast = model.getItem('lastLine');
+                if (curLast < model.getItem('totalLines')) {
+                    requestJobLog(curLast);
+                }
+            }
+            // if it's at the top, and we're not at line 0, get
+            // the previous chunk.
+            else if (panel.scrollTop === 0) {
+                const curFirst = model.getItem('firstLine');
+                if (curFirst > 0) {
+                    const reqLine = Math.max(0, curFirst - numLines);
+                    if (reqLine < curFirst) {
+                        requestJobLog(reqLine);
+                    }
+                }
+            }
+        }
+
+        /**
+         * builds contents of panel-body class
+         */
         function renderLayout() {
-            var events = Events.make(),
+            const events = Events.make(),
                 content = div({ dataElement: 'kb-log', style: { marginTop: '10px'}}, [
                     div({ class: 'kblog-header' }, [
                         div({ class: 'kblog-num-wrapper' }, [
                             div({ class: 'kblog-line-num' }, [])
                         ]),
                         div({ class: 'kblog-text' }, [
-                            renderControls(events)
+                            renderControls(events) // header
                         ])
                     ]),
-                    div({ dataElement: 'panel',
+                    div({ dataElement: 'log-panel',
                         style: {
-                            'overflow-y': 'scroll', height: panelHeight
-                        } })
+                            'overflow-y': 'scroll',
+                            height: panelHeight,
+                            transition: 'height 0.5s'
+                        }
+                    })
                 ]);
 
             return {
@@ -648,120 +614,85 @@ define([
             };
         }
 
-        function sanitize(text) {
-            var longWord = 80;
-            var encoded = ui.htmlEncode(text);
+        /**
+         * build and return div that displays
+         * individual job log line
+         * <div class="kblog-line">
+         *     <div class="kblog-num-wrapper">
+         *        <span class="kblog-line-num">###</span>
+         *        <span class="kblog-text">foobarbaz</span>
+         *     </div>
+         * </div>
+         * @param {object} line
+         */
+        function buildLine(line) {
+            // kblog-line wrapper div
+            const errorClass = line.isError ? ' kb-error' : '';
+            const kblogLine = document.createElement('div')
+            kblogLine.setAttribute('class', 'kblog-line' + errorClass);
+            // kblog-num-wrapper div
+            const wrapperDiv = document.createElement('div');
+            wrapperDiv.setAttribute('class', 'kblog-num-wrapper');
+            // number
+            const numDiv = document.createElement('div');
+            numDiv.setAttribute('class', 'kblog-line-num');
+            const lineNumber = document.createTextNode(line.lineNumber);
+            numDiv.appendChild(lineNumber);
+            // text
+            const textDiv = document.createElement('div');
+            textDiv.setAttribute('class', 'kblog-text');
+            const lineText = document.createTextNode(line.text);
+            textDiv.appendChild(lineText);
+            // append line number and text
+            wrapperDiv.appendChild(numDiv);
+            wrapperDiv.appendChild(textDiv);
+            // append wrapper to line div
+            kblogLine.appendChild(wrapperDiv);
 
-            // try to make sane word length not break things.
-            var words = encoded.split(/ /);
-
-            var fixed = words.map(function(word) {
-                if (word.length < longWord) {
-                    return word;
-                }
-                return word.replace(/\//, '/<wbr>')
-                    .replace(/\./, '.<wbr>');
-            });
-
-            return fixed.join(' ');
-        }
-        //left in because oher methods depend on it
-        function renderLine(line) {
-            var extraClass = line.isError ? ' kb-error' : '';
-
-            return div({
-                class: 'kblog-line' + extraClass
-            }, [
-                div({ class: 'kblog-num-wrapper' }, [
-                    div({ class: 'kblog-line-num' }, [
-                        String(line.lineNumber)
-                    ])
-                ]),
-                div({
-                    class: 'kblog-text',
-                    style: {
-                        overflow: 'auto'
-                    }
-                }, [
-                    div({ style: { marginBottom: '6px' } }, sanitize(line.text))
-                ])
-            ]);
-        }
-        function renderLine2(line) {
-            var extraClass = line.isError ? ' kb-error' : '';
-            var $line = $('<div />')
-                .addClass('kblog-num-wrapper' )
-                .append($('<span />')
-                    .addClass('kblog-line-num')
-                    .append(String(line.lineNumber)))
-                .append($('<span />')
-                    .addClass('kblog-text')
-                    .append(sanitize(line.text)));
-            return $('<div />')
-                .addClass('kblog-line' + extraClass)
-                .append($line);
-
+            return kblogLine;
         }
 
-        function renderLines(lines) {
-            var $section = $('<div/>');
-            for(var i = lines.length-1; i>=0; i--){
-                $section.prepend(renderLine2(lines[i]));
-            }
-            $section.addClass(String(model.getItem('currentLine')))
-                .mouseenter(function(){
-                    currentSection = Number($section.attr('class'));
-                });
-            return $section;
+        function getLogPanel() {
+            return ui.getElement('log-panel');
         }
 
+        /**
+         * onUpdate callback function (under model)
+         */
         function render() {
-            var startingLine = model.getItem('currentLine'),
-                lines = model.getItem('lines'),
-                viewLines,
-                $panel;
+            const lines = model.getItem('lines');
 
             if (lines) {
                 if (lines.length === 0) {
-                    ui.setContent('panel', 'Sorry, no log entries to show');
+                    ui.setContent('log-panel', 'No log entries to show.');
                     return;
                 }
-                viewLines = lines.map(function(line, index) {
-                    return {
-                        text: line.line,
-                        isError: (line.is_error === 1 ? true : false),
-                        lineNumber: startingLine + index + 1
-                    };
-                });
-                $panel = $(ui.getElements('panel')[0]);
-                var autoState = fsm.getCurrentState().state.auto;
-                if (!autoState){
-                    var target = renderLines(viewLines).css('font-color', 'white');
-                    if(renderAbove){
-                        var scrollTarget = $panel.children().first();
-                        target.prependTo($panel);
-                        scrollToLog($panel, scrollTarget, 0);
-                        target.css('font-color', 'black');
-                    }else{
-                        target.appendTo($panel).show();
-                    }
-                }else{
-                    $panel.html(renderLines(viewLines)[0]);
+
+                const panel = getLogPanel();
+                panel.innerHTML = '';
+                lines.forEach(line => panel.appendChild(buildLine(line)));
+
+                // if we're autoscrolling, scroll to the bottom
+                if (fsm.getCurrentState().state.auto || scrollToEndOnNext) {
+                    panel.scrollTo(0, panel.lastChild.offsetTop);
+                    scrollToEndOnNext = false;
                 }
             } else {
-                ui.setContent('panel', 'Sorry, no log yet...');
+                ui.setContent('log-panel', 'No log entries to show.');
             }
         }
 
         function handleJobStatusUpdate(message) {
             // if the job is finished, we don't want to reflect
             // this in the ui, and disable play/stop controls.
-            var jobStatus = message.jobState.job_state,
+            var jobStatus = message.jobState.status,
                 mode = fsm.getCurrentState().state.mode,
                 newState;
             switch (mode) {
             case 'new':
                 switch (jobStatus) {
+                case 'created':
+                case 'estimating':
                 case 'queued':
                     startJobUpdates();
                     newState = {
@@ -769,7 +700,7 @@ define([
                         auto: true
                     };
                     break;
-                case 'in-progress':
+                case 'running':
                     startJobUpdates();
                     startAutoFetch();
                     newState = {
@@ -778,22 +709,21 @@ define([
                     };
                     break;
                 case 'completed':
-                    requestLatestJobLog();
+                    requestJobLog(0);
                     stopJobUpdates();
                     newState = {
                         mode: 'complete'
                     };
                     break;
                 case 'error':
-                case 'suspend':
-                    requestLatestJobLog();
+                    requestJobLog(0);
                     stopJobUpdates();
                     newState = {
                         mode: 'error'
                     };
                     break;
-                case 'canceled':
-                    requestLatestJobLog();
+                case 'terminated':
+                    requestJobLog(0);
                     stopJobUpdates();
                     newState = {
                         mode: 'canceled'
@@ -807,10 +737,12 @@ define([
                 break;
             case 'queued':
                 switch (jobStatus) {
+                case 'created':
+                case 'estimating':
                 case 'queued':
                     // no change
                     break;
-                case 'in-progress':
+                case 'running':
                     newState = {
                         mode: 'active',
                         auto: true
@@ -823,12 +755,11 @@ define([
                     };
                     break;
                 case 'error':
-                case 'suspend':
                     newState = {
                         mode: 'error'
                     };
                     break;
-                case 'canceled':
+                case 'terminated':
                     newState = {
                         mode: 'canceled'
                     };
@@ -843,7 +774,7 @@ define([
                 case 'queued':
                     // this should not occur!
                     break;
-                case 'in-progress':
+                case 'running':
                     startAutoFetch();
                     break;
                 case 'completed':
@@ -852,12 +783,11 @@ define([
                     };
                     break;
                 case 'error':
-                case 'suspend':
                     newState = {
                         mode: 'error'
                     };
                     break;
-                case 'canceled':
+                case 'terminated':
                     newState = {
                         mode: 'canceled'
                     };
@@ -877,7 +807,7 @@ define([
                 }
             case 'canceled':
                 switch (jobStatus) {
-                case 'canceled':
+                case 'terminated':
                     return;
                 default:
                     console.error('Unexpected log status ' + jobStatus + ' for "canceled" state');
@@ -908,20 +838,6 @@ define([
         var externalEventListeners = [];
 
         function startEventListeners() {
-            var $panel = $(ui.getElements('panel')[0])
-                .on('scroll', function () {
-                    //at begining
-
-                    var autoState = fsm.getCurrentState().state.auto;
-                    var top = $(this).scrollTop();
-                    //when not on autoplay then scrolling to top will fetch new logs
-                    if (!autoState &&  top === 0) {
-                        var $panel = $(ui.getElements('panel')[0]),
-                            $currentSection = $panel.children(':first'),
-                            currentLine = Number($currentSection.attr('class'));
-                        fetchNewLogs(currentLine);
-                    }
-                });
             var ev;
 
             ev = runtime.bus().listen({
@@ -932,33 +848,43 @@ define([
                     type: 'job-logs'
                 },
                 handle: function(message) {
+                    if (!awaitingLog) {
+                        return;
+                    }
                     ui.hideElement('spinner');
+                    /* message has structure:
+                     * {
+                     *   jobId: string,
+                     *   latest: bool,
+                     *   logs: {
+                     *      first: int (first line of the log batch), 0-indexed
+                     *      job_id: string,
+                     *      latest: bool,
+                     *      max_lines: int (total logs available - if job is done, so is this),
+                     *      lines: [{
+                     *          is_error: 0 or 1,
+                     *          line: string,
+                     *          linepos: int, position in log. helpful!
+                     *          ts: timestamp
+                     *      }]
+                     *   }
+                     * }
+                     */
+                    awaitingLog = false;
 
-                    if (message.logs.lines.length === 0) {
-                        // TODO: add an alert area and show a dismissable alert.
-                        if (!looping) {
-                            // alert('No log entries returned');
-                            console.warn('No log entries returned', message);
-                        }
-                    } else {
-                        var lines = model.getItem('lines');
-
-                        model.setItem('lines', message.logs.lines);
-                        model.setItem('currentLine', message.logs.first);
-                        model.setItem('latest', true);
-                        model.setItem('fetchedAt', new Date().toUTCString());
-                        // Detect end of log.
-                        var lastLine = model.getItem('lastLine'),
-                            batchLastLine = message.logs.first + message.logs.lines.length;
-                        if (!lastLine) {
-                            lastLine = batchLastLine;
-                        } else {
-                            if (batchLastLine > lastLine) {
-                                lastLine = batchLastLine;
-                            }
-                        }
-                        model.setItem('lastLine', lastLine);
-
+                    if (message.logs.lines.length !== 0) {
+                        const viewLines = message.logs.lines.map(function(line, index) {
+                            return {
+                                text: line.line,
+                                isError: (line.is_error === 1 ? true : false),
+                                lineNumber: line.linepos
+                            };
+                        });
+                        model.setItem('lines', viewLines);
+                        model.setItem('firstLine', message.logs.first + 1);
+                        model.setItem('lastLine', message.logs.first + viewLines.length);
+                        model.setItem('totalLines', message.logs.max_lines);
+                        render();
                     }
                     if (looping) {
                         scheduleNextRequest();
@@ -982,7 +908,7 @@ define([
                 },
                 handle: function() {
                     stopAutoFetch();
-                    console.warn('No job log :( -- it has been deleted');
+                    render();
                 }
             });
             externalEventListeners.push(ev);
@@ -1045,10 +971,12 @@ define([
         }
 
         function doOnQueued(message) {
-            ui.setContent('kb-log.panel', renderLine({
-                lineNumber: '',
+            const noLogYet = {
+                lineNumber: undefined,
                 text: 'Job is queued, logs will be available when the job is running.'
-            }));
+            }
+            const line = buildLine(noLogYet);
+            getLogPanel().appendChild(line);
         }
 
         function doExitQueued(message) {
@@ -1100,9 +1028,6 @@ define([
         }
 
         function startJobUpdates() {
-            if (listeningForJob) {
-                return;
-            }
             runtime.bus().emit('request-job-update', {
                 jobId: jobId
             });
@@ -1115,13 +1040,27 @@ define([
             }
         }
 
+        /**
+         * The main lifecycle event, called when its container node exists, and we want to start
+         * running this widget.
+         * This detaches itself first, if it exists, then recreates itself in its host node.
+         * @param {object} arg - should have attributes:
+         *   - node - a DOM node where it will be hosted.
+         *   - jobId - string, a job id for this log
+         */
         function start(arg) {
             detach();  // if we're alive, remove ourselves before restarting
             var hostNode = arg.node;
+            if (!hostNode) {
+                throw new Error('Requires a node to start');
+            }
+            jobId = arg.jobId;
+            if (!jobId) {
+                throw new Error('Requires a job id to start');
+            }
+
             container = hostNode.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
-
-            jobId = arg.jobId;
 
             var layout = renderLayout();
             container.innerHTML = layout.content;
@@ -1144,9 +1083,6 @@ define([
             if (requestLoop) {
                 clearTimeout(requestLoop);
             }
-            if (bus) {
-                bus.stop();
-            }
             if (fsm) {
                 fsm.stop();
             }
@@ -1156,22 +1092,30 @@ define([
         function detach() {
             stop();
             if (container) {
-                container.innerHTML = '';
+                container.remove();
             }
         }
 
         // MAIN
+        /* The data model for this widget contains all lines currently being shown, along with the indices for
+         * the first and last lines known.
+         * It also tracks the total lines currently available for the app, if returned.
+         * Lines is a list of small objects. Each object
+         * lines - list, each is a small object with keys (these are all post-processed after fetching):
+         *      line - string, the line text
+         *      isError - boolean, true if that line denotes an error
+         *      ts - int timestamp
+         *      lineNumber - int, what line this is
+         * firstLine - int, the first line we're tracking (inclusive)
+         * lastLine - int, the last line we're tracking (inclusive)
+         * totalLines - int, the total number of lines available from the server as of the last message.
+         */
         model = Props.make({
             data: {
-                cache: [],
                 lines: [],
-                currentLine: null,
+                firstLine: null,
                 lastLine: null,
-                linesPerPage: linesPerPage,
-                fetchedAt: null
-            },
-            onUpdate: function() {
-                render();
+                totalLines: null
             }
         });
 
@@ -1180,14 +1124,13 @@ define([
         return Object.freeze({
             start: start,
             stop: stop,
-            bus: bus,
             detach: detach
         });
     }
 
     return {
         make: function(config) {
-            return factory(config);
+            return factory();
         }
     };
 });

@@ -9,7 +9,7 @@ define([
     let bus,
         testConfig,
         required = false,
-        runtime = Runtime.make(),
+        runtime,
         node,
         defaultValue = 'some test text',
         numRows = 3;
@@ -36,6 +36,7 @@ define([
 
     describe('Textarea Input tests', () => {
         beforeEach(() => {
+            runtime = Runtime.make();
             node = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'textarea testing',

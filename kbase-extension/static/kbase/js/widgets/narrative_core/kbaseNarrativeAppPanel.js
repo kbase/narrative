@@ -18,7 +18,6 @@ define([
     'util/display',
     'util/bootstrapDialog',
     'util/bootstrapSearch',
-    'util/icon',
     'text!kbase/templates/beta_warning_body.html',
     'yaml!ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml',
     'kbaseAccordion',
@@ -43,7 +42,6 @@ define([
     DisplayUtil,
     BootstrapDialog,
     BootstrapSearch,
-    Icon,
     BetaWarningTemplate,
     Categories,
     kbaseAccordion,
@@ -67,7 +65,7 @@ define([
             title: 'Apps',
             methodStoreURL: Config.url('narrative_method_store'),
             catalogURL: Config.url('catalog'),
-            moduleLink: '/#appcatalog/module/',
+            moduleLink: '/#catalog/modules/',
             methodHelpLink: '/#appcatalog/app/',
             appHelpLink: '/#appcatalog/app/l.a/'
         },
@@ -95,24 +93,8 @@ define([
 
             this.getIgnoreCategories();
 
-            this.icon_colors = Config.get('icons').colors;
-
             this.$searchDiv = $('<div>').hide();
 
-            this.$numHiddenSpan = $('<span>0</span>');
-            this.$showHideSpan = $('<span>show</span>');
-            this.$toggleHiddenDiv = $('<div>')
-                .append(this.$showHideSpan)
-                .append(' ')
-                .append(this.$numHiddenSpan)
-                .append(' filtered out')
-                .addClass('kb-function-toggle')
-                .hide()
-                .click($.proxy(function() {
-                    var curText = this.$showHideSpan.text();
-                    this.toggleHiddenMethods(curText === 'show');
-                    this.$showHideSpan.text(curText === 'show' ? 'hide' : 'show');
-                }, this));
 
             // placeholder for apps and methods once they're loaded.
             this.$methodList = $('<div>')
@@ -126,8 +108,7 @@ define([
             this.$functionPanel = $('<div>')
                 .addClass('kb-function-body')
                 .append($('<div>')
-                    .append(this.$searchDiv)
-                    .append(this.$toggleHiddenDiv))
+                    .append(this.$searchDiv))
                 .append(this.$methodList);
 
             this.bsSearch = new BootstrapSearch(this.$searchDiv, {
@@ -195,9 +176,7 @@ define([
              */
             $(document).on('getFunctionSpecs.Narrative',
                 $.proxy(function(e, specSet, callback) {
-                    //console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
                     if (callback) {
-                        //console.debug("Trigger: specSet=",specSet);
                         this.getFunctionSpecs(specSet, callback);
                     }
                 }, this)
@@ -394,17 +373,17 @@ define([
 
             this.addButton(this.$slideoutBtn);
 
-            if (!NarrativeMethodStore || !Catalog) {
-                this.showError('Sorry, an error occurred while loading Apps.',
-                    'Unable to connect to the Catalog or Narrative Method Store! ' +
-                    'Apps are currently unavailable.');
-                return this;
-            }
-
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
             this.catalog = new Catalog(this.options.catalogURL, {token: Runtime.make().authToken()});
             this.refreshFromService();
             return this;
+        },
+
+        detach: function () {
+            $(document).off('filterMethods.Narrative');
+            $(document).off('removeFilterMethods.Narrative');
+            $(document).off('getFunctionSpecs.Narrative');
+            this.$bodyDiv.detach();
         },
 
         refreshKernelSpecManager: function() {
@@ -422,9 +401,9 @@ define([
         setListHeight: function(height, animate) {
             if (this.$methodList) {
                 if (animate) {
-                    this.$methodList.animate({ 'height': height}, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
+                    this.$methodList.animate({'height': height}, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
                 } else {
-                    this.$methodList.css({ 'height': height});
+                    this.$methodList.css({'height': height});
                 }
             }
         },
@@ -761,7 +740,7 @@ define([
                 });
             };
 
-            // 1. Go through filterString and keep those that pass the filter (not yet).
+            // 1. Go through filterString and keep those that pass the filter.
             appSet = this.filterApps(filterString, appSet);
 
             // 2. Switch over panelStyle and build the view based on that.
@@ -828,7 +807,8 @@ define([
                     return [
                         app.info.name,
                         app.info.input_types.join(';'),
-                        app.info.output_types.join(';')
+                        app.info.output_types.join(';'),
+                        app.info.module_name
                     ].join(';').toLowerCase().indexOf(filterString) !== -1;
                 }
                 var lowerSearchSet = searchSet.map(function(val) { return val.toLowerCase(); });
@@ -984,11 +964,6 @@ define([
             this.$functionPanel.hide();
             this.$loadingPanel.hide();
             this.$errorPanel.show();
-            return;
         },
-
-        toggleOverlay: function() {
-            this.trigger('toggleSidePanelOverlay.Narrative');
-        }
     });
 });

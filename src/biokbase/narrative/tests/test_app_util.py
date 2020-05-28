@@ -239,7 +239,7 @@ class AppUtilTestCase(unittest.TestCase):
             'an_input': 'input_val'
         }
         state = {
-            'result': ['foo', 'bar']
+            'job_output': {'result': ['foo', 'bar']}
         }
         expected = (
             'testOutputWidget',

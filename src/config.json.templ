@@ -8,6 +8,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://appdev.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
+        "execution_engine2": "https://appdev.kbase.us/services/ee2",
         "fba": "https://appdev.kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://appdev.kbase.us/services/kb-ftp-api/v0",
@@ -59,6 +60,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://ci.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
+        "execution_engine2": "https://ci.kbase.us/services/ee2",
         "fba": "https://ci.kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://ci.kbase.us/services/kb-ftp-api/v0",
@@ -122,6 +124,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://ci.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
+        "execution_engine2": "https://ci.kbase.us/services/ee2",
         "fba": "https://ci.kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://ci.kbase.us/services/kb-ftp-api/v0",
@@ -162,8 +165,8 @@
         "google_analytics_id": "UA-74532036-1"
     },
     "dev_mode": {{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }},
-    "git_commit_hash": "2364f63f4",
-    "git_commit_time": "Tue Nov 12 11:34:01 2019 -0800",
+    "git_commit_hash": "465a86a62",
+    "git_commit_time": "Fri May 22 16:29:47 2020 -0700",
     "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif",
     "name": "KBase Narrative",
     "next": {
@@ -175,6 +178,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://next.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
+        "execution_engine2": "https://next.kbase.us/services/ee2",
         "fba": "https://next.kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://next.kbase.us/services/kb-ftp-api/v0",
@@ -224,6 +228,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
+        "execution_engine2": "https://kbase.us/services/ee2",
         "fba": "https://kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://kbase.us/services/kb-ftp-api/v0",
@@ -249,7 +254,7 @@
         "service_wizard": "https://kbase.us/services/service_wizard",
         "shock": "https://kbase.us/services/shock-api",
         "staging_api_url": "https://kbase.us/services/staging_service",
-        "static_narrative_root": "https://kbase.us/static_narratives",
+        "static_narrative_root": "https://kbase.us/n",
         "status_page": "http://kbase.us/internal/status/",
         "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version",
         "transform": "https://kbase.us/services/transform",
@@ -275,6 +280,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://narrative-dev.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
+        "execution_engine2": "https://narrative-dev.kbase.us/services/ee2",
         "fba": "https://narrative-dev.kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://narrative-dev.kbase.us/services/kb-ftp-api/v0",
@@ -300,7 +306,7 @@
         "service_wizard": "https://narrative-dev.kbase.us/services/service_wizard",
         "shock": "https://narrative-dev.kbase.us/services/shock-api",
         "staging_api_url": "https://narrative-dev.kbase.us/services/staging_service",
-        "static_narrative_root": "https://narrative-dev.kbase.us/sn",
+        "static_narrative_root": "https://kbase.us/n",
         "status_page": "http://kbase.us/internal/status/",
         "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version",
         "transform": "https://narrative-dev.kbase.us/services/transform",
@@ -321,5 +327,5 @@
         "showDelay": 750
     },
     "use_local_widgets": true,
-    "version": "4.0.0"
+    "version": "4.2.0"
 }

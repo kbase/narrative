@@ -67,7 +67,7 @@ define (
                 }
             }
             if (app.module_name && (entry.version === undefined)) {
-                type = '<a href="' + self.options.moduleLink + '/' + app.module_name + '" target="_blank">' +
+                type = '<a href="' + self.options.moduleLink + app.module_name + '" target="_blank">' +
                     app.namespace + '</a> ';
             }
 

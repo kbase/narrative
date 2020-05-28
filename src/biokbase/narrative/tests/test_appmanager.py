@@ -27,15 +27,15 @@ def mock_run_job(*args, **kwargs):
 
 class AppManagerTestCase(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         config = TestConfig()
-        self.am = AppManager()
-        self.good_app_id = config.get('app_tests', 'good_app_id')
-        self.good_tag = config.get('app_tests', 'good_app_tag')
-        self.bad_app_id = config.get('app_tests', 'bad_app_id')
-        self.bad_tag = config.get('app_tests', 'bad_app_tag')
-        self.test_app_id = config.get('app_tests', 'test_app_id')
-        self.test_app_params = {
+        cls.am = AppManager()
+        cls.good_app_id = config.get('app_tests', 'good_app_id')
+        cls.good_tag = config.get('app_tests', 'good_app_tag')
+        cls.bad_app_id = config.get('app_tests', 'bad_app_id')
+        cls.bad_tag = config.get('app_tests', 'bad_app_tag')
+        cls.test_app_id = config.get('app_tests', 'test_app_id')
+        cls.test_app_params = {
             "read_library_names": ["rhodo.art.jgi.reads"],
             "output_contigset_name": "rhodo_contigs",
             "recipe": "auto",
@@ -43,12 +43,12 @@ class AppManagerTestCase(unittest.TestCase):
             "pipeline": "",
             "min_contig_len": None
         }
-        self.test_job_id = config.get('app_tests', 'test_job_id')
-        self.test_tag = config.get('app_tests', 'test_app_tag')
-        self.public_ws = config.get('app_tests', 'public_ws_name')
-        self.ws_id = int(config.get('app_tests', 'public_ws_id'))
-        self.app_input_ref = config.get('app_tests', 'test_input_ref')
-        self.batch_app_id = config.get('app_tests', 'batch_app_id')
+        cls.test_job_id = config.get('app_tests', 'test_job_id')
+        cls.test_tag = config.get('app_tests', 'test_app_tag')
+        cls.public_ws = config.get('app_tests', 'public_ws_name')
+        cls.ws_id = int(config.get('app_tests', 'public_ws_id'))
+        cls.app_input_ref = config.get('app_tests', 'test_input_ref')
+        cls.batch_app_id = config.get('app_tests', 'batch_app_id')
 
     def test_reload(self):
         self.am.reload()
@@ -85,9 +85,9 @@ class AppManagerTestCase(unittest.TestCase):
             self.am.available_apps(self.bad_tag)
 
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
-    def test_dry_run_app(self, m, auth):
+    def test_dry_run_app(self, c, auth):
         os.environ['KB_WORKSPACE_ID'] = self.public_ws
         output = self.am.run_app(
             self.test_app_id,
@@ -105,10 +105,10 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertIn('wsid', output)
 
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
-    def test_run_app_good_inputs(self, m, auth):
-        m.return_value._send_comm_message.return_value = None
+    def test_run_app_good_inputs(self, c, auth):
+        c.return_value.send_comm_message.return_value = None
         os.environ['KB_WORKSPACE_ID'] = self.public_ws
         new_job = self.am.run_app(
             self.test_app_id,
@@ -122,10 +122,10 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertIsNone(new_job.cell_id)
 
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
-    def test_run_app_from_gui_cell(self, m, auth):
-        m.return_value._send_comm_message.return_value = None
+    def test_run_app_from_gui_cell(self, c, auth):
+        c.return_value.send_comm_message.return_value = None
         os.environ['KB_WORKSPACE_ID'] = self.public_ws
         self.assertIsNone(self.am.run_app(
             self.test_app_id,
@@ -134,22 +134,22 @@ class AppManagerTestCase(unittest.TestCase):
             cell_id="12345"
         ))
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
-    def test_run_app_bad_id(self, m):
-        m.return_value._send_comm_message.return_value = None
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
+    def test_run_app_bad_id(self, c):
+        c.return_value.send_comm_message.return_value = None
         self.assertIsNone(self.am.run_app(self.bad_app_id, None))
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
-    def test_run_app_bad_tag(self, m):
-        m.return_value._send_comm_message.return_value = None
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
+    def test_run_app_bad_tag(self, c):
+        c.return_value.send_comm_message.return_value = None
         self.assertIsNone(self.am.run_app(self.good_app_id,
                                           None,
                                           tag=self.bad_tag))
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
-    def test_run_app_bad_version_match(self, m):
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
+    def test_run_app_bad_version_match(self, c):
         # fails because a non-release tag can't be versioned
-        m.return_value._send_comm_message.return_value = None
+        c.return_value.send_comm_message.return_value = None
         self.assertIsNone(self.am.run_app(self.good_app_id,
                                           None,
                                           tag=self.good_tag,
@@ -158,27 +158,27 @@ class AppManagerTestCase(unittest.TestCase):
     # Running an app with missing inputs is now allowed. The app can
     # crash if it wants to, it can leave its process behind.
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
-    def test_run_app_missing_inputs(self, m, auth):
-        m.return_value._send_comm_message.return_value = None
+    def test_run_app_missing_inputs(self, c, auth):
+        c.return_value.send_comm_message.return_value = None
         self.assertIsNotNone(self.am.run_app(self.good_app_id,
                                              None,
                                              tag=self.good_tag))
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
-    def test_run_app_bad_version(self, m):
-        m.return_value._send_comm_message.return_value = None
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
+    def test_run_app_bad_version(self, c):
+        c.return_value.send_comm_message.return_value = None
         self.assertIsNone(self.am.run_app(self.good_app_id,
                                           None,
                                           tag="dev",
                                           version="1.0.0"))
 
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
-    def test_run_app_batch_good_inputs(self, m, auth):
-        m.return_value._send_comm_message.return_value = None
+    def test_run_app_batch_good_inputs(self, c, auth):
+        c.return_value.send_comm_message.return_value = None
         os.environ['KB_WORKSPACE_ID'] = self.public_ws
         new_job = self.am.run_app_batch(
             self.test_app_id,
@@ -195,10 +195,10 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertIsNone(new_job.cell_id)
 
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
-    def test_run_app_batch_gui_cell(self, m, auth):
-        m.return_value._send_comm_message.return_value = None
+    def test_run_app_batch_gui_cell(self, c, auth):
+        c.return_value.send_comm_message.return_value = None
         os.environ['KB_WORKSPACE_ID'] = self.public_ws
         self.assertIsNone(self.am.run_app_batch(
             self.test_app_id,
@@ -210,22 +210,22 @@ class AppManagerTestCase(unittest.TestCase):
             cell_id="12345"
         ))
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
-    def test_run_app_batch_bad_id(self, m):
-        m.return_value._send_comm_message.return_value = None
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
+    def test_run_app_batch_bad_id(self, c):
+        c.return_value.send_comm_message.return_value = None
         self.assertIsNone(self.am.run_app_batch(self.bad_app_id, None))
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
-    def test_run_app_batch_bad_tag(self, m):
-        m.return_value._send_comm_message.return_value = None
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
+    def test_run_app_batch_bad_tag(self, c):
+        c.return_value.send_comm_message.return_value = None
         self.assertIsNone(self.am.run_app_batch(self.good_app_id,
                                                 None,
                                                 tag=self.bad_tag))
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
-    def test_run_app_batch_bad_version_match(self, m):
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
+    def test_run_app_batch_bad_version_match(self, c):
         # fails because a non-release tag can't be versioned
-        m.return_value._send_comm_message.return_value = None
+        c.return_value.send_comm_message.return_value = None
         self.assertIsNone(self.am.run_app_batch(self.good_app_id,
                                                 None,
                                                 tag=self.good_tag,
@@ -234,17 +234,17 @@ class AppManagerTestCase(unittest.TestCase):
     # Running an app with missing inputs is now allowed. The app can
     # crash if it wants to, it can leave its process behind.
     @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
-    def test_run_app_missing_inputs(self, m, auth):
-        m.return_value._send_comm_message.return_value = None
+    def test_run_app_missing_inputs(self, c, auth):
+        c.return_value.send_comm_message.return_value = None
         self.assertIsNotNone(self.am.run_app_batch(self.good_app_id,
                                                    None,
                                                    tag=self.good_tag))
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
-    def test_run_app_batch_bad_version(self, m):
-        m.return_value._send_comm_message.return_value = None
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
+    def test_run_app_batch_bad_version(self, c):
+        c.return_value.send_comm_message.return_value = None
         self.assertIsNone(self.am.run_app_batch(self.good_app_id,
                                                 None,
                                                 tag="dev",

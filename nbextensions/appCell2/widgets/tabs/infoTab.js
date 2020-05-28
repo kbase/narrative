@@ -10,10 +10,10 @@ define([
 ) {
     'use strict';
 
-    let toBoolean = utils.toBoolean;
+    const toBoolean = utils.toBoolean;
 
-    let DOMTagA = function(innerHTML, options) {
-        let tag = document.createElement('a');
+    const DOMTagA = function(innerHTML, options) {
+        const tag = document.createElement('a');
         if(options) {
             if(options.class) {
                 tag.classList = options.class.split(' ');
@@ -25,20 +25,20 @@ define([
         return tag;
     };
 
-    let DOMTagLI = function (innerHTML) {
-        let item = document.createElement('li');
+    const DOMTagLI = function (innerHTML) {
+        const item = document.createElement('li');
         item.innerHTML = innerHTML;
         return item;
     };
 
-    let appendChildren = function(node, children) {
+    const appendChildren = function(node, children) {
         children.forEach(function(child) { node.appendChild(child); });
     };
 
-    let listLinks = function(links) {
-        let out = [];
-        let separator = document.createTextNode(', ');
-        let conjunction = document.createTextNode(' and ');
+    const listLinks = function(links) {
+        const out = [];
+        const separator = document.createTextNode(', ');
+        const conjunction = document.createTextNode(' and ');
         links.forEach(function(link, ix) {
             out.push(link);
             if(ix < links.length - 2) {
@@ -51,36 +51,36 @@ define([
     };
 
     function factory(config) {
-        let model = config.model;
+        const model = config.model;
 
         function start(arg) {
-            let appSpec = model.getItem('app.spec');
-            let appRef = [
+            const appSpec = model.getItem('app.spec');
+            const appRef = [
                 appSpec.info.id,
                 model.getItem('app').tag
             ].filter(toBoolean).join('/');
 
             // DESCRIPTION
-            let description = document.createTextNode(appSpec.info.subtitle);
+            const description = document.createTextNode(appSpec.info.subtitle);
 
             // AVERAGE RUNTIME
-            let executionStats = model.getItem('executionStats');
-            let avgRuntime = format.niceDuration(1000*(
+            const executionStats = model.getItem('executionStats');
+            const avgRuntime = format.niceDuration(1000*(
                 executionStats.total_exec_time/executionStats.number_of_calls
             ));
-            let runtimeAvgListItem = DOMTagLI(
+            const runtimeAvgListItem = DOMTagLI(
                 `The average execution time for this app is ${avgRuntime}.`
             );
 
             // LIST OF PARAMETERS
-            let parametersList = document.createElement('ul');
+            const parametersList = document.createElement('ul');
             appSpec.parameters.forEach(function(param) {
+                const textOptions = param.text_options;
                 let types = [];
-                let textOptions = param.text_options;
                 if(textOptions && Array.isArray(textOptions.valid_ws_types)) {
-                    let typesArray = (textOptions.valid_ws_types
+                    const typesArray = (textOptions.valid_ws_types
                         .map(function(type) {
-                            let linkType = DOMTagA(type, {
+                            const linkType = DOMTagA(type, {
                                 class: 'cm-em',
                                 href: '/#spec/type/' + type,
                                 target: '_blank'
@@ -92,7 +92,7 @@ define([
                         types = listLinks(typesArray);
                     }
                 }
-                let li = document.createElement('li');
+                const li = document.createElement('li');
                 li.appendChild(document.createTextNode(param.ui_name));
                 if(types.length) {
                     li.appendChild(document.createTextNode(': '));
@@ -100,17 +100,17 @@ define([
                 appendChildren(li, types);
                 parametersList.appendChild(li);
             });
-            let parametersListItem = document.createElement('li');
+            const parametersListItem = document.createElement('li');
             parametersListItem.appendChild(document.createTextNode(
                 'Parameters: '
             ));
             parametersListItem.appendChild(parametersList);
 
             // AUTHORS/OWNERS
-            let authors = appSpec.info.authors;
+            const authors = appSpec.info.authors;
             let authorsListItem = document.createTextNode('');
             if(authors.length) {
-                let authorsArray = authors.map(function(author) {
+                const authorsArray = authors.map(function(author) {
                     return DOMTagA(author, {
                         href: '/#people/' + author,
                         target: '_blank'
@@ -124,18 +124,18 @@ define([
             }
 
             // VERSION
-            let versionListItem = DOMTagLI(`Version: ${appSpec.info.ver}`);
+            const versionListItem = DOMTagLI(`Version: ${appSpec.info.ver}`);
 
             // CATALOG LINK
-            let linkCatalog = DOMTagA(
+            const linkCatalog = DOMTagA(
                 'View in App Catalog',
                 { href: '/#appcatalog/app/' + appRef, target: '_blank' }
             );
-            let linkCatalogListItem = document.createElement('li');
+            const linkCatalogListItem = document.createElement('li');
             linkCatalogListItem.appendChild(linkCatalog);
 
             // Assemble list items
-            let listItems = [
+            const listItems = [
                 runtimeAvgListItem,
                 parametersListItem,
                 authorsListItem,
@@ -145,7 +145,7 @@ define([
 
             // Populate info tab
             arg.node.appendChild(description);
-            let infoList = document.createElement('ul');
+            const infoList = document.createElement('ul');
             appendChildren(infoList, listItems);
             arg.node.appendChild(infoList);
             return Promise.resolve(arg.node);

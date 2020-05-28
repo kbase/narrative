@@ -873,7 +873,6 @@ define([
             selectedTab: null,
             tabs: {
                 info: {
-                    icon: 'question-circle',
                     label: 'Information',
                     widget: infoTabWidget,
                 },
@@ -962,7 +961,7 @@ define([
                 nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
                     token: runtime.authToken()
                 });
-            let catalog = new Catalog(runtime.config('services.catalog.url'));
+            const catalog = new Catalog(runtime.config('services.catalog.url'));
             return (catalog
                 .get_exec_aggr_stats({ full_app_ids: [appRef.ids[0]] })
                 .then(function(data) {

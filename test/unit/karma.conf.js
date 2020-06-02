@@ -10,7 +10,9 @@ module.exports = function (config) {
             jasmine: {
                 failFast: false,
                 DEFAULT_TIMEOUT_INTERVAL: 20000
-            }
+            },
+            requireJsShowNoTimestampsError: '^(?!.*(^/narrative/static/))',
+            clearContext: false
         },
         plugins: [
             'karma-jasmine',
@@ -25,7 +27,8 @@ module.exports = function (config) {
         preprocessors: {
             'kbase-extension/static/kbase/js/**/!(api)/*.js': ['coverage'],
             'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js': ['coverage'],
-            'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage']
+            'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage'],
+            'nbextensions/appcell2/widgets/tabs/*.js': ['coverage'],
         },
         files: [
             'kbase-extension/static/narrative_paths.js',
@@ -40,6 +43,7 @@ module.exports = function (config) {
             {pattern: 'kbase-extension/static/kbase/config/**/*.yaml', included: false, served: true},
             {pattern: 'kbase-extension/static/**/*.js', included: false, served: true},
             {pattern: 'kbase-extension/static/**/*.gif', included: false, served: true},
+            {pattern: 'nbextensions/appcell2/widgets/tabs/*.js', included: false},
             {pattern: 'test/unit/testConfig.json', included: false, served: true, nocache: true},
             {pattern: 'test/*.tok', included: false, served: true, nocache: true},
             {pattern: 'test/data/**/*', included: false, served: true},
@@ -66,6 +70,9 @@ module.exports = function (config) {
                 subdir: 'lcov'
             }],
             includeAllSources: true
+        },
+        mochaReporter: {
+            ignoreSkipped: true,
         },
         // web server port
         port: 9876,
@@ -98,6 +105,7 @@ module.exports = function (config) {
         browserNoActivityTimeout: 30000,
         singleRun: true,
         proxies: {
+            '/narrative/nbextensions': 'http://localhost:32323/narrative/nbextensions',
             '/narrative/static/': '/base/kbase-extension/static/',
             '/narrative/static/base': 'http://localhost:32323/narrative/static/base',
             '/narrative/static/notebook': 'http://localhost:32323/narrative/static/notebook',
@@ -106,10 +114,6 @@ module.exports = function (config) {
             '/narrative/static/bidi': 'http://localhost:32323/narrative/static/bidi',
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/'
-        },
-        client: {
-          requireJsShowNoTimestampsError: '^(?!.*(^/narrative/static/))',
-          clearContext: false
         },
         concurrency: Infinity
 

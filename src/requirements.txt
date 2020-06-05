@@ -2,6 +2,7 @@ nose>=1.1.2
 pygments==2.6.1
 pycrypto>=2.6
 rsa==4.0
+pyyaml==5.3.1
 pyasn1==0.4.8
 requests==2.23.0
 pyyaml==5.2
@@ -9,7 +10,6 @@ semantic_version==2.8.5
 jinja2==2.11.2
 sympy==1.6
 setuptools==47.1.1
-semantic_version==2.6.0
 terminado==0.8.3
 decorator==4.4.2
 jsonschema==3.2.0

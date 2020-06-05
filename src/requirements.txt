@@ -1,5 +1,5 @@
 nose>=1.1.2
-pygments==2.3.1
+pygments==2.6.1
 pycrypto>=2.6
 rsa==4.0
 pyasn1==0.4.5

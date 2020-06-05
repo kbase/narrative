@@ -5,10 +5,9 @@ rsa==4.0
 pyasn1==0.4.8
 requests==2.23.0
 pyyaml==5.2
-jinja2==2.11.1
+jinja2==2.11.2
 sympy==1.6
 setuptools==47.1.1
-setuptools==40.8.0
 semantic_version==2.6.0
 terminado==0.8.3
 decorator==4.4.2

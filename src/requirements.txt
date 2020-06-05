@@ -15,7 +15,7 @@ jsonschema==3.2.0
 pexpect==4.8.0
 pickleshare==0.7.5
 simplegeneric==0.8.1
-bokeh==1.0.4
+bokeh==2.0.2
 markupsafe==1.1.1
 plotly==3.7.0
 mock==2.0.0

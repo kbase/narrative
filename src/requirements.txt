@@ -18,7 +18,7 @@ pickleshare==0.7.5
 simplegeneric==0.8.1
 bokeh==2.0.2
 markupsafe==1.1.1
-plotly==3.7.0
+plotly==4.8.1
 mock==4.0.2
 coverage==5.0.3
 pillow==6.2.0

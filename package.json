@@ -25,7 +25,7 @@
     "karma-coverage": "1.1.2",
     "karma-es6-shim": "1.0.0",
     "karma-firefox-launcher": "1.1.0",
-    "karma-jasmine": "^2.0.1",
+    "karma-jasmine": "^3.3.1",
     "karma-mocha-reporter": "2.2.5",
     "karma-phantomjs-launcher": "1.0.4",
     "karma-requirejs": "1.1.0",

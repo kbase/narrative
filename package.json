@@ -15,7 +15,7 @@
     "grunt-coveralls": "2.0.0",
     "grunt-filerev": "2.3.1",
     "grunt-jasmine-nodejs": "1.6.1",
-    "grunt-karma": "3.0.2",
+    "grunt-karma": "4.0.0",
     "grunt-regex-replace": "0.4.0",
     "jasmine-ajax": "4.0.0",
     "jasmine-core": "3.5.0",

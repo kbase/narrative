@@ -20,5 +20,5 @@ markupsafe==1.1.1
 plotly==3.7.0
 mock==2.0.0
 coverage==5.0.3
-pillow==6.2.0
+pillow==7.1.2
 pymongo==3.7.2

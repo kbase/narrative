@@ -11,6 +11,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false
                     },
@@ -62,6 +65,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: [{
                         selector: {
                             viewOnly: false
@@ -155,6 +161,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: [{
                         selector: {
                             viewOnly: false
@@ -284,6 +293,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configureBatch: [{
                         selector: {
                             viewOnly: false
@@ -380,6 +392,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configureBatch: [{
                         selector: {
                             viewOnly: false
@@ -517,6 +532,9 @@ define([], function() {
             ],
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true
@@ -609,6 +627,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true
@@ -710,6 +731,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true
@@ -817,6 +841,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true
@@ -911,6 +938,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true
@@ -1000,6 +1030,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true
@@ -1085,6 +1118,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true
@@ -1153,6 +1189,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true
@@ -1226,6 +1265,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true
@@ -1283,6 +1325,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true
@@ -1357,6 +1402,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true
@@ -1431,6 +1479,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true
@@ -1486,6 +1537,9 @@ define([], function() {
             },
             ui: {
                 tabs: {
+                    info: {
+                        enabled: true
+                    },
                     configure: {
                         enabled: false,
                         hidden: true

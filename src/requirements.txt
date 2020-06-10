@@ -1,3 +1,4 @@
+chart_studio==1.1.0
 nose>=1.1.2
 pygments==2.3.1
 pycrypto>=2.6

@@ -205,7 +205,7 @@ define ([
             };
 
             var $resultDiv = $('<div>');
-            var $noResultsDiv = $('<div>').append('<center>No matching features found.</center>').hide();
+            var $noResultsDiv = $('<div>').append('<center>No matching features found.</center><br><center>Note: If this object was recently created, there may be a delay in feature tab functionality due to indexing.</center>').hide();
             var $loadingDiv = $('<div>');
             var $errorDiv = $('<div>');
             var $pagenateDiv = $('<div>').css('text-align', 'left');
@@ -618,7 +618,7 @@ define ([
             };
 
             var $resultDiv = $('<div>');
-            var $noResultsDiv = $('<div>').append('<center>No matching contigs found.</center>').hide();
+            var $noResultsDiv = $('<div>').append('<center>No matching contigs found.</center><br><center>Note: If this object was recently created, there may be a delay in contig tab functionality due to indexing.</center>').hide();
             var $loadingDiv = $('<div>');
             var $errorDiv = $('<div>');
             var $pagenateDiv = $('<div>').css('text-align', 'left');
@@ -1106,72 +1106,121 @@ define ([
                 this.showError('You\'re not logged in');
                 return;
             }
+
+            var get_feature_type_counts = function (metagenome_ref) {
+                return self.metagenomeAPI.callFunc('get_feature_type_counts', [{
+                    ref: metagenome_ref
+                }])
+                    .spread(function (d) {
+                        return d;
+                    })
+                    .catch(function (err) {
+                        console.error(err);
+                    });
+            };
+
+
             ///////// Overview Tab /////////
-            var ready = function (metagenomeData) {
+            var ready = function (metagenomeData, feature_type_counts) {
                 var mgnm = metagenomeData;
 
-                container.empty();
-                var $tabPane = $('<div id="' + pref + 'tab-content">');
-                container.append($tabPane);
-                var tabObj = new kbaseTabs($tabPane, {canDelete: true, tabs: []});
+                var metagenome_ref = self.metagenome_ref;
+                var feature_type_counts = {};
+                var feature_type_vals = [];
+                var feature_type_labels = [];
 
-                var tabData = self.tabData(mgnm);
-                var tabNames = tabData.names;
-                var tabIds = tabData.ids;
+                get_feature_type_counts(metagenome_ref).then(
+                    function (result) {
+                        console.log('heres the result', result)
+                        feature_type_counts = result['feature_type_counts'];
 
-                for (let i = 0; i < tabIds.length; i += 1) {
-                    var tabDiv = $('<div id="' + pref + tabIds[i] + '"> ');
-                    tabObj.addTab({tab: tabNames[i], content: tabDiv, canDelete: false, show: (i == 0)});
-                }
-                var $overviewPanel = $('#' + pref + 'overview');
-                var $overviewTable = $('<table>')
-                    .addClass('table table-striped table-bordered table-hover')
-                    .css({'margin-left': 'auto', 'margin-right': 'auto'})
-                    .css({'word-wrap': 'break-word', 'table-layout': 'fixed'})
-                    .append($('<colgroup>')
-                        .append($('<col span="1" style="width: 25%;">')));
+                        for (const property in feature_type_counts) {
+                            feature_type_labels.push("Number of ".concat(property).concat("s"));
+                            feature_type_vals.push(feature_type_counts[property]);
+                        }
+                        console.log("in the then type labels", feature_type_labels);
+                        console.log("in the then type vals", feature_type_vals)
 
-                var $tableDiv = $('<div>').append($overviewTable); //.addClass('col-md-8').append($overviewTable);
-                var $layout = $('<div>')//.addClass('row')
-                    .append($tableDiv);
 
-                $overviewPanel.append($('<div>').css('margin-top', '15px').append($layout));
+                        container.empty();
+                        var $tabPane = $('<div id="' + pref + 'tab-content">');
+                        container.append($tabPane);
+                        var tabObj = new kbaseTabs($tabPane, {canDelete: true, tabs: []});
 
-                var id = '<a href = "/#dataview/' + mgnm.ref + '" target="_blank">' + mgnm.ws_obj_name + '</a>';
+                        var tabData = self.tabData(mgnm);
+                        var tabNames = tabData.names;
+                        var tabIds = tabData.ids;
 
-                var source = mgnm.source;
-                var source_id = mgnm.source_id;
-                var size = mgnm.size;
-                if (size) {
-                    size = numberWithCommas(size);
-                }
-                var gc_content = mgnm.gc_content;
-                var environment = mgnm.environment;
+                        for (let i = 0; i < tabIds.length; i += 1) {
+                            var tabDiv = $('<div id="' + pref + tabIds[i] + '"> ');
+                            tabObj.addTab({tab: tabNames[i], content: tabDiv, canDelete: false, show: (i == 0)});
+                        }
+                        var $overviewPanel = $('#' + pref + 'overview');
+                        var $overviewTable = $('<table>')
+                            .addClass('table table-striped table-bordered table-hover')
+                            .css({'margin-left': 'auto', 'margin-right': 'auto'})
+                            .css({'word-wrap': 'break-word', 'table-layout': 'fixed'})
+                            .append($('<colgroup>')
+                                .append($('<col span="1" style="width: 25%;">')));
 
-                var overviewLabels = [
-                    'KBase Object Name',
-                    'Source',
-                    'Source ID',
-                    'Size',
-                    'GC Content',
-                    'Environment'
-                ];
+                        var $tableDiv = $('<div>').append($overviewTable); //.addClass('col-md-8').append($overviewTable);
+                        var $layout = $('<div>')//.addClass('row')
+                            .append($tableDiv);
 
-                var overviewData = [
-                    id,
-                    source,
-                    source_id,
-                    size,
-                    gc_content,
-                    environment
-                ];
+                        $overviewPanel.append($('<div>').css('margin-top', '15px').append($layout));
 
-                for (let i = 0; i < overviewData.length; i += 1) {
-                    $overviewTable.append(
-                        $('<tr>')
-                            .append($('<td>').append($('<b>').append(overviewLabels[i])))
-                            .append($('<td>').append(overviewData[i])));
-                }
+                        var id = '<a href = "/#dataview/' + mgnm.ref + '" target="_blank">' + mgnm.ws_obj_name + '</a>';
+
+                        var source = mgnm.source;
+                        var source_id = mgnm.source_id;
+                        var size = mgnm.size;
+                        if (size) {
+                            size = numberWithCommas(size);
+                        }
+                        var gc_content = mgnm.gc_content;
+                        var num_features = mgnm.num_features;
+                        var num_contigs = mgnm.num_contigs;
+                        var environment = mgnm.environment;
+
+                        var feat_type_labels = [];
+                        for (let i = 0; i < feature_type_counts.length; i +=1){
+                            feat_type_labels.push("Number of ".concat(feat_str).concat("s"))
+                        }
+
+                        console.log('feature type labels', feature_type_counts);
+                        console.log('feat type labels', feat_type_labels);
+
+                        var overviewLabels = [
+                            'KBase Object Name',
+                            'Source',
+                            'Source ID',
+                            'Size',
+                            'GC Content',
+                            'Number of Features',
+                            'Number of Contigs',
+                            'Environment'
+                        ].concat(feature_type_labels);
+
+                        var overviewData = [
+                            id,
+                            source,
+                            source_id,
+                            size,
+                            gc_content,
+                            num_features,
+                            num_contigs,
+                            environment
+                        ].concat(feature_type_vals);
+
+                        for (let i = 0; i < overviewData.length; i += 1) {
+                            $overviewTable.append(
+                                $('<tr>')
+                                    .append($('<td>').append($('<b>').append(overviewLabels[i])))
+                                    .append($('<td>').append(overviewData[i])));
+                        }
+
+                    }
+                );
 
                 var liElems = $tabPane.find('li');
 
@@ -1200,17 +1249,12 @@ define ([
                 };
 
                 for (let liElemPos = 0; liElemPos < liElems.length; liElemPos += 1) {
-                    // was var
                     var liElem = $(liElems.get(liElemPos));
-                    // was var
                     var aElem = liElem.find('a');
                     if (aElem.length != 1) {
                         continue;
                     }
-                    // was var
                     var dataTab = aElem.attr('data-tab');
-                    // was var
-                    var metagenome_ref = self.metagenome_ref;
                     if (dataTab === 'Browse Features' ) {
                         aElem.on('click', browse_features_func(metagenome_ref));
                     } else if (dataTab === 'Browse Contigs' ) {
@@ -1272,7 +1316,9 @@ define ([
                 source: '',
                 source_id: '',
                 size: '',
-                gc_content: ''
+                gc_content: '',
+                num_contigs: '',
+                num_features: ''
             };
 
             if (metadata['Genetic code']) {
@@ -1292,6 +1338,12 @@ define ([
             }
             if (metadata.Environment) {
                 genomeData.environment = metadata.Environment;
+            }
+            if (metadata['Number features']){
+                genomeData.num_features = metadata['Number features']
+            }
+            if (metadata['Number contigs']){
+                genomeData.num_contigs = metadata['Number contigs']
             }
 
             return genomeData;

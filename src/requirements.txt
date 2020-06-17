@@ -1,6 +1,6 @@
 bokeh==2.1.0
 chart_studio==1.1.0
-coverage==5.0.3
+coverage==5.1
 decorator==4.4.2
 jinja2==2.11.2
 jsonschema==3.2.0

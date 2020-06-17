@@ -87,7 +87,7 @@ define ([
         };
     };
 
-    return new KBWidget({
+    return KBWidget({
         name: 'kbaseAnnotatedMetagenomeAssemblyView',
         parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
@@ -104,7 +104,7 @@ define ([
         lastElemTabNum: 0,
         metagenome_info: null,
 
-        state: new WidgetState(),
+        state: WidgetState(),
 
         init: function (options) {
             this._super(options);
@@ -151,8 +151,6 @@ define ([
         },
 
         tabData : function () {
-            // var names = ['Overview'];
-            // var ids = ['overview'];
             var names = ['Overview', 'Browse Features', 'Browse Contigs'];
             var ids = ['overview', 'browse_features', 'browse_contigs'];
 
@@ -175,7 +173,9 @@ define ([
             var metagenome_ref = params.ref;
 
             var idClick = null;
-            if (params.idClick) {idClick = params.idClick;}
+            if (params.idClick) {
+                idClick = params.idClick;
+            }
             var contigClick = null;
             if (params.contigClick) {
                 contigClick = params.contigClick;
@@ -191,18 +191,6 @@ define ([
             // setup the main search button and the results panel and layout
             var $input = $('<input type="text" class="form-control" placeholder="Search Features">');
             $input.prop('disabled', true);
-
-            var isLastQuery = function () {
-                // establish edge condition
-                return true;
-                // if(start !== result['start']) {
-                //     return false;
-                // }
-                // if($input.val() !== result['query']) {
-                //     return false;
-                // }
-                // return true;
-            };
 
             var $resultDiv = $('<div>');
             var $noResultsDiv = $('<div>').append('<center>No matching features found.</center><br><center>Note: If this object was recently created, there may be a delay in feature tab functionality due to indexing.</center>').hide();
@@ -221,8 +209,6 @@ define ([
                 .append($('<div>').addClass('col-md-12').append($resultDiv));
             var $noResultsRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-12').append($noResultsDiv));
-            // var $errorRow = $('<div>').addClass('row')
-            //     .append($('<div>').addClass('col-md-8').append($errorDiv));
             var $infoRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-4').append($resultsInfoDiv))
                 .append($('<div>').addClass('col-md-8'));
@@ -368,8 +354,8 @@ define ([
                     var hasFunc = false;
                     var hasOntology = false;
                     var hasAlias = false;
-                    for (let k = 0; k < features.length; k += 1) {
-                        let row = buildRow(features[k]);
+                    features.forEach((feature) => {
+                        let row = buildRow(feature);
                         $table.append(row.$tr);
                         if (row.hasFunc) {
                             hasFunc = true;
@@ -380,7 +366,7 @@ define ([
                         if (row.hasAlias) {
                             hasAlias = true;
                         }
-                    }
+                    });
                     n_results = results.num_found;
                     showViewInfo(results.start, features.length, results.num_found);
                     showPaginate(results.num_found);
@@ -467,10 +453,8 @@ define ([
                     inFlight = true;
                     start = 0;
                     search($input.val(), start, limit, sort_by)
-                        .then(function (result) {
-                            if (isLastQuery(result)) {
-                                renderResult($table, result);
-                            }
+                        .then(function (result) {    
+                            renderResult($table, result);
                             inFlight = false;
                             start = 0;
                         })
@@ -542,9 +526,7 @@ define ([
                 setToLoad($loadingDiv);
                 search($input.val(), start, limit, sort_by)
                     .then(function (result) {
-                        if (isLastQuery(result)) {
-                            renderResult($table, result);
-                        }
+                        renderResult($table, result);
                     });
             });
             $pageForward.on('click', function () {
@@ -555,16 +537,13 @@ define ([
                 setToLoad($loadingDiv);
                 search($input.val(), start, limit, sort_by)
                     .then(function (result) {
-                        if (isLastQuery(result)) {
-                            renderResult($table, result);
-                        }
+                        renderResult($table, result);
                     });
             });
 
 
             //put in a slight delay so on rapid typing we don't make a flood of calls
             var fetchTimeout = null;
-            // var lastQuery = null;
             $input.on('input', function () {
                 // if we were waiting on other input, cancel that request
                 if (fetchTimeout) {
@@ -576,9 +555,7 @@ define ([
                     start = 0;
                     search($input.val(), start, limit, sort_by)
                         .then(function (result) {
-                            if (isLastQuery(result)) {
-                                renderResult($table, result);
-                            }
+                            renderResult($table, result);
                         });
                 }, 300);
             });
@@ -605,17 +582,6 @@ define ([
             var sort_by = ['contig_id', 1];
 
             var n_results = 0;
-
-            var isLastQuery = function () {
-
-                // if(start !== result['start']) {
-                //     return false;
-                // }
-                // if($input.val() !== result['query']) {
-                //     return false;
-                // }
-                return true;
-            };
 
             var $resultDiv = $('<div>');
             var $noResultsDiv = $('<div>').append('<center>No matching contigs found.</center><br><center>Note: If this object was recently created, there may be a delay in contig tab functionality due to indexing.</center>').hide();
@@ -802,9 +768,7 @@ define ([
                     start = 0;
                     search_contigs(start, limit, sort_by)
                         .then(function (result) {
-                            if (isLastQuery(result)) {
-                                renderResult($table, result);
-                            }
+                            renderResult($table, result);
                             inFlight = false;
                             start = 0;
                         })
@@ -865,9 +829,7 @@ define ([
                 setToLoad($loadingDiv);
                 search_contigs(start, limit, sort_by)
                     .then(function (result) {
-                        if (isLastQuery(result)) {
-                            renderResult($table, result);
-                        }
+                        renderResult($table, result);
                     });
             });
             $pageForward.on('click', function () {
@@ -878,9 +840,7 @@ define ([
                 setToLoad($loadingDiv);
                 search_contigs(start, limit, sort_by)
                     .then(function (result) {
-                        if (isLastQuery(result)) {
-                            renderResult($table, result);
-                        }
+                        renderResult($table, result);
                     });
             });
 
@@ -912,8 +872,8 @@ define ([
         },
 
         ////////////////////////
-        ////show contig tab////
-        //////////////////////
+        ////show contig tab/////
+        ////////////////////////
         showContigTab: function (metagenome_ref, contig_id, pref, tabPane) {
 
             var self = this;
@@ -939,10 +899,10 @@ define ([
                 cbFormat.id = featureData.feature_id;
                 cbFormat.location = [];
                 if (featureData.global_location.contig_id) {
-                    for(let k = 0; k < featureData.location.length; k += 1) {
+                    featureData.location.forEach((loc) => {
                         // only show things on the main contig
                         var loc = featureData.location[k];
-                        if(featureData.global_location.contig_id === loc.contig_id) {
+                        if (featureData.global_location.contig_id === loc.contig_id) {
                             cbFormat.location.push([
                                 loc.contig_id,
                                 loc.start,
@@ -950,7 +910,7 @@ define ([
                                 loc.stop
                             ]);
                         }
-                    }
+                    });
                 }
                 cbFormat.function = featureData.function;
                 return cbFormat;
@@ -975,9 +935,9 @@ define ([
                             genes: []
                         };
 
-                        for (let f = 0; f < result.features.length; f += 1) {
+                        result.features.forEach((feature) => {
                             contigWindowData.genes.push(translate_feature_data(result.features[f]));
-                        }
+                        });
 
                         var cgb = new ContigBrowserPanel();
                         cgb.data.options.contig = contigWindowData;
@@ -1134,7 +1094,7 @@ define ([
                         console.log('heres the result', result)
                         feature_type_counts = result['feature_type_counts'];
 
-                        for (const property in feature_type_counts) {
+                        for (const property in feature_type_counts){
                             feature_type_labels.push("Number of ".concat(property).concat("s"));
                             feature_type_vals.push(feature_type_counts[property]);
                         }
@@ -1248,14 +1208,13 @@ define ([
                         for (let liElemPos = 0; liElemPos < liElems.length; liElemPos += 1) {
                             var liElem = $(liElems.get(liElemPos));
                             var aElem = liElem.find('a');
-                            if (aElem.length != 1) {
-                                continue;
-                            }
-                            var dataTab = aElem.attr('data-tab');
-                            if (dataTab === 'Browse Features' ) {
-                                aElem.on('click', browse_features_func(metagenome_ref));
-                            } else if (dataTab === 'Browse Contigs' ) {
-                                aElem.on('click', browse_contig_func(metagenome_ref));
+                            if (aElem.length == 1) {
+                                var dataTab = aElem.attr('data-tab');
+                                if (dataTab === 'Browse Features' ) {
+                                    aElem.on('click', browse_features_func(metagenome_ref));
+                                } else if (dataTab === 'Browse Contigs' ) {
+                                    aElem.on('click', browse_contig_func(metagenome_ref));
+                                }
                             }
                         }
 
@@ -1274,9 +1233,7 @@ define ([
                 // get info from metadata
                 self.metagenomeAPI
                     .callFunc('get_annotated_metagenome_assembly', [{
-                        // genomes: [{
                         ref: self.metagenome_ref,
-                        // }],
                         included_fields: [] // include no fields
                     }]).spread(function (data) {
                         ready(self.normalizeMetagenomeDataFromQuery(data.genomes[0], metagenome_ref, ready));
@@ -1396,13 +1353,11 @@ define ([
                 if (locationObject.strand && locationObject.strand === '-') {
                     loc.end = locationObject.start;
                     loc.start = loc.end - locationObject.stop;
-                    // loc['start'] = loc['end'] - locationObject['length'];
 
                 } else {
                     // assume it is on + strand
                     loc.start = locationObject.start;
                     loc.end = loc.start + locationObject.stop;
-                    // loc['end'] = loc['start'] + locationObject['length'];
                 }
                 return loc;
             }
@@ -1606,13 +1561,13 @@ define ([
                         }])
                         .spread( function (result) {
                             $contigBrowser.empty();
-                            for (let f = 0; f < result.features.length; f += 1) {
-                                contigDataForBrowser.genes.push(translate_feature_data(result.features[f]));
-                            }
+                            result.features.forEach((feature) => {
+                                // for (let f = 0; f < result.features.length; f += 1) {
+                                contigDataForBrowser.genes.push(translate_feature_data(feature));
+                            });
 
                             var cgb = new ContigBrowserPanel();
                             cgb.data.options.contig = contigDataForBrowser;
-                            //cgb.data.options.svgWidth = self.width - 28;
                             cgb.data.options.onClickFunction = function (svgElement, feature) {
                                 self.showFeatureTab(metagenome_ref, feature.original_data.raw, pref, tabPane);
                             };

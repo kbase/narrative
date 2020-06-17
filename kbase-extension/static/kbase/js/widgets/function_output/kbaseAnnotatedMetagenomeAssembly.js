@@ -45,11 +45,11 @@ define ([
         return $('<div>')
             .addClass('alert alert-danger')
             .append(errorMessage);
-    }
+    };
 
     function numberWithCommas(x) {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    }
+    };
 
     function WidgetState() {
         var UNINITIALIZED = 0;
@@ -85,7 +85,7 @@ define ([
             isError: isError,
             info: info
         };
-    }
+    };
 
     return new KBWidget({
         name: 'kbaseAnnotatedMetagenomeAssemblyView',
@@ -121,11 +121,11 @@ define ([
                     message: errorMessage
                 });
                 return;
-            }
+            };
             this.state.ok();
             if (this.auth()) {
                 this.token = this.auth().token;
-            }
+            };
             this.attachClients();
             return this;
         },
@@ -1586,14 +1586,14 @@ define ([
                     var search_start = bounds.start - range;
                     if (search_start < 0){
                         search_start = 0;
-                    }
+                    };
                     var search_stop = bounds.end + range;
                     var search_length = search_stop - search_start;
                     contigDataForBrowser.length = search_stop;
 
                     if (search_length > 40000) {
                         search_length = 40000;
-                    }
+                    };
 
                     self.metagenomeAPI
                         .callFunc('search_region', [{

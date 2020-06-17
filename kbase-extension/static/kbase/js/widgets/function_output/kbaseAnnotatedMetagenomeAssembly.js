@@ -1121,7 +1121,7 @@ define ([
 
 
             ///////// Overview Tab /////////
-            var ready = function (metagenomeData, feature_type_counts) {
+            var ready = function (metagenomeData) {
                 var mgnm = metagenomeData;
 
                 var metagenome_ref = self.metagenome_ref;
@@ -1219,49 +1219,48 @@ define ([
                                     .append($('<td>').append(overviewData[i])));
                         }
 
+                        var liElems = $tabPane.find('li');
+
+                        var browse_features_func = function (metagenome_ref) {
+                            self.buildGeneSearchView({
+                                $div: $('#' + pref + 'browse_features'),
+                                ref: metagenome_ref,
+                                idClick: function (featureData) {
+                                    self.showFeatureTab(metagenome_ref, featureData, pref, tabObj);
+                                },
+                                contigClick: function (contigId) {
+                                    self.showContigTab(metagenome_ref, contigId, pref, tabObj);
+                                }
+                            });
+                        };
+
+                        var browse_contig_func = function (metagenome_ref) {
+                            self.buildContigSearchView({
+                                $div: $('#' + pref + 'browse_contigs'),
+                                ref: metagenome_ref,
+                                contigClick: function (contigId) {
+                                    self.showContigTab(metagenome_ref, contigId, pref, tabObj);
+                                }
+                            });
+
+                        };
+
+                        for (let liElemPos = 0; liElemPos < liElems.length; liElemPos += 1) {
+                            var liElem = $(liElems.get(liElemPos));
+                            var aElem = liElem.find('a');
+                            if (aElem.length != 1) {
+                                continue;
+                            }
+                            var dataTab = aElem.attr('data-tab');
+                            if (dataTab === 'Browse Features' ) {
+                                aElem.on('click', browse_features_func(metagenome_ref));
+                            } else if (dataTab === 'Browse Contigs' ) {
+                                aElem.on('click', browse_contig_func(metagenome_ref));
+                            }
+                        }
+
                     }
                 );
-
-                var liElems = $tabPane.find('li');
-
-                var browse_features_func = function (metagenome_ref) {
-                    self.buildGeneSearchView({
-                        $div: $('#' + pref + 'browse_features'),
-                        ref: metagenome_ref,
-                        idClick: function (featureData) {
-                            self.showFeatureTab(metagenome_ref, featureData, pref, tabObj);
-                        },
-                        contigClick: function (contigId) {
-                            self.showContigTab(metagenome_ref, contigId, pref, tabObj);
-                        }
-                    });
-                };
-
-                var browse_contig_func = function (metagenome_ref) {
-                    self.buildContigSearchView({
-                        $div: $('#' + pref + 'browse_contigs'),
-                        ref: metagenome_ref,
-                        contigClick: function (contigId) {
-                            self.showContigTab(metagenome_ref, contigId, pref, tabObj);
-                        }
-                    });
-
-                };
-
-                for (let liElemPos = 0; liElemPos < liElems.length; liElemPos += 1) {
-                    var liElem = $(liElems.get(liElemPos));
-                    var aElem = liElem.find('a');
-                    if (aElem.length != 1) {
-                        continue;
-                    }
-                    var dataTab = aElem.attr('data-tab');
-                    if (dataTab === 'Browse Features' ) {
-                        aElem.on('click', browse_features_func(metagenome_ref));
-                    } else if (dataTab === 'Browse Contigs' ) {
-                        aElem.on('click', browse_contig_func(metagenome_ref));
-                    }
-                }
-
 
             };
             container.empty();

@@ -39,8 +39,8 @@ define([
             type: errorType,
             message: errorMessage,
             detail: errorDetail,
-            advice: 'For more info please consult the logs in the Job Status tab. If the app fails consistently, ' + 
-            'please create a ticket on our help board at https://kbase.us/contact-us ',
+            advice: 'If the app fails consistently, ' + 
+            'please contact us at https://kbase.us/contact-us ',
         };
     }
 

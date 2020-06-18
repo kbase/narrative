@@ -701,7 +701,7 @@ define ([
                     }
                     n_results = results.num_found;
                     showViewInfo(results.start, contigs.length, results.num_found);
-                    showPaginate(results.num_found);
+                    showPaginate();
                 } else {
                     showNoResultsView();
                 }
@@ -1211,9 +1211,9 @@ define ([
                             if (aElem.length == 1) {
                                 var dataTab = aElem.attr('data-tab');
                                 if (dataTab === 'Browse Features' ) {
-                                    aElem.on('click', browse_features_func(metagenome_ref));
+                                    aElem.on('click', () => browse_features_func(metagenome_ref));
                                 } else if (dataTab === 'Browse Contigs' ) {
-                                    aElem.on('click', browse_contig_func(metagenome_ref));
+                                    aElem.on('click', () => browse_contig_func(metagenome_ref));
                                 }
                             }
                         }
@@ -1442,7 +1442,7 @@ define ([
                             if (i > 0) { $locDiv.append('<br>'); }
                             if (i > 6) { crop=true; }
                             var loc = locs[i];
-                            bounds = getFeatureLocationBounds(loc);
+                            var bounds = getFeatureLocationBounds(loc);
                             $locDiv.append(numberWithCommas(bounds.start) + '&nbsp;-&nbsp;' + numberWithCommas(bounds.end) + '&nbsp;(' + loc.strand + '&nbsp;Strand)');
                         }
                         $loc.append($locDiv);

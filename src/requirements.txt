@@ -16,7 +16,7 @@ pycrypto>=2.6
 pygments==2.6.1
 pymongo==3.10.1
 pyyaml==5.3.1
-requests==2.23.0
+requests==2.24.0
 rsa==4.6
 semantic_version==2.8.5
 setuptools==47.1.1

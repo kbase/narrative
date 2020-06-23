@@ -10,13 +10,15 @@
 		'bootstrap',
 		'jquery',
         'narrativeConfig',
-		'kbaseAuthenticatedWidget'
+		'kbaseAuthenticatedWidget',
+		'kb_common/jsonRpc/dynamicServiceClient'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
         Config,
-		kbaseAuthenticatedWidget
+		kbaseAuthenticatedWidget,
+		DynamicServiceClient,
 	) {
     return KBWidget({
         name: "kbaseVariation",
@@ -40,18 +42,32 @@
             this._super(options);
             return this;
         },
+        getLinks: function () {
+           var client =  new DynamicServiceClient({
+                module: 'JbrowseServer',
+                url: Config.url('service_wizard'),
+                token: this.token,
+                version: 'dev'
+            })
+            return client.lookupModule()
+                .spread(function(status) {
+                    return status.url;
+                });
+        },
+        buildIframe: function(url){
+            variation_ref = this.options.upas.variationID
+            this.$elem.append("<b>Genome browser view</b>")
+            jbrowse_url = [url, "jbrowse", variation_ref, "index.html"].join("/")
+            iframe_code = '<iframe  src="' + jbrowse_url + '" style="height:500px;width:100%;" allowfullscreen></iframe>'
+            this.$elem.append(iframe_code)
+        },
         render: function() {
-            this.$elem.append("hello world"); 
-            this.$elem.append(this.options.workspaceID); 
-            this.$elem.append(this.options.variationID);
 
-            //TODO: Figure out how to get variation_ref
-            variation_ref = "51264/9/1"
-            //TODO: Figure out how to use service-wizard url to get latest version of JbrowseServer dynamic service url
-            jbrowse_dyn_url = "https://ci.kbase.us/dynserv/e4c6fabee3f35fb9e7e3b8496cb799119422246d.JbrowseServer"
-            url = jbrowse_dyn_url + "/" + "jbrowse/" + variation_ref + "/index.html"  
-            iframe_code = '<iframe  src="' + url + '" style="height:500px;width:100%;" allowfullscreen></iframe>'
-            this.$elem.append(iframe_code)            
+            this.getLinks()
+                .then((url) => (
+                 this.buildIframe(url)
+               )
+            )
         },
 
         loggedInCallback: function(event, auth) {

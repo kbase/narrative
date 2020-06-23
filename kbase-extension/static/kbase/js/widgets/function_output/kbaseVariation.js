@@ -55,10 +55,10 @@
                 });
         },
         buildIframe: function(url){
-            variation_ref = this.options.upas.variationID
+            var variation_ref = this.options.upas.variationID
             this.$elem.append("<b>Genome browser view</b>")
-            jbrowse_url = [url, "jbrowse", variation_ref, "index.html"].join("/")
-            iframe_code = '<iframe  src="' + jbrowse_url + '" style="height:500px;width:100%;" allowfullscreen></iframe>'
+            var jbrowse_url = [url, "jbrowse", variation_ref, "index.html"].join("/")
+            var iframe_code = '<iframe  src="' + jbrowse_url + '" style="height:500px;width:100%;" allowfullscreen></iframe>'
             this.$elem.append(iframe_code)
         },
         render: function() {

@@ -62,7 +62,7 @@
             this.$elem.append(iframe_code)
         },
         render: function() {
-
+            this.$elem.empty()
             this.getLinks()
                 .then((url) => (
                  this.buildIframe(url)

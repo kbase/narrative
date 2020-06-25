@@ -11,6 +11,7 @@ define([
     'kb_common/html',
     'kb_common/format',
     'common/props',
+    'kb_service/client/catalog',
     'kb_service/client/narrativeMethodStore',
     'common/pythonInterop',
     'common/utils',
@@ -30,6 +31,7 @@ define([
     './tabs/resultsTab',
     './tabs/status/logTab',
     './tabs/errorTab',
+    './tabs/infoTab',
     './runClock',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
@@ -46,6 +48,7 @@ define([
     html,
     formatting,
     Props,
+    Catalog,
     NarrativeMethodStore,
     PythonInterop,
     utils,
@@ -65,6 +68,7 @@ define([
     resultsTabWidget,
     logTabWidget,
     errorTabWidget,
+    infoTabWidget,
     RunClock
 ) {
     'use strict';
@@ -76,7 +80,9 @@ define([
         pre = t('pre'),
         p = t('p'),
         blockquote = t('blockquote'),
-        appStates = AppStates;
+        appStates = AppStates,
+        toBoolean = utils.toBoolean;
+
 
     function factory(config) {
         var hostNode,
@@ -866,6 +872,10 @@ define([
         controlBarTabs = {
             selectedTab: null,
             tabs: {
+                info: {
+                    label: 'Information',
+                    widget: infoTabWidget,
+                },
                 configure: {
                     label: 'Configure',
                     widget: configureWidget()
@@ -951,14 +961,21 @@ define([
                 nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
                     token: runtime.authToken()
                 });
-
-            return nms.get_method_spec(appRef)
+            const catalog = new Catalog(runtime.config('services.catalog.url'));
+            return (catalog
+                .get_exec_aggr_stats({ full_app_ids: [appRef.ids[0]] })
                 .then(function(data) {
-                    if (!data[0]) {
-                        throw new Error('App not found');
-                    }
-                    return data[0];
-                });
+                    model.setItem('executionStats', data[0]);
+                }).then(function () {
+                    return nms.get_method_spec(appRef)
+                        .then(function(data) {
+                            if (!data[0]) {
+                                throw new Error('App not found');
+                            }
+                            return data[0];
+                        });
+                })
+            );
         }
 
         // RENDER API
@@ -1003,13 +1020,6 @@ define([
                 }).join('  ');
 
             ui.setContent('fsm-display.content', content);
-        }
-
-        function toBoolean(value) {
-            if (value && value !== null) {
-                return true;
-            }
-            return false;
         }
 
         function showAboutApp() {

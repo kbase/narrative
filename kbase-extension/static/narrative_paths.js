@@ -196,6 +196,7 @@ require.config({
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
+        'kbaseVariation': 'kbase/js/widgets/function_output/kbaseVariation',
         kbaseDefaultObjectView: 'kbase/js/widgets/function_output/kbaseDefaultObjectView',
         kbaseBinnedContigs: 'kbase/js/widgets/function_output/kbaseBinnedContigs',
         kbaseAlignment: 'kbase/js/widgets/function_output/kbaseAlignment',

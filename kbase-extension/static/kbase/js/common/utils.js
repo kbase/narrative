@@ -122,6 +122,13 @@ define([
         }
     }
     
+    function toBoolean(value) {
+        if (value && value !== null) {
+            return true;
+        }
+        return false;
+    }
+
     return {
         makePanel: makePanel,
         buildPanel: buildPanel,
@@ -133,7 +140,8 @@ define([
         setCellMeta: setCellMeta,
         pushMeta: pushMeta,
         formatTime: formatTime,
-        horribleHackToHideElement: horribleHackToHideElement
+        horribleHackToHideElement: horribleHackToHideElement,
+        toBoolean: toBoolean,
     };
 
 });

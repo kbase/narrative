@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Version 4.2.1
+- Address problems with SampleSet / AMA Viewer widget.
+- SCT-1822 - fix problems with drag and drop data upload failing for more than 100 files (updated the Dropzone widget to version 5.7.0)
+- Updated Globus endpoint to point to the newer Globusconnect server.
+- Updated tons of dependencies. Thanks Jason Fillman!
+
 ### Version 4.2.0
 - Updated the Narrative interface to connect to the remade Execution Engine.
 - Updated the Narrative interface to streamline events and cookies connected to the Traefik update.

@@ -237,12 +237,6 @@ define ([
                 $panel.empty();
                 $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                 $panel.append($loadingDiv);
-                window.setTimeout(function () {
-                    $loadingDiv.append('&nbsp; Building cache...');
-                    window.setTimeout(function () {
-                        $loadingDiv.append(' almost there...');
-                    }, 25000);
-                }, 2500);
             };
 
             var search = function (query, start, limit, sort_by) {
@@ -448,7 +442,6 @@ define ([
                         sort_by[DIR] = DESC;
                         $sortIcon.addClass('fa fa-sort-desc');
                     }
-
                     setToLoad($loadingDiv);
                     inFlight = true;
                     start = 0;
@@ -626,12 +619,6 @@ define ([
                 $panel.empty();
                 $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                 $panel.append($loadingDiv);
-                window.setTimeout(function () {
-                    $loadingDiv.append('&nbsp; Building cache...');
-                    window.setTimeout(function () {
-                        $loadingDiv.append(' almost there...');
-                    }, 25000);
-                }, 2500);
             };
 
             function search_contigs(start, limit, sort_by) {
@@ -762,7 +749,6 @@ define ([
                         sort_by[DIR] = DESC;
                         $sortIcon.addClass('fa fa-sort-desc');
                     }
-
                     setToLoad($loadingDiv);
                     inFlight = true;
                     start = 0;
@@ -1091,16 +1077,12 @@ define ([
 
                 get_feature_type_counts(metagenome_ref).then(
                     function (result) {
-                        console.log('heres the result', result)
                         feature_type_counts = result['feature_type_counts'];
 
                         for (const property in feature_type_counts){
                             feature_type_labels.push("Number of ".concat(property).concat("s"));
                             feature_type_vals.push(feature_type_counts[property]);
                         }
-                        console.log("in the then type labels", feature_type_labels);
-                        console.log("in the then type vals", feature_type_vals)
-
 
                         container.empty();
                         var $tabPane = $('<div id="' + pref + 'tab-content">');
@@ -1146,9 +1128,6 @@ define ([
                         for (let i = 0; i < feature_type_counts.length; i +=1){
                             feat_type_labels.push("Number of ".concat(feat_str).concat("s"))
                         }
-
-                        console.log('feature type labels', feature_type_counts);
-                        console.log('feat type labels', feat_type_labels);
 
                         var overviewLabels = [
                             'KBase Object Name',

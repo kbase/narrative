@@ -64,13 +64,22 @@ define([
             const description = document.createTextNode(appSpec.info.subtitle);
 
             // AVERAGE RUNTIME
-            const executionStats = model.getItem('executionStats');
-            const avgRuntime = format.niceDuration(1000*(
-                executionStats.total_exec_time/executionStats.number_of_calls
-            ));
-            const runtimeAvgListItem = DOMTagLI(
-                `The average execution time for this app is ${avgRuntime}.`
-            );
+            const execStats = model.getItem('executionStats');
+            let avgRuntime;
+            if( execStats
+                && execStats.total_exec_time
+                && execStats.number_of_calls > 0
+            ) {
+                avgRuntime = format.niceDuration(1000*(
+                    execStats.total_exec_time/execStats.number_of_calls
+                ));
+            }
+            let runtimeAvgListItem = document.createTextNode('');
+            if(avgRuntime) {
+                runtimeAvgListItem = DOMTagLI(
+                    `The average execution time for this app is ${avgRuntime}.`
+                );
+            }
 
             // LIST OF PARAMETERS
             const parametersList = document.createElement('ul');
@@ -156,6 +165,7 @@ define([
         }
 
         return {
+            hide: () => {},
             start: start,
             stop: stop
         };

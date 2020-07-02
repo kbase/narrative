@@ -1540,7 +1540,6 @@ define ([
                         .spread( function (result) {
                             $contigBrowser.empty();
                             result.features.forEach((feature) => {
-                                // for (let f = 0; f < result.features.length; f += 1) {
                                 contigDataForBrowser.genes.push(translate_feature_data(feature));
                             });
 

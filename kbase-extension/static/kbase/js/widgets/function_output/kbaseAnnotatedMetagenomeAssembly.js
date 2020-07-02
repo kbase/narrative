@@ -887,7 +887,6 @@ define ([
                 if (featureData.global_location.contig_id) {
                     featureData.location.forEach((loc) => {
                         // only show things on the main contig
-                        var loc = featureData.location[k];
                         if (featureData.global_location.contig_id === loc.contig_id) {
                             cbFormat.location.push([
                                 loc.contig_id,
@@ -922,7 +921,7 @@ define ([
                         };
 
                         result.features.forEach((feature) => {
-                            contigWindowData.genes.push(translate_feature_data(result.features[f]));
+                            contigWindowData.genes.push(translate_feature_data(feature));
                         });
 
                         var cgb = new ContigBrowserPanel();

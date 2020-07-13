@@ -657,7 +657,7 @@ define([
                             var $sharingDiv = $('<div>');
                             self.setInteractionPanel($interactionPanel, 'Share Settings', $sharingDiv);
                             new kbaseNarrativeSharePanel($sharingDiv, {
-                                ws_name_or_id: data.ws[0],
+                                wsId: data.ws[0],
                                 max_list_height: 'none',
                                 add_user_input_width: '280px'
                             });

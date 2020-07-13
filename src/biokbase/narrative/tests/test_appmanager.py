@@ -88,7 +88,7 @@ class AppManagerTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.jobs.appmanager.JobComm')
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
     def test_dry_run_app(self, c, auth):
-        os.environ['KB_WORKSPACE_ID'] = self.public_ws
+        os.environ['KB_WORKSPACE_NAME'] = self.public_ws
         output = self.am.run_app(
             self.test_app_id,
             self.test_app_params,
@@ -109,7 +109,7 @@ class AppManagerTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
     def test_run_app_good_inputs(self, c, auth):
         c.return_value.send_comm_message.return_value = None
-        os.environ['KB_WORKSPACE_ID'] = self.public_ws
+        os.environ['KB_WORKSPACE_NAME'] = self.public_ws
         new_job = self.am.run_app(
             self.test_app_id,
             self.test_app_params,
@@ -126,7 +126,7 @@ class AppManagerTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
     def test_run_app_from_gui_cell(self, c, auth):
         c.return_value.send_comm_message.return_value = None
-        os.environ['KB_WORKSPACE_ID'] = self.public_ws
+        os.environ['KB_WORKSPACE_NAME'] = self.public_ws
         self.assertIsNone(self.am.run_app(
             self.test_app_id,
             self.test_app_params,
@@ -179,7 +179,7 @@ class AppManagerTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
     def test_run_app_batch_good_inputs(self, c, auth):
         c.return_value.send_comm_message.return_value = None
-        os.environ['KB_WORKSPACE_ID'] = self.public_ws
+        os.environ['KB_WORKSPACE_NAME'] = self.public_ws
         new_job = self.am.run_app_batch(
             self.test_app_id,
             [
@@ -199,7 +199,7 @@ class AppManagerTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
     def test_run_app_batch_gui_cell(self, c, auth):
         c.return_value.send_comm_message.return_value = None
-        os.environ['KB_WORKSPACE_ID'] = self.public_ws
+        os.environ['KB_WORKSPACE_NAME'] = self.public_ws
         self.assertIsNone(self.am.run_app_batch(
             self.test_app_id,
             [
@@ -290,8 +290,8 @@ class AppManagerTestCase(unittest.TestCase):
         }
         app_id = "NarrativeTest/test_create_set"
         tag = "dev"
-        prev_ws_id = os.environ.get('KB_WORKSPACE_ID')
-        os.environ['KB_WORKSPACE_ID'] = self.public_ws
+        prev_ws_id = os.environ.get('KB_WORKSPACE_NAME')
+        os.environ['KB_WORKSPACE_NAME'] = self.public_ws
         sm = specmanager.SpecManager()
         spec = sm.get_spec(app_id, tag=tag)
         (params, ws_inputs) = app_util.validate_parameters(app_id, tag, sm.app_params(spec), inputs)
@@ -299,9 +299,9 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertIn('12345/8/1', ws_inputs)
         self.assertIn('12345/7/1', ws_inputs)
         if prev_ws_id is None:
-            del(os.environ['KB_WORKSPACE_ID'])
+            del(os.environ['KB_WORKSPACE_NAME'])
         else:
-            os.environ['KB_WORKSPACE_ID'] = prev_ws_id
+            os.environ['KB_WORKSPACE_NAME'] = prev_ws_id
 
     @mock.patch('biokbase.narrative.jobs.appmanager.specmanager.clients.get', get_mock_client)
     @mock.patch('biokbase.narrative.jobs.specmanager.clients.get', get_mock_client)
@@ -331,8 +331,8 @@ class AppManagerTestCase(unittest.TestCase):
         app_id = "NarrativeTest/test_create_set"
         tag = "dev"
         ws_name = self.public_ws
-        prev_ws_id = os.environ.get('KB_WORKSPACE_ID', None)
-        os.environ['KB_WORKSPACE_ID'] = ws_name
+        prev_ws_id = os.environ.get('KB_WORKSPACE_NAME', None)
+        os.environ['KB_WORKSPACE_NAME'] = ws_name
         sm = specmanager.SpecManager()
         spec = sm.get_spec(app_id, tag=tag)
         spec_params = sm.app_params(spec)
@@ -366,9 +366,9 @@ class AppManagerTestCase(unittest.TestCase):
         ret = app_util.transform_param_value("resolved-ref", ref_path, None)
         self.assertEqual(ret, ws_name + '/MyReadsSet;18836/5/1')
         if prev_ws_id is None:
-            del(os.environ['KB_WORKSPACE_ID'])
+            del(os.environ['KB_WORKSPACE_NAME'])
         else:
-            os.environ['KB_WORKSPACE_ID'] = prev_ws_id
+            os.environ['KB_WORKSPACE_NAME'] = prev_ws_id
 
     @mock.patch('biokbase.narrative.jobs.appmanager.specmanager.clients.get', get_mock_client)
     def test_generate_input(self):
@@ -393,7 +393,7 @@ class AppManagerTestCase(unittest.TestCase):
 
     def test_transform_input_good(self):
         ws_name = self.public_ws
-        os.environ['KB_WORKSPACE_ID'] = ws_name
+        os.environ['KB_WORKSPACE_NAME'] = ws_name
         test_data = [
             {
                 'value': 'input_value',
@@ -494,7 +494,7 @@ class AppManagerTestCase(unittest.TestCase):
             spec = test.get('spec', None)
             ret = app_util.transform_param_value(test['type'], test['value'], spec)
             self.assertEqual(ret, test['expected'])
-        del(os.environ['KB_WORKSPACE_ID'])
+        del(os.environ['KB_WORKSPACE_NAME'])
 
     def test_transform_input_bad(self):
         with self.assertRaises(ValueError):

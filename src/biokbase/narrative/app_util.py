@@ -53,9 +53,9 @@ def system_variable(var):
     """
     var = var.lower()
     if var == 'workspace':
-        return os.environ.get('KB_WORKSPACE_ID', None)
+        return os.environ.get('KB_WORKSPACE_NAME', None)
     elif var == 'workspace_id':
-        ws_name = os.environ.get('KB_WORKSPACE_ID', None)
+        ws_name = os.environ.get('KB_WORKSPACE_NAME', None)
         if ws_name is None:
             return None
         try:

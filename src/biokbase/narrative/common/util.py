@@ -32,7 +32,7 @@ class _KBaseEnv(object):
     env_narrative  = "KB_NARRATIVE"
     env_session    = "KB_SESSION"
     env_client_ip  = "KB_CLIENT_IP"
-    env_workspace  = "KB_WORKSPACE_ID"
+    env_workspace  = "KB_WORKSPACE_NAME"
     env_user       = "KB_USER_ID"
     env_env        = "KB_ENVIRONMENT"
 

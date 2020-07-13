@@ -16,7 +16,7 @@ class WidgetManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         config = TestConfig()
-        os.environ['KB_WORKSPACE_ID'] = '12345'  # That's the same workspace as my luggage!
+        os.environ['KB_WORKSPACE_NAME'] = '12345'  # That's the same workspace as my luggage!
         app_specs_list = config.load_json_file(config.get('specs', 'app_specs_file'))
         app_specs_dict = dict()
         for s in app_specs_list:

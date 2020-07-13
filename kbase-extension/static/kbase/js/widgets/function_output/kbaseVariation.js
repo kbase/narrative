@@ -1,5 +1,5 @@
 /**
- * Output widget for genome variation in Jbrowse 
+ * Output widget for genome variation in Jbrowse
  * @author  Priya Ranjan <pranjan77@gmail.com>
  * @public
  */
@@ -18,7 +18,7 @@
 		$,
         Config,
 		kbaseAuthenticatedWidget,
-		DynamicServiceClient,
+		DynamicServiceClient
 	) {
     return KBWidget({
         name: "kbaseVariation",

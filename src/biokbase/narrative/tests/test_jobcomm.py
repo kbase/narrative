@@ -43,7 +43,7 @@ class JobCommTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls.jm = biokbase.narrative.jobs.jobmanager.JobManager()
         cls.job_ids = list(job_info.keys())
-        os.environ['KB_WORKSPACE_ID'] = config.get('jobs', 'job_test_wsname')
+        os.environ['KB_WORKSPACE_NAME'] = config.get('jobs', 'job_test_wsname')
 
         cls.jc = biokbase.narrative.jobs.jobcomm.JobComm()
         cls.jc._comm = MockComm()

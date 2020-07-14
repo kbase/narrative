@@ -4,22 +4,22 @@
  * @public
  */
 
- define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
+define (
+    [
+        'kbwidget',
+        'bootstrap',
+        'jquery',
         'narrativeConfig',
-		'kbaseAuthenticatedWidget',
-		'kb_common/jsonRpc/dynamicServiceClient'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
+        'kbaseAuthenticatedWidget',
+        'kb_common/jsonRpc/dynamicServiceClient'
+    ], function(
+        KBWidget,
+        bootstrap,
+        $,
         Config,
-		kbaseAuthenticatedWidget,
-		DynamicServiceClient
-	) {
+        kbaseAuthenticatedWidget,
+        DynamicServiceClient
+) {
     return KBWidget({
         name: "kbaseVariation",
         parent : kbaseAuthenticatedWidget,

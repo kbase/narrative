@@ -367,6 +367,20 @@ define([
         }
 
         function render(cell) {
+            /*
+            The cell metadata 'kbase.cellState.toggleMinMax' is the
+            canonical indicator of whether a cell is collapsed or not.
+            */
+            const cellCollapsed = utils.getCellMeta(
+                cell, 'kbase.cellState.toggleMinMax', 'maximized'
+            ) !== 'maximized';
+            const execMessage = cell.element[0].querySelectorAll(
+                '[data-element="execMessage"]'
+            )[0];
+            const collapsedCellStatus = cellCollapsed ? (
+                execMessage && execMessage.innerHTML
+            ) : '';
+
             var events = Events.make({ node: container }),
                 buttons = [
                     div({ class: 'buttons pull-right' }, [
@@ -470,7 +484,11 @@ define([
                                             overflow: 'hidden'
                                         }
                                     }, [getCellSubtitle(cell)])
-                                ])
+                                ]),
+                                div(
+                                    { style: { margin: '0px 0px 0px auto' } },
+                                    [collapsedCellStatus]
+                                )
                             ])
                         ]),
                         div({ class: 'col-sm-3 buttons-container' }, [

@@ -10,7 +10,7 @@ nose>=1.1.2
 pexpect==4.8.0
 pickleshare==0.7.5
 pillow==7.1.2
-plotly==4.8.1
+plotly==4.8.2
 pyasn1==0.4.8
 pycrypto>=2.6
 pygments==2.6.1

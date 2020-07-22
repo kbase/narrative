@@ -9,19 +9,17 @@ The following changes are required:
 - Build the docker image using the make target "dev_image", this builds the docker image without the "grunt minify" step.
   The image will be tagged kbase/narrative:dev instead of the current git branch
 
+  ```bash
+  make dev-image
   ```
-  make dev_image
-  ```
 
-- start the container using the `scripts/local-dev-run.sh` script. 
+- start the container:
 
-    This script starts the narrative image using features to integrate it with local kbase-ui.
-
-    ```
-    env=ci bash scripts/local-dev-run.sh
+    ```bash
+    ENV={ci/next/prod} make run-dev-image
     ```
 
-    where env sets the CONFIG_ENV environment variable for the Docker container; ci is the environment in which you are working (needs to be same as the ui is running on.)
+    where ENV sets the CONFIG_ENV environment variable for the Docker container; ci is the environment in which you are working (needs to be same as the ui is running on.)
 
     - uses the config set $env; makes it easy to test different environments alongside ui
     - uses kbase-dev network; allows interoperation with the kbase-ui proxier 

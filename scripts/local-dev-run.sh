@@ -1,4 +1,3 @@
-#!/bin/bash
 root=$(git rev-parse --show-toplevel)
 static_dir=kbase-extension/static/kbase
 src_dir=src

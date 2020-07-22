@@ -363,9 +363,6 @@ define([
             var fixedApp = fixApp(app);
             var code = PythonInterop.buildEditorRunner(cellId, runId, fixedApp, params);
             // TODO: do something with the runId
-
-            // setStatus('Successfully built code');
-
             cell.set_text(code);
         }
 
@@ -386,13 +383,9 @@ define([
                 initialState: {
                     mode: 'new'
                 },
-                //xinitialState: {
-                //    mode: 'editing', params: 'incomplete'
-                //},
                 onNewState: function(fsm) {
                     editorState.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
-
                 },
                 bus: bus
             });
@@ -513,36 +506,8 @@ define([
                 ui.hideElement(element);
             });
 
-            // Editor state flags
-            // *** disabling this vew model style
-            // ['touched', 'changed'].forEach(function(flag) {
-            //     var flagged, params = model.getItem('params');
-            //     if (params) {
-            //         Object.keys(params).forEach(function(key) {
-            //             var param = params[key];
-            //             if (param[flag]) {
-            //                 flagged = true;
-            //             }
-            //         });
-            //         setStatusFlag(flag, flagged);
-            //     }
-            // });
             ui.setContent('flags.fsm', JSON.stringify(fsm.getCurrentState().state));
-
-
         }
-
-        // var saveTimer = null;
-
-        // function saveNarrative() {
-        //     if (saveTimer) {
-        //         return;
-        //     }
-        //     saveTimer = window.setTimeout(function() {
-        //         saveTimer = null;
-        //         Jupyter.saveNotebook();
-        //     }, saveMaxFrequency);
-        // }
 
         function doDeleteCell() {
             var content = div([
@@ -574,8 +539,6 @@ define([
             buildPython();
             doSaveReadsSet()
                 .then(function() {
-                    // Clear the parameter flags
-                    // clearModelFlags();
                     renderUI();
                 })
                 .catch(function(err) {
@@ -660,7 +623,6 @@ define([
                     controller.desc = 'update editor widget';
                     widgets.editor = {
                         path: ['editor', 'widget'],
-                        // module: widgetModule,
                         type: 'update',
                         bus: bus,
                         instance: widget
@@ -712,7 +674,6 @@ define([
                     });
 
                     bus.on('parameter-touched', function(message) {
-                        // model.setItem(['params', message.parameter, 'touched'], true);
                         var state = fsm.getCurrentState(),
                             newState = JSON.parse(JSON.stringify(state.state));
                         newState.data = 'touched';
@@ -810,9 +771,6 @@ define([
 
                     // NOT USED?
                     model.setItem('currentReadsSet', objectInfo);
-
-
-                    // return loadUpdateEditor();
                 });
         }
 
@@ -849,36 +807,12 @@ define([
             return setApiClient.callFunc('save_reads_set_v1', [params])
                 .spread(function(result) {
                     doEditObject(serviceUtils.objectInfoToObject(result.set_info));
-
-                    // return unloadEditor()
-                    //     .then(function() {
-                    //         var loading = loadingWidget.make();
-                    //         return loading.start({
-                    //                 node: ui.getElement('editor.widget'),
-                    //                 message: 'Loading Reads Set'
-                    //             })
-                    //             .then(function() {
-                    //                 return loadData(result.set_ref);
-                    //             })
-                    //             .then(function() {
-                    //                 return loading.stop();
-                    //             })
-                    //     })
-                    //     .then(function() {
-                    //         return loadUpdateEditor();
-                    //     })
-                    //     .then(function() {
-                    //         renderCurrentlyEditing();
-                    //         ui.collapsePanel('edit-object-selector');
-                    //         evaluateAppState(true);
-                    //     });
                 })
                 .catch(function(err) {
                     console.error('ERROR getting reads set ', err);
                     console.error(err.detail ? err.detail.replace('\n', '<br>') : '');
                     loadErrorWidget(err);
                 });
-
         }
 
         function doSaveReadsSet() {
@@ -1071,8 +1005,6 @@ define([
                         // Call this when we have a new object to edit. It will
                         // take care of updating the cell state as well as
                         // rendering the object.
-                        //editorState.setItem('current.set.ref', objectInfo.ref);
-                        //editorState.setItem('current.set.info', objectInfo);
                         var currentObject = editorState.getItem('current.set.info');
                         var newObject = message.objectInfo;
                         if (!newObject) {
@@ -1182,7 +1114,6 @@ define([
 
                             if (messages.length === 0) {
                                 buildPython();
-                                // fsm.updateState({ params: 'complete' });
                                 // dumb, but gotta get it working...
                                 fsm.newState({
                                     mode: 'editing',
@@ -1191,8 +1122,6 @@ define([
                                 });
                             } else {
                                 resetPython(cell);
-                                // fsm.newState({ mode: 'editing', params: 'incomplete', data: 'changed' });
-                                //fsm.updateState({ params: 'incomplete' });
                                 fsm.newState({
                                     mode: 'editing',
                                     params: 'incomplete',
@@ -1236,9 +1165,6 @@ define([
             bus.on('save', function() {
                 doSave();
             });
-            //                bus.on('remove', function () {
-            //                    doRemove();
-            //                });
 
             bus.on('on-success', function() {
                 doOnSuccess();
@@ -1290,7 +1216,6 @@ define([
                     var objectInfo = serviceUtils.objectInfoToObject(message.message.result.set_info);
                     editorState.setItem('current.set.info', objectInfo);
                     JupyterProxy.saveNotebook();
-                    // ui.setContent('editor.widget', html.loading('Loading saved Reads Set'));
 
                     return doEditObject(objectInfo);
                 } else if (message.message.error) {
@@ -1378,7 +1303,6 @@ define([
                     // if we start out in 'new' state, then we need to promote to
                     // editing...
                     if (fsm.getCurrentState().state.mode === 'new') {
-                        // fsm.newState({mode: 'editing', params: 'incomplete'});
                         evaluateAppState();
                     }
                     renderUI();
@@ -1401,7 +1325,6 @@ define([
                 return Promise.all(Object.keys(widgets).map(function(key) {
                     return widgets[key].stop();
                 }));
-                // busConnection.top();
             });
         }
 

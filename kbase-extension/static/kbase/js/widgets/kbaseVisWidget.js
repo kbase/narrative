@@ -23,8 +23,6 @@ define (
 		geometry_size
 	) {
 
-        //'use strict';
-
         return KBWidget({
             name: "kbaseVisWidget",
             version: "1.0.0",
@@ -84,14 +82,11 @@ define (
                 legendAlignment : 'TL',
                 legendOffset : [0,0],
                 legendLineHeight : 13,
-                //legendWidth : 50,
                 legendSize : '7pt',
                 legendTextXOffset : 6,
                 legendTextYOffset : 3,
 
                 aspectRatio : 'default',
-
-                //autoLegend : true,
             },
             shouldScaleAxis : function shouldScaleAxis (axis) {
                 if (this.options.scaleAxes) {
@@ -962,14 +957,6 @@ define (
                         .append('svg')
                         .attr('xmlns', "http://www.w3.org/2000/svg")
                         .attr('style', 'width : ' + this.options.width + '; height : ' + this.options.height)
-                    //.attr('viewBox', '0 0 1600 1600')
-                    //.attr('preserveAspectRatio', 'mMidYMid mMidYMid')
-                    //.attr('width', 1600)
-                    //.attr('height', 1600)
-                    //.attr('width', this.width())
-                    //.attr('height', this.height())
-                    //.attr('style', this.options.debug ? 'border : 1px solid blue' : undefined);
-                    //.attr('style', 'width : 100%; height : 100%')
 
                     var tooltip = d3.select('body').selectAll('.visToolTip')
                         .data([0])
@@ -1107,14 +1094,6 @@ define (
                     }
                 );
 
-                /*D3svg.selectAll('g').data(regions).selectAll('g')
-                 .data( regions.map( function(region) { return $vis.region(region, true) } ) )
-                 .enter()
-                 .append('g')
-                 .attr('class', function(region) { return region } );
-
-                 ;*/
-
             },
 
             buildTransformation : function buildTransformation(transformation) {
@@ -1249,15 +1228,6 @@ define (
                     );
 
                 var gradKey = [grad.cx, grad.cy, grad.r, grad.startColor, grad.stopColor].join(',');
-
-                /*$.each(
-                 this.radialGradients(),
-                 function (key, val) {
-                 if (val == grad.id) {
-                 return val;
-                 }
-                 }
-                 );*/
 
                 if (this.radialGradients()[gradKey] != undefined && grad.id == undefined) {
                     grad.id = this.radialGradients()[gradKey];

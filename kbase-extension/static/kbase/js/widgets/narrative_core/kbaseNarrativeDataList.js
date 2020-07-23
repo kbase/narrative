@@ -149,7 +149,6 @@ define([
          */
         isASet: function (objInfo) {
             return this.setInfo[this.itemId(objInfo)] ? true : false;
-            // return _.has(this.setInfo, this.itemId(obj_info));
         },
 
         /**
@@ -334,7 +333,6 @@ define([
         loggedInCallback: function (event, auth) {
             this.token = auth.token;
             this.ws = new Workspace(this.options.ws_url, auth);
-            // this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
             this.my_username = auth.user_id;
             this.isLoggedIn = true;
             this.writingLock = false;
@@ -396,7 +394,6 @@ define([
                         this.reloadWsData();
                     } else {
                         this.refreshTimeStrings();
-                        // this.hideLoading();
                     }
                 }.bind(this))
                 .catch(function (error) {
@@ -1456,7 +1453,6 @@ define([
                 e.dataTransfer.dropEffect = 'copy';
                 e.dataTransfer.setData('info', dataString);
 
-                // e.target.style.border = "3px red solid";
                 var targetCells = document.querySelectorAll('#notebook-container .cell');
                 var container = document.querySelector('#notebook-container');
                 for (var i = 0; i < targetCells.length; i += 1) {
@@ -1903,10 +1899,6 @@ define([
 
                 this.n_filteredObjsRendered = 0;
                 for (var k = 0; k < this.viewOrder.length; k++) {
-                    // // If it's already filtered out, skip it
-                    // if (!this.viewOrder[k].inFilter) {
-                    //     continue;
-                    // }
 
                     // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
                     // [3] : timestamp save_date // [4] : int version // [5] : username saved_by

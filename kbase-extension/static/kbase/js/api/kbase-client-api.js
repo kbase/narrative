@@ -7145,7 +7145,6 @@ function ExpressionServices(url,auth) {
     this.get_expression_samples_data = function(sampleIds)
     {
         var resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data", [sampleIds]);
-//      var resp = json_call_sync("ExpressionServices.get_expression_samples_data", [sampleIds]);
         return resp[0];
     }
 
@@ -7157,7 +7156,6 @@ function ExpressionServices(url,auth) {
     this.get_expression_samples_data_by_series_ids = function(seriesIds)
     {
         var resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data_by_series_ids", [seriesIds]);
-//      var resp = json_call_sync("ExpressionServices.get_expression_samples_data_by_series_ids", [seriesIds]);
         return resp[0];
     }
 
@@ -7169,7 +7167,6 @@ function ExpressionServices(url,auth) {
     this.get_expression_samples_data_by_experimental_unit_ids = function(experimentalUnitIDs)
     {
         var resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data_by_experimental_unit_ids", [experimentalUnitIDs]);
-//      var resp = json_call_sync("ExpressionServices.get_expression_samples_data_by_experimental_unit_ids", [experimentalUnitIDs]);
         return resp[0];
     }
 
@@ -7181,7 +7178,6 @@ function ExpressionServices(url,auth) {
     this.get_expression_experimental_unit_samples_data_by_experiment_meta_ids = function(experimentMetaIDs)
     {
         var resp = json_call_ajax_sync("ExpressionServices.get_expression_experimental_unit_samples_data_by_experiment_meta_ids", [experimentMetaIDs]);
-//      var resp = json_call_sync("ExpressionServices.get_expression_experimental_unit_samples_data_by_experiment_meta_ids", [experimentMetaIDs]);
         return resp[0];
     }
 
@@ -7193,7 +7189,6 @@ function ExpressionServices(url,auth) {
     this.get_expression_samples_data_by_strain_ids = function(strainIDs, sampleType)
     {
         var resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data_by_strain_ids", [strainIDs, sampleType]);
-//      var resp = json_call_sync("ExpressionServices.get_expression_samples_data_by_strain_ids", [strainIDs, sampleType]);
         return resp[0];
     }
 
@@ -7205,7 +7200,6 @@ function ExpressionServices(url,auth) {
     this.get_expression_samples_data_by_genome_ids = function(genomeIDs, sampleType, wildTypeOnly)
     {
         var resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data_by_genome_ids", [genomeIDs, sampleType, wildTypeOnly]);
-//      var resp = json_call_sync("ExpressionServices.get_expression_samples_data_by_genome_ids", [genomeIDs, sampleType, wildTypeOnly]);
         return resp[0];
     }
 
@@ -7217,7 +7211,6 @@ function ExpressionServices(url,auth) {
     this.get_expression_data_by_feature_ids = function(featureIds, sampleType, wildTypeOnly)
     {
         var resp = json_call_ajax_sync("ExpressionServices.get_expression_data_by_feature_ids", [featureIds, sampleType, wildTypeOnly]);
-//      var resp = json_call_sync("ExpressionServices.get_expression_data_by_feature_ids", [featureIds, sampleType, wildTypeOnly]);
         return resp[0];
     }
 
@@ -7242,8 +7235,6 @@ function ExpressionServices(url,auth) {
 
         //Send the proper header information along with the request
         http.setRequestHeader("Content-type", "application/json");
-        //http.setRequestHeader("Content-length", body.length);
-        //http.setRequestHeader("Connection", "close");
         return [http, body];
     }
 

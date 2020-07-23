@@ -108,7 +108,6 @@ define([
                 }
             }
             cell.toggleMinMax();
-            // cell.element.trigger('toggleMinMax.cell');
         }
 
         function doToggleCodeView() {
@@ -204,38 +203,7 @@ define([
                 toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
                 dropdownId = html.genId(),
                 menuItems = [
-                    // we can always dream.
-                    //                    {
-                    //                        name: 'help',
-                    //                        label: 'Help',
-                    //                        icon: {
-                    //                            type: 'question',
-                    //                            color: 'black'
-                    //                        },
-                    //                        id: events.addEvent({type: 'click', handler: doHelp})
-                    //                    },
-                    // {
-                    //     name: 'toggle-collapse',
-                    //     label: toggleMinMax === 'maximized' ? 'Collapse' : 'Expand',
-                    //     icon: {
-                    //         type: toggleIcon + '-square-o',
-                    //         color: 'orange'
-                    //     },
-                    //     id: events.addEvent({ type: 'click', handler: doToggleMinMaxCell })
-                    // }
                 ];
-
-            // we can always dream
-            //            if (isKBaseCell(cell)) {
-            //                menuItems.push({
-            //                    name: 'settings',
-            //                    label: 'Settings',
-            //                    icon: {
-            //                        type: 'gear',
-            //                        color: 'black'
-            //                    }
-            //                });
-            //            }
 
             if (cell.cell_type === 'code') {
                 menuItems.push({
@@ -278,11 +246,6 @@ define([
                         type: 'click',
                         handler: () => {
                             cell.toggleBatch();
-                            // var currentBatch = cell.metadata.kbase.appCell['user-settings'].batchMode;
-                            // if (currentBatch === undefined || currentBatch === null) {
-                            //     currentBatch = false;
-                            // }
-                            // cell.metadata.kbase.appCell['user-settings'].batchMode = !currentBatch;
                         }
                     })
                 });
@@ -387,7 +350,6 @@ define([
                         span({ class: 'kb-func-timestamp' }),
                         span({ class: 'fa fa-circle-o-notch fa-spin', style: { color: 'rgb(42, 121, 191)', display: 'none' } }),
                         span({ class: 'fa fa-exclamation-triangle', style: { color: 'rgb(255, 0, 0)', display: 'none' } }),
-                        // getOutdatedWarning(cell),
                         (readOnly ? null : button({
                             type: 'button',
                             class: 'btn btn-default btn-xs',
@@ -473,7 +435,6 @@ define([
                                     }, [
                                         getOutdatedWarning(cell),
                                         getCellTitle(cell),
-                                        // getOutdatedWarning(cell)
                                     ]),
                                     div({
                                         dataElement: 'subtitle',

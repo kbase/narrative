@@ -233,7 +233,6 @@ define ([
 
             // define the functions that do everything
             var setToLoad = function ($panel) {
-                //clearInfo();
                 $panel.empty();
                 $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                 $panel.append($loadingDiv);
@@ -831,9 +830,6 @@ define ([
             });
 
 
-            //put in a slight delay so on rapid typing we don't make a flood of calls
-            // var fetchTimeout = null;
-
         },
 
         renderContigData: function (metagenome_ref, contig_id, outputDivs) {
@@ -999,7 +995,6 @@ define ([
                         // Browser
                         $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                         var start = 0;
-                        // var tenKb = 10000;
                         var twentyKb = 20000;
                         var length = twentyKb;
                         var contig_length = contigData.length;
@@ -1366,7 +1361,6 @@ define ([
 
                 tblLabels.push('Feature ID');
                 // Landing pages don't work for all features yet
-                // tblData.push('<a href = "/#dataview/'+self.metagenome_ref+'?sub=Feature&subid='+fid+'" target="_blank">'+fid+'</a>');
                 tblData.push(fid);
 
                 tblLabels.push('Aliases');
@@ -1376,11 +1370,9 @@ define ([
                     var isFirst = true;
                     for (let alias in aliases) {
 
-                        // if (aliases.hasOwnProperty(alias)) {
                         if (isFirst) {isFirst = false;}
                         else {$aliases.append(', ');}
                         $aliases.append(alias);
-                        // }
                     }
                     if (isFirst) {
                         $aliases.append('None');

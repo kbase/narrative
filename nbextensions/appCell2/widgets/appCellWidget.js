@@ -195,7 +195,6 @@ define([
                     bus.on('parameter-sync', function(message) {
                         var value = model.getItem(['params', message.parameter]);
                         bus.send({
-                            //                            parameter: message.parameter,
                             value: value
                         }, {
                             // This points the update back to a listener on this key
@@ -301,7 +300,6 @@ define([
                     bus.on('parameter-sync', function(message) {
                         var value = model.getItem(['params', message.parameter]);
                         bus.send({
-                            //                            parameter: message.parameter,
                             value: value
                         }, {
                             // This points the update back to a listener on this key
@@ -373,192 +371,6 @@ define([
                         });
                 });
         }
-
-        // function loadBatchParamsWidget(arg) {
-        //     return pRequire(['./widgets/batchParamsWidget'])
-        //         .spread(function(Widget) {
-        //             // TODO: widget should make own bus.
-        //             var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for batch input widget' }),
-        //                 widget = Widget.make({
-        //                     bus: bus,
-        //                     workspaceInfo: workspaceInfo,
-        //                     initialParams: model.getItem('params')
-        //                 });
-
-        //             bus.on('sync-params', function(message) {
-        //                 message.parameters.forEach(function(paramId) {
-        //                     bus.send({
-        //                         parameter: paramId,
-        //                         value: model.getItem(['params', message.parameter])
-        //                     }, {
-        //                         key: {
-        //                             type: 'update',
-        //                             parameter: message.parameter
-        //                         }
-        //                     });
-        //                 });
-        //             });
-
-        //             bus.on('parameter-sync', function(message) {
-        //                 var value = model.getItem(['params', message.parameter]);
-        //                 bus.send({
-        //                     //                            parameter: message.parameter,
-        //                     value: value
-        //                 }, {
-        //                     // This points the update back to a listener on this key
-        //                     key: {
-        //                         type: 'update',
-        //                         parameter: message.parameter
-        //                     }
-        //                 });
-        //             });
-
-        //             bus.on('set-param-state', function(message) {
-        //                 model.setItem('paramState', message.id, message.state);
-        //             });
-
-        //             bus.on('toggle-batch-mode', function(message) {
-        //                 toggleBatchMode();
-        //             });
-
-        //             bus.respond({
-        //                 key: {
-        //                     type: 'get-param-state'
-        //                 },
-        //                 handle: function(message) {
-        //                     return {
-        //                         state: model.getItem('paramState', message.id)
-        //                     };
-        //                 }
-        //             });
-
-        //             bus.respond({
-        //                 key: {
-        //                     type: 'get-parameter'
-        //                 },
-        //                 handle: function(message) {
-        //                     return {
-        //                         value: model.getItem(['params', message.parameterName])
-        //                     };
-        //                 }
-        //             });
-
-        //             bus.on('parameter-changed', function(message) {
-        //                 // TODO: should never get these in the following states....
-
-        //                 var state = fsm.getCurrentState().state;
-        //                 if (state.mode === 'editing') {
-        //                     model.setItem(['params', message.parameter], message.newValue);
-        //                     evaluateAppState();
-        //                 } else {
-        //                     console.warn('parameter-changed event detected when not in editing mode - ignored');
-        //                 }
-        //             });
-
-        //             return widget.start({
-        //                 node: arg.node,
-        //                 appSpec: model.getItem('app.spec'),
-        //                 parameters: spec.getSpec().parameters
-        //             })
-        //                 .then(function() {
-        //                     return {
-        //                         bus: bus,
-        //                         instance: widget
-        //                     };
-        //                 });
-        //         });
-        // }
-
-        // function loadViewBatchParamsWidget(arg) {
-        //     return pRequire(['./batchParamsViewWidget'])
-        //         .spread(function(Widget) {
-        //             // TODO: widget should make own bus.
-        //             var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for batch input view widget' }),
-        //                 widget = Widget.make({
-        //                     bus: bus,
-        //                     workspaceInfo: workspaceInfo,
-        //                     initialParams: model.getItem('params')
-        //                 });
-
-        //             bus.on('sync-params', function(message) {
-        //                 message.parameters.forEach(function(paramId) {
-        //                     bus.send({
-        //                         parameter: paramId,
-        //                         value: model.getItem(['params', message.parameter])
-        //                     }, {
-        //                         key: {
-        //                             type: 'update',
-        //                             parameter: message.parameter
-        //                         }
-        //                     });
-        //                 });
-        //             });
-
-        //             bus.on('parameter-sync', function(message) {
-        //                 var value = model.getItem(['params', message.parameter]);
-        //                 bus.send({
-        //                     //                            parameter: message.parameter,
-        //                     value: value
-        //                 }, {
-        //                     // This points the update back to a listener on this key
-        //                     key: {
-        //                         type: 'update',
-        //                         parameter: message.parameter
-        //                     }
-        //                 });
-        //             });
-
-        //             bus.on('set-param-state', function(message) {
-        //                 model.setItem('paramState', message.id, message.state);
-        //             });
-
-        //             bus.respond({
-        //                 key: {
-        //                     type: 'get-param-state'
-        //                 },
-        //                 handle: function(message) {
-        //                     return {
-        //                         state: model.getItem('paramState', message.id)
-        //                     };
-        //                 }
-        //             });
-
-        //             bus.respond({
-        //                 key: {
-        //                     type: 'get-parameter'
-        //                 },
-        //                 handle: function(message) {
-        //                     return {
-        //                         value: model.getItem(['params', message.parameterName])
-        //                     };
-        //                 }
-        //             });
-
-        //             bus.on('parameter-changed', function(message) {
-        //                 // TODO: should never get these in the following states....
-
-        //                 var state = fsm.getCurrentState().state;
-        //                 if (state.mode === 'editing') {
-        //                     model.setItem(['params', message.parameter], message.newValue);
-        //                     evaluateAppState();
-        //                 } else {
-        //                     console.warn('parameter-changed event detected when not in editing mode - ignored');
-        //                 }
-        //             });
-
-        //             return widget.start({
-        //                 node: arg.node,
-        //                 appSpec: model.getItem('app.spec'),
-        //                 parameters: spec.getSpec().parameters
-        //             })
-        //                 .then(function() {
-        //                     return {
-        //                         bus: bus,
-        //                         instance: widget
-        //                     };
-        //                 });
-        //         });
-        // }
 
         function batchConfigureWidget() {
             function factory() {
@@ -809,9 +621,6 @@ define([
             if (!Config.get('features').batchAppMode) {
                 return;
             }
-            // var curState = fsm.getCurrentState();
-            // var btn = ui.getButton('batch-toggle');
-            // btn.classList.toggle('batch-active');
             var curBatchState = model.getItem('user-settings.batchMode'),
                 newBatchMode = !curBatchState,
                 currentTabId = selectedTabId(),
@@ -983,31 +792,6 @@ define([
 
         function syncFatalError() {
             return;
-            // TODO: resolve "fatal error" handling. I think this can be removed, but let's hold off.
-            // var advice = model.getItem('fatalError.advice'),
-            //     info = model.getItem('fatalError.info'),
-            //     ul = t('ul'),
-            //     li = t('li');
-            // if (advice) {
-            //     // Note the 1.2em seems to be the de-facto work around to have a list
-            //     // align left with other blocks yet retain the bullet and the
-            //     // indentation for list items.
-            //     advice = ul({ style: { paddingLeft: '1.2em' } }, advice.map(function (adv) {
-            //         return li(adv);
-            //     }));
-            // } else {
-            //     advice = 'no advice';
-            // }
-            // if (info) {
-            //     info = html.makeObjTable(info, { rotated: true, classes: [] });
-            // } else {
-            //     info = 'no additional info';
-            // }
-            // ui.setContent('fatal-error.title', model.getItem('fatalError.title'));
-            // ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
-            // ui.setContent('fatal-error.advice', advice);
-            // ui.setContent('fatal-error.info', info);
-            // ui.setContent('fatal-error.detail', model.getItem('fatalError.detail'));
         }
 
         function showFsmBar() {
@@ -1188,7 +972,6 @@ define([
                     div({
                         style: {
                             height: '50px',
-                            // width: '100px',
                             overflow: 'hidden',
                             textAlign: 'left',
                             lineHeight: '50px',
@@ -1202,9 +985,6 @@ define([
                     div({
                         dataElement: 'status',
                         style: {
-                            // position: 'absolute',
-                            // left: '100px',
-                            // top: '0',
                             width: '450px',
                             height: '50px',
                             overflow: 'hidden'
@@ -1339,7 +1119,6 @@ define([
             if (!currentState) {
                 // TODO: evaluate the state of things to try to guess the state?
                 // Or is this just an error unless it is a new cell?
-                // currentState = {mode: 'editing', params: 'incomplete'};
                 currentState = { mode: 'new' };
             }
             fsm = Fsm.make({
@@ -1454,12 +1233,10 @@ define([
         function showCodeInputArea() {
             var codeInputArea = cell.input.find('.input_area').get(0);
             if (model.getItem('user-settings.showCodeInputArea')) {
-                // codeInputArea.removeClass('hidden');
                 if (!codeInputArea.classList.contains('-show')) {
                     codeInputArea.classList.add('-show');
                 }
             } else {
-                // codeInputArea.addClass('hidden');
                 codeInputArea.classList.remove('-show');
             }
         }
@@ -2628,8 +2405,6 @@ define([
                         cellCommitHash: cellAppSpec.info.git_commit_hash,
                         catalogCommitHash: appSpec.info.git_commit_hash,
                         newAppName: appSpec.info.name
-                        //cellAppSpec: cellAppSpec,
-                        //catalogAppSpec: appSpec
                     },
                     advice: [
                         'Due to potential incompatibilities between different versions of an dev or beta app, this app cell cannot be rendered',
@@ -2738,7 +2513,6 @@ define([
             data: utils.getMeta(cell, 'appCell'),
             onUpdate: function(props) {
                 utils.setMeta(cell, 'appCell', props.getRawObject());
-                // saveNarrative();
             }
         });
 

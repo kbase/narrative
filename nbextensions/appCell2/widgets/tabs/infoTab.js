@@ -1,10 +1,8 @@
 /*global define*/ // eslint-disable-line no-redeclare
 define([
-    'bluebird',
     'common/format',
     'common/utils',
 ], function(
-    Promise,
     format,
     utils
 ) {
@@ -60,10 +58,13 @@ define([
                 model.getItem('app').tag
             ].filter(toBoolean).join('/');
 
-            // DESCRIPTION
-            const description = document.createTextNode(appSpec.info.subtitle);
+            const methodFullInfo = appSpec.full_info;
 
-            // AVERAGE RUNTIME
+            // DESCRIPTION
+            const description = document.createElement('div');
+            description.innerHTML = methodFullInfo.description;
+
+            // RUN COUNT AND AVERAGE RUNTIME
             const execStats = model.getItem('executionStats');
             let avgRuntime;
             if( execStats
@@ -76,8 +77,9 @@ define([
             }
             let runtimeAvgListItem = document.createTextNode('');
             if(avgRuntime) {
-                runtimeAvgListItem = DOMTagLI(
-                    `The average execution time for this app is ${avgRuntime}.`
+                runtimeAvgListItem = DOMTagLI(''
+                    + `This app has been run ${execStats.number_of_calls}`
+                    + ` times and its average execution time is ${avgRuntime}.`
                 );
             }
 
@@ -102,7 +104,9 @@ define([
                     }
                 }
                 const li = document.createElement('li');
-                li.appendChild(document.createTextNode(param.ui_name));
+                const paramUIName = document.createElement('span');
+                paramUIName.innerHTML = param.ui_name;
+                li.appendChild(paramUIName);
                 if(types.length) {
                     li.appendChild(document.createTextNode(': '));
                 }
@@ -137,7 +141,7 @@ define([
 
             // CATALOG LINK
             const linkCatalog = DOMTagA(
-                'View in App Catalog',
+                'View Full Documentation',
                 { href: '/#appcatalog/app/' + appRef, target: '_blank' }
             );
             const linkCatalogListItem = document.createElement('li');

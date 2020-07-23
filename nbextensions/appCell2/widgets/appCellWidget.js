@@ -872,10 +872,6 @@ define([
         controlBarTabs = {
             selectedTab: null,
             tabs: {
-                info: {
-                    label: 'Information',
-                    widget: infoTabWidget,
-                },
                 configure: {
                     label: 'Configure',
                     widget: configureWidget()
@@ -891,6 +887,10 @@ define([
                 viewBatchConfigure: {
                     label: 'View Batch Configure',
                     widget: viewBatchConfigureWidget()
+                },
+                info: {
+                    label: 'Info',
+                    widget: infoTabWidget,
                 },
                 logs: {
                     label: 'Job Status',
@@ -962,20 +962,21 @@ define([
                     token: runtime.authToken()
                 });
             const catalog = new Catalog(runtime.config('services.catalog.url'));
-            return (catalog
-                .get_exec_aggr_stats({ full_app_ids: [appRef.ids[0]] })
-                .then(function(data) {
-                    model.setItem('executionStats', data[0]);
-                }).then(function () {
-                    return nms.get_method_spec(appRef)
-                        .then(function(data) {
-                            if (!data[0]) {
-                                throw new Error('App not found');
-                            }
-                            return data[0];
-                        });
-                })
-            );
+            const appId = appRef.ids[0];
+            return Promise.all([
+                nms.get_method_full_info({
+                    ids: [appId], tag: appRef.tag, ver: appRef.version }
+                ),
+                nms.get_method_spec(appRef),
+                catalog.get_exec_aggr_stats({ full_app_ids: [appId] }),
+            ]).then(function ([methodFullInfo, methodSpecData, execAggrStatsData]) {
+                model.setItem('app.spec.full_info', methodFullInfo[0]);
+                model.setItem('executionStats', execAggrStatsData[0]);
+                if (!methodSpecData[0]) {
+                    throw new Error('App not found');
+                }
+                return methodSpecData[0];
+            });
         }
 
         // RENDER API

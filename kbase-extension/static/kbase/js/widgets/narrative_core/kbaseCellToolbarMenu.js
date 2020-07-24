@@ -329,6 +329,25 @@ define([
             });
         }
 
+        function minimizedStatus(mode, stage) {
+            if(mode === 'error' || mode === 'internal-error') {
+                return '<span style="color: red">Error</span>';
+            }
+            if(mode === 'canceled' || mode === 'canceling') {
+                return '<span style="color: orange">Canceled</span>';
+            }
+            if(mode ==='processing' && stage === 'running') {
+                return 'Running';
+            }
+            if(mode ==='processing' && stage === 'queued') {
+                return 'Queued';
+            }
+            if(mode === 'success') {
+                return '<span style="color: green">Success</span>';
+            }
+            return '';
+        }
+
         function render(cell) {
             /*
             The cell metadata 'kbase.cellState.toggleMinMax' is the
@@ -337,12 +356,14 @@ define([
             const cellCollapsed = utils.getCellMeta(
                 cell, 'kbase.cellState.toggleMinMax', 'maximized'
             ) !== 'maximized';
-            const execMessage = cell.element[0].querySelectorAll(
-                '[data-element="execMessage"]'
-            )[0];
-            const collapsedCellStatus = cellCollapsed ? (
-                execMessage && execMessage.innerHTML
-            ) : '';
+            const fsmMode = utils.getCellMeta(
+                cell, 'kbase.appCell.fsm.currentState.mode', ''
+            );
+            const fsmStage = utils.getCellMeta(
+                cell, 'kbase.appCell.fsm.currentState.stage', ''
+            );
+            const appStatePretty = minimizedStatus(fsmMode, fsmStage);
+            const collapsedCellStatus = cellCollapsed ? appStatePretty : '';
 
             var events = Events.make({ node: container }),
                 buttons = [
@@ -406,10 +427,20 @@ define([
                         utils.getCellMeta(cell, 'kbase.cellState.message')
                     ])
                 ]),
-                content = div({ class: 'kb-cell-toolbar container-fluid' }, [
-                    div({ class: 'row', style: { height: '56px' } }, [
-                        div({ class: 'col-sm-9 title-container' }, [
-                            div({ class: 'title', style: { display: 'flex', height: '56px' } }, [
+                content = div({ class: 'kb-cell-toolbar' }, [
+                    div({ class: '', style: {
+                        display: 'flex',
+                        flexDirection: 'row',
+                        height: '56px',
+                        justifyContent: 'space-between',
+                    } }, [
+                        div({
+                            class: 'title-container',
+                            style: {flexGrow: '1'}
+                        }, [
+                            div({ class: 'title', style: {
+                                display: 'flex', height: '56px'
+                            } }, [
                                 div({
                                     dataElement: 'icon',
                                     class: 'icon',
@@ -447,12 +478,18 @@ define([
                                     }, [getCellSubtitle(cell)])
                                 ]),
                                 div(
-                                    { style: { margin: '0px 0px 0px auto' } },
+                                    { style: {
+                                        margin: '0px 0px 0px auto',
+                                        minWidth: '65px'
+                                    }},
                                     [collapsedCellStatus]
                                 )
                             ])
                         ]),
-                        div({ class: 'col-sm-3 buttons-container' }, [
+                        div({
+                            class: 'buttons-container',
+                            style: { minWidth: '110px' }
+                        }, [
                             buttons,
                             message
                         ])

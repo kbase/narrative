@@ -290,7 +290,7 @@ define(
                 Jupyter.notebook.kernel.execute(
                     'import os;' +
                     'os.environ["KB_AUTH_TOKEN"]="' + auth.getAuthToken() + '";' +
-                    'os.environ["KB_WORKSPACE_ID"]="' + Jupyter.notebook.metadata.ws_name + '"'
+                    'os.environ["KB_WORKSPACE_NAME"]="' + Jupyter.notebook.metadata.ws_name + '"'
                 );
             });
         }

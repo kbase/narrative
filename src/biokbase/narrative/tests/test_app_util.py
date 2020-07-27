@@ -55,27 +55,27 @@ class AppUtilTestCase(unittest.TestCase):
             self.assertEqual(system_variable('user_id'), self.user_id)
 
     def test_sys_var_no_ws(self):
-        if 'KB_WORKSPACE_ID' in os.environ:
-            del os.environ['KB_WORKSPACE_ID']
+        if 'KB_WORKSPACE_NAME' in os.environ:
+            del os.environ['KB_WORKSPACE_NAME']
         self.assertIsNone(system_variable('workspace'))
 
     def test_sys_var_workspace(self):
-        os.environ['KB_WORKSPACE_ID'] = self.workspace
+        os.environ['KB_WORKSPACE_NAME'] = self.workspace
         self.assertEqual(system_variable('workspace'), self.workspace)
 
     def test_sys_var_no_ws_id(self):
-        if 'KB_WORKSPACE_ID' in os.environ:
-            del os.environ['KB_WORKSPACE_ID']
+        if 'KB_WORKSPACE_NAME' in os.environ:
+            del os.environ['KB_WORKSPACE_NAME']
         self.assertIsNone(system_variable('workspace_id'))
 
     @mock.patch('biokbase.narrative.app_util.clients.get', get_mock_client)
     def test_sys_var_workspace_id(self):
-        os.environ['KB_WORKSPACE_ID'] = self.workspace
+        os.environ['KB_WORKSPACE_NAME'] = self.workspace
         self.assertEqual(system_variable('workspace_id'), 12345)
 
     @mock.patch('biokbase.narrative.app_util.clients.get', get_mock_client)
     def test_sys_var_workspace_id_except(self):
-        os.environ['KB_WORKSPACE_ID'] = 'invalid_workspace'
+        os.environ['KB_WORKSPACE_NAME'] = 'invalid_workspace'
         self.assertIsNone(system_variable('workspace_id'))
 
     def test_sys_var_user_bad(self):
@@ -193,7 +193,7 @@ class AppUtilTestCase(unittest.TestCase):
         self.assertDictEqual(map_inputs_from_job(inputs, app_spec), expected)
 
     def test_map_outputs_from_state_simple(self):
-        os.environ['KB_WORKSPACE_ID'] = self.workspace
+        os.environ['KB_WORKSPACE_NAME'] = self.workspace
         app_spec = {
             'parameters': [],
             'behavior': {
@@ -207,7 +207,7 @@ class AppUtilTestCase(unittest.TestCase):
         self.assertTupleEqual(map_outputs_from_state(None, None, app_spec), ('kbaseDefaultNarrativeOutput', self.workspace))
 
     def test_map_outputs_from_state(self):
-        os.environ['KB_WORKSPACE_ID'] = self.workspace
+        os.environ['KB_WORKSPACE_NAME'] = self.workspace
         app_spec = {
             'widgets': {
                 'input': None,
@@ -253,7 +253,7 @@ class AppUtilTestCase(unittest.TestCase):
         self.assertTupleEqual(map_outputs_from_state(state, params, app_spec), expected)
 
     def test_map_outputs_from_state_bad_spec(self):
-        os.environ['KB_WORKSPACE_ID'] = self.workspace
+        os.environ['KB_WORKSPACE_NAME'] = self.workspace
         app_spec = {
             'not': 'really'
         }

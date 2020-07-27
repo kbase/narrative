@@ -42,7 +42,7 @@ class JobManagerTest(unittest.TestCase):
     def setUpClass(cls):
         cls.jm = biokbase.narrative.jobs.jobmanager.JobManager()
         cls.job_ids = list(job_info.keys())
-        os.environ['KB_WORKSPACE_ID'] = config.get('jobs', 'job_test_wsname')
+        os.environ['KB_WORKSPACE_NAME'] = config.get('jobs', 'job_test_wsname')
 
     @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     def setUp(self):

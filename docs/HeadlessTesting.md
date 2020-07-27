@@ -60,7 +60,7 @@ but override the default entrypoint with "headless-narrative".
 You will need to pass in the following environment variables via -e parameters on the
 docker run command line:
 * KB_AUTH_TOKEN - this is a standard KBase authentication token with access to the narrative to be run
-* KB_WORKSPACE_ID - this is a workspace that the KB_AUTH_TOKEN has access to. A narrative needs to run within some
+* KB_WORKSPACE_NAME - this is a workspace that the KB_AUTH_TOKEN has access to. A narrative needs to run within some
 workspace. This can be the same as the workspace of the narrative being run, or another workspace that the token has access to
 * ENVIRON - [optional] this is environment to use from (ci, next, appdev, prod). At runtime this
 value is substituted into the config.json file's "config" setting to determine the set of endpoints
@@ -88,7 +88,7 @@ come up when you mouse over a narrative in the data panel:
  ~~~
  (narrative) 177:narrative sychan$ docker run -i -t \
 > -e "KB_AUTH_TOKEN=un=sychan|tokenid=...secret_squirrel_decoder_string..." \
-> -e "KB_WORKSPACE_ID=sychan:1474590456472" \
+> -e "KB_WORKSPACE_NAME=sychan:1474590456472" \
 > --entrypoint="headless-narrative" \
 kbase/narrative:latest 11546/1/20
 Configuring KBase logging from defaults (KBASE_PROXY_CONFIG is empty, or not found)
@@ -101,7 +101,7 @@ Here is an example of setting the environment to the AppDev environment and then
 ~~~
 (narrative) 177:narrative sychan$ docker run -i -t \
 > -e "KB_AUTH_TOKEN=un=sychan|tokenid=...secret_squirrel_decoder_string..." \
-> -e "KB_WORKSPACE_ID=sychan:1474590456472" \
+> -e "KB_WORKSPACE_NAME=sychan:1474590456472" \
 > -e "ENVIRON=appdev" \
 > --entrypoint="headless-narrative" kbase/narrative:latest 2012/1/4
 Configuring KBase logging from defaults (KBASE_PROXY_CONFIG is empty, or not found)
@@ -113,7 +113,7 @@ Here we run the first narrative, but displaying all the codecells as well as the
 ~~~
 docker run -i -t \
 > -e "KB_AUTH_TOKEN=un=sychan|tokenid=...blahblahblah..." \
-> -e "KB_WORKSPACE_ID=sychan:1474590456472" \
+> -e "KB_WORKSPACE_NAME=sychan:1474590456472" \
 > --entrypoint="headless-narrative" \
 kbase/narrative:latest --codecells --all 11546/1/20
 Configuring KBase logging from defaults (KBASE_PROXY_CONFIG is empty, or not found)

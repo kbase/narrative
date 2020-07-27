@@ -608,7 +608,7 @@ class WidgetManager(object):
                 spec_params = self._sm.app_params(app_spec)
                 input_params = {}
                 is_ref_path = ';' in upa
-                is_external = info_tuple[7] != os.environ['KB_WORKSPACE_ID']
+                is_external = info_tuple[7] != os.environ['KB_WORKSPACE_NAME']
                 # it's not safe to use reference yet (until we switch to them all over the Apps)
                 # But in case we deal with ref-path we have to do it anyway:
                 obj_param_value = upa if (is_ref_path or is_external) else info_tuple[1]

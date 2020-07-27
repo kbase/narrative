@@ -155,9 +155,9 @@ class UpaApiTestCase(unittest.TestCase):
 
     def test_missing_ws_deserialize(self):
         tmp = None
-        if 'KB_WORKSPACE_ID' in os.environ:
-            tmp = os.environ.get('KB_WORKSPACE_ID')
-            del os.environ['KB_WORKSPACE_ID']
+        if 'KB_WORKSPACE_NAME' in os.environ:
+            tmp = os.environ.get('KB_WORKSPACE_NAME')
+            del os.environ['KB_WORKSPACE_NAME']
         try:
             with self.assertRaises(RuntimeError) as e:
                 deserialize("[1]/2/3")
@@ -165,7 +165,7 @@ class UpaApiTestCase(unittest.TestCase):
                              "Currently loaded workspace is unknown! Unable to deserialize UPA.")
         finally:
             if tmp is not None:
-                os.environ['KB_WORKSPACE_ID'] = tmp
+                os.environ['KB_WORKSPACE_NAME'] = tmp
 
     def test_is_ref(self):
         """

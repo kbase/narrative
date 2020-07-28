@@ -34,11 +34,15 @@ def generate_app_cell(validated_spec=None, spec_tuple=None):
     # injected into the cell metadata,
     # but it's necessary for this little function.
 
-    for i in range(len(validated_spec["parameters"])):
-        p = validated_spec["parameters"][i]
-        for key in ["ui_name", "short_hint", "description"]:
-            p[key] = p.get(key, '').replace('"', "&quot;")
-            p[key] = p.get(key, '').replace("'", "&apos;")
+    if "info" in validated_spec:
+        for key in ["name", "subtitle", "tooltip"]:
+            validated_spec["info"][key] = _fix_quotes(validated_spec["info"].get(key, ""))
+
+    if "parameters" in validated_spec:
+        for i in range(len(validated_spec["parameters"])):
+            p = validated_spec["parameters"][i]
+            for key in ["ui_name", "short_hint", "description"]:
+                p[key] = _fix_quotes(p.get(key, ""))
 
     js_template = """
         var outputArea = this,
@@ -56,3 +60,6 @@ def generate_app_cell(validated_spec=None, spec_tuple=None):
     js_code = Template(js_template).render(spec=json.dumps(validated_spec))
 
     return Javascript(data=js_code, lib=None, css=None)
+
+def _fix_quotes(s: str) -> str:
+    return s.replace('"', "&quot;").replace("'", "&apos;")

@@ -31,6 +31,6 @@ parameters :
         ui-name : |
             A String
         short-hint : |
-            A description string.
+            A description string, with "quoted" values, shouldn't fail.
 description : |
     <p>This is a tiny, simple method intended for testing the Narrative's ability to parse and display specs.</p>

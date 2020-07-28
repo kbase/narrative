@@ -26,6 +26,8 @@ class AppEditorTestCase(unittest.TestCase):
     def test_gen_app_cell_pre_valid(self):
         js = generate_app_cell(spec_tuple=(json.dumps(self.spec_json), self.display_yaml))
         self.assertIsNotNone(js)
+        self.assertIsNotNone(js.data)
+        self.assertIn("A description string, with &quot;quoted&quot; values, shouldn&apos;t fail.", js.data)
 
     def test_gen_app_cell_fail_validation(self):
         with self.assertRaises(Exception):

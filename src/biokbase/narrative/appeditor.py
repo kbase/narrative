@@ -28,6 +28,18 @@ def generate_app_cell(validated_spec=None, spec_tuple=None):
         elif "errors" in validated and validated['errors']:
             raise Exception(validated['errors'])
 
+    # Each of the values of the validated spec needs to be escaped for JS.
+    # Specifically we turn " -> &quot; and ' -> &apos;
+    # This isn't done so much on the frontend because of how it's already interpreted and
+    # injected into the cell metadata,
+    # but it's necessary for this little function.
+
+    for i in range(len(validated_spec["parameters"])):
+        p = validated_spec["parameters"][i]
+        for key in ["ui_name", "short_hint", "description"]:
+            p[key] = p.get(key, '').replace('"', "&quot;")
+            p[key] = p.get(key, '').replace("'", "&apos;")
+
     js_template = """
         var outputArea = this,
             cellElement = outputArea.element.parents('.cell'),

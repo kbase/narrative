@@ -11,12 +11,12 @@ from .util import TestConfig
 
 class AppEditorTestCase(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         config = TestConfig()
-        self.specs_list = config.load_json_file(config.get('specs', 'app_specs_file'))
-        self.spec_json = config.load_json_file(config.get('specs', 'simple_spec_json'))
+        cls.specs_list = config.load_json_file(config.get('specs', 'app_specs_file'))
+        cls.spec_json = config.load_json_file(config.get('specs', 'simple_spec_json'))
         with open(config.file_path(config.get('specs', 'simple_display_yaml'))) as f:
-            self.display_yaml = f.read()
+            cls.display_yaml = f.read()
             f.close()
 
     def test_gen_app_cell_post_validation(self):
@@ -28,6 +28,8 @@ class AppEditorTestCase(unittest.TestCase):
         self.assertIsNotNone(js)
         self.assertIsNotNone(js.data)
         self.assertIn("A description string, with &quot;quoted&quot; values, shouldn&apos;t fail.", js.data)
+        self.assertIn("Test Simple Inputs with &quot;quotes&quot;", js.data)
+        self.assertIn("A simple test spec with a single &apos;input&apos;.", js.data)
 
     def test_gen_app_cell_fail_validation(self):
         with self.assertRaises(Exception):

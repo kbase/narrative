@@ -1,9 +1,9 @@
 #
 # define display information
 #
-name: Test Simple Inputs
+name: Test Simple Inputs with "quotes"
 tooltip: |
-    A simple test spec with a single input.
+    A simple test spec with a single 'input'.
 screenshots: []
 
 icon: icon.png

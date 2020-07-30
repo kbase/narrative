@@ -36,9 +36,9 @@ jobs:
 ## TODO: Replace `registryPackages` with `$VERSIONS` or newer equivalent
     - name: Check for existing images
       run: |
-        echo ::set-env name=ISDEV::$(curl -s https://github.com/jsfillman/narrative-ci-test/packages/334089/versions | grep -c $MY_SHA)
-        echo ::set-env name=ISNEXT::$(curl -s https://github.com/jsfillman/narrative-ci-test/packages/334090/versions | grep -c $MY_SHA)
-        echo ::set-env name=ISCI::$(curl -s https://github.com/jsfillman/narrative-ci-test/packages/334212/versions | grep -c $MY_SHA)
+        echo ::set-env name=ISDEV::$(curl -s https://github.com/kbase/narrative/packages/334089/versions | grep -c $MY_SHA)
+        echo ::set-env name=ISNEXT::$(curl -s https://github.com/kbase/narrative/packages/334090/versions | grep -c $MY_SHA)
+        echo ::set-env name=ISCI::$(curl -s https://github.com/kbase/narrative/packages/334212/versions | grep -c $MY_SHA)
 
 
 ## Confirm variables

@@ -22,7 +22,7 @@ jobs:
         echo ::set-env name=MY_SHA::$(git rev-parse --short=7 HEAD)
         echo ::set-env name=PULL_NUMBER::$(echo "$GITHUB_REF" | awk -F / '{print $2,$3}' | sed -e 's/ /_/g')
         echo ::set-env name=APP_VERSION_NUM::$(sed -n '/module-version:/{n;p;}' kbase.yml | sed 's/ //g')
-        echo ::set-env name=TEST_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-testing")
+        echo ::set-env name=TEST_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-dev")
         echo ::set-env name=MY_DEV_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-appdev")
         echo ::set-env name=MY_NEXT_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-next")
         echo ::set-env name=MY_CI_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-ci")

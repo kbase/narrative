@@ -1,0 +1,105 @@
+name: Tag Environments
+
+on:
+  pull_request:
+    types:
+      - labeled
+    branches: 
+      - ci-beta
+
+jobs:
+
+  tag_env:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Check out GitHub Repo
+      uses: actions/checkout@v2
+
+
+    - name: Set App Version and Name Vars
+      run: |
+        echo ::set-env name=MY_SHA::$(git rev-parse --short=7 HEAD)
+        echo ::set-env name=PULL_NUMBER::$(echo "$GITHUB_REF" | awk -F / '{print $2,$3}' | sed -e 's/ /_/g')
+        echo ::set-env name=APP_VERSION_NUM::$(sed -n '/module-version:/{n;p;}' kbase.yml | sed 's/ //g')
+        echo ::set-env name=TEST_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-testing")
+        echo ::set-env name=MY_DEV_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-appdev")
+        echo ::set-env name=MY_NEXT_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-next")
+        echo ::set-env name=MY_CI_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-ci")
+        echo ::set-env name=MY_PROD_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-prod")
+        echo ::set-env name=MY_USER::$(echo $GITHUB_REPOSITORY | awk -F / '{print $1}' )
+        echo ::set-env name=MY_GPR::$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' )
+
+
+## Determine if the current image is already tagged for the various environments
+## (Mis)uses the :github: v4 GraphQL API
+## TODO: Replace `registryPackages` with `$VERSIONS` or newer equivalent
+    - name: Check for existing images
+      run: |
+        echo ::set-env name=ISDEV::$(curl -s https://github.com/jsfillman/narrative-ci-test/packages/334089/versions | grep -c $MY_SHA)
+        echo ::set-env name=ISNEXT::$(curl -s https://github.com/jsfillman/narrative-ci-test/packages/334090/versions | grep -c $MY_SHA)
+        echo ::set-env name=ISCI::$(curl -s https://github.com/jsfillman/narrative-ci-test/packages/334212/versions | grep -c $MY_SHA)
+
+
+## Confirm variables
+    - name: Verify Version and Repo Name
+      run: |
+        echo "Version:" $APP_VERSION_NUM
+        echo "Repo:" $GITHUB_REPOSITORY
+        echo "SHA:" $MY_SHA
+        echo "Image count dev:" $ISDEV
+        echo "Image count next:" $ISNEXT
+        echo "Image count CI:" $ISCI
+        echo "Image count prod:" $ISPROD
+        echo "Appdev Endpoint:" $MY_DEV_APP
+        echo "Next Endpoint:" $MY_NEXT_APP
+        echo "CI Endpoint:" $MY_CI_APP
+        echo "Prod Endpoint:" $MY_PROD_APP
+        echo "Versions:" $VERSIONS
+        echo "SHA:" $GITHUB_SHA
+        echo "REF:" $GITHUB_REF
+        echo "HeadRef:" $GITHUB_HEAD_REF
+        echo "PR:" $PULL_NUMBER
+        echo "User:" $MY_USER
+        echo "Package:" $MY_GPR
+
+
+## Set target Docker image based on new pull request label
+
+    - name: Tag Appdev
+      if: contains( github.event.pull_request.labels.*.name, 'appdev') && env.ISDEV < 1
+      run: |
+        echo "App:" $MY_DEV_APP
+        docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
+        docker pull docker.pkg.github.com/$TEST_APP:sha-$MY_SHA
+        docker tag docker.pkg.github.com/$TEST_APP:sha-$MY_SHA docker.pkg.github.com/$MY_DEV_APP:sha-$MY_SHA
+        docker tag docker.pkg.github.com/$MY_DEV_APP:sha-$MY_SHA docker.pkg.github.com/$MY_DEV_APP:$PULL_NUMBER
+        docker tag docker.pkg.github.com/$MY_DEV_APP:sha-$MY_SHA docker.pkg.github.com/$MY_DEV_APP:$GITHUB_HEAD_REF
+        docker push docker.pkg.github.com/$MY_DEV_APP:sha-$MY_SHA
+        docker push docker.pkg.github.com/$MY_DEV_APP:$GITHUB_HEAD_REF
+        docker push docker.pkg.github.com/$MY_DEV_APP:$PULL_NUMBER
+
+
+    - name: Tag Next
+      if: contains( github.event.pull_request.labels.*.name, 'next') && env.ISNEXT < 1
+      run: |
+        docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
+        docker pull docker.pkg.github.com/$TEST_APP:sha-$MY_SHA
+        docker tag docker.pkg.github.com/$TEST_APP:sha-$MY_SHA docker.pkg.github.com/$MY_NEXT_APP:sha-$MY_SHA
+        docker tag docker.pkg.github.com/$MY_NEXT_APP:sha-$MY_SHA docker.pkg.github.com/$MY_NEXT_APP:$PULL_NUMBER
+        docker tag docker.pkg.github.com/$MY_NEXT_APP:sha-$MY_SHA docker.pkg.github.com/$MY_NEXT_APP:$GITHUB_HEAD_REF
+        docker push docker.pkg.github.com/$MY_NEXT_APP:sha-$MY_SHA
+        docker push docker.pkg.github.com/$MY_NEXT_APP:$GITHUB_HEAD_REF
+        docker push docker.pkg.github.com/$MY_NEXT_APP:$PULL_NUMBER
+
+    - name: Tag CI
+      if: contains( github.event.pull_request.labels.*.name, 'ci') && env.ISCI < 1
+      run: |
+        docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
+        docker pull docker.pkg.github.com/$TEST_APP:sha-$MY_SHA
+        docker tag docker.pkg.github.com/$TEST_APP:sha-$MY_SHA docker.pkg.github.com/$MY_CI_APP:sha-$MY_SHA
+        docker tag docker.pkg.github.com/$MY_CI_APP:sha-$MY_SHA docker.pkg.github.com/$MY_CI_APP:$PULL_NUMBER
+        docker tag docker.pkg.github.com/$MY_CI_APP:sha-$MY_SHA docker.pkg.github.com/$MY_CI_APP:$GITHUB_HEAD_REF
+        docker push docker.pkg.github.com/$MY_CI_APP:sha-$MY_SHA
+        docker push docker.pkg.github.com/$MY_CI_APP:$GITHUB_HEAD_REF
+        docker push docker.pkg.github.com/$MY_CI_APP:$PULL_NUMBER

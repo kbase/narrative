@@ -1,0 +1,71 @@
+name: Tag Production Post-Merge
+on:
+  pull_request:
+    branches:
+    - ci-beta
+    types:
+    - closed
+
+
+jobs:
+
+  tag_prod:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Check out GitHub Repo
+      if: github.event.action == 'closed' && github.event.pull_request.merged == true
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+
+
+    - name: Set App Version and Name Vars
+      if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+      run: |
+        echo ::set-env name=MY_SHA::$(git rev-parse --short=7 HEAD)
+        echo ::set-env name=PULL_NUMBER::$(git log | grep $GITHUB_HEAD_REF | awk '{print $4}' | sed -e 's/#/pull_/g')
+        echo ::set-env name=MY_BRANCH::${{ github.event.pull_request.head.ref }}
+        echo ::set-env name=MY_REF::$${{ github.event.pull_request.head.ref }}
+        echo ::set-env name=APP_VERSION_NUM::$(sed -n '/module-version:/{n;p;}' kbase.yml | sed 's/ //g')
+        echo ::set-env name=TEST_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-testing")
+        echo ::set-env name=MY_PROD_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-prod")
+
+
+## Determine if the current image is already tagged for the various environments
+## (Mis)uses the :github: v4 GraphQL API
+## TODO: Replace `registryPackages` with `$VERSIONS` or newer equivalent
+    - name: Check for existing images
+      if: github.event.action == 'closed' && github.event.pull_request.merged == true
+      run: |
+        echo ::set-env name=ISPROD::$(curl -sL -X POST https://api.github.com/graphql -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }} " -d '{"query":"query{repository(owner:\"jsfillman\",name:\"sdk_ci_demopy\"){registryPackages(first:100,registryPackageType:\"DOCKER\",name: \"sdk_ci_demopy\"){nodes{versions(first:100){nodes{version}}}}}}"}' | jq . | grep -c $MY_SHA)
+
+
+## Confirm variables
+    - name: Verify Version and Repo Name
+      if: github.event.action == 'closed' && github.event.pull_request.merged == true
+      run: |
+        echo "Version:" $APP_VERSION_NUM
+        echo "Repo:" $GITHUB_REPOSITORY
+        echo "My SHA:" $MY_SHA
+        echo "Image count prod:" $ISPROD
+        echo "Prod Endpoint:" $MY_PROD_APP
+        echo "Versions:" $VERSIONS
+        echo "Checking Out:" ${{ github.event.pull_request.head.ref }}
+        echo "SHA:" $GITHUB_SHA
+        echo "REF:" $GITHUB_REF
+        echo "HeadRef:" $GITHUB_HEAD_REF
+        echo "PR:" $PULL_NUMBER
+
+
+## Set target Docker image based on new pull request label
+
+    - name: Tag Prod
+      if: github.event.action == 'closed' && github.event.pull_request.merged == true
+      run: |
+        docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
+        docker pull docker.pkg.github.com/$TEST_APP:$GITHUB_HEAD_REF
+        docker tag docker.pkg.github.com/$TEST_APP:$GITHUB_HEAD_REF docker.pkg.github.com/$MY_PROD_APP:$GITHUB_HEAD_REF
+        docker tag docker.pkg.github.com/$TEST_APP:$GITHUB_HEAD_REF docker.pkg.github.com/$MY_PROD_APP:latest
+        docker push docker.pkg.github.com/$MY_PROD_APP:$GITHUB_HEAD_REF
+        docker push docker.pkg.github.com/$MY_PROD_APP:latest

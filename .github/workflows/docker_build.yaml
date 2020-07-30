@@ -18,7 +18,7 @@ jobs:
     - name: Set Version and Repo Name
       run: |
         echo ::set-env name=APP_VERSION_NUM::$(sed -n '/module-version:/{n;p;}' kbase.yml | sed 's/ //g')
-        echo ::set-env name=MY_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-testing")
+        echo ::set-env name=MY_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-dev")
         echo ::set-env name=MY_SHA::$(git rev-parse --short=7 HEAD)
         echo ::set-env name=MY_BRANCH::$(git branch --show-current)
         echo ::set-env name=PR::$(echo "$GITHUB_REF" | awk -F / '{print $3}')

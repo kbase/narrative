@@ -26,7 +26,7 @@ Requires the following:
 * Node.js (latest LTS recommended)
 * Bower 1.8.8+
 
-### Using a conda environment (recommended!)
+### Using a conda environment (Recommended!)
 ```
 git clone https://github.com/kbase/narrative
 cd narrative

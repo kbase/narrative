@@ -2,6 +2,8 @@ name: Docker Build
 
 on:
   pull_request:
+    with:
+        ref: ${{ github.event.pull_request.head.sha }}
     branches: 
       - ci-beta
 
@@ -27,6 +29,7 @@ jobs:
 
     - name: Verify Version and Repo Name
       run: |
+        echo "Head SHA:" ${{ github.event.pull_request.head.sha }}
         echo "Version:" $APP_VERSION_NUM
         echo "App:" $MY_APP
         echo "Repo:" $GITHUB_REPOSITORY

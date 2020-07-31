@@ -35,7 +35,6 @@ jobs:
 
 ## Determine if the current image is already tagged for the various environments
 ## (Mis)uses the :github: v4 GraphQL API
-## TODO: Replace `registryPackages` with `$VERSIONS` or newer equivalent
     # - name: Check for existing images
     #   run: |
     #     echo ::set-env name=ISDEV::$(curl -s https://github.com/kbase/narrative/packages/334089/versions | grep -c $MY_SHA)

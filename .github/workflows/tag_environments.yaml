@@ -35,11 +35,11 @@ jobs:
 
 ## Determine if the current image is already tagged for the various environments
 ## (Mis)uses the :github: v4 GraphQL API
-    # - name: Check for existing images
-    #   run: |
-    #     echo ::set-env name=ISDEV::$(curl -s https://github.com/kbase/narrative/packages/334089/versions | grep -c $MY_SHA)
-    #     echo ::set-env name=ISNEXT::$(curl -s https://github.com/kbase/narrative/packages/334090/versions | grep -c $MY_SHA)
-    #     echo ::set-env name=ISCI::$(curl -s https://github.com/kbase/narrative/packages/334212/versions | grep -c $MY_SHA)
+    - name: Check for existing images
+      run: |
+        echo ::set-env name=ISDEV::$(curl -s https://github.com/kbase/narrative/packages/337035/versions | grep -c $MY_SHA)
+        echo ::set-env name=ISNEXT::$(curl -s https://github.com/kbase/narrative/packages/337041/versions | grep -c $MY_SHA)
+        echo ::set-env name=ISCI::$(curl -s https://github.com/kbase/narrative/packages/337047/versions | grep -c $MY_SHA)
 
 
 ## Confirm variables

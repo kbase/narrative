@@ -1,0 +1,73 @@
+name: Docker Build
+
+on:
+  pull_request:
+    branches: 
+      - ci-beta
+
+jobs:
+
+  docker_deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Check out GitHub Repo
+      if: "!contains(github.event.head_commit.message, 'skip ci')"
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+      uses: actions/checkout@v2
+
+    - name: Set Version and Repo Name
+      run: |
+        echo ::set-env name=APP_VERSION_NUM::$(sed -n '/module-version:/{n;p;}' kbase.yml | sed 's/ //g')
+        echo ::set-env name=MY_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-dev")
+        echo ::set-env name=MY_SHA::$(git rev-parse --short=7 HEAD)
+        echo ::set-env name=MY_BRANCH::$(git branch --show-current)
+        echo ::set-env name=PR::$(echo "$GITHUB_REF" | awk -F / '{print $3}')
+        echo ::set-env name=PULL_NUMBER::$(echo "$GITHUB_REF" | awk -F / '{print $2,$3}' | sed -e 's/ /_/g')
+
+
+    - name: Verify Version and Repo Name
+      run: |
+        echo "Head SHA:" ${{ github.event.pull_request.head.sha }}
+        echo "MY_SHA:" $MY_SHA
+        echo "Version:" $APP_VERSION_NUM
+        echo "App:" $MY_APP
+        echo "Repo:" $GITHUB_REPOSITORY
+        echo "Ref:" $GITHUB_REF
+        echo "PR No:" $PR
+        echo "PR:" $PULL_NUMBER
+        echo "HeadRef:" $GITHUB_HEAD_REF
+        echo "Branch:" $MY_BRANCH
+
+    - name: Build and Push to Packages
+      if: "!contains(github.event.head_commit.message, 'skip ci')" 
+      run: |
+        echo "App:" $MY_APP
+        docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
+        docker build . -t docker.pkg.github.com/$MY_APP
+        docker tag docker.pkg.github.com/$MY_APP docker.pkg.github.com/$MY_APP:sha-$MY_SHA
+        docker tag docker.pkg.github.com/$MY_APP docker.pkg.github.com/$MY_APP:$GITHUB_HEAD_REF
+        docker tag docker.pkg.github.com/$MY_APP docker.pkg.github.com/$MY_APP:$PULL_NUMBER
+        docker push docker.pkg.github.com/$MY_APP:latest
+        docker push docker.pkg.github.com/$MY_APP:sha-$MY_SHA
+        docker push docker.pkg.github.com/$MY_APP:$GITHUB_HEAD_REF
+        docker push docker.pkg.github.com/$MY_APP:$PULL_NUMBER
+
+    # - name: Build and Push to Packages
+    #   if: "!contains(github.event.head_commit.message, 'skip ci')"    
+    #   uses: docker/build-push-action@v1
+    #   with:
+    #     username: ${{ github.actor }}
+    #     password: ${{ secrets.GITHUB_TOKEN }}
+    #     registry: docker.pkg.github.com
+    #     repository: ${{ env.MY_APP }}
+    #     # tag_with_ref: true
+    #     tag_with_sha: true
+    #     # tags: ${{ github.event.number }},${{ env.APP_VERSION_NUM }}
+    #     # tags: ${{ github.event.number }},${{ env.APP_VERSION_NUM }}
+    #     tags: ${{ env.MY_BRANCH}}
+
+# Variable "env.MY_BRANCH" fails. Can only seem to do via PR.
+# The limitations in naming with `docker/build-push-action@v1` aren't worth the 3 lines of code saved.
+# Migrating to stock docker commands to get around the excess of variables we're using currently (and to make branch & PR tagging work the way we need).

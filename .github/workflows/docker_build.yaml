@@ -2,8 +2,6 @@ name: Docker Build
 
 on:
   pull_request:
-    with:
-      - ref: ${{ github.event.pull_request.head.sha }}
     branches: 
       - ci-beta
 
@@ -15,6 +13,8 @@ jobs:
 
     - name: Check out GitHub Repo
       if: "!contains(github.event.head_commit.message, 'skip ci')"
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
       uses: actions/checkout@v2
 
     - name: Set Version and Repo Name
@@ -30,6 +30,7 @@ jobs:
     - name: Verify Version and Repo Name
       run: |
         echo "Head SHA:" ${{ github.event.pull_request.head.sha }}
+        echo "MY_SHA:" $MY_SHA
         echo "Version:" $APP_VERSION_NUM
         echo "App:" $MY_APP
         echo "Repo:" $GITHUB_REPOSITORY

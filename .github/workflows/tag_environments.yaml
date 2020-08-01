@@ -14,12 +14,14 @@ jobs:
     steps:
 
     - name: Check out GitHub Repo
+      if: github.event.pull_request.merged == false
       uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.head.sha }}
 
 
     - name: Set App Version and Name Vars
+      if: github.event.pull_request.merged == false
       run: |
         echo ::set-env name=MY_SHA::$(git rev-parse --short=7 HEAD)
         echo ::set-env name=PULL_NUMBER::$(echo "$GITHUB_REF" | awk -F / '{print $2,$3}' | sed -e 's/ /_/g')
@@ -36,6 +38,7 @@ jobs:
 ## Determine if the current image is already tagged for the various environments
 ## (Mis)uses the :github: v4 GraphQL API
     - name: Check for existing images
+      if: github.event.pull_request.merged == false
       run: |
         echo ::set-env name=ISDEV::$(curl -s https://github.com/kbase/narrative/packages/337035/versions | grep -c $MY_SHA)
         echo ::set-env name=ISNEXT::$(curl -s https://github.com/kbase/narrative/packages/337041/versions | grep -c $MY_SHA)
@@ -44,6 +47,7 @@ jobs:
 
 ## Confirm variables
     - name: Verify Version and Repo Name
+      if: github.event.pull_request.merged == false
       run: |
         echo "Version:" $APP_VERSION_NUM
         echo "Repo:" $GITHUB_REPOSITORY
@@ -69,7 +73,7 @@ jobs:
 ## Set target Docker image based on new pull request label
 
     - name: Tag Appdev
-      if: contains( github.event.pull_request.labels.*.name, 'appdev') && env.ISDEV < 1
+      if: contains( github.event.pull_request.labels.*.name, 'appdev') && env.ISDEV < 1 && github.event.pull_request.merged == false
       run: |
         echo "App:" $MY_DEV_APP
         docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
@@ -83,7 +87,7 @@ jobs:
 
 
     - name: Tag Next
-      if: contains( github.event.pull_request.labels.*.name, 'next') && env.ISNEXT < 1
+      if: contains( github.event.pull_request.labels.*.name, 'next') && env.ISNEXT < 1 && github.event.pull_request.merged == false
       run: |
         docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
         docker pull docker.pkg.github.com/$TEST_APP:sha-$MY_SHA
@@ -95,7 +99,7 @@ jobs:
         docker push docker.pkg.github.com/$MY_NEXT_APP:$PULL_NUMBER
 
     - name: Tag CI
-      if: contains( github.event.pull_request.labels.*.name, 'ci') && env.ISCI < 1
+      if: contains( github.event.pull_request.labels.*.name, 'ci') && env.ISCI < 1 && github.event.pull_request.merged == false
       run: |
         docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
         docker pull docker.pkg.github.com/$TEST_APP:sha-$MY_SHA

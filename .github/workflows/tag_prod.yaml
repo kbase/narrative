@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Check out GitHub Repo
-      if: github.event.action == 'closed' && github.event.pull_request.merged == true
-      uses: actions/checkout@v2
-      with:
-        ref: ${{ github.event.pull_request.head.ref }}
+    # - name: Check out GitHub Repo
+    #   if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    #   uses: actions/checkout@v2
+    #   with:
+    #     ref: ${{ github.event.pull_request.head.ref }}
 
 
     - name: Set App Version and Name Vars
@@ -35,10 +35,10 @@ jobs:
 ## Determine if the current image is already tagged for the various environments
 ## (Mis)uses the :github: v4 GraphQL API
 ## TODO: Replace `registryPackages` with `$VERSIONS` or newer equivalent
-    - name: Check for existing images
-      if: github.event.action == 'closed' && github.event.pull_request.merged == true
-      run: |
-        echo ::set-env name=ISPROD::$(curl -sL -X POST https://api.github.com/graphql -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }} " -d '{"query":"query{repository(owner:\"jsfillman\",name:\"sdk_ci_demopy\"){registryPackages(first:100,registryPackageType:\"DOCKER\",name: \"sdk_ci_demopy\"){nodes{versions(first:100){nodes{version}}}}}}"}' | jq . | grep -c $MY_SHA)
+    # - name: Check for existing images
+    #   if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    #   run: |
+    #     echo ::set-env name=ISPROD::$(curl -sL -X POST https://api.github.com/graphql -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }} " -d '{"query":"query{repository(owner:\"jsfillman\",name:\"sdk_ci_demopy\"){registryPackages(first:100,registryPackageType:\"DOCKER\",name: \"sdk_ci_demopy\"){nodes{versions(first:100){nodes{version}}}}}}"}' | jq . | grep -c $MY_SHA)
 
 
 ## Confirm variables

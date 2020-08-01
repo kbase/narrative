@@ -70,7 +70,7 @@ The document specifically describes how you would build the system on a [Vagrant
 
 ## Architecture
 
-### In progress!
+### In progress
 
 The Narrative sits on top of the Jupyter Notebook, so most of its architecture is a mirror of that. However, the Narrative's interaction with other KBase elements - namely the data stores and job running services - merits its own description. This will be ongoing (and evolving!), but a brief description of how a job gets run and registered is available here:
 

@@ -1,9 +1,12 @@
 env:
-  browser: true
   amd: true
+  browser: true
+  es6: true
+  node: true
 extends: 'eslint:recommended'
 parserOptions:
-    ecmaVersion: 6
+    ecmaVersion: 2018
+root: true
 rules:
   strict:
     - error
@@ -11,8 +14,7 @@ rules:
   indent:
     - error
     - 4
-    - SwitchCase:
-      - 1
+    - SwitchCase: 1
   linebreak-style:
     - error
     - unix
@@ -27,3 +29,5 @@ rules:
     - allow:
       - warn
       - error
+  require-await:
+    - error

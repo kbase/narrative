@@ -21,7 +21,7 @@ dev-image:
 	SKIP_MINIFY=1 DOCKER_TAG=dev sh $(DOCKER_INSTALLER)
 
 run-dev-image:
-	ENV=$(ENV) bash scripts/local-dev-run.sh
+	ENV=$(ENV) sh scripts/local-dev-run.sh
 
 install:
 	bash $(INSTALLER)

@@ -3,18 +3,18 @@ updates:
 - package-ecosystem: pip
   directory: "/src"
   schedule:
-    interval: daily
+    interval: weekly
     time: '11:00'
-  open-pull-requests-limit: 10
+  open-pull-requests-limit: 20
 - package-ecosystem: npm
   directory: "/"
   schedule:
-    interval: daily
+    interval: weekly
     time: '11:00'
-  open-pull-requests-limit: 10
+  open-pull-requests-limit: 20
 - package-ecosystem: docker
   directory: "/"
   schedule:
-    interval: daily
+    interval: weekly
     time: '11:00'
-  open-pull-requests-limit: 10
+  open-pull-requests-limit: 20

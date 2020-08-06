@@ -49,7 +49,7 @@ define([
             $dropzoneElem.find('a.globus_link').click(e => {
                 e.stopPropagation();
                 e.preventDefault();
-                if((e.target.href).includes("app.globus.org")) {
+                if((e.target.href).includes('app.globus.org')) {
                     let stagingServiceClient = new StagingServiceClient({
                         root: this.stagingUrl,
                         token: Runtime.make().authToken()
@@ -62,10 +62,10 @@ define([
                             return true;
                         });
                 } else {
-                    window.open(e.target.href, "_blank");
-                };
+                    window.open(e.target.href, '_blank');
+                }
             });
-
+            const uploadConfig = Config.get('upload');
             this.$elem.append($dropzoneElem);
             this.dropzone = new Dropzone($dropzoneElem.get(0), {
                 url: this.stagingUrl + '/upload',
@@ -76,8 +76,9 @@ define([
                 paramName: 'uploads',
                 previewTemplate: this.dropFileTmpl(),
                 autoProcessQueue: true,
-                parallelUploads: 10,
-                maxFilesize: 20480  //20GB
+                parallelUploads: uploadConfig.parallel_uploads,
+                maxFilesize: uploadConfig.max_file_size,
+                timeout: uploadConfig.timeout, //Config.get('upload_timeout') //60*60*1000   // 5 minutes
             })
                 .on('totaluploadprogress', (progress) => {
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});

@@ -92,7 +92,8 @@ define([
             expect(renderedMsg).toContain('<li>Click in this box.</li>');
             expect(renderedMsg).toContain('<li>Drag and drop data files.</li>');
             expect(renderedMsg).toContain('For large files (over 20GB) or a large number of files use');
-            expect(renderedMsg).toContain('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&amp;destination_path=' + fakeUser);
+            expect(renderedMsg).toContain(Config.get('upload').globus_upload_url);
+            expect(renderedMsg).toContain(fakeUser);
             expect(renderedMsg).not.toContain('For large files (over 20GB), use Globus. Click');
             expect(renderedMsg).not.toContain('http://kbase.us/transfer-data-from-globus-to-kbase/');
         });
@@ -105,7 +106,7 @@ define([
             expect(renderedMsg).toContain('For large files (over 20GB), use Globus. Click');
             expect(renderedMsg).toContain('http://kbase.us/transfer-data-from-globus-to-kbase/');
             expect(renderedMsg).not.toContain('For large files (over 20GB) or a large number of files use');
-            expect(renderedMsg).not.toContain('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&amp;destination_path=' + fakeUser);
+            expect(renderedMsg).not.toContain(Config.get('upload').globus_upload_url);
         });
 
         it('Should be able to set and retrieve the path', () => {

@@ -189,7 +189,7 @@ define(
                             .append($('<p>').css({ 'margin': '1em 0 0 1em' })
                                 .html('If that doesn\'t work, please ' +
                                     'contact us at ' +
-                                    '<a href="http://kbase.us/contact-us/">http://kbase.us/contact-us/</a> ' +
+                                    '<a href="https://www.kbase.us/support/">https://www.kbase.us/support/</a> ' +
                                     'and include the following information:'))
                             .append($('<p>').css({ margin: '1em 0 0 2em' }).addClass('kb-err-text')
                                 .text('Version: ' + full_version))

@@ -108,7 +108,7 @@ define([
                 element: '.kb-side-overlay-container .kb-side-header:nth-child(3)', // public tab
                 title: 'Public Data',
                 placement: 'bottom',
-                content: 'The <i>Public</i> tab provides direct access to public data that KBase periodically imports from several sources. These sources are listed on the KBase website <a href="//kbase.us/data-policy-and-sources" target="_blank">kbase.us/data-policy-and-sources</a>',
+                content: 'The <i>Public</i> tab provides direct access to public data that KBase periodically imports from several sources. These sources are listed on the KBase website <a href="//www.kbase.us/data-policy-and-sources" target="_blank">www.kbase.us/data-policy-and-sources</a>',
                 onShow: function(tour) {
                     that.openDataSlideout(true);
                     $('.kb-side-overlay-container .kb-side-header:nth-child(3)').click();
@@ -128,7 +128,7 @@ define([
                 element: '.kb-side-overlay-container .kb-side-header:nth-child(5)', // import tab
                 title: 'Import Data',
                 placement: 'bottom',
-                content: 'Finally, the <i>Import</i> tab allows you to upload your own data for analysis. Any data you add are kept private unless you choose to share your Narrative. <a href="//kbase.us/data-upload-download-guide/" target="_blank">The Data Upload/Download Guide</a> has more information about how to import your data.',
+                content: 'Finally, the <i>Import</i> tab allows you to upload your own data for analysis. Any data you add are kept private unless you choose to share your Narrative. <a href="//docs.kbase.us/data/upload-download-guide/" target="_blank">The Data Upload/Download Guide</a> has more information about how to import your data.',
                 onShow: function(tour) {
                     that.openDataSlideout(true);
                     $('.kb-side-overlay-container .kb-side-header:nth-child(5)').click();
@@ -173,7 +173,7 @@ define([
             {
                 title: "End of Basic Features Tour",
                 orphan: true,
-                content: "<p>You have now been introduced to the basic features of the Narrative Interface. We hope you conduct interesting and creative research using these tools and are able to expand your collaborator network with other KBase users. If you have any questions or feature requests, please follow the Contact Us link in the hamburger menu at the top left. <p>To learn about advanced features of the Narrative Interface, click the right arrow button to proceed. To exit the tour, click the X at the top right of this box.",
+                content: "<p>You have now been introduced to the basic features of the Narrative Interface. We hope you conduct interesting and creative research using these tools and are able to expand your collaborator network with other KBase users. If you have any questions or feature requests, please follow the Contact Us link in the help menu. <p>To learn about advanced features of the Narrative Interface, click the right arrow button to proceed. To exit the tour, click the X at the top right of this box.",
                 backdrop: true
             },
             {
@@ -197,7 +197,7 @@ define([
             {
                 title: 'End of Advanced Features Tour',
                 orphan: true,
-                content: 'You have now been introduced to the advanced features of the Narrative Interface. The <a href="http://kbase.us/narrative-guide/">Narrative User Guide</a> has more information. If you have any questions or feature requests, please follow the Contact Us link in the hamburger menu.',
+                content: 'You have now been introduced to the advanced features of the Narrative Interface. The <a href="https://docs.kbase.us/getting-started/narrative">Narrative User Guide</a> has more information. If you have any questions or feature requests, please follow the Contact Us link in the help menu.',
                 backdrop: true
             }
 

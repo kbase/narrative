@@ -92,7 +92,7 @@ define ([
 
         getExampleDataAndRender: function() {
             if (!this.dataConfig) {
-                this.showError('Unable to load example data configuration! Please refresh your page to try again. If this continues to happen, please <a href=\'https://kbase.us/contact-us/\'>click here</a> to contact KBase with the problem.');
+                this.showError('Unable to load example data configuration! Please refresh your page to try again. If this continues to happen, please <a href=\'https://www.kbase.us/support/\'>click here</a> to contact KBase with the problem.');
                 return;
             }
 

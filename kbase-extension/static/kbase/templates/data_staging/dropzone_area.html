@@ -1,5 +1,5 @@
 <form class="kb-dropzone dropzone" style="min-height:200px">
-    <div id="global-info" style="display:none; border-bottom 1px solid #EEE; margin-bottom: 5px">
+    <div id="global-info" style="display:none; border-bottom: 1px solid #EEE; margin-bottom: 5px">
         <div id="total-progress" class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
             <div class="progress-bar progress-bar-success" style="width:0%;"></div>
         </div>
@@ -16,7 +16,7 @@
             <li>Click in this box.</li>
             <li>Drag and drop data files.</li>
             <li>{{#if userInfo.globusLinked}}For large files (over 20GB) or a large number of files use
-                <a href="https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path={{userInfo.user}}" class="globus_link">
+                <a href="{{globusUrl}}" class="globus_link">
                     <i class="fa fa-cloud-upload"></i> Globus.
                 </a>
                 {{else}}

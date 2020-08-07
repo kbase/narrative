@@ -35,7 +35,11 @@ define([
         },
 
         render: function() {
-            var $dropzoneElem = $(this.dropzoneTmpl({userInfo: this.userInfo}));
+            const uploadConfig = Config.get('upload');
+            const $dropzoneElem = $(this.dropzoneTmpl({
+                userInfo: this.userInfo,
+                globusUrl: uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user
+            }));
 
             // there are two anchor elements with same class name .globus_link.
             // One link takes the user to globus site,
@@ -43,7 +47,7 @@ define([
             $dropzoneElem.find('a.globus_link').click(e => {
                 e.stopPropagation();
                 e.preventDefault();
-                if((e.target.href).includes('app.globus.org')) {
+                if(e.target.href === uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user) {
                     let stagingServiceClient = new StagingServiceClient({
                         root: this.stagingUrl,
                         token: Runtime.make().authToken()
@@ -59,7 +63,6 @@ define([
                     window.open(e.target.href, '_blank');
                 }
             });
-            const uploadConfig = Config.get('upload');
             this.$elem.append($dropzoneElem);
             this.dropzone = new Dropzone($dropzoneElem.get(0), {
                 url: this.stagingUrl + '/upload',

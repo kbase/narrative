@@ -36,12 +36,6 @@ define([
 
         render: function() {
             var $dropzoneElem = $(this.dropzoneTmpl({userInfo: this.userInfo}));
-            $dropzoneElem.find('#clear-completed > button').click(e => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.dropzone.removeAllFiles();
-                $dropzoneElem.find('#clear-completed').css({'display': 'none'});
-            });
 
             // there are two anchor elements with same class name .globus_link.
             // One link takes the user to globus site,
@@ -83,12 +77,11 @@ define([
                 .on('totaluploadprogress', (progress) => {
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
                 })
-                .on('addedFile', (file) => {
+                .on('addedfile', (file) => {
                     $dropzoneElem.find('#global-info').css({'display': 'inline'});
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                 })
                 .on('success', (file, serverResponse) => {
-                    $dropzoneElem.find('#clear-completed').css({'display': 'inline'});
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                     file.previewElement.querySelector('#status-message').textContent = 'Completed';
                     file.previewElement.querySelector('.progress').style.display = 'none';

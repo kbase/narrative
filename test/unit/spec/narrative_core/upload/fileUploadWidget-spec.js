@@ -79,7 +79,7 @@ define([
             expect(renderedMsg).toContain(Config.get('upload').globus_upload_url);
             expect(renderedMsg).toContain(fakeUser);
             expect(renderedMsg).not.toContain('For large files (over 20GB), use Globus. Click');
-            expect(renderedMsg).not.toContain('http://kbase.us/transfer-data-from-globus-to-kbase/');
+            expect(renderedMsg).not.toContain('https://docs.kbase.us/data/globus');
         });
 
         it('Should render properly when not linked to globus', () => {
@@ -96,7 +96,7 @@ define([
             expect(renderedMsg).toContain('<li>Click in this box.</li>');
             expect(renderedMsg).toContain('<li>Drag and drop data files.</li>');
             expect(renderedMsg).toContain('For large files (over 20GB), use Globus. Click');
-            expect(renderedMsg).toContain('http://kbase.us/transfer-data-from-globus-to-kbase/');
+            expect(renderedMsg).toContain('https://docs.kbase.us/data/globus');
             expect(renderedMsg).not.toContain('For large files (over 20GB) or a large number of files use');
             expect(renderedMsg).not.toContain(Config.get('upload').globus_upload_url);
         });

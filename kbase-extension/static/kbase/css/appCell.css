@@ -33,9 +33,19 @@
     background-color: rgba(0, 0, 0, 0.03);
 }
 
-.kb-app-row-close-btn-addon {
+.kb-app-row-clip-btn-addon, .kb-app-row-close-btn-addon {
     background: transparent;
     border: 0;
+}
+
+.kb-app-row-clip-btn-addon:active:after {
+    background-color: #fff;
+    border-radius: 3px;
+    border: 1px solid gray;
+    content: 'copied!';
+    margin-top: -5px;
+    padding: 7px;
+    position: absolute;
 }
 
 .cell.selected .btn-default.kb-app-row-close-btn {
@@ -47,7 +57,7 @@
     color: red;
 } */
 
-.kb-app-row-close-btn {
+.kb-app-row-clip-btn, .kb-app-row-close-btn {
     height: 100%;
     margin-left: 1px;
     /* border-left: 3px solid transparent; */

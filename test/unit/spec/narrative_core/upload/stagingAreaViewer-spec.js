@@ -1,5 +1,5 @@
 /*global define*/
-/*global describe, it, xit, expect*/
+/*global describe, it, expect, spyOn*/
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
@@ -13,9 +13,7 @@ define ([
 ], function(
     $,
     StagingAreaViewer,
-    Jupyter,
-    Narrative,
-    TestUtil
+    Jupyter
 ) {
     'use strict';
 

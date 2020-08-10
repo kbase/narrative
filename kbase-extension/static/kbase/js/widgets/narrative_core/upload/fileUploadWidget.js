@@ -75,7 +75,7 @@ define([
                 autoProcessQueue: true,
                 parallelUploads: uploadConfig.parallel_uploads,
                 maxFilesize: uploadConfig.max_file_size,
-                timeout: uploadConfig.timeout, //Config.get('upload_timeout') //60*60*1000   // 5 minutes
+                timeout: uploadConfig.timeout,
             })
                 .on('totaluploadprogress', (progress) => {
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});

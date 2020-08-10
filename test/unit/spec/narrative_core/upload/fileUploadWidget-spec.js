@@ -6,13 +6,11 @@ define([
     'jquery',
     'kbase/js/widgets/narrative_core/upload/fileUploadWidget',
     'base/js/namespace',
-    'dropzone',
     'narrativeConfig'
 ], (
     $,
     FileUploadWidget,
     Jupyter,
-    Dropzone,
     Config
 ) => {
     'use strict';
@@ -21,63 +19,49 @@ define([
         $targetNode,
         fakeUser = 'notAUser';
 
-    const mockUploadEndpoint = (filename, username, isFolder, timeout) => {
+    const mockUploadEndpoint = (filename, username, isFolder) => {
         jasmine.Ajax.stubRequest(Config.url('staging_api_url') + '/upload')
-            .andReturn(() => {
-                const response = {
-                    status: 200,
-                    statusText: 'HTTP/1.1 200 OK',
-                    contentType: 'application/json',
-                    responseText: JSON.stringify([{name: filename, path: `${username}/${filename}`, mtime: 1596747139855, size: 1376, isFolder: isFolder}])
-                };
-                if (timeout) {
-                    jasmine.clock().install();
-                    jasmine.clock().tick(timeout);
-                    jasmine.clock().uninstall();
-                }
-                return response;
+            .andReturn({
+                status: 200,
+                statusText: 'HTTP/1.1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify([{name: filename, path: `${username}/${filename}`, mtime: 1596747139855, size: 1376, isFolder: isFolder}])
             });
     };
 
     const createMockFile = (filename) => {
         let file = new File(['file contents'], filename, { type: 'text/html' });
-        file.status = Dropzone.ADDED;
-        file.accepted = true;
-        file.upload = {
-            filename: filename
-        };
         return file;
     };
 
-    beforeEach(() => {
-        Jupyter.narrative = {
-            userId: fakeUser,
-            getAuthToken: () => { return 'fakeToken'; },
-            sidePanel: {
-                '$dataWidget': {
-                    '$overlayPanel': {}
-                }
-            },
-            showDataOverlay: () => {}
-        };
-        $targetNode = $('<div>');
-        fuWidget = new FileUploadWidget($targetNode, {
-            path: '/',
-            userInfo: {
-                user: fakeUser,
-                globusLinked: false
-            }
-        });
-        // jasmine.clock().install();
-        jasmine.Ajax.install();
-    });
-
-    afterEach(() => {
-        jasmine.Ajax.uninstall();
-        // jasmine.clock().uninstall();
-    });
-
     describe('Test the kbaseNarrativeSidePublicTab widget', () => {
+        beforeEach(() => {
+            jasmine.Ajax.install();
+            Jupyter.narrative = {
+                userId: fakeUser,
+                getAuthToken: () => { return 'fakeToken'; },
+                sidePanel: {
+                    '$dataWidget': {
+                        '$overlayPanel': {}
+                    }
+                },
+                showDataOverlay: () => {}
+            };
+            $targetNode = $('<div>');
+            fuWidget = new FileUploadWidget($targetNode, {
+                path: '/',
+                userInfo: {
+                    user: fakeUser,
+                    globusLinked: false
+                }
+            });
+        });
+
+        afterEach(() => {
+            jasmine.Ajax.requests.reset();
+            jasmine.Ajax.uninstall();
+        });
+
         it('Should render properly when linked to globus', () => {
             const $node = $('<div>'),
                 fuw = new FileUploadWidget($node, {
@@ -99,7 +83,15 @@ define([
         });
 
         it('Should render properly when not linked to globus', () => {
-            const renderedMsg = $targetNode.find('.dz-message').html();
+            const $node = $('<div>'),
+                fuw = new FileUploadWidget($node, {
+                    path: '/',
+                    userInfo: {
+                        user: fakeUser,
+                        globusLinked: false
+                    }
+                }),
+                renderedMsg = $node.find('.dz-message').html();
             expect(renderedMsg).toContain('<p>Three ways to add data to the staging area:</p>');
             expect(renderedMsg).toContain('<li>Click in this box.</li>');
             expect(renderedMsg).toContain('<li>Drag and drop data files.</li>');
@@ -110,9 +102,17 @@ define([
         });
 
         it('Should be able to set and retrieve the path', () => {
+            const $node = $('<div>'),
+                fuw = new FileUploadWidget($node, {
+                    path: '/',
+                    userInfo: {
+                        user: fakeUser,
+                        globusLinked: true
+                    }
+                });
             const newPath = 'newPath';
-            fuWidget.setPath(newPath);
-            expect(fuWidget.getPath()).toEqual(newPath);
+            fuw.setPath(newPath);
+            expect(fuw.getPath()).toEqual(newPath);
         });
 
         it('Should start and succeed on an upload when a file is given', (done) => {
@@ -142,7 +142,7 @@ define([
             fuWidget.dropzone.options.timeout = 100; // ms
             expect(fuWidget.dropzone.options.timeout).toBe(100);
             const filename='foo.txt';
-            mockUploadEndpoint(filename, fakeUser, false, 1500);
+            mockUploadEndpoint(filename, fakeUser, false);
             const mockFile = createMockFile(filename);
             fuWidget.dropzone.on('error', (file, errorMessage) => {
                 expect(errorMessage).toBeDefined();

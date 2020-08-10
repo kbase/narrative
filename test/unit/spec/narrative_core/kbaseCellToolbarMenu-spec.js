@@ -1,12 +1,20 @@
-/*global describe, it, expect */
+/*global describe, it, expect, beforeAll */
 /*jslint white: true*/
 define([
-    'kbaseCellToolbarMenu'
+    'kbaseCellToolbarMenu',
+    'base/js/namespace'
 ], function(
     Widget,
+    Jupyter
 ) {
     'use strict';
     describe('Test the kbaseCellToolbarMenu widget', function() {
+        beforeAll(() => {
+            Jupyter.narrative = {
+                readonly: false
+            };
+        });
+
         const mockParentCell = (mode, stage, collapsedState) => {
             const messageContainer = document.createElement('div');
             const currentState = {
@@ -41,9 +49,6 @@ define([
                 'div.title div:nth-child(3)'
             )[0].innerText;
         };
-
-        it('Should do things', function() {
-        });
 
         it('Should say Error when minimized and mode is error', function() {
             expect(

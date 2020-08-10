@@ -34,7 +34,7 @@ define([
         return file;
     };
 
-    describe('Test the kbaseNarrativeSidePublicTab widget', () => {
+    describe('Test the fileUploadWidget', () => {
         beforeEach(() => {
             jasmine.Ajax.install();
             Jupyter.narrative = {
@@ -159,7 +159,7 @@ define([
 
         it('Should open a Globus window on click', () => {
             // first pass = no globus link.
-            const unlinkedLink = 'http://kbase.us/transfer-data-from-globus-to-kbase/';
+            const unlinkedLink = 'https://docs.kbase.us/data/globus';
             spyOn(window, 'open').and.callThrough();
             fuWidget.$elem.find('a.globus_link').click();
             expect(window.open).toHaveBeenCalledWith(unlinkedLink, '_blank');

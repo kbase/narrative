@@ -35,11 +35,10 @@ define ([
             groups_url: Config.url('groups'),
             loadingImage: Config.get('loading_gif'),
             user_page_link: Config.url('profile_page'),
-            ws_name_or_id: null,
+            wsId: null,
             max_name_length: 35,
             max_list_height: '250px',
-            add_user_input_width: '200px',
-            wsID: Config.get('workspaceId'),
+            add_user_input_width: '200px'
         },
         ws: null, // workspace client
         narrOwner: null,
@@ -52,8 +51,8 @@ define ([
             this.$mainPanel = $('<div style="text-align:center">');
             this.$elem.append(this.$mainPanel);
             this.showWorking('loading narrative information');
-            
-            if (!this.options.ws_name_or_id) {
+
+            if (!this.options.wsId) {
                 //fail!
             }
             return this;
@@ -68,7 +67,7 @@ define ([
             this.my_user_id = auth.user_id;
 
             const p1 = this.fetchOrgs(this.authClient.getAuthToken());
-            const p2 = this.fetchNarrativeOrgs(this.options.wsID, this.authClient.getAuthToken());
+            const p2 = this.fetchNarrativeOrgs(this.options.wsId, this.authClient.getAuthToken());
             Promise.all([p1, p2]).then(() => {
                 this.refresh();
             })
@@ -85,7 +84,7 @@ define ([
         },
 
         /**
-         * fetch organizations that user is associated. 
+         * fetch organizations that user is associated.
          * @param {string} token  authorization token
          */
         fetchOrgs: function(token) {
@@ -133,12 +132,12 @@ define ([
                 .catch(error => console.error('Error while fetching group info:', error));
         },
         /**
-         * fetch organizations that workspace is associated. 
-         * @param {int} wsID workspace id
+         * fetch organizations that workspace is associated.
+         * @param {int} wsId workspace id
          * @param {string} token  authorization token
          */
-        fetchNarrativeOrgs: function(wsID, token) {
-            var groupUrl = this.options.groups_url+'/group?resourcetype=workspace&resource='+wsID;
+        fetchNarrativeOrgs: function(wsId, token) {
+            var groupUrl = this.options.groups_url+'/group?resourcetype=workspace&resource='+wsId;
             return fetch(groupUrl, {
                 method: "GET",
                 mode: "cors",
@@ -161,29 +160,22 @@ define ([
         user_data: {},
         all_users: null,
         getInfoAndRender: function () {
-            var self = this;
-            if (!self.ws || !self.options.ws_name_or_id) {
+            const self = this;
+            if (!self.ws || !self.options.wsId) {
                 return;
             }
-            var wsIdentity = {};
-            if (self.options.ws_name_or_id) {
-                if (/^[1-9]\d*$/.test(self.options.ws_name_or_id)) {
-                    wsIdentity.id = parseInt(self.options.ws_name_or_id);
-                } else {
-                    wsIdentity.workspace = self.options.ws_name_or_id;
-                }
-            }
+            const wsIdentity = {id: self.options.wsId};
 
             Promise.resolve(self.ws.get_workspace_info(wsIdentity))
-            .then(function (info) {
+            .then((info) => {
                 self.ws_info = info;
                 self.narrOwner = info[2];
                 return Promise.resolve(self.ws.get_permissions(wsIdentity));
             })
-            .then(function (perm) {
+            .then((perm) => {
                 self.ws_permissions = [];
                 self.user_data = {};
-                var usernameList = [ self.my_user_id ];
+                const usernameList = [ self.my_user_id ];
                 Object.keys(perm).forEach(function(u) {
                     if (u === '*') {
                         return;
@@ -193,14 +185,14 @@ define ([
                 });
                 return self.authClient.getUserNames(self.authClient.getAuthToken(), usernameList);
             })
-            .then(function (data) {
+            .then((data) => {
                 self.user_data = data;
             })
-            .catch(function(error) {
+            .catch((error) => {
                 console.error(error);
                 self.reportError(error);
             })
-            .finally(function() {
+            .finally(() => {
                 self.render();
             });
         },
@@ -364,7 +356,7 @@ define ([
 
                 // if there are orgs already associated with the narrative, add the org list.
                 if(this.narrativeOrgList){
-                    var $narrativeOrgsDiv = $('<table>').css({'border': '1px solid rgb(170, 170, 170)', 'border-radius': '4px', 'text-align': 'left', 'width': '51%', 'padding': '10px', 'margin': 'auto', 'margin-top': '10px'});                    
+                    var $narrativeOrgsDiv = $('<table>').css({'border': '1px solid rgb(170, 170, 170)', 'border-radius': '4px', 'text-align': 'left', 'width': '51%', 'padding': '10px', 'margin': 'auto', 'margin-top': '10px'});
                     this.narrativeOrgList.forEach((value, key, map) => {
                         let url = window.location.origin + "/#org/" + key;
                         let $href = $('<a>').attr("href", url);
@@ -374,7 +366,7 @@ define ([
                         $narrativeOrgsDiv.append($tr);
                     })
                 }
-                
+
                 $shareWithOrgDiv.append($addOrgDiv); // put addOrgDiv into shareWithOrgDiv
                 $shareWithOrgDiv.append($narrativeOrgsDiv); // put list of narrative div
             } else {

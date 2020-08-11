@@ -333,7 +333,7 @@ define([
             });
         shareDialog.getElement().one('shown.bs.modal', function () {
             shareWidget = new KBaseNarrativeSharePanel(sharePanel.empty(), {
-                ws_name_or_id: this.getWorkspaceName()
+                wsId: this.workspaceId
             });
         }.bind(this));
         $('#kb-share-btn').click(function () {

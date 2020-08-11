@@ -16,10 +16,12 @@ The following changes are required:
 - start the container:
 
     ```bash
-    ENV={ci/next/prod} make run-dev-image
+    ENV={ci/next/prod} PORT=<some port number> make run-dev-image
     ```
 
-    where ENV sets the CONFIG_ENV environment variable for the Docker container; ci is the environment in which you are working (needs to be same as the ui is running on.)
+    where 
+    * ENV sets the CONFIG_ENV environment variable for the Docker container; ci is the environment in which you are working (needs to be same as the ui is running on.)
+    * PORT sets the host port that can be used. E.g. if you use PORT=12345, then http://localhost:12345 will start the Narrative. Default is 8888. Note that the logging on the console will always show 8888 since that will be used internal to the container.
 
     - uses the config set $env; makes it easy to test different environments alongside ui
     - uses kbase-dev network; allows interoperation with the kbase-ui proxier 

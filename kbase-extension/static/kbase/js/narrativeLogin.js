@@ -79,7 +79,12 @@ define ([
                 .click(function () {
                     dialog.hide();
                     var newToken = $inputField.val();
-                    authClient.setAuthToken(newToken);
+                    authClient.setCookie({
+                        name: 'kbase_session',
+                        value: newToken,
+                        domain: 'localhost',
+                        secure: false
+                    });
                     location.reload();
                 })]
         });

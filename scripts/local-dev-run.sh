@@ -9,7 +9,7 @@ if [ -z "$ENV" ]; then
 	echo "The 'ENV' environment variable is required, set to either ci, next, appdev, or prod"
 	exit 1
 fi
-if [ -z "$PORT"]; then
+if [ -z "$PORT" ]; then
 	$PORT=8888
 fi
 echo "Starting Narrative for environment '${ENV}'"

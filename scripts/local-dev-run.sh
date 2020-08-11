@@ -9,6 +9,9 @@ if [ -z "$ENV" ]; then
 	echo "The 'ENV' environment variable is required, set to either ci, next, appdev, or prod"
 	exit 1
 fi
+if [ -z "$PORT"]; then
+	$PORT=8888
+fi
 echo "Starting Narrative for environment '${ENV}'"
 
 mount_local_dirs="${mount:-t}"
@@ -18,7 +21,7 @@ if [ "${mount_local_dirs}" == "t" ]; then
 	docker run \
 		--dns=8.8.8.8 \
 		-e "CONFIG_ENV=${ENV}" \
-		-p 8888:8888 \
+		-p ${PORT}:8888 \
 		--network=kbase-dev \
 		--name=narrative  \
 		--mount type=bind,src=${root}/${kbase_dir},dst=${container_root}/${kbase_dir} \
@@ -32,7 +35,7 @@ else
 	docker run \
 		--dns=8.8.8.8 \
 		-e "CONFIG_ENV=${ENV}" \
-		-p 8888:8888 \
+		-p ${PORT}:8888 \
 		--network=kbase-dev \
 		--name=narrative  \
 		--rm -it \

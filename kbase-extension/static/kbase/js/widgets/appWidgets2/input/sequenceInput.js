@@ -7,7 +7,6 @@ define([
     'common/runtime',
     'common/lang',
     'common/props',
-    'common/unodep',
     '../paramResolver',
     '../validators/sequence',
     '../fieldWidgetMicro',
@@ -23,7 +22,6 @@ define([
     Runtime,
     lang,
     Props,
-    Unodep,
     Resolver,
     Validation,
     FieldWidget
@@ -223,9 +221,6 @@ define([
                     }, [
                         span({ dataElement: 'index' }, String(control.index + 1)), '.'
                     ]);
-                    const clipboardButton = Unodep.clipboardButton(
-                        div, button, events, ui, control
-                    );
                     postButton = div({
                         class: 'input-group-addon kb-app-row-close-btn-addon',
                         style: {
@@ -255,7 +250,6 @@ define([
                     }, [
                         div({ class: 'input-group' }, [
                             div({ id: widgetId }),
-                            clipboardButton,
                             postButton
                         ])
                     ]);

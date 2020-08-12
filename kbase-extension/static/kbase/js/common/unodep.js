@@ -6,36 +6,6 @@ define([
     'use strict';
 
     /*
-     * A clipboard button for copying data from select boxes.
-     */
-    function clipboardButton(div, button, events, ui, control) {
-        return div({
-            class: 'input-group-addon kb-app-row-clip-btn-addon',
-            style: {
-                padding: '0',
-                height: '100%'
-            }
-        }, button({
-            class: 'btn btn-xs kb-app-row-clip-btn',
-            type: 'button',
-            dataIndex: String(control.index),
-            id: events.addEvent({
-                type: 'click',
-                handler: async function() {
-                    const text = (control
-                        .node
-                        .querySelectorAll('[role=textbox]')[0]
-                        .innerText
-                    );
-                    await navigator.clipboard.writeText(text);
-                }
-            })
-        }, ui.buildIcon({
-            name: 'clipboard'
-        })));
-    }
-
-    /*
      * Show elapsed time in a friendly fashion.
      */
     function pad(string, width, char, right) {
@@ -138,7 +108,6 @@ define([
     }
 
     return {
-        clipboardButton: clipboardButton,
         formatElapsedTime: formatElapsedTime,
         formatTime: formatTime,
         isEqual: isEqual

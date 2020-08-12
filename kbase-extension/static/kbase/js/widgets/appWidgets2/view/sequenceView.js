@@ -7,7 +7,6 @@ define([
     'common/runtime',
     'common/lang',
     'common/props',
-    'common/unodep',
     '../paramResolver',
     '../validators/sequence',
     '../fieldWidgetMicro',
@@ -23,7 +22,6 @@ define([
     Runtime,
     lang,
     Props,
-    Unodep,
     Resolver,
     Validation,
     FieldWidget
@@ -113,11 +111,12 @@ define([
 
         // TODO: wrap this in a new type of field control -- 
         //   specialized to be very lightweight for the sequence control.
-        function makeSingleViewControl(control, events) {
+        function makeSingleViewControl(control) {
             return resolver.loadViewControl(itemSpec)
                 .then(function(widgetFactory) {
                     // CONTROL
-                    var widgetId = html.genId(),
+                    var postButton,
+                        widgetId = html.genId(),
                         inputBus = runtime.bus().makeChannelBus({
                             description: 'Array input control'
                         }),
@@ -160,9 +159,17 @@ define([
                         }
                     });
 
-                    const clipboardButton = Unodep.clipboardButton(
-                        div, button, events, ui, control
-                    );
+                    postButton = div({
+                        class: 'input-group-addon kb-input-group-addon',
+                        style: {
+                            padding: '0'
+                        }
+                    }, button({
+                        class: 'btn btn-link btn-xs',
+                        type: 'button',
+                        style: { width: '4ex' },
+                        dataIndex: String(control.index)
+                    }, ''));
                     var content = div({
                         dataElement: 'input-row',
                         dataIndex: String(control.index),
@@ -173,7 +180,7 @@ define([
                     }, [
                         div({ class: 'input-group' }, [
                             div({ id: widgetId }),
-                            clipboardButton
+                            postButton
                         ])
                     ]);
                     return {

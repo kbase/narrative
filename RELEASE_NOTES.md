@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Version 4.3.0
+- SCT-2664 - Show the app cell status when in a collapsed state.
+- Added an "Info" tab to all app cells with app information.
+- Updated links to new KBase home page and docs site.
+- Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
+
 ### Version 4.2.1
 - Address problems with SampleSet / AMA Viewer widget.
 - SCT-1822 - fix problems with drag and drop data upload failing for more than 100 files (updated the Dropzone widget to version 5.7.0)

@@ -7,12 +7,13 @@ define([
     'kb_common/utils',
     'kb_service/client/workspace',
     'kb_service/utils',
-    'common/validation',
+    'common/data',
     'common/events',
     'common/runtime',
     'common/ui',
-    'common/data',
+    'common/validation',
     'util/timeFormat',
+    'widgets/appWidgets2/common',
     'kb_sdk_clients/genericClient',
 
     'select2',
@@ -25,17 +26,19 @@ define([
     utils,
     Workspace,
     serviceUtils,
-    Validation,
+    Data,
     Events,
     Runtime,
     UI,
-    Data,
+    Validation,
     TimeFormat,
-    GenericClient) {
+    WidgetCommon,
+    GenericClient) { //eslint-disable-line no-unused-vars
     'use strict';
 
     // Constants
     var t = html.tag,
+        button = t('button'),
         div = t('div'),
         span = t('span'),
         b = t('b'),
@@ -82,7 +85,6 @@ define([
                         if (model.blacklistValues) {
                             return !model.blacklistValues.some(function(value) {
                                 if (objectInfoHasRef(objectInfo, value)) {
-                                    // if (value === getObjectRef(objectInfo)) {
                                     filteredOptions.push(idx);
                                     return true;
                                 }
@@ -94,7 +96,6 @@ define([
                         var selected = false,
                             ref = idx; //getObjectRef(objectInfo);
                         if (objectInfoHasRef(objectInfo, model.value)) {
-                            // if (getObjectRef(objectInfo) === model.value) {
                             selected = true;
                         }
                         return option({
@@ -295,9 +296,13 @@ define([
         function render() {
             return Promise.try(function() {
                 var events = Events.make(),
-                    inputControl = makeInputControl(events),
-                    content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
+                    inputControl = makeInputControl(events);
 
+                ui.setContent('input-container', '');
+                const container = ui.getElement('input-container');
+                const content = WidgetCommon.containerContent(
+                    div, button, events, ui, container, inputControl
+                );
                 ui.setContent('input-container', content);
 
                 $(ui.getElement('input-container.input')).select2({

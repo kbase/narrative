@@ -55,18 +55,7 @@ cd narrative
 kbase-narrative
 ```
 
-Long version:
-
-[Local Narrative setup/deployment](docs/install/local_install.md)
-
-## Server installation (for administrators)
-
-If you want to set up your own Narrative server that uses the Docker framework, the below document will walk you through it. Once the server is set up, you only need to pull new code and build a new Docker image from it. You can also pull Narrative images directly from Dockerhub in the KBase namespace.
-
-The document specifically describes how you would build the system on a [Vagrant](https://www.vagrantup.com) image, but is applicable to any Ubuntu-based system.
-
-[Production Narrative setup/deployment](docs/install/deployment.md)
-[Dockerhub Narrative builds](docs/install/dockerhub_builds.md)
+Long version: [Local Narrative setup](docs/install/local_install.md)
 
 ## Architecture
 

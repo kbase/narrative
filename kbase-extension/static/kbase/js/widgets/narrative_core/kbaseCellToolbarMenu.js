@@ -108,7 +108,6 @@ define([
                 }
             }
             cell.toggleMinMax();
-            // cell.element.trigger('toggleMinMax.cell');
         }
 
         function doToggleCodeView() {
@@ -204,38 +203,7 @@ define([
                 toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
                 dropdownId = html.genId(),
                 menuItems = [
-                    // we can always dream.
-                    //                    {
-                    //                        name: 'help',
-                    //                        label: 'Help',
-                    //                        icon: {
-                    //                            type: 'question',
-                    //                            color: 'black'
-                    //                        },
-                    //                        id: events.addEvent({type: 'click', handler: doHelp})
-                    //                    },
-                    // {
-                    //     name: 'toggle-collapse',
-                    //     label: toggleMinMax === 'maximized' ? 'Collapse' : 'Expand',
-                    //     icon: {
-                    //         type: toggleIcon + '-square-o',
-                    //         color: 'orange'
-                    //     },
-                    //     id: events.addEvent({ type: 'click', handler: doToggleMinMaxCell })
-                    // }
                 ];
-
-            // we can always dream
-            //            if (isKBaseCell(cell)) {
-            //                menuItems.push({
-            //                    name: 'settings',
-            //                    label: 'Settings',
-            //                    icon: {
-            //                        type: 'gear',
-            //                        color: 'black'
-            //                    }
-            //                });
-            //            }
 
             if (cell.cell_type === 'code') {
                 menuItems.push({
@@ -278,11 +246,6 @@ define([
                         type: 'click',
                         handler: () => {
                             cell.toggleBatch();
-                            // var currentBatch = cell.metadata.kbase.appCell['user-settings'].batchMode;
-                            // if (currentBatch === undefined || currentBatch === null) {
-                            //     currentBatch = false;
-                            // }
-                            // cell.metadata.kbase.appCell['user-settings'].batchMode = !currentBatch;
                         }
                     })
                 });
@@ -366,14 +329,48 @@ define([
             });
         }
 
+        function minimizedStatus(mode, stage) {
+            if(mode === 'error' || mode === 'internal-error') {
+                return '<span style="color: red">Error</span>';
+            }
+            if(mode === 'canceled' || mode === 'canceling') {
+                return '<span style="color: orange">Canceled</span>';
+            }
+            if(mode ==='processing' && stage === 'running') {
+                return 'Running';
+            }
+            if(mode ==='processing' && stage === 'queued') {
+                return 'Queued';
+            }
+            if(mode === 'success') {
+                return '<span style="color: green">Success</span>';
+            }
+            return '';
+        }
+
         function render(cell) {
+            /*
+            The cell metadata 'kbase.cellState.toggleMinMax' is the
+            canonical indicator of whether a cell is collapsed or not.
+            */
+            const cellCollapsed = utils.getCellMeta(
+                cell, 'kbase.cellState.toggleMinMax', 'maximized'
+            ) !== 'maximized';
+            const fsmMode = utils.getCellMeta(
+                cell, 'kbase.appCell.fsm.currentState.mode', ''
+            );
+            const fsmStage = utils.getCellMeta(
+                cell, 'kbase.appCell.fsm.currentState.stage', ''
+            );
+            const appStatePretty = minimizedStatus(fsmMode, fsmStage);
+            const collapsedCellStatus = cellCollapsed ? appStatePretty : '';
+
             var events = Events.make({ node: container }),
                 buttons = [
                     div({ class: 'buttons pull-right' }, [
                         span({ class: 'kb-func-timestamp' }),
                         span({ class: 'fa fa-circle-o-notch fa-spin', style: { color: 'rgb(42, 121, 191)', display: 'none' } }),
                         span({ class: 'fa fa-exclamation-triangle', style: { color: 'rgb(255, 0, 0)', display: 'none' } }),
-                        // getOutdatedWarning(cell),
                         (readOnly ? null : button({
                             type: 'button',
                             class: 'btn btn-default btn-xs',
@@ -430,10 +427,20 @@ define([
                         utils.getCellMeta(cell, 'kbase.cellState.message')
                     ])
                 ]),
-                content = div({ class: 'kb-cell-toolbar container-fluid' }, [
-                    div({ class: 'row', style: { height: '56px' } }, [
-                        div({ class: 'col-sm-9 title-container' }, [
-                            div({ class: 'title', style: { display: 'flex', height: '56px' } }, [
+                content = div({ class: 'kb-cell-toolbar' }, [
+                    div({ class: '', style: {
+                        display: 'flex',
+                        flexDirection: 'row',
+                        height: '56px',
+                        justifyContent: 'space-between',
+                    } }, [
+                        div({
+                            class: 'title-container',
+                            style: {flexGrow: '1'}
+                        }, [
+                            div({ class: 'title', style: {
+                                display: 'flex', height: '56px'
+                            } }, [
                                 div({
                                     dataElement: 'icon',
                                     class: 'icon',
@@ -459,7 +466,6 @@ define([
                                     }, [
                                         getOutdatedWarning(cell),
                                         getCellTitle(cell),
-                                        // getOutdatedWarning(cell)
                                     ]),
                                     div({
                                         dataElement: 'subtitle',
@@ -470,10 +476,20 @@ define([
                                             overflow: 'hidden'
                                         }
                                     }, [getCellSubtitle(cell)])
-                                ])
+                                ]),
+                                div(
+                                    { style: {
+                                        margin: '0px 0px 0px auto',
+                                        minWidth: '65px'
+                                    }},
+                                    [collapsedCellStatus]
+                                )
                             ])
                         ]),
-                        div({ class: 'col-sm-3 buttons-container' }, [
+                        div({
+                            class: 'buttons-container',
+                            style: { minWidth: '110px' }
+                        }, [
                             buttons,
                             message
                         ])

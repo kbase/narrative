@@ -274,8 +274,6 @@ define ([
                 .append($('<div>').addClass('col-md-12').append($resultDiv));
             var $noResultsRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-12').append($noResultsDiv));
-            // var $errorRow = $('<div>').addClass('row')
-            //     .append($('<div>').addClass('col-md-8').append($errorDiv));
             var $infoRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-4').append($resultsInfoDiv))
                 .append($('<div>').addClass('col-md-8'));
@@ -300,7 +298,6 @@ define ([
 
             // define the functions that do everything
             var setToLoad = function($panel) {
-                //clearInfo();
                 $panel.empty();
                 var $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                 $panel.append($loadingDiv);
@@ -622,7 +619,6 @@ define ([
 
             //put in a slight delay so on rapid typing we don't make a flood of calls
             var fetchTimeout = null;
-            // var lastQuery = null;
             $input.on('input', function() {
                 // if we were waiting on other input, cancel that request
                 if(fetchTimeout) { window.clearTimeout(fetchTimeout); }
@@ -695,8 +691,6 @@ define ([
                 .append($('<div>').addClass('col-md-12').append($resultDiv));
             var $noResultsRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-12').append($noResultsDiv));
-            // var $errorRow = $('<div>').addClass('row')
-            //     .append($('<div>').addClass('col-md-8').append($errorDiv));
             var $infoRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-4').append($resultsInfoDiv))
                 .append($('<div>').addClass('col-md-8'));
@@ -721,7 +715,6 @@ define ([
 
             // define the functions that do everything
             var setToLoad = function($panel) {
-                //clearInfo();
                 $panel.empty();
                 var $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                 $panel.append($loadingDiv);
@@ -934,7 +927,6 @@ define ([
 
             //put in a slight delay so on rapid typing we don't make a flood of calls
             var fetchTimeout = null;
-            // var lastQuery = null;
             $input.on('input', function() {
                 // if we were waiting on other input, cancel that request
                 if(fetchTimeout) { window.clearTimeout(fetchTimeout); }
@@ -1332,7 +1324,6 @@ define ([
                         }
                         var cgb = new ContigBrowserPanel();
                         cgb.data.options.contig = contigWindowData;
-                        //cgb.data.options.svgWidth = self.width - 28;
                         cgb.data.options.onClickFunction = function(svgElement, feature) {
                             self.showFeatureTab(genome_ref, feature['original_data']['raw'], pref, tabPane);
                         };
@@ -1407,7 +1398,6 @@ define ([
                         // Browser
                         $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                         var start = 0;
-                        // var tenKb = 10000;
                         var twentyKb = 20000;
                         var length = twentyKb;
                         var contig_length = contigData['length'];
@@ -1869,7 +1859,6 @@ define ([
                                     }
                                     var cgb = new ContigBrowserPanel();
                                     cgb.data.options.contig = contigDataForBrowser;
-                                    //cgb.data.options.svgWidth = self.width - 28;
                                     cgb.data.options.onClickFunction = function(svgElement, feature) {
                                         self.showFeatureTab(genome_ref, feature['original_data']['raw'], pref, tabPane);
                                     };

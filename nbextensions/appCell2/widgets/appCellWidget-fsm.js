@@ -12,8 +12,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false
@@ -67,8 +66,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: [{
                         selector: {
@@ -296,8 +294,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configureBatch: [{
                         selector: {
@@ -396,8 +393,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configureBatch: [{
                         selector: {
@@ -537,8 +533,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
@@ -633,8 +628,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
@@ -738,8 +732,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
@@ -849,8 +842,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
@@ -947,8 +939,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
@@ -1040,8 +1031,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
@@ -1129,8 +1119,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
@@ -1201,8 +1190,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
@@ -1278,8 +1266,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
@@ -1339,8 +1326,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
@@ -1417,8 +1403,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
@@ -1495,8 +1480,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
@@ -1554,8 +1538,7 @@ define([], function() {
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
-                        hidden: true
+                        enabled: true
                     },
                     configure: {
                         enabled: false,

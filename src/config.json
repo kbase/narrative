@@ -165,8 +165,8 @@
         "google_analytics_id": "UA-74532036-1"
     },
     "dev_mode":  true,
-    "git_commit_hash": "465a86a62",
-    "git_commit_time": "Fri May 22 16:29:47 2020 -0700",
+    "git_commit_hash": "bf62933",
+    "git_commit_time": "Fri Jun 5 13:45:19 2020 -0700",
     "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif",
     "name": "KBase Narrative",
     "next": {
@@ -326,6 +326,12 @@
         "hideDelay": 0,
         "showDelay": 750
     },
+    "upload": {
+        "timeout": 0,
+        "parallel_uploads": 10,
+        "max_file_size": 20480,
+        "globus_upload_url": "https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a"
+    },
     "use_local_widgets": true,
-    "version": "4.2.1"
+    "version": "4.3.0"
 }

@@ -419,7 +419,6 @@ define([
                                     return Validation[method](test.value, options);
                                 })
                                     .then(function (result) {
-                                        // console.log(result);
                                         Object.keys(test.result).forEach(function (key) {
                                             expect(result[key]).toEqual(test.result[key]);
                                         });
@@ -433,9 +432,7 @@ define([
                                 return Validation[method](test.value, test.options);
                             })
                                 .then(function (result) {
-                                    // console.log(result);
                                     Object.keys(test.result).forEach(function (key) {
-                                        // console.log(key, result[key], test.result[key]);
                                         expect(result[key]).toEqual(test.result[key]);
                                     });
                                     done();
@@ -572,7 +569,6 @@ define([
                             errorMessage: 'value must be numeric',
                             value: 'abc',
                             parsedValue: undefined
-                                // message: 'value must be a string (it is of type "undefined")'
                         }
                     }
                 ],
@@ -797,7 +793,6 @@ define([
                             errorMessage: 'Invalid integer format',
                             value: 'abc',
                             parsedValue: undefined
-                                // message: 'value must be a string (it is of type "undefined")'
                         }
                     },
                     {

@@ -64,6 +64,8 @@ requirejs.config({
     },
 
     callback: function() {
+        'use strict';
+
         require(['testUtil'], function(TestUtil) {
             TestUtil.make().then(function() {
                 window.__karma__.start();

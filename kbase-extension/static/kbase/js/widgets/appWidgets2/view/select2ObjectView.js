@@ -13,7 +13,7 @@ define([
     'common/ui',
     'common/data',
     'util/timeFormat',
-
+    'widgets/appWidgets2/common',
     'select2',
     'bootstrap',
     'css!font-awesome'
@@ -29,11 +29,14 @@ define([
     Runtime,
     UI,
     Data,
-    TimeFormat) {
+    TimeFormat,
+    WidgetCommon,
+) {
     'use strict';
 
     // Constants
     var t = html.tag,
+        button = t('button'),
         div = t('div'),
         span = t('span'),
         b = t('b'),
@@ -254,9 +257,13 @@ define([
         function render() {
             return Promise.try(function() {
                 var events = Events.make(),
-                    inputControl = makeInputControl(events),
-                    content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
+                    inputControl = makeInputControl(events);
 
+                ui.setContent('input-container', '');
+                const container = ui.getElement('input-container');
+                const content = WidgetCommon.containerContent(
+                    div, button, events, ui, container, inputControl
+                );
                 ui.setContent('input-container', content);
 
                 $(ui.getElement('input-container.input')).select2({

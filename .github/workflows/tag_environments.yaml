@@ -41,8 +41,8 @@ jobs:
       if: github.event.pull_request.merged == false
       run: |
         echo ::set-env name=ISDEV::$(curl -s https://github.com/kbase/narrative/packages/337035/versions | grep -c $MY_SHA)
-        echo ::set-env name=ISNEXT::$(curl -s https://github.com/kbase/narrative/packages/337041/versions | grep -c $MY_SHA)
         echo ::set-env name=ISCI::$(curl -s https://github.com/kbase/narrative/packages/337047/versions | grep -c $MY_SHA)
+        echo ::set-env name=ISNEXT::$(curl -s https://github.com/kbase/narrative/packages/337041/versions | grep -c $MY_SHA)
 
 
 ## Confirm variables
@@ -85,6 +85,17 @@ jobs:
         docker push docker.pkg.github.com/$MY_DEV_APP:$GITHUB_HEAD_REF
         docker push docker.pkg.github.com/$MY_DEV_APP:$PULL_NUMBER
 
+    - name: Tag CI
+      if: contains( github.event.pull_request.labels.*.name, 'ci') && env.ISCI < 1 && github.event.pull_request.merged == false
+      run: |
+        docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
+        docker pull docker.pkg.github.com/$TEST_APP:sha-$MY_SHA
+        docker tag docker.pkg.github.com/$TEST_APP:sha-$MY_SHA docker.pkg.github.com/$MY_CI_APP:sha-$MY_SHA
+        docker tag docker.pkg.github.com/$MY_CI_APP:sha-$MY_SHA docker.pkg.github.com/$MY_CI_APP:$PULL_NUMBER
+        docker tag docker.pkg.github.com/$MY_CI_APP:sha-$MY_SHA docker.pkg.github.com/$MY_CI_APP:$GITHUB_HEAD_REF
+        docker push docker.pkg.github.com/$MY_CI_APP:sha-$MY_SHA
+        docker push docker.pkg.github.com/$MY_CI_APP:$GITHUB_HEAD_REF
+        docker push docker.pkg.github.com/$MY_CI_APP:$PULL_NUMBER
 
     - name: Tag Next
       if: contains( github.event.pull_request.labels.*.name, 'next') && env.ISNEXT < 1 && github.event.pull_request.merged == false
@@ -97,15 +108,3 @@ jobs:
         docker push docker.pkg.github.com/$MY_NEXT_APP:sha-$MY_SHA
         docker push docker.pkg.github.com/$MY_NEXT_APP:$GITHUB_HEAD_REF
         docker push docker.pkg.github.com/$MY_NEXT_APP:$PULL_NUMBER
-
-    - name: Tag CI
-      if: contains( github.event.pull_request.labels.*.name, 'ci') && env.ISCI < 1 && github.event.pull_request.merged == false
-      run: |
-        docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
-        docker pull docker.pkg.github.com/$TEST_APP:sha-$MY_SHA
-        docker tag docker.pkg.github.com/$TEST_APP:sha-$MY_SHA docker.pkg.github.com/$MY_CI_APP:sha-$MY_SHA
-        docker tag docker.pkg.github.com/$MY_CI_APP:sha-$MY_SHA docker.pkg.github.com/$MY_CI_APP:$PULL_NUMBER
-        docker tag docker.pkg.github.com/$MY_CI_APP:sha-$MY_SHA docker.pkg.github.com/$MY_CI_APP:$GITHUB_HEAD_REF
-        docker push docker.pkg.github.com/$MY_CI_APP:sha-$MY_SHA
-        docker push docker.pkg.github.com/$MY_CI_APP:$GITHUB_HEAD_REF
-        docker push docker.pkg.github.com/$MY_CI_APP:$PULL_NUMBER

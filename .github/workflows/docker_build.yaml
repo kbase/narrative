@@ -7,6 +7,34 @@ on:
 
 jobs:
 
+  show_env:
+    runs-on: ubuntu-16.04
+    steps:
+    - name: Dump GitHub context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+    - name: Dump job context
+      env:
+        JOB_CONTEXT: ${{ toJson(job) }}
+      run: echo "$JOB_CONTEXT"
+    - name: Dump steps context
+      env:
+        STEPS_CONTEXT: ${{ toJson(steps) }}
+      run: echo "$STEPS_CONTEXT"
+    - name: Dump runner context
+      env:
+        RUNNER_CONTEXT: ${{ toJson(runner) }}
+      run: echo "$RUNNER_CONTEXT"
+    - name: Dump strategy context
+      env:
+        STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+      run: echo "$STRATEGY_CONTEXT"
+    - name: Dump matrix context
+      env:
+        MATRIX_CONTEXT: ${{ toJson(matrix) }}
+      run: echo "$MATRIX_CONTEXT"
+
   docker_deploy:
     runs-on: ubuntu-latest
     steps:
@@ -21,11 +49,12 @@ jobs:
       run: |
         echo ::set-env name=APP_VERSION_NUM::$(sed -n '/module-version:/{n;p;}' kbase.yml | sed 's/ //g')
         echo ::set-env name=MY_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-dev")
+        echo ::set-env name=MY_APP2::$(echo {{ github.event.pull_request.repository }} | awk -F / '{print $1}')
         echo ::set-env name=MY_SHA::$(git rev-parse --short=7 HEAD)
+        echo ::set-env name=MY_SHA2::$(echo {{ github.event.pull_request.head.sha }} | cut -c 1-7)
         echo ::set-env name=MY_BRANCH::$(git branch --show-current)
         echo ::set-env name=PR::$(echo "$GITHUB_REF" | awk -F / '{print $3}')
         echo ::set-env name=PULL_NUMBER::$(echo "$GITHUB_REF" | awk -F / '{print $2,$3}' | sed -e 's/ /_/g')
-
 
     - name: Verify Version and Repo Name
       run: |
@@ -40,6 +69,16 @@ jobs:
         echo "HeadRef:" $GITHUB_HEAD_REF
         echo "Branch:" $MY_BRANCH
 
+    - name: Show Test Vars
+      run: |
+        echo "SHA:" ${{ github.event.pull_request.head.sha }}
+        echo "MY_SHA2:" $MY_SHA2
+        echo "PR#:" ${{ github.event.pull_request.number }}
+        echo "Origin Branch:" ${{ github.head_ref }}
+        echo "App:" ${{ github.repository }}
+        echo "MY_APP2" $MY_APP2
+
+
     - name: Build and Push to Packages
       if: "!contains(github.event.head_commit.message, 'skip ci')" 
       run: |
@@ -53,21 +92,3 @@ jobs:
         docker push docker.pkg.github.com/$MY_APP:sha-$MY_SHA
         docker push docker.pkg.github.com/$MY_APP:$GITHUB_HEAD_REF
         docker push docker.pkg.github.com/$MY_APP:$PULL_NUMBER
-
-    # - name: Build and Push to Packages
-    #   if: "!contains(github.event.head_commit.message, 'skip ci')"    
-    #   uses: docker/build-push-action@v1
-    #   with:
-    #     username: ${{ github.actor }}
-    #     password: ${{ secrets.GITHUB_TOKEN }}
-    #     registry: docker.pkg.github.com
-    #     repository: ${{ env.MY_APP }}
-    #     # tag_with_ref: true
-    #     tag_with_sha: true
-    #     # tags: ${{ github.event.number }},${{ env.APP_VERSION_NUM }}
-    #     # tags: ${{ github.event.number }},${{ env.APP_VERSION_NUM }}
-    #     tags: ${{ env.MY_BRANCH}}
-
-# Variable "env.MY_BRANCH" fails. Can only seem to do via PR.
-# The limitations in naming with `docker/build-push-action@v1` aren't worth the 3 lines of code saved.
-# Migrating to stock docker commands to get around the excess of variables we're using currently (and to make branch & PR tagging work the way we need).

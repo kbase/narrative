@@ -9,53 +9,66 @@ on:
 
 jobs:
 
+  show_env:
+    runs-on: ubuntu-16.04
+    steps:
+    - name: Dump GitHub context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+    - name: Dump job context
+      env:
+        JOB_CONTEXT: ${{ toJson(job) }}
+      run: echo "$JOB_CONTEXT"
+    - name: Dump steps context
+      env:
+        STEPS_CONTEXT: ${{ toJson(steps) }}
+      run: echo "$STEPS_CONTEXT"
+    - name: Dump runner context
+      env:
+        RUNNER_CONTEXT: ${{ toJson(runner) }}
+      run: echo "$RUNNER_CONTEXT"
+    - name: Dump strategy context
+      env:
+        STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+      run: echo "$STRATEGY_CONTEXT"
+    - name: Dump matrix context
+      env:
+        MATRIX_CONTEXT: ${{ toJson(matrix) }}
+      run: echo "$MATRIX_CONTEXT"
+
+
   tag_prod:
     runs-on: ubuntu-latest
     steps:
 
-    # - name: Check out GitHub Repo
-    #   if: github.event.action == 'closed' && github.event.pull_request.merged == true
-    #   uses: actions/checkout@v2
-    #   with:
-    #     ref: ${{ github.event.pull_request.head.ref }}
-
-
     - name: Set App Version and Name Vars
       if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
       run: |
-        echo ::set-env name=MY_SHA::$(git rev-parse --short=7 HEAD)
-        echo ::set-env name=PULL_NUMBER::$(git log | grep $GITHUB_HEAD_REF | awk '{print $4}' | sed -e 's/#/pull_/g')
-        echo ::set-env name=MY_BRANCH::${{ github.event.pull_request.head.ref }}
-        echo ::set-env name=MY_REF::$${{ github.event.pull_request.head.ref }}
-        echo ::set-env name=APP_VERSION_NUM::$(sed -n '/module-version:/{n;p;}' kbase.yml | sed 's/ //g')
         echo ::set-env name=TEST_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-dev")
+        echo ::set-env name=MY_APP2::${{ github.event.pull_request.repository }} | awk -F / '{print $1}'
+        echo ::set-env name=MY_SHA2::${{ github.event.pull_request.head.sha }} | cut -c 1-7 
         echo ::set-env name=MY_PROD_APP::$(echo ${GITHUB_REPOSITORY}/$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}' | sed -e "s/:refs//")"-prod")
+        echo "HEAD_SHA:" ${{ github.event.pull_request.head.sha }}
+        echo "EVENT:" ${{ github.event }}
+        echo "PR:" ${{ github.event.pull_request }}
+        echo "WORKFLOW:" ${{ github.event.workflow }}
+        echo "RUN_NO:" ${{ github.run_number }}
+        echo "SHA:" ${{ github.sha }}
+        echo "REF:" ${{ github.ref }}
+        echo "HEAD_REF:" ${{ github.head_ref }}
+        echo "BASE_REF:" ${{ github.base_ref }}
+        echo "CONTEXT:" ${{ github }}
+        echo "NEW_HEAD_REF:" 
 
-
-## Determine if the current image is already tagged for the various environments
-## (Mis)uses the :github: v4 GraphQL API
-## TODO: Replace `registryPackages` with `$VERSIONS` or newer equivalent
-    # - name: Check for existing images
-    #   if: github.event.action == 'closed' && github.event.pull_request.merged == true
-    #   run: |
-    #     echo ::set-env name=ISPROD::$(curl -sL -X POST https://api.github.com/graphql -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }} " -d '{"query":"query{repository(owner:\"jsfillman\",name:\"sdk_ci_demopy\"){registryPackages(first:100,registryPackageType:\"DOCKER\",name: \"sdk_ci_demopy\"){nodes{versions(first:100){nodes{version}}}}}}"}' | jq . | grep -c $MY_SHA)
-
-
-## Confirm variables
-    - name: Verify Version and Repo Name
-      if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    - name: Show Test Vars
       run: |
-        echo "Version:" $APP_VERSION_NUM
-        echo "Repo:" $GITHUB_REPOSITORY
-        echo "My SHA:" $MY_SHA
-        echo "Image count prod:" $ISPROD
-        echo "Prod Endpoint:" $MY_PROD_APP
-        echo "Versions:" $VERSIONS
-        echo "Checking Out:" ${{ github.event.pull_request.head.ref }}
-        echo "SHA:" $GITHUB_SHA
-        echo "REF:" $GITHUB_REF
-        echo "HeadRef:" $GITHUB_HEAD_REF
-        echo "PR:" $PULL_NUMBER
+        echo "SHA:" ${{ github.event.pull_request.head.sha }}
+        echo "MY_SHA2:" $MY_SHA2
+        echo "PR#:" ${{ github.event.pull_request.number }}
+        echo "Origin Branch:" ${{ github.head_ref }}
+        echo "Repo:" ${{ github.repository }}
+        echo "MY_APP2" $MY_APP2
 
 
 ## Set target Docker image based on new pull request label
@@ -65,7 +78,7 @@ jobs:
       run: |
         docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
         docker pull docker.pkg.github.com/$TEST_APP:$GITHUB_HEAD_REF
-        docker tag docker.pkg.github.com/$TEST_APP:$GITHUB_HEAD_REF docker.pkg.github.com/$MY_PROD_APP:$GITHUB_HEAD_REF
+        docker tag docker.pkg.github.com/$TEST_APP:$GITHUB_HEAD_REF docker.pkg.github.com/$MY_PROD_APP:$GITHUB_REF
         docker tag docker.pkg.github.com/$TEST_APP:$GITHUB_HEAD_REF docker.pkg.github.com/$MY_PROD_APP:latest
-        docker push docker.pkg.github.com/$MY_PROD_APP:$GITHUB_HEAD_REF
+        docker push docker.pkg.github.com/$MY_PROD_APP:$GITHUB_REF
         docker push docker.pkg.github.com/$MY_PROD_APP:latest

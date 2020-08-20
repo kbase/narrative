@@ -1,8 +1,10 @@
 # Description of PR purpose/changes
 
-Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
+* Please include a summary of the change and which issue is fixed. 
+* Please also include relevant motivation and context. List any dependencies that are required for this change.
 
-Optional Fixes # (issue)
+## Jira Ticket / Issue #
+e.g. https://kbase-jira.atlassian.net/browse/DATAUP-X
 
 ## Type of change
 
@@ -27,4 +29,5 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published in downstream modules
-- [ ] Jira story/task is linked and available in title e.g. (DATAUP-69)
+- [ ] Jira story/task is in title of PR e.g. (DATAUP-69)
+- [ ] Version has been bumped. Release notes have been updated

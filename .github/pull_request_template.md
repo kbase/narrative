@@ -4,12 +4,13 @@
 * Please also include relevant motivation and context.
 * List any dependencies that are required for this change.
 
-## Jira Ticket / Issue #
+# Jira Ticket / Issue #
 e.g. https://kbase-jira.atlassian.net/browse/DATAUP-X
+- [ ] Added the Jira Ticket to the title of the PR e.g. (DATAUP-69 Adds a PR template)
 
 # Testing Instructions
 * Details for how to test the PR: 
-- [ ] Tests pass in travis and locally
+- [ ] Tests pass in travis and locally 
 - [ ] Changes available by spinning up a local narrative and navigating to _X_ to see _Y_
 
 # Dev Checklist:
@@ -22,5 +23,8 @@ e.g. https://kbase-jira.atlassian.net/browse/DATAUP-X
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published in downstream modules
-- [ ] Title of the PR contains Jira ticket followed by the description of the PR e.g. (DATAUP-69 Adds a PR template)
-- [ ] Version has been bumped. Release notes have been updated. Is this a breaking change?
+
+# Develop to Master PR
+
+- [ ] [Version has been bumped](https://semver.org/)
+- [ ] [Release notes](/RELEASE_NOTES.md) have been updated

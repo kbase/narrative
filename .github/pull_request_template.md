@@ -1,27 +1,20 @@
 # Description of PR purpose/changes
 
 * Please include a summary of the change and which issue is fixed. 
-* Please also include relevant motivation and context. List any dependencies that are required for this change.
+* Please also include relevant motivation and context.
+* List any dependencies that are required for this change.
 
 ## Jira Ticket / Issue #
 e.g. https://kbase-jira.atlassian.net/browse/DATAUP-X
 
-## Type of change
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
-
-# How Has This Been Tested?
-
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration
-
-- [ ] Instructions for how to test the PR
+# Testing Instructions
+* Details for how to test the PR: 
+- [ ] Tests pass in travis and locally
+- [ ] Changes available by spinning up a local narrative and navigating to _X_ to see _Y_
 
 # Dev Checklist:
 
-- [ ] My code follows the style guidelines of this project
+- [ ] My code follows the guidelines at https://sites.google.com/truss.works/kbasetruss/development
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] I have made corresponding changes to the documentation
@@ -29,5 +22,5 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published in downstream modules
-- [ ] Jira story/task is in title of PR e.g. (DATAUP-69)
-- [ ] Version has been bumped. Release notes have been updated
+- [ ] Title of the PR contains Jira ticket followed by the description of the PR e.g. (DATAUP-69 Adds a PR template)
+- [ ] Version has been bumped. Release notes have been updated. Is this a breaking change?

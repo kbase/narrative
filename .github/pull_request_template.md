@@ -24,7 +24,7 @@ e.g. https://kbase-jira.atlassian.net/browse/DATAUP-X
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published in downstream modules
 
-# Develop to Master PR
+# Updating Version and Release Notes (if applicable)
 
-- [ ] [Version has been bumped](https://semver.org/)
-- [ ] [Release notes](/RELEASE_NOTES.md) have been updated
+- [ ] [Version has been bumped](https://semver.org/) for each release
+- [ ] [Release notes](/RELEASE_NOTES.md) have been updated for each release (and during the merge of feature branches)

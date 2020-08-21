@@ -186,7 +186,7 @@ define([
                 expect(msg.diagnosis).toBe('optional-empty');
                 done();
             });
-
+            //Could bus.emit not be returning promptly occasionally?
             widget.start({node: node})
                 .then(() => {
                     bus.emit('update', {value: 'foo'})
@@ -209,8 +209,9 @@ define([
 
         it('Should respond to changed select2 option', (done) => {
             let widget = Select2ObjectInput.make(testConfig);
-            bus.on('validation', (msg) => {
-            })
+            // What is this test doing?
+            // bus.on('validation', (msg) => {
+            // })
             bus.on('changed', (msg) => {
                 done();
             });
@@ -229,7 +230,8 @@ define([
                             }
                         }
                     })
-                    return TestUtil.wait(1000);
+                    //Why is there a wait
+                    // return TestUtil.wait(1000);
                 })
                 .then(() => {
                     let $select = $(node).find('select');

@@ -100,6 +100,7 @@ define([
         });
 
         // This is the current failing test
+        // Another change for a commit
         it('Should update value via bus', (done) => {
             // start with one value, change it, then reset.
             // check along the way.

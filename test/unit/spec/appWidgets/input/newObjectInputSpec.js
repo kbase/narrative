@@ -99,6 +99,7 @@ define([
             widget.start().then(() => {bus.emit('run', {node: node})});
         });
 
+        // This is the current failing test
         it('Should update value via bus', (done) => {
             // start with one value, change it, then reset.
             // check along the way.

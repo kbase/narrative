@@ -56,6 +56,7 @@ define([
         // These are still module scope
 
         function authToken() {
+            //Failing line during tests.
             return Jupyter.narrative.getAuthToken();
         }
 

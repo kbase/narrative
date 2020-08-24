@@ -53,8 +53,6 @@ define([
             //What is the purpose of this block?
             console.log(TestUtil.getAuthToken());
             if (TestUtil.getAuthToken()) {
-                //When tests aren't failing, this block doesn't run
-                console.log("TEST MESSAGE NEW object input: TESTUTIL.getAuthToken is TRUE")
                 document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
                 Jupyter.narrative = new Narrative();
                 Jupyter.narrative.authToken = TestUtil.getAuthToken();

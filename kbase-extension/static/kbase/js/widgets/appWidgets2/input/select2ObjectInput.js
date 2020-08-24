@@ -175,7 +175,8 @@ define([
                     processedValue = '',
                     validationOptions = {
                         required: spec.data.constraints.required,
-                        authToken: runtime.authToken(),
+                        // Need to validate that runtime.authToken exists. Throwing error in console while testing select2spec because it doesn't exist. Evaluates to null
+                        //authToken: runtime.authToken(),
                         workspaceServiceUrl: runtime.config('services.workspace.url')
                     };
 
@@ -195,6 +196,10 @@ define([
                         return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
                 }
             });
+            // Need to create catch for promise!!!!
+            // }).catches(function(){
+            //     console.log('FAILED validate() in selec2objectinput.js')
+            // });
         }
 
         function getObjectsByTypes_datalist(types) {

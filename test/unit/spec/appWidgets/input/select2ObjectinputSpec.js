@@ -91,9 +91,7 @@ define([
 
         beforeEach(() => {
             runtime = Runtime.make();
-            console.log("VAULE OF testutil.getAuthToken: ", TestUtil.getAuthToken());
             if (TestUtil.getAuthToken()) {
-                console.log("TEST MESSAGE select2: TESTUTIL.getAuthToken is TRUE")
                 document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
                 Jupyter.narrative = new Narrative();
                 Jupyter.narrative.authToken = TestUtil.getAuthToken();
@@ -198,6 +196,7 @@ define([
         it('Should reset model value by bus', (done) => {
             let widget = Select2ObjectInput.make(testConfig);
             bus.on('validation', (msg) => {
+                console.log('bus.on for should reset');
                 expect(msg.errorMessage).toBeUndefined();
                 expect(msg.diagnosis).toBe('optional-empty');
                 done();
@@ -209,6 +208,7 @@ define([
                 });
         });
 
+        // failing
         it('Should respond to changed select2 option', (done) => {
             let widget = Select2ObjectInput.make(testConfig);
             // What is this test doing?

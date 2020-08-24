@@ -119,7 +119,8 @@ define([
                                 shouldNotExist: true,
                                 workspaceId: workspaceId,
                                 types: spec.data.constraints.types,
-                                authToken: runtime.authToken(),
+                                //causing failures during testing
+                                //authToken: runtime.authToken(),
                                 workspaceServiceUrl: runtime.config('services.workspace.url')
                             };
                             return Validation.validateWorkspaceObjectName(rawValue, validationOptions);

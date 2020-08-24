@@ -50,8 +50,6 @@ define([
         beforeEach(() => {
             runtime = Runtime.make();
 
-            //What is the purpose of this block?
-            console.log(TestUtil.getAuthToken());
             if (TestUtil.getAuthToken()) {
                 document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
                 Jupyter.narrative = new Narrative();
@@ -102,8 +100,7 @@ define([
             widget.start().then(() => {bus.emit('run', {node: node})});
         });
 
-        // This is the current failing test
-        // Another change for a commit
+        // This is one of the current failing tests
         it('Should update value via bus', (done) => {
             // start with one value, change it, then reset.
             // check along the way.

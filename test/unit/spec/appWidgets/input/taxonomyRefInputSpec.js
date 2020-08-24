@@ -139,7 +139,7 @@ define([
                 expect(msg.diagnosis).toBe('valid');
                 done();
             });
-            // What is being tested here?
+
             widget.start({node: node})
                 .then(() => {
                     bus.emit('update', {value: 'foo'})
@@ -180,8 +180,7 @@ define([
                             }
                         }
                     })
-                    // Why is there a wait?
-                    // return TestUtil.wait(1000);
+                    return TestUtil.wait(1000);
                     // $select.val('something').trigger({
                     //     type: 'select2:select',
                     //     params: {

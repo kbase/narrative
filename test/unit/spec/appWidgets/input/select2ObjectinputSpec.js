@@ -91,7 +91,9 @@ define([
 
         beforeEach(() => {
             runtime = Runtime.make();
+            console.log("VAULE OF testutil.getAuthToken: ", TestUtil.getAuthToken());
             if (TestUtil.getAuthToken()) {
+                console.log("TEST MESSAGE select2: TESTUTIL.getAuthToken is TRUE")
                 document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
                 Jupyter.narrative = new Narrative();
                 Jupyter.narrative.authToken = TestUtil.getAuthToken();
@@ -213,6 +215,7 @@ define([
             // bus.on('validation', (msg) => {
             // })
             bus.on('changed', (msg) => {
+                // Should this check the message value compared to the expected test?
                 done();
             });
             widget.start({node: node})

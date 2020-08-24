@@ -49,7 +49,12 @@ define([
     describe('New Object Input tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();
+
+            //What is the purpose of this block?
+            console.log(TestUtil.getAuthToken());
             if (TestUtil.getAuthToken()) {
+                //When tests aren't failing, this block doesn't run
+                console.log("TEST MESSAGE NEW object input: TESTUTIL.getAuthToken is TRUE")
                 document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
                 Jupyter.narrative = new Narrative();
                 Jupyter.narrative.authToken = TestUtil.getAuthToken();
@@ -118,6 +123,9 @@ define([
             });
 
             bus.on('validation', (message) => {
+                console.log("VALIDATION MESSAGE LOG", message);
+                //Failing error LOG: 'VALIDATION MESSAGE LOG', Object{errorMessage: 'Jupyter.narrative.getAuthToken is not a function', diagnosis: 'error'}
+
                 expect(message.isValid).toBeTruthy();
                 let inputElem = node.querySelector('input[data-element="input"]');
                 if (inputElem) {

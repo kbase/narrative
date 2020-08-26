@@ -13,7 +13,7 @@ Developers on the narrative repository need to come into alignment on the git wo
 
 Pending
 
-## Considered Alternatives
+## Alternatives Considered
 
 * Feature Branches
 * Forks
@@ -33,39 +33,40 @@ Paragraph of text
 
 ### Feature Branches
 
-_A feature branch a separate branch in a repo used to implement a single feature in a project._
+_A feature branch is a separate branch in a repository used to implement a single feature in a project._
 
 * `+` Rapid iteration cycle
 * `+` Supports developer collaboration
 * `+` Provides visibility into what each team member is developing
-* `+` All work is being completed in a single repository
-* `-` Additional admin overhead related to repository access
+* `+` All code and changes are located in a single repository
+* `-` Additional admin overhead required to provide developers with write access to the repository
 * `-` More people have write access to a repository leading less fine-grained control of merges
 
 ### Forks
 
-_A fork is a copy of a repository._
+_A fork is a copy of a repository and is created in the developers namespace._
 
-* `+` Less user access management duties for a repository admin
-* `+` Fine-grain control over merging
-* `+` Supports 3rd party development via independent forks
+* `+` Repository admins do not need to grant write access to the repository
+* `+` Admins have complete control over what goes into the repo; content from untrusted sources can be vetted prior to merge
 * `+` Easy to discard experiments and changes
 * `-` Forking is more expensive (git has to do a diff of the entire codebase) and takes up more server space
-* `-` Changes live in different repositories which can be difficult to locate
+* `-` Code changes are scattered over numerous forks in different GitHub namespaces; no central shared repository
 * `-` Does not easily allow for collaboration
-* `-` Developers work in isolation which can lead to knowledge management issues if the team is unaware of where forked repos are located
-* `-` Forks do not have access to github action secrets from the management repository
+* `-` Developers work in isolation which can lead to knowledge management issues if the team is unaware of where forked repositories are located
+* `-` Developers must supply secrets (e.g. authentication data or dev tokens) for any github actions
 * `-` In a team setting keeping all forked repositories in sync can become error prone due to the sheer number of the moving parts
+* `-` Devs may end up with copies of the original repositoryand of collaborators' forked repositories
 
-### Alternative Three
+### Feature Branches and Forks
+
+* `+` Pro...
+* `-` Con...
+
+### Change Nothing - Developer Preference
 
 * `+` Pro...
 * `-` Con...
 
-### Alternative Four
-
-* `+` Pro...
-* `-` Con...
 
 ## References
 

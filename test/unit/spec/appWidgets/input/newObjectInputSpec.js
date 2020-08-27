@@ -50,9 +50,9 @@ define([
         beforeEach(() => {
             runtime = Runtime.make();
 
+            Jupyter.narrative = new Narrative();
             if (TestUtil.getAuthToken()) {
                 document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
-                Jupyter.narrative = new Narrative();
                 Jupyter.narrative.authToken = TestUtil.getAuthToken();
                 Jupyter.narrative.userId = TestUtil.getUserId();
             }
@@ -118,9 +118,6 @@ define([
             });
 
             bus.on('validation', (message) => {
-                console.log("VALIDATION MESSAGE LOG", message);
-                //Failing error LOG: 'VALIDATION MESSAGE LOG', Object{errorMessage: 'Jupyter.narrative.getAuthToken is not a function', diagnosis: 'error'}
-
                 expect(message.isValid).toBeTruthy();
                 let inputElem = node.querySelector('input[data-element="input"]');
                 if (inputElem) {

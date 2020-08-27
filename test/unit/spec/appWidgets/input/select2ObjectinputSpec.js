@@ -91,9 +91,10 @@ define([
 
         beforeEach(() => {
             runtime = Runtime.make();
+            Jupyter.narrative = new Narrative();
+
             if (TestUtil.getAuthToken()) {
                 document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
-                Jupyter.narrative = new Narrative();
                 Jupyter.narrative.authToken = TestUtil.getAuthToken();
                 Jupyter.narrative.userId = TestUtil.getUserId();
             }
@@ -196,7 +197,6 @@ define([
         it('Should reset model value by bus', (done) => {
             let widget = Select2ObjectInput.make(testConfig);
             bus.on('validation', (msg) => {
-                console.log('bus.on for should reset');
                 expect(msg.errorMessage).toBeUndefined();
                 expect(msg.diagnosis).toBe('optional-empty');
                 done();
@@ -211,11 +211,9 @@ define([
         // failing
         it('Should respond to changed select2 option', (done) => {
             let widget = Select2ObjectInput.make(testConfig);
-            // What is this test doing?
-            // bus.on('validation', (msg) => {
-            // })
+            bus.on('validation', (msg) => {
+            })
             bus.on('changed', (msg) => {
-                // Should this check the message value compared to the expected test?
                 done();
             });
             widget.start({node: node})
@@ -233,8 +231,7 @@ define([
                             }
                         }
                     })
-                    //Why is there a wait
-                    // return TestUtil.wait(1000);
+                    return TestUtil.wait(1000);
                 })
                 .then(() => {
                     let $select = $(node).find('select');

@@ -49,9 +49,9 @@ define([
     describe('New Object Input tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();
+            Jupyter.narrative = new Narrative();
             if (TestUtil.getAuthToken()) {
                 document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
-                Jupyter.narrative = new Narrative();
                 Jupyter.narrative.authToken = TestUtil.getAuthToken();
                 Jupyter.narrative.userId = TestUtil.getUserId();
             }

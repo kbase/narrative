@@ -39,11 +39,11 @@ _A feature branch is a separate branch in a repository used to implement a singl
 * `+` Provides visibility into what each team member is developing
 * `+` All code and changes are located in a single repository
 * `-` Additional admin overhead required to provide developers with write access to the repository
-* `-` More people have write access to a repository leading less fine-grained control of merges
+* `-` More people have write access to a repository leading less fine-grained control of merges; can be mitigated using [CODEOWNERS](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners) file to control branch access
 
 ### Forks
 
-_A fork is a copy of a repository and is created in the developers namespace._
+_A fork is a copy of a repository and is created in the developer's namespace._
 
 * `+` Repository admins do not need to grant write access to the repository
 * `+` Admins have complete control over what goes into the repo; content from untrusted sources can be vetted prior to merge
@@ -54,7 +54,7 @@ _A fork is a copy of a repository and is created in the developers namespace._
 * `-` Developers work in isolation which can lead to knowledge management issues if the team is unaware of where forked repositories are located
 * `-` Developers must supply secrets (e.g. authentication data or dev tokens) for any github actions
 * `-` In a team setting keeping all forked repositories in sync can become error prone due to the sheer number of the moving parts
-* `-` Devs may end up with copies of the original repositoryand of collaborators' forked repositories
+* `-` Devs may end up with copies of the original repository and of collaborators' forked repositories
 
 ### Feature Branches and Forks for 3rd Party Developers
 
@@ -67,7 +67,7 @@ _Internal KBase staff and teams contribute via feature branches, and 3rd party d
 * `+` Provides an insight into internal work being completed on the repository
 * `-` Additional user access management duties for repository admins
 * `-` Admins will have to monitor the repository for 3rd party pull requests
-* `-` More internal team members have write access to repository; less control over what is merged into develop
+* `-` More internal team members have write access to repository; less control over what is merged into develop; can be mitigated using [CODEOWNERS](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners) file to control branch access
 
 ### Change Nothing - Developer Preference
 

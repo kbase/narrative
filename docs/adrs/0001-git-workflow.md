@@ -1,6 +1,6 @@
 # Git Workflow for Narrative Repo
 
-Date: 2020-08-26
+Date: 2020-08-28
 
 Developers on the narrative repository need to come into alignment on the git workflow used to create PRs and add new content.
 
@@ -17,17 +17,16 @@ Pending
 
 * Feature Branches
 * Forks
-* Feature Branches and Forks
+* Feature Branches and Forks for 3rd Party Developers
 * Change nothing and allow developers to choose their git flow preference
 
 ## Decision Outcome
 
-Paragraph of text
+Internal team members will use feature branches and external developers will contribute via forks.
 
 ## Consequences
 
-*
-*
+By choosing a combined approach contribution, there will be an increase in admin responsibilities of the repository related to access management. Internal developers will potentially have to get comfortable with contributing via feature branches if they have not done this previously. Given internal developers will not contribute via forks, regular maintenance tasks may arise to ensure the 3rd party developer experience maintains a high standard. This may be less of an issue in this repository given only internal team members have historically contributed.
 
 ## Pros and Cons of the Alternatives
 
@@ -57,15 +56,25 @@ _A fork is a copy of a repository and is created in the developers namespace._
 * `-` In a team setting keeping all forked repositories in sync can become error prone due to the sheer number of the moving parts
 * `-` Devs may end up with copies of the original repositoryand of collaborators' forked repositories
 
-### Feature Branches and Forks
+### Feature Branches and Forks for 3rd Party Developers
 
-* `+` Pro...
-* `-` Con...
+_Internal KBase staff and teams contribute via feature branches, and 3rd party developers contribute via forks._
+
+* `+` Internal teams/developers can easily collaborate
+* `+` Fine grain control of what 3rd party developers can contribute
+* `+` Less forks of the repository will exist
+* `+` All internal work will be completed within a single repository
+* `+` Provides an insight into internal work being completed on the repository
+* `-` Additional user access management duties for repository admins
+* `-` Admins will have to monitor the repository for 3rd party pull requests
+* `-` More internal team members have write access to repository; less control over what is merged into develop
 
 ### Change Nothing - Developer Preference
 
-* `+` Pro...
-* `-` Con...
+* `+` Allows developers to choose the method they are most comfortable with
+* `-` No standard can lead to confusion when attempting to collaborate and check out work locally
+* `-` Has the cons of both forks and feature branches
+* `-` Chaos
 
 
 ## References

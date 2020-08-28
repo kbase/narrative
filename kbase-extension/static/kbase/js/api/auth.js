@@ -56,7 +56,7 @@ define([
             const props = {
                 expires: TOKEN_AGE,        // gets translated to GMT string
                 path: '/',
-                samesite: 'none'
+                samesite: 'Lax'
             };
             if (Number.isInteger(cookie.expires)) {
                 props.expires = cookie.expires;

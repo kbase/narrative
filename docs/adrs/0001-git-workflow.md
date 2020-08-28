@@ -76,10 +76,11 @@ _Internal KBase staff and teams contribute via feature branches, and 3rd party d
 * `-` Has the cons of both forks and feature branches
 * `-` Chaos
 
-
 ## References
 
 * [Atlassian Support
 ](https://support.atlassian.com/bitbucket-cloud/docs/branch-or-fork-your-repository/)
 * [The Definitive Guide to Forks and Branches in Git](https://www.pluralsight.com/blog/software-development/the-definitive-guide-to-forks-and-branches-in-git#:~:text=Forking%20creates%20a%20full%20copy,what%20branch%20you%20are%20using.)
 * [Git Workflows for Pros: A Good Git Guide](https://www.toptal.com/git/git-workflows-for-pros-a-good-git-guide)
+* [The problem with Git Flow](https://about.gitlab.com/blog/2020/03/05/what-is-gitlab-flow/)
+* [Comparing Workflows](https://www.atlassian.com/git/tutorials/comparing-workflows)

@@ -9,6 +9,18 @@
 
 This is the repository for the KBase Narrative Interface.
 
+***Table of Contents***
+
+- [About](#about)
+- [Installation](#installation)
+  - [Local Installation for Developers](#local-installation-for-developers)
+    - [Using a Conda Environment](#using-a-conda-environment)
+    - [Without Conda](#without-conda)
+- [Architecture](#architecture)
+- [Testing](#testing)
+  - [Manual Testing](#manual-testing)
+- [Submitting Code](#submitting-code)
+
 ## About
 
 The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.org) and contains elements to interact with various KBase tools and data stores.
@@ -16,17 +28,23 @@ The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.or
 This document contains links to various documentation in the [docs](docs) directory, with a brief description of each.
 
 ## Installation
+
 If you want to use the KBase Narrative Interface, just point your browser at https://narrative.kbase.us, make a free account, and jump in. This repo is only for people who wish to contribute to the development of the interface.
 
-## Local Installation (for developers)
+### Local Installation for Developers
+
 Short version:
 Requires the following:
+
 * Python 3.6+
 * Anaconda/Miniconda as an environment manager (https://www.anaconda.com/)
 * Node.js (latest LTS recommended)
 * Bower 1.8.8+
 
-### Using a conda environment (recommended!)
+### _Using a Conda Environment_
+
+This is the recommended method of installation!
+
 ```
 git clone https://github.com/kbase/narrative
 cd narrative
@@ -35,19 +53,22 @@ conda activate my_narrative_environment
 ./scripts/install_narrative.sh
 kbase-narrative
 ```
+
 If the previous instructions do not work, try
+
 ```
 # source ~/anaconda3/bin/activate or wherever you have python installed
-conda create -n my_narrative_environment 
+conda create -n my_narrative_environment
 conda activate my_narrative_environment
 sh scripts/install_narrative.sh
 # scripts/install_narrative.sh
 kbase-narrative
 ```
 
+### _Without conda_
 
+This process installs lots of requirements of specific versions and may clobber things on your PYTHONPATH.
 
-### Or, without conda - this installs lots of requirements of specific versions and may clobber things on your PYTHONPATH.
 ```
 git clone https://github.com/kbase/narrative
 cd narrative
@@ -59,7 +80,7 @@ Long version: [Local Narrative setup](docs/install/local_install.md)
 
 ## Architecture
 
-### In progress!
+***In progress!***
 
 The Narrative sits on top of the Jupyter Notebook, so most of its architecture is a mirror of that. However, the Narrative's interaction with other KBase elements - namely the data stores and job running services - merits its own description. This will be ongoing (and evolving!), but a brief description of how a job gets run and registered is available here:
 
@@ -71,9 +92,9 @@ When deployed in production, the Narrative Interface is compiled into a [Docker]
 
 Testing is composed of three components:
 
-- a `make test` directive that runs through a batch of unit-testing of the Narrative, both the front-end Javascript-based components, and the back-end IPython modifications
-- a `travis.yml` file for Travis-CI testing
-- a set of Selenium-based end-to-end tests that simulate browser interactions
+* a `make test` directive that runs through a batch of unit-testing of the Narrative, both the front-end Javascript-based components, and the back-end IPython modifications
+* a `travis.yml` file for Travis-CI testing
+* a set of Selenium-based end-to-end tests that simulate browser interactions
 
 Testing locally (i.e. not through Travis-CI) requires a local Narrative installation, with active virtualenv (if installed that way). Then just run `make test` or `make test-frontend-unit` or `make test-backend`. If you haven't changed any configuration, this will run unauthenticated tests and skip any tests that require authentication.
 
@@ -81,11 +102,11 @@ To run authenticated tests, you'll need to get an auth token from KBase servers,
 
 Note: **DO NOT CHECK YOUR TOKEN FILE IN TO GITHUB**. You'll be shamed without mercy.
 
-## Manual Testing
+### Manual Testing
 
 * It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`
 
-* For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with kbase-narrative. You can print messages to the terminal using 
+* For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with kbase-narrative. You can print messages to the terminal using
 
 ```
 log = logging.getLogger("tornado.application")
@@ -94,6 +115,4 @@ log.info("Your Logs Go Here")
 
 ## Submitting code
 
-Ensure that tests pass (and add some for your changes), then submit a PR to the `develop` branch.
-
-This branch will eventually get merged to `master` where it is tagged and released to production.
+Follow the gitflow directions located at [docs/git-workflow.md](docs/git-workflow.md) to submit code to this repository.

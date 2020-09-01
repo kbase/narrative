@@ -10,14 +10,23 @@
 ***Table of Contents***
 
 - [About](#branches-tags)
+
 - [Installation](#local-installation-for-developers)
+
   - [Local Installation for Developers](#pull-requests)
+
     - [Using a Conda Environment](#using-a-conda-environment)
+
     - [Without Conda](#without-conda)
+
 - [Architecture](#realease-flow)
+
 - [Testing](#testing)
+
   - [Manual Testing](#manual-testing)
+
 - [Production Releases](#production-releases)
+
   - [Submitting Code](#submitting-code)
 
 ## About

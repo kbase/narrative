@@ -7,24 +7,23 @@
 | master | [![Build Status](https://travis-ci.org/kbase/narrative.svg?branch=master)](https://travis-ci.org/kbase/narrative) [![Coverage Status](https://coveralls.io/repos/kbase/narrative/badge.svg?branch=master)](https://coveralls.io/r/kbase/narrative?branch=master) |
 | develop | [![Build Status](https://travis-ci.org/kbase/narrative.svg?branch=develop)](https://travis-ci.org/kbase/narrative) [![Coverage Status](https://coveralls.io/repos/kbase/narrative/badge.svg?branch=develop)](https://coveralls.io/r/kbase/narrative?branch=develop)|
 
-This is the repository for the KBase Narrative Interface.
-
 ***Table of Contents***
 
-  - [About](#branches-tags)
-  - [Installation](#local-installation-for-developers)
-    - [Local Installation for Developers](#pull-requests)
-      - [Using a Conda Environment](#using-a-conda-environment)
-      - [Without Conda](#without-conda)
-  - [Architecture](#realease-flow)
-  - [Testing](#testing)
-    - [Manual Testing](#manual-testing)
-  - [Production Releases](#production-releases)
-    - [Submitting Code](#submitting-code)
+- [About](#branches-tags)
+- [Installation](#local-installation-for-developers)
+  - [Local Installation for Developers](#pull-requests)
+    - [Using a Conda Environment](#using-a-conda-environment)
+    - [Without Conda](#without-conda)
+- [Architecture](#realease-flow)
+- [Testing](#testing)
+  - [Manual Testing](#manual-testing)
+- [Production Releases](#production-releases)
+  - [Submitting Code](#submitting-code)
 
 ## About
 
-The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.org) and contains elements to interact with various KBase tools and data stores.
+This is the repository for the KBase Narrative Interface.
+. The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.org) and contains elements to interact with various KBase tools and data stores.
 
 This document contains links to various documentation in the [docs](docs) directory, with a brief description of each.
 

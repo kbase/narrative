@@ -13,12 +13,12 @@ This is the repository for the KBase Narrative Interface.
 
 - [About](#about)
 - [Installation](#installation)
-  - [Local Installation for Developers](#local-installation-for-developers)
-    - [Using a Conda Environment](#using-a-conda-environment)
-    - [Without Conda](#without-conda)
+    - [Local Installation for Developers](#local-installation-for-developers)
+        - [Using a Conda Environment](#using-a-conda-environment)
+        - [Without Conda](#without-conda)
 - [Architecture](#architecture)
 - [Testing](#testing)
-  - [Manual Testing](#manual-testing)
+    - [Manual Testing](#manual-testing)
 - [Submitting Code](#submitting-code)
 
 ## About
@@ -36,12 +36,12 @@ If you want to use the KBase Narrative Interface, just point your browser at htt
 Short version:
 Requires the following:
 
-* Python 3.6+
-* Anaconda/Miniconda as an environment manager (https://www.anaconda.com/)
-* Node.js (latest LTS recommended)
-* Bower 1.8.8+
+- Python 3.6+
+- Anaconda/Miniconda as an environment manager (https://www.anaconda.com/)
+- Node.js (latest LTS recommended)
+- Bower 1.8.8+
 
-### _Using a Conda Environment_
+### *Using a Conda Environment*
 
 This is the recommended method of installation!
 
@@ -65,7 +65,7 @@ sh scripts/install_narrative.sh
 kbase-narrative
 ```
 
-### _Without conda_
+### *Without conda*
 
 This process installs lots of requirements of specific versions and may clobber things on your PYTHONPATH.
 
@@ -92,9 +92,9 @@ When deployed in production, the Narrative Interface is compiled into a [Docker]
 
 Testing is composed of three components:
 
-* a `make test` directive that runs through a batch of unit-testing of the Narrative, both the front-end Javascript-based components, and the back-end IPython modifications
-* a `travis.yml` file for Travis-CI testing
-* a set of Selenium-based end-to-end tests that simulate browser interactions
+- a `make test` directive that runs through a batch of unit-testing of the Narrative, both the front-end Javascript-based components, and the back-end IPython modifications
+- a `travis.yml` file for Travis-CI testing
+- a set of Selenium-based end-to-end tests that simulate browser interactions
 
 Testing locally (i.e. not through Travis-CI) requires a local Narrative installation, with active virtualenv (if installed that way). Then just run `make test` or `make test-frontend-unit` or `make test-backend`. If you haven't changed any configuration, this will run unauthenticated tests and skip any tests that require authentication.
 
@@ -104,9 +104,9 @@ Note: **DO NOT CHECK YOUR TOKEN FILE IN TO GITHUB**. You'll be shamed without me
 
 ### Manual Testing
 
-* It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`
+- It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`
 
-* For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with kbase-narrative. You can print messages to the terminal using
+- For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with `kbase-narrative`. You can print messages to the terminal using
 
 ```
 log = logging.getLogger("tornado.application")

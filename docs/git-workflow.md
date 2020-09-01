@@ -1,6 +1,6 @@
 # Git branching workflow for narrative
 
-This document describes the git workflow that *all- developers of the narrative code must follow. It also describes the release procedure, which only an unlucky few should have to worry about.
+This document describes the git workflow that *all* developers of the narrative code must follow. It also describes the release procedure, which only an unlucky few should have to worry about.
 
 - Last modified: Aug. 31, 2020
 
@@ -36,11 +36,11 @@ To begin working on a feature or story, make sure you've assigned yourself to th
 
 Create a new branch off `develop` using the naming convention:
 
-`{your initials or username}-{summary}-{JIRA #}`
+`{JIRA #}-{summary}`
 
-For example: `jd-data-panel-button-112`
+For example: `DATAUP-63-data_panel_button`
 
-When your branch is ready for review, open a PR into `develop` and request reviews from relevant team members. Address any failing tests, lint errors, PR feedback, etc. Once the work is approved, it will be merged.
+When your branch is ready for review, open a PR into develop. Address any lint errors or failing tests. Request reviews from relevant team members. Respond to PR feedback promptly, and request re-review once all issues have been resolved.
 
 More detailed directions for the feature branch workflow are located on [Github](https://guides.github.com/introduction/flow/)
 
@@ -84,8 +84,7 @@ Perform the final round of testing on `narrative-dev`:
 - Test it.
 - Seriously, test it. This includes "stress" and "acceptance" tests.
 
-Once you are satisfied that the `staging` branch is fit for production, you should commit any
-changes you made:
+Once you are satisfied that the `staging` branch is fit for production, you should commit any changes you made:
 
     git commit -a # .. or whatever
     git push

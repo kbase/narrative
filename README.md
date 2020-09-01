@@ -37,10 +37,10 @@ If you want to use the KBase Narrative Interface, just point your browser at htt
 Short version:
 Requires the following:
 
-  - Python 3.6+
-  - Anaconda/Miniconda as an environment manager (<https://www.anaconda.com/>)
-  - Node.js (latest LTS recommended)
-  - Bower 1.8.8+
+- Python 3.6+
+- Anaconda/Miniconda as an environment manager (<https://www.anaconda.com/>)
+- Node.js (latest LTS recommended)
+- Bower 1.8.8+
 
 ### *Using a Conda Environment*
 
@@ -105,9 +105,9 @@ Note: **DO NOT CHECK YOUR TOKEN FILE IN TO GITHUB**. You'll be shamed without me
 
 ### Manual Testing
 
-  - It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`
+- It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`
 
-  - For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with `kbase-narrative`. You can print messages to the terminal using
+- For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with `kbase-narrative`. You can print messages to the terminal using
 
 ```
 log = logging.getLogger("tornado.application")

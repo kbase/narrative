@@ -9,7 +9,7 @@
 
 ***Table of Contents***
 
-- [About](#branches-tags)
+-   [About](#branches-tags)
 
 - [Installation](#local-installation-for-developers)
 

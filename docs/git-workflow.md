@@ -9,10 +9,10 @@ This document describes the git workflow that *all* developers of the narrative 
 - [Branches and Tags](#branches-tags)
 - [Contributing](#Contributing)
   - [Pull Requests](#pull-requests)
-- [Release Flows](#realease-flow)
+- [Release Flows](#release-flow)
   - [Development Releases](#development-releases)
   - [Production Releases](#production-releases)
-  - [Hotfix Releases](#hotfixes-releases)
+  - [Hotfix Releases](#hotfix-releases)
 
 ## Branches and Tags
 

@@ -6,10 +6,10 @@ This document describes the git workflow that *all* developers of the narrative 
 
 ***Table of Contents***
 
-- [Branches and Tags](#branches-tags)
-- [Contributing](#Contributing)
+- [Branches and Tags](#branches-and-tags)
+- [Contributing](#contributing)
   - [Pull Requests](#pull-requests)
-- [Release Flows](#release-flow)
+- [Release Flows](#release-flows)
   - [Development Releases](#development-releases)
   - [Production Releases](#production-releases)
   - [Hotfix Releases](#hotfix-releases)

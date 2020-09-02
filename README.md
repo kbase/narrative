@@ -38,7 +38,7 @@ kbase-narrative
 If the previous instructions do not work, try
 ```
 # source ~/anaconda3/bin/activate or wherever you have python installed
-conda create -n my_narrative_environment 
+conda create -n my_narrative_environment
 conda activate my_narrative_environment
 sh scripts/install_narrative.sh
 # scripts/install_narrative.sh
@@ -69,28 +69,7 @@ When deployed in production, the Narrative Interface is compiled into a [Docker]
 
 ## Testing
 
-Testing is composed of three components:
-
-- a `make test` directive that runs through a batch of unit-testing of the Narrative, both the front-end Javascript-based components, and the back-end IPython modifications
-- a `travis.yml` file for Travis-CI testing
-- a set of Selenium-based end-to-end tests that simulate browser interactions
-
-Testing locally (i.e. not through Travis-CI) requires a local Narrative installation, with active virtualenv (if installed that way). Then just run `make test` or `make test-frontend-unit` or `make test-backend`. If you haven't changed any configuration, this will run unauthenticated tests and skip any tests that require authentication.
-
-To run authenticated tests, you'll need to get an auth token from KBase servers, drop it in a file in the test directory (as the only line in that file), then modify two config files. These are `test/unit/testConfig.json` for frontend tests, and `src/biokbase/narrative/tests/test.cfg` for backend tests [TODO: merge those, or move them somewhere sensible]. The frontend test file should have the "token" block modified to include your username and the path to the token file. The backend test file should be updated so that the `test_user` and/or `private_user` keys in the `[users]` and `[token_files]` block are aligned (e.g. users.test_user is the user for the token in token_files.test_user).
-
-Note: **DO NOT CHECK YOUR TOKEN FILE IN TO GITHUB**. You'll be shamed without mercy.
-
-## Manual Testing
-
-* It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`
-
-* For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with kbase-narrative. You can print messages to the terminal using 
-
-```
-log = logging.getLogger("tornado.application")
-log.info("Your Logs Go Here")
-```
+For general testing instructions and guidance refer to [docs/testing.md](docs/testing.md). For information about headless browser testing refer to [docs/HeadlessTesting.md].
 
 ## Submitting code
 

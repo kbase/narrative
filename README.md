@@ -69,7 +69,7 @@ When deployed in production, the Narrative Interface is compiled into a [Docker]
 
 ## Testing
 
-For general testing instructions and guidance refer to [docs/testing.md](docs/testing.md). For information about headless browser testing refer to [docs/HeadlessTesting.md].
+For general testing instructions and guidance refer to [docs/testing.md](docs/testing.md). For information about headless browser testing refer to [docs/HeadlessTesting.md](docs/HeadlessTesting.md).
 
 ## Submitting code
 

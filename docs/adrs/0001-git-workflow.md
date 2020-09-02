@@ -11,7 +11,7 @@ Developers on the narrative repository need to come into alignment on the git wo
 
 ## Status
 
-Pending
+Accepted
 
 ## Alternatives Considered
 

@@ -11,7 +11,7 @@
 
 - [About](#about)
 - [Installation](#installation)
-  - [Local Installation for Developers](#local-installation-for-developers)
+  - [Local Installation](#local-installation)
     - [Using a Conda Environment](#using-a-conda-environment)
     - [Without Conda](#without-conda)
 - [Architecture](#architecture)
@@ -30,7 +30,7 @@ This document contains links to various documentation in the [docs](docs) direct
 
 If you want to use the KBase Narrative Interface, just point your browser at https://narrative.kbase.us, make a free account, and jump in. This repo is only for people who wish to contribute to the development of the interface.
 
-### Local Installation for Developers
+### Local Installation
 
 Short version:
 Requires the following:

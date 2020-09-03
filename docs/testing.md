@@ -76,7 +76,7 @@ JavaScript tests follow the common Test Spec idiom. Here, we create a new spec f
 
 ***Python***
 
-For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with kbase-narrative. You can print messages to the terminal using
+For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with `kbase-narrative`. You can print messages to the terminal using
 
 ```
 log = logging.getLogger("tornado.application")
@@ -89,12 +89,22 @@ It can be useful to immediately see your changes in the narrative. For javascrip
 
 To debug using the Karma Debugger complete the following steps:
 
-1. In one terminal tab enter:
-`kbase-narrative --no-browser --NotebookApp.allow_origin="*" --ip=127.0.0.1 --port=32323`
+- In one terminal tab enter:
 
-2. Open a second tab and enter:
-`export PATH=$PATH:./node_modules/.bin/`
+```
+kbase-narrative --no-browser --NotebookApp.allow_origin="*" --ip=127.0.0.1 --port=32323
+```
 
-3. In the second tab enter: `karma start test/ut/karma.conf.js --browsers=Chrome --single-run=false`
+- Open a second tab and enter:
+
+```
+export PATH=$PATH:./node_modules/.bin/
+```
+
+- In the second tab enter:
+
+```
+karma start test/ut/karma.conf.js --browsers=Chrome --single-run=false
+```
 
 After running the third command, a chrome browser will open. Click on the debug button. This opens a second browser window where you can inspect the page and use chrome debugger tools.

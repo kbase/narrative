@@ -22,7 +22,7 @@ npm install -g grunt-cli
 
 ## Short version
 
-1. Install the Narrative and activate its virtualenv (if appropriate)
+1. Install the Narrative and activate its conda environment (if appropriate)
     a. (optional) set credentials in test/
 2. Run `make test` at a prompt.
 3. Lament the coverage is so low.
@@ -113,7 +113,7 @@ export PATH=$PATH:./node_modules/.bin/
 - In the second tab enter:
 
 ```
-karma start test/ut/karma.conf.js --browsers=Chrome --single-run=false
+karma start test/unit/karma.conf.js --browsers=Chrome --single-run=false
 ```
 
 After running the third command, a chrome browser will open. Click on the debug button. This opens a second browser window where you can inspect the page and use chrome debugger tools.

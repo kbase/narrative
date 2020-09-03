@@ -2,6 +2,7 @@
 
 ***Table of Contents***
 
+- [Installation](#installation)
 - [Short Version](#short-version)
 - [Long Version](#long-version)
   - [About](#about)
@@ -10,6 +11,14 @@
   - [Testing with Travis-CI and Coveralls](#testing-with-travis-ci-and-coveralls)
   - [Adding Your Own Tests](#adding-your-own-tests)
   - [Manual Testing and Debugging](#manual-testing-and-debugging)
+
+## Installation
+
+Install grunt-cli via the following command:
+
+```
+npm install -g grunt-cli
+```
 
 ## Short version
 

@@ -57,7 +57,8 @@ script:
 after_script:
   - coveralls-lcov -v -n js-coverage/lcov/lcov.info > js-coverage.json
   - coveralls --merge js-coverage.json
-  - flake8 .
+  - flake8 ./src
+  - black --check ./src
   - bash -x scripts/build_narrative_container.sh
   - IMAGE_NAME=kbase/narrative scripts/push2dockerhub.sh
   - IMAGE_NAME=kbase/narrative_version scripts/push2dockerhub.sh

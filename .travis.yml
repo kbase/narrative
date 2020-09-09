@@ -35,7 +35,7 @@ before_install:
   - npm install -g karma-cli
 
 install:
-  - flake8 --max-line-length=150 ./src 
+  - flake8 --max-line-length=150 --max-complexity=21  --exclude src/biokbase src
   - black --check ./src
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda

@@ -3,7 +3,6 @@ Hunts for Python 2 code in all Narratives in a Workspace environment.
 Needs an Administrator token.
 """
 import sys
-import requests
 import argparse
 import json
 from biokbase.workspace.client import Workspace

@@ -270,7 +270,7 @@ def update_md5(filenames):
         print("Internal error!", file=sys.stderr)
         sys.exit(2)
 
-    src = src[: match.start(1)] + repl + src[match.end(1):]
+    src = src[: match.start(1)] + repl + src[match.end(1) :]
     f = open(srcfile, "w")
     f.write(src)
     f.close()

@@ -18,7 +18,7 @@ DEFAULT_OUTPUT_FILE = "update_results.json"
 
 
 def fix_all_workspace_info(
-        ws_url, auth_url, token, max_id, outfile=DEFAULT_OUTPUT_FILE
+    ws_url, auth_url, token, max_id, outfile=DEFAULT_OUTPUT_FILE
 ):
     """
     Iterates over all workspaces available at the ws_url endpoint, using the given admin token,
@@ -167,10 +167,10 @@ def _fix_single_workspace_info(ws_id, admin_id, ws, verbose=False):
             new_meta["is_temporary"] = "false"
     elif current_temp is None:
         if (
-                len(cells) == 1
-                and cells[0]["cell_type"] == "markdown"
-                and narr_name == "Untitled"
-                and narr_info[4] == 1
+            len(cells) == 1
+            and cells[0]["cell_type"] == "markdown"
+            and narr_name == "Untitled"
+            and narr_info[4] == 1
         ):
             if verbose:
                 print(

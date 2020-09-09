@@ -155,7 +155,7 @@ def _untransform(transform_type, value):
         if slash == -1:
             return value
         else:
-            return value[slash + 1:]
+            return value[slash + 1 :]
     else:
         return value
 

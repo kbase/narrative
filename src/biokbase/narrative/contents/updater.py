@@ -134,7 +134,7 @@ def update_method_cell(cell, format_ver):
     app_name = method_info.get("id", "")
     # the app_name in this case, is everything after the slash. So
     # MegaHit/run_megahit would just be 'run_megahit'
-    app_name = app_name[app_name.find("/") + 1:]
+    app_name = app_name[app_name.find("/") + 1 :]
     module_name = method_behavior.get("kb_service_name", None)
     tag = None
     # now we get the version, if it exists.

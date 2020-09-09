@@ -13,6 +13,7 @@ the appropriate options to ``use_setuptools()``.
 
 This file can also be run as a script to install or upgrade setuptools.
 """
+import os
 import sys
 
 DEFAULT_VERSION = "0.6c11"
@@ -63,7 +64,6 @@ md5_data = {
     "setuptools-0.6c9-py2.6.egg": "ca37b1ff16fa2ede6e19383e7b59245a",
 }
 
-import sys, os
 
 try:
     from hashlib import md5
@@ -147,7 +147,8 @@ def download_setuptools(
     with a '/'). `to_dir` is the directory where the egg will be downloaded.
     `delay` is the number of seconds to pause before an actual download attempt.
     """
-    import urllib2, shutil
+    import urllib2
+    import shutil
 
     egg_name = "setuptools-%s-py%s.egg" % (version, sys.version[:3])
     url = download_base + egg_name
@@ -270,7 +271,7 @@ def update_md5(filenames):
         print("Internal error!", file=sys.stderr)
         sys.exit(2)
 
-    src = src[: match.start(1)] + repl + src[match.end(1) :]
+    src = src[: match.start(1)] + repl + src[match.end(1):]
     f = open(srcfile, "w")
     f.write(src)
     f.close()

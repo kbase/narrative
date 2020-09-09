@@ -3,7 +3,8 @@
 Output single markdown doc from multimarkdown
 with internal links and includes.
 """
-import sys, re
+import sys
+import re
 
 
 def println(*s):
@@ -19,7 +20,7 @@ def main():
             # if m:
             #    println(''.join(m.groups()),'\n')
             # else:
-            m = re.search("\{\{(.*)\}\}", line)
+            m = re.search(r"\{\{(.*)\}\}", line)
             if m:
                 f2 = open(m.group(1), "r")
                 println("\n")

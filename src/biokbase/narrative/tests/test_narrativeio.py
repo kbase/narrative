@@ -424,7 +424,7 @@ class NarrIOTestCase(unittest.TestCase):
         )
         self.assertEqual(new_name, nar["info"][10]["name"])
 
-        ### now, put it back to the old name, so it doesn't break other tests...
+        # now, put it back to the old name, so it doesn't break other tests...
         self.mixin.rename_narrative(self.private_nar["ref"], self.test_user, cur_name)
         self.logout()
 

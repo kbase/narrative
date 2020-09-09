@@ -29,7 +29,7 @@ try:
     kbase_env.env = env
     url_config = config[env]  # fun, right?
     URLS = Struct(**url_config)
-except:
+except BaseException:
     url_dict = {
         "workspace": "https://kbase.us/services/ws/",
         "invocation": "https://kbase.us/services/invocation",

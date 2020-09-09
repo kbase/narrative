@@ -88,7 +88,7 @@ class NarrativeLoggerTestCase(unittest.TestCase):
         try:
             logger = NarrativeLogger()
             logger.narrative_save("12345/67", 8)
-        except:
+        except BaseException:
             self.fail(
                 "Log writing threw an unexpected exception without a live socket!"
             )

@@ -1,16 +1,16 @@
 """
 Installer for KBase narrative Python libraries
 """
+from biokbase.narrative.common.util import BuildDocumentation
+from setuptools import setup, find_packages
 import glob
 import re
 import sys
 import ez_setup
 
 ez_setup.use_setuptools()
-from setuptools import setup, find_packages
 
 # added command classes
-from biokbase.narrative.common.util import BuildDocumentation
 
 long_desc = "This Python package contains all the KBase Python libraries to support the Python narrative UI, which is built on the IPython notebook."
 

@@ -427,7 +427,8 @@ class MockClients:
         # filter on type
         if types:
             # kinda ew, but kinda pretty, too.
-            # check if any member of types is the start of any object_info type, pass the filter if so
+            # check if any member of types is the start of any object_info type, pass
+            # the filter if so
             data["data"] = list(
                 filter(
                     lambda x: any(

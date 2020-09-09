@@ -63,7 +63,7 @@ class WidgetManager(object):
                 os.path.join(nar_path, "src", "widget_param_mapping.json")
             )
             self.widget_param_map = json.loads(widget_param_file.read())
-        except:
+        except BaseException:
             self.widget_param_map = dict()
         self.reload_info()
 
@@ -211,7 +211,8 @@ class WidgetManager(object):
                     params[param_name] = param_info
 
                 if widget_name in all_widgets:
-                    # if it's already there, just update the allowed_types and allowed_values for some params that have them
+                    # if it's already there, just update the allowed_types and allowed_values
+                    # for some params that have them
                     for p_name in params.keys():
                         if "allowed_types" in params[p_name]:
                             if p_name not in all_widgets[widget_name]["params"]:
@@ -388,7 +389,7 @@ class WidgetManager(object):
             # infer what it is based on mapping and inputs
             try:
                 upas = self.infer_upas(widget_name, input_data)
-            except:
+            except BaseException:
                 raise
 
         input_template = """
@@ -807,7 +808,7 @@ class WidgetManager(object):
 
         # Prepare data for export into the Javascript.
 
-        if type(widget) is list:
+        if isinstance(widget, list):
             widget_package = widget[0]
             widget_package_version = widget[1]
             widget_name = widget[2]

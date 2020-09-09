@@ -13,7 +13,7 @@ class PermissionsError(ServerError):
         for the narrative (i.e. the workspace the narrative is in).
         """
         pat = re.compile(
-            "(\s*[Uu]sers?\s*(\w+)?\s*may not \w+ workspace.*)|(\s*[Tt]oken validation failed)"
+            r"(\s*[Uu]sers?\s*(\w+)?\s*may not \w+ workspace.*)|(\s*[Tt]oken validation failed)"
         )
         return pat.search(err) is not None
 

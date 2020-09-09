@@ -28,7 +28,7 @@ from biokbase.narrative.common import log_common
 
 EVENT_MSG_SEP = log_common.EVENT_MSG_SEP
 
-g_log = None  #  global logger
+g_log = None  # global logger
 LOGGER_NAME = "log_proxy"  # use this name for logger
 
 m_fwd = None  # global forwarder object
@@ -179,7 +179,7 @@ class DBConfiguration(Configuration):
         elif p in self._obj:
             del self._obj[p]  # just delete unused password
 
-    ## Expose configuration values as class properties
+    # Expose configuration values as class properties
     @property
     def db_host(self):
         return self._obj.get("db_host", self.DEFAULT_DB_HOST)

@@ -235,7 +235,8 @@ def _admin_update_metadata(ws, admin_id, ws_id, new_meta):
                 "params": {"id": ws_id, "new_permission": "a", "users": [admin_id]},
             }
         )
-    # Now that we added ourself as an admin on that workspace, we can just use the usual call to update the metadata
+    # Now that we added ourself as an admin on that workspace, we can just use
+    # the usual call to update the metadata
     ws.alter_workspace_metadata({"wsi": {"id": ws_id}, "new": new_meta})
 
     # Now, reset our permission on that workspace.

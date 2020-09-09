@@ -263,5 +263,5 @@ class Client:
             try:
                 name = n if n else d.name
                 return (name, d)
-            except:
+            except BaseException:
                 raise Exception(u"Error opening file handle for upload")

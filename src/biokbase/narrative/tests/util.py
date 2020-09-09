@@ -256,7 +256,7 @@ def recvall(socket, n, timeout=0):
 class LogProxyMessageBufferer(socketserver.BaseRequestHandler):
     def handle(self):
         self.request.settimeout(1)
-        while 1:
+        while True:
             try:
                 hdr = self.request.recv(4)
             except Exception:

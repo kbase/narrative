@@ -106,7 +106,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     # ws.123
     # 123
     path_regex = re.compile(
-        "^(ws\.)?(?P<wsid>\d+)((\.obj\.(?P<objid>\d+))(\.ver\.(?P<ver>\d+))?)?$"
+        r"^(ws\.)?(?P<wsid>\d+)((\.obj\.(?P<objid>\d+))(\.ver\.(?P<ver>\d+))?)?$"
     )
 
     # This is a regular expression to make sure that the workspace ID
@@ -116,7 +116,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     # to get an id of 'Hello_Freaking_World_123'
     # We will enforce validation on the narrative naming GUI, but this is
     # a safety net
-    wsid_regex = re.compile("[\W]+", re.UNICODE)
+    wsid_regex = re.compile(r"[\W]+", re.UNICODE)
 
     def __init__(self, *args, **kwargs):
         """Verify that we can connect to the configured WS instance"""

@@ -111,7 +111,7 @@ def _update_narrative(
 
     try:
         nb = nbformat.reads(json.dumps(narr_obj["data"]), 4.0)
-    except:
+    except BaseException:
         nb = nbformat.reads(json.dumps(narr_obj["data"]), 3.0)
     ninfo = NarrativeInfo(narr_obj["info"], ws_info[2])
 

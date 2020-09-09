@@ -66,7 +66,7 @@ def system_variable(var):
                 {"workspace": ws_name}
             )
             return ws_info[0]
-        except:
+        except BaseException:
             return None
     elif var == "user_id":
         token = biokbase.auth.get_auth_token()
@@ -75,7 +75,7 @@ def system_variable(var):
         try:
             user_info = biokbase.auth.get_user_info(token)
             return user_info.get("user", None)
-        except:
+        except BaseException:
             return None
         # TODO: make this better with more exception handling.
     elif var == "timestamp_epoch_ms":
@@ -155,7 +155,7 @@ def _untransform(transform_type, value):
         if slash == -1:
             return value
         else:
-            return value[slash + 1 :]
+            return value[slash + 1:]
     else:
         return value
 
@@ -678,7 +678,7 @@ def validate_param_value(param, value, workspace):
                     ws_ref,
                     "Given value {} should be <= {}".format(value, param["max_val"]),
                 )
-        except:
+        except BaseException:
             return (ws_ref, "Given value {} must be a number".format(value))
 
     if "min_val" in param:
@@ -688,7 +688,7 @@ def validate_param_value(param, value, workspace):
                     ws_ref,
                     "Given value {} should be >= {}".format(value, param["min_val"]),
                 )
-        except:
+        except BaseException:
             return (ws_ref, "Given value {} must be a number".format(value))
 
     # if it's an output object, make sure it follows the data object rules.
@@ -726,7 +726,8 @@ def resolve_single_ref(workspace, value):
                         value
                     )
                 )
-            # return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
+            # return (ws_ref, 'Data reference named {} does not have the right format
+            # - should be workspace/object/version(optional)')
         info = clients.get("workspace").get_object_info_new(
             {"objects": [{"ref": value}]}
         )[0]

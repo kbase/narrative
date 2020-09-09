@@ -27,7 +27,7 @@ def format_kvps(mapping, prefix=""):
             kvps = format_kvps(v, prefix=new_prefix)  # format as string
             kvp_list.append(kvps)
             continue  # already prefixed with key; go to next
-        if v == None:
+        if v is None:
             v = "None"
         elif isinstance(v, int) or isinstance(v, float):
             v = "{}".format(v)

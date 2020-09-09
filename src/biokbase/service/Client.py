@@ -206,7 +206,7 @@ class Client(object):
     def sync_call(
         self, service_method, param_list, service_version=None, json_rpc_context=None
     ):
-        if json_rpc_context and type(json_rpc_context) is not dict:
+        if json_rpc_context and not isinstance(json_rpc_context, dict):
             raise ValueError(
                 "Method send_data: argument json_rpc_context is not type dict as required."
             )

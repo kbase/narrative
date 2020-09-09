@@ -10,7 +10,7 @@
 try:
     # baseclient and this client are in a package
     from .baseclient import BaseClient as _BaseClient  # @UnusedImport
-except:
+except BaseException:
     # no they aren't
     from baseclient import BaseClient as _BaseClient  # @Reimport
 

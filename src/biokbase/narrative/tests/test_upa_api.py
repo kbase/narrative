@@ -100,7 +100,7 @@ class UpaApiTestCase(unittest.TestCase):
     @mock.patch("biokbase.narrative.upa.system_variable", mock_sys_var)
     def test_deserialize_good(self):
         for pair in self.serialize_test_data + self.serialize_external_test_data:
-            if type(pair["upa"]) is not list:
+            if not isinstance(pair["upa"], list):
                 deserial_upa = deserialize(pair["serial"])
                 self.assertEqual(deserial_upa, pair["upa"])
 
@@ -109,7 +109,7 @@ class UpaApiTestCase(unittest.TestCase):
         for bad_upa in self.bad_upas:
             with self.assertRaisesRegex(
                 ValueError,
-                '^".+" is not a valid UPA\. It may have already been serialized\.$',
+                r'^".+" is not a valid UPA\. It may have already been serialized\.$',
             ):
                 serialize(bad_upa)
 

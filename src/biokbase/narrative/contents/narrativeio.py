@@ -39,7 +39,7 @@ list_objects_fields = [
 ]
 obj_field = dict(zip(list_objects_fields, range(len(list_objects_fields))))
 
-obj_ref_regex = re.compile("^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$")
+obj_ref_regex = re.compile(r"^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$")
 
 MAX_METADATA_STRING_BYTES = 900
 MAX_METADATA_SIZE_BYTES = 16000
@@ -222,7 +222,7 @@ class KBaseWSManagerMixin(object):
             meta["format"] = "ipynb"
 
             if len(meta["name"]) > MAX_METADATA_STRING_BYTES - len("name"):
-                meta["name"] = meta["name"][0 : MAX_METADATA_STRING_BYTES - len("name")]
+                meta["name"] = meta["name"][0: MAX_METADATA_STRING_BYTES - len("name")]
 
             nb["metadata"] = meta
         except Exception as e:
@@ -409,7 +409,7 @@ class KBaseWSManagerMixin(object):
         # But we do need the totals anyway, in case we blow over the max metadata size.
 
         # final pass - trim out methods and apps if cell_kvp_size > total allowable size
-        kvp_size = lambda x: sum([len(k) + len(str(x[k])) for k in x])
+        def kvp_size(x): return sum([len(k) + len(str(x[k])) for k in x])
 
         metadata_size = kvp_size(metadata)
         method_size = kvp_size(method_info)

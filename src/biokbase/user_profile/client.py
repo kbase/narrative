@@ -68,7 +68,7 @@ def _read_rcfile(file=_os.environ["HOME"] + "/.authrc"):  # @ReservedAssignment
                         "password",
                     )
                 }
-        except Exception, e:
+        except Exception as e:
             print "Error while reading authrc file %s: %s" % (file, e)
     return authdata
 
@@ -98,7 +98,7 @@ def _read_inifile(
                     "password",
                 )
             }
-        except Exception, e:
+        except Exception as e:
             print "Error while reading INI file %s: %s" % (file, e)
     return authdata
 

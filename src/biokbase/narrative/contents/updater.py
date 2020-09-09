@@ -132,8 +132,9 @@ def update_method_cell(cell, format_ver):
 
     git_hash = method_info.get("git_commit_hash", None)
     app_name = method_info.get("id", "")
-    # the app_name in this case, is everything after the slash. So MegaHit/run_megahit would just be 'run_megahit'
-    app_name = app_name[app_name.find("/") + 1 :]
+    # the app_name in this case, is everything after the slash. So
+    # MegaHit/run_megahit would just be 'run_megahit'
+    app_name = app_name[app_name.find("/") + 1:]
     module_name = method_behavior.get("kb_service_name", None)
     tag = None
     # now we get the version, if it exists.
@@ -305,7 +306,7 @@ def update_legacy_app_cell(cell):
     if len(meta.get("widget_state")):
         try:
             params = meta["widget_state"][0]["state"]["step"]
-        except:
+        except BaseException:
             pass
     cell = obsolete_app_cell(cell, app_id, app_name, meta.get("app", {}), params)
     cell["metadata"]["kbase"] = {"old_app": True, "info": meta}
@@ -392,11 +393,12 @@ def update_output_cell(cell, format_ver):
     """
     # hoo-boy, here's the hard one.
     # Grab the source, parse it, build a new viewer for it,
-    # put that in a code cell, and put the result in the output area (since we already know what it is, just plop it in there).
+    # put that in a code cell, and put the result in the output area (since we
+    # already know what it is, just plop it in there).
     code = cell["source"]
 
     m = re.search(
-        '<div id="(.+)"></div>\s*<script>(\$\(.+\))\.(\w+)\((.+)\);\<\/script\>', code
+        r'<div id="(.+)"></div>\s*<script>(\$\(.+\))\.(\w+)\((.+)\);\<\/script\>', code
     )
     groups = m.groups()
     if m is not None and len(m.groups()) == 4:
@@ -495,5 +497,5 @@ try:
     nar_path = os.environ["NARRATIVE_DIR"]
     obsolete_json = open(os.path.join(nar_path, "src", "obsolete_app_mapping.json"))
     obsolete_apps = json.loads(obsolete_json.read())
-except:
+except BaseException:
     obsolete_apps = dict()

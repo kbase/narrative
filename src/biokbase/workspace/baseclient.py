@@ -190,7 +190,7 @@ class BaseClient(object):
             "id": str(_random.random())[2:],
         }
         if context:
-            if type(context) is not dict:
+            if not isinstance(context, dict):
                 raise ValueError("context is not type dict as required.")
             arg_hash["context"] = context
 

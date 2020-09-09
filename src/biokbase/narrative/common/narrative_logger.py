@@ -44,7 +44,7 @@ class NarrativeLogger(object):
         try:
             log_socket.connect((self.host, self.port))
             log_socket.sendall((json.dumps(message) + "\n").encode())
-        except:
+        except BaseException:
             pass  # just bomb out silently. We can lose a log or two.
         finally:
             log_socket.close()

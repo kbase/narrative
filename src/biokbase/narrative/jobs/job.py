@@ -124,7 +124,7 @@ class Job(object):
             # inputs = map_inputs_from_state(state, spec)
             print("Inputs:\n------")
             pprint(self.inputs)
-        except:
+        except BaseException:
             print("Unable to retrieve current running state!")
 
     def app_spec(self):
@@ -248,7 +248,7 @@ class Job(object):
             return (num_available_lines, list())
         return (
             num_available_lines,
-            self._job_logs[first_line : first_line + num_lines],
+            self._job_logs[first_line: first_line + num_lines],
         )
 
     def _update_log(self):

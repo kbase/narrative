@@ -27,7 +27,7 @@ def user_workspace(newWs=None):
         cfg = getKBaseCfg()
         try:
             userId = cfg.get("authentication", "user_id")
-        except:
+        except BaseException:
             userId = "public"
         cfg.set("workspace_deluxe", userId + "-current-workspace", currentWs)
         with open(kb_config, "w") as configfile:
@@ -40,11 +40,11 @@ def user_workspace(newWs=None):
         cfg = getKBaseCfg()
         try:
             userId = cfg.get("authentication", "user_id")
-        except:
+        except BaseException:
             userId = "public"
         try:
             currentWs = cfg.get("workspace_deluxe", userId + "-current-workspace")
-        except:
+        except BaseException:
             # for compatibility, look for the old style workspace config variable
             try:
                 currentWs = cfg.get("workspace_deluxe", "workspace")
@@ -52,7 +52,7 @@ def user_workspace(newWs=None):
                 cfg.remove_option("workspace_deluxe", "workspace")
                 with open(kb_config, "w") as configfile:
                     cfg.write(configfile)
-            except:
+            except BaseException:
                 sys.stderr.write(
                     "\nWorkspace has not been set!\nRun ws-workspace [WORKSPACE_NAME] to set your workspace.\n\n"
                 )

@@ -761,7 +761,7 @@ class AppManager(object):
                 self.send_cell_message("result", cell_id, run_id, {"result": result})
             else:
                 return result
-        except:
+        except BaseException:
             raise
 
     def send_cell_message(self, message_id, cell_id, run_id, message):
@@ -932,7 +932,7 @@ class AppManager(object):
         if "symbols" in generator:
             try:
                 symbols = int(generator["symbols"])
-            except:
+            except BaseException:
                 raise ValueError(
                     'The "symbols" input to the generated value must be an '
                     + "integer > 0!"

@@ -24,7 +24,7 @@ from .narrative_logger import NarrativeLogger
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 __date__ = "2014-07-31"
 
-## Constants
+# Constants
 
 KBASE_TMP_DIR = "/tmp"
 KBASE_TMP_LOGFILE = os.path.join(KBASE_TMP_DIR, "kbase-narrative.log")
@@ -32,7 +32,7 @@ KBASE_TMP_LOGFILE = os.path.join(KBASE_TMP_DIR, "kbase-narrative.log")
 # env var with location of proxy config file
 KBASE_PROXY_ENV = "KBASE_PROXY_CONFIG"
 
-## Internal logging
+# Internal logging
 
 _log = logging.getLogger("tornado.application")
 _narr_log = NarrativeLogger()
@@ -41,7 +41,7 @@ _narr_log = NarrativeLogger()
 # def _logdbg(m):
 #    open("/tmp/wtf", "a").write(m + "\n")
 
-## External functions
+# External functions
 
 
 def get_narrative_logger():
@@ -83,7 +83,7 @@ def log_event(log, event, mapping):
     log.info(msg)
 
 
-## Internal functions and classes
+# Internal functions and classes
 
 
 def _kbase_log_name(name):
@@ -102,7 +102,7 @@ def _has_handler_type(log, type_):
     return any([isinstance(h, type_) for h in log.handlers])
 
 
-## Custom handlers
+# Custom handlers
 
 
 class BufferedSocketHandler(handlers.SocketHandler):
@@ -232,7 +232,7 @@ def reset_handlers():
     init_handlers()
 
 
-## Run the rest of this on import
+# Run the rest of this on import
 
 # Get root log obj.
 g_log = get_logger()

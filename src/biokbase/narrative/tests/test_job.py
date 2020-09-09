@@ -120,7 +120,8 @@ class JobTest(unittest.TestCase):
         job = self._mocked_job()
         js_out = job._repr_javascript_()
         self.assertIsInstance(js_out, str)
-        # spot check to make sure the core pieces are present. needs the element.html part, job_id, and widget
+        # spot check to make sure the core pieces are present. needs the
+        # element.html part, job_id, and widget
         self.assertIn("element.html", js_out)
         self.assertIn(job.job_id, js_out)
         self.assertIn("kbaseNarrativeJobStatus", js_out)

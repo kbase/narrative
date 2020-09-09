@@ -338,7 +338,7 @@ def _flatten_params(d):
             # e.g. goes from [1, 2, 3] to '1_2_3'
             trim_list = str(v)
             trim_list = re.sub(
-                "[\[\]\s']", "", trim_list
+                r"[\[\]\s']", "", trim_list
             )  # remove [, ], spaces and quotes
             trim_list = re.sub(
                 "[^A-Za-z0-9|._-]", "_", trim_list
@@ -441,7 +441,7 @@ def _generate_vals(t):
         start = Decimal(str(t[0]))
         interval = Decimal(str(t[1]))
         target = Decimal(str(t[2]))
-    except:
+    except BaseException:
         raise ValueError("The input tuple must be entirely numeric")
     if interval == 0:
         raise ValueError("The interval value must not be 0")

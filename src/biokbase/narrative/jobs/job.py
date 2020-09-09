@@ -290,7 +290,7 @@ class Job(object):
                 "version": spec["info"].get("ver", None),
                 "name": spec["info"]["name"],
             }
-        except Exception as e:
+        except Exception:
             state = {}
             info = {"app_id": None, "version": None, "name": "Unknown App"}
         return Template(tmpl).render(

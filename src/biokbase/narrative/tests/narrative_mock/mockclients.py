@@ -138,7 +138,6 @@ class MockClients:
             None,
         ]
 
-        obj_info = random_obj_info
         infos = []
         for obj_ident in params.get(
             "objects", [{"name": "Sbicolor2", "workspace": "whatever"}]

@@ -4,8 +4,6 @@ Installer for KBase narrative Python libraries
 from biokbase.narrative.common.util import BuildDocumentation
 from setuptools import setup, find_packages
 import glob
-import re
-import sys
 import ez_setup
 
 ez_setup.use_setuptools()

@@ -4,7 +4,6 @@ Test log proxy and kblogging
 import logging
 import os
 import signal
-import sys
 import time
 import unittest
 from biokbase.narrative.common import log_proxy as proxy
@@ -96,7 +95,7 @@ class LogRecordTest(unittest.TestCase):
             {12: "xanthium"},
             {"message": "Hello=World;greeting"},
         ):
-            kbrec = proxy.DBRecord(inp)
+            proxy.DBRecord(inp)
             self.assertRaises(ValueError, proxy.DBRecord, inp, strict=True)
 
 

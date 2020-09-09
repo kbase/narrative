@@ -4,16 +4,13 @@ Utility functions for dealing with KBase services, etc.
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 __date__ = "1/6/14"
 
-import json
 import os
 import re
 import requests
 from setuptools import Command
-import time
 from .kvp import KVP_EXPR, parse_kvp
 from biokbase.workspace.client import Workspace as WS2
 from biokbase.workspace.baseclient import ServerError
-from urllib.error import URLError
 
 
 def kbase_debug_mode():

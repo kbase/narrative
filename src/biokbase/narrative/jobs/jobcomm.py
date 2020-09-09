@@ -193,7 +193,7 @@ class JobComm:
             job_info = self._jm.lookup_job_info(req.job_id)
             self.send_comm_message("job_info", job_info)
             return job_info
-        except ValueError as e:
+        except ValueError:
             self.send_error_message("job_does_not_exist", req)
             raise
 
@@ -220,7 +220,7 @@ class JobComm:
             job_state = self._jm.get_job_state(req.job_id)
             self.send_comm_message("job_status", job_state)
             return job_state
-        except ValueError as e:
+        except ValueError:
             # kblogging.log_event(self._log, "lookup_job_state_error", {"err": str(e)})
             self.send_error_message("job_does_not_exist", req)
             raise
@@ -255,7 +255,7 @@ class JobComm:
         self._verify_job_id(req)
         try:
             self._jm.cancel_job(req.job_id)
-        except ValueError as e:
+        except ValueError:
             self.send_error_message("job_does_not_exist", req)
             raise
         except NarrativeException as e:
@@ -297,7 +297,7 @@ class JobComm:
                     "latest": latest_only,
                 },
             )
-        except ValueError as e:
+        except ValueError:
             self.send_error_message("job_does_not_exist", req)
             raise
         except NarrativeException as e:

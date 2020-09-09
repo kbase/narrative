@@ -153,7 +153,7 @@ class JobTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_show_output_widget(self):
         job = self._mocked_job()
-        out_widget = job.show_output_widget()
+        job.show_output_widget()
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_log(self):

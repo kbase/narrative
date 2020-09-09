@@ -135,7 +135,7 @@ def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False)
     ws_id = ws_info[0]
 
     # setup and save the narrative object
-    metadata = nar["info"][10]
+    nar["info"][10]
     ws_save_obj = {
         "type": "KBaseNarrative.Narrative",
         "data": nar["data"],

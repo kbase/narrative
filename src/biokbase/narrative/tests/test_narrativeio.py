@@ -240,7 +240,6 @@ class NarrIOTestCase(unittest.TestCase):
         """
         Validates a Narrative's typed object metadata.
         """
-        pass
 
     def test_read_narrative_valid_content_metadata(self):
         if self.test_token is None:

@@ -11,7 +11,6 @@ class MockComm(object):
 
     def on_msg(self, *args, **kwargs):
         """Mock the msg router"""
-        pass
 
     def send(self, data=None, content=None):
         """Mock sending a msg"""

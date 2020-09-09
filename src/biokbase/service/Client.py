@@ -184,9 +184,8 @@ class Client(object):
             verify=not self.trust_all_ssl_certificates,
         )
         if ret.status_code == _requests.codes.server_error:
-            json_header = None
             if _CT in ret.headers:
-                json_header = ret.headers[_CT]
+                ret.headers[_CT]
             if _CT in ret.headers and ret.headers[_CT] == _AJ:
                 err = _json.loads(ret.text)
                 if "error" in err:

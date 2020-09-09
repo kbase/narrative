@@ -165,7 +165,7 @@ def update_method_cell(cell, format_ver):
                             tag = tag_pref
                 if tag is None:
                     raise Exception("No release tag found!")
-        except Exception as e:
+        except Exception:
             # print("Exception found: {}".format(str(e)))
             try:
                 # print("Searching for module info...")

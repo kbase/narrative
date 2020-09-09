@@ -4,7 +4,6 @@ from biokbase.narrative.contents.updater import (
     find_app_info,
     suggest_apps,
 )
-import json
 from .util import TestConfig
 
 

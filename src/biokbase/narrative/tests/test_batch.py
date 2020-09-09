@@ -3,7 +3,6 @@ Tests for the app_util module
 """
 import unittest
 from .narrative_mock.mockclients import get_mock_client, MockStagingHelper
-import os
 import mock
 from . import util
 from biokbase.narrative.jobs.batch import (
@@ -16,7 +15,6 @@ from biokbase.narrative.jobs.batch import (
     _prepare_output_vals,
 )
 import biokbase.narrative.jobs.specmanager
-from pprint import pprint
 
 
 class BatchTestCase(unittest.TestCase):

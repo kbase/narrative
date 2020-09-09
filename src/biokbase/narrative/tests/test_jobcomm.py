@@ -113,7 +113,7 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("job_state", job_id, True)
 
         with self.assertRaises(ValueError) as e:
-            state = self.jc._lookup_job_state(req)
+            self.jc._lookup_job_state(req)
         self.assertIn("Job id required to process job_state request", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual(
@@ -125,7 +125,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id = "nope"
         req = make_comm_msg("job_state", job_id, True)
         with self.assertRaises(ValueError) as e:
-            state = self.jc._lookup_job_state(req)
+            self.jc._lookup_job_state(req)
         self.assertIn(f"No job present with id {job_id}", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual(

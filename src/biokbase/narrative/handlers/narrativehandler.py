@@ -1,4 +1,3 @@
-import os
 from notebook.utils import url_path_join, url_escape
 from notebook.base.handlers import IPythonHandler, FilesRedirectHandler
 from tornado import web

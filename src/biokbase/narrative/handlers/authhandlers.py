@@ -54,7 +54,7 @@ class KBaseLoginHandler(LoginHandler):
             auth_info = dict()
             try:
                 auth_info = get_user_info(token)
-            except Exception as e:
+            except Exception:
                 app_log.error(
                     "Unable to get user information from authentication token!"
                 )
@@ -106,7 +106,7 @@ class KBaseLoginHandler(LoginHandler):
 
 class KBaseLogoutHandler(LogoutHandler):
     def get(self):
-        client_ip = self.request.remote_ip
+        self.request.remote_ip
         http_headers = self.request.headers
         user = kbase_env.user
         ua = http_headers.get("User-Agent", "unknown")

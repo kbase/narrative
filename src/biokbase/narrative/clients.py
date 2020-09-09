@@ -13,7 +13,7 @@ def get(client_name, token=None):
 
 
 def reset():
-    __clients = dict()
+    pass
 
 
 def __init_client(client_name, token=None):

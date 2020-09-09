@@ -115,11 +115,10 @@ def _update_narrative(
         nb = nbformat.reads(json.dumps(narr_obj["data"]), 3.0)
     ninfo = NarrativeInfo(narr_obj["info"], ws_info[2])
 
-    cells = list()
     if nb.nbformat == 4:
-        cells = nb.cells
+        nb.cells
     else:
-        cells = nb.worksheets[0].cells
+        nb.worksheets[0].cells
 
     for idx, cell in enumerate(nb.cells):
         if cell.cell_type != "code":

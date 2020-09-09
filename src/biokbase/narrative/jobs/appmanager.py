@@ -243,7 +243,7 @@ class AppManager(object):
             agent_token = auth.get_agent_token(
                 auth.get_auth_token(), token_name=token_name
             )
-        except Exception as e:
+        except Exception:
             raise
 
         job_meta["token_id"] = agent_token["id"]
@@ -460,7 +460,7 @@ class AppManager(object):
             agent_token = auth.get_agent_token(
                 auth.get_auth_token(), token_name=token_name
             )
-        except Exception as e:
+        except Exception:
             raise
         job_runner_inputs["meta"]["token_id"] = agent_token["id"]
 

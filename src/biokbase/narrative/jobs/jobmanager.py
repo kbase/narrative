@@ -2,12 +2,10 @@ import biokbase.narrative.clients as clients
 from .job import Job
 
 # from ipykernel.comm import Comm
-import threading
 from biokbase.narrative.common import kblogging
 from IPython.display import HTML
 from jinja2 import Template
 from datetime import datetime, timezone, timedelta
-import time
 from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.exception_util import transform_job_exception
 

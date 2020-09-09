@@ -62,7 +62,6 @@ def set_token(newtoken):
         user_profile = biokbase.auth.User(token=token)
         user_id = user_profile.user_id
         # If we had a previous session, clear it out
-        ws_client = None
 
 
 def clear_token():
@@ -73,7 +72,6 @@ def clear_token():
         token = None
         user_profile = None
     biokbase.auth.set_environ_token(None)
-    ws_client = None
 
 
 # Define the KBase notebook magics

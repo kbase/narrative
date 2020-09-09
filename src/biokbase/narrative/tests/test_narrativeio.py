@@ -151,7 +151,7 @@ class NarrIOTestCase(unittest.TestCase):
             self.mixin, biokbase.narrative.contents.narrativeio.KBaseWSManagerMixin
         )
 
-    ##### test KBaseWSManagerMixin.narrative_exists #####
+    # test KBaseWSManagerMixin.narrative_exists #####
 
     def test_narrative_exists_valid(self):
         if self.test_token is None:
@@ -175,7 +175,7 @@ class NarrIOTestCase(unittest.TestCase):
             self.mixin.narrative_exists(self.private_nar["ref"])
         self.assertIsNotNone(err)
 
-    ##### test KBaseWSManagerMixin.read_narrative #####
+    # test KBaseWSManagerMixin.read_narrative #####
 
     def validate_narrative(self, nar, with_content, with_meta):
         """
@@ -301,7 +301,7 @@ class NarrIOTestCase(unittest.TestCase):
             "read_narrative must use a NarrativeRef as input!", str(err.exception)
         )
 
-    ##### test KBaseWSManagerMixin.write_narrative #####
+    # test KBaseWSManagerMixin.write_narrative #####
 
     def test_write_narrative_valid_auth(self):
         if self.test_token is None:
@@ -406,7 +406,7 @@ class NarrIOTestCase(unittest.TestCase):
         self.assertEqual(err.exception.status_code, 400)
         self.logout()
 
-    ##### test KBaseWSManagerMixin.rename_narrative #####
+    # test KBaseWSManagerMixin.rename_narrative #####
 
     def test_rename_narrative_valid_auth(self):
         if self.test_token is None:
@@ -461,7 +461,7 @@ class NarrIOTestCase(unittest.TestCase):
             "read_narrative must use a NarrativeRef as input!", str(err.exception)
         )
 
-    ##### test KBaseWSManagerMixin.copy_narrative #####
+    # test KBaseWSManagerMixin.copy_narrative #####
 
     def test_copy_narrative_valid(self):
         # no op for now
@@ -471,7 +471,7 @@ class NarrIOTestCase(unittest.TestCase):
         # no op for now
         pass
 
-    ##### test KBaseWSManagerMixin.list_narratives #####
+    # test KBaseWSManagerMixin.list_narratives #####
 
     def validate_narrative_list(self, nar_list):
         self.assertIsInstance(nar_list, list)
@@ -531,7 +531,7 @@ class NarrIOTestCase(unittest.TestCase):
             self.mixin.list_narratives(ws_id=self.bad_nar_ref)
         self.assertIsNotNone(err)
 
-    ##### test KBaseWSManagerMixin.narrative_permissions #####
+    # test KBaseWSManagerMixin.narrative_permissions #####
     # params:
     #    narrative ref == valid, invalid, bad/malformed
     # user:
@@ -575,7 +575,7 @@ class NarrIOTestCase(unittest.TestCase):
             str(err.exception),
         )
 
-    ##### test KBaseWSManagerMixin.narrative_writable #####
+    # test KBaseWSManagerMixin.narrative_writable #####
 
     def test_narrative_writable_anon(self):
         if self.test_token is None:
@@ -629,7 +629,7 @@ class NarrIOTestCase(unittest.TestCase):
         )
         self.logout()
 
-    ##### test KBaseWSManagerMixin._validate_nar_type #####
+    # test KBaseWSManagerMixin._validate_nar_type #####
     def test__validate_nar_type_ok(self):
         self.assertIsNone(
             self.mixin._validate_nar_type("KBaseNarrative.Narrative-123.45", None)

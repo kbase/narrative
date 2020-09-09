@@ -47,7 +47,7 @@ This calls a few subcommands, and those can be run independently for specific us
 
 ### Add Credentials for Tests
 
-The Narrative Interface is one of the hubs of KBase - it touches several different services, all of which need real authentication. Some of those have been mocked in various tests (like running apps), but others (the Workspace service) still require a real Auth token. If you have a KBase Developer account, you can create a Developer Token in the Account tab of the main KBase interface.
+The Narrative Interface is one of the hubs of KBase - it touches several different services, all of which need real authentication. Some of those have been mocked in various tests (like running apps), but others (the Workspace service) still require a real Auth token. If you have a KBase Developer account, you can create a Developer Token in the Account tab of the main KBase interface. To create a developer token, follow the instructions in [Section 3.4 of the KBase SDK documentation](https://kbase.github.io/kb_sdk_docs/tutorial/3_initialize.html).
 
 You can store auth token files in test/. These are single line files, containing only the Auth token used for testing a single user. For example, `test/narrativetest.tok` would be for the narrativetest user, and would only contain that user's Auth token. DO NOT CHECK THESE IN TO GITHUB.
 

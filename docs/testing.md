@@ -22,7 +22,7 @@ npm install -g grunt-cli
 
 ## Short version
 
-1. Install the Narrative and activate its conda environment (if appropriate)
+1. Install the Narrative and activate its environment
     a. (optional) set credentials in test/
 2. Run `make test` at a prompt.
 3. Lament the coverage is so low.

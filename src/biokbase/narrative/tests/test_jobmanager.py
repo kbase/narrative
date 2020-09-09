@@ -14,51 +14,58 @@ from biokbase.narrative.exception_util import NarrativeException
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 config = TestConfig()
-job_info = config.load_json_file(config.get('jobs', 'ee2_job_info_file'))
+job_info = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 
 
-@mock.patch('biokbase.narrative.jobs.job.clients.get', get_mock_client)
+@mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
 def phony_job():
-    return Job.from_state('phony_job',
-                          {'params': [], 'service_ver': '0.0.0'},
-                          'kbasetest',
-                          'NarrativeTest/test_editor',
-                          tag='dev')
+    return Job.from_state(
+        "phony_job",
+        {"params": [], "service_ver": "0.0.0"},
+        "kbasetest",
+        "NarrativeTest/test_editor",
+        tag="dev",
+    )
 
 
 def create_jm_message(r_type, job_id=None, data={}):
-    data['request_type'] = r_type
-    data['job_id'] = job_id
-    return {
-        "content": {
-            "data": data
-        }
-    }
+    data["request_type"] = r_type
+    data["job_id"] = job_id
+    return {"content": {"data": data}}
 
 
 class JobManagerTest(unittest.TestCase):
     @classmethod
-    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def setUpClass(cls):
         cls.jm = biokbase.narrative.jobs.jobmanager.JobManager()
         cls.job_ids = list(job_info.keys())
-        os.environ['KB_WORKSPACE_ID'] = config.get('jobs', 'job_test_wsname')
+        os.environ["KB_WORKSPACE_ID"] = config.get("jobs", "job_test_wsname")
 
-    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def setUp(self):
         self.jm.initialize_jobs()
 
     def validate_status_message(self, msg):
-        core_keys = set(['widget_info', 'owner', 'state', 'spec'])
-        state_keys = set(['user', 'authstrat', 'wsid', 'status', 'updated', 'job_input'])
+        core_keys = set(["widget_info", "owner", "state", "spec"])
+        state_keys = set(
+            ["user", "authstrat", "wsid", "status", "updated", "job_input"]
+        )
         if not core_keys.issubset(set(msg.keys())):
-            print("Missing core key(s) - [{}]".format(', '.join(core_keys.difference(set(msg.keys())))))
+            print(
+                "Missing core key(s) - [{}]".format(
+                    ", ".join(core_keys.difference(set(msg.keys())))
+                )
+            )
             return False
-        if not state_keys.issubset(set(msg['state'].keys())):
-            print("Missing status key(s) - [{}]".format(', '.join(state_keys.difference(set(msg['state'].keys())))))
+        if not state_keys.issubset(set(msg["state"].keys())):
+            print(
+                "Missing status key(s) - [{}]".format(
+                    ", ".join(state_keys.difference(set(msg["state"].keys())))
+                )
+            )
             return False
         return True
-
 
     def test_get_job_good(self):
         job_id = self.job_ids[0]
@@ -67,9 +74,9 @@ class JobManagerTest(unittest.TestCase):
 
     def test_get_job_bad(self):
         with self.assertRaises(ValueError):
-            self.jm.get_job('not_a_job_id')
+            self.jm.get_job("not_a_job_id")
 
-    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_list_jobs_html(self):
         jobs_html = self.jm.list_jobs()
         self.assertIsInstance(jobs_html, HTML)
@@ -84,7 +91,7 @@ class JobManagerTest(unittest.TestCase):
         self.assertIn("<td>Not started</td>", html)
         self.assertIn("<td>Incomplete</td>", html)
 
-    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_cancel_job_good(self):
         new_job = phony_job()
         job_id = new_job.job_id
@@ -95,7 +102,7 @@ class JobManagerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.jm.cancel_job(None)
 
-    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_lookup_all_job_states(self):
         states = self.jm.lookup_all_job_states()
         self.assertEqual(len(states), 2)
@@ -155,12 +162,15 @@ class JobManagerTest(unittest.TestCase):
     #     self.assertTrue(self.jm._running_jobs[phony_id]['refresh'] == 0)
     #     self.assertIsNone(msg)
 
-    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_failing_mock_client)
+    @mock.patch(
+        "biokbase.narrative.jobs.jobmanager.clients.get", get_failing_mock_client
+    )
     def test_initialize_jobs_ee2_fail(self):
         # init jobs should fail. specifically, ee2.check_workspace_jobs should error.
         with self.assertRaises(NarrativeException) as e:
             self.jm.initialize_jobs()
-        self.assertIn('Job lookup failed', str(e.exception))
+        self.assertIn("Job lookup failed", str(e.exception))
+
 
 if __name__ == "__main__":
     unittest.main()

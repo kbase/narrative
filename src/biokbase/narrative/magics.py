@@ -7,9 +7,16 @@
 import getpass
 import logging
 import sys
+
 # IPython
-from IPython.core.magic import (Magics, magics_class, line_magic,
-                                cell_magic, line_cell_magic)
+from IPython.core.magic import (
+    Magics,
+    magics_class,
+    line_magic,
+    cell_magic,
+    line_cell_magic,
+)
+
 # KBase
 import biokbase.auth
 
@@ -29,7 +36,7 @@ ws_client = None
 have_browser = None
 
 # End points for various services
-endpoint = {'workspace': URLS.workspace}
+endpoint = {"workspace": URLS.workspace}
 
 # IPython interpreter object
 ip = None
@@ -43,8 +50,7 @@ def user_msg(s):
     Adds a newline.
     Also logs it for posterity.
     """
-    g_log.debug("user_msg{}len={:d}".format(
-               EVENT_MSG_SEP, len(s)))
+    g_log.debug("user_msg{}len={:d}".format(EVENT_MSG_SEP, len(s)))
     sys.stderr.write(s + "\n")
 
 
@@ -69,12 +75,12 @@ def clear_token():
     biokbase.auth.set_environ_token(None)
     ws_client = None
 
+
 # Define the KBase notebook magics
 
 
 @magics_class
 class kbasemagics(Magics):
-
     @line_magic
     def kblogin(self, line):
         """
@@ -93,9 +99,10 @@ class kbasemagics(Magics):
         global user_id, token, user_profile
 
         if user_id is not None:
-            user_msg("Already logged in as {}. "
-                     "Please kblogout first if you want to re-login"
-                     .format(user_id))
+            user_msg(
+                "Already logged in as {}. "
+                "Please kblogout first if you want to re-login".format(user_id)
+            )
         elif user is None:
             user_msg("kblogin requires at least a username")
         else:
@@ -106,17 +113,21 @@ class kbasemagics(Magics):
                 # t = biokbase.auth.Token(user_id=user)
                 # if t.token is None:
                 if password is None:
-                    password = getpass.getpass("Please enter the KBase "
-                                               "password for '%s': " % user)
+                    password = getpass.getpass(
+                        "Please enter the KBase " "password for '%s': " % user
+                    )
                 t = biokbase.auth.Token(user_id=user, password=password)
                 if t.token:
                     set_token(t.token)
                 else:
                     raise biokbase.auth.AuthFail(
-                        "Could not get token with username and password given")
+                        "Could not get token with username and password given"
+                    )
             except biokbase.auth.AuthFail:
-                user_msg("Failed to login with username password provided. "
-                         "Please try again.")
+                user_msg(
+                    "Failed to login with username password provided. "
+                    "Please try again."
+                )
                 token = None
         if token is not None:
             return user_id
@@ -126,7 +137,7 @@ class kbasemagics(Magics):
     @line_magic
     def kblogout(self, line):
         """Logout by removing credentials from environment and
-           clearing session objects
+        clearing session objects
         """
         # Call the clear_token method
         clear_token()

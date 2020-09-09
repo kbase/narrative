@@ -44,8 +44,9 @@ def _prepare_upa_serialization(upa):
     if isinstance(upa, list):
         upa = ";".join(upa)
     if not is_upa(upa):
-        raise ValueError('"{}" is not a valid UPA. It may have already been serialized.'
-                         .format(upa))
+        raise ValueError(
+            '"{}" is not a valid UPA. It may have already been serialized.'.format(upa)
+        )
     return upa
 
 
@@ -97,11 +98,13 @@ def deserialize(serial_upa):
     if not isinstance(serial_upa, str):
         raise ValueError("Can only deserialize UPAs from strings.")
     if serial_upa.startswith(external_tag):
-        deserial = serial_upa[len(external_tag):]
+        deserial = serial_upa[len(external_tag) :]
     else:
         ws_id = system_variable("workspace_id")
         if ws_id is None:
-            raise RuntimeError("Currently loaded workspace is unknown! Unable to deserialize UPA.")
+            raise RuntimeError(
+                "Currently loaded workspace is unknown! Unable to deserialize UPA."
+            )
         deserial = re.sub("^\[(\d+)\]\/", str(ws_id) + "/", serial_upa)
     if not is_upa(deserial):
         raise ValueError('Deserialized UPA: "{}" is invalid!'.format(deserial))

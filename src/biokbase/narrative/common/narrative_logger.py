@@ -22,6 +22,7 @@ class NarrativeLogger(object):
     JSON packet, then closes off the socket. If there's any errors while writing, it just
     ignores them and moves on - if we lose a log or two, it's not a big deal.
     """
+
     def __init__(self):
         self.host = URLS.log_host
         self.port = URLS.log_port
@@ -36,7 +37,7 @@ class NarrativeLogger(object):
             "type": "narrative",
             "user": kbase_env.user,
             "operation": event,
-            "env": self.env
+            "env": self.env,
         }
         message.update(context)
         log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

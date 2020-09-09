@@ -1,7 +1,7 @@
 import unittest
 from biokbase.narrative.exception_util import (
     NarrativeException,
-    transform_job_exception
+    transform_job_exception,
 )
 from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 from biokbase.userandjobstate.baseclient import ServerError as UJSServerError
@@ -19,7 +19,7 @@ class ExceptionUtilTestCase(unittest.TestCase):
         self.assertEqual(nar_err.code, code)
         self.assertEqual(nar_err.message, message)
         self.assertEqual(nar_err.name, name)
-        self.assertEqual(nar_err.source, 'njs')
+        self.assertEqual(nar_err.source, "njs")
 
     def test_transform_ujs_err(self):
         code = 1000
@@ -30,7 +30,7 @@ class ExceptionUtilTestCase(unittest.TestCase):
         self.assertEqual(nar_err.code, code)
         self.assertEqual(nar_err.message, message)
         self.assertEqual(nar_err.name, name)
-        self.assertEqual(nar_err.source, 'ujs')
+        self.assertEqual(nar_err.source, "ujs")
 
     def test_transform_http_err_unavailable(self):
         codes = [404, 502, 503]
@@ -44,7 +44,7 @@ class ExceptionUtilTestCase(unittest.TestCase):
             self.assertEqual(nar_err.code, c)
             self.assertEqual(nar_err.message, message)
             self.assertEqual(nar_err.name, name)
-            self.assertEqual(nar_err.source, 'network')
+            self.assertEqual(nar_err.source, "network")
 
     def test_transform_http_err_timeout(self):
         codes = [504, 598, 599]
@@ -58,7 +58,7 @@ class ExceptionUtilTestCase(unittest.TestCase):
             self.assertEqual(nar_err.code, c)
             self.assertEqual(nar_err.message, message)
             self.assertEqual(nar_err.name, name)
-            self.assertEqual(nar_err.source, 'network')
+            self.assertEqual(nar_err.source, "network")
 
     def test_transform_http_err_internal(self):
         code = 500
@@ -71,7 +71,7 @@ class ExceptionUtilTestCase(unittest.TestCase):
         self.assertEqual(nar_err.code, code)
         self.assertEqual(nar_err.message, message)
         self.assertEqual(nar_err.name, name)
-        self.assertEqual(nar_err.source, 'network')
+        self.assertEqual(nar_err.source, "network")
 
     def test_transform_http_err_unknown(self):
         code = 666
@@ -84,4 +84,4 @@ class ExceptionUtilTestCase(unittest.TestCase):
         self.assertEqual(nar_err.code, code)
         self.assertEqual(nar_err.message, message)
         self.assertEqual(nar_err.name, name)
-        self.assertEqual(nar_err.source, 'network')
+        self.assertEqual(nar_err.source, "network")

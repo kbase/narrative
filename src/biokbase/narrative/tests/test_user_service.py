@@ -12,4 +12,4 @@ from .util import TestConfig
 class UserServiceTestCase(unittest.TestCase):
     def test_user_trust(self):
         us = UserService()
-        self.assertTrue(us.is_trusted_user('anybody'))
+        self.assertTrue(us.is_trusted_user("anybody"))

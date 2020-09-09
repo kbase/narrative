@@ -16,20 +16,30 @@ except:
 
 
 class Catalog(object):
-
     def __init__(
-            self, url=None, timeout=30 * 60, user_id=None,
-            password=None, token=None, ignore_authrc=False,
-            trust_all_ssl_certificates=False,
-            auth_svc='https://kbase.us/services/authorization/Sessions/Login'):
+        self,
+        url=None,
+        timeout=30 * 60,
+        user_id=None,
+        password=None,
+        token=None,
+        ignore_authrc=False,
+        trust_all_ssl_certificates=False,
+        auth_svc="https://kbase.us/services/authorization/Sessions/Login",
+    ):
         if url is None:
-            raise ValueError('A url is required')
+            raise ValueError("A url is required")
         self._service_ver = None
         self._client = _BaseClient(
-            url, timeout=timeout, user_id=user_id, password=password,
-            token=token, ignore_authrc=ignore_authrc,
+            url,
+            timeout=timeout,
+            user_id=user_id,
+            password=password,
+            token=token,
+            ignore_authrc=ignore_authrc,
             trust_all_ssl_certificates=trust_all_ssl_certificates,
-            auth_svc=auth_svc)
+            auth_svc=auth_svc,
+        )
 
     def version(self, context=None):
         """
@@ -37,8 +47,8 @@ class Catalog(object):
         :returns: instance of String
         """
         return self._client.call_method(
-            'Catalog.version',
-            [], self._service_ver, context)
+            "Catalog.version", [], self._service_ver, context
+        )
 
     def is_registered(self, params, context=None):
         """
@@ -51,8 +61,8 @@ class Catalog(object):
         :returns: instance of type "boolean" (@range [0,1])
         """
         return self._client.call_method(
-            'Catalog.is_registered',
-            [params], self._service_ver, context)
+            "Catalog.is_registered", [params], self._service_ver, context
+        )
 
     def register_repo(self, params, context=None):
         """
@@ -69,8 +79,8 @@ class Catalog(object):
         :returns: instance of String
         """
         return self._client.call_method(
-            'Catalog.register_repo',
-            [params], self._service_ver, context)
+            "Catalog.register_repo", [params], self._service_ver, context
+        )
 
     def push_dev_to_beta(self, params, context=None):
         """
@@ -83,8 +93,8 @@ class Catalog(object):
            String, parameter "git_url" of String
         """
         return self._client.call_method(
-            'Catalog.push_dev_to_beta',
-            [params], self._service_ver, context)
+            "Catalog.push_dev_to_beta", [params], self._service_ver, context
+        )
 
     def request_release(self, params, context=None):
         """
@@ -96,8 +106,8 @@ class Catalog(object):
            String, parameter "git_url" of String
         """
         return self._client.call_method(
-            'Catalog.request_release',
-            [params], self._service_ver, context)
+            "Catalog.request_release", [params], self._service_ver, context
+        )
 
     def list_requested_releases(self, context=None):
         """
@@ -108,8 +118,8 @@ class Catalog(object):
            parameter "owners" of list of String
         """
         return self._client.call_method(
-            'Catalog.list_requested_releases',
-            [], self._service_ver, context)
+            "Catalog.list_requested_releases", [], self._service_ver, context
+        )
 
     def review_release_request(self, review, context=None):
         """
@@ -119,8 +129,8 @@ class Catalog(object):
            String, parameter "review_message" of String
         """
         return self._client.call_method(
-            'Catalog.review_release_request',
-            [review], self._service_ver, context)
+            "Catalog.review_release_request", [review], self._service_ver, context
+        )
 
     def list_basic_module_info(self, params, context=None):
         """
@@ -155,8 +165,8 @@ class Catalog(object):
            String
         """
         return self._client.call_method(
-            'Catalog.list_basic_module_info',
-            [params], self._service_ver, context)
+            "Catalog.list_basic_module_info", [params], self._service_ver, context
+        )
 
     def add_favorite(self, params, context=None):
         """
@@ -165,8 +175,8 @@ class Catalog(object):
            String
         """
         return self._client.call_method(
-            'Catalog.add_favorite',
-            [params], self._service_ver, context)
+            "Catalog.add_favorite", [params], self._service_ver, context
+        )
 
     def remove_favorite(self, params, context=None):
         """
@@ -175,8 +185,8 @@ class Catalog(object):
            String
         """
         return self._client.call_method(
-            'Catalog.remove_favorite',
-            [params], self._service_ver, context)
+            "Catalog.remove_favorite", [params], self._service_ver, context
+        )
 
     def list_favorites(self, username, context=None):
         """
@@ -186,8 +196,8 @@ class Catalog(object):
            String
         """
         return self._client.call_method(
-            'Catalog.list_favorites',
-            [username], self._service_ver, context)
+            "Catalog.list_favorites", [username], self._service_ver, context
+        )
 
     def list_app_favorites(self, item, context=None):
         """
@@ -198,8 +208,8 @@ class Catalog(object):
            parameter "username" of String, parameter "timestamp" of String
         """
         return self._client.call_method(
-            'Catalog.list_app_favorites',
-            [item], self._service_ver, context)
+            "Catalog.list_app_favorites", [item], self._service_ver, context
+        )
 
     def list_favorite_counts(self, params, context=None):
         """
@@ -214,8 +224,8 @@ class Catalog(object):
            parameter "count" of Long
         """
         return self._client.call_method(
-            'Catalog.list_favorite_counts',
-            [params], self._service_ver, context)
+            "Catalog.list_favorite_counts", [params], self._service_ver, context
+        )
 
     def get_module_info(self, selection, context=None):
         """
@@ -343,8 +353,8 @@ class Catalog(object):
            parameter "is_main" of type "boolean" (@range [0,1])
         """
         return self._client.call_method(
-            'Catalog.get_module_info',
-            [selection], self._service_ver, context)
+            "Catalog.get_module_info", [selection], self._service_ver, context
+        )
 
     def get_version_info(self, params, context=None):
         """
@@ -405,8 +415,8 @@ class Catalog(object):
            parameter "is_main" of type "boolean" (@range [0,1])
         """
         return self._client.call_method(
-            'Catalog.get_version_info',
-            [params], self._service_ver, context)
+            "Catalog.get_version_info", [params], self._service_ver, context
+        )
 
     def list_released_module_versions(self, params, context=None):
         """
@@ -455,8 +465,11 @@ class Catalog(object):
            parameter "is_main" of type "boolean" (@range [0,1])
         """
         return self._client.call_method(
-            'Catalog.list_released_module_versions',
-            [params], self._service_ver, context)
+            "Catalog.list_released_module_versions",
+            [params],
+            self._service_ver,
+            context,
+        )
 
     def get_module_version(self, selection, context=None):
         """
@@ -543,8 +556,8 @@ class Catalog(object):
            "boolean" (@range [0,1])
         """
         return self._client.call_method(
-            'Catalog.get_module_version',
-            [selection], self._service_ver, context)
+            "Catalog.get_module_version", [selection], self._service_ver, context
+        )
 
     def list_local_functions(self, params, context=None):
         """
@@ -568,8 +581,8 @@ class Catalog(object):
            "kb_types" of list of String
         """
         return self._client.call_method(
-            'Catalog.list_local_functions',
-            [params], self._service_ver, context)
+            "Catalog.list_local_functions", [params], self._service_ver, context
+        )
 
     def get_local_function_details(self, params, context=None):
         """
@@ -598,8 +611,8 @@ class Catalog(object):
            "long_description" of String
         """
         return self._client.call_method(
-            'Catalog.get_local_function_details',
-            [params], self._service_ver, context)
+            "Catalog.get_local_function_details", [params], self._service_ver, context
+        )
 
     def module_version_lookup(self, selection, context=None):
         """
@@ -618,8 +631,8 @@ class Catalog(object):
            String, parameter "docker_img_name" of String
         """
         return self._client.call_method(
-            'Catalog.module_version_lookup',
-            [selection], self._service_ver, context)
+            "Catalog.module_version_lookup", [selection], self._service_ver, context
+        )
 
     def list_service_modules(self, filter, context=None):
         """
@@ -632,8 +645,8 @@ class Catalog(object):
            of String, parameter "docker_img_name" of String
         """
         return self._client.call_method(
-            'Catalog.list_service_modules',
-            [filter], self._service_ver, context)
+            "Catalog.list_service_modules", [filter], self._service_ver, context
+        )
 
     def set_registration_state(self, params, context=None):
         """
@@ -643,8 +656,8 @@ class Catalog(object):
            "registration_state" of String, parameter "error_message" of String
         """
         return self._client.call_method(
-            'Catalog.set_registration_state',
-            [params], self._service_ver, context)
+            "Catalog.set_registration_state", [params], self._service_ver, context
+        )
 
     def get_module_state(self, params, context=None):
         """
@@ -664,8 +677,8 @@ class Catalog(object):
            "registration" of String, parameter "error_message" of String
         """
         return self._client.call_method(
-            'Catalog.get_module_state',
-            [params], self._service_ver, context)
+            "Catalog.get_module_state", [params], self._service_ver, context
+        )
 
     def get_build_log(self, registration_id, context=None):
         """
@@ -673,8 +686,8 @@ class Catalog(object):
         :returns: instance of String
         """
         return self._client.call_method(
-            'Catalog.get_build_log',
-            [registration_id], self._service_ver, context)
+            "Catalog.get_build_log", [registration_id], self._service_ver, context
+        )
 
     def get_parsed_build_log(self, params, context=None):
         """
@@ -693,8 +706,8 @@ class Catalog(object):
            type "boolean" (@range [0,1])
         """
         return self._client.call_method(
-            'Catalog.get_parsed_build_log',
-            [params], self._service_ver, context)
+            "Catalog.get_parsed_build_log", [params], self._service_ver, context
+        )
 
     def list_builds(self, params, context=None):
         """
@@ -722,8 +735,8 @@ class Catalog(object):
            parameter "git_url" of String
         """
         return self._client.call_method(
-            'Catalog.list_builds',
-            [params], self._service_ver, context)
+            "Catalog.list_builds", [params], self._service_ver, context
+        )
 
     def delete_module(self, params, context=None):
         """
@@ -735,8 +748,8 @@ class Catalog(object):
            String, parameter "git_url" of String
         """
         return self._client.call_method(
-            'Catalog.delete_module',
-            [params], self._service_ver, context)
+            "Catalog.delete_module", [params], self._service_ver, context
+        )
 
     def migrate_module_to_new_git_url(self, params, context=None):
         """
@@ -750,8 +763,11 @@ class Catalog(object):
            String, parameter "new_git_url" of String
         """
         return self._client.call_method(
-            'Catalog.migrate_module_to_new_git_url',
-            [params], self._service_ver, context)
+            "Catalog.migrate_module_to_new_git_url",
+            [params],
+            self._service_ver,
+            context,
+        )
 
     def set_to_active(self, params, context=None):
         """
@@ -763,8 +779,8 @@ class Catalog(object):
            String, parameter "git_url" of String
         """
         return self._client.call_method(
-            'Catalog.set_to_active',
-            [params], self._service_ver, context)
+            "Catalog.set_to_active", [params], self._service_ver, context
+        )
 
     def set_to_inactive(self, params, context=None):
         """
@@ -775,8 +791,8 @@ class Catalog(object):
            String, parameter "git_url" of String
         """
         return self._client.call_method(
-            'Catalog.set_to_inactive',
-            [params], self._service_ver, context)
+            "Catalog.set_to_inactive", [params], self._service_ver, context
+        )
 
     def is_approved_developer(self, usernames, context=None):
         """
@@ -785,32 +801,32 @@ class Catalog(object):
         :returns: instance of list of type "boolean" (@range [0,1])
         """
         return self._client.call_method(
-            'Catalog.is_approved_developer',
-            [usernames], self._service_ver, context)
+            "Catalog.is_approved_developer", [usernames], self._service_ver, context
+        )
 
     def list_approved_developers(self, context=None):
         """
         :returns: instance of list of String
         """
         return self._client.call_method(
-            'Catalog.list_approved_developers',
-            [], self._service_ver, context)
+            "Catalog.list_approved_developers", [], self._service_ver, context
+        )
 
     def approve_developer(self, username, context=None):
         """
         :param username: instance of String
         """
         return self._client.call_method(
-            'Catalog.approve_developer',
-            [username], self._service_ver, context)
+            "Catalog.approve_developer", [username], self._service_ver, context
+        )
 
     def revoke_developer(self, username, context=None):
         """
         :param username: instance of String
         """
         return self._client.call_method(
-            'Catalog.revoke_developer',
-            [username], self._service_ver, context)
+            "Catalog.revoke_developer", [username], self._service_ver, context
+        )
 
     def log_exec_stats(self, params, context=None):
         """
@@ -838,8 +854,8 @@ class Catalog(object):
            of type "boolean" (@range [0,1])
         """
         return self._client.call_method(
-            'Catalog.log_exec_stats',
-            [params], self._service_ver, context)
+            "Catalog.log_exec_stats", [params], self._service_ver, context
+        )
 
     def get_exec_aggr_stats(self, params, context=None):
         """
@@ -867,8 +883,8 @@ class Catalog(object):
            "total_queue_time" of Double, parameter "total_exec_time" of Double
         """
         return self._client.call_method(
-            'Catalog.get_exec_aggr_stats',
-            [params], self._service_ver, context)
+            "Catalog.get_exec_aggr_stats", [params], self._service_ver, context
+        )
 
     def get_exec_aggr_table(self, params, context=None):
         """
@@ -878,8 +894,8 @@ class Catalog(object):
         :returns: instance of unspecified object
         """
         return self._client.call_method(
-            'Catalog.get_exec_aggr_table',
-            [params], self._service_ver, context)
+            "Catalog.get_exec_aggr_table", [params], self._service_ver, context
+        )
 
     def get_exec_raw_stats(self, params, context=None):
         """
@@ -889,8 +905,8 @@ class Catalog(object):
         :returns: instance of list of unspecified object
         """
         return self._client.call_method(
-            'Catalog.get_exec_raw_stats',
-            [params], self._service_ver, context)
+            "Catalog.get_exec_raw_stats", [params], self._service_ver, context
+        )
 
     def get_client_groups(self, params, context=None):
         """
@@ -905,8 +921,8 @@ class Catalog(object):
            "app_id" of String, parameter "client_groups" of list of String
         """
         return self._client.call_method(
-            'Catalog.get_client_groups',
-            [params], self._service_ver, context)
+            "Catalog.get_client_groups", [params], self._service_ver, context
+        )
 
     def set_client_group_config(self, config, context=None):
         """
@@ -915,8 +931,8 @@ class Catalog(object):
            String, parameter "client_groups" of list of String
         """
         return self._client.call_method(
-            'Catalog.set_client_group_config',
-            [config], self._service_ver, context)
+            "Catalog.set_client_group_config", [config], self._service_ver, context
+        )
 
     def remove_client_group_config(self, config, context=None):
         """
@@ -925,8 +941,8 @@ class Catalog(object):
            String, parameter "client_groups" of list of String
         """
         return self._client.call_method(
-            'Catalog.remove_client_group_config',
-            [config], self._service_ver, context)
+            "Catalog.remove_client_group_config", [config], self._service_ver, context
+        )
 
     def list_client_group_configs(self, filter, context=None):
         """
@@ -938,8 +954,8 @@ class Catalog(object):
            String, parameter "client_groups" of list of String
         """
         return self._client.call_method(
-            'Catalog.list_client_group_configs',
-            [filter], self._service_ver, context)
+            "Catalog.list_client_group_configs", [filter], self._service_ver, context
+        )
 
     def set_volume_mount(self, config, context=None):
         """
@@ -954,8 +970,8 @@ class Catalog(object):
            (@range [0,1])
         """
         return self._client.call_method(
-            'Catalog.set_volume_mount',
-            [config], self._service_ver, context)
+            "Catalog.set_volume_mount", [config], self._service_ver, context
+        )
 
     def remove_volume_mount(self, config, context=None):
         """
@@ -970,8 +986,8 @@ class Catalog(object):
            (@range [0,1])
         """
         return self._client.call_method(
-            'Catalog.remove_volume_mount',
-            [config], self._service_ver, context)
+            "Catalog.remove_volume_mount", [config], self._service_ver, context
+        )
 
     def list_volume_mounts(self, filter, context=None):
         """
@@ -994,8 +1010,8 @@ class Catalog(object):
            (@range [0,1])
         """
         return self._client.call_method(
-            'Catalog.list_volume_mounts',
-            [filter], self._service_ver, context)
+            "Catalog.list_volume_mounts", [filter], self._service_ver, context
+        )
 
     def is_admin(self, username, context=None):
         """
@@ -1004,5 +1020,5 @@ class Catalog(object):
         :returns: instance of type "boolean" (@range [0,1])
         """
         return self._client.call_method(
-            'Catalog.is_admin',
-            [username], self._service_ver, context)
+            "Catalog.is_admin", [username], self._service_ver, context
+        )

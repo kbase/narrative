@@ -4,10 +4,7 @@ A (currently stubby) class for managing Narrative checkpoints.
 
 import os
 from tornado.web import HTTPError
-from notebook.services.contents.checkpoints import (
-    Checkpoints,
-    GenericCheckpointsMixin
-)
+from notebook.services.contents.checkpoints import Checkpoints, GenericCheckpointsMixin
 from .narrativeio import KBaseWSManagerMixin
 import notebook._tz as tz
 
@@ -15,10 +12,7 @@ import notebook._tz as tz
 class KBaseCheckpoints(KBaseWSManagerMixin, Checkpoints):
     def create_checkpoint(self, contents_mgr, path):
         """Create a checkpoint."""
-        return dict(
-            id=path,
-            last_modified=tz.utcnow()
-        )
+        return dict(id=path, last_modified=tz.utcnow())
 
     def restore_checkpoint(self, contents_mgr, checkpoint_id, path):
         """Restore a checkpoint"""

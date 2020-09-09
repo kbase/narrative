@@ -33,6 +33,7 @@ class JobRequest:
         job_id (sometimes), and other information that can be specific for
         each request.
     """
+
     def __init__(self, rq: dict):
         self.msg_id = rq.get("msg_id")  # might be useful later?
         self.rq_data = rq.get("content", {}).get("data")
@@ -42,7 +43,6 @@ class JobRequest:
         if self.request is None:
             raise ValueError("Missing request type in job channel message!")
         self.job_id = self.rq_data.get("job_id")
-
 
 
 class JobComm:
@@ -103,16 +103,16 @@ class JobComm:
             self._jm = jobmanager.JobManager()
         if self._msg_map is None:
             self._msg_map = {
-               "all_status": self._lookup_all_job_states,
-               "job_status": self._lookup_job_state,
-               "job_info": self._lookup_job_info,
-               "start_update_loop": self.start_job_status_loop,
-               "stop_update_loop": self.stop_job_status_loop,
-               "start_job_update": self._modify_job_update,
-               "stop_job_update": self._modify_job_update,
-               "cancel_job": self._cancel_job,
-               "job_logs": self._get_job_logs,
-               "job_logs_latest": self._get_job_logs
+                "all_status": self._lookup_all_job_states,
+                "job_status": self._lookup_job_state,
+                "job_info": self._lookup_job_info,
+                "start_update_loop": self.start_job_status_loop,
+                "stop_update_loop": self.stop_job_status_loop,
+                "start_job_update": self._modify_job_update,
+                "stop_job_update": self._modify_job_update,
+                "cancel_job": self._cancel_job,
+                "job_logs": self._get_job_logs,
+                "job_logs_latest": self._get_job_logs,
             }
 
     def _verify_job_id(self, req: JobRequest) -> None:
@@ -140,7 +140,7 @@ class JobComm:
                     "code": getattr(e, "code", -1),
                     "source": getattr(e, "source", "jobmanager"),
                     "name": getattr(e, "name", type(e).__name__),
-                    "service": "execution_engine2"
+                    "service": "execution_engine2",
                 }
                 self.send_comm_message("job_init_err", error)
         if self._lookup_timer is None:
@@ -206,14 +206,9 @@ class JobComm:
         Therefore, it sends the job message to the browser over the right channel,
         and also returns the job state (or raises a ValueError if not found).
         """
-        req = JobRequest({
-            "content": {
-                "data": {
-                    "request_type": "job_status",
-                    "job_id": job_id
-                }
-            }
-        })
+        req = JobRequest(
+            {"content": {"data": {"request_type": "job_status", "job_id": job_id}}}
+        )
         return self._lookup_job_state(req)
 
     def _lookup_job_state(self, req: JobRequest) -> dict:
@@ -264,12 +259,16 @@ class JobComm:
             self.send_error_message("job_does_not_exist", req)
             raise
         except NarrativeException as e:
-            self.send_error_message("job_comm_error", req, {
-                "error": "Unable to cancel job",
-                "message": getattr(e, "message", "Unknown reason"),
-                "code": getattr(e, "code", -1),
-                "name": getattr(e, "name", type(e).__name__)
-            })
+            self.send_error_message(
+                "job_comm_error",
+                req,
+                {
+                    "error": "Unable to cancel job",
+                    "message": getattr(e, "message", "Unknown reason"),
+                    "code": getattr(e, "code", -1),
+                    "name": getattr(e, "name", type(e).__name__),
+                },
+            )
             raise
         self._lookup_job_state(req)
 
@@ -283,24 +282,35 @@ class JobComm:
         latest_only = req.request == "job_logs_latest"
         try:
             (first_line, max_lines, logs) = self._jm.get_job_logs(
-                req.job_id, num_lines=num_lines, first_line=first_line, latest_only=latest_only)
-            self.send_comm_message("job_logs", {
-                "job_id": req.job_id,
-                "first": first_line,
-                "max_lines": max_lines,
-                "lines": logs,
-                "latest": latest_only
-            })
+                req.job_id,
+                num_lines=num_lines,
+                first_line=first_line,
+                latest_only=latest_only,
+            )
+            self.send_comm_message(
+                "job_logs",
+                {
+                    "job_id": req.job_id,
+                    "first": first_line,
+                    "max_lines": max_lines,
+                    "lines": logs,
+                    "latest": latest_only,
+                },
+            )
         except ValueError as e:
             self.send_error_message("job_does_not_exist", req)
             raise
         except NarrativeException as e:
-            self.send_error_message("job_comm_error", req, {
-                "error": "Unable to retrieve job logs",
-                "message": getattr(e, "message", "Unknown reason"),
-                "code": getattr(e, "code", -1),
-                "name": getattr(e, "name", type(e).__name__)
-            })
+            self.send_error_message(
+                "job_comm_error",
+                req,
+                {
+                    "error": "Unable to retrieve job logs",
+                    "message": getattr(e, "message", "Unknown reason"),
+                    "code": getattr(e, "code", -1),
+                    "name": getattr(e, "name", type(e).__name__),
+                },
+            )
             raise
 
     def _handle_comm_message(self, msg: dict) -> None:
@@ -319,7 +329,10 @@ class JobComm:
         if request.request in self._msg_map:
             self._msg_map[request.request](request)
         else:
-            self.send_comm_message("job_comm_error", {"message": "Unknown message", "request_type": request.request})
+            self.send_comm_message(
+                "job_comm_error",
+                {"message": "Unknown message", "request_type": request.request},
+            )
             raise ValueError(f"Unknown KBaseJobs message '{request.request}'")
 
     def send_comm_message(self, msg_type: str, content: dict) -> None:
@@ -327,13 +340,12 @@ class JobComm:
         Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
         and content. These just get encoded into the message itself.
         """
-        msg = {
-            "msg_type": msg_type,
-            "content": content
-        }
+        msg = {"msg_type": msg_type, "content": content}
         self._comm.send(msg)
 
-    def send_error_message(self, err_type: str, req: JobRequest, content: dict = None) -> None:
+    def send_error_message(
+        self, err_type: str, req: JobRequest, content: dict = None
+    ) -> None:
         """
         Sends a comm message over the KBaseJobs channel as an error. This will have msg_type as
         whatever the error type is, and include the original request in the message content as
@@ -346,11 +358,7 @@ class JobComm:
             other fields about the error, dependent on the content.
         }
         """
-        error_content = {
-            "job_id": req.job_id,
-            "source": req.request
-        }
+        error_content = {"job_id": req.job_id, "source": req.request}
         if content is not None:
             error_content.update(content)
         self.send_comm_message(err_type, error_content)
-

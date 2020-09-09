@@ -3,7 +3,6 @@ import requests
 import json
 import sys
 from time import time
-from fix_workspace_info import fix_all_workspace_info
 from pprint import pprint
 
 kb_port = 9999

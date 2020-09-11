@@ -205,7 +205,10 @@ def update_method_cell(cell, format_ver):
                 "result": None,
             },
             "params": method_params,
-            "user-settings": {"showCodeInputArea": False, "showDeveloperOptions": False}
+            "user-settings": {
+                "showCodeInputArea": False,
+                "showDeveloperOptions": False,
+            },
         },
     }
 

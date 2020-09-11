@@ -216,7 +216,7 @@ class SyslogConfiguration(Configuration):
         Configuration.__init__(self, *a, **k)
         self.host, self.port, self.facility, self.proto = None, None, None, None
         for default in filter(
-                lambda x: x.startswith("DEFAULT_"), vars(SyslogConfiguration).keys()
+            lambda x: x.startswith("DEFAULT_"), vars(SyslogConfiguration).keys()
         ):
             # transform name to corresponding property in config file
             prop = default.replace("DEFAULT_", "syslog_").lower()
@@ -512,21 +512,21 @@ class DBRecord(object):
         rec = self.record  # alias
         # not needed at all
         for k in (
-                "msg",
-                "threadName",
-                "thread",
-                "pathname",
-                "msecs",
-                "levelno",
-                "asctime",
-                "relativeCreated",
-                "filename",
-                "processName",
-                "process",
-                "module",
-                "lineno",
-                "funcName",
-                "auth_token",
+            "msg",
+            "threadName",
+            "thread",
+            "pathname",
+            "msecs",
+            "levelno",
+            "asctime",
+            "relativeCreated",
+            "filename",
+            "processName",
+            "process",
+            "module",
+            "lineno",
+            "funcName",
+            "auth_token",
         ):
             if k in rec:
                 del rec[k]

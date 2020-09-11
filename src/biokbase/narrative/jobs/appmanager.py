@@ -660,109 +660,109 @@ class AppManager(object):
             run_id=run_id,
         )
 
-    def run_dynamic_service(
-        self, app_id, params, tag="release", version=None, cell_id=None, run_id=None
-    ):
-        """
-        Attempts to run a local app. These do not return a Job object, but just
-        the result of the app. In most cases, this will be a Javascript display
-        of the result, but could be anything.
-
-        If the app_spec looks like it makes a service call, then this raises a ValueError.
-        Otherwise, it validates each parameter in **kwargs against the app spec, executes it, and
-        returns the result.
-
-        Parameters:
-        -----------
-        app_id - should be from the app spec, e.g. 'view_expression_profile'
-        params - the dictionary of parameters for the app. Should be key-value
-                 pairs where they keys are strings. If any non-optional
-                 parameters are missing, an informative string will be printed.
-        tag - optional, one of [release|beta|dev] (default=release)
-        version - optional, a semantic version string. Only released modules have
-                  versions, so if the tag is not 'release', and a version is given,
-                  a ValueError will be raised.
-        **kwargs - these are the set of parameters to be used with the app.
-                   They can be found by using the app_usage function. If any
-                   non-optional apps are missing, a ValueError will be raised.
-
-        Example:
-        run_local_app('NarrativeViewers/view_expression_profile', version='0.0.1',
-                      input_expression_matrix="MyMatrix", input_gene_ids="1234")
-        """
-        try:
-            if params is None:
-                params = dict()
-            return self._run_dynamic_service_internal(
-                app_id, params, tag, version, cell_id, run_id, **kwargs
-            )
-        except Exception as e:
-            e_type = type(e).__name__
-            e_message = str(e).replace("<", "&lt;").replace(">", "&gt;")
-            e_trace = traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")
-
-            if cell_id:
-                self.send_cell_message(
-                    "result",
-                    cell_id,
-                    run_id,
-                    {
-                        "error": {
-                            "message": e_message,
-                            "type": e_type,
-                            "stacktrace": e_trace,
-                        }
-                    },
-                )
-            else:
-                print(
-                    "Error while trying to start your app (run_local_app)!"
-                    + "\n-------------------------------------\n"
-                    + str(e)
-                )
-
-    def _run_dynamic_service_internal(
-        self, app_id, params, tag, version, cell_id, run_id
-    ):
-        spec = self._get_validated_app_spec(app_id, tag, False, version=version)
-
-        # Log that we're trying to run a job...
-        log_info = {
-            "app_id": app_id,
-            "tag": tag,
-            "username": system_variable("user_id"),
-            "ws": system_variable("workspace"),
-        }
-        kblogging.log_event(self._log, "run_dynamic_service", log_info)
-
-        # Silly to keep this here, but we do not validate the incoming parameters.
-        # If they are provided by the UI (we have cell_id), they are constructed
-        # according to the spec, so are trusted;
-        # Otherwise, if they are the product of direct code cell entry, this is a mode we do not
-        # "support", so we can let it fail hard.
-        # In the future when code cell interaction is supported for users, we will need to provide
-        # robust validation and error reporting, but this may end up being (should be) provided by the
-        # sdk execution infrastructure anyway
-
-        input_vals = params
-        function_name = (
-            spec["behavior"]["kb_service_name"]
-            + "."
-            + spec["behavior"]["kb_service_method"]
-        )
-        try:
-            result = clients.get("service").sync_call(
-                function_name, input_vals, service_version=tag
-            )[0]
-            # if a ui call (a cell_id is defined) we send a result message, otherwise
-            # just the raw result for display in a code cell. This is how we "support"
-            # code cells for internal usage.
-            if cell_id:
-                self.send_cell_message("result", cell_id, run_id, {"result": result})
-            else:
-                return result
-        except BaseException:
-            raise
+    # def run_dynamic_service(
+    #     self, app_id, params, tag="release", version=None, cell_id=None, run_id=None
+    # ):
+    #     """
+    #     Attempts to run a local app. These do not return a Job object, but just
+    #     the result of the app. In most cases, this will be a Javascript display
+    #     of the result, but could be anything.
+    #
+    #     If the app_spec looks like it makes a service call, then this raises a ValueError.
+    #     Otherwise, it validates each parameter in **kwargs against the app spec, executes it, and
+    #     returns the result.
+    #
+    #     Parameters:
+    #     -----------
+    #     app_id - should be from the app spec, e.g. 'view_expression_profile'
+    #     params - the dictionary of parameters for the app. Should be key-value
+    #              pairs where they keys are strings. If any non-optional
+    #              parameters are missing, an informative string will be printed.
+    #     tag - optional, one of [release|beta|dev] (default=release)
+    #     version - optional, a semantic version string. Only released modules have
+    #               versions, so if the tag is not 'release', and a version is given,
+    #               a ValueError will be raised.
+    #     **kwargs - these are the set of parameters to be used with the app.
+    #                They can be found by using the app_usage function. If any
+    #                non-optional apps are missing, a ValueError will be raised.
+    #
+    #     Example:
+    #     run_local_app('NarrativeViewers/view_expression_profile', version='0.0.1',
+    #                   input_expression_matrix="MyMatrix", input_gene_ids="1234")
+    #     """
+    #     try:
+    #         if params is None:
+    #             params = dict()
+    #         return self._run_dynamic_service_internal(
+    #             app_id, params, tag, version, cell_id, run_id, **kwargs
+    #         )
+    #     except Exception as e:
+    #         e_type = type(e).__name__
+    #         e_message = str(e).replace("<", "&lt;").replace(">", "&gt;")
+    #         e_trace = traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")
+    #
+    #         if cell_id:
+    #             self.send_cell_message(
+    #                 "result",
+    #                 cell_id,
+    #                 run_id,
+    #                 {
+    #                     "error": {
+    #                         "message": e_message,
+    #                         "type": e_type,
+    #                         "stacktrace": e_trace,
+    #                     }
+    #                 },
+    #             )
+    #         else:
+    #             print(
+    #                 "Error while trying to start your app (run_local_app)!"
+    #                 + "\n-------------------------------------\n"
+    #                 + str(e)
+    #             )
+    #
+    # def _run_dynamic_service_internal(
+    #     self, app_id, params, tag, version, cell_id, run_id
+    # ):
+    #     spec = self._get_validated_app_spec(app_id, tag, False, version=version)
+    #
+    #     # Log that we're trying to run a job...
+    #     log_info = {
+    #         "app_id": app_id,
+    #         "tag": tag,
+    #         "username": system_variable("user_id"),
+    #         "ws": system_variable("workspace"),
+    #     }
+    #     kblogging.log_event(self._log, "run_dynamic_service", log_info)
+    #
+    #     # Silly to keep this here, but we do not validate the incoming parameters.
+    #     # If they are provided by the UI (we have cell_id), they are constructed
+    #     # according to the spec, so are trusted;
+    #     # Otherwise, if they are the product of direct code cell entry, this is a mode we do not
+    #     # "support", so we can let it fail hard.
+    #     # In the future when code cell interaction is supported for users, we will need to provide
+    #     # robust validation and error reporting, but this may end up being (should be) provided by the
+    #     # sdk execution infrastructure anyway
+    #
+    #     input_vals = params
+    #     function_name = (
+    #         spec["behavior"]["kb_service_name"]
+    #         + "."
+    #         + spec["behavior"]["kb_service_method"]
+    #     )
+    #     try:
+    #         result = clients.get("service").sync_call(
+    #             function_name, input_vals, service_version=tag
+    #         )[0]
+    #         # if a ui call (a cell_id is defined) we send a result message, otherwise
+    #         # just the raw result for display in a code cell. This is how we "support"
+    #         # code cells for internal usage.
+    #         if cell_id:
+    #             self.send_cell_message("result", cell_id, run_id, {"result": result})
+    #         else:
+    #             return result
+    #     except BaseException:
+    #         raise
 
     def send_cell_message(self, message_id, cell_id, run_id, message):
         address = {

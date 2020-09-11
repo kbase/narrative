@@ -106,19 +106,20 @@ class WidgetManager(object):
 
         methods = list(self._sm.app_specs[tag].values())
         all_widgets = dict()
-
-        # keys = widget names / namespaced require path / etc.
-        # Individual widget values should be:
-        # {params: {
-        #     name1: {
-        #         is_constant: boolean,
-        #         value: (***something*** | None) (something = any structure),
-        #         allowed: [ list of allowed values, optional ],
-        #         type: (string, int, float, boolean, etc. list? hash?)
-        #         allowed_types: [ list of allowed ws types, optional ]
-        #     },
-        #     name2: { is_constant, value }
-        # }
+        """
+        keys = widget names / namespaced require path / etc.
+         Individual widget values should be:
+         {params: {
+             name1: {
+                 is_constant: boolean,
+                 value: (***something*** | None) (something = any structure),
+                 allowed: [ list of allowed values, optional ],
+                 type: (string, int, float, boolean, etc. list? hash?)
+                 allowed_types: [ list of allowed ws types, optional ]
+             },
+             name2: { is_constant, value }
+        }
+        """
 
         for method in methods:
             if "output" not in method["widgets"]:

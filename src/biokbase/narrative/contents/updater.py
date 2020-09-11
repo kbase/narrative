@@ -112,18 +112,6 @@ def update_method_cell(cell, format_ver):
     if not method_params:
         method_params = {}
 
-    # guess at the FSM state for the method cell from the runtime_state.runningState
-    cur_state = runtime_state.get("runningState", "input")
-    fsm_state = {}
-    if cur_state == "input":
-        fsm_state = {"mode": "editing", "params": "incomplete"}
-    elif cur_state in ["submitted", "queued", "running", "error"]:
-        # no longer access to the job, so just reset to input
-        fsm_state = {"mode": "editing", "params": "complete"}
-    else:
-        # only one left is complete...
-        fsm_state = {"mode": "success", "params": "complete"}
-
     ts = widget_state.get("time", None)
     if ts:
         ts = datetime.datetime.utcfromtimestamp(ts / 1000.0).strftime(
@@ -218,9 +206,6 @@ def update_method_cell(cell, format_ver):
             },
             "params": method_params,
             "user-settings": {"showCodeInputArea": False, "showDeveloperOptions": False}
-            # 'fsm': {
-            #     'currentState': fsm_state
-            # }
         },
     }
 

@@ -225,8 +225,6 @@ class JobManager(object):
             },
             "errormsg": error_msg,
             "error_code": code,
-            "cell_id": None,
-            "run_id": None,
             "job_id": job_id,
             "cell_id": cell_id,
             "run_id": run_id,

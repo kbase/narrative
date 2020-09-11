@@ -555,7 +555,7 @@ class NarrIOTestCase(unittest.TestCase):
         if self.test_token is None:
             self.skipTest("No auth token")
         self.login()
-        with self.assertRaises(WorkspaceError) as err:
+        with self.assertRaises(WorkspaceError):
             self.mixin.narrative_permissions(self.invalid_nar_ref)
         self.logout()
 

@@ -222,7 +222,7 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("cancel_job", job_id, True)
         with self.assertRaises(NarrativeException) as e:
             self.jc._cancel_job(req)
-        self.assertIn(f"Can't cancel job", str(e.exception))
+        self.assertIn("Can't cancel job", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual("job_comm_error", msg["data"]["msg_type"])
         self.assertEqual("Unable to cancel job", msg["data"]["content"]["error"])
@@ -278,7 +278,7 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("job_logs", job_id, True)
         with self.assertRaises(NarrativeException) as e:
             self.jc._get_job_logs(req)
-        self.assertIn(f"Can't get job logs", str(e.exception))
+        self.assertIn("Can't get job logs", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual("job_comm_error", msg["data"]["msg_type"])
         self.assertEqual("Unable to retrieve job logs", msg["data"]["content"]["error"])

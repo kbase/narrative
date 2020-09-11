@@ -7,24 +7,25 @@ __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 __date__ = "8/22/14"
 
 import asyncore
-from datetime import datetime
-from dateutil.tz import tzlocal
 import logging
-from logging import handlers
-import pymongo
 import pickle
 import re
 import socket
 import struct
 import time
-import yaml
+from datetime import datetime
 from io import IOBase
+from logging import handlers
+
+import pymongo
+import yaml
+from dateutil.tz import tzlocal
 
 # Local
 from biokbase import narrative
+from biokbase.narrative.common import log_common
 from biokbase.narrative.common.kvp import parse_kvp
 from biokbase.narrative.common.url_config import URLS
-from biokbase.narrative.common import log_common
 
 EVENT_MSG_SEP = log_common.EVENT_MSG_SEP
 
@@ -174,7 +175,7 @@ class DBConfiguration(Configuration):
     def _check_auth_keys(self):
         u, p = "user", "password"
         if u in self._obj:
-            if not p in self._obj:
+            if p not in self._obj:
                 raise KeyError('Key "{}" given but "{}" missing'.format(u, p))
         elif p in self._obj:
             del self._obj[p]  # just delete unused password
@@ -215,7 +216,7 @@ class SyslogConfiguration(Configuration):
         Configuration.__init__(self, *a, **k)
         self.host, self.port, self.facility, self.proto = None, None, None, None
         for default in filter(
-            lambda x: x.startswith("DEFAULT_"), vars(SyslogConfiguration).keys()
+                lambda x: x.startswith("DEFAULT_"), vars(SyslogConfiguration).keys()
         ):
             # transform name to corresponding property in config file
             prop = default.replace("DEFAULT_", "syslog_").lower()
@@ -235,7 +236,7 @@ class SyslogConfiguration(Configuration):
                     self.facility, ", ".join(h.facility_names)
                 )
             )
-        if not self.proto in ("tcp", "udp"):
+        if self.proto not in ("tcp", "udp"):
             raise ValueError(
                 "Invalid syslog protocol '{}', must be either " "'udp' or 'tcp'"
             )
@@ -511,21 +512,21 @@ class DBRecord(object):
         rec = self.record  # alias
         # not needed at all
         for k in (
-            "msg",
-            "threadName",
-            "thread",
-            "pathname",
-            "msecs",
-            "levelno",
-            "asctime",
-            "relativeCreated",
-            "filename",
-            "processName",
-            "process",
-            "module",
-            "lineno",
-            "funcName",
-            "auth_token",
+                "msg",
+                "threadName",
+                "thread",
+                "pathname",
+                "msecs",
+                "levelno",
+                "asctime",
+                "relativeCreated",
+                "filename",
+                "processName",
+                "process",
+                "module",
+                "lineno",
+                "funcName",
+                "auth_token",
         ):
             if k in rec:
                 del rec[k]

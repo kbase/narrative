@@ -443,68 +443,68 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         path = "{0}/{1}".format(path, name)
         return self.new(model, path)
 
-    def new(self, model=None, path=""):
-        """Create a new file or directory and return its model with no content.
+    # def new(self, model=None, path=""):
+    #     """Create a new file or directory and return its model with no content.
+    #
+    #     To create a new untitled entity in a directory, use `new_untitled`.
+    #     """
+    #     # TODO
+    #     path = path.strip("/")
+    #     if model is None:
+    #         model = {}
+    #
+    #     if path.endswith(".ipynb"):
+    #         model.setdefault("type", "notebook")
+    #     else:
+    #         model.setdefault("type", "file")
+    #
+    #     # no content, not a directory, so fill out new-file model
+    #     if "content" not in model and model["type"] != "directory":
+    #         if model["type"] == "notebook":
+    #             model["content"] = new_notebook()
+    #             model["format"] = "json"
+    #         else:
+    #             model["content"] = ""
+    #             model["type"] = "file"
+    #             model["format"] = "text"
+    #
+    #     model = self.save(model, path)
+    #     return model
 
-        To create a new untitled entity in a directory, use `new_untitled`.
-        """
-        # TODO
-        path = path.strip("/")
-        if model is None:
-            model = {}
-
-        if path.endswith(".ipynb"):
-            model.setdefault("type", "notebook")
-        else:
-            model.setdefault("type", "file")
-
-        # no content, not a directory, so fill out new-file model
-        if "content" not in model and model["type"] != "directory":
-            if model["type"] == "notebook":
-                model["content"] = new_notebook()
-                model["format"] = "json"
-            else:
-                model["content"] = ""
-                model["type"] = "file"
-                model["format"] = "text"
-
-        model = self.save(model, path)
-        return model
-
-    def copy(self, from_path, to_path=None):
-        """Copy an existing file and return its new model.
-
-        If to_path not specified, it will be the parent directory of from_path.
-        If to_path is a directory, filename will increment `from_path-Copy#.ext`.
-
-        from_path must be a full path to a file.
-        """
-        # TODO
-        path = from_path.strip("/")
-        if to_path is not None:
-            to_path = to_path.strip("/")
-
-        if "/" in path:
-            from_dir, from_name = path.rsplit("/", 1)
-        else:
-            from_dir = ""
-            from_name = path
-
-        model = self.get(path)
-        model.pop("path", None)
-        model.pop("name", None)
-        if model["type"] == "directory":
-            raise HTTPError(400, "Can't copy directories")
-
-        if to_path is None:
-            to_path = from_dir
-        if self.dir_exists(to_path):
-            name = copy_pat.sub(".", from_name)
-            to_name = self.increment_filename(name, to_path, insert="-Copy")
-            to_path = "{0}/{1}".format(to_path, to_name)
-
-        model = self.save(model, to_path)
-        return model
+    # def copy(self, from_path, to_path=None):
+    #     """Copy an existing file and return its new model.
+    #
+    #     If to_path not specified, it will be the parent directory of from_path.
+    #     If to_path is a directory, filename will increment `from_path-Copy#.ext`.
+    #
+    #     from_path must be a full path to a file.
+    #     """
+    #     # TODO
+    #     path = from_path.strip("/")
+    #     if to_path is not None:
+    #         to_path = to_path.strip("/")
+    #
+    #     if "/" in path:
+    #         from_dir, from_name = path.rsplit("/", 1)
+    #     else:
+    #         from_dir = ""
+    #         from_name = path
+    #
+    #     model = self.get(path)
+    #     model.pop("path", None)
+    #     model.pop("name", None)
+    #     if model["type"] == "directory":
+    #         raise HTTPError(400, "Can't copy directories")
+    #
+    #     if to_path is None:
+    #         to_path = from_dir
+    #     if self.dir_exists(to_path):
+    #         name = copy_path.sub(".", from_name)
+    #         to_name = self.increment_filename(name, to_path, insert="-Copy")
+    #         to_path = "{0}/{1}".format(to_path, to_name)
+    #
+    #     model = self.save(model, to_path)
+    #     return model
 
     def log_info(self):
         self.log.info(self.info_string())
@@ -563,9 +563,9 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             # self.log.warn("Notebook %s is totally trusted", path)
             # # all notebooks are trustworthy, because KBase is Pollyanna.
 
-    def should_list(self, name):
-        """Should this file/directory name be displayed in a listing?"""
-        return not any(fnmatch(name, glob) for glob in self.hide_globs)
+    # def should_list(self, name):
+    #     """Should this file/directory name be displayed in a listing?"""
+    #     return not any(fnmatch(name, glob) for glob in self.hide_globs)
 
     def info_string(self):
         return (

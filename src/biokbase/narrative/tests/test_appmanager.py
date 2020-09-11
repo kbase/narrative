@@ -241,7 +241,7 @@ class AppManagerTestCase(unittest.TestCase):
         "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
         side_effect=mock_agent_token,
     )
-    def test_run_app_missing_inputs(self, c, auth):
+    def test_run_app_missing_inputs2(self, c, auth):
         c.return_value.send_comm_message.return_value = None
         self.assertIsNotNone(
             self.am.run_app_batch(self.good_app_id, None, tag=self.good_tag)

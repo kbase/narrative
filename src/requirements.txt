@@ -13,7 +13,7 @@ pillow==7.2.0
 plotly==4.9.0
 pyasn1==0.4.8
 pycrypto>=2.6
-pygments==2.6.1
+pygments==2.7.0
 pymongo==3.11.0
 pyyaml==5.3.1
 requests==2.24.0

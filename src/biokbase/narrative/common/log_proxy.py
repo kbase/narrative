@@ -3,31 +3,33 @@ Code to proxy logs from the narrative, over a socket, to a DB.
 The proxy will tend to have root permissions so it can read protected
 configuration files.
 """
-__author__ = 'Dan Gunter <dkgunter@lbl.gov>'
-__date__ = '8/22/14'
+__author__ = "Dan Gunter <dkgunter@lbl.gov>"
+__date__ = "8/22/14"
 
 import asyncore
-from datetime import datetime
-from dateutil.tz import tzlocal
 import logging
-from logging import handlers
-import pymongo
 import pickle
 import re
 import socket
 import struct
 import time
-import yaml
+from datetime import datetime
 from io import IOBase
+from logging import handlers
+
+import pymongo
+import yaml
+from dateutil.tz import tzlocal
+
 # Local
 from biokbase import narrative
+from biokbase.narrative.common import log_common
 from biokbase.narrative.common.kvp import parse_kvp
 from biokbase.narrative.common.url_config import URLS
-from biokbase.narrative.common import log_common
 
 EVENT_MSG_SEP = log_common.EVENT_MSG_SEP
 
-g_log = None #  global logger
+g_log = None  # global logger
 LOGGER_NAME = "log_proxy"  # use this name for logger
 
 m_fwd = None  # global forwarder object
@@ -36,7 +38,8 @@ m_fwd = None  # global forwarder object
 class DBAuthError(Exception):
     def __init__(self, host, port, db):
         msg = "Authorization failed to {host}:{port:d}/{db}".format(
-            host=host, port=port, db=db)
+            host=host, port=port, db=db
+        )
         Exception.__init__(self, msg)
 
 
@@ -56,7 +59,7 @@ class Configuration(object):
         self._obj = {}
         if input_file:
             if not isinstance(input_file, IOBase):
-                input_file = open(str(input_file), 'r')
+                input_file = open(str(input_file), "r")
             try:
                 self._obj = yaml.load(input_file)
                 if self._obj is None:
@@ -64,12 +67,13 @@ class Configuration(object):
             except (IOError, ValueError):
                 raise
             except Exception as err:
-                raise ValueError("Unknown error while parsing '{}': {}"
-                                 .format(input_file, err))
+                raise ValueError(
+                    "Unknown error while parsing '{}': {}".format(input_file, err)
+                )
 
 
 class ProxyConfiguration(Configuration):
-    DEFAULT_HOST = 'localhost'
+    DEFAULT_HOST = "localhost"
     DEFAULT_PORT = 32001
 
     def __init__(self, conf):
@@ -77,18 +81,20 @@ class ProxyConfiguration(Configuration):
 
     @property
     def host(self):
-        return self._obj.get('host', self.DEFAULT_HOST)
+        return self._obj.get("host", self.DEFAULT_HOST)
 
     @property
     def port(self):
-        return self._obj.get('port', self.DEFAULT_PORT)
+        return self._obj.get("port", self.DEFAULT_PORT)
+
 
 class ProxyConfigurationWrapper(ProxyConfiguration):
     def __init__(self, conf):
         ProxyConfiguration.__init__(self, conf)
         if conf is None:
-            self._obj['host'] = URLS.log_proxy_host
-            self._obj['port'] = URLS.log_proxy_port
+            self._obj["host"] = URLS.log_proxy_host
+            self._obj["port"] = URLS.log_proxy_port
+
 
 class DBConfiguration(Configuration):
     """
@@ -111,7 +117,8 @@ class DBConfiguration(Configuration):
         collection: <MongoDB collection name>
 
     """
-    DEFAULT_DB_HOST = 'localhost'
+
+    DEFAULT_DB_HOST = "localhost"
     DEFAULT_DB_PORT = 27017
 
     def __init__(self, *a, **k):
@@ -129,79 +136,90 @@ class DBConfiguration(Configuration):
         self._check_auth_keys()
 
     def _check_db_collection(self):
-        d, c = 'db', 'collection'
+        d, c = "db", "collection"
         for k in d, c:
             if k not in self._obj:
-                raise KeyError('Missing {k} from configuration'.format(k=k))
+                raise KeyError("Missing {k} from configuration".format(k=k))
         d, c = self._obj[d], self._obj[c]  # replace key with value
         total_len = len(d) + len(c) + 1
         if total_len > 123:
-            raise ValueError("Database + collection name is too long, "
-                             "{:d} > 123: '{}.{}'".format(total_len, d, c))
+            raise ValueError(
+                "Database + collection name is too long, "
+                "{:d} > 123: '{}.{}'".format(total_len, d, c)
+            )
         # Check DB name for illegal chars
-        m = re.match('^[a-zA-Z][_a-zA-Z0-9]*', d)
+        m = re.match("^[a-zA-Z][_a-zA-Z0-9]*", d)
         if m is None:
-            raise ValueError("Initial character not a letter in database '{}'"
-                             .format(d))
+            raise ValueError(
+                "Initial character not a letter in database '{}'".format(d)
+            )
         if m.end() < len(d):
-            raise ValueError("Bad character at {:d}: '{}' in database '{}'"
-                             .format(m.end() + 1, d[m.end()], d))
+            raise ValueError(
+                "Bad character at {:d}: '{}' in database '{}'".format(
+                    m.end() + 1, d[m.end()], d
+                )
+            )
         # Check collection name for illegal chars
-        m = re.match('^[a-zA-Z][_.a-zA-Z0-9]*', c)
+        m = re.match("^[a-zA-Z][_.a-zA-Z0-9]*", c)
         if m is None:
-            raise ValueError("Initial character not a letter in collection '{}'"
-                             .format(c))
+            raise ValueError(
+                "Initial character not a letter in collection '{}'".format(c)
+            )
         if m.end() < len(d):
-            raise ValueError("Bad character at {:d}: '{}' in collection '{}'"
-                             .format(m.end() + 1, c[m.end()], c))
+            raise ValueError(
+                "Bad character at {:d}: '{}' in collection '{}'".format(
+                    m.end() + 1, c[m.end()], c
+                )
+            )
 
     def _check_auth_keys(self):
-        u, p = 'user', 'password'
+        u, p = "user", "password"
         if u in self._obj:
-            if not p in self._obj:
+            if p not in self._obj:
                 raise KeyError('Key "{}" given but "{}" missing'.format(u, p))
         elif p in self._obj:
             del self._obj[p]  # just delete unused password
 
-    ## Expose configuration values as class properties
+    # Expose configuration values as class properties
     @property
     def db_host(self):
-        return self._obj.get('db_host', self.DEFAULT_DB_HOST)
+        return self._obj.get("db_host", self.DEFAULT_DB_HOST)
 
     @property
     def db_port(self):
-        return self._obj.get('db_port', self.DEFAULT_DB_PORT)
+        return self._obj.get("db_port", self.DEFAULT_DB_PORT)
 
     @property
     def user(self):
-        return self._obj.get('user', None)
+        return self._obj.get("user", None)
 
     @property
     def password(self):
-        return self._obj.get('password', None)
+        return self._obj.get("password", None)
 
     @property
     def db(self):
-        return self._obj.get('db', None)
+        return self._obj.get("db", None)
 
     @property
     def collection(self):
-        return self._obj['collection']
+        return self._obj["collection"]
 
 
 class SyslogConfiguration(Configuration):
-    DEFAULT_HOST = 'localhost'
+    DEFAULT_HOST = "localhost"
     DEFAULT_PORT = 514
-    DEFAULT_FACILITY = 'user'
-    DEFAULT_PROTO = 'udp'
+    DEFAULT_FACILITY = "user"
+    DEFAULT_PROTO = "udp"
 
     def __init__(self, *a, **k):
         Configuration.__init__(self, *a, **k)
         self.host, self.port, self.facility, self.proto = None, None, None, None
-        for default in filter(lambda x: x.startswith('DEFAULT_'),
-                              vars(SyslogConfiguration).keys()):
+        for default in filter(
+            lambda x: x.startswith("DEFAULT_"), vars(SyslogConfiguration).keys()
+        ):
             # transform name to corresponding property in config file
-            prop = default.replace('DEFAULT_', 'syslog_').lower()
+            prop = default.replace("DEFAULT_", "syslog_").lower()
             name = prop[7:]  # strip 'syslog_' prefix
             # set attr to value in config, or default
             value = self._obj.get(prop, getattr(self, default))
@@ -211,43 +229,48 @@ class SyslogConfiguration(Configuration):
         # validation
         h = handlers.SysLogHandler()
         try:
-            h.encodePriority(self.facility, 'info')
+            h.encodePriority(self.facility, "info")
         except KeyError:
-            raise ValueError("Invalid syslog facility '{}', must be one of: {}"
-                             .format(self.facility,
-                                     ', '.join(h.facility_names)))
-        if not self.proto in ('tcp', 'udp'):
-            raise ValueError("Invalid syslog protocol '{}', must be either "
-                             "'udp' or 'tcp'")
+            raise ValueError(
+                "Invalid syslog facility '{}', must be one of: {}".format(
+                    self.facility, ", ".join(h.facility_names)
+                )
+            )
+        if self.proto not in ("tcp", "udp"):
+            raise ValueError(
+                "Invalid syslog protocol '{}', must be either " "'udp' or 'tcp'"
+            )
         # keyword args for logging.SysLogHandler constructor
         self.handler_args = {
-            'address': (self.host, self.port),
-            'facility': self.facility,
-            'socktype': {'tcp': socket.SOCK_STREAM,
-                         'udp': socket.SOCK_DGRAM}[self.proto]}
+            "address": (self.host, self.port),
+            "facility": self.facility,
+            "socktype": {"tcp": socket.SOCK_STREAM, "udp": socket.SOCK_DGRAM}[
+                self.proto
+            ],
+        }
 
 
 def get_sample_config():
     """Get a sample configuration."""
     fields = [
-        '# proxy listen host and port',
-        'host: {}'.format(ProxyConfiguration.DEFAULT_HOST),
-        'port: {}'.format(ProxyConfiguration.DEFAULT_PORT),
-        '# mongodb server host and port',
-        'db_host: {}'.format(DBConfiguration.DEFAULT_DB_HOST),
-        'db_port: {}'.format(DBConfiguration.DEFAULT_DB_PORT),
-        '# mongodb server user/pass and database',
-        'user: joeschmoe',
-        'password: letmein',
-        'db: mymongodb',
-        'collection: kbaselogs',
-        '# syslog destination',
-        'syslog_facility: {}'.format(SyslogConfiguration.DEFAULT_FACILITY),
-        'syslog_host: {}'.format(SyslogConfiguration.DEFAULT_HOST),
-        'syslog_port: {}'.format(SyslogConfiguration.DEFAULT_PORT),
-        'syslog_proto: {}'.format(SyslogConfiguration.DEFAULT_PROTO)
+        "# proxy listen host and port",
+        "host: {}".format(ProxyConfiguration.DEFAULT_HOST),
+        "port: {}".format(ProxyConfiguration.DEFAULT_PORT),
+        "# mongodb server host and port",
+        "db_host: {}".format(DBConfiguration.DEFAULT_DB_HOST),
+        "db_port: {}".format(DBConfiguration.DEFAULT_DB_PORT),
+        "# mongodb server user/pass and database",
+        "user: joeschmoe",
+        "password: letmein",
+        "db: mymongodb",
+        "collection: kbaselogs",
+        "# syslog destination",
+        "syslog_facility: {}".format(SyslogConfiguration.DEFAULT_FACILITY),
+        "syslog_host: {}".format(SyslogConfiguration.DEFAULT_HOST),
+        "syslog_port: {}".format(SyslogConfiguration.DEFAULT_PORT),
+        "syslog_proto: {}".format(SyslogConfiguration.DEFAULT_PROTO),
     ]
-    return '\n'.join(fields)
+    return "\n".join(fields)
 
 
 class LogForwarder(asyncore.dispatcher):
@@ -263,19 +286,27 @@ class LogForwarder(asyncore.dispatcher):
 
         # only do this once; it takes ~5 sec
         if self.__host is None:
-            g_log.info(
-                "Getting fully qualified domain name (may take a few seconds)")
+            g_log.info("Getting fully qualified domain name (may take a few seconds)")
             self.__host = socket.getfqdn()
             try:
                 self.__ip = socket.gethostbyname(self.__host)
             except socket.gaierror:
-                self.__ip = '0.0.0.0'
+                self.__ip = "0.0.0.0"
             g_log.info(
-                "Done getting fully qualified domain name: {}".format(self.__host))
+                "Done getting fully qualified domain name: {}".format(self.__host)
+            )
         ver = narrative.version()
-        self._meta.update({'host': {'name': self.__host, 'ip': self.__ip},
-                           'ver': {'str': str(ver), 'major': ver.major,
-                                   'minor': ver.minor, 'patch': ver.patch}})
+        self._meta.update(
+            {
+                "host": {"name": self.__host, "ip": self.__ip},
+                "ver": {
+                    "str": str(ver),
+                    "major": ver.major,
+                    "minor": ver.minor,
+                    "patch": ver.patch,
+                },
+            }
+        )
         # handlers
         self._hnd = []
         if db:
@@ -289,7 +320,7 @@ class LogForwarder(asyncore.dispatcher):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
-            g_log.info('Accepted connection from {}'.format(addr))
+            g_log.info("Accepted connection from {}".format(addr))
             LogStreamForwarder(sock, self._hnd, self._meta)
 
     @staticmethod
@@ -313,14 +344,12 @@ class LogForwarder(asyncore.dispatcher):
 
 
 class LogStreamForwarder(asyncore.dispatcher):
-
     def __init__(self, sock, hnd, meta):
-        """Forward logs coming in on socket `sock` to handler list `hnd`.
-        """
+        """Forward logs coming in on socket `sock` to handler list `hnd`."""
         asyncore.dispatcher.__init__(self, sock)
         self._meta, self._hnd = meta, hnd
-        self._hdr, self._dbg = '', g_log.isEnabledFor(logging.DEBUG)
-        self._body, self._body_remain = '', 0
+        self._hdr, self._dbg = "", g_log.isEnabledFor(logging.DEBUG)
+        self._body, self._body_remain = "", 0
 
     def writable(self):
         return False
@@ -333,14 +362,16 @@ class LogStreamForwarder(asyncore.dispatcher):
             if len(self._hdr) < 4:
                 return
             # Parse data and calc. body
-            size = struct.unpack('>L', self._hdr)[0]
+            size = struct.unpack(">L", self._hdr)[0]
             if size > 65536:
-                g_log.error("Log message size ({:d}) > 64K, possibly corrupt header"
-                            ": <{}>".format(size, self._hdr))
-                self._hdr = ''
+                g_log.error(
+                    "Log message size ({:d}) > 64K, possibly corrupt header"
+                    ": <{}>".format(size, self._hdr)
+                )
+                self._hdr = ""
                 return
             self._body_remain = size
-            self._hdr = ''
+            self._hdr = ""
             if self._dbg:
                 g_log.debug("Expect msg size={}".format(size))
         # read body data
@@ -354,7 +385,7 @@ class LogStreamForwarder(asyncore.dispatcher):
                     record = pickle.loads(chunk)
                 except Exception as err:
                     g_log.error("Could not unpickle record: {}".format(err))
-                    self._body = ''
+                    self._body = ""
                     return
                 if self._dbg:
                     g_log.debug("handle_read: record={}".format(record))
@@ -365,20 +396,23 @@ class LogStreamForwarder(asyncore.dispatcher):
                         g_log.debug("Dispatch to handler {}".format(h))
                     h.handle(record, meta)
 
+
 # Handlers
+
 
 class Handler(object):
     # extract these from the incoming records,
     # incoming name is in key, outgoing name is in value
     EXTRACT_META = {
-        'session': 'session_id',
-        'narrative': 'narr',
-        'client_ip': 'client_ip',
-        'user': 'user'}
+        "session": "session_id",
+        "narrative": "narr",
+        "client_ip": "client_ip",
+        "user": "user",
+    }
 
     def _get_record_meta(self, record):
-        return {val: record.get(key, '')
-                for key, val in self.EXTRACT_META.items()}
+        return {val: record.get(key, "") for key, val in self.EXTRACT_META.items()}
+
 
 class MongoDBHandler(Handler):
     def __init__(self, coll):
@@ -394,8 +428,8 @@ class MongoDBHandler(Handler):
         kbrec.record.update(self._get_record_meta(kbrec.record))
         self._coll.insert(kbrec.record)
 
-class SyslogHandler(Handler):
 
+class SyslogHandler(Handler):
     def __init__(self, log_handler):
         f = logging.Formatter("%(levelname)s %(asctime)s %(name)s %(message)s")
         f.converter = time.gmtime
@@ -409,20 +443,22 @@ class SyslogHandler(Handler):
             g_log.debug("SyslogHandler: rec.in={}".format(record))
         kvp = meta.copy()
         kvp.update(self._get_record_meta(record))
-        message = record.get('message', record.get('msg', ''))
-        record['msg'] = message + ' ' + log_common.format_kvps(kvp)
-        if 'message' in record:
-            del record['message'] #??
+        message = record.get("message", record.get("msg", ""))
+        record["msg"] = message + " " + log_common.format_kvps(kvp)
+        if "message" in record:
+            del record["message"]  # ??
         if self._dbg:
             g_log.debug("SyslogHandler: rec.out={}".format(record))
         logrec = logging.makeLogRecord(record)
         self._hnd.emit(logrec)
 
+
 # Log record
 
+
 class DBRecord(object):
-    """Convert logged record (dict) to object that we can store in a DB.
-    """
+    """Convert logged record (dict) to object that we can store in a DB."""
+
     def __init__(self, record, strict=False):
         """Process input record. Results are stored in `record` attribute.
 
@@ -447,56 +483,67 @@ class DBRecord(object):
         embedded key-value pairs.
         """
         rec = self.record  # alias
-        message = rec.get('message', rec.get('msg', None))
+        message = rec.get("message", rec.get("msg", None))
         if message is None:
-            g_log.error("No 'message' or 'msg' field found in record: {}"
-                        .format(rec))
+            g_log.error("No 'message' or 'msg' field found in record: {}".format(rec))
             message = "unknown;Message field not found"
         # Split out event name
         try:
             event, msg = message.split(log_common.EVENT_MSG_SEP, 1)
         except ValueError:
-            event, msg = 'event', message  # assign generic event name
+            event, msg = "event", message  # assign generic event name
             if self.strict:
-                raise ValueError("Cannot split event/msg in '{}'"
-                                 .format(message))
+                raise ValueError("Cannot split event/msg in '{}'".format(message))
         # Break into key=value pairs
         text = parse_kvp(msg, rec)
         # Anything not parsed goes back into message
-        rec['msg'] = text
+        rec["msg"] = text
         # Event gets its own field, too
-        rec['event'] = event
+        rec["event"] = event
         # Levelname is too long
-        if 'levelname' in rec:
-            rec['level'] = rec['levelname']
-            del rec['levelname']
+        if "levelname" in rec:
+            rec["level"] = rec["levelname"]
+            del rec["levelname"]
         else:
-            rec['level'] = logging.getLevelName(logging.INFO)
+            rec["level"] = logging.getLevelName(logging.INFO)
 
     def _strip_logging_junk(self):
         """Delete/rename fields from logging library."""
         rec = self.record  # alias
         # not needed at all
-        for k in ('msg', 'threadName', 'thread', 'pathname', 'msecs',
-                  'levelno', 'asctime', 'relativeCreated', 'filename',
-                  'processName', 'process', 'module', 'lineno', 'funcName',
-                  'auth_token'):
+        for k in (
+            "msg",
+            "threadName",
+            "thread",
+            "pathname",
+            "msecs",
+            "levelno",
+            "asctime",
+            "relativeCreated",
+            "filename",
+            "processName",
+            "process",
+            "module",
+            "lineno",
+            "funcName",
+            "auth_token",
+        ):
             if k in rec:
                 del rec[k]
         # rename
-        for old_name, new_name in (('name', 'method'),):
+        for old_name, new_name in (("name", "method"),):
             if old_name in rec:
                 rec[new_name] = rec[old_name]
                 del rec[old_name]
         # remove exception stuff if empty
-        if rec.get('exc_info', None) is None:
-            for k in 'exc_info', 'exc_text':
+        if rec.get("exc_info", None) is None:
+            for k in "exc_info", "exc_text":
                 if k in rec:
                     del rec[k]
         # remove args if empty
-        if 'args' in rec:
-            if not rec['args']:
-                del rec['args']
+        if "args" in rec:
+            if not rec["args"]:
+                del rec["args"]
         elif self.strict:
             raise ValueError("missing 'args'")
 
@@ -504,16 +551,17 @@ class DBRecord(object):
         """Fix types, mainly of fields that were parsed out of the message."""
         rec = self.record  # alias
         # duration
-        if 'dur' in rec:
-            rec['dur'] = float(rec['dur'])
+        if "dur" in rec:
+            rec["dur"] = float(rec["dur"])
         # convert created to datetime type (converted on insert by pymongo)
-        if 'created' in rec:
-            ts = rec.get('created')
-            del rec['created']
+        if "created" in rec:
+            ts = rec.get("created")
+            del rec["created"]
         else:
             ts = 0
         date = datetime.fromtimestamp(ts, tzlocal())
-        rec['ts'] = {'sec': ts, 'date': date, 'tz': date.tzname()}
+        rec["ts"] = {"sec": ts, "date": date, "tz": date.tzname()}
+
 
 def run(args):
     """
@@ -549,21 +597,28 @@ def run(args):
     # Create LogForwarder
     try:
         metadata = dict(args.meta) if args.meta else {}
-        m_fwd = LogForwarder(pconfig, db=db_config, syslog=syslog_config,
-                             meta=metadata)
+        m_fwd = LogForwarder(pconfig, db=db_config, syslog=syslog_config, meta=metadata)
     except pymongo.errors.ConnectionFailure as err:
-        g_log.warn("Could not connect to MongoDB server at '{}:{:d}': {}"
-                   .format(db_config.db_host, db_config.db_port, err))
+        g_log.warn(
+            "Could not connect to MongoDB server at '{}:{:d}': {}".format(
+                db_config.db_host, db_config.db_port, err
+            )
+        )
 
     # Let user know what's up
     g_log.info("Listening on {}:{:d}".format(pconfig.host, pconfig.port))
     if db_config:
-        g_log.info("Connected to MongoDB server at {}:{:d}"
-                   .format(db_config.db_host, db_config.db_port))
+        g_log.info(
+            "Connected to MongoDB server at {}:{:d}".format(
+                db_config.db_host, db_config.db_port
+            )
+        )
     if syslog_config:
-        g_log.info("Connected to syslog at {}:{:d} ({})"
-                   .format(syslog_config.host, syslog_config.port,
-                           syslog_config.proto.upper()))
+        g_log.info(
+            "Connected to syslog at {}:{:d} ({})".format(
+                syslog_config.host, syslog_config.port, syslog_config.proto.upper()
+            )
+        )
 
     # Main loop
     g_log.debug("Start main loop")

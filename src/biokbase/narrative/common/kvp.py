@@ -3,7 +3,8 @@ Key=value pair parser
 """
 import re
 
-KVP_EXPR = re.compile(r"""
+KVP_EXPR = re.compile(
+    r"""
     (?:
         \s*                        # leading whitespace
         ([0-9a-zA-Z_.\-]+)         # Name
@@ -15,9 +16,12 @@ KVP_EXPR = re.compile(r"""
         \s*
     ) |
     ([^= ]+)                        # Text w/o key=value
-    """, flags=re.X)
+    """,
+    flags=re.X,
+)
 
-def parse_kvp(msg, record, text_sep=' '):
+
+def parse_kvp(msg, record, text_sep=" "):
     """
     Parse key-value pairs, adding to record in-place.
 

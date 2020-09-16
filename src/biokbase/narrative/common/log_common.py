@@ -1,16 +1,18 @@
 """
 Common stuff for kbase logging
 """
-__author__ = 'Dan Gunter <dkgunter@lbl.gov>'
-__date__ = '11/20/14'
+__author__ = "Dan Gunter <dkgunter@lbl.gov>"
+__date__ = "11/20/14"
 
 # Constants
-EVENT_MSG_SEP = ';'  # separates event name from msg in log
+EVENT_MSG_SEP = ";"  # separates event name from msg in log
+
 
 def format_event(event, mapping):
     return "{}{}{}".format(event, EVENT_MSG_SEP, format_kvps(mapping))
 
-def format_kvps(mapping, prefix=''):
+
+def format_kvps(mapping, prefix=""):
     """Formats a mapping as key=value pairs.
 
     Values may be strings, numbers, or nested mappings.
@@ -20,16 +22,16 @@ def format_kvps(mapping, prefix=''):
     """
     kvp_list = []
     for k, v in mapping.items():
-        if hasattr(v, 'keys'):  # nested mapping
-            new_prefix = prefix + '.' + k if prefix else k
-            kvps = format_kvps(v, prefix=new_prefix) # format as string
+        if hasattr(v, "keys"):  # nested mapping
+            new_prefix = prefix + "." + k if prefix else k
+            kvps = format_kvps(v, prefix=new_prefix)  # format as string
             kvp_list.append(kvps)
-            continue # already prefixed with key; go to next
-        if (v == None):
-            v = 'None'
+            continue  # already prefixed with key; go to next
+        if v is None:
+            v = "None"
         elif isinstance(v, int) or isinstance(v, float):
             v = "{}".format(v)
-        elif ' ' in v:
+        elif " " in v:
             v = '"' + v.replace('"', '\\"') + '"'
         if prefix:
             k = prefix + "." + k

@@ -1,0 +1,10 @@
+repos:
+-   repo: https://github.com/ambv/black
+    rev: 20.8b1
+    hooks:
+    - id: black
+      exclude: '.+Impl.py'
+-   repo: https://gitlab.com/pycqa/flake8
+    rev: ''
+    hooks:
+    - id: flake8

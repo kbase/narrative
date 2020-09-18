@@ -48,6 +48,12 @@ More detailed directions for the feature branch workflow are located on [Github]
 
 External developers do not have write access to the repository. To create a pull request, fork the repository and submit a pull request from the fork. Instructions for how to fork a repository are located on [GitHub](https://guides.github.com/activities/forking/).
 
+
+#### _Passing Flake8 and Black_
+
+In order to pass the build, flake8 and black must be run on the code. In order to avoid having to do so manually, use [git pre-commit](README.md#git-pre-commit-installation)
+
+
 ## Release Flows
 
 There are three main workflows: development, production releases, and hotfixes.

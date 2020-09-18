@@ -47,7 +47,7 @@ Our git [pre-commit](https://pre-commit.com/#install) [hooks](/.pre-commit-confi
 - change into the base directory
 - `pip install pre-commit`
 - `pre-commit install` to set up the git hook scripts
-- `pre-commit run --all-files` to test it out
+- edit a python file and `git commit -m <comment>` it in to test out the installation
 
 
 ### *Using a Conda Environment*

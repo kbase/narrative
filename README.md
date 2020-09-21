@@ -40,6 +40,16 @@ Requires the following:
 -   Node.js (latest LTS recommended)
 -   Bower 1.8.8+
 
+### Git Pre-commit installation
+
+Our git [pre-commit](https://pre-commit.com/#install) [hooks](/.pre-commit-config.yaml) allow you to run flake8 and black upon `git commit` and save you from having to run these linters manually.
+
+- change into the base directory
+- `pip install pre-commit`
+- `pre-commit install` to set up the git hook scripts
+- edit a python file and `git commit -m <comment>` it in to test out the installation
+
+
 ### *Using a Conda Environment*
 
 This is the recommended method of installation!

@@ -21,8 +21,7 @@
 
 ## About
 
-This is the repository for the KBase Narrative Interface.
-. The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.org) and contains elements to interact with various KBase tools and data stores.
+This is the repository for the KBase Narrative Interface. The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.org) and contains elements to interact with various KBase tools and data stores.
 
 This document contains links to various documentation in the [docs](docs) directory, with a brief description of each.
 

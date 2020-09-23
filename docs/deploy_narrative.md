@@ -58,7 +58,7 @@ Once a pull request is merged from `develop` to `master` a new _production_ imag
 
 | Evironment  | Image URL   |
 | ----------- | ----------- |
-| CI          | docker.pkg.github.com/kbase/narrative/narrative-develop:latest |
-| Appdev      | docker.pkg.github.com/kbase/narrative/narrative:appdev         |
-| Next        | docker.pkg.github.com/kbase/narrative/narrative:next           |
-| Production  | docker.pkg.github.com/kbase/narrative/narrative:prod           |
+| CI          | ghcr.io/kbase/narrative-develop:latest |
+| Appdev      | ghcr.io/kbase/narrative:appdev         |
+| Next        | ghcr.io/kbase/narrative:next           |
+| Production  | ghcr.io/kbase/narrative:prod           |

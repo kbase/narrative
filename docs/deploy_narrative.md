@@ -23,9 +23,9 @@
 #### Deploy CI
 
 Once a pull request is merged from a temporary branch to `develop` a new _development_ image will be available at:
-`docker.pkg.github.com/kbase/narrative/narrative-develop:latest`
+`ghcr.io/kbase/narrative-develop:latest`
 
-Simply restart the `narrative` container for CI in Rancher. No other action is needed.
+Simply upgrade the `narrative` container for CI in Rancher for the changes to take effect.
 
 ### Appdev, Next, & Prod
 
@@ -36,6 +36,8 @@ Simply restart the `narrative` container for CI in Rancher. No other action is n
 
 Once a pull request is merged from `develop` to `master` a new _production_ image will be available at:
 `docker.pkg.github.com/kbase/narrative/narrative:latest`.
+
+In order to deploy the production `/kbase/narrative/narrative` image in appdev, next, or prod, follow the steps below.
 
 
 #### Tag & Deploy Image
@@ -51,7 +53,7 @@ Once a pull request is merged from `develop` to `master` a new _production_ imag
     -t IMAGE_TAG is the *current* Docker image tag, typically `pr-#` or `latest`
     -e TARGET Sets target environment's tag. This is typically either:`appdev`, `next`, or `prod`.
 ```
-4. Restart the `narrative` container for the desired environment (e.g. `appdev`) in Rancher.
+4. Upgrade the `narrative` container for the desired environment (e.g. `next` ) in Rancher.
 
 
 ### Image URLs

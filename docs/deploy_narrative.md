@@ -43,7 +43,7 @@ The Continuous Integration environment - <https://ci.kbase.us> - is intended for
 Once a pull request is merged from a temporary branch to `develop` a new _development_ image will be available at:
 `docker.pkg.github.com/kbase/narrative/narrative-develop:latest`
 
-Simply restart the `narrative` container for CI in Rancher. No other action is needed.
+To see your changes once the new image is created, simply open a narrative on CI. If you already have one loaded, restart the application by selecting the "Shutdown and Restart" option from the menu in the upper left.
 
 ### Stage a Final Release
 

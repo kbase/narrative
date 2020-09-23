@@ -90,3 +90,6 @@ target/
 # IDE / Editor
 .vscode
 /tags
+
+# Developer tokens for cypress tests
+cypress.env.json

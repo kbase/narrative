@@ -43,10 +43,7 @@
     "bower": "bower install",
     "test": "grunt test",
     "build": "grunt build",
-    "start": "kbase-narrative",
-    "cypress": "cypress open",
-    "cypress:run": "cypress run",
-    "test-e2e": "start-server-and-test start http://localhost:8888/narrative/tree cypress:run"
+    "cypress:open": "cypress open"
   },
   "dependencies": {}
 }

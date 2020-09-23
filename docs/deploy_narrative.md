@@ -94,10 +94,10 @@ Once a pull request is merged from `develop` to `master` a new _production_ imag
     -o ORG is the organization (`kbase`, `kbaseapps`, etc.)
     -r REPO is the repository (e.g. `narrative`)
     -t IMAGE_TAG is the *current* Docker image tag, typically `pr-#` or `latest`
-    -e TARGET Sets target environment's tag. This is typically either:`appdev`, `next`, or `prod`.
+    -e TARGET Sets target environment's tag. This is typically either:`next`, `appdev`, or `prod`.
 ```
 
-4.  Restart the `narrative` container for the desired environment (e.g. `appdev`) in Rancher.
+4.  Restart the `narrative` container for the desired environment (e.g. `appdev`) in Rancher. The `next`, `appdev`, and `prod` Rancher environments all have their access limited to the KBase devops staff, so ask them (on the #sysadmin channel) for help.
 
 ### Image URLs
 

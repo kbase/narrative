@@ -1,8 +1,8 @@
 ## Narrative Development & Deployment HowTo
 
-This document describes how to release and deploy the Narrative Interface app onto the different KBase environments. It's intended for KBase developers and operators.
+This document describes how to release and deploy the Narrative Interface app onto the different KBase environments. It's intended for KBase developers and admins.
 
-- Last modified: Sep. 22, 2020
+- Last modified: Sep. 25, 2020
 
 **_Table of Contents_**
 

@@ -1,4 +1,4 @@
-## Narrative Development & Deployment HowTo
+## Narrative Development & Deployment
 
 This document describes how to release and deploy the Narrative Interface app onto the different KBase environments. It's intended for KBase developers and admins.
 
@@ -6,15 +6,23 @@ This document describes how to release and deploy the Narrative Interface app on
 
 **_Table of Contents_**
 
+-   [KBase Environments](#kbase-environments)
 -   [Deployment flow overview](#deployment-flow-overview)
 -   [Deploying CI](#deploying-ci)
-    -   [Create CI Image](#create-ci-image)
-    -   [Release CI](#release-ci)
 -   [Stage a Final Release](#stage-a-final-release)
 -   [Deploying Next, Appdev, and Prod](#deploying-next,-appdev-&-prod)
     -   [Create Release Image](#create-release-image)
     -   [Tag & Deploy Image](#tag-&-deploy-image)
 -   [Image URLs](#image-urls)
+
+### KBase Environments
+
+The various KBase environments are all used used for slightly different purposes:
+-   **ci** <https://ci.kbase.us> is intended for testing and demoing of new features that may not always work right. It's also intended to be continuously upgraded and redeployed. 
+-   **next** <https://next.kbase.us> is used for final internal testing before being promoted to the public-facing environments - appdev and production. Most services should be up to date here, and this is used for final integration and acceptance testing.
+-   **appdev** <https://appdev.kbase.us> is used primarily for KBase app development using the [KBase SDK](https://kbase.github.io/kb_sdk_docs/). This environment mirrors the production environment, but allows for finding and running apps in "dev" mode.
+-   **prod** <https://narrative.kbase.us> is the main production environment. This is the place where most users will use KBase and run apps that have either been entirely released or have been made available for beta testing.
+
 
 ### Deployment Flow Overview
 
@@ -27,10 +35,6 @@ This document describes how to release and deploy the Narrative Interface app on
 
 ### Deploying CI
 
-The Continuous Integration environment - <https://ci.kbase.us> - is intended for testing and demoing of new features that may not always work right. It's also intended to be continuously upgraded and redeployed, so this process is designed to be as easy as possible.
-
-#### Create CI Image
-
 1.  Create a new temporary branch from the `develop` branch.
 2.  Add a _single_ bug fix or new feature to your temporary branch.
 3.  Create a new [pull request](https://github.com/kbase/narrative/compare) to merge your branch into `develop`.
@@ -38,10 +42,8 @@ The Continuous Integration environment - <https://ci.kbase.us> - is intended for
 5.  Complete review and testing.
 6.  Merge pull request.
 
-#### Release CI
-
 Once a pull request is merged from a temporary branch to `develop` a new _development_ image will be available at:
-`docker.pkg.github.com/kbase/narrative/narrative-develop:latest`
+`docker.pkg.github.com/kbase/narrative/narrative-develop:latest`. This is automatically deployed to CI.
 
 To see your changes once the new image is created, simply open a narrative on CI. If you already have one loaded, restart the application by selecting the "Shutdown and Restart" option from the menu in the upper left.
 
@@ -69,21 +71,20 @@ To see your changes once the new image is created, simply open a narrative on CI
 
 ### Deploying Next, Appdev, & Prod
 
-These environments: <https://next.kbase.us>, <https://appdev.kbase.us>, and <https://narrative.kbase.us> are all deployed using a production image. They're used for slightly different purposes:
-
--   **next** is used for final internal testing before being promoted to the public-facing environments - appdev and production. Most services should be up to date here, and this is used for final integration and acceptance testing.
--   **appdev** is used primarily for KBase app development using the [KBase SDK](https://kbase.github.io/kb_sdk_docs/). This environment mirrors the production environment, but allows for finding and running apps in "dev" mode.
--   **prod** (or narrative.kbase.us) is the main production environment. This is the place where most users will use KBase and run apps that have either been entirely released or have been made available for beta testing.
+The [next](https://next.kbase.us), [appdev](https://appdev.kbase.us), and [prod](https://narrative.kbase.us) environments are all deployed using a production image. 
 
 #### Create Release Image
 
 1.  Create a new [pull request](https://github.com/kbase/narrative/compare) to merge the `develop` branch into `master`.
-2.  Follow the same process outlined in the `Develop` section above.
+2.  Ensure the automated tests complete successfully.
+3.  Complete the review and merge the PR.
 
 Once a pull request is merged from `develop` to `master` a new _production_ image will be available at:
 `docker.pkg.github.com/kbase/narrative/narrative:latest`.
 
-#### Tag & Deploy Image
+#### Tag & Deploy Image (admins only)
+
+**Note:** This section applies only to KBase admins who will be doing the deploy process.
 
 1.  Ensure the [deploy_tag.sh](https://github.com/kbase/narrative-traefiker/blob/develop/.github/workflows/scripts/deploy_tag.sh) script is installed on either your local workstation, or under your home directory on a secured system, such as `install.kbase.lbl.gov`.
 2.  Create a GitHub [personal access token](https://github.com/settings/tokens) and set it as "$TOKEN" in your workstation/server shell environment.
@@ -101,9 +102,9 @@ Once a pull request is merged from `develop` to `master` a new _production_ imag
 
 ### Image URLs
 
-| Evironment | Image URL                                                      |
-| ---------- | -------------------------------------------------------------- |
-| CI         | docker.pkg.github.com/kbase/narrative/narrative-develop:latest |
-| Appdev     | docker.pkg.github.com/kbase/narrative/narrative:appdev         |
-| Next       | docker.pkg.github.com/kbase/narrative/narrative:next           |
-| Production | docker.pkg.github.com/kbase/narrative/narrative:prod           |
+| Environment | Image URL                                                      |
+| ----------- | -------------------------------------------------------------- |
+| CI          | docker.pkg.github.com/kbase/narrative/narrative-develop:latest |
+| Appdev      | docker.pkg.github.com/kbase/narrative/narrative:appdev         |
+| Next        | docker.pkg.github.com/kbase/narrative/narrative:next           |
+| Production  | docker.pkg.github.com/kbase/narrative/narrative:prod           |

@@ -43,7 +43,7 @@ The various KBase environments are all used used for slightly different purposes
 6.  Merge pull request.
 
 Once a pull request is merged from a temporary branch to `develop` a new _development_ image will be available at:
-`docker.pkg.github.com/kbase/narrative/narrative-develop:latest`. This is automatically deployed to CI.
+`ghcr.io/kbase/narrative-develop:latest`. This is automatically deployed to CI.
 
 To see your changes once the new image is created, simply open a narrative on CI. If you already have one loaded, restart the application by selecting the "Shutdown and Restart" option from the menu in the upper left.
 
@@ -80,7 +80,7 @@ The [next](https://next.kbase.us), [appdev](https://appdev.kbase.us), and [prod]
 3.  Complete the review and merge the PR.
 
 Once a pull request is merged from `develop` to `master` a new _production_ image will be available at:
-`docker.pkg.github.com/kbase/narrative/narrative:latest`.
+`ghcr.io/kbase/narrative:latest`.
 
 #### Tag & Deploy Image (admins only)
 
@@ -104,7 +104,7 @@ Once a pull request is merged from `develop` to `master` a new _production_ imag
 
 | Environment | Image URL                                                      |
 | ----------- | -------------------------------------------------------------- |
-| CI          | docker.pkg.github.com/kbase/narrative/narrative-develop:latest |
-| Appdev      | docker.pkg.github.com/kbase/narrative/narrative:appdev         |
-| Next        | docker.pkg.github.com/kbase/narrative/narrative:next           |
-| Production  | docker.pkg.github.com/kbase/narrative/narrative:prod           |
+| CI          | ghcr.io/kbase/narrative-develop:latest |
+| Appdev      | ghcr.io/kbase/narrative:appdev         |
+| Next        | ghcr.io/kbase/narrative:next           |
+| Production  | ghcr.io/kbase/narrative:prod           |

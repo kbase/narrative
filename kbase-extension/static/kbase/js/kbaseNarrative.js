@@ -292,7 +292,6 @@ define([
                         isReady: Jupyter.notebook.kernel && Jupyter.notebook.kernel.is_connected()
                     }
                 );
-                console.log('emitted kernel-state-changed event, probably not ready!');
             });
         });
         $([Jupyter.events]).on('delete.Cell', function () {
@@ -784,7 +783,7 @@ define([
                     this.sidePanel.render();
                 }.bind(this));
 
-            $([Jupyter.events]).on('kernel_ready.Kernel',
+            $([Jupyter.events]).on('kernel_connected.Kernel',
                 (e) => {
                     this.loadingWidget.updateProgress('kernel', true);
                     this.jobCommChannel = new JobCommChannel();

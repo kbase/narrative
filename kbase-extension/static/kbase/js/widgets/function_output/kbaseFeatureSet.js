@@ -14,9 +14,8 @@ define ([
     'jquery-dataTables',
     'knhx',
     'widgetMaxWidthCorrection',
-    'GenomeSearchUtil-client-api',
     'bootstrap',
-], function(
+], function (
     KBWidget,
     $,
     Config,
@@ -43,7 +42,7 @@ define ([
             this.$elem.append(this.$messagePane);
 
             if (options.workspaceids && options.workspaceids.length > 0) {
-                var id = options.workspaceids[0].split('/');
+                const id = options.workspaceids[0].split('/');
                 this.options.treeID = id[1];
                 this.options.workspaceID = id[0];
             }
@@ -87,37 +86,37 @@ define ([
         features: null, // genomeId : [{fid: x, data: x}]
 
         loadFeatureSet: function() {
-            var self = this;
-            self.features = {};
-            self.workspace.callFunc('get_objects', [[{
-                ref: self.options.workspaceName+'/'+self.options.featureset_name
-            }]]).then(([data]) => {
-                var fs = data[0].data;
-                if(fs.description) {
-                    self.$mainPanel.append($('<div>')
-                        .append('<i>Description</i> - ')
-                        .append(fs.description));
-                }
+            this.features = {};
+            this.workspace.callFunc('get_objects', [[{
+                ref: this.options.workspaceName+'/'+this.options.featureset_name
+            }]])
+                .then(([data]) => {
+                    const fs = data[0].data;
+                    if(fs.description) {
+                        this.$mainPanel.append($('<div>')
+                            .append('<i>Description</i> - ')
+                            .append(fs.description));
+                    }
 
-                for (var fid in fs.elements) {
-                    if (fid in fs.elements) {
-                        for (var k=0; k<fs.elements[fid].length; k++) {
-                            var gid = fs.elements[fid][k];
-                            if (gid in self.features) {
-                                self.features[gid].push(fid);
-                            } else {
-                                self.features[gid] = [fid];
+                    for (const fid in fs.elements) {
+                        if (fid in fs.elements) {
+                            for (let k=0; k<fs.elements[fid].length; k++) {
+                                const gid = fs.elements[fid][k];
+                                if (gid in this.features) {
+                                    this.features[gid].push(fid);
+                                } else {
+                                    this.features[gid] = [fid];
+                                }
                             }
                         }
                     }
-                }
-                self.getGenomeData();
-                self.$mainPanel.show();
-            },
-            function(error) {
-                self.loading(true);
-                self.renderError(error);
-            });
+                    this.getGenomeData();
+                    this.$mainPanel.show();
+                })
+                .catch((error) => {
+                    this.loading(false);
+                    this.renderError(error);
+                });
         },
 
         search: function(genome_ref, query, limit) {
@@ -138,17 +137,16 @@ define ([
         featureTableData: null, // list for datatables
 
         getGenomeData: function() {
-            var self = this;
-            self.genomeLookupTable = {};
-            self.genomeObjectInfo = {};
-            self.featureTableData = [];
-            for(const gid in self.features) {
-                const query = {'feature_id': self.features[gid]};
-                self.search(gid, query, self.features[gid].length)
-                    .then(function(results) {
-                        for (var f in results.features) {
-                            var feature = results.features[f];
-                            self.featureTableData.push(
+            this.genomeLookupTable = {};
+            this.genomeObjectInfo = {};
+            this.featureTableData = [];
+            for (const gid in this.features) {
+                const query = {'feature_id': this.features[gid]};
+                this.search(gid, query, this.features[gid].length)
+                    .then((results) => {
+                        for (const f in results.features) {
+                            const feature = results.features[f];
+                            this.featureTableData.push(
                                 {
                                     fid: '<a href="/#dataview/'+gid+
                                                 '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
@@ -162,67 +160,64 @@ define ([
                             );
 
                         }
-                        self.renderFeatureTable(); // just rerender each time
-                        self.loading(true);
+                        this.renderFeatureTable(); // just rerender each time
+                        this.loading(true);
                     })
-                    .catch(function(e) {
+                    .catch((e) => {
                         console.error(e);
                     });
             }
-            if (Object.keys(self.features).length === 0){
-                self.loading(true);
-                self.showMessage('This feature set is empty.');
+            if (Object.keys(this.features).length === 0) {
+                this.loading(true);
+                this.showMessage('This feature set is empty.');
             }
         },
 
         $featureTableDiv : null,
         renderFeatureTable: function() {
-            var self = this;
-
-            if(!self.$featureTableDiv) {
-                self.$featureTableDiv = $('<div>').css({'margin':'5px'});
-                self.$mainPanel.append(self.$featureTableDiv);
+            if (!this.$featureTableDiv) {
+                this.$featureTableDiv = $('<div>').css({'margin':'5px'});
+                this.$mainPanel.append(this.$featureTableDiv);
             }
 
-            self.$featureTableDiv.empty();
+            this.$featureTableDiv.empty();
 
-            var $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
+            const $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
                 .addClass('table table-bordered table-striped');
-            self.$featureTableDiv.append($tbl);
+            this.$featureTableDiv.append($tbl);
 
-            var sDom = 'ft<ip>';
-            if(self.featureTableData.length<=10) sDom = 'ft<i>';
+            const sDom = `ft<${this.featureTableData.length <= 10 ? 'i' : 'ip'}>`;
 
-            var tblSettings = {
-                'sPaginationType': 'full_numbers',
-                'iDisplayLength': 10,
-                'sDom': sDom,
-                'aaSorting': [[ 2, 'asc' ], [0, 'asc']],
-                'aoColumns': [
+            const tblSettings = {
+                sPaginationType: 'full_numbers',
+                iDisplayLength: 10,
+                sDom: sDom,
+                aaSorting: [[ 2, 'asc' ], [0, 'asc']],
+                aoColumns: [
                     {sTitle: 'Feature ID', mData: 'fid'},
                     {sTitle: 'Aliases', mData: 'ali'},
                     {sTitle: 'Genome', mData: 'gid'},
                     {sTitle: 'Type', mData: 'type'},
                     {sTitle: 'Function', mData: 'func'},
                 ],
-                'aaData': [],
-                'oLanguage': {
-                    'sSearch': 'Search features:',
-                    'sEmptyTable': 'This FeatureSet is empty'
+                aaData: [],
+                oLanguage: {
+                    sSearch: 'Search features:',
+                    sEmptyTable: 'This FeatureSet is empty'
                 }
             };
-            var featuresTable = $tbl.dataTable(tblSettings);
-            featuresTable.fnAddData(self.featureTableData);
+            const featuresTable = $tbl.dataTable(tblSettings);
+            featuresTable.fnAddData(this.featureTableData);
         },
 
         renderError: function(error) {
-            var errString = 'Sorry, an unknown error occurred';
+            let errString = 'Sorry, an unknown error occurred';
             if (typeof error === 'string')
                 errString = error;
             else if (error.error && error.error.message)
                 errString = error.error.message;
 
-            var $errorDiv = $('<div>')
+            const $errorDiv = $('<div>')
                 .addClass('alert alert-danger')
                 .append('<b>Error:</b>')
                 .append('<br>' + errString);
@@ -231,7 +226,7 @@ define ([
         },
 
         buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+            const obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;
             } else {
@@ -253,15 +248,15 @@ define ([
         },
 
         loading: function(doneLoading) {
-            if (doneLoading)
+            if (doneLoading) {
                 this.hideMessage();
-            else
+            } else {
                 this.showMessage('<img src=\'' + this.options.loadingImage + '\'/>');
+            }
         },
 
         showMessage: function(message) {
-            var span = $('<span/>').append(message);
-
+            const span = $('<span/>').append(message);
             this.$messagePane.append(span);
             this.$messagePane.show();
         },
@@ -283,6 +278,5 @@ define ([
             this.render();
             return this;
         }
-
     });
 });

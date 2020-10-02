@@ -6,6 +6,7 @@
 define([
     'kbaseFeatureSet'
 ], function(Widget) {
+    'use strict';
     describe('Test the kbaseFeatureSet widget', function() {
         it('Should do things', function() {
 

@@ -16,7 +16,7 @@ define([
     SearchAPI2,
     common
 ) {
-
+    'use strict';
     class RefDataSearch {
         constructor({url, token, timeout}) {
             this.url = url;
@@ -48,7 +48,7 @@ define([
                 size: 0,
                 from: 0,
                 track_total_hits: true
-            }
+            };
             return this.searchAPI2.search_objects({params, timeout: this.timeout})
                 .then((result) => {
                     return result.count;
@@ -85,9 +85,9 @@ define([
             };
             if (query !== null) {
                 params.query.bool.must.push({
-                    "match": {
-                        "scientific_name": {
-                            "query": query
+                    'match': {
+                        'scientific_name': {
+                            'query': query
                         }
                     }
                 });
@@ -250,7 +250,7 @@ define([
                         })
                         .catch((error) => {
                             if (error instanceof DOMException && error.name === 'AbortError') {
-                                errorMsg = `Request canceled - perhaps timed out after ${this.config.timeout}ms`;
+                                const errorMsg = `Request canceled - perhaps timed out after ${this.config.timeout}ms`;
                                 throw new Error(errorMsg);
                             }
                             throw(error);

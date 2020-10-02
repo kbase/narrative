@@ -282,7 +282,8 @@ define([
                     }
                 });
 
-            this.$addDataButton = $('<span>').addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
+            this.$addDataButton = $('<button>').addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
+                .attr('aria-label', 'add data button')
                 .css({ 'position': 'absolute', bottom: '15px', right: '25px', 'z-index': '5' })
                 .click(function () {
                     _this.trigger('hideGalleryPanelOverlay.Narrative');

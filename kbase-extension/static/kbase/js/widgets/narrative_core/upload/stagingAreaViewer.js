@@ -405,14 +405,12 @@ define([
 
                         if ($(e.currentTarget).hasClass('fa-caret-down')) {
                             $('.kb-dropzone').css('min-height', '75px');
-                            $('.dz-message').css('margin', '0em 0');
                             this.openFileInfo[fileName] = myFile;
                             $tr.after(
                                 this.renderMoreFileInfo(myFile)
                             );
                         } else {
                             $('.kb-dropzone').css('min-height', '200px');
-                            $('.dz-message').css('margin', '3em 0');
                             $tr.next().detach();
                             delete this.openFileInfo[fileName];
                         }

@@ -5,6 +5,21 @@
     font-weight: bold;
 }
 
+/* 
+    TODO: find out if it's ok to set margins this way or if we should follow design convention for positioning
+*/
+.kb-dropzone .dz-message {
+    font-family: Roboto;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 24px;
+    line-height: 28px;
+    text-align: center;
+    color: #000000;
+    mix-blend-mode: normal;
+    margin: 2em 4.5em;
+}
+
 .kb-data-staging-table-name {
     white-space: nowrap;
     overflow: hidden;
@@ -3011,6 +3026,25 @@ button.kb-data-obj {
 
 .kb-import-content .btn-xs {
     border: none;
+}
+
+/* TODO: check with design on setting width/height (vs positioning) */
+.kb-import-content .upload-options button {
+    background: #FFFFFF;
+    border: 1px solid #C4C4C4;
+    box-sizing: border-box;
+    border-radius: 6px;
+    font-family: Oxygen;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 18px;
+    /* identical to box height */
+    text-align: center;
+    color: #000000;
+    width: 140px;
+    height: 42px;
+    margin: 0 6px;
 }
 
 .kb-overlay-footer {

@@ -8,61 +8,132 @@ a search against these cached results
 define([
     'bluebird',
     'handlebars',
-    'kb_common/utils',
-    'kb_common/jsonRpc/dynamicServiceClient',
-    'common/kbaseSearchEngine',
+    'common/searchAPI2',
     './common'
 ], function (
     Promise,
     Handlebars,
-    Utils,
-    DynamicServiceClient,
-    KBaseSearchEngine,
+    SearchAPI2,
     common
 ) {
-    'use strict';
 
-    function parseGenomeIndexV1 (item) {
-        // oh, lordy, people messing with the metadata...
+    class RefDataSearch {
+        constructor({url, token, timeout}) {
+            this.url = url;
+            this.token = token;
+            this.searchAPI2 = new SearchAPI2({url: this.url, token: this.token});
+            this.timeout = timeout;
+        }
+
+        referenceGenomeTotal({source}) {
+            const params = {
+                query: {
+                    bool: {
+                        must: [
+                            {
+                                term: {
+                                    tags: 'refdata'
+                                }
+                            },
+                            {
+                                term: {
+                                    source: source
+                                }
+                            },
+                        ]
+                    }
+                },
+                only_public: true,
+                indexes: ['genome'],
+                size: 0,
+                from: 0,
+                track_total_hits: true
+            }
+            return this.searchAPI2.search_objects({params, timeout: this.timeout})
+                .then((result) => {
+                    return result.count;
+                });
+        }
+
+        referenceGenomeDataSearch({source, query, offset, limit}) {
+            const params = {
+                query: {
+                    bool: {
+                        must: [
+                            {
+                                term: {
+                                    tags: 'refdata'
+                                }
+                            },
+                            {
+                                term: {
+                                    source: source
+                                }
+                            }
+                        ]
+                    }
+                },
+                sort: [
+                    {'scientific_name.raw': {order: 'asc'}},
+                    '_score'
+                ],
+                only_public: true,
+                indexes: ['genome'],
+                size: limit,
+                from: offset,
+                track_total_hits: true
+            };
+            if (query !== null) {
+                params.query.bool.must.push({
+                    "match": {
+                        "scientific_name": {
+                            "query": query
+                        }
+                    }
+                });
+            }
+            return this.searchAPI2.search_objects({params, timeout: this.timeout});
+        }
+
+        referenceGenomeSearch({source, query, page, pageSize}) {
+            var offset = page * pageSize;
+            var limit = pageSize;
+            return Promise.all([
+                this.referenceGenomeTotal({source}),
+                this.referenceGenomeDataSearch({source, query, offset, limit})
+            ])
+                .then(([totalAvailable, result]) => {
+                    return {
+                        totalAvailable,
+                        result
+                    };
+                });
+        }
+    }
+
+
+    function parseGenomeSearchResultItem (item) {
         return {
-            genome_id: item.kbase_id,
-            genome_source: item.data.source,
-            genome_source_id: item.data.source_id,
-            scientific_name: item.data.scientific_name,
-            domain: item.data.domain,
-            num_contigs: item.data.num_contigs,
-            num_cds: item.data.cds_count,
-            num_features: item.data.feature_counts && item.data.feature_counts.gene,
-            ws_ref: item.kbase_id,
+            genome_id: item.doc.genome_id,
+            genome_source: item.doc.source,
+            genome_source_id: item.doc.source_id,
+            scientific_name: item.doc.scientific_name,
+            num_contigs: item.doc.num_contigs,
+            num_cds: item.doc.cds_count,
+            num_features: item.doc.feature_count,
+            ws_ref: [item.doc.access_group, item.doc.obj_id, item.doc.version].join('/'),
             workspace_name: null,
-            taxonomy: item.data.taxonomy,
-            object_name: item.object_name
+            taxonomy: item.doc.taxonomy,
+            object_name: item.doc.obj_name
         };
     }
 
-    function parseGenomeSearchResultItem (item) {
-        // get the type and version
-        var indexType = item.type.toLowerCase();
-        var indexTypeVersion = item.type_ver;
-
-        if (indexType !== 'genome') {
-            throw new Error('Item is not a genome: ' + indexType);
-        }
-
-        switch (indexTypeVersion) {
-        case 1:
-            return parseGenomeIndexV1(item);
-        default:
-            throw new Error('Unsupported genome index version: ' + indexTypeVersion);
-        }
-    }
-
-    var SearchDataSource = Object.create({}, {
+    return Object.create({}, {
         init: {
             value: function (arg) {
                 common.requireArg(arg, 'config');
                 common.requireArg(arg, 'token');
-                common.requireArg(arg, 'urls.KBaseSearchEngine');
+                common.requireArg(arg, 'urls.searchapi2');
                 common.requireArg(arg, 'pageSize');
 
                 this.pageSize = arg.pageSize;
@@ -74,9 +145,10 @@ define([
                 this.availableData = null;
                 this.fetchedDataCount = null;
                 this.filteredData = null;
-                this.searchApi = KBaseSearchEngine.make({
-                    url: arg.urls.KBaseSearchEngine,
-                    token: arg.token
+                this.searchApi = new RefDataSearch({
+                    url: arg.urls.searchapi2,
+                    token: arg.token,
+                    timeout: arg.config.timeout
                 });
                 this.searchState = {
                     lastSearchAt: null,
@@ -91,7 +163,7 @@ define([
         },
         search: {
             value: function(query) {
-                return Promise.try(function () {
+                return Promise.try(() => {
                     if (this.searchState.currentQueryState) {
                         return;
                     }
@@ -149,11 +221,11 @@ define([
                         query: this.queryExpression,
                         page: this.page
                     })
-                        .then(function (result) {
+                        .then((result) => {
                             this.availableDataCount = result.totalAvailable;
-                            this.filteredDataCount = result.result.total;
-                            this.availableData = result.result.objects.map(function (item) {
-                                // This call givs us a normalized genome result object.
+                            this.filteredDataCount = result.result.count;
+                            this.availableData = result.result.hits.map((item) => {
+                                // This call gives us a normalized genome result object.
                                 // In porting this over, we are preserving the field names.
                                 var genomeRecord = parseGenomeSearchResultItem(item);
     
@@ -171,14 +243,21 @@ define([
                                     attached: false,
                                     workspaceReference: {ref: genomeRecord.ws_ref}
                                 };
-                            }.bind(this));
+                            });
                             // for now assume that all items before the page have been fetched
                             this.fetchedDataCount = (this.page + 1) * this.pageSize + this.availableData.length;
                             return this.availableData;
-                        }.bind(this));
+                        })
+                        .catch((error) => {
+                            if (error instanceof DOMException && error.name === 'AbortError') {
+                                errorMsg = `Request canceled - perhaps timed out after ${this.config.timeout}ms`;
+                                throw new Error(errorMsg);
+                            }
+                            throw(error);
+                        });
 
                     return queryState.promise;
-                }.bind(this))
+                })
                     .finally(function () {
                         this.searchState.currentQueryState = null;      
                     }.bind(this));
@@ -190,32 +269,23 @@ define([
             }
         },
         applyQuery: {
-            value: function () {
-                // if (!this.queryExpression) {
-                //     this.filteredData = this.availableData;
-                //     return this.availableData;
-                // }
-                // if (!this.availableData) {
-                //     throw new Error('No data to query');
-                // }
-                var _this = this;
-
+            value: () => {
                 return this.searchApi.referenceGenomeSearch({
                     source: this.config.source,
                     pageSize: this.itemsPerPage,
                     query: this.queryExpression,
                     page: this.page
                 })
-                    .then(function (result) {
-                        _this.availableDataCount = result.totalAvailable;
-                        _this.filteredDataCount = result.result.total;
-                        _this.availableData = result.result.objects.map(function (item) {
-                            // This call givs us a normalized genome result object.
+                    .then((result) => {
+                        this.availableDataCount = result.totalAvailable;
+                        this.filteredDataCount = result.result.count;
+                        this.availableData = result.result.objects.map(function (item) {
+                            // This call gives us a normalized genome result object.
                             // In porting this over, we are preserving the field names.
                             var genomeRecord = parseGenomeSearchResultItem(item);
 
-                            var name = _this.titleTemplate(genomeRecord);
-                            var metadata = common.applyMetadataTemplates(_this.metadataTemplates, genomeRecord);
+                            var name = this.titleTemplate(genomeRecord);
+                            var metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
                             return {
                                 info: null,
                                 id: genomeRecord.genome_id,
@@ -223,13 +293,13 @@ define([
                                 name: name,
                                 objectName: genomeRecord.object_name,
                                 metadata: metadata,
-                                ws: _this.config.workspaceName,
-                                type: _this.config.type,
+                                ws: this.config.workspaceName,
+                                type: this.config.type,
                                 attached: false
                             };
                         });
-                        return _this.availableData;
-                    }.bind(this));
+                        return this.availableData;
+                    });
             }
         },
         load: {
@@ -255,6 +325,4 @@ define([
             }
         }
     });
-
-    return SearchDataSource;
 });

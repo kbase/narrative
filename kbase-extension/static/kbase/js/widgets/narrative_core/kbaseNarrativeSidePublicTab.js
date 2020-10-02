@@ -15,7 +15,7 @@ define ([
     'kb_common/html',
     'util/icon',
     'widgets/narrative_core/publicDataSources/workspaceDataSource',
-    'widgets/narrative_core/publicDataSources/searchDataSource',
+    'widgets/narrative_core/publicDataSources/search2DataSource',
     'yaml!kbase/config/publicDataSources.yaml',
 
     'bootstrap'
@@ -201,7 +201,7 @@ define ([
     var dataSourceTypes = {
         search: {
             serviceDependencies: {
-                KBaseSearchEngine: 'KBaseSearchEngine'
+                searchapi2: 'searchapi2'
             },
             baseObject: SearchDataSource
         },
@@ -486,7 +486,7 @@ define ([
             this.currentQuery = query;
             this.currentPage = 0;
             this.totalAvailable = null;
-            this.currentFilteredlResults = null;
+            this.currentFilteredResults = null;
 
             return this.renderInitial();
         },
@@ -519,7 +519,7 @@ define ([
             this.totalPanel.empty();
             this.hideResultFooter();
             this.resultsFooterMessage.empty();
-            this.totalPanel.html('<div class="alert alert-danger">Sorry, an error occurred executing this search!</div>');
+            this.totalPanel.html('<div class="alert alert-danger">An error occurred executing this search!</div>');
         },
 
         renderMore: function() {
@@ -557,17 +557,19 @@ define ([
             } else {
                 var dataSourceType = dataSourceTypes[dataSourceConfig.sourceType];
                
-                var urls = Object.keys(dataSourceType.serviceDependencies).reduce(function (urls, key) {
-                    var configKey = dataSourceType.serviceDependencies[key];
-                    urls[key] = Config.url(configKey);
-                    return urls;
-                }, {});
-                dataSource = Object.create(dataSourceType.baseObject).init({
-                    config: dataSourceConfig,
-                    urls: urls,
-                    token: this.token,
-                    pageSize: this.itemsPerPage
-                });
+                var urls = Object.keys(dataSourceType.serviceDependencies)
+                    .reduce(function (urls, key) {
+                        var configKey = dataSourceType.serviceDependencies[key];
+                        urls[key] = Config.url(configKey);
+                        return urls;
+                    }, {});
+                dataSource = Object.create(dataSourceType.baseObject)
+                    .init({
+                        config: dataSourceConfig,
+                        urls: urls,
+                        token: this.token,
+                        pageSize: this.itemsPerPage
+                    });
                 this.currentDataSource = dataSource;
             }
             return dataSource;
@@ -943,6 +945,7 @@ define ([
             } else {
                 errorMsg = error;
             }
+           
             this.infoPanel.empty();
             this.infoPanel.append('<div class="alert alert-danger">Error: ' + errorMsg + '</span>');
         },

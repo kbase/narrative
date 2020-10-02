@@ -7,9 +7,11 @@
       name: NCBI RefSeq Genomes
       # The type of data source. The data source will understand this configuration.
       sourceType: search
-      # For search data types this us used to match the "source" index key, which is 
+      # Timeout in ms
+      timeout: 60000
+      # For search data types this ui used to match the "source" index key, which is 
       # derived form the Source metadata property.
-      source: refseq
+      source: RefSeq
       # TODO: remove - not used?
       sourceLabel: RefSeq
       # The kbase type, without version. 

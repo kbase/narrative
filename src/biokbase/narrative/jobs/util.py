@@ -7,14 +7,18 @@ def sanitize_state(state):
     This takes a state structure (as returned by NJS.check_jobs or NJS.check_job) and returns
     it with some keys changed.
     """
-    if 'cancelled' in state:
-        state['canceled'] = state.get('cancelled', 0)
-        del state['cancelled']
-    if state.get('job_state', '') == 'cancelled':
-        state['job_state'] = 'canceled'
-    ujs_status = state.get('status', [])
-    if isinstance(ujs_status, list) and len(ujs_status) >= 2 and ujs_status[1] == 'cancelled':
-        state['status'][1] = 'canceled'
+    if "cancelled" in state:
+        state["canceled"] = state.get("cancelled", 0)
+        del state["cancelled"]
+    if state.get("job_state", "") == "cancelled":
+        state["job_state"] = "canceled"
+    ujs_status = state.get("status", [])
+    if (
+        isinstance(ujs_status, list)
+        and len(ujs_status) >= 2
+        and ujs_status[1] == "cancelled"
+    ):
+        state["status"][1] = "canceled"
     return state
 
 
@@ -23,6 +27,6 @@ def sanitize_all_states(states):
     Like sanitize_state above, but meant to be applied to the result of NJS.check_jobs. This maintains
     the plural structure provided by that function while changing the names around.
     """
-    for job_id in states.get('job_states', {}):
-        states['job_states'][job_id] = sanitize_state(states['job_states'][job_id])
+    for job_id in states.get("job_states", {}):
+        states["job_states"][job_id] = sanitize_state(states["job_states"][job_id])
     return states

@@ -3,24 +3,18 @@ from notebook.base.handlers import IPythonHandler
 from traitlets.config import Application
 from notebook.auth.login import LoginHandler
 from notebook.auth.logout import LogoutHandler
-from biokbase.narrative.common.kblogging import (
-    get_logger, log_event
-)
+from biokbase.narrative.common.kblogging import get_logger, log_event
 from biokbase.narrative.common.util import kbase_env
 import tornado.log
 import os
 import urllib.parse
 import logging
-from biokbase.auth import (
-    get_user_info,
-    init_session_env,
-    set_environ_token
-)
+from biokbase.auth import get_user_info, init_session_env, set_environ_token
 
 """
 KBase handlers for authentication in the Jupyter notebook.
 """
-__author__ = 'Bill Riehl <wjriehl@lbl.gov>'
+__author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 # Set logging up globally.
 g_log = get_logger("biokbase.narrative")
@@ -29,7 +23,7 @@ app_log = tornado.log.app_log  # alias
 if Application.initialized:
     app_log = Application.instance().log
 
-if os.environ.get('KBASE_DEBUG', False):
+if os.environ.get("KBASE_DEBUG", False):
     app_log.setLevel(logging.DEBUG)
 
 auth_cookie_name = "kbase_session"
@@ -50,7 +44,7 @@ class KBaseLoginHandler(LoginHandler):
         # cookie_regex = re.compile('([^ =|]+)=([^\|]*)')
         client_ip = self.request.remote_ip
         http_headers = self.request.headers
-        ua = http_headers.get('User-Agent', 'unknown')
+        ua = http_headers.get("User-Agent", "unknown")
         # save client ip in environ for later logging
         kbase_env.client_ip = client_ip
 
@@ -60,8 +54,10 @@ class KBaseLoginHandler(LoginHandler):
             auth_info = dict()
             try:
                 auth_info = get_user_info(token)
-            except Exception as e:
-                app_log.error("Unable to get user information from authentication token!")
+            except Exception:
+                app_log.error(
+                    "Unable to get user information from authentication token!"
+                )
                 raise
 
             # re-enable if token logging info is needed.
@@ -72,14 +68,16 @@ class KBaseLoginHandler(LoginHandler):
             #                           tok=token))
             init_session_env(auth_info, client_ip)
             self.current_user = kbase_env.user
-            log_event(g_log, 'session_start', {'user': kbase_env.user, 'user_agent': ua})
+            log_event(
+                g_log, "session_start", {"user": kbase_env.user, "user_agent": ua}
+            )
 
         app_log.info("KBaseLoginHandler.get(): user={}".format(kbase_env.user))
 
         if self.current_user:
-            self.redirect(self.get_argument('next', default=self.base_url))
+            self.redirect(self.get_argument("next", default=self.base_url))
         else:
-            self.write('This is a test?')
+            self.write("This is a test?")
 
     def post(self):
         pass
@@ -88,17 +86,17 @@ class KBaseLoginHandler(LoginHandler):
     def get_user(cls, handler):
         user_id = kbase_env.user
 
-        if user_id == '':
-            user_id = 'anonymous'
+        if user_id == "":
+            user_id = "anonymous"
         if user_id is None:
             handler.clear_login_cookie()
             if not handler.login_available:
-                user_id = 'anonymous'
+                user_id = "anonymous"
         return user_id
 
     @classmethod
     def password_from_settings(cls, settings):
-        return ''
+        return ""
 
     @classmethod
     def login_available(cls, settings):
@@ -108,20 +106,24 @@ class KBaseLoginHandler(LoginHandler):
 
 class KBaseLogoutHandler(LogoutHandler):
     def get(self):
-        client_ip = self.request.remote_ip
+        self.request.remote_ip
         http_headers = self.request.headers
         user = kbase_env.user
-        ua = http_headers.get('User-Agent', 'unknown')
+        ua = http_headers.get("User-Agent", "unknown")
 
-        kbase_env.auth_token = 'none'
-        kbase_env.narrative = 'none'
-        kbase_env.session = 'none'
-        kbase_env.user = 'anonymous'
-        kbase_env.workspace = 'none'
+        kbase_env.auth_token = "none"
+        kbase_env.narrative = "none"
+        kbase_env.session = "none"
+        kbase_env.user = "anonymous"
+        kbase_env.workspace = "none"
 
         set_environ_token(None)
 
-        app_log.info('Successfully logged out')
-        log_event(g_log, 'session_close', {'user': user, 'user_agent': ua})
+        app_log.info("Successfully logged out")
+        log_event(g_log, "session_close", {"user": user, "user_agent": ua})
 
-        self.write(self.render_template('logout.html', message={'info': 'Successfully logged out'}))
+        self.write(
+            self.render_template(
+                "logout.html", message={"info": "Successfully logged out"}
+            )
+        )

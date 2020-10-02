@@ -21,8 +21,7 @@
 
 ## About
 
-This is the repository for the KBase Narrative Interface.
-. The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.org) and contains elements to interact with various KBase tools and data stores.
+This is the repository for the KBase Narrative Interface. The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.org) and contains elements to interact with various KBase tools and data stores.
 
 This document contains links to various documentation in the [docs](docs) directory, with a brief description of each.
 
@@ -39,6 +38,16 @@ Requires the following:
 -   Anaconda/Miniconda as an environment manager (<https://www.anaconda.com/>)
 -   Node.js (latest LTS recommended)
 -   Bower 1.8.8+
+
+### Git Pre-commit installation
+
+Our git [pre-commit](https://pre-commit.com/#install) [hooks](/.pre-commit-config.yaml) allow you to run flake8 and black upon `git commit` and save you from having to run these linters manually.
+
+- change into the base directory
+- `pip install pre-commit`
+- `pre-commit install` to set up the git hook scripts
+- edit a python file and `git commit -m <comment>` it in to test out the installation
+
 
 ### *Using a Conda Environment*
 

@@ -1,6 +1,7 @@
 {
     "appdev": {
         "KBaseSearchEngine": "https://appdev.kbase.us/services/searchapi2/legacy",
+        "searchapi2": "https://appdev.kbase.us/services/searchapi2/rpc",
         "auth": "https://appdev.kbase.us/services/auth",
         "awe": "https://appdev.kbase.us/services/awe-api",
         "catalog": "https://appdev.kbase.us/services/catalog",
@@ -53,6 +54,7 @@
     "auth_sleep_recheck_ms": 60000,
     "ci": {
         "KBaseSearchEngine": "https://ci.kbase.us/services/searchapi2/legacy",
+        "searchapi2": "https://ci.kbase.us/services/searchapi2/rpc",
         "auth": "https://ci.kbase.us/services/auth",
         "awe": "https://ci.kbase.us/services/awe-api",
         "catalog": "https://ci.kbase.us/services/catalog",
@@ -117,6 +119,7 @@
     },
     "dev": {
         "KBaseSearchEngine": "https://ci.kbase.us/services/searchapi2/legacy",
+        "searchapi2": "https://dev.kbase.us/services/searchapi2/rpc",
         "auth": "https://ci.kbase.us/services/auth",
         "awe": "https://ci.kbase.us/services/awe-api",
         "catalog": "https://ci.kbase.us/services/catalog",
@@ -165,12 +168,13 @@
         "google_analytics_id": "UA-74532036-1"
     },
     "dev_mode": {{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }},
-    "git_commit_hash": "bf62933",
-    "git_commit_time": "Fri Jun 5 13:45:19 2020 -0700",
+    "git_commit_hash": "18827d2b8",
+    "git_commit_time": "Fri Oct 2 05:30:23 2020 -0700",
     "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif",
     "name": "KBase Narrative",
     "next": {
         "KBaseSearchEngine": "https://next.kbase.us/services/searchapi2/legacy",
+        "searchapi2": "https://next.kbase.us/services/searchapi2/rpc",
         "auth": "https://next.kbase.us/services/auth",
         "awe": "https://next.kbase.us/services/awe-api",
         "catalog": "https://next.kbase.us/services/catalog",
@@ -221,6 +225,7 @@
     },
     "prod": {
         "KBaseSearchEngine": "https://kbase.us/services/searchapi2/legacy",
+        "searchapi2": "https://kbase.us/services/searchapi2/rpc",
         "auth": "https://kbase.us/services/auth",
         "awe": "https://kbase.us/services/awe-api",
         "catalog": "https://kbase.us/services/catalog",
@@ -273,6 +278,7 @@
     },
     "narrative-dev": {
         "KBaseSearchEngine": "https://narrative-dev.kbase.us/services/searchapi2/legacy",
+        "searchapi2": "https://narrative-dev.kbase.us/services/searchapi2/rpc",
         "auth": "https://narrative-dev.kbase.us/services/auth",
         "awe": "https://narrative-dev.kbase.us/services/awe-api",
         "catalog": "https://narrative-dev.kbase.us/services/catalog",

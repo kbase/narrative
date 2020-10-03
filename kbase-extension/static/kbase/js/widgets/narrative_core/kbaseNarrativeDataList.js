@@ -384,7 +384,7 @@ define([
                 console.error('ws: ' + this.ws);
                 return;
             }
-            Promise.resolve(this.ws.get_workspace_info({
+            return Promise.resolve(this.ws.get_workspace_info({
                 workspace: this.ws_name
             }))
                 .then(function (wsInfo) {

@@ -4,44 +4,177 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
-    'jquery',
     'kbaseNarrativeDataList',
-    'base/js/namespace',
-    'kbaseNarrative',
-    'bootstrap'
-], function($, DataList, Jupyter, Narrative) {
-    describe('Test the kbaseNarrativeDataList widget', function() {
-        let $div = null;
+    'jquery',
+    'narrativeConfig',
+    'kb_service/client/workspace',
+    'base/js/namespace'
+], function (DataList, $, Config, Workspace, Jupyter) {
+    'use strict';
+    var $dataList = $('<div>');
+    var dataListObj = null;
+
+    const fakeNSUrl = 'https://ci.kbase.us/services/fake_url';
+    const narrativeServiceInfo = {
+        version: '1.1',
+        id: '12345',
+        result: [{
+            git_commit_hash: 'foo',
+            hash: 'bar',
+            health: 'healthy',
+            module_name: 'SampleService',
+            url: fakeNSUrl
+        }]
+    };
+
+    function mockServiceWizard() {
+        jasmine.Ajax.stubRequest(Config.url('service_wizard')).andReturn({
+            status: 200,
+            statusText: 'HTTP/1/1 200 OK',
+            contentType: 'application/json',
+            responseText: JSON.stringify(narrativeServiceInfo)
+        });
+    };
+
+    function mockNarrativeServiceListObjects(objData) {
+        jasmine.Ajax.stubRequest(fakeNSUrl).andReturn({
+            status: 200,
+            statusText: 'HTTP/1 200 OK',
+            contentType: 'application/json',
+            responseText: JSON.stringify({
+                version: '1.1',
+                id: '12345',
+                result: [{
+                    // The data object is where objects will be return
+                    data: objData,
+                    data_palette_refs: {}
+                }]
+            })
+        });
+    };
+
+    function mockWorkSpaceService() {
+        jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            status: 200,
+            statusText: 'success',
+            contentType: 'application/json',
+            responseHeaders: '',
+            responseText: JSON.stringify({
+                version: '1.1',
+                result: [[
+                    35855,
+                    'testUser:narrative_1534979778065',
+                    'testUser',
+                    '2020-09-30T23:22:25+0000',
+                    2,
+                    'a',
+                    'n',
+                    'unlocked',
+                    {
+                        'narrative_nice_name': 'CI Scratch',
+                        'searchtags': 'narrative',
+                        'is_temporary': 'false',
+                        'narrative': '1'
+                    }
+                ]]
+            })
+        });
+    };
+
+    describe('Test the kbaseNarrativeDataList', () => {
+
         beforeEach(() => {
             jasmine.Ajax.install();
-            $div = $('<div>');
-            Jupyter.narrative = new Narrative();
-            Jupyter.narrative.getAuthToken = () => { return 'NotARealToken!' };
+            Jupyter.narrative = {
+                getAuthToken: () => 'someToken',
+                getWorkspaceName: () => 'someWorkspace'
+            };
         });
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
-            $div.remove();
+            $dataList = $('<div>');
+            dataListObj = null;
         });
 
-        it('Should initialize an empty data list properly', function() {
-            expect(dataList).toEqual(jasmine.any(Object));
+        describe('Without data', () => {
+            beforeEach( async () => {
+                var objData = [];
+
+                // mock service calls
+                mockServiceWizard();
+                mockNarrativeServiceListObjects(objData);
+                mockWorkSpaceService();
+
+                // Create datalist object
+                dataListObj = new DataList($dataList, {});
+                expect(dataListObj).toBeDefined();
+
+                // Populate datalist object via the refresh function
+                dataListObj.ws_name = 'some_workspace';
+                dataListObj.ws = new Workspace(Config.url('workspace'), null);
+                await dataListObj.refresh();
+            });
+
+            it('Should instantiate itself', () => {
+                expect(dataListObj).toBeDefined();
+                expect($dataList.html()).toContain('This Narrative has no data yet.');
+            });
+
+
+            it('Should render the add data text button ', async () => {
+                var $addDataButton = $dataList.find('.kb-data-list-add-data-text-button');
+                expect($addDataButton).toBeDefined();
+                expect($addDataButton.html()).toContain('Add Data');
+            });
         });
 
-        it('Should have an add data button with Add Data text when there are no list items', function(){
-            var addDataButton = $list.find('.kb-data-list-add-data-text-button')
-            expect(addDataButton.length).toBe(1);
-            expect(addDataButton.text()).toEqual('Add Data');
-        });
+        describe('With data', () => {
+            beforeEach( async () => {
+                var objData = [
+                    {
+                        "object_info": [
+                            5,
+                            "Rhodobacter_CACIA_14H1",
+                            "KBaseGenomes.Genome-7.0",
+                            "2020-10-03T01:15:14+0000",
+                            1,
+                            "emahanna",
+                            54640,
+                            "emahanna:narrative_1601675739009",
+                            "53af8071b814a1db43f81eb490a35491",
+                            3110399,
+                            {}
+                        ]
+                    }
+                ];
 
-        it('Should have an add data button with no text when there are list items', function(){
-            var addDataButton = $list.find('.kb-data-list-add-data-button')
-            expect(addDataButton.length).toBe(1);
-        });
+                // mock service calls
+                mockServiceWizard();
+                mockNarrativeServiceListObjects(objData);
+                mockWorkSpaceService();
 
-        it('Should fire a trigger when the add data button is clicked', function(){
-            // Not sure how to do this in Jasmine yet
-            // this.trigger('hideGalleryPanelOverlay.Narrative'); is this adding a class or is this a function?
+                // Create datalist object
+                const dataListObj = new DataList($dataList, {});
+
+                // Populate datalist object via the refresh function
+                dataListObj.ws_name = 'some_workspace';
+                dataListObj.ws = new Workspace(Config.url('workspace'), null);
+                await dataListObj.refresh();
+            });
+
+            it('Should instantiate itself', () => {
+                expect(dataListObj).toBeDefined();
+            });
+
+            it('Should render a data object row', () => {
+                expect($dataList.find('.narrative-card-row')).toBeDefined();
+            });
+
+            it('Should generate the add data button ', async () => {
+                var $addDataButton = $dataList.find('.kb-data-list-add-data-button');
+                expect($addDataButton).toBeDefined();
+            });
         });
     });
 });

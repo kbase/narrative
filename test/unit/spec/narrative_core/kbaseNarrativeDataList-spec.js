@@ -122,7 +122,7 @@ define([
             });
 
 
-            it('Should render the add data text button ', async () => {
+            it('Should render the add data text button ', () => {
                 var $addDataButton = $dataList.find('.kb-data-list-add-data-text-button');
                 expect($addDataButton).toBeDefined();
                 expect($addDataButton.html()).toContain('Add Data');
@@ -133,16 +133,16 @@ define([
             beforeEach( async () => {
                 var objData = [
                     {
-                        "object_info": [
+                        'object_info': [
                             5,
-                            "Rhodobacter_CACIA_14H1",
-                            "KBaseGenomes.Genome-7.0",
-                            "2020-10-03T01:15:14+0000",
+                            'Rhodobacter_CACIA_14H1',
+                            'KBaseGenomes.Genome-7.0',
+                            '2020-10-03T01:15:14+0000',
                             1,
-                            "emahanna",
+                            'testuser',
                             54640,
-                            "emahanna:narrative_1601675739009",
-                            "53af8071b814a1db43f81eb490a35491",
+                            'testuser:narrative_1601675739009',
+                            '53af8071b814a1db43f81eb490a35491',
                             3110399,
                             {}
                         ]
@@ -171,7 +171,7 @@ define([
                 expect($dataList.find('.narrative-card-row')).toBeDefined();
             });
 
-            it('Should generate the add data button ', async () => {
+            it('Should generate the add data button ', () => {
                 var $addDataButton = $dataList.find('.kb-data-list-add-data-button');
                 expect($addDataButton).toBeDefined();
             });

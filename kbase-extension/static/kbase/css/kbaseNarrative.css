@@ -2463,7 +2463,7 @@ button.kb-data-obj {
 
 .kb-data-list-add-data-button:hover {
     cursor:pointer;
-    background-color: #4379B1;
+    background-color: #36618E;
 }
 
 .kb-data-list-add-data-text-button {
@@ -2481,7 +2481,7 @@ button.kb-data-obj {
     moz-box-shadow: 1px 1px 3px #aaa;
 }
 .kb-data-list-add-data-text-button:hover {
-    background-color: #4379B1;
+    background-color: #36618E;
 }
 
 

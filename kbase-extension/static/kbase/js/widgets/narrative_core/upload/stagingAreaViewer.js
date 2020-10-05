@@ -166,7 +166,7 @@ define([
 
             // Add ACL before going to the staging area
             // If it fails, it'll just do so silently.
-            var $globusLink = this.$elem.find('.globus_link');
+            var $globusLink = this.$elem.find('.globus_linked');
             $globusLink.click((e) => {
                 var globusWindow = window.open('', 'globus');
                 globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');

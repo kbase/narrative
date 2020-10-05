@@ -41,12 +41,13 @@ define([
                 globusUrl: uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user
             }));
 
-            // there are two anchor elements with same class name .globus_link.
+            // there are two anchor elements with same class name .globus_linked.
             // One link takes the user to globus site,
             // and the other link takes user to how to link globus account.
-            $dropzoneElem.find('a.globus_link').click(e => {
+            $dropzoneElem.find('globus_linked').click(e => {
                 e.stopPropagation();
                 e.preventDefault();
+
                 if(e.target.href === uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user) {
                     let stagingServiceClient = new StagingServiceClient({
                         root: this.stagingUrl,

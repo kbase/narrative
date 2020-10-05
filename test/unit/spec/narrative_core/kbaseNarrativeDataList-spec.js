@@ -122,11 +122,18 @@ define([
             });
 
 
-            it('Should render the add data text button ', () => {
-                var $addDataButton = $dataList.find('.kb-data-list-add-data-text-button');
-                expect($addDataButton).toBeDefined();
-                expect($addDataButton.html()).toContain('Add Data');
+            it('Should render the add data text button and hide the other add data button', () => {
+                var $addDataTxtButton = $dataList.find('.kb-data-list-add-data-text-button');
+                expect($addDataTxtButton).toBeDefined();
+                expect($addDataTxtButton.length).toEqual(1);
+                expect($addDataTxtButton.is('button')).toBeTruthy();
+                expect($addDataTxtButton.html()).toContain('Add Data');
+
+                var $addDataButton = $dataList.find('.kb-data-list-add-data-button');
+                // When .hide() is called on a jquery element, the display attribute is set to none.
+                expect($addDataButton.css('display')).toEqual('none');
             });
+
         });
 
         describe('With data', () => {
@@ -174,6 +181,9 @@ define([
             it('Should generate the add data button ', () => {
                 var $addDataButton = $dataList.find('.kb-data-list-add-data-button');
                 expect($addDataButton).toBeDefined();
+                expect($addDataButton.length).toEqual(1);
+                expect($addDataButton.is('button')).toBeTruthy();
+                expect($addDataButton.css('display')).toEqual('inline-block');
             });
         });
     });

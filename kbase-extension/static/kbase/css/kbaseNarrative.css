@@ -11,6 +11,10 @@
     text-overflow: ellipsis;
 }
 
+.kb-data-breadcrumb a {
+  cursor: pointer;
+}
+
 .kb-data-staging-footer {
     font-family : Oxygen, Arial, sans-serif;
     font-weight: bold;

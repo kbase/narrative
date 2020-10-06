@@ -802,7 +802,7 @@ define([
         this.authToken = NarrativeLogin.getAuthToken();
         this.userId = NarrativeLogin.sessionInfo.user;
 
-        Jupyter.narrative.patchKeyboardMapping();
+        this.patchKeyboardMapping();
         this.registerEvents();
         this.initAboutDialog();
         this.initUpgradeDialog();
@@ -826,94 +826,72 @@ define([
             },
         };
 
-        $([Jupyter.events]).on(
-            'notebook_loaded.Notebook',
-            function () {
-                this.loadingWidget.updateProgress('narrative', true);
-                $('#notification_area').find('div#notification_trusted').hide();
+        $([Jupyter.events]).on('notebook_loaded.Notebook', () => {
+            this.loadingWidget.updateProgress('narrative', true);
+            $('#notification_area').find('div#notification_trusted').hide();
 
-                $(document).one(
-                    'dataUpdated.Narrative',
-                    function () {
-                        this.loadingWidget.updateProgress('data', true);
-                    }.bind(this)
-                );
+            $(document).one(
+                'dataUpdated.Narrative',
+                () => this.loadingWidget.updateProgress('data', true)
+            );
 
-                $(document).one(
-                    'appListUpdated.Narrative',
-                    function () {
-                        this.loadingWidget.updateProgress('apps', true);
-                    }.bind(this)
-                );
+            $(document).one(
+                'appListUpdated.Narrative',
+                () => this.loadingWidget.updateProgress('apps', true)
+            );
 
-                // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
-                this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), {
-                    autorender: false,
+            // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
+            this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), {
+                autorender: false,
+            });
+            this.narrController = new KBaseNarrativeWorkspace(
+                $('#notebook_panel'),
+                { ws_id: this.getWorkspaceName() }
+            );
+
+            // Disable autosave so as not to spam the Workspace.
+            Jupyter.notebook.set_autosave_interval(0);
+            KBaseCellToolbar.register(Jupyter.notebook);
+            Jupyter.CellToolbar.activate_preset('KBase');
+            Jupyter.CellToolbar.global_show();
+
+            if (Jupyter.notebook && Jupyter.notebook.metadata) {
+                const creatorId = Jupyter.notebook.metadata.creator || 'KBase User';
+                DisplayUtil.displayRealName(creatorId, $('#kb-narr-creator'));
+
+                // This puts the cell menu in the right place.
+                $([Jupyter.events]).trigger('select.Cell', {
+                    cell: Jupyter.notebook.get_selected_cell(),
                 });
-                this.narrController = new KBaseNarrativeWorkspace(
-                    $('#notebook_panel'),
-                    {
-                        ws_id: this.getWorkspaceName(),
-                    }
+            }
+            if (this.getWorkspaceName() === null) {
+                KBFatal(
+                    'Narrative.init',
+                    'Unable to locate workspace name from the Narrative object!'
                 );
-
-                // Disable autosave so as not to spam the Workspace.
-                Jupyter.notebook.set_autosave_interval(0);
-                KBaseCellToolbar.register(Jupyter.notebook);
-                Jupyter.CellToolbar.activate_preset('KBase');
-                Jupyter.CellToolbar.global_show();
-
-                if (Jupyter.notebook && Jupyter.notebook.metadata) {
-                    var creatorId = Jupyter.notebook.metadata.creator || 'KBase User';
-                    DisplayUtil.displayRealName(creatorId, $('#kb-narr-creator'));
-
-                    // This puts the cell menu in the right place.
-                    $([Jupyter.events]).trigger('select.Cell', {
-                        cell: Jupyter.notebook.get_selected_cell(),
-                    });
-                }
-                if (this.getWorkspaceName() === null) {
+                this.loadingWidget.remove();
+                return;
+            }
+            this.initSharePanel();
+            this.initStaticNarrativesPanel();
+            this.updateDocumentVersion()
+                .then(() => this.narrController.render())
+                .finally(() => this.sidePanel.render());
+        });
+        $([Jupyter.events]).on('kernel_connected.Kernel', () => {
+            this.loadingWidget.updateProgress('kernel', true);
+            this.jobCommChannel = new JobCommChannel();
+            this.jobCommChannel
+                .initCommChannel()
+                .then(() => this.loadingWidget.updateProgress('jobs', true))
+                .catch((err) => {
+                    console.error('An error occurred while initializing kbase comm channel', err);
                     KBFatal(
                         'Narrative.init',
-                        'Unable to locate workspace name from the Narrative object!'
+                        'KBase communication channel could not be initiated with the kernel.'
                     );
-                    this.loadingWidget.remove();
-                    return;
-                }
-                this.initSharePanel();
-                this.initStaticNarrativesPanel();
-                this.updateDocumentVersion()
-                    .then(
-                        function () {
-                        // init the controller
-                            return this.narrController.render();
-                        }.bind(this)
-                    )
-                    .finally(
-                        function () {
-                            this.sidePanel.render();
-                        }.bind(this)
-                    );
-
-                $([Jupyter.events]).on('kernel_connected.Kernel', () => {
-                    this.loadingWidget.updateProgress('kernel', true);
-                    this.jobCommChannel = new JobCommChannel();
-                    // TODO: This should be an event 'kernel-ready', perhaps broadcast
-                    // on the default bus channel.
-                    this.jobCommChannel
-                        .initCommChannel()
-                        .then(() => this.loadingWidget.updateProgress('jobs', true))
-                        .catch((err) => {
-                        // TODO: put the narrative into a terminal state
-                            console.error('ERROR initializing kbase comm channel', err);
-                            KBFatal(
-                                'Narrative.ini',
-                                'KBase communication channel could not be initiated with the back end. TODO'
-                            );
-                        });
                 });
-            }.bind(this)
-        );
+        });
     };
 
     /**

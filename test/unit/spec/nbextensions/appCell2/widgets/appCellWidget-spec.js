@@ -27,7 +27,7 @@ define([
 
     describe('The appCell widget instance', () => {
         var $node = null;
-        var appCell = null;
+        var $appCell = null;
         var mockAppCell = null;
 
         var workspaceInfo = {
@@ -103,7 +103,7 @@ define([
                 cell: cell,
 
             });
-            appCell = mockAppCell.start({$node});
+            $appCell = mockAppCell.start({$node});
         // });
 
         // afterEach(() => {
@@ -114,6 +114,7 @@ define([
         // });
 
         it('Should render an app cell', function() {
+            console.log($appCell)
             expect(true).toEqual(true);
         });
 

@@ -103,7 +103,7 @@
         "google_ad_conversion": "kR9OCLas4JgBEOy2pucC"
     },
     "comm_wait_timeout": 600000,
-    "config": "narrative-refactor",
+    "config": "dev",
     "data_panel": {
         "initial_sort_limit": 10000,
         "max_name_length": 33,

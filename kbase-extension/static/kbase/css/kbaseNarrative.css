@@ -38,6 +38,37 @@
  max-height : 200px;
 }
 
+/* https://www.figma.com/file/T30UN3QhWhhV5SpXiqY1ij/KBase-component-library?node-id=1%3A4 */
+.kb-data-staging-button{
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: Oxygen, serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 18px;
+    text-align: center;
+    text-transform: uppercase;
+    color: #4379B1;
+    height:25px;
+    margin:5px;
+    position: relative;
+    top: -3px;
+}
+
+.kb-data-stagingarea{
+    font-family: Oxygen, serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 24px;
+    line-height: 30px;
+}
+
+.kb-data-staging-spacer{
+    margin-top: 10px;
+}
+
 .kb-dropzone {
     border: 2px dashed #2196F3 !important;
     margin-bottom:5px;

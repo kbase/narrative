@@ -1,4 +1,12 @@
-<button id="refresh" class="btn btn-xs btn-default">
+<span class="kb-data-stagingarea">Staging Area </span>
+
+<button id="refresh" class="kb-data-staging-button">
     <span><i class="fa fa-refresh fa-lg"></i></span>
+    REFRESH
 </button>
-{{#each path}}/ {{#if @last}}{{term}}{{else}}<a style="cursor:pointer" data-element="{{subpath}}">{{term}}</a>{{/if}} {{/each}}
+
+<div class="kb-data-breadcrumb">
+{{#each path}}/ {{#if @last}}{{ term }}{{ else }}<a style="cursor:pointer" data-element="{{ subpath }}">{{ term }}</a>{{/if}} {{/each}}
+</div>
+
+<div class="kb-data-staging-spacer"></div>

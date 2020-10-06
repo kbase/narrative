@@ -26,7 +26,7 @@
 }
 
 .kb-data-staging-metadata-list {
-  font-family : Oxygen;
+  font-family : Oxygen, Arial, sans-serif;
   font-weight: bold;
   width : 115px;
   display : inline-block;
@@ -47,7 +47,7 @@
     background: none;
     border: none;
     cursor: pointer;
-    font-family: Oxygen, serif;
+    font-family: Oxygen, Arial, sans-serif;
     font-style: normal;
     font-weight: bold;
     font-size: 14px;
@@ -62,7 +62,7 @@
 }
 
 .kb-data-stagingarea{
-    font-family: Oxygen, serif;
+    font-family: Oxygen, Arial, sans-serif;
     font-style: normal;
     font-weight: bold;
     font-size: 24px;

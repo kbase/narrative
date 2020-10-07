@@ -897,7 +897,9 @@ define([
                 .initCommChannel()
                 .then(() => {
                     this.loadingWidget.updateProgress('jobs', true);
-                    jobsReadyCallback();
+                    if (jobsReadyCallback) {
+                        jobsReadyCallback();
+                    }
                 })
                 .catch((err) => {
                     console.error('An error occurred while initializing kbase comm channel', err);
@@ -905,7 +907,9 @@ define([
                         'Narrative.init',
                         'KBase communication channel could not be initiated with the kernel.'
                     );
-                    jobsReadyCallback({error: err});
+                    if (jobsReadyCallback) {
+                        jobsReadyCallback({error: err});
+                    }
                 });
         });
     };

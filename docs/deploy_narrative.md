@@ -75,7 +75,7 @@ The [next](https://next.kbase.us), [appdev](https://appdev.kbase.us), and [prod]
 
 ### Deploying Narrative-Refactor
 
-The [narrative-refactor](https://narrative-refactor.kbase.us) image is built against the "truss" branch of the repo and is called narrative-truss:pr### when still in a PR state or narrative-truss:latest after merge
+The [narrative-refactor](https://narrative-refactor.kbase.us) image is automatically built against the "truss" branch of the repo and is called narrative-truss:pr### when still in a PR state or narrative-truss:latest after merge. The images can be found here: https://github.com/orgs/kbase/packages
 
 #### Create Release Image
 

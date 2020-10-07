@@ -790,12 +790,20 @@ define([
      * 1. Registers event listeners on Jupyter events such as cell selection, insertion,
      *    deletion, etc.
      * 2. Initializes the Core UI dialogs that depend on configuration information (About,
-     *    Upgrade, and Shutdown)
-     * 3. Initializes the
+     *    Upgrade, and Shutdown).
+     * 3. Initializes the help tour.
+     *
+     * The rest depends on a few Jupyter events being fired. Once the notebook is registered
+     * as "loaded" (notebook_loaded.Notebook), we can proceed to load the data, apps, and
+     * side panel components.
+     *
+     * When the kernel is connected (the channel between front and back ends, with the
+     * kernel_connected.Kernel event), we can set up the job communication channel.
+     *
+     * Since these are handled by jquery events, we need a couple of optional callbacks
+     *
      */
-    // This should not be run until AFTER the notebook has been loaded!
-    // It depends on elements of the Notebook metadata.
-    Narrative.prototype.init = function () {
+    Narrative.prototype.init = function (jobsReadyCallback) {
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0, 0);
 
@@ -883,13 +891,17 @@ define([
             this.jobCommChannel = new JobCommChannel();
             this.jobCommChannel
                 .initCommChannel()
-                .then(() => this.loadingWidget.updateProgress('jobs', true))
+                .then(() => {
+                    this.loadingWidget.updateProgress('jobs', true);
+                    jobsReadyCallback();
+                })
                 .catch((err) => {
                     console.error('An error occurred while initializing kbase comm channel', err);
                     KBFatal(
                         'Narrative.init',
                         'KBase communication channel could not be initiated with the kernel.'
                     );
+                    jobsReadyCallback(err);
                 });
         });
     };

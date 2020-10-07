@@ -41,7 +41,25 @@ define ([
                     }
                 },
                 kernel: {
-                    is_connected: () => false
+                    is_connected: () => false,
+                    comm_info: (comm_name, callback) => {
+                        callback({content: {
+                            comms: {
+                                'some_comm_id': {
+                                    target_name: 'KBaseJobs'
+                                }
+                            }
+                        }});
+                    },
+                    comm_manager: {
+                        register_comm: () => {}
+                    },
+                    execute: (code, callbacks) => {
+                        console.log(code);
+                        callbacks.shell.reply({
+                            content: {}
+                        });
+                    }
                 },
                 notebook_name: DEFAULT_NOTEBOOK_NAME
             };
@@ -82,10 +100,10 @@ define ([
                     ],
                     customroles:['role1', 'role2'],
                     policyids:[
-                        {id: 'data-policy.1', agreedon:1497637084128},
-                        {id: 'data-policy.3', agreedon:1490285343224},
-                        {id: 'kbase-user.1', agreedon:1497637084130},
-                        {id: 'kbase-user.2', agreedon:1490285343222}
+                        {id: 'data-policy.1', agreedon: 1497637084128},
+                        {id: 'data-policy.3', agreedon: 1490285343224},
+                        {id: 'kbase-user.1', agreedon: 1497637084130},
+                        {id: 'kbase-user.2', agreedon: 1490285343222}
                     ],
                     user: 'some_user',
                     local: false,
@@ -110,11 +128,20 @@ define ([
             expect(narr.maxNarrativeSize).toBe('10 MB');
         });
 
-        it('Should have an init function', (done) => {
+        it('Should have an init function that responds when the kernel is connected', (done, fail) => {
             const narr = new Narrative();
-            narr.init();
+            const jobsReadyCallback = (err) => {
+                if (err) {
+                    fail(err);
+                }
+                done();
+            };
+            narr.init(jobsReadyCallback);
             $([Jupyter.events]).trigger('kernel_connected.Kernel');
-            setTimeout(() => done(), 1000);
+        });
+
+        it('init should fail as expected when the job connection fails', (done, fail) => {
+
         });
 
         it('Should return a boolean for is_loaded', () => {

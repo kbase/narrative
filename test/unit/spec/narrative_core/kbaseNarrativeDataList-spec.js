@@ -34,7 +34,7 @@ define([
             contentType: 'application/json',
             responseText: JSON.stringify(narrativeServiceInfo)
         });
-    };
+    }
 
     function mockNarrativeServiceListObjects(objData) {
         jasmine.Ajax.stubRequest(fakeNSUrl).andReturn({

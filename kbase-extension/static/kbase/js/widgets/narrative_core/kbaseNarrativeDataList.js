@@ -282,8 +282,7 @@ define([
                     }
                 });
 
-            this.$addDataButton = $('<button>').addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
-                .attr('aria-label', 'add data')
+            this.$addDataButton = $('<span>').addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
                 .css({ 'position': 'absolute', bottom: '15px', right: '25px', 'z-index': '5' })
                 .click(function () {
                     _this.trigger('hideGalleryPanelOverlay.Narrative');
@@ -384,7 +383,7 @@ define([
                 console.error('ws: ' + this.ws);
                 return;
             }
-            return Promise.resolve(this.ws.get_workspace_info({
+            Promise.resolve(this.ws.get_workspace_info({
                 workspace: this.ws_name
             }))
                 .then(function (wsInfo) {

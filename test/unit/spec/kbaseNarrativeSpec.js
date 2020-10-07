@@ -39,12 +39,8 @@ define ([
                 responseText: JSON.stringify({
                     type: 'Login',
                     id: 'some-token-id',
-                    expires: 16027145808440,
-                    created: 1601504980844,
                     name: null,
                     user: 'some_user',
-                    custom: {},
-                    cachefor: 300000
                 })
             });
             jasmine.Ajax.stubRequest(/\/me$/).andReturn({
@@ -52,27 +48,8 @@ define ([
                 statusText: 'HTTP/1.1 200 OK',
                 contentType: 'application/json',
                 responseText: JSON.stringify({
-                    created: 1490219221579,
-                    lastlogin: 1601504980844,
                     display: 'Some User',
-                    roles:[
-                        {id: 'DevToken', desc: 'Create developer tokens'},
-                        {id: 'ServToken', desc: 'Create server tokens'}
-                    ],
-                    customroles:['role1', 'role2'],
-                    policyids:[
-                        {id: 'data-policy.1', agreedon: 1497637084128},
-                        {id: 'data-policy.3', agreedon: 1490285343224},
-                        {id: 'kbase-user.1', agreedon: 1497637084130},
-                        {id: 'kbase-user.2', agreedon: 1490285343222}
-                    ],
                     user: 'some_user',
-                    local: false,
-                    email: 'some_user@somewhere.com',
-                    idents:[
-                        {provusername: 'some_user@somewhere.org', provider:'Globus', id: 'some-globus-ident-id'},
-                        {provusername: '1234-5678-9012-3456', provider:'OrcID', id: 'some-orcid-ident-id'}
-                    ]
                 })
             });
 

@@ -800,7 +800,11 @@ define([
      * When the kernel is connected (the channel between front and back ends, with the
      * kernel_connected.Kernel event), we can set up the job communication channel.
      *
-     * Since these are handled by jquery events, we need a couple of optional callbacks
+     * Since these are handled by jquery events, we need an optional callback. The
+     * jobsReadyCallback function is invoked after setting up (or failing to set up) the
+     * job communication channel with the kernel. It takes an (optional) error object as
+     * input, which will have structure { error: xxx }, where xxx is the structure of the error
+     * that might get thrown by the Jupyter stack.
      *
      */
     Narrative.prototype.init = function (jobsReadyCallback) {

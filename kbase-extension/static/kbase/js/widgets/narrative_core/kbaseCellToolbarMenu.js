@@ -369,31 +369,6 @@ define([
                 buttons = [
                     div({ class: 'buttons pull-right' }, [
                         renderOptions(cell, events),
-                        (function() {
-                            var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
-                                toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
-                                color = (toggleMinMax === 'maximized' ? '#000' : 'rgba(255,137,0,1)');
-                            return button({
-                                type: 'button',
-                                class: 'btn btn-default btn-xs',
-                                dataToggle: 'tooltip',
-                                dataPlacement: 'left',
-                                title: true,
-                                dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
-                                id: events.addEvent({ type: 'click', handler: doToggleMinMaxCell })
-                            }, [
-                                span({
-                                    class: 'fa fa-' + toggleIcon + '-square-o fa-lg',
-                                    style: {
-                                        color: color
-                                    }
-                                })
-                            ]);
-                        }()),
-
-
-
-                        // span({ class: 'kb-func-timestamp' }),
                         span({ class: 'fa fa-circle-o-notch fa-spin', style: { color: 'rgb(42, 121, 191)', display: 'none' } }),
                         span({ class: 'fa fa-exclamation-triangle', style: { color: 'rgb(255, 0, 0)', display: 'none' } }),
                         (readOnly ? null : button({
@@ -419,6 +394,27 @@ define([
                             span({ class: 'fa fa-arrow-down fa-lg' })
                         ])),
 
+                        (function() {
+                            var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
+                                toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
+                                color = (toggleMinMax === 'maximized' ? '#000' : 'rgba(255,137,0,1)');
+                            return button({
+                                type: 'button',
+                                class: 'btn btn-default btn-xs',
+                                dataToggle: 'tooltip',
+                                dataPlacement: 'left',
+                                title: true,
+                                dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
+                                id: events.addEvent({ type: 'click', handler: doToggleMinMaxCell })
+                            }, [
+                                span({
+                                    class: 'fa fa-' + toggleIcon + '-square-o fa-lg',
+                                    style: {
+                                        color: color
+                                    }
+                                })
+                            ]);
+                        }())
                     ])
                 ],
                 message = div({

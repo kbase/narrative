@@ -26,45 +26,6 @@ define ([
 
     describe('Test the kbaseNarrative module', () => {
         let loginDiv = $('<div>');
-        beforeAll(() => {
-            // mock a jupyter notebook.
-            // namespace should already be loaded
-            Jupyter.notebook = {
-                _fully_loaded: DEFAULT_FULLY_LOADED,
-                writable: DEFAULT_WRITABLE,
-                keyboard_manager: {
-                    edit_shortcuts: {
-                        remove_shortcut: () => {}
-                    },
-                    command_shortcuts: {
-                        remove_shortcut: () => {}
-                    }
-                },
-                kernel: {
-                    is_connected: () => false,
-                    comm_info: (comm_name, callback) => {
-                        callback({content: {
-                            comms: {
-                                'some_comm_id': {
-                                    target_name: 'KBaseJobs'
-                                }
-                            }
-                        }});
-                    },
-                    comm_manager: {
-                        register_comm: () => {}
-                    },
-                    execute: (code, callbacks) => {
-                        console.log(code);
-                        callbacks.shell.reply({
-                            content: {}
-                        });
-                    }
-                },
-                notebook_name: DEFAULT_NOTEBOOK_NAME
-            };
-            Jupyter.keyboard_manager = Jupyter.notebook.keyboard_manager;
-        });
 
         beforeEach(async () => {
             // we need to be "logged in" for various tests to work, especially initing the Narrative object.
@@ -114,6 +75,44 @@ define ([
                     ]
                 })
             });
+
+            // mock a jupyter notebook.
+            // namespace should already be loaded
+            Jupyter.notebook = {
+                _fully_loaded: DEFAULT_FULLY_LOADED,
+                writable: DEFAULT_WRITABLE,
+                keyboard_manager: {
+                    edit_shortcuts: {
+                        remove_shortcut: () => {}
+                    },
+                    command_shortcuts: {
+                        remove_shortcut: () => {}
+                    }
+                },
+                kernel: {
+                    is_connected: () => false,
+                    comm_info: (comm_name, callback) => {
+                        callback({content: {
+                            comms: {
+                                'some_comm_id': {
+                                    target_name: 'KBaseJobs'
+                                }
+                            }
+                        }});
+                    },
+                    comm_manager: {
+                        register_comm: () => {}
+                    },
+                    execute: (code, callbacks) => {
+                        callbacks.shell.reply({
+                            content: {}
+                        });
+                    }
+                },
+                notebook_name: DEFAULT_NOTEBOOK_NAME
+            };
+            Jupyter.keyboard_manager = Jupyter.notebook.keyboard_manager;
+
             // The NarrativeLogin.init call invokes both of the above token/user profile calls.
             // It's called before the creation of the Narrative object. So that needs to happen here.
             await NarrativeLogin.init(loginDiv);
@@ -121,6 +120,7 @@ define ([
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
+            Jupyter.notebook = null;
         });
 
         it('Should instantiate', () => {
@@ -128,20 +128,39 @@ define ([
             expect(narr.maxNarrativeSize).toBe('10 MB');
         });
 
-        it('Should have an init function that responds when the kernel is connected', (done, fail) => {
-            const narr = new Narrative();
-            const jobsReadyCallback = (err) => {
-                if (err) {
-                    fail(err);
-                }
-                done();
-            };
-            narr.init(jobsReadyCallback);
-            $([Jupyter.events]).trigger('kernel_connected.Kernel');
+        it('Should have an init function that responds when the kernel is connected', () => {
+            return new Promise((resolve, reject) => {
+                const narr = new Narrative();
+                const jobsReadyCallback = (err) => {
+                    if (err) {
+                        reject('This should not have failed', err);
+                    }
+                    else {
+                        resolve();
+                    }
+                };
+                narr.init(jobsReadyCallback);
+                $([Jupyter.events]).trigger('kernel_connected.Kernel');
+            });
         });
 
-        it('init should fail as expected when the job connection fails', (done, fail) => {
-
+        it('init should fail as expected when the job connection fails', () => {
+            return new Promise((resolve, reject) => {
+                Jupyter.notebook.kernel.comm_info = () => {
+                    throw new Error('an error happened');
+                };
+                const narr = new Narrative();
+                const jobsReadyCallback = (err) => {
+                    if (err) {
+                        resolve();
+                    }
+                    else {
+                        reject('expected an error');
+                    }
+                };
+                narr.init(jobsReadyCallback);
+                $([Jupyter.events]).trigger('kernel_connected.Kernel');
+            });
         });
 
         it('Should return a boolean for is_loaded', () => {

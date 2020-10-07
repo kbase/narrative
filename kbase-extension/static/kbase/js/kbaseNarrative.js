@@ -901,7 +901,7 @@ define([
                         'Narrative.init',
                         'KBase communication channel could not be initiated with the kernel.'
                     );
-                    jobsReadyCallback(err);
+                    jobsReadyCallback({error: err});
                 });
         });
     };

@@ -148,10 +148,13 @@ define([
         //     expect(result).toBeNull();
         // });
 
-        // it('has a method "start" which returns a Promise', () => {
-        //         expect(appCellPromise instanceof Promise).toBeTrue();
-        //     }
-        // );
+        it('has a method "start" which returns a Promise', () => {
+            var startPromise = mockAppCell.start();
+            expect(initPromise instanceof Promise).toBeTrue();
+
+            var result = await startPromise;
+            expect(result).toBeNull();
+        });
 
         it('has a method "stop" which returns a Promise', () => {
             var stopPromise = mockAppCell.stop();

@@ -11,6 +11,11 @@
     text-overflow: ellipsis;
 }
 
+.kb-data-staging-table-name > .kb-data-staging-folder:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 .kb-data-staging-footer {
     font-family : Oxygen, Arial, sans-serif;
     font-weight: bold;

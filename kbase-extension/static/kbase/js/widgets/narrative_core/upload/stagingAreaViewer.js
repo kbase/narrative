@@ -272,7 +272,7 @@ define([
                             if (isFolder) {
                                 disp = '<button data-name="' + full[1] + '" class="btn btn-xs btn-default">' + disp + '</button>';
                             } else {
-                                disp = '<i class="fa fa-caret-right" data-caret="' + full[1] + '" style="cursor : pointer"></i> ' + disp;
+                                disp = '<i class="fa fa-caret-right kb-pointer" data-caret="' + full[1] + '"></i> ' + disp;
                             }
                             return disp;
                         } else {
@@ -283,14 +283,11 @@ define([
                     aTargets: [1],
                     sClass: 'staging-name',
                     mRender: function (data, type, full) {
-                        console.log(data);
-                        console.log(full[0]);
                         if (type === 'display') {
-
-                            var decompressButton = '';
+                            let decompressButton = '';
 
                             if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
-                                decompressButton = '<button class="btn btn-default btn-xs" style="border : 1px solid #cccccc; border-radius : 1px" data-decompress="' + data + '><i class="fa fa-expand"></i></button> ';
+                                decompressButton = '<button class="btn btn-default btn-xs kb-data-staging-decompress" data-decompress="' + data + '><i class="fa fa-expand"></i></button> ';
                             }
 
                             if (full[0] === 'true') {

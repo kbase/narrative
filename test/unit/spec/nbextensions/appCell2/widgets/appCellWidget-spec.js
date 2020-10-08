@@ -15,7 +15,7 @@ define([
     Promise
 ) {
     'use strict';
-    let mockAppCell, $node;
+    let mockAppCell;
 
     var workspaceInfo = {
         globalread: 'n',
@@ -93,7 +93,6 @@ define([
     describe('The appCell widget', () => {
 
         beforeEach( () => {
-            $node = $('<div>');
             var bus = Runtime.make().bus();
             mockAppCell = AppCell.make({
                 workspaceInfo: workspaceInfo,

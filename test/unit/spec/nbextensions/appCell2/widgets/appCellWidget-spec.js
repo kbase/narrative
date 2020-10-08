@@ -17,7 +17,7 @@ define([
     Promise
 ) {
     'use strict';
-    let mockAppCell, $node, appCellPromise, $appCell;
+    let mockAppCell, $node;
 
     var workspaceInfo = {
         globalread: "n",
@@ -131,22 +131,6 @@ define([
             expect(mockAppCell.stop).toBeDefined();
             expect(mockAppCell.detach).toBeDefined();
         });
-
-        // it('has a method "init" which returns a promise then null', async () => {
-        //     var initPromise = mockAppCell.init();
-        //     expect(initPromise instanceof Promise).toBeTrue();
-
-        //     var result = await initPromise;
-        //     expect(result).toBeNull();
-        // });
-
-        // it('has a method "attach" which returns a promise then null', async () => {
-        //     var attatchPromise = mockAppCell.attach($node);
-        //     expect(attatchPromise instanceof Promise).toBeTrue();
-
-        //     var result = await attatchPromise;
-        //     expect(result).toBeNull();
-        // });
 
         it('has a method "start" which returns a Promise', async () => {
             var startPromise = mockAppCell.start();

@@ -2448,7 +2448,6 @@ button.kb-data-obj {
     width:  30pt;
     height: 30pt;
     border-radius: 50%;
-    padding-top: 5pt;
 }
 /* specialize buttons that hover over narrative */
 #kb-add-code-cell, #kb-add-md-cell {

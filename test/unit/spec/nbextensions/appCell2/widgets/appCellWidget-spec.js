@@ -37,6 +37,8 @@ define([
         user_permission: "a"
     };
 
+    $inputElement = $('<div>');
+
     var cell = {
         cell_type: 'code',
         metadata: {
@@ -80,9 +82,7 @@ define([
                         }
                     }
                 },
-                input: {
-
-                },
+                input: [inputElement],
             }
         }
     };
@@ -132,13 +132,13 @@ define([
             expect(mockAppCell.detach).toBeDefined();
         });
 
-        it('has a method "init" which returns a promise then null', async () => {
-            var initPromise = mockAppCell.init();
-            expect(initPromise instanceof Promise).toBeTrue();
+        // it('has a method "init" which returns a promise then null', async () => {
+        //     var initPromise = mockAppCell.init();
+        //     expect(initPromise instanceof Promise).toBeTrue();
 
-            var result = await initPromise;
-            expect(result).toBeNull();
-        });
+        //     var result = await initPromise;
+        //     expect(result).toBeNull();
+        // });
 
         // it('has a method "attach" which returns a promise then null', async () => {
         //     var attatchPromise = mockAppCell.attach($node);
@@ -148,9 +148,9 @@ define([
         //     expect(result).toBeNull();
         // });
 
-        it('has a method "start" which returns a Promise', () => {
+        it('has a method "start" which returns a Promise', async () => {
             var startPromise = mockAppCell.start();
-            expect(initPromise instanceof Promise).toBeTrue();
+            expect(startPromise instanceof Promise).toBeTrue();
 
             var result = await startPromise;
             expect(result).toBeNull();

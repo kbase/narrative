@@ -43,6 +43,7 @@ define([
 
         options: {
             refreshIntervalDuration: 30000,
+            path: '/'
         },
 
         init: function (options) {

@@ -77,6 +77,7 @@ The [next](https://next.kbase.us), [appdev](https://appdev.kbase.us), and [prod]
 
 The [narrative-refactor](https://narrative-refactor.kbase.us) image is automatically built against the "truss" branch of the repo and is called narrative-truss:pr### when still in a PR state or narrative-truss:latest after merge. The images can be found here: https://github.com/orgs/kbase/packages
 
+
 #### Create Release Image
 
 1.  Create a new [pull request](https://github.com/kbase/narrative/compare) to merge the `develop` branch into `master`.

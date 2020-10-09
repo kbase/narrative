@@ -1,5 +1,19 @@
-exports.config = {
-    kbaseToken: 'your-token-here',
+/* eslint-env node */
+/* eslint no-console: 0 */
+/* eslint {strict: ['error', 'global']} */
+'use strict';
+
+let baseUrl = 'http://localhost:8888';
+if (process.env.BASE_URL) {
+    baseUrl = process.env.BASE_URL;
+}
+let authToken = 'fakeToken';
+if (process.env.TOKEN) {
+    authToken = process.env.TOKEN;
+}
+
+const wdioConfig = {
+    kbaseToken: authToken,
     //
     // ====================
     // Runner Configuration
@@ -47,11 +61,13 @@ exports.config = {
     // https://docs.saucelabs.com/reference/platforms-configurator
     //
     capabilities: [{
-
         // maxInstances can get overwritten per capability. So if you have an in-house Selenium
         // grid with only 5 firefox instances available you can make sure that not more than
         // 5 instances get started at a time.
-        maxInstances: 5,
+        maxInstances: 1,
+        'goog:chromeOptions': {
+            args: ['--disable-gpu']
+        },
         //
         browserName: 'chrome',
         acceptInsecureCerts: true
@@ -91,7 +107,7 @@ exports.config = {
     // with `/`, the base url gets prepended, not including the path portion of your baseUrl.
     // If your `url` parameter starts without a scheme or `/` (like `some/path`), the base url
     // gets prepended directly.
-    baseUrl: 'http://localhost',
+    baseUrl: baseUrl,
     //
     // Default timeout for all waitFor* commands.
     waitforTimeout: 10000,
@@ -269,4 +285,6 @@ exports.config = {
     */
     //onReload: function(oldSessionId, newSessionId) {
     //}
-}
+};
+
+exports.config = wdioConfig;

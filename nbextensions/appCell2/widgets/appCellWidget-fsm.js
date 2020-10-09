@@ -557,7 +557,7 @@ define([], function() {
                 },
                 actionButton: {
                     name: 'cancel',
-                    disabled: true
+                    disabled: false
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],

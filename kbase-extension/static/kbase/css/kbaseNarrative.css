@@ -2437,7 +2437,7 @@ button.kb-data-obj {
 .kb-data-list-add-data-button {
 
     cursor:pointer;
-    background-color: #F44336;
+    background-color: #4379B1;
     color: #fff;
     border: none;
     box-shadow: 1px 1px 3px #aaa;
@@ -2448,7 +2448,6 @@ button.kb-data-obj {
     width:  30pt;
     height: 30pt;
     border-radius: 50%;
-    padding-top: 5pt;
 }
 /* specialize buttons that hover over narrative */
 #kb-add-code-cell, #kb-add-md-cell {
@@ -2463,11 +2462,11 @@ button.kb-data-obj {
 
 .kb-data-list-add-data-button:hover {
     cursor:pointer;
-    background-color: #DC3C31;
+    background-color: #36618E;
 }
 
 .kb-data-list-add-data-text-button {
-    background-color: #F44336;
+    background-color: #4379B1;
     border-radius: 1px;
     color: #fff;
     border: none;
@@ -2481,7 +2480,7 @@ button.kb-data-obj {
     moz-box-shadow: 1px 1px 3px #aaa;
 }
 .kb-data-list-add-data-text-button:hover {
-    background-color: #DC3C31;
+    background-color: #36618E;
 }
 
 

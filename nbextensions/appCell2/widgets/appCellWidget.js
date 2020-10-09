@@ -1593,8 +1593,6 @@ define([
             // the fact that the user may have opened and closed the tab...
             userSelectedTab = false;
 
-
-
             cell.execute();
         }
 

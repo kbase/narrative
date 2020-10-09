@@ -99,14 +99,19 @@ define ([
                 });
             linkedStagingViewer.render()
                 .then(() => {
-                    expect($node.html()).toContain('Or upload to this staging area by using');
-                    expect($node.html()).toContain('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&amp;destination_path=' + fakeUser);
+                    var $globusButton = $node.find('.globus_linked');
+                    expect($globusButton).toBeDefined();
+                    expect($globusButton.html()).toContain('Upload with Globus');
+                    expect($globusButton.html()).toContain('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&amp;destination_path=' + fakeUser);
                     done();
                 });
         });
 
         it('Should render properly without a Globus linked account', () => {
-            expect($targetNode.html()).not.toContain('Or upload to this staging area by using');
+            var $globusButton = $targetNode.find('.globus_not_linked');
+            expect($globusButton).toBeDefined();
+            expect($globusButton.html()).toContain('Upload with Globus');
+            expect($globusButton.html()).toContain('https://docs.kbase.us/data/globus');
         });
 
         it('Should start a help tour', function() {

@@ -1,7 +1,7 @@
-## New PR & Testing Process Proposal
+# New PR & Testing Process Proposal
 
 
-### Goals
+## Goals
 
 Design a development process and write related automation that:
 

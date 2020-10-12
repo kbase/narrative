@@ -36,7 +36,7 @@ There will be overhead to create and maintain additional tests.
 * `+` Supports iframes
 * `-` Steep learning curve for new developers
 * `-` Challenging to implement
-* `-` Test execution is slows
+* `-` Test execution is slow
 * `-` Can be flaky
 
 ### Cypress

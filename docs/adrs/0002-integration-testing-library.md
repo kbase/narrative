@@ -1,6 +1,6 @@
 # Integration Testing Framework
 
-Date: 2020-09-21
+Date: 2020-10-12
 
 Integration testing and end-to-end (e2e) testing is not actively used in this repo. To implement integration/e2e testing, a testing framework needs to be selected and implemented.
 
@@ -10,7 +10,7 @@ Integration testing and end-to-end (e2e) testing is not actively used in this re
 
 ## Status
 
-Pending
+Accepted
 
 ## Alternatives Considered
 
@@ -20,11 +20,11 @@ Pending
 
 ## Decision Outcome
 
-Cypress will be used for integration and e2e testing.
+Selenium WebDriver will be used for integration and e2e testing.
 
 ## Consequences
 
-KBase developers will have to learn a new testing frame work. There will also be overhead to create and maintain additional tests.
+There will be overhead to create and maintain additional tests.
 
 ## Pros and Cons of the Alternatives
 
@@ -33,9 +33,10 @@ KBase developers will have to learn a new testing frame work. There will also be
 * `+` Other repos in KBase use it
 * `+` Has cross browser testing (Chrome, Firefox, Edge, IE, Opera, Safari)
 * `+` Supports multiple languages
+* `+` Supports iframes
 * `-` Steep learning curve for new developers
 * `-` Challenging to implement
-* `-` Test execution is slow
+* `-` Test execution is slows
 * `-` Can be flaky
 
 ### Cypress

@@ -21,6 +21,6 @@ jobs:
       env:
         PR: "${{ github.event.pull_request.number }}"
         SHA: "${{ github.event.pull_request.head.sha }}"
-        DOCKER_ACTOR: "${{ github.actor }}"
-        DOCKER_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        DOCKER_ACTOR: "jsfillman"
+        DOCKER_TOKEN: "${{ secrets.GHCR_TOKEN }}"
       run: "./.github/workflows/scripts/tag_test_latest.sh\n"

@@ -10,7 +10,7 @@ nose>=1.1.2
 pexpect==4.8.0
 pickleshare==0.7.5
 pillow==7.2.0
-plotly==4.10.0
+plotly==4.11.0
 pyasn1==0.4.8
 pycrypto>=2.6
 pygments==2.7.1
@@ -19,7 +19,7 @@ pyyaml==5.3.1
 requests==2.24.0
 rsa==4.6
 semantic_version==2.8.5
-setuptools==49.2.1
+setuptools==50.3.0
 simplegeneric==0.8.1
 sympy==1.6.2
 terminado==0.9.1

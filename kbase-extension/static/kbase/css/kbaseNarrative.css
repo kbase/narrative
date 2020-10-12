@@ -21,35 +21,66 @@
     text-decoration: underline;
 }
 
-.kb-pointer {
+.kb-data-breadcrumb .kb-pointer a {
     cursor: pointer;
 }
 
 .kb-data-staging-footer {
-    font-family : Oxygen, Arial, sans-serif;
+    font-family: Oxygen, Arial, sans-serif;
     font-weight: bold;
-    font-size : 105%;
-    text-align : center;
-    background-color : #EEEEEE;
-    height : 32px;
-    padding : 8px;
+    font-size: 105%;
+    text-align: center;
+    background-color: #EEEEEE;
+    height: 32px;
+    padding: 8px;
 }
 
 .kb-data-staging-metadata-list {
-  font-family : Oxygen;
-  font-weight: bold;
-  width : 115px;
-  display : inline-block;
-  font-size : 90%;
+    font-family: Oxygen, Arial, sans-serif;
+    font-weight: bold;
+    width: 115px;
+    display: inline-block;
+    font-size: 90%;
 }
 
 .kb-data-staging-metadata-file-lines {
-  white-space : pre;
- overflow : scroll;
- font-family : monospace;
- font-size : 90%;
- background-color : #DDDDDD;
- max-height : 200px;
+    white-space: pre;
+    overflow: scroll;
+    font-family: monospace;
+    font-size: 90%;
+    background-color: #DDDDDD;
+    max-height: 200px;
+}
+
+/* https://www.figma.com/file/T30UN3QhWhhV5SpXiqY1ij/KBase-component-library?node-id=1%3A4 */
+.kb-data-staging-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: Oxygen, Arial, sans-serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 18px;
+    text-align: center;
+    text-transform: uppercase;
+    color: #4379B1;
+    height: 25px;
+    margin: 5px;
+    position: relative;
+    top: -3px;
+}
+
+.kb-data-stagingarea {
+    font-family: Oxygen, Arial, sans-serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 24px;
+    line-height: 30px;
+}
+
+.kb-data-staging-spacer {
+    margin-top: 10px;
 }
 
 .kb-dropzone {
@@ -2451,7 +2482,7 @@ button.kb-data-obj {
 .kb-data-list-add-data-button {
 
     cursor:pointer;
-    background-color: #F44336;
+    background-color: #4379B1;
     color: #fff;
     border: none;
     box-shadow: 1px 1px 3px #aaa;
@@ -2462,7 +2493,6 @@ button.kb-data-obj {
     width:  30pt;
     height: 30pt;
     border-radius: 50%;
-    padding-top: 5pt;
 }
 /* specialize buttons that hover over narrative */
 #kb-add-code-cell, #kb-add-md-cell {
@@ -2477,11 +2507,11 @@ button.kb-data-obj {
 
 .kb-data-list-add-data-button:hover {
     cursor:pointer;
-    background-color: #DC3C31;
+    background-color: #36618E;
 }
 
 .kb-data-list-add-data-text-button {
-    background-color: #F44336;
+    background-color: #4379B1;
     border-radius: 1px;
     color: #fff;
     border: none;
@@ -2495,7 +2525,7 @@ button.kb-data-obj {
     moz-box-shadow: 1px 1px 3px #aaa;
 }
 .kb-data-list-add-data-text-button:hover {
-    background-color: #DC3C31;
+    background-color: #36618E;
 }
 
 

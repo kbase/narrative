@@ -5,9 +5,6 @@
     font-weight: bold;
 }
 
-/* 
-    TODO: find out if it's ok to set margins this way or if we should follow design convention for positioning
-*/
 .kb-dropzone .dz-message {
     font-family: Roboto;
     font-style: normal;
@@ -3028,7 +3025,6 @@ button.kb-data-obj {
     border: none;
 }
 
-/* TODO: check with design on setting width/height (vs positioning) */
 .kb-import-content .upload-options button {
     background: #FFFFFF;
     border: 1px solid #C4C4C4;

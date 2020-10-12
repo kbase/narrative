@@ -63,18 +63,18 @@ define([
         });
 
         it('Should be able to set and retrieve the path', () => {
-                const $node = $('<div>'),
-                    fuw = new FileUploadWidget($node, {
-                        path: '/',
-                        userInfo: {
-                            user: fakeUser,
-                            globusLinked: true
-                        }
-                    });
-                const newPath = 'newPath';
-                fuw.setPath(newPath);
-                expect(fuw.getPath()).toEqual(newPath);
-            });
+            const $node = $('<div>'),
+                fuw = new FileUploadWidget($node, {
+                    path: '/',
+                    userInfo: {
+                        user: fakeUser,
+                        globusLinked: true
+                    }
+                });
+            const newPath = 'newPath';
+            fuw.setPath(newPath);
+            expect(fuw.getPath()).toEqual(newPath);
+        });
 
         it('Should start and succeed on an upload when a file is given', (done) => {
             const filename='foo.txt';

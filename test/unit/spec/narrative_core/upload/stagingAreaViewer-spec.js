@@ -88,7 +88,7 @@ define ([
             expect(stagingViewer).not.toBeNull();
         });
 
-        it('Should render properly with a Globus linked account', (done) => {
+        it('Should render properly with a Globus linked account', async (done) => {
             let $node = $('<div>'),
                 linkedStagingViewer = new StagingAreaViewer($node, {
                     path: startingPath,
@@ -98,7 +98,7 @@ define ([
                         globusLinked: true
                     }
                 });
-            linkedStagingViewer.render()
+            await linkedStagingViewer.render()
                 .then(() => {
                     var $globusButton = $node.find('.globus_linked');
                     expect($globusButton).toBeDefined();
@@ -108,14 +108,16 @@ define ([
                 });
         });
 
-        it('Should render properly without a Globus linked account', () => {
+        it('Should render properly without a Globus linked account', async () => {
+            await stagingViewer.render();
             var $globusButton = $targetNode.find('.globus_not_linked');
             expect($globusButton).toBeDefined();
             expect($globusButton.html()).toContain('Upload with Globus');
             expect($globusButton.html()).toContain('https://docs.kbase.us/data/globus');
         });
 
-        it('Should render a url button', () => {
+        it('Should render a url button', async () => {
+            await stagingViewer.render();
             var $urlButton = $targetNode.find('.web_upload_div');
             expect($urlButton).toBeDefined();
             expect($urlButton.html()).toContain('Upload with URL');

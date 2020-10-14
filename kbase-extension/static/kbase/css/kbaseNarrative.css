@@ -74,23 +74,20 @@
     position: relative;
     top: -3px;
     letter-spacing: .5pt;
+    border-radius: 4px;
 }
 
 .kb-data-staging-button:hover{
     background: rgba(67, 121, 177, 0.1);
-    border-radius: 4px;
 }
 .kb-data-staging-button:focus{
     background: rgba(67, 121, 177, 0.15);
-    border-radius: 4px;
 }
 .kb-data-staging-button:active{
     background: rgba(67, 121, 177, 0.2);
-    border-radius: 4px;
 }
 .kb-data-staging-button:disabled{
     background: rgba(0, 0, 0, 0.02);
-    border-radius: 4px;
     color: #929292;
 }
 

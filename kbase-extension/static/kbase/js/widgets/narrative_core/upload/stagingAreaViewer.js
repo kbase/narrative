@@ -342,7 +342,7 @@ define([
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     });
                     $('td:eq(4)', nRow).find('select').select2({
-                        placeholder: 'Select format'
+                        placeholder: 'Select a type'
                     });
                     $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', e => {
                         var importType = $(e.currentTarget).prevAll('#import-type').val();

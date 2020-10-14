@@ -17,6 +17,10 @@
     margin: 2em 4.5em;
 }
 
+#kb-data-staging-table_wrapper{
+    margin-top: 15px;
+}
+
 .kb-data-staging-decompress {
     border: 1px solid #cccccc;
     border-radius : 1px;
@@ -81,7 +85,25 @@
     margin: 5px;
     position: relative;
     top: -3px;
+    letter-spacing: .5pt;
+    border-radius: 4px;
 }
+
+.kb-data-staging-button:hover{
+    background: rgba(67, 121, 177, 0.1);
+}
+.kb-data-staging-button:focus{
+    background: rgba(67, 121, 177, 0.15);
+}
+.kb-data-staging-button:active{
+    background: rgba(67, 121, 177, 0.2);
+}
+.kb-data-staging-button:disabled{
+    background: rgba(0, 0, 0, 0.02);
+    color: #929292;
+}
+
+
 
 .kb-data-stagingarea {
     font-family: Oxygen, Arial, sans-serif;

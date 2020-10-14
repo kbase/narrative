@@ -9,13 +9,23 @@
     margin-top: 15px;
 }
 
+.kb-data-staging-decompress {
+    border: 1px solid #cccccc;
+    border-radius : 1px;
+}
+
 .kb-data-staging-table-name {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.kb-data-breadcrumb a {
+.kb-data-staging-folder:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.kb-data-breadcrumb .kb-pointer a {
     cursor: pointer;
 }
 

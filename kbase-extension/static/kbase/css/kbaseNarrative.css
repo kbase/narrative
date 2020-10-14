@@ -3109,6 +3109,24 @@ button.kb-data-obj {
     margin: 0 6px;
 }
 
+.kb-import-content .upload-options button:hover {
+    border: 1px solid #CFCFCF;
+    background-color: #FAFAFA;
+}
+
+.kb-import-content .upload-options button:focus {
+    background-color: #F2F2F2;
+}
+
+.kb-import-content .upload-options button:active {
+    background-color: #E6E6E6;
+}
+
+.kb-import-content .upload-options button:disabled {
+    background-color: #FAFAFA;
+    color: #929292;
+}
+
 .kb-overlay-footer {
     position: absolute;
     width: 100%;

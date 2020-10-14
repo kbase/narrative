@@ -89,7 +89,7 @@ define ([
         });
 
         it('Should render properly with a Globus linked account', (done) => {
-            var $node = $('<div>'),
+            let $node = $('<div>'),
                 linkedStagingViewer = new StagingAreaViewer($node, {
                     path: startingPath,
                     updatePathFn: updatePathFn,

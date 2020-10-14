@@ -114,6 +114,13 @@ define ([
             expect($globusButton.html()).toContain('https://docs.kbase.us/data/globus');
         });
 
+        it('Should render a url button', () => {
+            var $urlButton = $targetNode.find('.web_upload_div');
+            expect($urlButton).toBeDefined();
+            expect($urlButton.html()).toContain('Upload with URL');
+        });
+
+
         it('Should start a help tour', function() {
             stagingViewer.render();
             stagingViewer.startTour();

@@ -14,7 +14,7 @@ Accepted
 
 ## Alternatives Considered
 
-* Selenium WebDriver
+* WebDriver.io
 * Cypress
 * No integration testing
 
@@ -28,7 +28,7 @@ There will be overhead to create and maintain additional tests.
 
 ## Pros and Cons of the Alternatives
 
-### Selenium Webdriver
+### Webdriver.io
 
 * `+` Other repos in KBase use it
 * `+` Has cross browser testing (Chrome, Firefox, Edge, IE, Opera, Safari)
@@ -50,7 +50,7 @@ There will be overhead to create and maintain additional tests.
 * `-` Can only test using JavaScript
 * `-` Has limited cross browser testing (Chrome, Edge, Electron, Firefox - Beta)
 * `-` KBase developers will have to learn another testing framework
-* `-` Limited iframe support
+* `-` Limited iframe support (the narrative uses iframes in several locations)
 
 ### No integration/e2e testing
 
@@ -64,6 +64,5 @@ There will be overhead to create and maintain additional tests.
 ## References
 
 * [Cypress.io](https://www.cypress.io/)
-* [Selenium WebDriver](https://www.selenium.dev/documentation/en/webdriver/)
+* [WebDriver.io](https://webdriver.io/)
 * [Applitools: Cypress vs Selenium WebDriver](https://applitools.com/blog/cypress-vs-selenium-webdriver-better-or-just-different/)
-* [BrowserStack: Cypress vs Selenium](https://www.browserstack.com/guide/cypress-vs-selenium)

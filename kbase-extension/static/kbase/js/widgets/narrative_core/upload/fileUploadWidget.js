@@ -80,10 +80,13 @@ define([
             })
                 .on('totaluploadprogress', (progress) => {
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
+                    console.log("TOTAL UPLOADING PROGRESS")
                 })
                 .on('addedfile', (file) => {
                     $dropzoneElem.find('#global-info').css({'display': 'inline'});
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
+                    console.log("ADDED FILE")
+
                 })
                 .on('success', (file, serverResponse) => {
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
@@ -97,10 +100,12 @@ define([
                         $($dropzoneElem.find('#total-progress')).fadeOut(1000, function() {
                             $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
                         });
+                        console.log("SUCCESS 1")
                     }
                     $(file.previewElement).fadeOut(1000, function() {
                         $(file.previewElement.querySelector('.btn')).trigger('click');
                     });
+                    console.log("SUCCESS 2")
                 })
                 .on('sending', (file, xhr, data) => {
                     $dropzoneElem.find('#global-info').css({'display': 'inline'});
@@ -116,10 +121,12 @@ define([
                     }
                     $($dropzoneElem.find('#total-progress')).show();
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
+                    console.log("SENDING")
                 })
                 .on('reset', function() {
                     $dropzoneElem.find('#global-info').css({'display': 'none'});
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
+                    console.log("RESET")
                 })
                 .on('error', (err) => {
                     let errorText = 'unable to upload file!';
@@ -127,7 +134,31 @@ define([
                         errorText = err.xhr.responseText;
                     }
                     $dropzoneElem.find('.error.text-danger').text('Error: ' + errorText);
+                    $dropzoneElem.append(this.makeClearAllButton());
                 });
+        },
+
+        makeClearAllButton: () => {
+            var $clearAllBtn = $('<button>')
+                .text('Clear All')
+                .addClass('text-button clear-all-dropzone')
+                .attr('aria-label', 'clear all files from the dropzone')
+                .attr('id', 'clear-all-btn');
+
+            var $buttonContainer = $('<div>')
+                .attr('id', 'clear-all-btn-container')
+                .addClass('text-center')
+                .append($clearAllBtn)
+                .on('click', this.removeAllFiles());
+
+                return $buttonContainer;
+        },
+
+        removeAllFiles: () => {
+            this.dropzone.processQueue();
+            this.dropzone.removeAllFiles();
+            $('#clear-all-btn-container').remove();
+            $('clear-all-btn').remove();
         },
 
         makeUploadMessage: function() {

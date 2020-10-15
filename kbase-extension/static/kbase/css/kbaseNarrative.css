@@ -17,6 +17,52 @@
     margin: 2em 4.5em;
 }
 
+.text-button {
+    background: #FFFFFF;
+    box-sizing: border-box;
+    border-radius: 4px;
+    border: 1px solid #FFFFFF;
+    font-family: Oxygen;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 18px;
+    outline: none;
+
+    text-transform: uppercase;
+    text-align: center;
+    color: #4379B1;
+    height: 34px;
+}
+
+.text-button:hover {
+    color: #36618E;
+    border: 1px solid #ECF2F7;
+    background-color: #ECF2F7;
+}
+
+.text-button:focus {
+    color: #36618E;
+    border: 1px solid #E3EBF3;
+    background-color: #E3EBF3;
+}
+
+.text-button:active {
+    color: #36618E;
+    border: 1px solid #D9E4EF;
+    background-color: #D9E4EF;
+}
+
+.text-button:disabled {
+    color: #929292;
+    border: 1px solid #FAFAFA;
+    background-color: #FAFAFA;
+}
+
+.clear-all-dropzone {
+    margin: 6px;
+}
+
 #kb-data-staging-table_wrapper{
     margin-top: 15px;
 }
@@ -1115,12 +1161,6 @@ p span.notification{
 
 .panel-default>.panel-heading {
     background-image: none;
-}
-
-.btn-default {
-    /** not sure why this is here, but it makes buttons look fuzzy.
-        commenting out until answers come around. - WJR **/
-    /*text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);*/
 }
 
 #menus {

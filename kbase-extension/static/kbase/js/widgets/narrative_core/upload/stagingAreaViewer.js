@@ -345,7 +345,7 @@ define([
                         placeholder: 'Select a type'
                     });
                     $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', e => {
-                        var importType = $(e.currentTarget).prevAll('#import-type').val();
+                        var importType = $(e.currentTarget).prevAll('select').val();
                         var importFile = getFileFromName($(e.currentTarget).data().import);
                         this.initImportApp(importType, importFile);
                         this.updateView();

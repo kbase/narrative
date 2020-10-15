@@ -279,7 +279,8 @@ define([
                     id: dropdownId,
                     dataToggle: 'dropdown',
                     ariaHaspopup: 'true',
-                    ariaExpanded: 'true'
+                    ariaExpanded: 'true',
+                    'data-test' : 'cell-dropdown'
                 }, [span({ class: 'fa fa-ellipsis-h fa-lg' })]),
                 ul({
                     class: 'dropdown-menu dropdown-menu-right',
@@ -378,6 +379,7 @@ define([
                             dataPlacement: 'left',
                             title: true,
                             dataOriginalTitle: 'Move Cell Up',
+                            'data-test' : 'cell-move-up',
                             id: events.addEvent({ type: 'click', handler: doMoveCellUp })
                         }, [
                             span({ class: 'fa fa-arrow-up fa-lg' })
@@ -389,6 +391,7 @@ define([
                             dataPlacement: 'left',
                             title: true,
                             dataOriginalTitle: 'Move Cell Down',
+                             'data-test' : 'cell-move-down',
                             id: events.addEvent({ type: 'click', handler: doMoveCellDown })
                         }, [
                             span({ class: 'fa fa-arrow-down fa-lg' })
@@ -404,6 +407,7 @@ define([
                                 dataToggle: 'tooltip',
                                 dataPlacement: 'left',
                                 title: true,
+                                 'data-test' : 'cell-toggle-expansion',
                                 dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
                                 id: events.addEvent({ type: 'click', handler: doToggleMinMaxCell })
                             }, [

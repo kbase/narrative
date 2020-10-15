@@ -1,75 +1,70 @@
 #kblog-header {
-    margin: 5px 0 5px 0;
+  margin: 5px 0 5px 0;
 }
 
 #kblog-panel {
-    background-color: #F5F5F5;
-    border: 1px solid #CECECE;
-    height: 350px;
-    padding: 5px;
-    resize: vertical;
-    overflow: auto;
-    color: #000;
-    vertical-align: top;
+  background-color: #f5f5f5;
+  border: 1px solid #cecece;
+  height: 350px;
+  padding: 5px;
+  resize: vertical;
+  overflow: auto;
+  color: #000;
+  vertical-align: top;
 }
 
 .kblog-header {
-    display: flex;
-    font-family: monospace;
+  display: flex;
+  font-family: monospace;
 }
 
 .kblog-line {
-    font-family: monospace;
+  font-family: monospace;
 }
 
 .kblog-line:hover {
-    background-color: #DDD;
+  background-color: #ddd;
 }
 
 .kblog-num-wrapper {
-    font-size: 85%;
-    display: flex;
-    flex-direction: row;
+  font-size: 85%;
+  display: flex;
+  flex-direction: row;
 }
 
 .kblog-line-num {
-    flex-shrink: 0;
-    width: 3rem;
-    text-align: right;
-    color: #999;
-    white-space: nowrap;
+  flex-shrink: 0;
+  width: 3rem;
+  text-align: right;
+  color: #999;
+  white-space: nowrap;
 
-    /* makes text unselectabe */
-    -moz-user-select: -moz-none;
-    -khtml-user-select: none;
-    -webkit-user-select: none;
-    -o-user-select: none;
-    user-select: none;
+  /* makes text unselectabe */
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -o-user-select: none;
+  user-select: none;
 }
 
 .kblog-text {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    flex: 1;
-    margin-left: 6px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  flex: 1;
+  margin-left: 6px;
 }
 
-.kb-error, .kb-error .kblog-line-num  {
-    color: darkred;
-    text-decoration: underline;
-    text-decoration-style: solid;
-    text-decoration-color: red;
-    font-weight: bold;
-    font-size: 12px;
-    background-color: rgb(255, 245, 245);
-
+.kb-error,
+.kb-error .kblog-line-num {
+  color: darkred;
+  text-decoration: underline;
+  font-weight: bold;
+  font-size: 12px;
+  background-color: rgb(255, 245, 245);
 }
 
-#kblog-msg {
-    margin-top: 5px;
-}
-
+#kblog-msg,
 #kblog-err {
-    margin-top: 5px;
-    /* color: #660000; */
+  margin-top: 5px;
 }

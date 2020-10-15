@@ -3079,9 +3079,18 @@ button.kb-data-obj {
     border: none;
 }
 
-/*
-.kb-import-content .select2-selection .select2-selection__placeholder {
-    color: #DF0002;
+/* style for Import As dropdown container */
+.kb-import-content .select2 .select2-selection--single {
+    width: 160px;
+    height: 42px;
+    background: #FFFFFF;
+    border: 1px solid #DF0002;
+    box-sizing: border-box;
+    border-radius: 4px;
+}
+
+/* style for Import As dropdown container text */
+.kb-import-content .select2-container .select2-selection .select2-selection__rendered {
     position: absolute;
     left: 8.87%;
     right: 5.41%;
@@ -3093,6 +3102,12 @@ button.kb-data-obj {
     align-items: center;
 }
 
+/* Import as dropdown placeholder text is red */
+.kb-import-content .select2-container .select2-selection .select2-selection__rendered .select2-selection__placeholder {
+    color: #DF0002;
+}
+
+/* style for Import As dropdown container arrow */
 .kb-import-content .select2-selection .select2-selection__arrow {
     position: absolute;
     height: 16px;
@@ -3100,24 +3115,14 @@ button.kb-data-obj {
     right: 5.44%;
     top: 30.95%;
     bottom: 30.95%;
-    color: #DF0002;
 }
+
 
 
 .kb-import-content .select2-selection .select2-selection__arrow b {
     border-color: #DF0002 transparent transparent transparent;
 }
 
-.kb-import-content .select2-container .select2-selection--single {
-    width: 160px;
-    height: 42px;
-    background: #FFFFFF;
-    border: 1px solid #DF0002;
-    box-sizing: border-box;
-    border-radius: 4px;
-}
-
-*/
 .kb-overlay-footer {
     position: absolute;
     width: 100%;

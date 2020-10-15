@@ -288,7 +288,7 @@ define([
                             let decompressButton = '';
 
                             if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
-                                decompressButton = '<button class="btn btn-default btn-xs kb-data-staging-decompress" data-decompress="' + data + '><i class="fa fa-expand"></i></button> ';
+                                decompressButton = '<button class="btn btn-default btn-xs kb-data-staging-decompress" data-decompress="' + data + '"><i class="fa fa-expand"></i></button>';
                             }
 
                             if (full[0] === 'true') {

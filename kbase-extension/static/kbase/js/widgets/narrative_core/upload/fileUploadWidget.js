@@ -135,6 +135,7 @@ define([
                     }
                     $dropzoneElem.find('.error.text-danger').text('Error: ' + errorText);
                     $dropzoneElem.append(this.makeClearAllButton());
+                    $('#clear-all-btn').on('click', function(e){this.removeAllFiles()});
                 });
         },
 
@@ -148,15 +149,14 @@ define([
             var $buttonContainer = $('<div>')
                 .attr('id', 'clear-all-btn-container')
                 .addClass('text-center')
-                .append($clearAllBtn)
-                .on('click', this.removeAllFiles());
+                .append($clearAllBtn);
 
                 return $buttonContainer;
         },
 
         removeAllFiles: () => {
             this.dropzone.processQueue();
-            this.dropzone.removeAllFiles();
+            this.dropzone.removeFile();
             $('#clear-all-btn-container').remove();
             $('clear-all-btn').remove();
         },

@@ -69,8 +69,9 @@
     text-align: center;
     text-transform: uppercase;
     color: #4379B1;
-    height: 25px;
-    margin: 5px;
+    height: 35px;
+    margin: 8px;
+    padding: 8px;
     position: relative;
     top: -3px;
     letter-spacing: .5pt;

@@ -45,7 +45,9 @@ define([
          *  - expires = TOKEN_AGE (default 14) days
          * @param {object} cookie
          *  - has the cookie keys: name, value, path, expires, max-age, domain
-         *  - adds secure=true, samesite=none for KBase use.
+         *  - adds secure=true, samesite=Lax for KBase use.
+         *  - When used in a localhost dev environment samesite=Lax and secure=false
+         *    should be sufficient for browsers.
          */
         function setCookie(cookie) {
             if (!cookie.name) {
@@ -56,7 +58,7 @@ define([
             const props = {
                 expires: TOKEN_AGE,        // gets translated to GMT string
                 path: '/',
-                samesite: 'none'
+                samesite: 'Lax'
             };
             if (Number.isInteger(cookie.expires)) {
                 props.expires = cookie.expires;

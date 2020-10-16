@@ -20,8 +20,8 @@
            'kbaseAuthenticatedWidget',
            'kbaseAccordion',
            'kbaseNarrativeOutputCell'
-           ], 
-  function(KBWidget, bootstrap,$, 
+           ],
+  function(KBWidget, bootstrap,$,
            Config,
            StringUtil,
            DisplayUtil,
@@ -140,7 +140,7 @@
             console.error(error);
             var $errorHeader = $('<div>')
                                .addClass('alert alert-danger')
-                               .append('<b>Sorry, an error occurred while loading your KBase App.</b><br>Please <a href="http://kbase.us/contact-us/">contact the KBase team</a> with the information below.');
+                               .append('<b>Sorry, an error occurred while loading your KBase App.</b><br>Please <a href="http://www.kbase.us/support/">contact the KBase team</a> with the information below.');
             var $errorPanel = $('<div>')
                                 .addClass('panel kb-app-panel');
             $errorPanel.append($errorHeader);
@@ -330,16 +330,16 @@
                                      .addClass('panel-footer')
                                      .css({'overflow' : 'hidden'})
                                      .append($buttons));
-                        
+
             this.$elem
                 .closest('.cell')
-                .trigger('set-title.cell', [appTitle]);             
-            
+                .trigger('set-title.cell', [appTitle]);
+
             var $logo = $('<div>').append(DisplayUtil.getAppIcon({isApp:true}));
             this.$elem
                 .closest('.cell')
                 .trigger('set-icon.cell', [$logo.html()]);
-            
+
             //require(['kbaseNarrativeCellMenu'], $.proxy(function() {
             //    this.cellMenu =  new kbaseNarrativeCellMenu($menuSpan);
             //}, this));
@@ -437,10 +437,10 @@
             // todo, update input widget so that we don't have to stringify
             var inputWidget = $inputWidgetDiv[inputWidgetName]({ method: JSON.stringify(stepSpec) });
             var inputStepData = {
-              id:stepId ,methodId: stepSpec.info.id, 
+              id:stepId ,methodId: stepSpec.info.id,
               widget:inputWidget,
-              $stepContainer:$stepPanel, 
-              $statusPanel:$statusPanel, 
+              $stepContainer:$stepPanel,
+              $statusPanel:$statusPanel,
               $outputPanel:$outputPanel,
               outputWidgetName:outputWidgetName,
               minimized: false,
@@ -634,7 +634,7 @@
             } else {
                  $cellMenu.trigger('runningIndicator.toolbar', {enabled: false});
                 if (had_error) {
-                    $cellMenu.trigger('errorIndicator.toolbar', {enabled: true});                   
+                    $cellMenu.trigger('errorIndicator.toolbar', {enabled: true});
                 } else {
                     $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
                 }
@@ -793,7 +793,7 @@
 
             // if we were in the running state before, set the values
             if (state.runningState) {
-                
+
                 if (state.runningState.appRunState) {
                     if (state.runningState.submittedText) {
                         this.$submitted.html(state.runningState.submittedText);
@@ -895,7 +895,7 @@
                 this.$stopButton.hide();
                 this.$resetButton.show();
                 this.displayRunning(false);
-                
+
                 // Show the 'next-steps' to take, if there are any
                 this.getNextSteps(
                   $.proxy(function(next_steps) {

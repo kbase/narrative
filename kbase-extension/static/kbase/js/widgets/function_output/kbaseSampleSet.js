@@ -126,7 +126,7 @@ define ([
                 .catch((err) => {
                     console.error('an error occurred! ' + err);
                     this.$elem.empty();
-                    this.$elem.append('An unexpected error occured: \nPlease contact KBase <a href="https://kbase.us/new-help-board/">here<a>');
+                    this.$elem.append('An unexpected error occured: \nPlease contact KBase <a href="https://www.kbase.us/support/">here<a>');
                 });
 
             return this;

@@ -7,15 +7,20 @@ from tornado.web import HTTPError
 
 
 class KBWSManagerTestCase(unittest.TestCase):
-
-    @mock.patch('biokbase.narrative.common.narrative_ref.clients.get', get_mock_client)
+    @mock.patch("biokbase.narrative.common.narrative_ref.clients.get", get_mock_client)
     def test__parse_path(self):
         manager = KBaseWSManager()
         cases = [
             ("123", NarrativeRef({"wsid": "123", "objid": None, "ver": None})),
             ("ws.123", NarrativeRef({"wsid": "123", "objid": None, "ver": None})),
-            ("ws.123.obj.456", NarrativeRef({"wsid": "123", "objid": "456", "ver": None})),
-            ("ws.123.obj.456.ver.7", NarrativeRef({"wsid": "123", "objid": "456", "ver": "7"}))
+            (
+                "ws.123.obj.456",
+                NarrativeRef({"wsid": "123", "objid": "456", "ver": None}),
+            ),
+            (
+                "ws.123.obj.456.ver.7",
+                NarrativeRef({"wsid": "123", "objid": "456", "ver": "7"}),
+            ),
         ]
         for c in cases:
             self.assertEqual(c[1], manager._parse_path(c[0]))
@@ -29,7 +34,7 @@ class KBWSManagerTestCase(unittest.TestCase):
             "ws.obj.ver",
             "ws.1.obj.ver",
             "ws.1.obj.a",
-            "ws.1.2"
+            "ws.1.2",
         ]
         for c in cases:
             with self.assertRaises(HTTPError) as e:

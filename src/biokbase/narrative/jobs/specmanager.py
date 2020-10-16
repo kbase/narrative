@@ -1,9 +1,5 @@
 import biokbase.narrative.clients as clients
-from biokbase.narrative.app_util import (
-    app_version_tags,
-    check_tag,
-    app_param
-)
+from biokbase.narrative.app_util import app_version_tags, check_tag, app_param
 import json
 from jinja2 import Template
 from IPython.display import HTML
@@ -21,7 +17,7 @@ class SpecManager(object):
             SpecManager.__instance.reload()
         return SpecManager.__instance
 
-    def get_spec(self, app_id, tag='release'):
+    def get_spec(self, app_id, tag="release"):
         self.check_app(app_id, tag, raise_exception=True)
         return self.app_specs[tag][app_id]
 
@@ -37,24 +33,26 @@ class SpecManager(object):
         """
         Reloads all app specs into memory from the latest update.
         """
-        client = clients.get('narrative_method_store')
+        client = clients.get("narrative_method_store")
         for tag in app_version_tags:
-            specs = client.list_methods_spec({'tag': tag})
+            specs = client.list_methods_spec({"tag": tag})
             spec_dict = dict()
             for spec in specs:
-                spec_dict[spec['info']['id']] = spec
+                spec_dict[spec["info"]["id"]] = spec
             self.app_specs[tag] = spec_dict
 
         # And let's load all types from the beginning and cache them
-        self.type_specs = client.list_categories({'load_types': 1})[3]
+        self.type_specs = client.list_categories({"load_types": 1})[3]
 
-    def app_description(self, app_id, tag='release'):
+    def app_description(self, app_id, tag="release"):
         """
         Returns the app description as a printable object. Makes it kinda pretty? repr_html, maybe?
         """
         self.check_app(app_id, tag, raise_exception=True)
 
-        info = clients.get('narrative_method_store').get_method_full_info({'ids': [app_id], 'tag': tag})[0]
+        info = clients.get("narrative_method_store").get_method_full_info(
+            {"ids": [app_id], "tag": tag}
+        )[0]
 
         tmpl = """
         <div class="bg-info" style="padding:15px">
@@ -74,7 +72,7 @@ class SpecManager(object):
         """
         check_tag(tag, raise_exception=True)
 
-        tmpl="""
+        tmpl = """
         <b>Available {{tag}} apps</b><br>
         <table class="table table-striped table-bordered table-condensed">
         <thead>
@@ -100,10 +98,16 @@ class SpecManager(object):
         </table>
         """
 
-        return HTML(Template(tmpl).render(tag=tag,
-                                          apps=sorted(list(self.app_specs[tag].values()), key=lambda m: m['info']['id'])))
+        return HTML(
+            Template(tmpl).render(
+                tag=tag,
+                apps=sorted(
+                    list(self.app_specs[tag].values()), key=lambda m: m["info"]["id"]
+                ),
+            )
+        )
 
-    def app_usage(self, app_id, tag='release'):
+    def app_usage(self, app_id, tag="release"):
         """
         Should show app inputs and outputs. Something like this:
         App id
@@ -123,16 +127,18 @@ class SpecManager(object):
         spec = self.app_specs[tag][app_id]
 
         # start with basic info
-        usage = {'id': app_id,
-                 'name': spec['info']['name'],
-                 'tag': tag,
-                 'subtitle': spec['info']['subtitle'],
-                 'ver': spec['info']['ver'],
-                 'params': self.app_params(spec)}
+        usage = {
+            "id": app_id,
+            "name": spec["info"]["name"],
+            "tag": tag,
+            "subtitle": spec["info"]["subtitle"],
+            "ver": spec["info"]["ver"],
+            "params": self.app_params(spec),
+        }
 
         return AppUsage(usage)
 
-    def check_app(self, app_id, tag='release', raise_exception=False):
+    def check_app(self, app_id, tag="release", raise_exception=False):
         """
         Checks if a method (and release tag) is available for running and such.
         If raise_exception==True, and either the tag or app_id are invalid, a ValueError is raised.
@@ -145,7 +151,9 @@ class SpecManager(object):
 
         if app_id not in self.app_specs[tag]:
             if raise_exception:
-                raise ValueError('Unknown app id "{}" tagged as "{}"'.format(app_id, tag))
+                raise ValueError(
+                    'Unknown app id "{}" tagged as "{}"'.format(app_id, tag)
+                )
             return False
 
         return True
@@ -165,30 +173,32 @@ class SpecManager(object):
         }
         """
         params = list()
-        for p in spec['parameters']:
+        for p in spec["parameters"]:
             p_info = app_param(p)
             params.append(p_info)
 
-        for p in spec.get('parameter_groups', []):
-            p_info = {'id': p.get('id', ''), 'is_group': True}
-            p_info['optional'] = p.get('optional', 0) == 1
-            p_info['short_hint'] = p.get('short_hint', '')
-            p_info['description'] = p.get('ui_name', '')
-            p_info['parameter_ids'] = p.get('parameter_ids', [])
-            p_info['id_mapping'] = p.get('id_mapping', {})
-            p_info['allow_multiple'] = p.get('allow_multiple', 0)
-            p_info['type'] = 'group'
+        for p in spec.get("parameter_groups", []):
+            p_info = {"id": p.get("id", ""), "is_group": True}
+            p_info["optional"] = p.get("optional", 0) == 1
+            p_info["short_hint"] = p.get("short_hint", "")
+            p_info["description"] = p.get("ui_name", "")
+            p_info["parameter_ids"] = p.get("parameter_ids", [])
+            p_info["id_mapping"] = p.get("id_mapping", {})
+            p_info["allow_multiple"] = p.get("allow_multiple", 0)
+            p_info["type"] = "group"
 
             params.append(p_info)
 
-        return sorted(params, key=lambda p: (p.get('optional', False), p.get('is_output', False)))
-
+        return sorted(
+            params, key=lambda p: (p.get("optional", False), p.get("is_output", False))
+        )
 
 
 class AppUsage(object):
     """
     A tiny class for representing app usage in HTML (or as a pretty string)
     """
+
     def __init__(self, usage):
         self.usage = usage
 
@@ -249,15 +259,26 @@ class AppUsage(object):
         return self.__str__()
 
     def __str__(self):
-        s = "id: {}\nname: {}\nsubtitle: {}\nparameters (*required):\n-----------------------".format(self.usage['id'], self.usage['name'], self.usage['subtitle'])
+        s = "id: {}\nname: {}\nsubtitle: {}\nparameters (*required):\n-----------------------".format(
+            self.usage["id"], self.usage["name"], self.usage["subtitle"]
+        )
 
-        for p in self.usage['params']:
+        for p in self.usage["params"]:
             if not p.get("is_constant", False):
-                p_def = "\n{}{} - {}".format('*' if not p['optional'] else '', p['id'], p['type'])
+                p_def = "\n{}{} - {}".format(
+                    "*" if not p["optional"] else "", p["id"], p["type"]
+                )
                 if "allowed_types" in p:
-                    p_def = p_def + " - is a data object where the type is one of: {}".format(json.dumps(p['allowed_types']))
+                    p_def = (
+                        p_def
+                        + " - is a data object where the type is one of: {}".format(
+                            json.dumps(p["allowed_types"])
+                        )
+                    )
                 if "allowed_values" in p:
-                    p_def = p_def + " - must be one of {}".format(json.dumps(p['allowed_values']))
+                    p_def = p_def + " - must be one of {}".format(
+                        json.dumps(p["allowed_values"])
+                    )
                 s = s + p_def
 
         return s

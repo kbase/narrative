@@ -57,22 +57,22 @@ define([
 
     In both cases, we are only interested in the final path component, and only the
     workspace id part of that.
-    Note that the url is always versionless. Although narratives have versions 
-    (as objects, of course they do!), they generally are not designed to be usable 
+    Note that the url is always versionless. Although narratives have versions
+    (as objects, of course they do!), they generally are not designed to be usable
     directly.
-    Later code performs a lookup of the narrative workspace object to get the 
+    Later code performs a lookup of the narrative workspace object to get the
     object id if it is not provided in the url.
     */
 
     // Using the location's pathname, we don't get the fragment.
     const path = window.location.pathname;
-    // The following regex pattern will match for ws.<wsid>.obj.<objid>, 
+    // The following regex pattern will match for ws.<wsid>.obj.<objid>,
     // ws.<wsid>.obj.<objid>.ver.<version>, and
     // <wsid>
     const narrativeIDRegex = /.*\/(?:(?:ws.(\d+).obj.(\d+)(?:.ver.(\d+))?)|(\d*))$/;
     const pathMatchResults = path.match(narrativeIDRegex);
     if (pathMatchResults) {
-        // Note that wsid1 will be populated for the legacy form, and 
+        // Note that wsid1 will be populated for the legacy form, and
         // wsid2 for the modern form.
         const [, workspaceId1, _objectId, _objectVersion, workspaceId2] = pathMatchResults;
         workspaceId = parseInt(workspaceId1 || workspaceId2);
@@ -80,7 +80,7 @@ define([
         // I think this is a remnant which should be removed from the codebase, but is
         // out of scope for what I'm doing now which is ensuring that url fragments
         // (the #hash part of the url) don't break the narrative.
-        // All code that I can find uses getNarrativeRef() from kbaseNarrative.js to 
+        // All code that I can find uses getNarrativeRef() from kbaseNarrative.js to
         // obtain a workspaceId/objectId narrative id. And that method gets the workspace
         // info for the workspace id provided in the url, and uses the 'narrative' metadata
         // field to discover the object id for the narrative object.
@@ -114,7 +114,8 @@ define([
         data_panel: ConfigSet.data_panel,
         comm_wait_timeout: ConfigSet.comm_wait_timeout,
         auth_cookie: ConfigSet.auth_cookie,
-        auth_sleep_recheck_ms: ConfigSet.auth_sleep_recheck_ms
+        auth_sleep_recheck_ms: ConfigSet.auth_sleep_recheck_ms,
+        upload: ConfigSet.upload,
     };
 
     debug = config.mode === 'debug';
@@ -196,7 +197,7 @@ define([
             return Promise.try(function () {
                 return config;
             });
-        }).catch(function (error) {
+        }).catch(function () {
             console.error('Config: unable to process remote data configuration options. Searching locally.');
             // hate embedding this stuff, but it seems the only good way.
             // the filename is the last step of that url path (after the last /)
@@ -217,7 +218,7 @@ define([
                     config.exampleData = dataCategories[env].exampleData;
                     return config;
                 })
-                .catch(function (error) {
+                .catch(function () {
                     console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
                     return config;
                 });

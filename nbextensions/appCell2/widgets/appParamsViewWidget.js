@@ -269,7 +269,7 @@ define([
                 }, [
                     div('This App is running in Batch mode. To view this app\'s currently running configuration, use the "Show code" menu option to see a list of parameters for each app run.'),
                     div('Also, the "Job Status" tab will show the inputs for each job.'),
-                    div({style: 'margin-top: 1ex'}, ['Tutorials and documentation about batch mode can be found <a href="//kbase.us" target="api_doc">here</a>.'])
+                    div({style: 'margin-top: 1ex'}, ['Tutorials and documentation about batch mode can be found <a href="//docs.kbase.us/getting-started/narrative/analyze-data" target="api_doc">here</a>.'])
                 ]),
                 classes: ['kb-panel-light']
             });

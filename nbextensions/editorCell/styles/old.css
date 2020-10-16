@@ -1,0 +1,181 @@
+/* Wrapper class 
+  All classes below may be wrapped in this class to avoid polluting
+  the Narrative styles.
+*/
+.kb-app-cell {
+
+}
+
+/** new app parameter styling **/
+.kb-app-cell  .kb-app-parameter-panel {
+    border-left: 3px solid #fff;
+}
+.kb-app-cell  .kb-app-parameter-panel-hover {
+    border-left: 3px solid #428bca;
+}
+.kb-app-cell .kb-app-parameter-row {
+    margin:0px;
+    padding:5px;
+    border-radius:5px;
+}
+/* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
+.kb-app-cell .kb-app-parameter-row-hover {
+    background:#F9F9F9;
+}
+
+.kb-app-cell  .kb-app-parameter-row-error {
+    background: #f2dede;
+}
+.kb-app-cell .kb-app-parameter-error-message {
+    padding:5px;
+    text-align:center;
+    font-family: 'OxygenBold', sans-serif;
+    font-weight: bold;
+    font-size: 9pt;
+    color:#F44336;
+}
+
+
+/* not sure how to get text in these divs to valign middle... */
+.kb-app-cell .kb-app-parameter-name {
+    font-family: 'OxygenBold', sans-serif;
+    color:#777;
+    text-align:right;
+    vertical-align:middle;
+    margin-top:3px;
+    padding-right: 4px;
+    padding-left:0px;
+    white-space: normal;
+}
+.kb-app-cell .kb-app-parameter-input {
+    vertical-align:middle;
+    white-space: nowrap;
+    xpadding-left:10px;
+}
+.kb-app-cell .kb-app-parameter-input input {
+    font-weight: bold;
+}
+
+.kb-app-cell .kb-app-parameter-input select.form-control {
+    margin: 0;
+}
+
+/*
+This set of styles is a to accomodate the required/satisfied icon which appears
+between the select input control and the help text to the right of it. The
+problem is that within the columns used for layout the select is set to 100% width
+and yet the icon is placed right next to it. The result is that the icon is shoved
+to the right of the select control and into the next column, overlapping the
+help text. The old app handling this was to scoot the help text far enough over
+to accomodate the the icon intruding into its space. This technique makes space
+in the column in which the icon lives, and does this by shrinking the select
+control with padding, and then scooting the icon back into its column.
+*/
+.kb-app-cell .kb-app-parameter-input > div {
+    /* allow space for the required (red arrow), satisfied (green checkbox) icon */
+    padding-right: 20px;
+}
+.kb-app-cell .kb-app-parameter-input .kb-app-parameter-accepted-glyph,
+.kb-app-cell .kb-app-parameter-input .kb-app-parameter-required-glyph {
+    /* This scoots the icon inside */
+    font-size: 15px;
+    margin-left: 0;
+}
+.kb-app-cell .kb-app-parameter-required-glyph {
+    color: #F44336;
+}
+.kb-app-cell .kb-app-parameter-hint {
+    padding-left: 7px;
+}
+
+.kb-app-cell .kb-parameter-data-selection {
+    font-weight: bold;
+}
+
+.kb-app-cell .kb-app-parameter-hint {
+    color: #777;
+    text-align:left;
+    margin-top:3px;
+}
+
+.kb-app-cell .kb-app-parameter-accepted-glyph {
+    color: #4BB856;
+}
+
+.kb-app-cell .kb-app-parameter-info {
+    color: #777;
+}
+
+.kb-app-cell .kb-parameter-data-row-remove {
+    color: #777;
+}
+.kb-app-cell .kb-parameter-data-row-add {
+    color: #777;
+}
+
+
+.kb-app-cell .kb-app-advanced-options-controller-inactive {
+    font-family: 'OxygenBold', sans-serif;
+    font-style: italic;
+    font-size: 10pt;
+    line-height: 14px;
+    color: #777;
+    text-align: center;
+}
+.kb-app-cell .kb-app-advanced-options-controller {
+    font-family: 'OxygenBold', sans-serif;
+    cursor:pointer;
+    font-style: italic;
+    font-size: 10pt;
+    line-height: 14px;
+    color: #0088cc;
+    text-align: center;
+}
+.kb-app-cell .kb-app-advanced-options-controller:hover {
+    color: #2a6496;
+}
+
+.kb-app-cell .kb-app-footer {
+    width: 100%;
+    overflow: none;
+    background-color: #F5F5F5;
+    padding: 10px;
+}
+
+.kb-app-cell .kb-app-subtitle {
+    background-color: #F5F5F5;
+    padding: 3px 5px;
+}
+
+
+.kb-app-cell .panel-title > [data-toggle="collapse"]::before {
+    display: inline-block;
+    margin-left: 0px;
+    margin-right: 4px;
+    font-family: "FontAwesome";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 90%;
+    width: 12px;
+    color: silver;
+    line-height: 1;
+    vertical-align: baseline;
+    content: "\f078 ";
+}
+.kb-app-cell .panel-title > [data-toggle="collapse"].collapsed::before {
+    margin-left: 2px; margin-right: 2px;
+    content: "\f054 ";
+}
+
+/* tweaks to elemnts that should be dimmed when the cell is not selected */
+
+.unselected .kb-app-cell {
+    opacity: 0.5;
+}
+
+.kb-app-cell .advanced-parameter-showing {
+    display: block;
+}
+.kb-app-cell .advanced-parameter-hidden {
+    display: none;
+}

@@ -80,7 +80,6 @@ define([
             })
                 .on('totaluploadprogress', (progress) => {
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
-                    console.log("TOTAL UPLOADING PROGRESS")
                 })
                 .on('addedfile', (file) => {
                     $dropzoneElem.find('#global-info').css({'display': 'inline'});
@@ -143,7 +142,7 @@ define([
             var $clearAllBtn = $('<button>')
                 .text('Clear All')
                 .addClass('text-button clear-all-dropzone')
-                .attr('aria-label', 'clear all files from the dropzone')
+                .attr('aria-label', 'clear all errored files from the dropzone')
                 .attr('id', 'clear-all-btn')
                 .click(function(){
                     this.dropzone.removeAllFiles();
@@ -156,7 +155,7 @@ define([
                 .addClass('text-center')
                 .append($clearAllBtn);
 
-                return $buttonContainer;
+            return $buttonContainer;
         },
 
         makeUploadMessage: function() {

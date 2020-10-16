@@ -121,6 +121,8 @@ define([
                 .on('reset', function() {
                     $dropzoneElem.find('#global-info').css({'display': 'none'});
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
+                    $('#clear-all-btn-container').remove();
+                    $('#clear-all-btn').remove();
                 })
                 .on('error', (err) => {
                     let errorText = 'unable to upload file!';
@@ -128,9 +130,14 @@ define([
                         errorText = err.xhr.responseText;
                     }
                     $dropzoneElem.find('.error.text-danger').text('Error: ' + errorText);
+
+                    // Check to see if there already a button in the dropzone area
                     if (!$dropzoneElem.find('#clear-all-btn').length){
                         $dropzoneElem.append(this.makeClearAllButton());
+
                     } else {
+                        // If there is a button already in the area, it has to be removed,
+                        // and appened to the new document when additional errored files are added.
                         $('#clear-all-btn-container').remove();
                         $('#clear-all-btn').remove();
                         $dropzoneElem.append(this.makeClearAllButton());

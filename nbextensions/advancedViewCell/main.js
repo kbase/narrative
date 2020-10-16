@@ -9,7 +9,7 @@
  * In this model, the execution of the module the first time per session is the same
  * as creating a global management object.
  *
- * Thus we do things like createa a message bus
+ * Thus we do things like create a message bus
  *
  * @param {type} $
  * @param {type} Jupyter
@@ -31,11 +31,9 @@ define([
     'common/appUtils',
     'common/jupyter',
     'common/spec',
-    //    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
     'css!kbase/css/appCell.css',
-    'css!./styles/main.css',
     'bootstrap',
     'custom/custom'
 ], function(

@@ -343,6 +343,8 @@ define([
                     });
                     $('td:eq(4)', nRow).find('select').select2({
                         placeholder: 'Select a type'
+                    }).on('select2:select', function(e) {
+                        $('td:eq(4)', nRow).find('.select2-selection').addClass('type-selected');
                     });
                     $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', e => {
                         var importType = $(e.currentTarget).prevAll('select').val();

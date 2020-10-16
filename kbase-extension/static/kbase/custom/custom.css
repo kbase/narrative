@@ -6,289 +6,340 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 */
 @font-face {
   font-family: 'Glyphicons Halflings';
+
   src: url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot');
   src: url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff2') format('woff2'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff') format('woff'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.ttf') format('truetype'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular') format('svg');
 }
 
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
-  background-color: #337ab7;
-  color: #fff;
+    background-color: #337ab7;
+    color: #FFF;
 }
 
 .select2-container--default .select2-results__option--highlighted[aria-selected] span {
-  color: #fff !important;
+    color: #FFF !important;
 }
 
 #site {
-  overflow: visible;
+    overflow: visible;
 }
+
 
 /* disable the standard notebook, bottom spacer */
 
-#notebook > .end_space {
-  min-height: 0;
-  height: 0;
+#notebook>.end_space {
+    min-height: 0;
+    height: 0;
 }
 
 @media (min-width: 1200px) {
-  #notebook-container {
-    width: auto;
-  }
+    #notebook-container {
+        width: auto;
+    }
 }
 
 @media (min-width: 992px) {
-  #notebook-container {
-    width: auto;
-  }
+    #notebook-container {
+        width: auto;
+    }
 }
 
 @media (min-width: 768px) {
-  #notebook-container {
-    width: auto;
-  }
+    #notebook-container {
+        width: auto;
+    }
 }
 
 .notebook_app {
-  overflow-y: hidden;
-  background-color: #fff;
+    overflow-y: hidden;
+    background-color: #FFFFFF;
 }
+
+
+/* .btn * { color: black; } */
 
 .celltoolbar {
-  height: auto;
-  background: none;
-  border: none;
-  border-left: 1px solid transparent;
-  padding-top: 0;
-  padding-bottom: 2px;
+    height: auto;
+    background: none;
+    border: none;
+    border-left: 1px solid transparent;
+    padding-top: 0;
+    padding-bottom: 2px;
 }
 
-.input_area {
-  border: 1px solid #cecece;
-  border-radius: 0;
-
-  /* a little padding to match the prompt */
-  padding-top: 4px;
+div.input_area {
+    border: 1px solid #CECECE;
+    border-radius: 0px;
+    /* a little padding to match the prompt */
+    padding-top: 4px;
 }
 
-.output_subarea {
-  max-width: inherit;
+div.output_subarea {
+    max-width: inherit;
 }
 
-.text_cell_input {
-  border: 1px solid #cecece;
-  border-radius: 0;
+div.text_cell_input {
+    border: 1px solid #CECECE;
+    border-radius: 0px;
 }
 
 div.cell {
-  margin: 8px 0 8px 0;
-  padding: 0;
-  border: 1px solid #ccc;
-  border-left: 5px solid #ccc;
-  border-radius: 0;
+    margin: 8px 0 8px 0px;
+    padding: 0;
+    border: 1px solid #CCC;
+    border-left: 5px solid #CCC;
+    border-radius: 0;
 }
 
 div.cell.selected {
-  margin-left: 0;
-  border: 1px solid #4bb856;
-  border-left: 5px solid #4bb856;
-  padding-left: 0;
-  background: none;
-  -webkit-transition: box-shadow 0.2s ease-in-out;
-  -moz-transition: box-shadow 0.2s ease-in-out;
-  -o-transition: box-shadow 0.2s ease-in-out;
-  transition: box-shadow 0.2s ease-in-out;
-  -webkit-box-shadow: 0 1px 2px #aaa, 0 5px 5px #aaa;
-  -moz-box-shadow: 0 1px 2px #aaa, 0 5px 5px #aaa;
-  box-shadow: 0 1px 2px #aaa, 0 5px 5px #aaa;
+    margin-left: 0;
+    border: 1px solid #4BB856;
+    border-left: 5px solid #4BB856;
+    padding-left: 0px;
+    background-color: #E8EFFF;
+    background: none;
+    transition: box-shadow 0.2s ease-in-out;
+    -moz-transition: box-shadow 0.2s ease-in-out;
+    -webkit-transition: box-shadow 0.2s ease-in-out;
+    box-shadow: 0px 1px 2px #aaa, 0 5px 5px #aaa;
+    -moz-box-shadow: 0px 1px 2px #aaa, 0 5px 5px #aaa;
+    -webkit-box-shadow: 0px 1px 2px #aaa, 0 5px 5px #aaa;
 }
 
-div.cell.selected::before {
-  background: none;
+div.cell.selected:before {
+    background: none;
 }
 
 div.cell.opened {
-  padding-top: 0;
+    padding-top: 0px;
 }
 
 .edit_mode div.cell.selected {
-  border-left: 5px solid #66bb6a;
-  background: none;
-  padding-left: 0;
+    border-left: 5px solid #66BB6A;
+    background: none;
+    padding-left: 0px;
 }
 
 div.cell.selected.kb-error {
-  border: 1px solid #d9534f;
-  border-left: 5px solid #d9534f;
+    border: 1px solid #d9534f;
+    border-left: 5px solid #d9534f;
 }
 
-#notebook {
-  padding: 0;
+div#notebook {
+    padding: 0;
 }
 
-#notebook_name {
-  color: #006698;
+span#notebook_name {
+    color: #006698;
 }
 
-#notebook_name:hover {
-  cursor: pointer;
-  background-color: #e0e0e0;
-}
-
-#notebook-container {
-  -webkit-box-shadow: none;
-  -moz-box-shadow: none;
-  box-shadow: none;
-  width: auto;
-  min-width: 460px;
-  position: fixed;
-  left: 380px;
-  top: 70px;
-  right: 0;
-  bottom: 0;
-  overflow: auto;
-}
-
-#notebook-container::after {
-  content: "";
-  height: 100px;
-  display: block;
+span#notebook_name:hover {
+    cursor: pointer;
+    background-color: #e0e0e0;
 }
 
 .prompt {
-  display: none !important;
+    min-width: 10ex;
+    padding-top: 10px;
 }
+
+#notebook-container {
+    box-shadow: none;
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    width: auto;
+    min-width: 460px;
+    position: fixed;
+    left: 380px;
+    top: 70px;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+}
+#notebook-container:after{
+    content: "";
+    height: 100px;
+    display:block;
+}
+
 
 /* margin left doesn't really seeem to play well */
 
 .btn-toolbar {
-  margin-left: 0;
-  padding-left: 0;
+    margin-left: 0;
+    padding-left: -5px;
 }
 
 .kb-narr-side-panel .btn-group .btn {
-  padding: 3px 4px 3px 4px;
-  font-size: 16px;
+    padding: 3px 4px 3px 4px;
+    font-size: 16px;
 }
 
 .btn-subtle {
-  color: #888;
-  margin: 0;
+    color: #888;
+    margin: 0px
 }
 
 .btn-subtle .fa {
-  color: #888;
+    color: #888;
 }
 
 .btn-subtle .fa::before {
-  color: #888;
+    color: #888;
 }
 
 .notebook_app .btn.active {
-  box-shadow: none;
+    box-shadow: none;
 }
 
-.kb-btn-icon {
-  display: inline-block;
-  padding: 4px;
-}
-
-.kb-btn-icon .fa {
-  opacity: 0.5;
-}
-
-.kb-btn-icon:hover .fa {
-  opacity: 1;
-}
 
 /* Fooling around with the narrative cells */
 
 .notebook_app .inner_cell {
-  overflow: visible;
+    overflow: visible;
 }
 
-.notebook_app .celltoolbar > .button_container {
-  flex: 0 auto;
+.notebook_app .celltoolbar>.button_container {
+    flex: 0 auto;
 }
 
-.notebook_app .celltoolbar > .button_container:nth-child(1) {
-  flex: auto;
+.notebook_app .celltoolbar>.button_container:nth-child(1) {
+    flex: auto;
 }
 
 .notebook_app .celltoolbar_container {
-  border-bottom: 1px silver solid;
+    border-bottom: 1px silver solid;
 }
 
-.notebook_app .cell.unselected .text_cell_render {
-  border: 1px solid transparent;
+.notebook_app .prompt {
+    padding-top: 0px;
+    color: silver;
+    width: 75px;
 }
 
-.notebook_app .cell.selected .text_cell_render {
-  border: 1px solid transparent;
+.notebook_app .cell.unselected div.text_cell_render {
+    border: 1px solid transparent;
+}
+
+.notebook_app .cell.selected div.text_cell_render {
+    border: 1px solid transparent;
 }
 
 .notebook_app .buttons .dropdown-menu {
-  height: auto !important;
-  overflow: visible !important;
+    height: auto !important;
+    overflow: visible !important;
 }
 
 .notebook_app .btn.disabled .fa {
-  color: silver;
+    color: silver;
+}
+
+.text_cell.kb-cell .rendered_html table {
+    border: 1px solid #ddd;
+}
+
+.text_cell.kb-cell .rendered_html ul {
+    margin: 0;
+}
+
+.text_cell.opened.rendered.kb-cell .rendered_html {
+    padding: 0;
+    border: 0;
+}
+
+.text_cell.opened.rendered.selected.kb-cell .rendered_html {
+    border-left: 1px solid #4BB856;
+}
+
+.text_cell.opened.rendered.selected.kb-cell.kb-error .rendered_html {
+    border-left: 1px solid #d9534f;
+}
+
+.text_cell.opened.rendered.kb-cell {
+    padding-bottom: 0;
 }
 
 .rendered_html tr,
 .rendered_html th,
 .rendered_html td {
-  text-align: inherit;
+    text-align: inherit;
 }
 
 .rendered_html table {
-  table-layout: inherit;
+    table-layout: inherit;
 }
 
-.text_cell.kb-cell .rendered_html table {
-  border: 1px solid #ddd;
+/* narrative cell icons */
+
+.cell.selected .prompt .method-icon {
+    color: rgb(103, 58, 183);
 }
 
-.text_cell.kb-cell .rendered_html ul {
-  margin: 0;
+.cell.selected .prompt .app-icon {
+    color: rgb(0, 150, 136);
 }
 
-.text_cell.kb-cell.opened.rendered .rendered_html {
-  padding: 0;
-  border: 0;
+.cell.selected .prompt .markdown-icon {
+    color: #000;
 }
 
-.text_cell.kb-cell.opened.rendered.selected .rendered_html {
-  border-left: 1px solid #4bb856;
+.cell.selected .prompt .app-output-icon {
+    color: #000;
 }
 
-.text_cell.kb-cell.opened.rendered.selected.kb-error .rendered_html {
-  border-left: 1px solid #d9534f;
+.cell.selected .prompt .method-output-icon {
+    color: #000;
 }
 
-.text_cell.kb-cell.opened.rendered {
-  padding-bottom: 0;
+.cell.selected .prompt .data-viewer-icon {
+    color: #000;
 }
 
-.cell > .inner_cell > .ctb_hideshow {
-  display: block;
+.cell.selected .prompt .error-icon {
+    color: red;
+}
+
+.cell.selected .prompt.input_prompt {
+    color: #303F9F;
+}
+
+.cell.selected .prompt.output_prompt {
+    color: #D84315;
+}
+
+.cell>.inner_cell>.ctb_hideshow {
+    display: block;
 }
 
 .cell.selected .btn-default {
-  color: #000;
+    color: #000;
 }
 
 .cell.unselected .btn-default {
-  color: #ccc;
+    color: #CCC;
 }
 
 .cell.unselected .kb-cell-toolbar .title-container {
-  opacity: 0.5;
+    opacity: 0.5;
 }
 
 .cell.unselected .kb-cell-toolbar .buttons-container {
-  opacity: 0.2;
+    opacity: 0.2;
 }
+
+.kb-btn-icon {
+    display: inline-block;
+    padding: 4px;
+}
+
+.kb-btn-icon .fa {
+    opacity: 0.5
+}
+
+.kb-btn-icon:hover .fa {
+    opacity: 1.0
+}
+
 
 /*
   For some reason Jupyter removes the bottom margin. This causes problems with
@@ -296,7 +347,11 @@ div.cell.selected.kb-error {
 */
 
 p {
-  margin-bottom: 9px;
+    margin-bottom: 9px;
+}
+
+.prompt {
+    display: none !important;
 }
 
 /*
@@ -304,20 +359,19 @@ p {
  * Cool though this is, it's a problem on app cells.
  * This hunk of CSS should remove it until we can better work it in to our design.
  */
+div.code_cell:hover .run_this_cell {
+    visibility: hidden !important;
+}
+
+div.code_cell:hover div.input_prompt.run_this_cell {
+    visibility: hidden !important;
+}
+
+div.code_cell div.input_prompt {
+    min-width: 0;
+}
 
 .run_this_cell {
-  padding: 0 !important;
-  width: 0 !important;
-}
-
-.code_cell:hover .run_this_cell {
-  visibility: hidden !important;
-}
-
-.code_cell:hover .input_prompt.run_this_cell {
-  visibility: hidden !important;
-}
-
-.code_cell .input_prompt {
-  min-width: 0;
+    padding: 0 !important;
+    width: 0 !important;
 }

@@ -9,6 +9,10 @@
     margin-top: 15px;
 }
 
+#kb-data-staging-table td {
+    vertical-align: middle;
+}
+
 .kb-data-staging-decompress {
     border: 1px solid #cccccc;
     border-radius : 1px;
@@ -3065,7 +3069,6 @@ button.kb-data-obj {
 
 
 /* styling for data import overlay  */
-
 .kb-import-content {
     position:relative;
     margin: 0 0 0 0px;

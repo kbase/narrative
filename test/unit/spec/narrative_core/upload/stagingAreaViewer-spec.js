@@ -212,5 +212,35 @@ define ([
             expect(dlNode.getAttribute('src')).toEqual('some_url');
         });
 
+        it('should properly render the import as dropdown', async () => {            
+            let file = {
+                name: 'render_file_test.fa',
+                path: fakeUser + '/render_file_test.fa',
+                mtime: 1532738637555,
+                size: 49233,
+                source: 'KBase upload',
+                isFolder: false,
+                imported: {}
+            };
+
+            await stagingViewer.render();
+            stagingViewer.renderFiles([file]);
+            let placeholder = $targetNode.find('span.select2-selection__placeholder').html();
+            expect(placeholder).toContain('Select a type');
+
+            let options = $targetNode.find('.select2-hidden-accessible').html();
+            expect(options).toContain('FASTQ Reads');
+            expect(options).toContain('SRA Reads');
+            expect(options).toContain('GenBank Genome');
+            expect(options).toContain('GFF Genome');
+            expect(options).toContain('GFF Metagenome');
+            expect(options).toContain('Expression Matrix');
+            expect(options).toContain('Media');
+            expect(options).toContain('FBA Model');
+            expect(options).toContain('Assembly');
+            expect(options).toContain('Phenotype Set');
+            expect(options).toContain('Sample Set');
+        });
+
     });
 });

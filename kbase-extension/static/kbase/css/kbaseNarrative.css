@@ -5,6 +5,18 @@
     font-weight: bold;
 }
 
+.kb-dropzone .dz-message {
+    font-family: Roboto;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 24px;
+    line-height: 28px;
+    text-align: center;
+    color: #000000;
+    mix-blend-mode: normal;
+    margin: 2em 4.5em;
+}
+
 #kb-data-staging-table_wrapper{
     margin-top: 15px;
 }
@@ -3021,15 +3033,6 @@ button.kb-data-obj {
 
 /* END CATALOG SLIDEOUT BROWSER STYLES */
 
-
-
-
-
-
-
-
-
-
 /* share panel styles */
 .kb-share-user-permissions-dropdown {
     border-style:none;
@@ -3080,6 +3083,43 @@ button.kb-data-obj {
 
 .kb-import-content .btn-xs {
     border: none;
+}
+
+.kb-import-content .upload-options button {
+    background: #FFFFFF;
+    border: 1px solid #C4C4C4;
+    box-sizing: border-box;
+    border-radius: 6px;
+    font-family: Oxygen;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 18px;
+    /* identical to box height */
+    text-align: center;
+    color: #000000;
+    width: 140px;
+    height: 42px;
+    margin: 0 6px;
+}
+
+.kb-import-content .upload-options button:hover {
+    border: 1px solid #CFCFCF;
+    background-color: #FAFAFA;
+}
+
+.kb-import-content .upload-options button:focus {
+    background-color: #F2F2F2;
+}
+
+.kb-import-content .upload-options button:active {
+    background-color: #E6E6E6;
+}
+
+.kb-import-content .upload-options button:disabled {
+    background-color: #FAFAFA;
+    color: #929292;
+
 }
 
 /* style for Import As dropdown container */

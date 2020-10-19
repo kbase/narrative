@@ -129,9 +129,6 @@ define([
         it('has a method "init" which returns a promise then null', async () => {
             var initPromise = mockAppCell.init();
             expect(initPromise instanceof Promise).toBeTrue();
-
-            var result = await initPromise;
-            expect(result).toBeNull();
         });
 
         it('has a method stop which returns a Promise', () => {
@@ -140,7 +137,7 @@ define([
         });
 
         it('has a method detach which returns a Promise', () => {
-            var detachPromise = mockAppCell.stop();
+            var detachPromise = mockAppCell.detach();
             expect(detachPromise instanceof Promise).toBeTrue();
         });
 

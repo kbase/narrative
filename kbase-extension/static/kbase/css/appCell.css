@@ -69,16 +69,10 @@
   color: gray;
 }
 
-/* .cell.selected .btn-default.kb-app-row-close-btn:hover {
-    color: red;
-} */
-
 .kb-app-row-clip-btn,
 .kb-app-row-close-btn {
   height: 100%;
   margin-left: 1px;
-
-  /* border-left: 3px solid transparent; */
   border-right: 0;
   border-top: 0;
   border-bottom: 0;
@@ -90,10 +84,10 @@
 /* let's just do this as a normal button hover effect */
 
 .kb-app-parameter-right-error-bar {
-  /* height: 100%; */
   height: 28px;
 
   /* firefox wants it explicitly wired */
+
   background: red;
 }
 
@@ -105,15 +99,12 @@
 
 .kb-app-cell .kb-app-parameter-row .message.-error {
   background: #f2dede;
+  color: #f44336;
 }
 
 .kb-app-cell .kb-app-parameter-row .message {
   text-align: center;
   font-family: 'Oxygen', sans-serif;
-}
-
-.kb-app-cell .kb-app-parameter-row .message.-error {
-  color: #f44336;
 }
 
 /* not sure how to get text in these divs to valign middle... */
@@ -159,12 +150,6 @@ in the column in which the icon lives, and does this by shrinking the select
 control with padding, and then scooting the icon back into its column.
 */
 
-/* .kb-app-cell .kb-app-parameter-input > div {
-     allow space for the required (red arrow), satisfied (green checkbox) icon
-    padding-right: 20px;
-}
-*/
-
 .kb-app-cell .kb-app-parameter-input .kb-app-parameter-accepted-glyph,
 .kb-app-cell .kb-app-parameter-input .kb-app-parameter-required-glyph {
   /* This scoots the icon inside */
@@ -176,10 +161,6 @@ control with padding, and then scooting the icon back into its column.
   color: #f44336;
 }
 
-.kb-app-cell .kb-app-parameter-hint {
-  padding-left: 7px;
-}
-
 .kb-app-cell .kb-parameter-data-selection {
   font-weight: bold;
 }
@@ -188,6 +169,7 @@ control with padding, and then scooting the icon back into its column.
   color: #777;
   text-align: left;
   margin-top: 3px;
+  padding-left: 7px;
 }
 
 .kb-app-cell .kb-app-parameter-accepted-glyph {
@@ -236,11 +218,6 @@ control with padding, and then scooting the icon back into its column.
   overflow: none;
   background-color: #f5f5f5;
   padding: 10px;
-}
-
-.kb-app-cell .kb-app-subtitle {
-  background-color: #f5f5f5;
-  padding: 3px 5px;
 }
 
 .kb-app-cell .kb-app-subtitle {
@@ -433,13 +410,6 @@ warning: orange
   margin-bottom: 0;
 }
 
-.btn.kb-app-cell-btn.btn-danger.active:hover {
-  color: rgb(209, 82, 65);
-  background-color: #ddd;
-  border-bottom: 2px rgb(209, 82, 65) solid;
-  margin-bottom: 4px;
-}
-
 .btn.kb-app-cell-btn.btn-danger.active {
   color: white;
   background-color: rgb(209, 82, 65);
@@ -456,15 +426,6 @@ warning: orange
 }
 
 /* DISABLED is gray border and text */
-
-/*
-.btn.kb-app-cell-btn.btn-primary.disabled:hover {
-    color: #888;
-    background-color: #FFF;
-    border-bottom: 2px #888 solid;
-    margin-bottom: 4px;
-}
-*/
 
 .btn.kb-app-cell-btn.disabled,
 .btn.kb-app-cell-btn.disabled:hover,
@@ -562,10 +523,6 @@ warning: orange
 
 .tt-header {
   font-size: 75%;
-
-  /* this doesn't work, don't want to just turn it on, though:
-  font-color : gray;
-  */
   font-style: italic;
   padding-left: 5px;
 }

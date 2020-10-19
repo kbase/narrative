@@ -11,8 +11,6 @@
 .nav > li > a:hover,
 .nav > li > a:focus {
   text-decoration: none;
-
-  /* background-color: #fff !important; */
 }
 
 /* END KBase navigation bar */
@@ -27,13 +25,17 @@
 }
 
 #signin-button {
-  /* margin: 15px 7px 0 0; */
   display: inline-block;
   padding: 0 15px 0 0;
 }
 
 /* bootstrap overrides */
-.wrapper { width: 95%; margin-left: auto; margin-right: auto; }
+
+.wrapper {
+  width: 95%;
+  margin-left: auto;
+  margin-right: auto;
+}
 
 /* end bootstrap overrides */
 
@@ -92,10 +94,6 @@ table {
   padding: 6px;
 }
 
-/* #select-box tr :hover {
-    background-color: #eee;
-} */
-
 .selected-ws {
   background-color: #428bca;
   color: #fff;
@@ -126,23 +124,6 @@ table {
 .heatmap-view {
   overflow-x: scroll;
 }
-
-/* div::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
-
-div::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-    border-radius: 10px;
-    background: #ddd;
-}
-
-div::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    background: #666;
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
-} */
 
 /* ws browser */
 
@@ -197,8 +178,6 @@ div::-webkit-scrollbar-thumb {
   -moz-box-shadow: 7px 7px 5px #888;
   -webkit-box-shadow: 7px 7px 5px #888;
   box-shadow: 7px 7px 5px #888;
-
-  /* background: #95C07C;    */
 }
 
 .modal-cover-content {
@@ -348,8 +327,6 @@ div::-webkit-scrollbar-thumb {
   .narrative-sidebar {
     position: fixed;
     width: 20%;
-
-    /* float:left; */
   }
 }
 
@@ -368,21 +345,15 @@ div::-webkit-scrollbar-thumb {
   letter-spacing: 0;
 }
 
-.view-header {
-  font: 1.5em/1.75em  'RobotoBlack', Arial, sans-serif;
-  font-weight: normal;
-  color: #898989;
-  letter-spacing: 0;
-}
-
 .active .btn-narr {
   background-color: #bbe8f9;
   text-align: left;
   padding-left: 20px;
   padding-right: 20px;
-
-  /* border: 1px solid #A5D4E1; */
   border: 1px solid #428bca;
+
+  /* FIXME: why does the font change here?! */
+
   font-family: OxygenBold;
   font-size: 14px;
 }
@@ -449,9 +420,6 @@ div::-webkit-scrollbar-thumb {
 
 /* for the footer */
 #footer {
-  /* margin-top: 60px;
-    position: relative;
-    bottom: 0px; */
   height: 58px;
 }
 
@@ -482,9 +450,6 @@ div::-webkit-scrollbar-thumb {
 }
 
 #footer .disclaimer {
-  /* background-color: #f2dede;
-    border-top: 1px solid #ebccd1;
-    color: #a94442; */
   background-color: #a94442;
   color: #fff;
   display: block;

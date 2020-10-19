@@ -121,8 +121,7 @@ define([
                 .on('reset', function() {
                     $dropzoneElem.find('#global-info').css({'display': 'none'});
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
-                    $('#clear-all-btn-container').remove();
-                    $('#clear-all-btn').remove();
+                    this.deleteClearAllButton();
                 })
                 .on('error', (err) => {
                     let errorText = 'unable to upload file!';
@@ -138,8 +137,7 @@ define([
                     } else {
                         // If there is a button already in the area, it has to be removed,
                         // and appened to the new document when additional errored files are added.
-                        $('#clear-all-btn-container').remove();
-                        $('#clear-all-btn').remove();
+                        this.deleteClearAllButton();
                         $dropzoneElem.append(this.makeClearAllButton());
                     }
                 });
@@ -153,8 +151,7 @@ define([
                 .attr('id', 'clear-all-btn')
                 .click(function(){
                     this.dropzone.removeAllFiles();
-                    $('#clear-all-btn-container').remove();
-                    $('#clear-all-btn').remove();
+                    this.deleteClearAllButton();
                 }.bind(this));
 
             var $buttonContainer = $('<div>')
@@ -163,6 +160,11 @@ define([
                 .append($clearAllBtn);
 
             return $buttonContainer;
+        },
+
+        deleteClearAllButton: function () {
+            $('#clear-all-btn-container').remove();
+            $('#clear-all-btn').remove();
         },
 
         makeUploadMessage: function() {

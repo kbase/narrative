@@ -17,7 +17,8 @@ define([
     'text!kbase/templates/data_staging/file_path.html',
     'kb_service/client/workspace',
     'jquery-dataTables',
-    'select2',
+    'dataTables.net-select',
+    'select2'
 ], function (
     $,
     KBaseTabs,
@@ -98,10 +99,32 @@ define([
         },
 
         updateView: function () {
-            return Promise.resolve(this.stagingServiceClient.list({
-                path: this.subpath
-            }))
+            // return Promise.resolve(this.stagingServiceClient.list({
+            //     path: this.subpath
+            // }))
+
+            return Promise.resolve(
+                new Promise((resolve, reject) => {
+                    resolve(JSON.stringify([
+                        // {
+                        //     name: 'test_folder',
+                        //     path: 'leia/test_folder',
+                        //     mtime: 1532738637499,
+                        //     size: 34,
+                        //     isFolder: true
+                        // }, {
+                        {
+                            name: 'file_list.txt',
+                            path: 'leia/file_list.txt',
+                            mtime: 1532738637555,
+                            size: 49233,
+                            source: 'KBase upload'
+                        }
+                    ]));
+                })
+            )
                 .then(data => {
+                    console.log('got the data: ', data);
                     //list is recursive, so it'd show all files in all subdirectories. This filters 'em out.
                     let files = JSON.parse(data).filter(f => {
                         // this is less complicated than you think. The path is the username,
@@ -127,6 +150,7 @@ define([
                     }, 0);
                 })
                 .catch(xhr => {
+                    console.log('error in the resolution: ', xhr);
                     this.$elem.empty();
                     this.renderFileHeader();
                     this.renderError(xhr.responseText ? xhr.responseText : 'Unknown error - directory was not found, or may have been deleted');
@@ -247,6 +271,7 @@ define([
          * keys: files (list of file info) and error (optional error)
          */
         renderFiles: function (files) {
+            console.log('trying to render files: ', files);
             files = files || [];
             const emptyMsg = 'No files found.';
             var $fileTable = $(this.ftpFileTableTmpl({
@@ -265,6 +290,11 @@ define([
                 ],
                 aoColumnDefs: [{
                     aTargets: [0],
+                    className: 'select-checkbox',
+                    orderable: false,
+                    targets: 0
+                }, {
+                    aTargets: [1],
                     mRender: function (data, type, full) {
                         if (type === 'display') {
                             var isFolder = data === 'true' ? true : false;
@@ -281,7 +311,7 @@ define([
                         }
                     }
                 }, {
-                    aTargets: [1],
+                    aTargets: [2],
                     sClass: 'staging-name',
                     mRender: function (data, type, full) {
                         if (type === 'display') {
@@ -302,7 +332,7 @@ define([
                         return data;
                     }
                 }, {
-                    aTargets: [2],
+                    aTargets: [3],
                     mRender: function (data, type) {
                         if (type === 'display') {
                             return StringUtil.readableBytes(Number(data));
@@ -312,7 +342,7 @@ define([
                     },
                     sType: 'numeric'
                 }, {
-                    aTargets: [3],
+                    aTargets: [4],
                     mRender: function (data, type) {
                         if (type === 'display') {
                             return TimeFormat.getShortTimeStampStr(Number(data));
@@ -322,6 +352,7 @@ define([
                     },
                     sType: 'numeric'
                 }],
+                select: 'single',
                 rowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
                     var getFileFromName = function (fileName) {
                         return files.filter(function (file) {
@@ -329,31 +360,31 @@ define([
                         })[0];
                     };
 
-                    $('td:eq(1)', nRow).find('.kb-data-staging-table-name').tooltip({
-                        title: $('td:eq(1)', nRow).find('.kb-data-staging-table-name').text(),
+                    $('td:eq(2)', nRow).find('.kb-data-staging-table-name').tooltip({
+                        title: $('td:eq(2)', nRow).find('.kb-data-staging-table-name').text(),
                         placement: 'top',
                         delay: {
                             show: Config.get('tooltip').showDelay,
                             hide: Config.get('tooltip').hideDelay
                         }
                     });
-                    $('td:eq(1)', nRow).find('span.kb-data-staging-folder').off('click').on('click', e => {
+                    $('td:eq(2)', nRow).find('span.kb-data-staging-folder').off('click').on('click', e => {
                         $(e.currentTarget).off('click');
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     });
-                    $('td:eq(4)', nRow).find('select').select2({
+                    $('td:eq(5)', nRow).find('select').select2({
                         placeholder: 'Select a type'
                     }).on('select2:select', function(e) {
-                        $('td:eq(4)', nRow).find('.select2-selection').addClass('type-selected');
+                        $('td:eq(5)', nRow).find('.select2-selection').addClass('type-selected');
                     });
-                    $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', e => {
+                    $('td:eq(5)', nRow).find('button[data-import]').off('click').on('click', e => {
                         var importType = $(e.currentTarget).prevAll('select').val();
                         var importFile = getFileFromName($(e.currentTarget).data().import);
                         this.initImportApp(importType, importFile);
                         this.updateView();
                     });
 
-                    $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', e => {
+                    $('td:eq(5)', nRow).find('button[data-download]').off('click').on('click', e => {
                         let file = $(e.currentTarget).data('download');
                         if (this.subpath) {
                             file = this.subpath + '/' + file;
@@ -362,7 +393,7 @@ define([
                         this.downloadFile(url);
                     });
 
-                    $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', e => {
+                    $('td:eq(5)', nRow).find('button[data-delete]').off('click').on('click', e => {
                         var file = $(e.currentTarget).data('delete');
                         if (window.confirm('Really delete ' + file + '?')) {
                             this.stagingServiceClient.delete({
@@ -376,15 +407,15 @@ define([
                     });
 
 
-                    $('td:eq(0)', nRow).find('button[data-name]').off('click').on('click', e => {
+                    $('td:eq(1)', nRow).find('button[data-name]').off('click').on('click', e => {
                         $(e.currentTarget).off('click');
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     });
 
-                    $('td:eq(0)', nRow).find('i[data-caret]').off('click');
+                    $('td:eq(1)', nRow).find('i[data-caret]').off('click');
 
                     // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
-                    var $caret = $('td:eq(0)', nRow).find('i[data-caret]'),
+                    var $caret = $('td:eq(1)', nRow).find('i[data-caret]'),
                         fileName,
                         myFile;
                     if ($caret.length) {
@@ -409,7 +440,7 @@ define([
 
                     }
 
-                    $('td:eq(0)', nRow).find('i[data-caret]').on('click', e => {
+                    $('td:eq(1)', nRow).find('i[data-caret]').on('click', e => {
 
                         $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
                         var $tr = $(e.currentTarget).parent().parent();
@@ -427,8 +458,8 @@ define([
                         }
                     });
 
-                    $('td:eq(1)', nRow).find('button[data-decompress]').off('click');
-                    $('td:eq(1)', nRow).find('button[data-decompress]').on('click', e => {
+                    $('td:eq(2)', nRow).find('button[data-decompress]').off('click');
+                    $('td:eq(2)', nRow).find('button[data-decompress]').on('click', e => {
                         var fileName = $(e.currentTarget).data().decompress;
                         var myFile = getFileFromName(fileName);
 

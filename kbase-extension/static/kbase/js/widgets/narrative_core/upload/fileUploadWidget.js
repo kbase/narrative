@@ -119,9 +119,10 @@ define([
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                 })
                 .on('reset', function() {
+                    $('#clear-all-btn-container').remove();
+                    $('#clear-all-btn').remove();
                     $dropzoneElem.find('#global-info').css({'display': 'none'});
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
-                    this.deleteClearAllButton();
                 })
                 .on('error', (err) => {
                     let errorText = 'unable to upload file!';
@@ -162,7 +163,7 @@ define([
             return $buttonContainer;
         },
 
-        deleteClearAllButton: function () {
+        deleteClearAllButton: function() {
             $('#clear-all-btn-container').remove();
             $('#clear-all-btn').remove();
         },

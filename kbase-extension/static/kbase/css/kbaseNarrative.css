@@ -3123,7 +3123,11 @@ button.kb-data-obj {
 }
 
 /* style for Import As dropdown container */
-.kb-import-content .select2 .select2-selection--single {
+.kb-data-mgmt {
+    margin-left: -26px;
+}
+
+.kb-data-mgmt .kb-data-staging-import-dropdown {
     width: 160px;
     height: 42px;
     background: #FFFFFF;
@@ -3133,14 +3137,14 @@ button.kb-data-obj {
 }
 
 /* When user clicks into the dropdown or chooses a selection box change border color */
-.kb-import-content .select2.select2-container--focus .select2-selection--single,
-.kb-import-content .select2.select2-container--open .select2-selection--single,
-.kb-import-content .select2-selection.select2-selection--single.type-selected {
+.kb-data-mgmt .select2-container--open .kb-data-staging-import-dropdown,
+.kb-data-mgmt .select2-container--focus .kb-data-staging-import-dropdown,
+.kb-data-mgmt .kb-data-staging-import-dropdown.type-selected {
     border: 1px solid #C4C4C4;
 }
 
 /* style for Import As dropdown container text */
-.kb-import-content .select2.select2-container .select2-selection__rendered {
+.kb-data-mgmt .kb-data-staging-import-dropdown .select2-selection__rendered {
     position: absolute;
     left: 8.87%;
     right: 5.41%;
@@ -3154,18 +3158,18 @@ button.kb-data-obj {
 }
 
 /* Import as dropdown placeholder text is red */
-.kb-import-content .select2.select2-container .select2-selection__placeholder {
+.kb-data-mgmt .kb-data-staging-import-dropdown .select2-selection__placeholder {
     color: #DF0002;
 }
 
 /* Change placeholder color when user clicks in */
-.kb-import-content .select2.select2-container--focus .select2-selection__placeholder,
-.kb-import-content .select2.select2-container--open .select2-selection__placeholder {
+.kb-data-mgmt .select2-container--open .select2-selection__placeholder,
+.kb-data-mgmt .select2-container--focus .select2-selection__placeholder {
     color: #000000;
 }
 
 /* style for Import As dropdown container arrow */
-.kb-import-content .select2-selection .select2-selection__arrow {
+.kb-data-mgmt .kb-data-staging-import-dropdown .select2-selection__arrow {
     position: absolute;
     height: 16px;
     left: 87.76%;
@@ -3175,13 +3179,13 @@ button.kb-data-obj {
 }
 
 /* Before user makes a selection arrow is red */
-.kb-import-content .select2-selection .select2-selection__arrow b {
+.kb-data-mgmt .kb-data-staging-import-dropdown .select2-selection__arrow b {
     border-color: #DF0002 transparent transparent transparent;
 }
 
 /* after user makes a selection, or when in focus, arrow is grey */
-.kb-import-content .select2.select2-container--focus .select2-selection__arrow b,
-.kb-import-content .type-selected .select2-selection__arrow b {
+.kb-data-mgmt .kb-data-staging-import-dropdown:focus .select2-selection__arrow b,
+.kb-data-mgmt .kb-data-staging-import-dropdown.type-selected .select2-selection__arrow b {
     border-color: #888 transparent transparent transparent;
 }
 

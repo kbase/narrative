@@ -245,18 +245,14 @@ define ([
             let placeholder = $targetNode.find('span.select2-selection__placeholder').html();
             expect(placeholder).toContain('Select a type');
 
-            let options = $targetNode.find('.select2-hidden-accessible').html();
-            expect(options).toContain('FASTQ Reads');
-            expect(options).toContain('SRA Reads');
-            expect(options).toContain('GenBank Genome');
-            expect(options).toContain('GFF Genome');
-            expect(options).toContain('GFF Metagenome');
-            expect(options).toContain('Expression Matrix');
-            expect(options).toContain('Media');
-            expect(options).toContain('FBA Model');
-            expect(options).toContain('Assembly');
-            expect(options).toContain('Phenotype Set');
-            expect(options).toContain('Sample Set');
+            //The options that should be in the import as dropdown
+            let menuOptions = ['FASTQ Reads', 'SRA Reads', 'GenBank Genome', 'GFF Genome', 'GFF Metagenome', 'Expression Matrix', 'Media', 'FBA Model', 'Assembly', 'Phenotype Set', 'Sample Set'];
+            let foundOptions = $targetNode.find('.select2-hidden-accessible').html();
+
+            menuOptions.forEach(option => {
+                expect(foundOptions).toContain(option);
+            });
+
         });
 
     });

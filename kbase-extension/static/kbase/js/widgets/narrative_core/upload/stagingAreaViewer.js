@@ -355,11 +355,14 @@ define([
                         $(e.currentTarget).off('click');
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     });
+
                     $('td:eq(5)', nRow).find('select').select2({
-                        placeholder: 'Select a type'
+                        placeholder: 'Select a type',
+                        containerCssClass: 'kb-data-staging-import-dropdown'
                     }).on('select2:select', function(e) {
                         $('td:eq(5)', nRow).find('.select2-selection').addClass('type-selected');
                     });
+
                     $('td:eq(5)', nRow).find('button[data-import]').off('click').on('click', e => {
                         var importType = $(e.currentTarget).prevAll('select').val();
                         var importFile = getFileFromName($(e.currentTarget).data().import);

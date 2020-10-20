@@ -251,7 +251,6 @@ define([
          * keys: files (list of file info) and error (optional error)
          */
         renderFiles: function (files) {
-            console.log('trying to render files: ', files);
             files = files || [];
             const emptyMsg = 'No files found.';
             var $fileTable = $(this.ftpFileTableTmpl({
@@ -264,18 +263,20 @@ define([
                     emptyTable: emptyMsg
                 },
                 dom: '<"file-path pull-left">frtip',
-                bAutoWidth: false,
-                aaSorting: [
-                    [3, 'desc']
-                ],
-                aoColumnDefs: [{
-                    aTargets: [0],
+                autoWidth: false,
+                select: {
+                    style:    'os',
+                    selector: 'td:first-child'
+                },
+                order: [[4, 'desc']],
+                columnDefs: [{
+                    targets: 0,
                     className: 'select-checkbox',
-                    orderable: false,
-                    targets: 0
+                    orderable: false
                 }, {
-                    aTargets: [1],
-                    mRender: function (data, type, full) {
+                    targets: 1, 
+                    orderable: false,
+                    render: function (data, type, full) {
                         if (type === 'display') {
                             var isFolder = data === 'true' ? true : false;
                             var icon = isFolder ? 'folder' : 'file-o';
@@ -291,9 +292,8 @@ define([
                         }
                     }
                 }, {
-                    aTargets: [2],
-                    sClass: 'staging-name',
-                    mRender: function (data, type, full) {
+                    targets: 2,
+                    render: function (data, type, full) {
                         if (type === 'display') {
                             let decompressButton = '';
 
@@ -312,30 +312,26 @@ define([
                         return data;
                     }
                 }, {
-                    aTargets: [3],
-                    mRender: function (data, type) {
+                    targets: 3,
+                    type: 'num',
+                    render: function (data, type) {
                         if (type === 'display') {
                             return StringUtil.readableBytes(Number(data));
                         } else {
                             return Number(data);
                         }
-                    },
-                    sType: 'numeric'
+                    }
                 }, {
-                    aTargets: [4],
-                    mRender: function (data, type) {
+                    targets: 4,
+                    type: 'num',
+                    render: function (data, type) {
                         if (type === 'display') {
                             return TimeFormat.getShortTimeStampStr(Number(data));
                         } else {
                             return data;
                         }
-                    },
-                    sType: 'numeric'
+                    }
                 }],
-                select: {
-                    style:    'os',
-                    selector: 'td:first-child'
-                },
                 rowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
                     var getFileFromName = function (fileName) {
                         return files.filter(function (file) {

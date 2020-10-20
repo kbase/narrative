@@ -17,7 +17,9 @@ define([
     'text!kbase/templates/data_staging/file_path.html',
     'kb_service/client/workspace',
     'jquery-dataTables',
-    'dataTables.net-select',
+    'css!ext_components/datatables.net-select/css/select.bootstrap.min.css',
+    'datatables.net-select',
+    'datatables.net-select-bs',
     'select2'
 ], function (
     $,
@@ -352,7 +354,10 @@ define([
                     },
                     sType: 'numeric'
                 }],
-                select: 'single',
+                select: {
+                    style:    'os',
+                    selector: 'td:first-child'
+                },
                 rowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
                     var getFileFromName = function (fileName) {
                         return files.filter(function (file) {

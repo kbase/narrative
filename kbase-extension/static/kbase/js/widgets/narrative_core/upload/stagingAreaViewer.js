@@ -17,9 +17,6 @@ define([
     'text!kbase/templates/data_staging/file_path.html',
     'kb_service/client/workspace',
     'jquery-dataTables',
-    'css!ext_components/datatables.net-select/css/select.bootstrap.min.css',
-    'datatables.net-select',
-    'datatables.net-select-bs',
     'select2'
 ], function (
     $,
@@ -271,8 +268,11 @@ define([
                 order: [[4, 'desc']],
                 columnDefs: [{
                     targets: 0,
-                    className: 'select-checkbox',
-                    orderable: false
+                    orderable: false,
+                    render: function (data, type, full, meta){
+                        return '<input type="checkbox" name="id[]" value="'
+                           + $('<div/>').text(data).html() + '">';
+                    }
                 }, {
                     targets: 1, 
                     orderable: false,

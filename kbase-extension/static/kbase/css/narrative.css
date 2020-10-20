@@ -18,12 +18,6 @@
   z-index: 1001;
 }
 
-html {
-  padding: 0;
-  margin: 0;
-  background-color: white;
-}
-
 body {
   overflow: hidden;
   margin: 0 auto;

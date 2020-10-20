@@ -101,32 +101,10 @@ define([
         },
 
         updateView: function () {
-            // return Promise.resolve(this.stagingServiceClient.list({
-            //     path: this.subpath
-            // }))
-
-            return Promise.resolve(
-                new Promise((resolve, reject) => {
-                    resolve(JSON.stringify([
-                        // {
-                        //     name: 'test_folder',
-                        //     path: 'leia/test_folder',
-                        //     mtime: 1532738637499,
-                        //     size: 34,
-                        //     isFolder: true
-                        // }, {
-                        {
-                            name: 'file_list.txt',
-                            path: 'leia/file_list.txt',
-                            mtime: 1532738637555,
-                            size: 49233,
-                            source: 'KBase upload'
-                        }
-                    ]));
-                })
-            )
+            return Promise.resolve(this.stagingServiceClient.list({
+                path: this.subpath
+            }))
                 .then(data => {
-                    console.log('got the data: ', data);
                     //list is recursive, so it'd show all files in all subdirectories. This filters 'em out.
                     let files = JSON.parse(data).filter(f => {
                         // this is less complicated than you think. The path is the username,

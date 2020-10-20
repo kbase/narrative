@@ -3139,7 +3139,7 @@ button.kb-data-obj {
 /* When user clicks into the dropdown or chooses a selection box change border color */
 .kb-data-mgmt .select2-container--open .kb-data-staging-import-dropdown,
 .kb-data-mgmt .select2-container--focus .kb-data-staging-import-dropdown,
-.kb-data-mgmt .select2 .kb-data-staging-import-dropdown.type-selected {
+.kb-data-mgmt .kb-data-staging-import-dropdown.type-selected {
     border: 1px solid #C4C4C4;
 }
 

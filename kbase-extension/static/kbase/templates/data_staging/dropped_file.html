@@ -1,22 +1,29 @@
 <div class="row file-row" style="width:100%; border: 1px solid #EEE; margin: 2px 0; padding: 5px 0">
     <div class="col-md-7" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-        <span class="name" data-dz-name></span>
-        <strong class="error text-danger" data-dz-errormessage></strong>
+        <div class="name" data-dz-name></div>
+        <strong class="error text-danger" style="white-space: normal;" data-dz-errormessage></strong>
     </div>
     <div class="col-md-1">
         <span class="size pull-right" data-dz-size></span>
     </div>
-    <div class="col-md-3 text-center">
-        <div id="status-message" style="display:none"></div>
-        <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="margin-bottom: inherit; margin-left: 5px">
-            <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
+
+    <div id="upload_progress_and_cancel">
+        <div class="col-md-3 text-center">
+            <div id="status-message" style="display:none"></div>
+            <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="margin-bottom: inherit; margin-left: 5px">
+                <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
+            </div>
+        </div>
+        <div class="col-md-1">
+            <div class="pull-right">
+                <button data-dz-remove class="btn btn-xs btn-danger cancel">
+                    <i class="fa fa-lg fa-fw fa-ban"></i>
+                </button>
+            </div>
         </div>
     </div>
-    <div class="col-md-1">
-        <div class="pull-right">
-            <button data-dz-remove class="btn btn-xs btn-danger cancel">
-                <i class="fa fa-lg fa-fw fa-ban"></i>
-            </button>
-        </div>
+    <div id="error_icon" class="pull-right" style="margin: 5px;">
+        <span style="font-size: 16px;">Error</span>
+        <i class="fa fa-1.5x fa-exclamation-triangle"></i>
     </div>
 </div>

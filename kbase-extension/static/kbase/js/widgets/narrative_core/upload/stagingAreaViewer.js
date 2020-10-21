@@ -127,7 +127,6 @@ define([
                     }, 0);
                 })
                 .catch(xhr => {
-                    console.log('error in the resolution: ', xhr);
                     this.$elem.empty();
                     this.renderFileHeader();
                     this.renderError(xhr.responseText ? xhr.responseText : 'Unknown error - directory was not found, or may have been deleted');
@@ -261,22 +260,22 @@ define([
                 },
                 dom: '<"file-path pull-left">frtip',
                 autoWidth: false,
-                select: {
-                    style:    'os',
-                    selector: 'td:first-child'
-                },
                 order: [[4, 'desc']],
                 columnDefs: [{
                     targets: 0,
                     orderable: false,
-                    render: function (data, type, full, meta){
-                        return '<input type="checkbox" name="id[]" value="'
+                    searchable: false,
+                    //TODO: what value makes most sense for these? file name, or eventual data type selection? 
+                    render: function (data, type, full) {
+                        //render checkboxes disabled until the user selects a type
+                        return '<input class="kb-data-checkbox-input" type="checkbox" name="id[]" disabled=true value="'
                            + $('<div/>').text(data).html() + '">';
                     }
                 }, {
                     targets: 1, 
                     orderable: false,
                     render: function (data, type, full) {
+                        //console.log('data in the first target: ', data, type, full);
                         if (type === 'display') {
                             var isFolder = data === 'true' ? true : false;
                             var icon = isFolder ? 'folder' : 'file-o';
@@ -357,6 +356,8 @@ define([
                         containerCssClass: 'kb-data-staging-import-dropdown'
                     }).on('select2:select', function(e) {
                         $('td:eq(5)', nRow).find('.select2-selection').addClass('type-selected');
+                        //make checkbox for that row enabled
+                        $('td:eq(0)', nRow).find('.kb-data-checkbox-input').prop('disabled', false);
                     });
 
                     $('td:eq(5)', nRow).find('button[data-import]').off('click').on('click', e => {

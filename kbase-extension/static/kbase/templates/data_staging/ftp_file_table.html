@@ -1,7 +1,9 @@
 <table id="kb-data-staging-table" class="table table-striped table-condensed" style="table-layout:fixed">
     <thead>
         <tr>
-            <th style="width: 5%"></th>
+            <th class="kb-data-header-checkbox">
+                <input type="checkbox" name="select_all" value="1" id="">
+            </th>
             <th style="width: 5%"></th>
             <th style="width: 30%; overflow:hidden">Name</th>
             <th style="width: 13%">Size</th>
@@ -12,8 +14,8 @@
     <tbody>
     {{#each files}}
         <tr>
-            <td></td>
-            <td style="text-align:center">{{isFolder}}</td>
+            <td class="kb-data-checkbox">{{name}}</td>
+            <td class="kb-data-expander">{{isFolder}}</td>
             <td>{{name}}</td>
             <td>{{size}}</td>
             <td>{{mtime}}</td>

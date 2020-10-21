@@ -25,6 +25,17 @@
     vertical-align: middle;
 }
 
+#kb-data-staging-table .kb-data-header-checkbox {
+    width: 5%;
+    text-align: center;
+    padding: 0;
+}
+
+#kb-data-staging-table .kb-data-checkbox,
+#kb-data-staging-table .kb-data-expander {
+    text-align: center;
+}
+
 .kb-data-staging-decompress {
     border: 1px solid #cccccc;
     border-radius : 1px;

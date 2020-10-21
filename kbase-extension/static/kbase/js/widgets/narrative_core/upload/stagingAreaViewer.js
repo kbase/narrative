@@ -353,7 +353,7 @@ define([
                     $('td:eq(5)', nRow).find('select').select2({
                         placeholder: 'Select a type',
                         containerCssClass: 'kb-data-staging-import-dropdown'
-                    }).on('select2:select', function(e) {
+                    }).on('select2:select', function() {
                         $('td:eq(5)', nRow).find('.select2-selection').addClass('type-selected');
                         //make checkbox for that row enabled
                         $('td:eq(0)', nRow).find('.kb-data-checkbox-input').prop('disabled', false);

@@ -103,7 +103,7 @@ define ([
                     var $globusButton = $node.find('#globusLinked');
                     expect($globusButton).toBeDefined();
                     expect($globusButton.html()).toContain('Upload with Globus');
-                    expect($globusButton).toContain('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&amp;destination_path=' + fakeUser);
+                    expect($globusButton.attr('href')).toEqual('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' + fakeUser);
                     done();
                 });
         });
@@ -113,7 +113,7 @@ define ([
             var $globusButton = $targetNode.find('#globusNotLinked');
             expect($globusButton).toBeDefined();
             expect($globusButton.html()).toContain('Upload with Globus');
-            expect($globusButton).toContain('https://docs.kbase.us/data/globus');
+            expect($globusButton.attr('href')).toEqual('https://docs.kbase.us/data/globus');
         });
 
         it('Should render a url button', async () => {

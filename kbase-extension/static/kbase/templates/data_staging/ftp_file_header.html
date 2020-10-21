@@ -3,11 +3,11 @@
         <div class="upload-options">
             Other ways to upload:
             {{#if userInfo.globusLinked}}
-                <a id="globusLinked" class="globus_acl_link" href="{{globusUrl}}" target="_blank" aria-label="opens new window to upload via globus">
+                <a id="globusLinked" class="globus_acl_link globus-link" href="{{globusUrl}}" target="_blank" aria-label="opens new window to upload via globus">
                     <button tabindex="-1" class="globus_linked">Upload with Globus</button>
                 </a>
             {{else}}
-                <a id="globusNotLinked" href="https://docs.kbase.us/data/globus" rel="noopener noreferrer" target="_blank"  aria-label="opens new window to kbase globus upload docs">
+                <a id="globusNotLinked" class="globus-link" href="https://docs.kbase.us/data/globus" rel="noopener noreferrer" target="_blank"  aria-label="opens new window to kbase globus upload docs">
                     <button tabindex="-1" class="globus_not_linked">Upload with Globus</button>
                 </a>
             {{/if}}

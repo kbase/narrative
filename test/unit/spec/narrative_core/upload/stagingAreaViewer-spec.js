@@ -100,8 +100,7 @@ define ([
                 });
             await linkedStagingViewer.render()
                 .then(() => {
-                    var $globusButton = $node.find('#globusLinkedLink');
-                    console.log("LINKED BUTTON HTML: ", $globusButton.html())
+                    var $globusButton = $node.find('#globusLinked');
                     expect($globusButton).toBeDefined();
                     expect($globusButton.html()).toContain('Upload with Globus');
                     expect($globusButton).toContain('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&amp;destination_path=' + fakeUser);
@@ -111,7 +110,7 @@ define ([
 
         it('Should render properly without a Globus linked account', async () => {
             await stagingViewer.render();
-            var $globusButton = $targetNode.find('.globusNotLinkedLink');
+            var $globusButton = $targetNode.find('#globusNotLinked');
             expect($globusButton).toBeDefined();
             expect($globusButton.html()).toContain('Upload with Globus');
             expect($globusButton).toContain('https://docs.kbase.us/data/globus');
@@ -121,7 +120,7 @@ define ([
             await stagingViewer.render();
             var $urlButton = $targetNode.find('.web_upload_div');
             expect($urlButton).toBeDefined();
-            expect($urlButton.html().toContain('Upload with URL');
+            expect($urlButton.html()).toContain('Upload with URL');
         });
 
 

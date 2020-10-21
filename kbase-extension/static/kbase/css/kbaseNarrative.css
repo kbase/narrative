@@ -39,6 +39,7 @@
     color: #36618E;
     border: 1px solid #ECF2F7;
     background-color: #ECF2F7;
+    cursor: pointer;
 }
 
 .text-button:focus {

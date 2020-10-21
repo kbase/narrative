@@ -85,6 +85,13 @@ define([
                     $dropzoneElem.find('#global-info').css({'display': 'inline'});
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
 
+                    // If there is a button already in the area, it has to be removed,
+                    // and appened to the new document when additional errored files are added.
+                    if ($dropzoneElem.find('#clear-all-btn').length){
+                        this.deleteClearAllButton();
+                        $dropzoneElem.append(this.makeClearAllButton());
+                    }
+
                 })
                 .on('success', (file, serverResponse) => {
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
@@ -93,12 +100,8 @@ define([
                     file.previewElement.querySelector('#status-message').style.display = 'inline';
                     $(file.previewElement.querySelector('.fa-ban')).removeClass('fa-ban').addClass('fa-check');
                     $(file.previewElement.querySelector('.btn-danger')).removeClass('btn-danger').addClass('btn-success');
-                    if (this.dropzone.getQueuedFiles().length === 0 &&
-                        this.dropzone.getUploadingFiles().length === 0) {
-                        $($dropzoneElem.find('#total-progress')).fadeOut(1000, function() {
-                            $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
-                        });
-                    }
+
+                    this.removeProgressBar($dropzoneElem);
                     $(file.previewElement).fadeOut(1000, function() {
                         $(file.previewElement.querySelector('.btn')).trigger('click');
                     });
@@ -124,21 +127,17 @@ define([
                     $dropzoneElem.find('#global-info').css({'display': 'none'});
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
                 })
-                .on('error', (err) => {
+                .on('error', (erroredFile) => {
+                    this.removeProgressBar($dropzoneElem);
                     let errorText = 'unable to upload file!';
-                    if (err && err.xhr && err.xhr.responseText) {
-                        errorText = err.xhr.responseText;
+                    if (erroredFile && erroredFile.xhr && erroredFile.xhr.responseText) {
+                        errorText = erroredFile.xhr.responseText;
                     }
                     $dropzoneElem.find('.error.text-danger').text('Error: ' + errorText);
+                    $dropzoneElem.find('#upload_progress_and_cancel').remove();
 
                     // Check to see if there already a button in the dropzone area
                     if (!$dropzoneElem.find('#clear-all-btn').length){
-                        $dropzoneElem.append(this.makeClearAllButton());
-
-                    } else {
-                        // If there is a button already in the area, it has to be removed,
-                        // and appened to the new document when additional errored files are added.
-                        this.deleteClearAllButton();
                         $dropzoneElem.append(this.makeClearAllButton());
                     }
                 });
@@ -166,6 +165,15 @@ define([
         deleteClearAllButton: function() {
             $('#clear-all-btn-container').remove();
             $('#clear-all-btn').remove();
+        },
+
+        removeProgressBar: function($dropzoneElem) {
+            if (this.dropzone.getQueuedFiles().length === 0 &&
+            this.dropzone.getUploadingFiles().length === 0) {
+                $($dropzoneElem.find('#total-progress')).fadeOut(1000, function() {
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
+                });
+            }
         },
 
         makeUploadMessage: function() {

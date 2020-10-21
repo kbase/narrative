@@ -273,7 +273,6 @@ define([
                     }
                 }, {
                     targets: 1, 
-                    orderable: false,
                     render: function (data, type, full) {
                         //console.log('data in the first target: ', data, type, full);
                         if (type === 'display') {

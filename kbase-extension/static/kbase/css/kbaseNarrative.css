@@ -42,11 +42,45 @@
 
 .kb-data-header .kb-data-header-size,
 .kb-data-header .kb-data-header-age {
-    width: 13%;
+    width: 8%;
 }
 
 .kb-data-header .kb-data-header-import {
     width: 22%;
+}
+
+/* Overriding default datatables sort icons so they come before the header title rather than after */
+#kb-data-staging-table .kb-data-header .sorting:before,
+#kb-data-staging-table .kb-data-header .sorting_desc:before,
+#kb-data-staging-table .kb-data-header .sorting_asc:before {
+    opacity: 0.2;
+    content: "\e150";
+    position: relative;
+    top: 1px;
+    right: 4px;
+    display: inline-block;
+    font-family: 'Glyphicons Halflings';
+}
+
+#kb-data-staging-table .kb-data-header .sorting_asc:before {
+    content: "\e155";
+}
+
+#kb-data-staging-table .kb-data-header .sorting_desc:before {
+    content: "\e156";
+}
+
+#kb-data-staging-table .kb-data-header .sorting:after,
+#kb-data-staging-table .kb-data-header .sorting_desc:after,
+#kb-data-staging-table .kb-data-header .sorting_asc:after {
+    display: none;
+} 
+
+/* Special positioning for folder sort icon as there is no title*/
+#kb-data-staging-table .kb-data-header .kb-data-header-file.sorting:before,
+#kb-data-staging-table .kb-data-header .kb-data-header-file.sorting_desc:before,
+#kb-data-staging-table .kb-data-header .kb-data-header-file.sorting_asc:before {
+    right: 0;
 }
 
 .kb-data-body .kb-data-checkbox,
@@ -58,30 +92,31 @@
     vertical-align: middle;
 }
 
-
-.kb-data-staging-decompress {
+.kb-data-body-decompress {
     border: 1px solid #cccccc;
     border-radius : 1px;
 }
 
-.kb-data-staging-table-name {
+.kb-data-body-name {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.kb-data-staging-folder:hover {
+.kb-data-body-folder:hover {
     cursor: pointer;
     text-decoration: underline;
 }
 
 /* style for Import As dropdown container */
-.kb-data-body .kb-data-body-import div {
-    margin-left: -26px;
+
+/* set the width here, otherwise it will get overriden by datatables when changing the sort order */
+.kb-data-body .select2 {
+    width: 160px !important;
 }
 
+/* TODO: can this class be merged with the one above? */
 .kb-data-body .kb-data-staging-import-dropdown {
-    width: 160px;
     height: 42px;
     background: #FFFFFF;
     border: 1px solid #DF0002;
@@ -140,6 +175,19 @@
 .kb-data-body .kb-data-staging-import-dropdown:focus .select2-selection__arrow b,
 .kb-data-body .kb-data-staging-import-dropdown.type-selected .select2-selection__arrow b {
     border-color: #888 transparent transparent transparent;
+}
+
+.kb-data-body .kb-data-body-download {
+    font-size: 9px;
+    margin-left: 5px;
+}
+
+#kb-data-staging-table .kb-data-body .kb-data-body-delete {
+    color: #4379B1;
+    background: none;
+    font-size: 16px;
+    line-height: 18.4px;
+    box-shadow: none;
 }
 
 .kb-data-breadcrumb .kb-pointer a {

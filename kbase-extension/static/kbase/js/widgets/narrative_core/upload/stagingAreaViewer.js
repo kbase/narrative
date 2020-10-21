@@ -274,7 +274,6 @@ define([
                 }, {
                     targets: 1, 
                     render: function (data, type, full) {
-                        //console.log('data in the first target: ', data, type, full);
                         if (type === 'display') {
                             var isFolder = data === 'true' ? true : false;
                             var icon = isFolder ? 'folder' : 'file-o';
@@ -296,14 +295,14 @@ define([
                             let decompressButton = '';
 
                             if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
-                                decompressButton = '<button class="btn btn-default btn-xs kb-data-staging-decompress" data-decompress="' + data + '"><i class="fa fa-expand"></i></button>';
+                                decompressButton = '<button class="btn btn-default btn-xs kb-data-body-decompress" data-decompress="' + data + '"><i class="fa fa-expand"></i></button>';
                             }
 
                             if (full[0] === 'true') {
-                                data = '<span class="kb-data-staging-folder" data-name="' + data + '">' + data + '</span>';
+                                data = '<span class="kb-data-body-folder" data-name="' + data + '">' + data + '</span>';
                             }
 
-                            return '<div class="kb-data-staging-table-name">' + decompressButton +
+                            return '<div class="kb-data-body-name">' + decompressButton +
                                 data +
                                 '</div>';
                         }

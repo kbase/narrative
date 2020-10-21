@@ -268,7 +268,7 @@ define([
                     //TODO: what value makes most sense for these? file name, or eventual data type selection? 
                     render: function (data, type, full) {
                         //render checkboxes disabled until the user selects a type
-                        return '<input class="kb-data-checkbox-input" type="checkbox" name="id[]" disabled=true value="'
+                        return '<input class="kb-staging-table-body__checkbox-input" type="checkbox" name="id[]" disabled=true value="'
                            + $('<div/>').text(data).html() + '">';
                     }
                 }, {
@@ -295,14 +295,14 @@ define([
                             let decompressButton = '';
 
                             if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
-                                decompressButton = '<button class="btn btn-default btn-xs kb-data-body-decompress" data-decompress="' + data + '"><i class="fa fa-expand"></i></button>';
+                                decompressButton = '<button class="btn btn-default btn-xs kb-staging-table-body__decompress" data-decompress="' + data + '"><i class="fa fa-expand"></i></button>';
                             }
 
                             if (full[0] === 'true') {
-                                data = '<span class="kb-data-body-folder" data-name="' + data + '">' + data + '</span>';
+                                data = '<span class="kb-staging-table-body__folder" data-name="' + data + '">' + data + '</span>';
                             }
 
-                            return '<div class="kb-data-body-name">' + decompressButton +
+                            return '<div class="kb-staging-table-body__name">' + decompressButton +
                                 data +
                                 '</div>';
                         }
@@ -336,26 +336,27 @@ define([
                         })[0];
                     };
 
-                    $('td:eq(2)', nRow).find('.kb-data-staging-table-name').tooltip({
-                        title: $('td:eq(2)', nRow).find('.kb-data-staging-table-name').text(),
+                    $('td:eq(2)', nRow).find('.kb-staging-table-body__name').tooltip({
+                        title: $('td:eq(2)', nRow).find('.kb-staging-table-body__name').text(),
                         placement: 'top',
                         delay: {
                             show: Config.get('tooltip').showDelay,
                             hide: Config.get('tooltip').hideDelay
                         }
                     });
-                    $('td:eq(2)', nRow).find('span.kb-data-staging-folder').off('click').on('click', e => {
+                    $('td:eq(2)', nRow).find('span.kb-staging-table-body__folder').off('click').on('click', e => {
                         $(e.currentTarget).off('click');
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     });
 
                     $('td:eq(5)', nRow).find('select').select2({
                         placeholder: 'Select a type',
-                        containerCssClass: 'kb-data-staging-import-dropdown'
+                        containerCssClass: 'kb-staging-table-body__import-dropdown'
                     }).on('select2:select', function() {
+                        //TODO: fix the css here
                         $('td:eq(5)', nRow).find('.select2-selection').addClass('type-selected');
                         //make checkbox for that row enabled
-                        $('td:eq(0)', nRow).find('.kb-data-checkbox-input').prop('disabled', false);
+                        $('td:eq(0)', nRow).find('.kb-staging-table-body__checkbox-input').prop('disabled', false);
                     });
 
                     $('td:eq(5)', nRow).find('button[data-import]').off('click').on('click', e => {

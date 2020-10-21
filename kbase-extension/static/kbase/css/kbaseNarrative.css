@@ -21,38 +21,37 @@
     margin-top: 15px;
 }
 
-#kb-data-staging-table {
+.kb-staging-table {
     table-layout: fixed;
 }
 
-.kb-data-header .kb-data-header-checkbox,
-.kb-data-body .kb-data-checkbox {
+.kb-staging-table-header .kb-staging-table-header__checkbox {
     width: 2%;
     text-align: center;
 }
 
-.kb-data-header .kb-data-header-file {
+.kb-staging-table-header .kb-staging-table-header__file {
     width: 4%;
 }
 
-.kb-data-header .kb-data-header-name {
+.kb-staging-table-header .kb-staging-table-header__name {
     width: 27%;
     overflow: hidden;
 }
 
-.kb-data-header .kb-data-header-size,
-.kb-data-header .kb-data-header-age {
+.kb-staging-table-header .kb-staging-table-header__size,
+.kb-staging-table-header .kb-staging-table-header__age {
     width: 8%;
 }
 
-.kb-data-header .kb-data-header-import {
+.kb-staging-table-header .kb-staging-table-header__import {
     width: 22%;
 }
 
 /* Overriding default datatables sort icons so they come before the header title rather than after */
-#kb-data-staging-table .kb-data-header .sorting:before,
-#kb-data-staging-table .kb-data-header .sorting_desc:before,
-#kb-data-staging-table .kb-data-header .sorting_asc:before {
+.kb-staging-table .kb-staging-table-header .sorting:before,
+.kb-staging-table .kb-staging-table-header .sorting_desc:before,
+.kb-staging-table .kb-staging-table-header .sorting_asc:before {
     opacity: 0.2;
     content: "\e150";
     position: relative;
@@ -62,48 +61,52 @@
     font-family: 'Glyphicons Halflings';
 }
 
-#kb-data-staging-table .kb-data-header .sorting_asc:before {
+.kb-staging-table .kb-staging-table-header .sorting_asc:before {
     content: "\e155";
 }
 
-#kb-data-staging-table .kb-data-header .sorting_desc:before {
+.kb-staging-table .kb-staging-table-header .sorting_desc:before {
     content: "\e156";
 }
 
-#kb-data-staging-table .kb-data-header .sorting:after,
-#kb-data-staging-table .kb-data-header .sorting_desc:after,
-#kb-data-staging-table .kb-data-header .sorting_asc:after {
+.kb-staging-table .kb-staging-table-header .sorting:after,
+.kb-staging-table .kb-staging-table-header .sorting_desc:after,
+.kb-staging-table .kb-staging-table-header .sorting_asc:after {
     display: none;
 } 
 
 /* Special positioning for folder sort icon as there is no title*/
-#kb-data-staging-table .kb-data-header .kb-data-header-file.sorting:before,
-#kb-data-staging-table .kb-data-header .kb-data-header-file.sorting_desc:before,
-#kb-data-staging-table .kb-data-header .kb-data-header-file.sorting_asc:before {
+.kb-staging-table .kb-staging-table-header .kb-staging-table-header__file.sorting:before,
+.kb-staging-table .kb-staging-table-header .kb-staging-table-header__file.sorting_desc:before,
+.kb-staging-table .kb-staging-table-header .kb-staging-table-header__file.sorting_asc:before {
     right: 0;
 }
 
-.kb-data-body .kb-data-checkbox,
-.kb-data-body .kb-data-expander {
-    text-align: center;
-}
-
-#kb-data-staging-table .kb-data-body td {
+.kb-staging-table .kb-staging-table-body td {
     vertical-align: middle;
 }
 
-.kb-data-body-decompress {
+.kb-staging-table-body .kb-staging-table-body__checkbox {
+    width: 2%;
+    text-align: center;
+}
+
+.kb-staging-table-body .kb-staging-table-body__expander {
+    text-align: center;
+}
+
+.kb-staging-table-body__decompress {
     border: 1px solid #cccccc;
     border-radius : 1px;
 }
 
-.kb-data-body-name {
+.kb-staging-table-body__name {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.kb-data-body-folder:hover {
+.kb-staging-table-body__folder:hover {
     cursor: pointer;
     text-decoration: underline;
 }
@@ -111,12 +114,12 @@
 /* style for Import As dropdown container */
 
 /* set the width here, otherwise it will get overriden by datatables when changing the sort order */
-.kb-data-body .select2 {
+.kb-staging-table-body .select2 {
     width: 160px !important;
 }
 
 /* TODO: can this class be merged with the one above? */
-.kb-data-body .kb-data-staging-import-dropdown {
+.kb-staging-table-body .kb-staging-table-body__import-dropdown {
     height: 42px;
     background: #FFFFFF;
     border: 1px solid #DF0002;
@@ -125,14 +128,14 @@
 }
 
 /* When user clicks into the dropdown or chooses a selection box change border color */
-.kb-data-body .select2-container--open .kb-data-staging-import-dropdown,
-.kb-data-body .select2-container--focus .kb-data-staging-import-dropdown,
-.kb-data-body .kb-data-staging-import-dropdown.type-selected {
+.kb-staging-table-body .select2-container--open .kb-staging-table-body__import-dropdown,
+.kb-staging-table-body .select2-container--focus .kb-staging-table-body__import-dropdown,
+.kb-staging-table-body .kb-staging-table-body__import-dropdown.type-selected {
     border: 1px solid #C4C4C4;
 }
 
 /* style for Import As dropdown container text */
-.kb-data-body .kb-data-staging-import-dropdown .select2-selection__rendered {
+.kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__rendered {
     position: absolute;
     left: 8.87%;
     right: 5.41%;
@@ -146,18 +149,18 @@
 }
 
 /* Import as dropdown placeholder text is red */
-.kb-data-body .kb-data-staging-import-dropdown .select2-selection__placeholder {
+.kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__placeholder {
     color: #DF0002;
 }
 
 /* Change placeholder color when user clicks in */
-.kb-data-body .select2-container--open .select2-selection__placeholder,
-.kb-data-body .select2-container--focus .select2-selection__placeholder {
+.kb-staging-table-body .select2-container--open .select2-selection__placeholder,
+.kb-staging-table-body .select2-container--focus .select2-selection__placeholder {
     color: #000000;
 }
 
 /* style for Import As dropdown container arrow */
-.kb-data-body .kb-data-staging-import-dropdown .select2-selection__arrow {
+.kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__arrow {
     position: absolute;
     height: 16px;
     left: 87.76%;
@@ -167,22 +170,22 @@
 }
 
 /* Before user makes a selection arrow is red */
-.kb-data-body .kb-data-staging-import-dropdown .select2-selection__arrow b {
+.kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__arrow b {
     border-color: #DF0002 transparent transparent transparent;
 }
 
 /* after user makes a selection, or when in focus, arrow is grey */
-.kb-data-body .kb-data-staging-import-dropdown:focus .select2-selection__arrow b,
-.kb-data-body .kb-data-staging-import-dropdown.type-selected .select2-selection__arrow b {
+.kb-staging-table-body .kb-staging-table-body__import-dropdown:focus .select2-selection__arrow b,
+.kb-staging-table-body .kb-staging-table-body__import-dropdown.type-selected .select2-selection__arrow b {
     border-color: #888 transparent transparent transparent;
 }
 
-.kb-data-body .kb-data-body-download {
+.kb-staging-table-body .kb-staging-table-body__download {
     font-size: 9px;
     margin-left: 5px;
 }
 
-#kb-data-staging-table .kb-data-body .kb-data-body-delete {
+.kb-staging-table-body .kb-staging-table-body__delete {
     color: #4379B1;
     background: none;
     font-size: 16px;
@@ -190,11 +193,7 @@
     box-shadow: none;
 }
 
-.kb-data-breadcrumb .kb-pointer a {
-    cursor: pointer;
-}
-
-.kb-data-staging-footer {
+.kb-staging-table-footer {
     font-family: Oxygen, Arial, sans-serif;
     font-weight: bold;
     font-size: 105%;
@@ -203,6 +202,19 @@
     height: 32px;
     padding: 8px;
 }
+
+/* 
+
+    END staging data table modifiers 
+    TODO: make sure this statement is true
+
+*/
+
+.kb-data-breadcrumb .kb-pointer a {
+    cursor: pointer;
+}
+
+
 
 .kb-data-staging-metadata-list {
     font-family: Oxygen, Arial, sans-serif;

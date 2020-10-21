@@ -1,25 +1,25 @@
-<table id="kb-data-staging-table" class="table table-striped table-condensed">
-    <thead class="kb-data-header">
+<table class="kb-staging-table table table-striped table-condensed">
+    <thead class="kb-staging-table-header">
         <tr>
-            <th class="kb-data-header-checkbox">
+            <th class="kb-staging-table-header__checkbox">
                 <input type="checkbox" name="select_all" value="1" id="">
             </th>
-            <th class="kb-data-header-file"></th>
-            <th class="kb-data-header-name">Name</th>
-            <th class="kb-data-header-size" >Size</th>
-            <th class="kb-data-header-age">Age</th>
-            <th class="kb-data-header-import">Import As...</th>
+            <th class="kb-staging-table-header__file"></th>
+            <th class="kb-staging-table-header__name">Name</th>
+            <th class="kb-staging-table-header__size" >Size</th>
+            <th class="kb-staging-table-header__age">Age</th>
+            <th class="kb-staging-table-header__import">Import As...</th>
         </tr>
     </thead>
-    <tbody class="kb-data-body">
+    <tbody class="kb-staging-table-body">
     {{#each files}}
         <tr>
-            <td class="kb-data-body-checkbox">{{name}}</td>
-            <td class="kb-data-body-expander">{{isFolder}}</td>
+            <td class=kb-staging-table-body__checkbox>{{name}}</td>
+            <td class="kb-staging-table-body__expander">{{isFolder}}</td>
             <td>{{name}}</td>
             <td>{{size}}</td>
             <td>{{mtime}}</td>
-            <td class="kb-data-body-import">
+            <td class="kb-staging-table-body__import">
                 {{#if imported }}
                 <div>
                     <select>
@@ -31,15 +31,15 @@
                     <!-- <button data-import="{{name}}" class="btn btn-xs btn-primary">
                         <span><i class="fa fa-upload"></i></span>
                     </button> -->
-                    <button data-download="{{name}}" class="kb-data-body-download btn btn-xs btn-primary">
+                    <button data-download="{{name}}" class="kb-staging-table-body__download btn btn-xs btn-primary">
                             <span><i class="fa fa-download"></i></span>
                     </button>
-                    <button data-delete="{{name}}" class="kb-data-body-delete btn btn-xs btn-danger">
+                    <button data-delete="{{name}}" class="kb-staging-table-body__delete btn btn-xs btn-danger">
                         <span><i class="fa fa-trash"></i></span>
                     </button>
                 </div>
                 {{ else }}
-                    <button data-delete="{{name}}" class="kb-data-body-delete btn btn-xs btn-danger pull-right">
+                    <button data-delete="{{name}}" class="kb-data-table-body__delete btn btn-xs btn-danger pull-right">
                         <span><i class="fa fa-trash"></i></span>
                     </button>
                 {{/if}}
@@ -48,6 +48,6 @@
     {{/each}}
     </tbody>
 </table>
-<div class='kb-data-staging-footer'>
+<div class='kb-staging-table-footer'>
     All files will be deleted after 90 days
 </div>

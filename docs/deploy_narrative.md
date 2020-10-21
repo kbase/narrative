@@ -2,7 +2,7 @@
 
 This document describes how to release and deploy the Narrative Interface app onto the different KBase environments. It's intended for KBase developers and admins.
 
-- Last modified: Sep. 25, 2020
+- Last modified: Oct. 2, 2020
 
 **_Table of Contents_**
 
@@ -43,7 +43,7 @@ The various KBase environments are all used used for slightly different purposes
 6.  Merge pull request.
 
 Once a pull request is merged from a temporary branch to `develop` a new _development_ image will be available at:
-`docker.pkg.github.com/kbase/narrative/narrative-develop:latest`. This is automatically deployed to CI.
+`ghcr.io/kbase/narrative-develop:latest`. This is automatically deployed to CI.
 
 To see your changes once the new image is created, simply open a narrative on CI. If you already have one loaded, restart the application by selecting the "Shutdown and Restart" option from the menu in the upper left.
 
@@ -73,6 +73,10 @@ To see your changes once the new image is created, simply open a narrative on CI
 
 The [next](https://next.kbase.us), [appdev](https://appdev.kbase.us), and [prod](https://narrative.kbase.us) environments are all deployed using a production image. 
 
+### Deploying Narrative-Refactor
+
+The [narrative-refactor](https://narrative-refactor.kbase.us) image is built against the "truss" branch of the repo and is called narrative-truss:pr### when still in a PR state or narrative-truss:latest after merge
+
 #### Create Release Image
 
 1.  Create a new [pull request](https://github.com/kbase/narrative/compare) to merge the `develop` branch into `master`.
@@ -80,7 +84,7 @@ The [next](https://next.kbase.us), [appdev](https://appdev.kbase.us), and [prod]
 3.  Complete the review and merge the PR.
 
 Once a pull request is merged from `develop` to `master` a new _production_ image will be available at:
-`docker.pkg.github.com/kbase/narrative/narrative:latest`.
+`ghcr.io/kbase/narrative:latest`.
 
 #### Tag & Deploy Image (admins only)
 
@@ -104,7 +108,8 @@ Once a pull request is merged from `develop` to `master` a new _production_ imag
 
 | Environment | Image URL                                                      |
 | ----------- | -------------------------------------------------------------- |
-| CI          | docker.pkg.github.com/kbase/narrative/narrative-develop:latest |
-| Appdev      | docker.pkg.github.com/kbase/narrative/narrative:appdev         |
-| Next        | docker.pkg.github.com/kbase/narrative/narrative:next           |
-| Production  | docker.pkg.github.com/kbase/narrative/narrative:prod           |
+| CI          | ghcr.io/kbase/narrative-develop:latest |
+| Narrative-refactor| ghcr.io/kbase/narrative-truss:latest |
+| Appdev      | ghcr.io/kbase/narrative:appdev         |
+| Next        | ghcr.io/kbase/narrative:next           |
+| Production  | ghcr.io/kbase/narrative:prod           |

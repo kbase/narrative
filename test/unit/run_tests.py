@@ -81,7 +81,6 @@ thread.start()
 
 print("Jupyter server started!")
 
-
 resp_unit = 0
 resp_integration = 0
 try:

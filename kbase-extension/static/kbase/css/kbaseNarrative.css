@@ -86,12 +86,7 @@
     vertical-align: middle;
 }
 
-.kb-staging-table-body .kb-staging-table-body__checkbox-input {
-    width: 2%;
-    text-align: center;
-}
-
-.kb-staging-table-body .kb-staging-table-body__expander {
+.kb-staging-table-body__expander {
     text-align: center;
 }
 
@@ -128,9 +123,9 @@
 }
 
 /* When user clicks into the dropdown or chooses a selection box change border color */
-.kb-staging-table-body .select2-container--open .kb-staging-table-body__import-dropdown,
-.kb-staging-table-body .select2-container--focus .kb-staging-table-body__import-dropdown,
-.kb-staging-table-body .kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected {
+.select2-container--open .kb-staging-table-body__import-dropdown,
+.select2-container--focus .kb-staging-table-body__import-dropdown,
+.kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected {
     border: 1px solid #C4C4C4;
 }
 
@@ -155,7 +150,7 @@
 
 /* Change placeholder color when user clicks in */
 .kb-staging-table-body .select2-container--open .select2-selection__placeholder,
-.kb-staging-table-body .select2-container--focus .select2-selection__placeholder {
+.select2-container--focus .select2-selection__placeholder {
     color: #000000;
 }
 
@@ -180,12 +175,12 @@
     border-color: #888 transparent transparent transparent;
 }
 
-.kb-staging-table-body .kb-staging-table-body__download {
+.kb-staging-table-body__download {
     font-size: 9px;
     margin-left: 5px;
 }
 
-.kb-staging-table-body .kb-staging-table-body__delete {
+.kb-staging-table-body__delete {
     color: #4379B1;
     background: none;
     font-size: 16px;

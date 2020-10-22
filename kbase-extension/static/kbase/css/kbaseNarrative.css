@@ -17,7 +17,7 @@
   margin: 2em 4.5em;
 }
 
-.text-button {
+.btn__text {
     background: #FFFFFF;
     box-sizing: border-box;
     border-radius: 4px;
@@ -35,26 +35,26 @@
     height: 34px;
 }
 
-.text-button:hover {
+.btn__text:hover {
     color: #36618E;
     border: 1px solid #ECF2F7;
     background-color: #ECF2F7;
     cursor: pointer;
 }
 
-.text-button:focus {
+.btn__text:focus {
     color: #36618E;
     border: 1px solid #E3EBF3;
     background-color: #E3EBF3;
 }
 
-.text-button:active {
+.btn__text:active {
     color: #36618E;
     border: 1px solid #D9E4EF;
     background-color: #D9E4EF;
 }
 
-.text-button:disabled {
+.btn__text:disabled {
     color: #929292;
     border: 1px solid #FAFAFA;
     background-color: #FAFAFA;
@@ -62,6 +62,50 @@
 
 .clear-all-dropzone {
     margin: 6px;
+}
+
+.dz-file {
+  width:100%;
+  border: 1px solid #EEEEEE;
+  margin: 2px 0px;
+  padding: 5px 0px;
+  font-family: Oxygen, Arial, sans-serif;
+  font-style: normal;
+  font-size: 16px;
+}
+
+
+.dz-file__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 20px;
+}
+
+.dz-file__msg {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+}
+
+.dz-file__msg__success {
+  display:none;
+  color: #4BAF4F;
+}
+
+.dz-file__progress__bar {
+  margin-bottom: inherit;
+  margin-left: 5px;
+}
+
+.dz-file__icon {
+  margin: 5px;
+  display: none;
+  font-weight: bold;
+}
+
+.dz-file__icon__success {
+  color: #4BAF4F;
 }
 
 #kb-data-staging-table_wrapper {

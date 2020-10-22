@@ -66,7 +66,7 @@ const wdioConfig = {
         // 5 instances get started at a time.
         maxInstances: 1,
         'goog:chromeOptions': {
-            args: ['--disable-gpu']
+            args: ['--disable-gpu', '--no-sandbox', 'headless']
         },
         //
         browserName: 'chrome',

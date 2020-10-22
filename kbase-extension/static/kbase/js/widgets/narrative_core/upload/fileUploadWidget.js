@@ -95,11 +95,10 @@ define([
                 })
                 .on('success', (file, serverResponse) => {
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
-                    file.previewElement.querySelector('#status-message').textContent = 'Completed';
-                    file.previewElement.querySelector('.progress').style.display = 'none';
-                    file.previewElement.querySelector('#status-message').style.display = 'inline';
-                    $(file.previewElement.querySelector('.fa-ban')).removeClass('fa-ban').addClass('fa-check');
-                    $(file.previewElement.querySelector('.btn-danger')).removeClass('btn-danger').addClass('btn-success');
+                    var $successElem = $(file.previewElement);
+                    $successElem.find('#upload_progress_and_cancel').remove();
+                    $successElem.find('#success_icon').css('display', 'inline');
+                    $successElem.find('#success_message').css('display', 'inline');
 
                     this.removeProgressBar($dropzoneElem);
                     $(file.previewElement).fadeOut(1000, function() {
@@ -128,13 +127,17 @@ define([
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
                 })
                 .on('error', (erroredFile) => {
+                    var $errorElem = $(erroredFile.previewElement);
+                    $errorElem.css('color', '#DF0002');
+                    $errorElem.find('#upload_progress_and_cancel').remove();
+                    $errorElem.find('#error_icon').css('display', 'inline');
+
                     this.removeProgressBar($dropzoneElem);
                     let errorText = 'unable to upload file!';
                     if (erroredFile && erroredFile.xhr && erroredFile.xhr.responseText) {
                         errorText = erroredFile.xhr.responseText;
                     }
-                    $dropzoneElem.find('.error.text-danger').text('Error: ' + errorText);
-                    $dropzoneElem.find('#upload_progress_and_cancel').remove();
+                    $dropzoneElem.find('#error_message').text('Error: ' + errorText);
 
                     // Check to see if there already a button in the dropzone area
                     if (!$dropzoneElem.find('#clear-all-btn').length){
@@ -146,7 +149,7 @@ define([
         makeClearAllButton: function() {
             var $clearAllBtn = $('<button>')
                 .text('Clear All')
-                .addClass('text-button clear-all-dropzone')
+                .addClass('btn__text clear-all-dropzone')
                 .attr('aria-label', 'clear all errored files from the dropzone')
                 .attr('id', 'clear-all-btn')
                 .click(function(){

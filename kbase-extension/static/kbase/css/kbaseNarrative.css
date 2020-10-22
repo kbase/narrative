@@ -130,7 +130,7 @@
 /* When user clicks into the dropdown or chooses a selection box change border color */
 .kb-staging-table-body .select2-container--open .kb-staging-table-body__import-dropdown,
 .kb-staging-table-body .select2-container--focus .kb-staging-table-body__import-dropdown,
-.kb-staging-table-body .kb-staging-table-body__import-dropdown.type-selected {
+.kb-staging-table-body .kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected {
     border: 1px solid #C4C4C4;
 }
 
@@ -176,7 +176,7 @@
 
 /* after user makes a selection, or when in focus, arrow is grey */
 .kb-staging-table-body .kb-staging-table-body__import-dropdown:focus .select2-selection__arrow b,
-.kb-staging-table-body .kb-staging-table-body__import-dropdown.type-selected .select2-selection__arrow b {
+.kb-staging-table-body .kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected .select2-selection__arrow b {
     border-color: #888 transparent transparent transparent;
 }
 

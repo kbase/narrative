@@ -353,8 +353,7 @@ define([
                         placeholder: 'Select a type',
                         containerCssClass: 'kb-staging-table-body__import-dropdown'
                     }).on('select2:select', function() {
-                        //TODO: fix the css here
-                        $('td:eq(5)', nRow).find('.select2-selection').addClass('type-selected');
+                        $('td:eq(5)', nRow).find('.select2-selection').addClass('kb-staging-table-body__import-type-selected');
                         //make checkbox for that row enabled
                         $('td:eq(0)', nRow).find('.kb-staging-table-body__checkbox-input').prop('disabled', false);
                     });

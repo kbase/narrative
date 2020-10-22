@@ -17,9 +17,8 @@
     margin: 2em 4.5em;
 }
 
-#kb-data-staging-table_wrapper{
-    margin-top: 15px;
-}
+
+/* BEGIN staging data table modifiers */
 
 .kb-staging-table {
     table-layout: fixed;
@@ -199,10 +198,7 @@
 }
 
 /* 
-
     END staging data table modifiers 
-    TODO: make sure this statement is true
-
 */
 
 .kb-data-breadcrumb .kb-pointer a {

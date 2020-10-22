@@ -1,6 +1,7 @@
 <table class="kb-staging-table table table-striped table-condensed">
     <thead class="kb-staging-table-header">
         <tr>
+            <!-- TODO: what behavior should select all checkbox have? -->
             <th class="kb-staging-table-header__checkbox">
                 <input type="checkbox" name="select_all" value="1" id="">
             </th>
@@ -14,7 +15,7 @@
     <tbody class="kb-staging-table-body">
     {{#each files}}
         <tr>
-            <td class=kb-staging-table-body__checkbox>{{name}}</td>
+            <td>{{name}}</td>
             <td class="kb-staging-table-body__expander">{{isFolder}}</td>
             <td>{{name}}</td>
             <td>{{size}}</td>

@@ -344,6 +344,7 @@ define([
                             hide: Config.get('tooltip').hideDelay
                         }
                     });
+
                     $('td:eq(2)', nRow).find('span.kb-staging-table-body__folder').off('click').on('click', e => {
                         $(e.currentTarget).off('click');
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);

@@ -3316,6 +3316,15 @@ button.kb-data-obj {
   border: none;
 }
 
+.ftp-file-header {
+  margin-bottom: 5px;
+  margin-top: 8px;
+}
+
+.globus-link:hover {
+  text-decoration: none;
+}
+
 .kb-import-content .upload-options button {
   background: #fff;
   border: 1px solid #c4c4c4;

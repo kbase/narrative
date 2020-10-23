@@ -74,6 +74,10 @@
   font-size: 16px;
 }
 
+.dz-file__row {
+  display: flex;
+  align-items: center;
+}
 
 .dz-file__name {
   white-space: nowrap;
@@ -99,9 +103,10 @@
 }
 
 .dz-file__icon {
-  margin: 5px;
+  margin: 0 2px 0 2px;
   display: none;
   font-weight: bold;
+  align-items: center;
 }
 
 .dz-file__icon__success {

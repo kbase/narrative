@@ -21,7 +21,7 @@ require([
             return Login.init($('#signin-button'), true);
         })
         .then(function () {
-            let statusCode = document.getElementById('error_container').getAttribute('data-code');
+            const statusCode = document.getElementById('error_container').getAttribute('data-code');
             if (statusCode === '403') {
                 buildRequestControl();
             }

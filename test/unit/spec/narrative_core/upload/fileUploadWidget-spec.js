@@ -170,5 +170,29 @@ define([
             });
         });
 
+        it('Should display an error icon and hide the progress bar and cancel button when an error occurs', (done) => {
+            fuWidget.dropzone.options.maxFilesize = 1;
+
+            // Create file
+            const filename='foo.txt';
+            mockUploadEndpoint(filename, fakeUser, false);
+            var mockFile = createMockFile(filename);
+            Object.defineProperty(mockFile, 'size', {value: Math.pow(1024, 4), writable: false});
+
+            // Create mock calls
+            const adderMock = jasmine.createSpy('adderMock');
+            fuWidget.dropzone.on('addedfile', () => {
+                adderMock();
+            });
+
+            fuWidget.dropzone.addFile(mockFile);
+            setTimeout(() => {
+                expect(adderMock).toHaveBeenCalled();
+                expect(document.getElementById('upload_progress_and_cancel')).toBeNull();
+                expect(document.getElementById('error_icon')).toBeDefined();
+                done();
+            });
+        })
+
     });
 });

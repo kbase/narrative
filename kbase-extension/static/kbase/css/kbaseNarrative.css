@@ -2701,22 +2701,35 @@ button.kb-data-obj {
 /* specialize buttons that hover over narrative */
 #kb-add-code-cell,
 #kb-add-md-cell {
-  box-shadow: #cecece 2px 2px 1px;
-  height: 40px;
-  width: 40px;
   background-color: #2196f3;
+  border-radius: 50%;
+  bottom: 15px;
+  box-shadow: #cecece 2px 2px 1px;
+  cursor: pointer;
+  color: #fff;
+  height: 40px;
   opacity: 0.5;
+  padding-top: 5px;
+  position: fixed;
+  width: 40px;
+  z-index: 5;
 }
 
 #kb-add-code-cell {
-  right: 100px;
+  right: 75px;
+  padding-left: 7px;
 }
 
 #kb-add-md-cell {
   margin-right: 20px;
+  right: 10px;
+  padding-left: 8px;
 }
 
+#kb-add-code-cell:hover,
+#kb-add-md-cell:hover,
 .kb-data-list-add-data-button:hover {
+  opacity: 1;
   cursor: pointer;
   background-color: #36618e;
 }

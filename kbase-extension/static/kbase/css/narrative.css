@@ -7,10 +7,6 @@
   z-index: 1000;
 }
 
-body {
-  overflow: hidden;
-}
-
 .whiteout-pane {
   height: 100%;
   width: 100%;
@@ -22,57 +18,35 @@ body {
   z-index: 1001;
 }
 
-html {
-  background-color: #a2a2a2;
-
-  /* border: 1px solid #000; */
-  padding: 0;
-  margin: 0;
-  background-color: white;
-}
-
 body {
+  overflow: hidden;
   margin: 0 auto;
   padding: 0;
   line-height: 1.5em;
-  font: 1.375em "OxygenRegular", Arial, sans-serif;
+  font: 1.375em 'OxygenRegular', Arial, sans-serif;
   color: #333;
   background-color: #fff;
-
-  /* width: 1170px; */
 }
 
 /* header styling */
 
 .notebook_app .navbar-kbase {
-  webkit-box-shadow: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
   box-shadow: none;
-  moz-box-shadow: none;
 }
 
 header[role="banner"] {
-  /*	overflow: auto;
-	padding: 7px 0 2px 0;
-	border-bottom: 1px solid #C0C0C0;
-	-moz-box-shadow: inset 0 0 2px #c2c2c2;
-	-webkit-box-shadow: inset 0 0 2px #c2c2c2;
-	box-shadow: inset 0 0 2px #c2c2c2; */
   position: absolute;
   top: 0;
   width: 100%;
   background-color: #fff;
   border-bottom: 1px solid #e0e0e0;
-
-  /* -webkit-box-shadow: 0 1px 10px rgba(0,0,0,.1);
-    -moz-box-shadow: 0 1px 10px rgba(0,0,0,.1);
-    box-shadow: 0 1px 10px rgba(0,0,0,.1); */
   z-index: 999;
 }
 
 nav[role="navigation"] ul {
   margin: 1.2em 0 0.5em 0;
-
-  /* text-align: center; */
   padding-left: 0;
 }
 
@@ -85,7 +59,7 @@ nav[role="navigation"] ul li {
 nav[role="navigation"] ul li a {
   text-decoration: none;
   font-size: 1.2em;
-  font-family: "OxygenBold";
+  font-family: 'OxygenBold';
   padding: 7px 1em;
   background-color: #5c9531;
   color: #fff;
@@ -217,30 +191,6 @@ p#site-title {
   margin-left: 5px;
 }
 
-/*
-nav {
-	padding: 26px 0 0 0;
-}
-
-nav ul {
-	margin: 0 0 0 100px;
-}
-
-nav ul li {
-	display: inline;
-	font: 18px 'RobotoBlack', Arial, sans-serif;
-	font-weight: normal;
-	color: #686868;
-	padding: 11px 7px;
-	margin: 0 15px;
-}
-
-nav ul li.selected {
-	background-color: #F78F1E;
-	color: #fff;
-}
-*/
-
 .search-box {
   position: relative;
   display: inline;
@@ -278,7 +228,7 @@ nav ul li.selected {
 
 #search-area {
   position: relative;
-  font: 18px "RobotoBlack", Arial, sans-serif;
+  font: 18px 'RobotoBlack', Arial, sans-serif;
   font-weight: normal;
   color: #686868;
   padding: 11px 11px;
@@ -290,8 +240,8 @@ nav ul li.selected {
 }
 
 /* container for the left and center panes */
+
 #main-container {
-  /* width: 1170px; */
   width: 100%;
   position: absolute;
   top: 55px;
@@ -306,11 +256,6 @@ nav ul li.selected {
 }
 
 #content-column {
-  /* float: left; */
-
-  /*	max-width: 1170px;
-*/
-
   height: 100%;
   margin-left: 300px;
 }
@@ -342,14 +287,6 @@ nav ul li.selected {
 }
 
 /* left pane styling */
-
-/* #left-column {
-	width: 289px;
-	position: fixed;
-	left: 10px;
-	bottom: 0;
-	top: 53px;
-} */
 
 #data-header {
   padding: 10px 0;
@@ -452,20 +389,9 @@ nav ul li.selected {
   overflow: auto;
 }
 
-/* .left-pane {
-    font-size: 14px;
-    position: relative;
-}
-*/
 .left-pane {
   font-size: 14px;
   position: relative;
-
-  /*	width: 289px;
-	top: 428px;
-	bottom: 20px;
-	overflow: auto;
-*/
 }
 
 #kb-function-panel .kb-function-body {
@@ -548,9 +474,6 @@ fieldset {
 }
 
 fieldset label {
-  /*	display: block;
-*/
-
   margin: 0 0 3px 0;
   font-weight: bold;
   font-size: 1em;
@@ -585,7 +508,6 @@ img.dataset-cell {
   background-image: url("../images/gears.png");
   background-position: right;
   background-repeat: no-repeat;
-  #background-color: #f2f2f2;
 }
 
 .dataset-cell p,
@@ -682,7 +604,6 @@ div.metadata {
 
 div.social {
   float: right;
-  display: block;
   width: 80px;
   padding: 0 10px;
   display: none;
@@ -696,7 +617,7 @@ p span.notification {
 }
 
 /**
- * Bootstrap 3 submenu hack^H^H^H^H fix
+ * Bootstrap 3 submenu hack fix
  * http://stackoverflow.com/questions/18023493/bootstrap-3-dropdown-sub-menu-missing
  */
 
@@ -775,10 +696,6 @@ p span.notification {
   padding-bottom: 5px;
 }
 
-#menubar .navbar {
-  margin-bottom: 5px;
-}
-
 #menubar .navbar .container {
   padding-left: 0;
   padding-right: 0;
@@ -831,6 +748,7 @@ p span.notification {
 }
 
 #menubar .navbar {
+  margin-bottom: 5px;
   width: 100%;
 }
 

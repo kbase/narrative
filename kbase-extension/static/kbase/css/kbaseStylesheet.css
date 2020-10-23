@@ -128,13 +128,13 @@ body {
 
 strong,
 b {
-  font-family: 'Oxygen';
+  font-family: 'Oxygen', Arial, sans-serif;
   font-weight: bold;
 }
 
 em,
 i {
-  font-family: 'Oxygen';
+  font-family: 'Oxygen', Arial, sans-serif;
   font-style: italic;
 }
 
@@ -142,7 +142,7 @@ strong em,
 em strong,
 b i,
 i b {
-  font-family: 'Oxygen';
+  font-family: 'Oxygen', Arial, sans-serif;
   font-style: italic;
   font-weight: bold;
 }

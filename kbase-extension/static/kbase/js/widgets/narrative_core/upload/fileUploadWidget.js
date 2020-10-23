@@ -95,7 +95,7 @@ define([
                 })
                 .on('success', (file, serverResponse) => {
                     var $successElem = $(file.previewElement);
-                    $successElem.find('#upload_progress_and_cancel').remove();
+                    $successElem.find('#upload_progress_and_cancel').hide();
                     $successElem.find('#dz_file_row_1').css({"display": "flex", "align-items": "center"});
                     $successElem.find('#success_icon').css('display', 'flex');
                     $successElem.find('#success_message').css('display', 'inline');
@@ -129,7 +129,7 @@ define([
                 })
                 .on('error', (erroredFile) => {
                     var $errorElem = $(erroredFile.previewElement);
-                    $errorElem.find('#upload_progress_and_cancel').remove();
+                    $errorElem.find('#upload_progress_and_cancel').hide();
                     $errorElem.find('#dz_file_row_1').css({"display": "flex", "align-items": "center"});
                     $errorElem.css('color', '#DF0002');
                     $errorElem.find('#error_icon').css('display', 'flex');

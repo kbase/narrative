@@ -317,12 +317,6 @@ define([
                 });
             });
         });
-        $([Jupyter.events]).on(
-            'delete.Cell',
-            function () {
-                // this.enableKeyboardManager();
-            }.bind(this)
-        );
 
         $([Jupyter.events]).on(
             'notebook_save_failed.Notebook',

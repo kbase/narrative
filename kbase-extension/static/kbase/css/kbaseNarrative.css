@@ -88,7 +88,7 @@
   cursor: pointer;
 }
 
-.kb-data-staging-container {
+.kb-data-staging__container {
   height: 604px;
   padding: 5px;
   overflow-y: auto;

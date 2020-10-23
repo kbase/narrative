@@ -1,11 +1,12 @@
 <table class="kb-staging-table table table-striped table-condensed">
+    <caption>Staging Area File List</caption>
     <thead class="kb-staging-table-header">
         <tr>
             <!-- TODO: what behavior should select all checkbox have? -->
             <th class="kb-staging-table-header__checkbox">
                 <input type="checkbox" name="select_all" value="1" id="">
             </th>
-            <th class="kb-staging-table-header__file"></th>
+            <th class="kb-staging-table-header__file" scope="col" aria-label="File or Folder sort column"></th>
             <th class="kb-staging-table-header__name" scope="col">Name</th>
             <th class="kb-staging-table-header__size" scope="col">Size</th>
             <th class="kb-staging-table-header__age" scope="col">Age</th>
@@ -14,7 +15,7 @@
     </thead>
     <tbody class="kb-staging-table-body">
     {{#each files}}
-        <tr>
+        <tr scope="row">
             <td>{{name}}</td>
             <td class="kb-staging-table-body__expander">{{isFolder}}</td>
             <td>{{name}}</td>
@@ -32,15 +33,15 @@
                     <!-- <button data-import="{{name}}" class="btn btn-xs btn-primary">
                         <span><i class="fa fa-upload"></i></span>
                     </button> -->
-                    <button data-download="{{name}}" class="kb-staging-table-body__download btn btn-xs btn-primary">
+                    <button data-download="{{name}}" class="kb-staging-table-body__download btn btn-xs btn-primary" aria-label="Download Data">
                             <span><i class="fa fa-download"></i></span>
                     </button>
-                    <button data-delete="{{name}}" class="kb-staging-table-body__delete btn btn-xs btn-danger">
+                    <button data-delete="{{name}}" class="kb-staging-table-body__delete btn btn-xs btn-danger" aria-label="Delete File">
                         <span><i class="fa fa-trash"></i></span>
                     </button>
                 </div>
                 {{ else }}
-                    <button data-delete="{{name}}" class="kb-staging-table-body__delete btn btn-xs btn-danger pull-right">
+                    <button data-delete="{{name}}" class="kb-staging-table-body__delete btn btn-xs btn-danger pull-right" aria-label="Delete Folder">
                         <span><i class="fa fa-trash"></i></span>
                     </button>
                 {{/if}}
@@ -49,6 +50,6 @@
     {{/each}}
     </tbody>
 </table>
-<div class='kb-staging-table-footer'>
+<div class='kb-staging-table-notice'>
     All files will be deleted after 90 days
 </div>

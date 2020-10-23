@@ -142,11 +142,13 @@ define ([
 
         it('Should return a boolean for is_loaded', () => {
             const narr = new Narrative();
-            expect(narr.isLoaded()).toEqual(DEFAULT_FULLY_LOADED);  // default as set in
+            // default as set in the mock Jupyter object above
+            expect(narr.isLoaded()).toEqual(DEFAULT_FULLY_LOADED);
         });
 
         it('Should test ui mode', () => {
             const narr = new Narrative();
+            expect(Jupyter.notebook.writable).toBe(DEFAULT_WRITABLE);
             expect(narr.uiModeIs('edit')).toBe(DEFAULT_WRITABLE);
             expect(narr.uiModeIs('view')).toBe(!DEFAULT_WRITABLE);
             Jupyter.notebook.writable = !Jupyter.notebook.writable;

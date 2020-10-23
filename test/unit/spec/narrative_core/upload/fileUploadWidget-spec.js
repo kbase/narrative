@@ -192,7 +192,7 @@ define([
                 expect(document.getElementById('error_icon')).toBeDefined();
                 done();
             });
-        })
+        });
 
     });
 });

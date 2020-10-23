@@ -130,7 +130,7 @@ define([
                 .on('error', (erroredFile) => {
                     var $errorElem = $(erroredFile.previewElement);
                     $errorElem.find('#upload_progress_and_cancel').hide();
-                    $errorElem.find('#dz_file_row_1').css({"display": "flex", "align-items": "center"});
+                    $errorElem.find('#dz_file_row_1').css({'display': 'flex', 'align-items': 'center'});
                     $errorElem.css('color', '#DF0002');
                     $errorElem.find('#error_icon').css('display', 'flex');
 

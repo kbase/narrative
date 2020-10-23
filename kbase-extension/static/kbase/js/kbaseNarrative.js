@@ -171,25 +171,24 @@ define([
         return Promise.try(() => {
             if (this.workspaceRef) {
                 return this.workspaceRef;
-            } else {
-                return new Workspace(Config.url('workspace'), {
-                    token: this.getAuthToken(),
-                })
-                    .get_workspace_info({ id: this.workspaceId })
-                    .then((wsInfo) => {
-                        let narrId = wsInfo[8]['narrative'];
-                        this.workspaceRef = this.workspaceId + '/' + narrId;
-                        return this.workspaceRef;
-                    });
             }
+            return new Workspace(Config.url('workspace'), {
+                token: this.getAuthToken(),
+            })
+                .get_workspace_info({ id: this.workspaceId })
+                .then((wsInfo) => {
+                    let narrId = wsInfo[8]['narrative'];
+                    this.workspaceRef = this.workspaceId + '/' + narrId;
+                    return this.workspaceRef;
+                });
         });
     };
 
     Narrative.prototype.getUserPermissions = function () {
-        return new Workspace(Config.url('workspace'), {
+        const ws = new Workspace(Config.url('workspace'), {
             token: this.getAuthToken(),
-        })
-            .get_workspace_info({ id: this.workspaceId })
+        });
+        return ws.get_workspace_info({ id: this.workspaceId })
             .then((wsInfo) => {
                 return wsInfo[5];
             });
@@ -241,15 +240,15 @@ define([
         commonShortcuts.forEach(function (shortcut) {
             try {
                 Jupyter.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
-            } catch (ex) {
-                console.warn('Error removing shortcut "' + shortcut + '"', ex);
+            } catch (e) {
+                console.warn('Error removing shortcut "' + shortcut + '"', e);
             }
             try {
                 Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(
                     shortcut
                 );
-            } catch (ex) {
-                // console.warn('Error removing shortcut ''  + shortcut +'"', ex);
+            } catch (e) {
+                // console.warn('Error removing shortcut "' + shortcut + '"', e);
             }
         });
 

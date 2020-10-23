@@ -69,13 +69,13 @@ define([
         render: function() {
             return this.getUserInfo()
                 .then(userInfo => {
-                    var $mainElem = $('<div>')
+                    const $mainElem = $('<div>')
                         .css({
                             'height': '604px',
                             'padding': '5px',
                             'overflow-y': 'auto'
                         });
-                    var $dropzoneElem = $('<div>');
+                    const $dropzoneElem = $('<div>');
                     this.$elem
                         .empty()
                         .append($mainElem

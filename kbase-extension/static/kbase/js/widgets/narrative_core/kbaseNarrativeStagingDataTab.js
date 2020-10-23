@@ -70,11 +70,7 @@ define([
             return this.getUserInfo()
                 .then(userInfo => {
                     const $mainElem = $('<div>')
-                        .css({
-                            'height': '604px',
-                            'padding': '5px',
-                            'overflow-y': 'auto'
-                        });
+                        .addClass('kb-data-staging-container');
                     const $dropzoneElem = $('<div>');
                     this.$elem
                         .empty()

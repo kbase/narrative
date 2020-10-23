@@ -88,6 +88,12 @@
   cursor: pointer;
 }
 
+.kb-data-staging-container {
+  height: 604px;
+  padding: 5px;
+  overflow-y: auto;
+}
+
 .kb-data-staging-footer {
   font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;

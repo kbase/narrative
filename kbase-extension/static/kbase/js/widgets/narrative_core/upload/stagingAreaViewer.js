@@ -279,9 +279,9 @@ define([
                             var icon = isFolder ? 'folder' : 'file-o';
                             var disp = '<span><i class="fa fa-' + icon + '"></i></span>';
                             if (isFolder) {
-                                disp = '<button data-name="' + full[1] + '" class="btn btn-xs btn-default">' + disp + '</button>';
+                                disp = '<button data-name="' + full[0] + '" class="btn btn-xs btn-default">' + disp + '</button>';
                             } else {
-                                disp = '<i class="fa fa-caret-right kb-pointer" data-caret="' + full[1] + '"></i> ' + disp;
+                                disp = '<i class="fa fa-caret-right kb-pointer" data-caret="' + full[0] + '"></i> ' + disp;
                             }
                             return disp;
                         } else {
@@ -329,15 +329,15 @@ define([
                         }
                     }
                 }],
-                rowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                rowCallback: function (row) {
                     var getFileFromName = function (fileName) {
                         return files.filter(function (file) {
                             return file.name === fileName;
                         })[0];
                     };
 
-                    $('td:eq(2)', nRow).find('.kb-staging-table-body__name').tooltip({
-                        title: $('td:eq(2)', nRow).find('.kb-staging-table-body__name').text(),
+                    $('td:eq(2)', row).find('.kb-staging-table-body__name').tooltip({
+                        title: $('td:eq(2)', row).find('.kb-staging-table-body__name').text(),
                         placement: 'top',
                         delay: {
                             show: Config.get('tooltip').showDelay,
@@ -345,28 +345,28 @@ define([
                         }
                     });
 
-                    $('td:eq(2)', nRow).find('span.kb-staging-table-body__folder').off('click').on('click', e => {
+                    $('td:eq(2)', row).find('span.kb-staging-table-body__folder').off('click').on('click', e => {
                         $(e.currentTarget).off('click');
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     });
 
-                    $('td:eq(5)', nRow).find('select').select2({
+                    $('td:eq(5)', row).find('select').select2({
                         placeholder: 'Select a type',
                         containerCssClass: 'kb-staging-table-body__import-dropdown'
                     }).on('select2:select', function() {
-                        $('td:eq(5)', nRow).find('.select2-selection').addClass('kb-staging-table-body__import-type-selected');
+                        $('td:eq(5)', row).find('.select2-selection').addClass('kb-staging-table-body__import-type-selected');
                         //make checkbox for that row enabled
-                        $('td:eq(0)', nRow).find('.kb-staging-table-body__checkbox-input').prop('disabled', false);
+                        $('td:eq(0)', row).find('.kb-staging-table-body__checkbox-input').prop('disabled', false);
                     });
 
-                    $('td:eq(5)', nRow).find('button[data-import]').off('click').on('click', e => {
+                    $('td:eq(5)', row).find('button[data-import]').off('click').on('click', e => {
                         var importType = $(e.currentTarget).prevAll('select').val();
                         var importFile = getFileFromName($(e.currentTarget).data().import);
                         this.initImportApp(importType, importFile);
                         this.updateView();
                     });
 
-                    $('td:eq(5)', nRow).find('button[data-download]').off('click').on('click', e => {
+                    $('td:eq(5)', row).find('button[data-download]').off('click').on('click', e => {
                         let file = $(e.currentTarget).data('download');
                         if (this.subpath) {
                             file = this.subpath + '/' + file;
@@ -375,7 +375,7 @@ define([
                         this.downloadFile(url);
                     });
 
-                    $('td:eq(5)', nRow).find('button[data-delete]').off('click').on('click', e => {
+                    $('td:eq(5)', row).find('button[data-delete]').off('click').on('click', e => {
                         var file = $(e.currentTarget).data('delete');
                         if (window.confirm('Really delete ' + file + '?')) {
                             this.stagingServiceClient.delete({
@@ -388,24 +388,23 @@ define([
                         }
                     });
 
-
-                    $('td:eq(1)', nRow).find('button[data-name]').off('click').on('click', e => {
+                    $('td:eq(1)', row).find('button[data-name]').off('click').on('click', e => {
                         $(e.currentTarget).off('click');
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     });
 
-                    $('td:eq(1)', nRow).find('i[data-caret]').off('click');
-
                     // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
-                    var $caret = $('td:eq(1)', nRow).find('i[data-caret]'),
+                    var $caret = $('td:eq(1)', row).find('i[data-caret]'),
                         fileName,
                         myFile;
+
                     if ($caret.length) {
                         //next, we use that caret to find the fileName, and the file Data.
                         fileName = $caret.data().caret;
                         myFile = getFileFromName(fileName);
                     }
 
+                    $caret.off('click');
 
                     //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
                     if (fileName && this.openFileInfo[fileName]) {
@@ -419,11 +418,9 @@ define([
                                 this.renderMoreFileInfo(myFile)
                             )
                         }, 0);
-
                     }
 
-                    $('td:eq(1)', nRow).find('i[data-caret]').on('click', e => {
-
+                    $caret.on('click', e => {
                         $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
                         var $tr = $(e.currentTarget).parent().parent();
 
@@ -440,8 +437,9 @@ define([
                         }
                     });
 
-                    $('td:eq(2)', nRow).find('button[data-decompress]').off('click');
-                    $('td:eq(2)', nRow).find('button[data-decompress]').on('click', e => {
+                    $('td:eq(2)', row).find('button[data-decompress]')
+                    .off('click')
+                    .on('click', e => {
                         var fileName = $(e.currentTarget).data().decompress;
                         var myFile = getFileFromName(fileName);
 
@@ -457,12 +455,12 @@ define([
                             });
 
                     });
+                    
                 }.bind(this)
             });
         },
 
         renderMoreFileInfo: function (fileData) {
-
             var self = this;
 
             if (fileData.loaded) {

@@ -24,33 +24,31 @@
     table-layout: fixed;
 }
 
-.kb-staging-table-header .kb-staging-table-header__checkbox {
+.kb-staging-table-header__checkbox {
     width: 2%;
-    text-align: center;
 }
 
-.kb-staging-table-header .kb-staging-table-header__file {
+.kb-staging-table-header__file {
     width: 4%;
 }
 
-.kb-staging-table-header .kb-staging-table-header__name {
+.kb-staging-table-header__name {
     width: 27%;
-    overflow: hidden;
 }
 
-.kb-staging-table-header .kb-staging-table-header__size,
-.kb-staging-table-header .kb-staging-table-header__age {
+.kb-staging-table-header__size,
+.kb-staging-table-header__age {
     width: 8%;
 }
 
-.kb-staging-table-header .kb-staging-table-header__import {
+.kb-staging-table-header__import {
     width: 22%;
 }
 
 /* Overriding default datatables sort icons so they come before the header title rather than after */
-.kb-staging-table .kb-staging-table-header .sorting:before,
-.kb-staging-table .kb-staging-table-header .sorting_desc:before,
-.kb-staging-table .kb-staging-table-header .sorting_asc:before {
+.kb-staging-table-header .sorting:before,
+.kb-staging-table-header .sorting_desc:before,
+.kb-staging-table-header .sorting_asc:before {
     opacity: 0.2;
     content: "\e150";
     position: relative;
@@ -60,11 +58,11 @@
     font-family: 'Glyphicons Halflings';
 }
 
-.kb-staging-table .kb-staging-table-header .sorting_asc:before {
+.kb-staging-table-header .sorting_asc:before {
     content: "\e155";
 }
 
-.kb-staging-table .kb-staging-table-header .sorting_desc:before {
+.kb-staging-table-header .sorting_desc:before {
     content: "\e156";
 }
 
@@ -75,9 +73,9 @@
 } 
 
 /* Special positioning for folder sort icon as there is no title*/
-.kb-staging-table .kb-staging-table-header .kb-staging-table-header__file.sorting:before,
-.kb-staging-table .kb-staging-table-header .kb-staging-table-header__file.sorting_desc:before,
-.kb-staging-table .kb-staging-table-header .kb-staging-table-header__file.sorting_asc:before {
+.kb-staging-table-header .kb-staging-table-header__file.sorting:before,
+.kb-staging-table-header .kb-staging-table-header__file.sorting_desc:before,
+.kb-staging-table-header .kb-staging-table-header__file.sorting_asc:before {
     right: 0;
 }
 

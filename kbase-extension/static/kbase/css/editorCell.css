@@ -27,25 +27,12 @@
 
 .kb-editor-cell .kb-app-parameter-row .message.-error {
   background: #f2dede;
-}
-
-.kb-editor-cell .kb-app-parameter-row .message.-warning {
-  xbackground: yellow;
+  color: #f44336;
 }
 
 .kb-editor-cell .kb-app-parameter-row .message {
   text-align: center;
   font-family: 'Oxygen', sans-serif;
-
-  /* font-size: 9pt; */
-}
-
-.kb-editor-cell .kb-app-parameter-row .message.-error {
-  color: #f44336;
-}
-
-.kb-editor-cell .kb-app-parameter-row .message.-warning {
-  xcolor: orange;
 }
 
 /* not sure how to get text in these divs to valign middle... */
@@ -54,22 +41,13 @@
   color: #777;
   text-align: left;
   vertical-align: bottom;
-  xmargin-top: 3px;
   padding-right: 4px;
   padding-left: 0;
   white-space: normal;
-  xborder-bottom: 1px #ddd dotted;
 }
 
 .kb-editor-cell .kb-app-parameter-input {
   vertical-align: middle;
-  xwhite-space: nowrap;
-  xpadding-left: 10px;
-  xborder-bottom: 1px #ccc dotted;
-}
-
-.kb-editor-cell .kb-app-parameter-input input {
-  xfont-weight: bold;
 }
 
 .kb-editor-cell .kb-app-parameter-input select.form-control {
@@ -77,7 +55,7 @@
 }
 
 /*
-This set of styles is a to accomodate the required/satisfied icon which appears
+This set of styles is to accommodate the required/satisfied icon which appears
 between the select input control and the help text to the right of it. The
 problem is that within the columns used for layout the select is set to 100% width
 and yet the icon is placed right next to it. The result is that the icon is shoved
@@ -88,11 +66,6 @@ in the column in which the icon lives, and does this by shrinking the select
 control with padding, and then scooting the icon back into its column.
 */
 
-/* .kb-editor-cell .kb-app-parameter-input > div {
-     allow space for the required (red arrow), satisfied (green checkbox) icon
-    padding-right: 20px;
-}
-*/
 .kb-editor-cell .kb-app-parameter-input .kb-app-parameter-accepted-glyph,
 .kb-editor-cell .kb-app-parameter-input .kb-app-parameter-required-glyph {
   /* This scoots the icon inside */
@@ -104,15 +77,12 @@ control with padding, and then scooting the icon back into its column.
   color: #f44336;
 }
 
-.kb-editor-cell .kb-app-parameter-hint {
-  padding-left: 7px;
-}
-
 .kb-editor-cell .kb-parameter-data-selection {
   font-weight: bold;
 }
 
 .kb-editor-cell .kb-app-parameter-hint {
+  padding-left: 7px;
   color: #777;
   text-align: left;
   margin-top: 3px;
@@ -164,11 +134,6 @@ control with padding, and then scooting the icon back into its column.
   overflow: none;
   background-color: #f5f5f5;
   padding: 10px;
-}
-
-.kb-editor-cell .kb-app-subtitle {
-  background-color: #f5f5f5;
-  padding: 3px 5px;
 }
 
 .kb-editor-cell .kb-app-subtitle {
@@ -326,13 +291,6 @@ warning: orange
   margin-bottom: 0;
 }
 
-.btn.kb-editor-cell-btn.btn-danger.active:hover {
-  color: rgb(209, 82, 65);
-  background-color: #ddd;
-  border-bottom: 2px  rgb(209, 82, 65) solid;
-  margin-bottom: 4px;
-}
-
 .btn.kb-editor-cell-btn.btn-danger.active {
   color: white;
   background-color: rgb(209, 82, 65);
@@ -350,33 +308,20 @@ warning: orange
 
 /* DISABLED is gray border and text */
 
-/*
-.btn.kb-editor-cell-btn.btn-primary.disabled:hover {
-    color: #888;
-    background-color: #FFF;
-    border-bottom: 2px #888 solid;
-    margin-bottom: 4px;
-}
-*/
-
 .btn.kb-editor-cell-btn.disabled,
 .btn.kb-editor-cell-btn.disabled:hover,
 .btn.kb-editor-cell-btn.disabled:active {
   color: #888;
-  xbackground-color: #fff;
   border: 2px #888 solid;
   margin-bottom: 4px;
 }
 
 .kb-editor-cell [data-element="run-control-panel"] {
-  xpadding-left: 8px;
   width: 100%;
 }
 
 .kb-editor-cell [data-element="tab-pane"] {
   border-top: 2px rgb(33, 150, 243) solid;
-  xborder: 1px solid rgb(32, 77, 16);
-  xbackground-color: #f5f5f5;
 }
 
 .kb-editor-cell [data-element="tab-pane"] > div:empty {
@@ -385,10 +330,6 @@ warning: orange
 
 .kb-editor-cell [data-element="tab-pane"] > div {
   padding: 4px;
-}
-
-.kb-editor-cell .btn.disabled {
-  xbackground-color: #fff;
 }
 
 .kb-editor-cell .btn-primary.kb-btn-action.-rerun {

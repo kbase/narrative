@@ -1,33 +1,40 @@
 <div class="row file-row dz-file">
-    <div class="col-md-7">
-        <div class="dz-file__name" data-dz-name></div>
-        <div id="error_message" class="dz-file__msg" data-dz-errormessage></div>
-        <div id="success_message" class="dz-file__msg dz-file__msg__success">Successfully moved to stagin area!</div>
-    </div>
-    <div class="col-md-1">
-        <span class="size pull-right" data-dz-size></span>
-    </div>
-
-    <div id="upload_progress_and_cancel">
-        <div class="col-md-3 text-center">
-            <div class="progress progress-striped active dz-file__progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
+    <div id="dz_file_row_1" class="row">
+        <div class="col-md-7">
+            <div class="dz-file__name" data-dz-name></div>
+        </div>
+        <div class="col-md-1 ">
+            <span class="size pull-right" data-dz-size></span>
+        </div>
+        <div id="upload_progress_and_cancel" style="display: inline;">
+            <div class="col-md-3 text-center">
+                <div class="progress progress-striped active dz-file__progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <div class="pull-right">
+                    <button data-dz-remove class="btn btn-xs btn-danger cancel">
+                        <i class="fa fa-lg fa-fw fa-ban"></i>
+                    </button>
+                </div>
             </div>
         </div>
-        <div class="col-md-1">
-            <div class="pull-right">
-                <button data-dz-remove class="btn btn-xs btn-danger cancel">
-                    <i class="fa fa-lg fa-fw fa-ban"></i>
-                </button>
+        <div class="col-md-4">
+            <div id="error_icon" class="pull-right dz-file__icon">
+                <span>Error</span>
+                <i class="fa fa-2x fa-exclamation-triangle"></i>
+            </div>
+            <div id="success_icon" class="pull-right dz-file__icon dz-file__icon__success">
+                <span>Completed</span>
+                <i class="fa fa-2x fa-check-circle"></i>
             </div>
         </div>
     </div>
-    <div id="error_icon" class="pull-right dz-file__icon">
-        <span>Error</span>
-        <i class="fa fa-2x fa-exclamation-triangle"></i>
-    </div>
-    <div id="success_icon" class="pull-right dz-file__icon dz-file__icon__success">
-        <span>Completed</span>
-        <i class="fa fa-2x fa-check-circle"></i>
+    <div class="row">
+        <div class="col-md-7">
+            <div id="error_message" class="dz-file__msg" data-dz-errormessage></div>
+            <div id="success_message" class="dz-file__msg dz-file__msg__success">Successfully moved to stagin area!</div>
+        </div>
     </div>
 </div>

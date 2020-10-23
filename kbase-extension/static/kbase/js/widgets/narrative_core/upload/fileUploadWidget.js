@@ -94,11 +94,12 @@ define([
 
                 })
                 .on('success', (file, serverResponse) => {
-                    $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                     var $successElem = $(file.previewElement);
                     $successElem.find('#upload_progress_and_cancel').remove();
-                    $successElem.find('#success_icon').css('display', 'inline');
+                    $successElem.find('#dz_file_row_1'.css({"display": "flex", "align-items": "center"}));
+                    $successElem.find('#success_icon').css('display', 'flex');
                     $successElem.find('#success_message').css('display', 'inline');
+                    $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
 
                     this.removeProgressBar($dropzoneElem);
                     $(file.previewElement).fadeOut(1000, function() {
@@ -128,9 +129,10 @@ define([
                 })
                 .on('error', (erroredFile) => {
                     var $errorElem = $(erroredFile.previewElement);
-                    $errorElem.css('color', '#DF0002');
                     $errorElem.find('#upload_progress_and_cancel').remove();
-                    $errorElem.find('#error_icon').css('display', 'inline');
+                    $errorElem.find('#dz_file_row_1'.css({"display": "flex", "align-items": "center"}));
+                    $errorElem.css('color', '#DF0002');
+                    $errorElem.find('#error_icon').css('display', 'flex');
 
                     this.removeProgressBar($dropzoneElem);
                     let errorText = 'unable to upload file!';

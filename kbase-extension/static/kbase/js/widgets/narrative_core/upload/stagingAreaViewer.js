@@ -17,7 +17,7 @@ define([
     'text!kbase/templates/data_staging/file_path.html',
     'kb_service/client/workspace',
     'jquery-dataTables',
-    'select2',
+    'select2'
 ], function (
     $,
     KBaseTabs,
@@ -259,21 +259,29 @@ define([
                     emptyTable: emptyMsg
                 },
                 dom: '<"file-path pull-left">frtip',
-                bAutoWidth: false,
-                aaSorting: [
-                    [3, 'desc']
-                ],
-                aoColumnDefs: [{
-                    aTargets: [0],
-                    mRender: function (data, type, full) {
+                autoWidth: false,
+                order: [[4, 'desc']],
+                columnDefs: [{
+                    targets: 0,
+                    orderable: false,
+                    searchable: false,
+                    //TODO: what value makes most sense for these? file name, or eventual data type selection? 
+                    render: function (data, type, full) {
+                        //render checkboxes disabled until the user selects a type
+                        return '<input class="kb-staging-table-body__checkbox-input" type="checkbox" name="id[]" disabled=true value="'
+                           + $('<div/>').text(data).html() + '">';
+                    }
+                }, {
+                    targets: 1, 
+                    render: function (data, type, full) {
                         if (type === 'display') {
                             var isFolder = data === 'true' ? true : false;
                             var icon = isFolder ? 'folder' : 'file-o';
                             var disp = '<span><i class="fa fa-' + icon + '"></i></span>';
                             if (isFolder) {
-                                disp = '<button data-name="' + full[1] + '" class="btn btn-xs btn-default">' + disp + '</button>';
+                                disp = '<button data-name="' + full[0] + '" class="btn btn-xs btn-default">' + disp + '</button>';
                             } else {
-                                disp = '<i class="fa fa-caret-right kb-pointer" data-caret="' + full[1] + '"></i> ' + disp;
+                                disp = '<i class="fa fa-caret-right kb-pointer" data-caret="' + full[0] + '"></i> ' + disp;
                             }
                             return disp;
                         } else {
@@ -281,82 +289,84 @@ define([
                         }
                     }
                 }, {
-                    aTargets: [1],
-                    sClass: 'staging-name',
-                    mRender: function (data, type, full) {
+                    targets: 2,
+                    render: function (data, type, full) {
                         if (type === 'display') {
                             let decompressButton = '';
 
                             if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
-                                decompressButton = '<button class="btn btn-default btn-xs kb-data-staging-decompress" data-decompress="' + data + '"><i class="fa fa-expand"></i></button>';
+                                decompressButton = '<button class="btn btn-default btn-xs kb-staging-table-body__decompress" data-decompress="' + data + '"><i class="fa fa-expand"></i></button>';
                             }
 
                             if (full[0] === 'true') {
-                                data = '<span class="kb-data-staging-folder" data-name="' + data + '">' + data + '</span>';
+                                data = '<span class="kb-staging-table-body__folder" data-name="' + data + '">' + data + '</span>';
                             }
 
-                            return '<div class="kb-data-staging-table-name">' + decompressButton +
+                            return '<div class="kb-staging-table-body__name">' + decompressButton +
                                 data +
                                 '</div>';
                         }
                         return data;
                     }
                 }, {
-                    aTargets: [2],
-                    mRender: function (data, type) {
+                    targets: 3,
+                    type: 'num',
+                    render: function (data, type) {
                         if (type === 'display') {
                             return StringUtil.readableBytes(Number(data));
                         } else {
                             return Number(data);
                         }
-                    },
-                    sType: 'numeric'
+                    }
                 }, {
-                    aTargets: [3],
-                    mRender: function (data, type) {
+                    targets: 4,
+                    type: 'num',
+                    render: function (data, type) {
                         if (type === 'display') {
                             return TimeFormat.getShortTimeStampStr(Number(data));
                         } else {
                             return data;
                         }
-                    },
-                    sType: 'numeric'
+                    }
                 }],
-                rowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                rowCallback: function (row) {
                     var getFileFromName = function (fileName) {
                         return files.filter(function (file) {
                             return file.name === fileName;
                         })[0];
                     };
 
-                    $('td:eq(1)', nRow).find('.kb-data-staging-table-name').tooltip({
-                        title: $('td:eq(1)', nRow).find('.kb-data-staging-table-name').text(),
+                    $('td:eq(2)', row).find('.kb-staging-table-body__name').tooltip({
+                        title: $('td:eq(2)', row).find('.kb-staging-table-body__name').text(),
                         placement: 'top',
                         delay: {
                             show: Config.get('tooltip').showDelay,
                             hide: Config.get('tooltip').hideDelay
                         }
                     });
-                    $('td:eq(1)', nRow).find('span.kb-data-staging-folder').off('click').on('click', e => {
+
+                    $('td:eq(2)', row).find('span.kb-staging-table-body__folder').off('click').on('click', e => {
                         $(e.currentTarget).off('click');
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     });
 
-                    $('td:eq(4)', nRow).find('select').select2({
+                    $('td:eq(5)', row).find('select').select2({
                         placeholder: 'Select a type',
-                        containerCssClass: 'kb-data-staging-import-dropdown'
-                    }).on('select2:select', function(e) {
-                        $('td:eq(4)', nRow).find('.select2-selection').addClass('type-selected');
+                        containerCssClass: 'kb-staging-table-body__import-dropdown'
+                    }).on('select2:select', function() {
+                        $('td:eq(5)', row).find('.select2-selection').addClass('kb-staging-table-body__import-type-selected');
+                        //make checkbox for that row enabled
+                        $('td:eq(0)', row).find('.kb-staging-table-body__checkbox-input').prop('disabled', false);
                     });
 
-                    $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', e => {
+                    $('td:eq(5)', row).find('button[data-import]').off('click').on('click', e => {
                         var importType = $(e.currentTarget).prevAll('select').val();
                         var importFile = getFileFromName($(e.currentTarget).data().import);
                         this.initImportApp(importType, importFile);
                         this.updateView();
                     });
 
-                    $('td:eq(4)', nRow).find('button[data-download]').off('click').on('click', e => {
+                    $('td:eq(5)', row).find('button[data-download]').off('click').on('click', e => {
                         let file = $(e.currentTarget).data('download');
                         if (this.subpath) {
                             file = this.subpath + '/' + file;
@@ -365,7 +375,7 @@ define([
                         this.downloadFile(url);
                     });
 
-                    $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', e => {
+                    $('td:eq(5)', row).find('button[data-delete]').off('click').on('click', e => {
                         var file = $(e.currentTarget).data('delete');
                         if (window.confirm('Really delete ' + file + '?')) {
                             this.stagingServiceClient.delete({
@@ -378,24 +388,23 @@ define([
                         }
                     });
 
-
-                    $('td:eq(0)', nRow).find('button[data-name]').off('click').on('click', e => {
+                    $('td:eq(1)', row).find('button[data-name]').off('click').on('click', e => {
                         $(e.currentTarget).off('click');
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     });
 
-                    $('td:eq(0)', nRow).find('i[data-caret]').off('click');
-
                     // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
-                    var $caret = $('td:eq(0)', nRow).find('i[data-caret]'),
+                    var $caret = $('td:eq(1)', row).find('i[data-caret]'),
                         fileName,
                         myFile;
+
                     if ($caret.length) {
                         //next, we use that caret to find the fileName, and the file Data.
                         fileName = $caret.data().caret;
                         myFile = getFileFromName(fileName);
                     }
 
+                    $caret.off('click');
 
                     //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
                     if (fileName && this.openFileInfo[fileName]) {
@@ -409,11 +418,9 @@ define([
                                 this.renderMoreFileInfo(myFile)
                             )
                         }, 0);
-
                     }
 
-                    $('td:eq(0)', nRow).find('i[data-caret]').on('click', e => {
-
+                    $caret.on('click', e => {
                         $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
                         var $tr = $(e.currentTarget).parent().parent();
 
@@ -430,8 +437,9 @@ define([
                         }
                     });
 
-                    $('td:eq(1)', nRow).find('button[data-decompress]').off('click');
-                    $('td:eq(1)', nRow).find('button[data-decompress]').on('click', e => {
+                    $('td:eq(2)', row).find('button[data-decompress]')
+                    .off('click')
+                    .on('click', e => {
                         var fileName = $(e.currentTarget).data().decompress;
                         var myFile = getFileFromName(fileName);
 
@@ -447,12 +455,12 @@ define([
                             });
 
                     });
+                    
                 }.bind(this)
             });
         },
 
         renderMoreFileInfo: function (fileData) {
-
             var self = this;
 
             if (fileData.loaded) {

@@ -42,6 +42,7 @@ Then, simply run (from the narrative root directory) `make test`.
 This calls a few subcommands, and those can be run independently for specific uses:
 
 - `make test-frontend-unit` will run only the unit tests on the frontend (i.e. those with the Karma runner)
+- `make test-integration` will run the frontend integration tests that make use of webdriver.io to simulate the browser on a locally instantiated Narrative, but running against live KBase services.
 - `make test-frontend-e2e` will run only the frontend tests that make use of Selenium to simulate a browser on the real Narrative site.
 - `make test-backend` will run only the backend Python tests.
 
@@ -67,7 +68,18 @@ This just needs the path to the token file (with pre-pended slash), such as `"/t
 
 ### Testing with Travis-CI and Coveralls
 
-These tests are run (without credentials) automatically on a pull request to the Narrative Github repo. These are currently run through [Travis-CI](https://travis-ci.org/) and the coverage reported with [Coveralls](https://coveralls.io/). There should be nothing you need to do to make this work.
+These tests are run automatically on a pull request to the Narrative Github repo. These are currently run through [Travis-CI](https://travis-ci.org/) and the coverage reported with [Coveralls](https://coveralls.io/).
+
+Unit tests are automatically run without credentials, skipping various tests that are, really, more like integration tests.
+
+The integration tests that run with webdriver.io do require an authentication token. This is embedded in the `.travis.yml` file as a secure environment variable - the third (and last) one. That token will expire every 90 days and will need to be replaced. A new one can be generated from the KBase CI Account page with a valid developer account. This token can then be encrypted with the following commands. Note that Ruby is required.
+
+```
+gem install travis  # if not already installed
+travis encrypt KBASE_TOKEN=my_generated_token
+```
+This will emit a string that looks like `secure: "SDFSDFSDFSDF="` Use this string to replace the out of date token. It will become available in the test environment as `KBASE_TOKEN`, which is the variable that the `wdio.conf.js` file looks for.
+
 
 ### Adding Your Own Tests
 
@@ -80,6 +92,27 @@ There are some service client Mocks available using the `mock` library. Check ou
 ***JavaScript***
 
 JavaScript tests follow the common Test Spec idiom. Here, we create a new spec file for each JavaScript module. These all live under `test/unit/spec` in roughly the same subdirectory as found under `kbase-extension/static/kbase/js`. There's an example spec in `test/unit/specTemplate.js` - you can just copy this to a new module, and modify to fit your needs.
+
+***Front End Integration***
+
+Integration tests are done using [webdriver.io](https://webdriver.io). The test scripts are written in Javascript and all resemble the common Mocha style. These tests are all under `test/integration/spec`. It's helpful for each of these files to include the `wdioUtils.js` module in `test/integration`. For each view that requires authentication (i.e. most of them), be sure to start your test with the async `login` function provided by that module. An example spec file might look like:
+
+```javascript
+const Utils = require('../wdioUtils');
+
+describe('Simple test runner', () => {
+    beforeEach(async () => await Utils.login());
+
+    it('opens a narrative', async () => {
+        await browser.url(Utils.makeURL('narrative/31932'));
+        const loadingBlocker = await $('#kb-loading-blocker');
+        const loadingText = await loadingBlocker.getText();
+        expect(loadingText).toContain('Connecting to KBase services...');
+    });
+});
+```
+
+When running these locally, these expect that there's a valid authentication token in 
 
 ### Manual Testing and Debugging
 
@@ -94,7 +127,7 @@ log.info("Your Logs Go Here")
 
 ***JavaScript***
 
-It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`
+It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`.
 
 To debug using the Karma Debugger complete the following steps:
 

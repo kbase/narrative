@@ -118,5 +118,57 @@ define([
             fuWidget.dropzone.addFile(mockFile);
         });
 
+        it('Should error when too large of a file is uploaded', (done) => {
+            // Set the file max size to 0
+            fuWidget.dropzone.options.maxFilesize = 1;
+
+            // Create file
+            const filename='foo.txt';
+            mockUploadEndpoint(filename, fakeUser, false);
+            var mockFile = createMockFile(filename);
+            Object.defineProperty(mockFile, 'size', {value: Math.pow(1024, 4), writable: false});
+
+            // Create mock calls
+            const adderMock = jasmine.createSpy('adderMock');
+            const errorMock = jasmine.createSpy('errorMock');
+            fuWidget.dropzone.on('addedfile', () => {
+                adderMock();
+            });
+            fuWidget.dropzone.on('error', () => {
+                errorMock();
+            });
+            fuWidget.dropzone.addFile(mockFile);
+            setTimeout(() => {
+                expect(adderMock).toHaveBeenCalled();
+                expect(errorMock).toHaveBeenCalled();
+                done();
+            });
+        });
+
+        it('Should create a clear all button when a file upload error occurs', (done) => {
+            // Set the file max size to 0
+            fuWidget.dropzone.options.maxFilesize = 1;
+
+            // Create file
+            const filename='foo.txt';
+            mockUploadEndpoint(filename, fakeUser, false);
+            var mockFile = createMockFile(filename);
+            Object.defineProperty(mockFile, 'size', {value: Math.pow(1024, 4), writable: false});
+
+            // Create mock calls
+            const adderMock = jasmine.createSpy('adderMock');
+            fuWidget.dropzone.on('addedfile', () => {
+                adderMock();
+            });
+
+            fuWidget.dropzone.addFile(mockFile);
+            setTimeout(() => {
+                expect(adderMock).toHaveBeenCalled();
+                var clearAllButton = document.getElementById('clear-all-btn');
+                expect(clearAllButton).toBeDefined();
+                done();
+            });
+        });
+
     });
 });

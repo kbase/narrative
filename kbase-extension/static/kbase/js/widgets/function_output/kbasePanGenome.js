@@ -208,11 +208,11 @@ define([
                 }, {
                     id: 'pcgCount',
                     text: 'Protein Coding Gene Count',
-                    isSortable: true
+                    isSortable: false
                 }, {
                     id: 'gCount',
                     text: 'Genome Count',
-                    isSortable: true
+                    isSortable: false
                 }],
                 rowsPerPage: this.options.pFamsPerPage,
                 searchPlaceholder: 'Search Families',

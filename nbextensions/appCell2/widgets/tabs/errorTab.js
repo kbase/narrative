@@ -39,7 +39,8 @@ define([
             type: errorType,
             message: errorMessage,
             detail: errorDetail,
-            advice: 'If the app fails consistently, contact us at help@kbase.us',
+            advice: 'If the app fails consistently, ' +
+            'please contact us at https://www.kbase.us/support ',
         };
     }
 

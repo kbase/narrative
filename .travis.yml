@@ -1,4 +1,4 @@
-dist: trusty
+dist: bionic
 sudo: required
 language: python
 python:
@@ -28,13 +28,15 @@ branches:
 
 before_install:
   - gem install coveralls-lcov
-  - pip install coveralls
+  - pip install coveralls flake8 black
   - nvm install $TRAVIS_NODE_VERSION
   - npm install -g bower
   - npm install -g grunt-cli
   - npm install -g karma-cli
 
 install:
+  - flake8 --max-complexity=21  ./src ./test
+  - black --check ./src ./test
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -45,10 +47,10 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
   - source activate test-environment
 
-before_script:
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
-  - sleep 3 # give xvfb some time to start
+# before_script:
+#   - "export DISPLAY=:99.0"
+#   - "sh -e /etc/init.d/xvfb start"
+#   - sleep 3 # give xvfb some time to start
 
 script:
   - make build-travis-narrative

@@ -84,9 +84,6 @@ define([
                     userInfo: userInfo,
                     userId: Jupyter.narrative.userId
                 });
-                this.uploadWidget.dropzone.on('complete', function() {
-                    this.updateView();
-                }.bind(this));
 
                 this.stagingAreaViewer = new StagingAreaViewer(this.$myFiles, {
                     path: this.path,

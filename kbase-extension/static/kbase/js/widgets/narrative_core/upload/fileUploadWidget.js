@@ -35,13 +35,11 @@ define([
         },
 
         render: function() {
-            var $dropzoneElem = $(this.dropzoneTmpl({userInfo: this.userInfo}));
-            $dropzoneElem.find('#clear-completed > button').click(e => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.dropzone.removeAllFiles();
-                $dropzoneElem.find('#clear-completed').css({'display': 'none'});
-            });
+            const uploadConfig = Config.get('upload');
+            const $dropzoneElem = $(this.dropzoneTmpl({
+                userInfo: this.userInfo,
+                globusUrl: uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user
+            }));
 
             // there are two anchor elements with same class name .globus_link.
             // One link takes the user to globus site,
@@ -49,7 +47,7 @@ define([
             $dropzoneElem.find('a.globus_link').click(e => {
                 e.stopPropagation();
                 e.preventDefault();
-                if((e.target.href).includes("app.globus.org")) {
+                if(e.target.href === uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user) {
                     let stagingServiceClient = new StagingServiceClient({
                         root: this.stagingUrl,
                         token: Runtime.make().authToken()
@@ -62,10 +60,9 @@ define([
                             return true;
                         });
                 } else {
-                    window.open(e.target.href, "_blank");
-                };
+                    window.open(e.target.href, '_blank');
+                }
             });
-
             this.$elem.append($dropzoneElem);
             this.dropzone = new Dropzone($dropzoneElem.get(0), {
                 url: this.stagingUrl + '/upload',
@@ -76,18 +73,18 @@ define([
                 paramName: 'uploads',
                 previewTemplate: this.dropFileTmpl(),
                 autoProcessQueue: true,
-                parallelUploads: 10,
-                maxFilesize: 20480  //20GB
+                parallelUploads: uploadConfig.parallel_uploads,
+                maxFilesize: uploadConfig.max_file_size,
+                timeout: uploadConfig.timeout,
             })
                 .on('totaluploadprogress', (progress) => {
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
                 })
-                .on('addedFile', (file) => {
+                .on('addedfile', (file) => {
                     $dropzoneElem.find('#global-info').css({'display': 'inline'});
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                 })
                 .on('success', (file, serverResponse) => {
-                    $dropzoneElem.find('#clear-completed').css({'display': 'inline'});
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                     file.previewElement.querySelector('#status-message').textContent = 'Completed';
                     file.previewElement.querySelector('.progress').style.display = 'none';

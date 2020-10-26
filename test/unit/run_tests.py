@@ -19,47 +19,52 @@ import signal
 KARMA_PORT = 9876
 JUPYTER_PORT = 32323
 
-argparser = argparse.ArgumentParser(
-        description='Run KBase Narrative unit tests'
-    )
-argparser.add_argument('-b', '--browsers', default='Firefox',
-                       help="Browsers to use for Karma test")
-argparser.add_argument('-d', '--debug', action='store_true',
-                       help="Whether to enter debug mode in Karma")
+argparser = argparse.ArgumentParser(description="Run KBase Narrative unit tests")
+argparser.add_argument(
+    "-b", "--browsers", default="Firefox", help="Browsers to use for Karma test"
+)
+argparser.add_argument(
+    "-d", "--debug", action="store_true", help="Whether to enter debug mode in Karma"
+)
 options = argparser.parse_args(sys.argv[1:])
 
-nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"', '--ip=127.0.0.1',
-              '--port={}'.format(JUPYTER_PORT)]
+nb_command = [
+    "kbase-narrative",
+    "--no-browser",
+    '--NotebookApp.allow_origin="*"',
+    "--ip=127.0.0.1",
+    "--port={}".format(JUPYTER_PORT),
+]
 
-if not hasattr(sys, 'real_prefix'):
-    nb_command[0] = 'kbase-narrative'
+if not hasattr(sys, "real_prefix"):
+    nb_command[0] = "kbase-narrative"
 
-nb_server = subprocess.Popen(nb_command,
-    stderr=subprocess.STDOUT,
-    stdout=subprocess.PIPE,
-    preexec_fn = os.setsid
+nb_server = subprocess.Popen(
+    nb_command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, preexec_fn=os.setsid
 )
 
 # wait for notebook server to start up
 while 1:
-    line = nb_server.stdout.readline().decode('utf-8').strip()
+    line = nb_server.stdout.readline().decode("utf-8").strip()
     if not line:
         continue
     print(line)
-    if 'The Jupyter Notebook is running at:' in line:
+    if "The Jupyter Notebook is running at:" in line:
         break
-    if 'is already in use' in line:
+    if "is already in use" in line:
         os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
         # nb_server.terminate()
         raise ValueError(
-            'The port {} was already taken, kill running notebook servers'.format(JUPYTER_PORT)
+            "The port {} was already taken, kill running notebook servers".format(
+                JUPYTER_PORT
+            )
         )
 
 
 def readlines():
     """Print the notebook server output."""
     while 1:
-        line = nb_server.stdout.readline().decode('utf-8').strip()
+        line = nb_server.stdout.readline().decode("utf-8").strip()
         if line:
             print(line)
 
@@ -69,7 +74,7 @@ thread.setDaemon(True)
 thread.start()
 # time.sleep(15)
 
-test_command = ['grunt', 'test']
+test_command = ["grunt", "test"]
 
 resp = 1
 try:

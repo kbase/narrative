@@ -122,7 +122,7 @@ define([
         }
 
         function selectItem(ref) {
-            // this is (currently) a select, so we need to 
+            // this is (currently) a select, so we need to
             // unselect any selected item and
             // find the matching option and select it
             //console.log('autoselect', ref);
@@ -271,7 +271,7 @@ define([
                         detail: 'This is an unknown error connecting to a service. Additional details may be available in your browser log',
                         advice: [
                             'This problem may be temporary -- try again later',
-                            'You may wish to <href="https://kbase.us/contact">report this error to kbase</a>'
+                            'You may wish to <href="https://www.kbase.us/support">report this error to kbase</a>'
                         ]
                     });
                 });
@@ -311,7 +311,7 @@ define([
 
 
         /*
-         * Now 
+         * Now
          */
         function start(arg) {
             return Promise.try(function() {

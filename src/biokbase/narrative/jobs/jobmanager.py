@@ -1,20 +1,14 @@
 import biokbase.narrative.clients as clients
 from .job import Job
+
 # from ipykernel.comm import Comm
-import threading
 from biokbase.narrative.common import kblogging
 from IPython.display import HTML
 from jinja2 import Template
-from datetime import (
-    datetime,
-    timezone,
-    timedelta
-)
-import time
+from datetime import datetime, timezone, timedelta
 from biokbase.narrative.app_util import system_variable
-from biokbase.narrative.exception_util import (
-    transform_job_exception
-)
+from biokbase.narrative.exception_util import transform_job_exception
+
 """
 KBase Job Manager
 
@@ -29,6 +23,8 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
 TERMINAL_STATES = ["completed", "terminated", "error"]
+EXCLUDED_JOB_STATE_FIELDS = ["authstrat", "job_input", "condor_job_ads"]
+
 
 class JobManager(object):
     """
@@ -36,6 +32,7 @@ class JobManager(object):
     On status lookups, it feeds the results to the KBaseJobs channel that the front end
     listens to.
     """
+
     __instance = None
 
     # keys = job_id, values = { refresh = T/F, job = Job object }
@@ -62,32 +59,37 @@ class JobManager(object):
         """
         ws_id = system_variable("workspace_id")
         job_states = dict()
-        kblogging.log_event(self._log, "JobManager.initialize_jobs", {'ws_id': ws_id})
+        kblogging.log_event(self._log, "JobManager.initialize_jobs", {"ws_id": ws_id})
         try:
-            job_states = clients.get('execution_engine2').check_workspace_jobs({
-                'workspace_id': ws_id, 'return_list': 0})
+            job_states = clients.get("execution_engine2").check_workspace_jobs(
+                {"workspace_id": ws_id, "return_list": 0}
+            )
             self._running_jobs = dict()
         except Exception as e:
-            kblogging.log_event(self._log, 'init_error', {'err': str(e)})
+            kblogging.log_event(self._log, "init_error", {"err": str(e)})
             new_e = transform_job_exception(e)
             raise new_e
 
         for job_id, job_state in job_states.items():
-            job_input = job_state.get('job_input', {})
-            job_meta = job_input.get('narrative_cell_info', {})
-            status = job_state.get('status')
-            job = Job.from_state(job_id,
-                                 job_input,
-                                 job_state.get('user'),
-                                 app_id=job_input.get('app_id'),
-                                 tag=job_meta.get('tag', 'release'),
-                                 cell_id=job_meta.get('cell_id', None),
-                                 run_id=job_meta.get('run_id', None),
-                                 token_id=job_meta.get('token_id', None),
-                                 meta=job_meta)
+            job_input = job_state.get("job_input", {})
+            job_meta = job_input.get("narrative_cell_info", {})
+            status = job_state.get("status")
+            job = Job.from_state(
+                job_id,
+                job_input,
+                job_state.get("user"),
+                app_id=job_input.get("app_id"),
+                tag=job_meta.get("tag", "release"),
+                cell_id=job_meta.get("cell_id", None),
+                run_id=job_meta.get("run_id", None),
+                token_id=job_meta.get("token_id", None),
+                meta=job_meta,
+            )
             self._running_jobs[job_id] = {
-                'refresh': 1 if status not in ['completed', 'errored', 'terminated'] else 0,
-                'job': job
+                "refresh": 1
+                if status not in ["completed", "errored", "terminated"]
+                else 0,
+                "job": job,
             }
 
     def _create_jobs(self, job_ids):
@@ -97,32 +99,32 @@ class JobManager(object):
         Initially used to make Child jobs from some parent, but will eventually be adapted to all jobs on startup.
         Just slaps them all into _running_jobs
         """
-        job_states = clients.get('execution_engine2').check_jobs({'job_ids': job_ids,
-                                                                  'return_list': 0})
+        job_states = clients.get("execution_engine2").check_jobs(
+            {"job_ids": job_ids, "return_list": 0}
+        )
         for job_id in job_ids:
             if job_id in job_ids and job_id not in self._running_jobs:
                 job_state = job_states.get(job_id, {})
-                user = job_state.get('user')
-                job_info = job_state.get('job_input', {})
-                job_meta = job_info.get('narrative_cell_info', {})
-                job = Job.from_state(job_id,                                     # the id
-                                     job_info,                                   # params, etc.
-                                     user,                                       # owner id
-                                     app_id=job_info.get('app_id', job_info.get('method')),
-                                     tag=job_meta.get('tag', 'release'),
-                                     cell_id=job_meta.get('cell_id', None),
-                                     run_id=job_meta.get('run_id', None),
-                                     token_id=job_meta.get('token_id', None),
-                                     meta=job_meta)
+                user = job_state.get("user")
+                job_info = job_state.get("job_input", {})
+                job_meta = job_info.get("narrative_cell_info", {})
+                job = Job.from_state(
+                    job_id,  # the id
+                    job_info,  # params, etc.
+                    user,  # owner id
+                    app_id=job_info.get("app_id", job_info.get("method")),
+                    tag=job_meta.get("tag", "release"),
+                    cell_id=job_meta.get("cell_id", None),
+                    run_id=job_meta.get("run_id", None),
+                    token_id=job_meta.get("token_id", None),
+                    meta=job_meta,
+                )
 
                 # Note that when jobs for this narrative are initially loaded,
                 # they are set to not be refreshed. Rather, if a client requests
                 # updates via the start_job_update message, the refresh flag will
                 # be set to True.
-                self._running_jobs[job_id] = {
-                    'refresh': 0,
-                    'job': job
-                }
+                self._running_jobs[job_id] = {"refresh": 0, "job": job}
 
     def list_jobs(self):
         """
@@ -135,30 +137,34 @@ class JobManager(object):
             if not len(state_list):
                 return "No running jobs!"
 
-            state_list = sorted(state_list, key=lambda s: s.get('created', 0))
+            state_list = sorted(state_list, key=lambda s: s.get("created", 0))
             for state in state_list:
                 job = self.get_job(state["job_id"])
-                state['created'] = datetime.fromtimestamp(
-                    state['created'] / 1000.0).strftime("%Y-%m-%d %H:%M:%S")
-                state['run_time'] = 'Not started'
+                state["created"] = datetime.fromtimestamp(
+                    state["created"] / 1000.0
+                ).strftime("%Y-%m-%d %H:%M:%S")
+                state["run_time"] = "Not started"
                 state["owner"] = job.owner
                 state["app_id"] = job.app_id
-                exec_start = state.get('running', None)
+                exec_start = state.get("running", None)
 
-                if state.get('finished'):
-                    finished_time = datetime.fromtimestamp(state.get('finished') / 1000.0)
-                    state['finish_time'] = finished_time.strftime("%Y-%m-%d %H:%M:%S")
+                if state.get("finished"):
+                    finished_time = datetime.fromtimestamp(
+                        state.get("finished") / 1000.0
+                    )
+                    state["finish_time"] = finished_time.strftime("%Y-%m-%d %H:%M:%S")
                     if exec_start:
                         exec_start_time = datetime.fromtimestamp(exec_start / 1000.0)
                         delta = finished_time - exec_start_time
                         delta = delta - timedelta(microseconds=delta.microseconds)
-                        state['run_time'] = str(delta)
+                        state["run_time"] = str(delta)
                 elif exec_start:
-                    exec_start_time = datetime.fromtimestamp(exec_start / 1000.0).replace(
-                        tzinfo=timezone.utc)
+                    exec_start_time = datetime.fromtimestamp(
+                        exec_start / 1000.0
+                    ).replace(tzinfo=timezone.utc)
                     delta = datetime.now(timezone.utc) - exec_start_time
                     delta = delta - timedelta(microseconds=delta.microseconds)
-                    state['run_time'] = str(delta)
+                    state["run_time"] = str(delta)
 
             tmpl = """
             <table class="table table-bordered table-striped table-condensed">
@@ -187,11 +193,18 @@ class JobManager(object):
             return HTML(Template(tmpl).render(jobs=state_list))
 
         except Exception as e:
-            kblogging.log_event(self._log, "list_jobs.error", {'err': str(e)})
+            kblogging.log_event(self._log, "list_jobs.error", {"err": str(e)})
             raise
 
-    def _create_error_state(self, error: str, error_msg: str, code: int, cell_id=None,
-                            run_id=None, job_id=None) -> dict:
+    def _create_error_state(
+        self,
+        error: str,
+        error_msg: str,
+        code: int,
+        cell_id=None,
+        run_id=None,
+        job_id=None,
+    ) -> dict:
         """
         Creates an error state to return if
         1. the state is missing or unretrievable
@@ -208,17 +221,15 @@ class JobManager(object):
                 "code": code,
                 "name": "Job Error",
                 "message": error_msg,
-                "error": error
+                "error": error,
             },
             "errormsg": error_msg,
             "error_code": code,
-            "cell_id": None,
-            "run_id": None,
             "job_id": job_id,
             "cell_id": cell_id,
             "run_id": run_id,
             "created": 0,
-            "updated": 0
+            "updated": 0,
         }
 
     def _construct_job_status(self, job: Job, state: dict) -> dict:
@@ -265,56 +276,68 @@ class JobManager(object):
         # This could also be triggered by manually looking up job state for some job that doesn't
         # exist in the Narrative. Which is borderline, but still probably ok.
         if job is None and state is not None:
-            state.update({
-                "cell_id": None,
-                "run_id": None,
-            })
+            state.update(
+                {
+                    "cell_id": None,
+                    "run_id": None,
+                }
+            )
             return {
-                'state': state,
-                'app_spec': app_spec,
-                'widget_info': widget_info,
-                'owner': None
+                "state": state,
+                "app_spec": app_spec,
+                "widget_info": widget_info,
+                "owner": None,
             }
 
         if state is None:
-            kblogging.log_event(self._log, "lookup_job_status.error", {'err': 'Unable to get job state for job {}'.format(job.job_id)})
+            kblogging.log_event(
+                self._log,
+                "lookup_job_status.error",
+                {"err": "Unable to get job state for job {}".format(job.job_id)},
+            )
             state = self._create_error_state(
                 "Unable to find current job state. Please try again later, or contact KBase.",
                 "Unable to return job state",
                 -1,
                 cell_id=job.cell_id,
                 run_id=job.run_id,
-                job_id=job.job_id
+                job_id=job.job_id,
             )
 
-        if state.get('finished'):
+        if state.get("finished"):
             try:
                 widget_info = job.get_viewer_params(state)
             except Exception as e:
                 # Can't get viewer params
                 new_e = transform_job_exception(e)
-                kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
-                state.update({
-                    "status": "error",
-                    "errormsg": "Unable to build output viewer parameters!",
-                    "error": {
-                        "code": getattr(new_e, "code", -1),
-                        "source": getattr(new_e, "source", "JobManager"),
-                        "name": "App Error",
-                        "message": "Unable to build output viewer parameters",
-                        "error": "Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact the developer of this App for assistance."
+                kblogging.log_event(
+                    self._log, "lookup_job_status.error", {"err": str(e)}
+                )
+                state.update(
+                    {
+                        "status": "error",
+                        "errormsg": "Unable to build output viewer parameters!",
+                        "error": {
+                            "code": getattr(new_e, "code", -1),
+                            "source": getattr(new_e, "source", "JobManager"),
+                            "name": "App Error",
+                            "message": "Unable to build output viewer parameters",
+                            "error": "Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact the developer of this App for assistance.",
+                        },
                     }
-                })
+                )
 
-        state.update({
-            "child_jobs": self._child_job_states(
-                state.get("sub_jobs", []),
-                job.meta.get("batch_app"),
-                job.meta.get("batch_tag")
-            ),
-            "run_id": job.cell_id,
-            "cell_id": job.cell_id
-        })
+        state.update(
+            {
+                "child_jobs": self._child_job_states(
+                    state.get("sub_jobs", []),
+                    job.meta.get("batch_app"),
+                    job.meta.get("batch_tag"),
+                ),
+                "run_id": job.cell_id,
+                "cell_id": job.cell_id,
+            }
+        )
         if "batch_size" in job.meta:
             state.update({"batch_size": job.meta["batch_size"]})
         return {
@@ -322,7 +345,7 @@ class JobManager(object):
             "spec": app_spec,
             "widget_info": widget_info,
             "owner": job.owner,
-            "listener_count": self._running_jobs[job.job_id]["refresh"]
+            "listener_count": self._running_jobs[job.job_id]["refresh"],
         }
 
     def _child_job_states(self, sub_job_list, app_id, app_tag):
@@ -342,32 +365,32 @@ class JobManager(object):
 
         sub_job_list = sorted(sub_job_list)
 
-        job_states = clients.get('execution_engine2').check_jobs({'job_ids': sub_job_list,
-                                                                  'return_list': 0})
+        job_states = clients.get("execution_engine2").check_jobs(
+            {
+                "job_ids": sub_job_list,
+                "exclude_fields": EXCLUDED_JOB_STATE_FIELDS,
+                "return_list": 0,
+            }
+        )
         child_job_states = list()
 
         for job_id in sub_job_list:
             job_state = job_states.get(job_id, {})
-            params = job_state.get('job_input', {}).get('params', [])
+            params = job_state.get("job_input", {}).get("params", [])
             # if it's error, get the error.
-            if job_state.get('errormsg'):
+            if job_state.get("errormsg"):
                 error = job_state
-                error.update({'job_id': job_id})
+                error.update({"job_id": job_id})
                 child_job_states.append(error)
                 continue
             # if it's done, get the output mapping.
-            state = job_state.get('status')
-            if state == 'completed':
+            state = job_state.get("status")
+            if state == "completed":
                 try:
-                    widget_info = Job.map_viewer_params(
-                        state,
-                        params,
-                        app_id,
-                        app_tag
-                    )
+                    widget_info = Job.map_viewer_params(state, params, app_id, app_tag)
                 except ValueError:
                     widget_info = {}
-                state.update({'widget_info': widget_info})
+                state.update({"widget_info": widget_info})
             child_job_states.append(state)
         return child_job_states
 
@@ -400,12 +423,17 @@ class JobManager(object):
         # Get the rest of states direct from EE2.
         if len(jobs_to_lookup):
             try:
-                fetched_states = clients.get("execution_engine2").check_jobs({
-                    "job_ids": jobs_to_lookup,
-                    "return_list": 0
-                })
+                fetched_states = clients.get("execution_engine2").check_jobs(
+                    {
+                        "job_ids": jobs_to_lookup,
+                        "exclude_fields": EXCLUDED_JOB_STATE_FIELDS,
+                        "return_list": 0,
+                    }
+                )
             except Exception as e:
-                kblogging.log_event(self._log, "construct_job_status_set", {"err": str(e)})
+                kblogging.log_event(
+                    self._log, "construct_job_status_set", {"err": str(e)}
+                )
         for job_id, state in fetched_states.items():
             revised_state = self._construct_job_status(self.get_job(job_id), state)
             if revised_state["state"]["status"] in TERMINAL_STATES:
@@ -421,18 +449,26 @@ class JobManager(object):
         If parent doesn't exist, or child isn't an actual child, raise an exception
         """
         if parent_job_id not in self._running_jobs:
-            raise ValueError('Parent job id {} not found, cannot validate child job {}.'.format(parent_job_id, child_job_id))
+            raise ValueError(
+                "Parent job id {} not found, cannot validate child job {}.".format(
+                    parent_job_id, child_job_id
+                )
+            )
         if child_job_id not in self._running_jobs:
             parent_job = self.get_job(parent_job_id)
             parent_state = parent_job.state()
-            if child_job_id not in parent_state.get('sub_jobs', []):
-                raise ValueError('Child job id {} is not a child of parent job {}'.format(child_job_id, parent_job_id))
+            if child_job_id not in parent_state.get("sub_jobs", []):
+                raise ValueError(
+                    "Child job id {} is not a child of parent job {}".format(
+                        child_job_id, parent_job_id
+                    )
+                )
             else:
                 self._create_jobs([child_job_id])
                 # injects its app id and version
                 child_job = self.get_job(child_job_id)
-                child_job.app_id = parent_job.meta.get('batch_app')
-                child_job.tag = parent_job.meta.get('batch_tag', 'release')
+                child_job.app_id = parent_job.meta.get("batch_app")
+                child_job.tag = parent_job.meta.get("batch_tag", "release")
 
     def lookup_job_info(self, job_id, parent_job_id=None):
         """
@@ -451,10 +487,10 @@ class JobManager(object):
             self._verify_job_parentage(parent_job_id, job_id)
         job = self.get_job(job_id)
         info = {
-            'app_id': job.app_id,
-            'app_name': job.app_spec()['info']['name'],
-            'job_id': job_id,
-            'job_params': job.inputs
+            "app_id": job.app_id,
+            "app_name": job.app_spec()["info"]["name"],
+            "job_id": job_id,
+            "job_params": job.inputs,
         }
         return info
 
@@ -471,7 +507,7 @@ class JobManager(object):
         jobs_to_lookup = list()
         # grab the list of running job ids, so we don't run into update-while-iterating problems.
         for job_id in self._running_jobs.keys():
-            if self._running_jobs[job_id]['refresh'] > 0 or ignore_refresh_flag:
+            if self._running_jobs[job_id]["refresh"] > 0 or ignore_refresh_flag:
                 jobs_to_lookup.append(job_id)
         if len(jobs_to_lookup) > 0:
             return self._construct_job_status_set(jobs_to_lookup)
@@ -490,7 +526,7 @@ class JobManager(object):
             The new Job that was started.
         """
         kblogging.log_event(self._log, "register_new_job", {"job_id": job.job_id})
-        self._running_jobs[job.job_id] = {'job': job, 'refresh': 0}
+        self._running_jobs[job.job_id] = {"job": job, "refresh": 0}
 
     def get_job(self, job_id):
         """
@@ -502,8 +538,14 @@ class JobManager(object):
         else:
             raise ValueError(f"No job present with id {job_id}")
 
-    def get_job_logs(self, job_id: str, parent_job_id: str=None, first_line: int=0,
-                     num_lines: int=None, latest_only: bool=False) -> tuple:
+    def get_job_logs(
+        self,
+        job_id: str,
+        parent_job_id: str = None,
+        first_line: int = 0,
+        num_lines: int = None,
+        latest_only: bool = False,
+    ) -> tuple:
         """
         Raises a Value error if the job_id doesn't exist or is not present.
         :param job_id: str - the job id from the execution engine
@@ -544,7 +586,7 @@ class JobManager(object):
         except Exception as e:
             raise transform_job_exception(e)
 
-    def cancel_job(self, job_id: str, parent_job_id: str=None) -> None:
+    def cancel_job(self, job_id: str, parent_job_id: str = None) -> None:
         """
         Cancels a running job, placing it in a canceled state.
         Does NOT delete the job.
@@ -555,13 +597,18 @@ class JobManager(object):
         """
 
         if job_id is None:
-            raise ValueError('Job id required for cancellation!')
+            raise ValueError("Job id required for cancellation!")
         if not parent_job_id and job_id not in self._running_jobs:
             raise ValueError(f"No job present with id {job_id}")
 
         try:
-            cancel_status = clients.get("execution_engine2").check_job_canceled({"job_id": job_id})
-            if cancel_status.get("finished", 0) == 1 or cancel_status.get("canceled", 0) == 1:
+            cancel_status = clients.get("execution_engine2").check_job_canceled(
+                {"job_id": job_id}
+            )
+            if (
+                cancel_status.get("finished", 0) == 1
+                or cancel_status.get("canceled", 0) == 1
+            ):
                 # It's already finished, don't try to cancel it again.
                 return
         except Exception as e:
@@ -570,19 +617,19 @@ class JobManager(object):
         # Stop updating the job status while we try to cancel.
         # Also, set it to have a special state of 'canceling' while we're doing the cancel
         if not parent_job_id:
-            is_refreshing = self._running_jobs[job_id].get('refresh', 0)
-            self._running_jobs[job_id]['refresh'] = 0
-            self._running_jobs[job_id]['canceling'] = True
+            is_refreshing = self._running_jobs[job_id].get("refresh", 0)
+            self._running_jobs[job_id]["refresh"] = 0
+            self._running_jobs[job_id]["canceling"] = True
         try:
-            clients.get('execution_engine2').cancel_job({'job_id': job_id})
+            clients.get("execution_engine2").cancel_job({"job_id": job_id})
         except Exception as e:
             raise transform_job_exception(e)
         finally:
             if not parent_job_id:
-                self._running_jobs[job_id]['refresh'] = is_refreshing
-                del self._running_jobs[job_id]['canceling']
+                self._running_jobs[job_id]["refresh"] = is_refreshing
+                del self._running_jobs[job_id]["canceling"]
 
-    def get_job_state(self, job_id: str, parent_job_id: str=None) -> dict:
+    def get_job_state(self, job_id: str, parent_job_id: str = None) -> dict:
         if parent_job_id is not None:
             self._verify_job_parentage(parent_job_id, job_id)
         if job_id is None or job_id not in self._running_jobs:
@@ -591,11 +638,13 @@ class JobManager(object):
             return self._completed_job_states[job_id]
         job = self.get_job(job_id)
         state = self._construct_job_status(job, job.state())
-        if state.get('status') == 'completed':
+        if state.get("status") == "completed":
             self._completed_job_states[job_id] = state
         return state
 
-    def modify_job_refresh(self, job_id: str, update_adjust: int, parent_job_id: str=None) -> None:
+    def modify_job_refresh(
+        self, job_id: str, update_adjust: int, parent_job_id: str = None
+    ) -> None:
         """
         Modifies how many things want to get the job updated.
         If this sets the current "refresh" key to be less than 0, it gets reset to 0.

@@ -246,7 +246,6 @@ define([
                         data: StringUtil.safeJSONStringify(data.result)
                     };
                     if (data.next_steps) {
-                        // console.debug("adding next steps in create");
                         params.next_steps = data.next_steps;
                     }
                     this.createOutputCell(cell, params);
@@ -276,17 +275,6 @@ define([
                     this.setDataIcon(param.elt, param.type, param.stacked, param.indent);
                 }.bind(this)
             );
-
-            // Refresh the read-only or View-only mode
-            // Disabled as never used.
-            // $(document).on('updateReadOnlyMode.Narrative',
-            //     function(e, ws, name, callback) {
-            //         this.runtime.bus().emit('read-only-changed');
-            //         this.updateReadOnlyMode(ws, name, callback);
-            //     }.bind(this)
-            // );
-            // related: click on edit-mode toggles state
-
 
             this.initReadOnlyElements();
 
@@ -773,11 +761,9 @@ define([
             // If this narrative became read-only after the toggle button was rendered,
             // then simply disabling the class-switching is not enough, the entire
             // mechanism should be disabled (and the button hidden as well.)
-            // if (!this.narrativeIsReadOnly) {
             var icon = $('#kb-view-mode span');
             icon.toggleClass('fa-eye', (this.uiMode === 'view'));
             icon.toggleClass('fa-pencil', (this.uiMode === 'edit'));
-            //}
             Jupyter.narrative.readonly = (this.uiMode === 'view');
 
             // Warning, do not look for the code for this ... it will burn your
@@ -850,7 +836,6 @@ define([
             // console.debug("check_readonly_mode.begin");
             // stop if no workspace client
             if (ws == null) {
-                // console.debug("set_readonly_mode.end: WS client not initialized");
                 return callback(null);
             }
             // stop if this is too-soon after last check
@@ -858,7 +843,6 @@ define([
             if (this.last_readonly_check != null) {
                 var delta = sec - this.last_readonly_check;
                 if (delta < 60) {
-                    // console.debug("check_readonly_mode.end: skip, too soon delta=" + delta);
                     return callback(null);
                 }
             }
@@ -874,7 +858,6 @@ define([
                         is_ro = false;
                     }
                     Jupyter.narrative.readonly = is_ro; // set globally
-                    // console.debug("set_readonly_mode.end: callback_value=" + is_ro);
                     return callback(is_ro);
                 },
                 function (error) {
@@ -895,8 +878,6 @@ define([
                 '#kb-add-code-cell', '#kb-add-md-cell', // edit btns
                 '#kb-share-btn', '#kb-save-btn', // action btns
                 '#kb-ipy-menu', // kernel
-                // '.kb-app-panel .pull-right', // app icons
-                // '.kb-func-panel .pull-right', // method icons
                 '.kb-cell-toolbar .buttons.pull-right', // Jupyter icons
                 '.kb-title .btn-toolbar .btn .fa-arrow-right', // data panel slideout
             ];
@@ -987,7 +968,6 @@ define([
          */
         enterReadOnlyMode: function () {
             // It is implicit that view-only mode is on when the narrative is read only.
-            // this.inReadOnlyMode = true;
             this.uiMode = 'view';
 
             // Hide side-panel
@@ -1096,7 +1076,6 @@ define([
         connect: function (p, q, g, w, container, line_class) {
             var pc = $(p).position();
             var qc = $(q).position();
-            // console.debug("connect ", pc, " to ", qc);
             var py = pc.top + (p.height() - w) / 2.0;
             var qy = qc.top + (q.height() - w) / 2.0;
             var coords = [{
@@ -1126,7 +1105,6 @@ define([
          * Activate "normal" R/W mode
          */
         activateReadwriteMode: function () {
-            // console.debug("activate read-write mode");
         },
 
         /**
@@ -1260,22 +1238,6 @@ define([
 
             try {
                 var state;
-                /** wjriehl - 6:20pm,Fri,15apr2016
-                 * SAVE STATE DISABLED
-                 * changes to the kbwidget API have caused this to embed the actual cell object into the
-                 * state, making it all circular when it tries to serialize.
-                 * so, disabled for now.
-                 */
-                // if (widget && $(cell.element).find(target)[widget](['prototype'])['getState']) {
-                //     // if that widget can save state, do it!
-                //     state = $(cell.element).find(target)[widget]('getState');
-                // }
-
-                // var timestamp = this.getTimestamp();
-                // cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
-                // while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
-                //     cell.metadata[this.KB_CELL][this.KB_STATE].pop();
-                // }
             } catch (error) {
                 this.dbg('Unable to save state for cell:');
                 this.dbg(cell);
@@ -1320,13 +1282,6 @@ define([
                         widget = capture[2];
                     }
 
-                    // // do output widget stuff.
-                    // widget = 'kbaseNarrativeOutputCell';
-
-                    // // if it's an older Narrative, then it might have metadata invoking a different widget.
-                    // var metadata = cell.metadata[this.KB_CELL];
-                    // if (metadata.widget)
-                    //     widget = metadata.widget;
                 } else if (this.isAppCell(cell)) {
                     widget = 'kbaseNarrativeAppCell';
                 }
@@ -1345,9 +1300,6 @@ define([
                         }
                     } catch (err) {
                         // just ignore it and move on.
-                        // this.dbg('Unable to load cell state! Ignoring the following cell:')
-                        // this.dbg(cell);
-                        // this.dbg(err);
                     }
                 }
             }
@@ -1429,9 +1381,6 @@ define([
                     // get the list of parameters and save the state in the cell's metadata
                     var paramList = $(cell.element).find('#inputs')[inputWidget]('getParameters');
                     self.saveCellState(cell);
-
-                    // var state = $(cell.element).find("#inputs")[inputWidget]('getState');
-                    // cell.metadata[self.KB_CELL][self.KB_STATE] = state;
 
                     // Run the method.
                     var method = cell.metadata[self.KB_CELL].method;
@@ -1523,30 +1472,6 @@ define([
                                 'Any generated data will be retained. Continue?';
 
                             this.showDeleteCellModal(index, cell, stateWarning);
-                            // switch(state) {
-                            //     case 'running':
-                            //         // set some text
-                            //         stateWarning = 'This cell appears to have a running job associated with it. ' +
-                            //                        'Deleting this cell will also stop and delete the running job. ' +
-                            //                        'Any generated data will not be deleted. Continue?';
-                            //         break;
-                            //     case 'error':
-                            //         // set some text
-                            //         stateWarning = 'This cell appears to have produced an error while running. ' +
-                            //                        'Deleting this cell will also stop and delete the associated job. ' +
-                            //                        'Any generated data will be maintained. Continue?';
-                            //         break;
-                            //     case 'done':
-                            //         // set some text
-                            //         stateWarning = 'This cell has finished running but may have a job still associated with it. ' +
-                            //                        'Deleting this cell will also delete that job, but not any generated data. ' +
-                            //                        'Continue?';
-                            //         break;
-                            //     default:
-                            //         // set no text
-                            //         stateWarning = 'Deleting this cell will also delete any associated job. Any generated data will be retained. Continue?';
-                            //         break;
-                            // }
                         }
                     } else {
                         Jupyter.notebook.delete_cell(index);
@@ -1647,15 +1572,7 @@ define([
                     store_history: false
                 };
 
-                // ignore making code cells for now.
-                // var codeCell = nb.insert_cell_below('code', currentIndex);
-                // self.setCodeCell(codeCell);
-                // codeCell.element.css('display', 'none');
-
                 var code = self.buildRunCommand(service, method, params);
-                // codeCell.set_text(code);
-                // codeCell.output_area.clear_output(true, true, true);
-                // codeCell.set_input_prompt('*');
 
                 $(cell.element).find('#kb-func-progress').css({
                     'display': 'block'
@@ -1753,7 +1670,6 @@ define([
             this.dbg('[handleExecuteReply]');
             this.dbg(content);
 
-            // this.dbg(cell);
             /* This catches and displays any errors that don't get piped through
              * the back-end service.py mechanism.
              * Any code that makes it that far gets reported through the output
@@ -1787,7 +1703,6 @@ define([
 
             }
             this.showCellProgress(cell, 'DONE', 0, 0);
-            //this.set_input_prompt(content.execution_count);
             $([Jupyter.events]).trigger('set_dirty.Notebook', {
                 value: true
             });
@@ -1810,7 +1725,6 @@ define([
         handleInputRequest: function (cell, content) {
             this.dbg('handle input request called');
             return;
-            //this.output_area.append_raw_input(content);
         },
         /**
          * @method _handle_clear_output
@@ -1819,7 +1733,6 @@ define([
         handleClearOutput: function (cell, content) {
             this.dbg('handle clear output called');
             return;
-            //this.clear_output(content.stdout, content.stderr, content.other);
         },
 
         /**

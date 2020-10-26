@@ -1,5 +1,5 @@
 /*global define*/
-/*global describe, it, xit, expect*/
+/*global describe, it, expect, spyOn*/
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
@@ -13,9 +13,7 @@ define ([
 ], function(
     $,
     StagingAreaViewer,
-    Jupyter,
-    Narrative,
-    TestUtil
+    Jupyter
 ) {
     'use strict';
 
@@ -102,7 +100,7 @@ define ([
             linkedStagingViewer.render()
                 .then(() => {
                     expect($node.html()).toContain('Or upload to this staging area by using');
-                    expect($node.html()).toContain('https://app.globus.org/file-manager?destination_id=3aca022a-5e5b-11e6-8309-22000b97daec&amp;destination_path=%2F' + fakeUser);
+                    expect($node.html()).toContain('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&amp;destination_path=' + fakeUser);
                     done();
                 });
         });

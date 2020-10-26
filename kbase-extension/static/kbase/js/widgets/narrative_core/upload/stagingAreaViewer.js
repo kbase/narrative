@@ -152,7 +152,11 @@ define([
         },
 
         renderFileHeader: function () {
-            this.$elem.append(this.ftpFileHeaderTmpl({userInfo: this.userInfo}));
+            const uploadConfig = Config.get('upload');
+            this.$elem.append(this.ftpFileHeaderTmpl({
+                globusUrl: uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user,
+                userInfo: this.userInfo
+            }));
 
 
             // Set up the link to the web upload app.

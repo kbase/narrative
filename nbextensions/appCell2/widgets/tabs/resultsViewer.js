@@ -144,7 +144,7 @@ define([
             var events = Events.make();
             var appList = div([
                 'No suggestions available! ',
-                a({ href:'https://kbase.us/contact-us/', target: '_blank' }, 'Contact us'),
+                a({ href:'https://www.kbase.us/support/', target: '_blank' }, 'Contact us'),
                 ' if you would like to add one.'
             ]);
             // filter out legacy apps with no module name

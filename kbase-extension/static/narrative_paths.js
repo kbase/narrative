@@ -147,7 +147,6 @@ require.config({
         'kbaseNarrativeParameterFileInput': 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterFileInput',
         'kbaseNarrativeParameterTextSubdataInput': 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextSubdataInput',
         'kbaseNarrativeError': 'kbase/js/widgets/function_output/kbaseNarrativeError',
-        'narrativeManager': 'kbase/js/api/NarrativeManager',
         'ipythonCellMenu': 'kbase/js/widgets/narrative_core/ipythonCellMenu',
 
 
@@ -196,6 +195,7 @@ require.config({
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
+        'kbaseVariation': 'kbase/js/widgets/function_output/kbaseVariation',
         kbaseDefaultObjectView: 'kbase/js/widgets/function_output/kbaseDefaultObjectView',
         kbaseBinnedContigs: 'kbase/js/widgets/function_output/kbaseBinnedContigs',
         kbaseAlignment: 'kbase/js/widgets/function_output/kbaseAlignment',

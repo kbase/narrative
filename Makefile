@@ -17,8 +17,11 @@ build-narrative-container:
 docker_image: build-narrative-container
 
 # Per PR #1328, adding an option to skip minification
-dev_image:
+dev-image:
 	SKIP_MINIFY=1 DOCKER_TAG=dev sh $(DOCKER_INSTALLER)
+
+run-dev-image:
+	ENV=$(ENV) sh scripts/local-dev-run.sh
 
 install:
 	bash $(INSTALLER)

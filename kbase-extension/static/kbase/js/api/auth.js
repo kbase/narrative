@@ -1,17 +1,36 @@
 define([
     'bluebird',
-    'jquery'
-], function(Promise, $) {
+    'jquery',
+    'narrativeConfig'
+], function (
+    Promise,
+    $,
+    Config
+) {
     'use strict';
 
     function factory(config) {
-        const url = config.url,
-            cookieNames = {
-                auth: 'kbase_session',                  // main auth token, use this
-                narrativeSession: 'narrative_session',  // session token - used by the router, not set, but should be deleted
-                backup: 'kbase_session_backup'          // used by the reports HTML server, should get deleted
+        const url = config.url;
+        const secureCookies = typeof config.secureCookies === 'undefined' ? true : config.secureCookies;
+
+        /*
+            Each cookie is defined
+        */
+        const cookieConfig = {
+            auth: {
+                name: 'kbase_session'
             },
-            tokenAge = 14; // days
+            backup: {
+                name: 'kbase_session_backup',
+                domain: 'kbase.us',
+                enableIn: ['prod']
+            },
+            narrativeSession: {
+                name: 'narrative_session'
+            }
+        };
+
+        const TOKEN_AGE = 14; // days
 
         /**
          * Meant for managing auth or session cookies (mainly auth cookies as set by
@@ -23,38 +42,54 @@ define([
          * expires is expected to be in days
          * auto set fields are:
          *  - path = '/'
-         *  - expires = tokenAge (default 14) days
+         *  - expires = TOKEN_AGE (default 14) days
          * @param {object} cookie
          *  - has the cookie keys: name, value, path, expires, max-age, domain
-         *  - adds secure=true, samesite=none for KBase use.
+         *  - adds secure=true, samesite=Lax for KBase use.
+         *  - When used in a localhost dev environment samesite=Lax and secure=false
+         *    should be sufficient for browsers.
          */
         function setCookie(cookie) {
             if (!cookie.name) {
                 return;
             }
-            let name = encodeURIComponent(cookie.name);
-            let value = encodeURIComponent(cookie.value || '');
-            let props = {
-                expires: tokenAge,        // gets translated to GMT string
+            const name = encodeURIComponent(cookie.name);
+            const value = encodeURIComponent(cookie.value || '');
+            const props = {
+                expires: TOKEN_AGE,        // gets translated to GMT string
                 path: '/',
-                samesite: 'none'
+                samesite: 'Lax'
             };
             if (Number.isInteger(cookie.expires)) {
                 props.expires = cookie.expires;
             }
+
+            // Default to secure cookies global setting if not specified.
+            if (typeof cookie.secure === 'undefined') {
+                cookie.secure = secureCookies;
+            }
+
             if (cookie.domain) {
                 props.domain = cookie.domain;
-                props.secure = 'true';
             }
             props['max-age'] = 86400 * props.expires;
             if (props.expires === 0) {
                 props.expires = new Date(0).toUTCString();
-            }
-            else {
+            } else {
                 props.expires = new Date(new Date().getTime() + (86400000*props.expires)).toUTCString();
             }
-            let propStr = Object.keys(props).map(key => `${key}=${props[key]}`).join('; ');
-            let newCookie = `${name}=${value}; ${propStr}`;
+
+            const fields = Object.keys(props).map((key) => {
+                return `${key}=${props[key]}`;
+            });
+
+            if (cookie.secure) {
+                fields.push('secure');
+            }
+
+            const propStr = fields.join(';');
+
+            const newCookie = `${name}=${value}; ${propStr}`;
             document.cookie=newCookie;
         }
 
@@ -63,12 +98,12 @@ define([
          * @param {string} name
          */
         function getCookie(name) {
-            let allCookies = {};
-            document.cookie.split(';').forEach(cookie => {
+            const allCookies = {};
+            document.cookie.split(';').forEach((cookie) => {
                 const parts = cookie.trim().split('=');
                 allCookies[parts[0]] = parts[1];
             });
-            return allCookies[name];
+            return allCookies[name] || null;
         }
 
         /**
@@ -79,16 +114,16 @@ define([
          * @param {string || undefined} domain
          */
         function removeCookie(name, path, domain) {
-            let removedCookie = {
-                name: name,
+            const cookieToRemove = {
+                name,
                 value: '',
-                path: path,
+                path,
                 expires: 0
             };
             if (domain) {
-                removedCookie.domain = domain;
+                cookieToRemove.domain = domain;
             }
-            setCookie(removedCookie);
+            setCookie(cookieToRemove);
         }
 
         /**
@@ -127,38 +162,57 @@ define([
          * Returns null if not logged in.
          */
         function getAuthToken() {
-            const token = getCookie(cookieNames.auth);
-            if (token) {
-                return token;
-            }
-            return null;
+            return getCookie(cookieConfig.auth.name);
         }
 
         /* Sets the given auth token into the browser's cookie.
          * Does nothing if the token is null.
          */
         function setAuthToken(token) {
-            if (token) {
-                ['auth', 'backup'].forEach((name) => {
-                    let cookie = {
-                        name: cookieNames[name],
-                        value: token
+            const deployEnv = Config.get('environment');
+
+            function setToken(config) {
+                // Honor cookie host whitelist if present.
+                if (config.enableIn) {
+                    if (config.enableIn.indexOf(deployEnv) === -1) {
+                        return;
                     }
-                    setCookie(cookie);
-                    cookie.domain='.kbase.us';
-                    setCookie(cookie);
-                });
+                }
+                const cookieField = {
+                    name: config.name,
+                    value: token
+                };
+                if (config.domain) {
+                    cookieField.domain = config.domain;
+                }
+                setCookie(cookieField);
             }
+
+            setToken(cookieConfig.auth);
+            setToken(cookieConfig.backup);
         }
 
         /* Deletes the auth cookies */
         function clearAuthToken() {
-            Object.keys(cookieNames).forEach(name => removeCookie(cookieNames[name], '/', '.kbase.us'));
-            Object.keys(cookieNames).forEach(name => removeCookie(cookieNames[name], '/'));
+            const deployEnv = Config.get('environment');
+
+            function removeToken(config) {
+                // Honor the cookie host whitelist if present.
+                if (config.enableIn) {
+                    if (config.enableIn.indexOf(deployEnv) === -1) {
+                        return;
+                    }
+                }
+                removeCookie(config.name, '/', config.domain);
+            }
+
+            Object.keys(cookieConfig).forEach((name) => {
+                removeToken(cookieConfig[name]);
+            });
         }
 
         function revokeAuthToken(token, id) {
-            var operation = '/tokens/revoke/' + id;
+            const operation = '/tokens/revoke/' + id;
             return makeAuthCall(token, {
                 operation: operation,
                 method: 'DELETE'
@@ -171,8 +225,8 @@ define([
             if (!token) {
                 token = getAuthToken();
             }
-            let encodedUsers = users.map(u => encodeURIComponent(u));
-            var operation = '/users/?list=' + encodedUsers.join(',');
+            const encodedUsers = users.map((u) => encodeURIComponent(u));
+            const operation = '/users/?list=' + encodedUsers.join(',');
             return makeAuthCall(token, {
                 operation: operation,
                 method: 'GET'
@@ -183,7 +237,7 @@ define([
             if (!token) {
                 token = getAuthToken();
             }
-            var operation = '/users/search/' + query;
+            let operation = '/users/search/' + query;
             if (options) {
                 operation += '/?fields=' + options.join(',');
             }
@@ -218,13 +272,13 @@ define([
          * parameters as expected.
          */
         function makeAuthCall(token, callParams) {
-            var version = callParams.version || 'V2',
-                callString = [
-                    url,
-                    '/api/',
-                    version,
-                    callParams.operation
-                ].join('');
+            const version = callParams.version || 'V2';
+            const callString = [
+                url,
+                '/api/',
+                version,
+                callParams.operation
+            ].join('');
 
             return Promise.resolve($.ajax({
                 url: callString,
@@ -255,36 +309,37 @@ define([
                 retries = 3;
             }
             return getTokenInfo(token)
-            .then(function(info) {
-                if (info.expires && info.expires > new Date().getTime()) {
-                    return true;
-                }
-                return false;
-            })
-            .catch(function(error) {
-                if (error.status === 401 || error.status === 403 || retries < 0) {
+                .then(function (info) {
+                    if (info.expires && info.expires > new Date().getTime()) {
+                        return true;
+                    }
                     return false;
-                }
-                else {
-                    throw error;
-                }
-            });
+                })
+                .catch(function (error) {
+                    if (error.status === 401 || error.status === 403 || retries < 0) {
+                        return false;
+                    }
+                    else {
+                        throw error;
+                    }
+                });
         }
 
         return {
-            putCurrentProfile: putCurrentProfile,
-            getCurrentProfile: getCurrentProfile,
+            putCurrentProfile,
+            getCurrentProfile,
             getUserProfile: getCurrentProfile,
-            getAuthToken: getAuthToken,
-            setAuthToken: setAuthToken,
-            clearAuthToken: clearAuthToken,
-            revokeAuthToken: revokeAuthToken,
-            getTokenInfo: getTokenInfo,
-            getUserNames: getUserNames,
-            searchUserNames: searchUserNames,
-            validateToken: validateToken
+            getAuthToken,
+            setAuthToken,
+            clearAuthToken,
+            revokeAuthToken,
+            getTokenInfo,
+            getUserNames,
+            searchUserNames,
+            validateToken,
+            setCookie,
+            getCookie
         };
-
     }
 
     return {

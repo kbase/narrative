@@ -48,7 +48,8 @@
 }
 
 .kblog-text {
-    /* word-wrap: break-word; */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
     flex: 1;
     margin-left: 6px;
 }

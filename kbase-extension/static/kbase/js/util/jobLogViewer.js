@@ -352,8 +352,9 @@ define([
             loopFrequency = 5000,
             looping = false,
             stopped = false,
-            listeningForJob = false,
-            requestLoop = null,
+            listeningForJob = false,    // if true, this means we're listening for job updates
+            awaitingLog = false,        // if true, there's a log request fired that we're awaiting
+            requestLoop = null,         // the timeout object
             scrollToEndOnNext = false;
 
         // VIEW ACTIONS
@@ -389,9 +390,10 @@ define([
                 if (requestLoop) {
                     clearTimeout(requestLoop);
                 }
-                runtime.bus().emit('request-latest-job-log', {
-                    jobId: jobId,
-                });
+                requestLatestJobLog();
+                // runtime.bus().emit('request-latest-job-log', {
+                //     jobId: jobId,
+                // });
             }
         }
 
@@ -426,6 +428,7 @@ define([
          */
         function requestJobLog(firstLine) {
             ui.showElement('spinner');
+            awaitingLog = true;
             runtime.bus().emit('request-job-log', {
                 jobId: jobId,
                 options: {
@@ -441,6 +444,7 @@ define([
             // otherwise load entire log
             let autoState = fsm.getCurrentState().state.auto;
             scrollToEndOnNext = true;
+            awaitingLog = true;
             ui.showElement('spinner');
             runtime.bus().emit('request-latest-job-log', {
                 jobId: jobId,
@@ -596,10 +600,6 @@ define([
                         ])
                     ]),
                     div({ dataElement: 'log-panel',
-                        // id: events.addEvent({
-                        //     type: 'scroll',
-                        //     handler: handlePanelScrolling
-                        // }),
                         style: {
                             'overflow-y': 'scroll',
                             height: panelHeight,
@@ -612,24 +612,6 @@ define([
                 content: content,
                 events: events
             };
-        }
-
-        function sanitize(text) {
-            var longWord = 80;
-            var encoded = ui.htmlEncode(text);
-
-            // try to make sane word length not break things.
-            var words = encoded.split(/ /);
-
-            var fixed = words.map(function(word) {
-                if (word.length < longWord) {
-                    return word;
-                }
-                return word.replace(/\//, '/<wbr>')
-                    .replace(/\./, '.<wbr>');
-            });
-
-            return fixed.join(' ');
         }
 
         /**
@@ -659,7 +641,7 @@ define([
             // text
             const textDiv = document.createElement('div');
             textDiv.setAttribute('class', 'kblog-text');
-            const lineText = document.createTextNode(line.text)
+            const lineText = document.createTextNode(line.text);
             textDiv.appendChild(lineText);
             // append line number and text
             wrapperDiv.appendChild(numDiv);
@@ -866,6 +848,9 @@ define([
                     type: 'job-logs'
                 },
                 handle: function(message) {
+                    if (!awaitingLog) {
+                        return;
+                    }
                     ui.hideElement('spinner');
                     /* message has structure:
                      * {
@@ -885,12 +870,12 @@ define([
                      *   }
                      * }
                      */
+                    awaitingLog = false;
 
                     if (message.logs.lines.length !== 0) {
                         const viewLines = message.logs.lines.map(function(line, index) {
-                            const text = sanitize(line.line);
                             return {
-                                text: text,
+                                text: line.line,
                                 isError: (line.is_error === 1 ? true : false),
                                 lineNumber: line.linepos
                             };
@@ -991,7 +976,7 @@ define([
                 text: 'Job is queued, logs will be available when the job is running.'
             }
             const line = buildLine(noLogYet);
-            ui.setContent('kb-log.panel', line);
+            getLogPanel().appendChild(line);
         }
 
         function doExitQueued(message) {
@@ -1043,9 +1028,6 @@ define([
         }
 
         function startJobUpdates() {
-            if (listeningForJob) {
-                return;
-            }
             runtime.bus().emit('request-job-update', {
                 jobId: jobId
             });

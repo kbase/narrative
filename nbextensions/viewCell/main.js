@@ -36,7 +36,6 @@ define([
 
     // for effect
     'css!kbase/css/appCell.css',
-    'css!./styles/main.css',
     'bootstrap',
     'custom/custom'
 ], function(

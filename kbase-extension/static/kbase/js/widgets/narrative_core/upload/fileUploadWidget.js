@@ -84,6 +84,7 @@ define([
                 .on('addedfile', (file) => {
                     $dropzoneElem.find('#global-info').css({'display': 'inline'});
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
+
                 })
                 .on('success', (file, serverResponse) => {
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
@@ -118,6 +119,8 @@ define([
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                 })
                 .on('reset', function() {
+                    $('#clear-all-btn-container').remove();
+                    $('#clear-all-btn').remove();
                     $dropzoneElem.find('#global-info').css({'display': 'none'});
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
                 })
@@ -127,7 +130,42 @@ define([
                         errorText = err.xhr.responseText;
                     }
                     $dropzoneElem.find('.error.text-danger').text('Error: ' + errorText);
+
+                    // Check to see if there already a button in the dropzone area
+                    if (!$dropzoneElem.find('#clear-all-btn').length){
+                        $dropzoneElem.append(this.makeClearAllButton());
+
+                    } else {
+                        // If there is a button already in the area, it has to be removed,
+                        // and appened to the new document when additional errored files are added.
+                        this.deleteClearAllButton();
+                        $dropzoneElem.append(this.makeClearAllButton());
+                    }
                 });
+        },
+
+        makeClearAllButton: function() {
+            var $clearAllBtn = $('<button>')
+                .text('Clear All')
+                .addClass('text-button clear-all-dropzone')
+                .attr('aria-label', 'clear all errored files from the dropzone')
+                .attr('id', 'clear-all-btn')
+                .click(function(){
+                    this.dropzone.removeAllFiles();
+                    this.deleteClearAllButton();
+                }.bind(this));
+
+            var $buttonContainer = $('<div>')
+                .attr('id', 'clear-all-btn-container')
+                .addClass('text-center')
+                .append($clearAllBtn);
+
+            return $buttonContainer;
+        },
+
+        deleteClearAllButton: function() {
+            $('#clear-all-btn-container').remove();
+            $('#clear-all-btn').remove();
         },
 
         makeUploadMessage: function() {

@@ -57,7 +57,7 @@
 .text-button:disabled {
     color: #929292;
     border: 1px solid #FAFAFA;
-    background-color: #FAFAFA;
+    background-color: #fafafa;
 }
 
 .clear-all-dropzone {

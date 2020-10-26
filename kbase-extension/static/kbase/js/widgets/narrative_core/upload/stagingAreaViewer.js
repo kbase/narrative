@@ -297,10 +297,11 @@ define([
                     searchable: false,
                     render: function (data) {
                         //render checkboxes disabled until the user selects a type
-                        return '<input class="kb-staging-table-body__checkbox-input" \
-                        type="checkbox" disabled=true \
-                        aria-checked="false" tabindex="0" aria-label="Select to import file checkbox: disabled until at least one data type is selected" \
-                        id="'+ $('<div/>').text(data).html() + '">';
+                        return '<input class="kb-staging-table-body__checkbox-input"' + 
+                        'type="checkbox" disabled=true' + 
+                        'aria-checked="false" tabindex="0"' +
+                        'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
+                        'id="'+ $('<div/>').text(data).html() + '">';
                         //TODO: this ID is not guaranteed if user uploads more than one file with same name - is that an edge case we care about? 
 
                     }
@@ -363,9 +364,9 @@ define([
                     }
                 }],
                 rowCallback: function (row) {
-                    const getFileFromName = function (fileName) {
+                    const getFileFromName = function (fileData) {
                         return files.filter(function (file) {
-                            return file.name === fileName;
+                            return file.name === fileData;
                         })[0];
                     };
 
@@ -461,13 +462,13 @@ define([
                     .off('click')
                     .on('click', e => {
                         const decompressButton = $(e.currentTarget);
-                        const fileName = decompressButton.data().decompress;
-                        const myFile = getFileFromName(fileName);
+                        const fileData = decompressButton.data().decompress;
+                        const decompressFile = getFileFromName(fileData);
 
                         decompressButton.replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
 
                         stagingAreaViewer.stagingServiceClient.decompress({
-                            path: myFile.name
+                            path: decompressFile.name
                         })
                         .then(() => stagingAreaViewer.updateView())
                         .fail(xhr => {

@@ -249,7 +249,7 @@
     width: 160px;
     height: 42px;
     border-radius: 4px;
-    font-family: Public Sans;
+    font-family: Public Sans, Arial, sans-serif;
     font-style: normal;
     font-weight: bold;
     font-size: 14px;
@@ -278,7 +278,7 @@
 .kb-staging-table-import .tooltip .tooltip-inner {
     background: #FFF;
     color: #000;
-    font-family: Public Sans;
+    font-family: Public Sans, Arial, sans-serif;
     font-style: normal;
     font-weight: normal;
     font-size: 12px;

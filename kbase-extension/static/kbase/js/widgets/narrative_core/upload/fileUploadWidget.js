@@ -125,7 +125,7 @@ define([
                     $('#clear-all-btn-container').remove();
                     $('#clear-all-btn').remove();
                     $dropzoneElem.find('#global-info').css({'display': 'none'});
-                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
                 })
                 .on('error', (erroredFile) => {
                     var $errorElem = $(erroredFile.previewElement);
@@ -176,7 +176,7 @@ define([
             if (this.dropzone.getQueuedFiles().length === 0 &&
             this.dropzone.getUploadingFiles().length === 0) {
                 $($dropzoneElem.find('#total-progress')).fadeOut(1000, function() {
-                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
                 });
             }
         },

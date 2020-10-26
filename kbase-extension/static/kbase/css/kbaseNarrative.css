@@ -102,15 +102,22 @@
   margin-left: 5px;
 }
 
-.dz-file__icon {
-  margin: 0 2px 0 2px;
+.dz-file__status {
   display: none;
   font-weight: bold;
   align-items: center;
 }
 
-.dz-file__icon__success {
+.dz-file__status__icon {
+  margin: 0 4px 0 8px;
+}
+
+.dz-file__status__success {
   color: #4BAF4F;
+}
+
+.dz-file__status__error {
+  color: #DF0002;
 }
 
 #kb-data-staging-table_wrapper {

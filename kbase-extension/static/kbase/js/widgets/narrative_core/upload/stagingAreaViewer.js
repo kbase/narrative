@@ -122,6 +122,7 @@ define([
                     this.$elem.empty();
                     this.renderFileHeader();
                     this.renderFiles(files);
+
                     setTimeout(() => {
                         this.$elem.parent().scrollTop(scrollTop)
                     }, 0);
@@ -133,6 +134,7 @@ define([
                 })
                 .finally(() => {
                     this.renderPath();
+                    this.renderImportButton();
                 });
         },
 
@@ -167,7 +169,7 @@ define([
 
             // Add ACL before going to the staging area
             // If it fails, it'll just do so silently.
-            var $globusLink = this.$elem.find('a.globus_linked');
+            var $globusLink = this.$elem.find('.globus_acl_link');
             $globusLink.click((e) => {
                 var globusWindow = window.open('', 'globus');
                 globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
@@ -247,29 +249,60 @@ define([
          * keys: files (list of file info) and error (optional error)
          */
         renderFiles: function (files) {
+            let stagingAreaViewer = this; 
             files = files || [];
             const emptyMsg = 'No files found.';
-            var $fileTable = $(this.ftpFileTableTmpl({
+
+            const $fileTable = $(stagingAreaViewer.ftpFileTableTmpl({
                 files: files,
-                uploaders: this.uploaders.dropdown_order
+                uploaders: stagingAreaViewer.uploaders.dropdown_order
             }));
-            this.$elem.append($fileTable);
-            this.$elem.find('table').dataTable({
+            
+            stagingAreaViewer.$elem.append($fileTable);
+            stagingAreaViewer.$elem.find('table').dataTable({
                 language: {
                     emptyTable: emptyMsg
                 },
                 dom: '<"file-path pull-left">frtip',
                 autoWidth: false,
                 order: [[4, 'desc']],
+                headerCallback: function (thead) {     
+               
+                    function selectAllOrNone (event) {
+                        let selectAllChecked = event.target.checked;
+                        
+                        $('input.kb-staging-table-body__checkbox-input:enabled')
+                        .prop('checked', selectAllChecked)
+                        .attr('aria-checked', selectAllChecked);
+
+                        //enable or disable import appropriately
+                        if (selectAllChecked) {
+                            stagingAreaViewer.enableImportButton();
+                        } else {
+                            stagingAreaViewer.disableImportButton();
+                        }
+                    }
+
+                    $(thead).find('th').eq(0)
+                    .on('click', (e) => {
+                        selectAllOrNone(e);
+                    })
+                    .on('keyPress', (e) => {
+                        selectAllOrNone(e);
+                    });                    
+                },
                 columnDefs: [{
                     targets: 0,
                     orderable: false,
                     searchable: false,
-                    //TODO: what value makes most sense for these? file name, or eventual data type selection? 
-                    render: function (data, type, full) {
+                    render: function (data) {
                         //render checkboxes disabled until the user selects a type
-                        return '<input class="kb-staging-table-body__checkbox-input" type="checkbox" name="id[]" disabled=true value="'
-                           + $('<div/>').text(data).html() + '">';
+                        return '<input class="kb-staging-table-body__checkbox-input" \
+                        type="checkbox" disabled=true \
+                        aria-checked="false" tabindex="0" aria-label="Select to import file checkbox: disabled until at least one data type is selected" \
+                        id="'+ $('<div/>').text(data).html() + '">';
+                        //TODO: this ID is not guaranteed if user uploads more than one file with same name - is that an edge case we care about? 
+
                     }
                 }, {
                     targets: 1, 
@@ -330,71 +363,48 @@ define([
                     }
                 }],
                 rowCallback: function (row) {
-                    var getFileFromName = function (fileName) {
+                    const getFileFromName = function (fileName) {
                         return files.filter(function (file) {
                             return file.name === fileName;
                         })[0];
                     };
 
-                    $('td:eq(2)', row).find('.kb-staging-table-body__name').tooltip({
-                        title: $('td:eq(2)', row).find('.kb-staging-table-body__name').text(),
-                        placement: 'top',
-                        delay: {
-                            show: Config.get('tooltip').showDelay,
-                            hide: Config.get('tooltip').hideDelay
+                    function changeImportButton(event) {
+                        const checked = event.currentTarget.checked;
+
+                        if (checked) {
+                            stagingAreaViewer.enableImportButton();
+                        } else {
+                            /* 
+                                check state of all checkboxes
+                                if any are checked we leave import button enabled
+                            */
+                            let anyCheckedBoxes = $('input.kb-staging-table-body__checkbox-input:checked');
+
+                            if(!anyCheckedBoxes.length) {
+                                stagingAreaViewer.disableImportButton();
+                            }
                         }
+                    }
+
+                    $('td:eq(0)', row).find('input.kb-staging-table-body__checkbox-input')
+                    .off('click')
+                    .on('click', (e) => {                        
+                        changeImportButton(e);
+                    })
+                    .on('keyPress', (e) => {
+                        changeImportButton(e);
                     });
 
-                    $('td:eq(2)', row).find('span.kb-staging-table-body__folder').off('click').on('click', e => {
+                    $('td:eq(1)', row).find('button[data-name]')
+                    .off('click')
+                    .on('click', e => {
                         $(e.currentTarget).off('click');
-                        this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
-                    });
-
-                    $('td:eq(5)', row).find('select').select2({
-                        placeholder: 'Select a type',
-                        containerCssClass: 'kb-staging-table-body__import-dropdown'
-                    }).on('select2:select', function() {
-                        $('td:eq(5)', row).find('.select2-selection').addClass('kb-staging-table-body__import-type-selected');
-                        //make checkbox for that row enabled
-                        $('td:eq(0)', row).find('.kb-staging-table-body__checkbox-input').prop('disabled', false);
-                    });
-
-                    $('td:eq(5)', row).find('button[data-import]').off('click').on('click', e => {
-                        var importType = $(e.currentTarget).prevAll('select').val();
-                        var importFile = getFileFromName($(e.currentTarget).data().import);
-                        this.initImportApp(importType, importFile);
-                        this.updateView();
-                    });
-
-                    $('td:eq(5)', row).find('button[data-download]').off('click').on('click', e => {
-                        let file = $(e.currentTarget).data('download');
-                        if (this.subpath) {
-                            file = this.subpath + '/' + file;
-                        }
-                        const url = Config.url('staging_api_url') + '/download/' + file;
-                        this.downloadFile(url);
-                    });
-
-                    $('td:eq(5)', row).find('button[data-delete]').off('click').on('click', e => {
-                        var file = $(e.currentTarget).data('delete');
-                        if (window.confirm('Really delete ' + file + '?')) {
-                            this.stagingServiceClient.delete({
-                                path: this.subpath + '/' + file
-                            }).then(() => {
-                                this.updateView();
-                            }).fail(xhr => {
-                                alert('Error ' + xhr.status + '\r' + xhr.responseText);
-                            });
-                        }
-                    });
-
-                    $('td:eq(1)', row).find('button[data-name]').off('click').on('click', e => {
-                        $(e.currentTarget).off('click');
-                        this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
+                        stagingAreaViewer.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     });
 
                     // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
-                    var $caret = $('td:eq(1)', row).find('i[data-caret]'),
+                    let $caret = $('td:eq(1)', row).find('i[data-caret]'),
                         fileName,
                         myFile;
 
@@ -407,57 +417,121 @@ define([
                     $caret.off('click');
 
                     //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
-                    if (fileName && this.openFileInfo[fileName]) {
+                    if (fileName && stagingAreaViewer.openFileInfo[fileName]) {
                         //so we note that we've already loaded the info.
-                        myFile.loaded = this.openFileInfo[fileName].loaded;
+                        myFile.loaded = stagingAreaViewer.openFileInfo[fileName].loaded;
                         //toggle the caret
                         $caret.toggleClass('fa-caret-down fa-caret-right');
                         //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
                         setTimeout(() => {
                             $caret.parent().parent().after(
-                                this.renderMoreFileInfo(myFile)
+                                stagingAreaViewer.renderMoreFileInfo(myFile)
                             )
                         }, 0);
                     }
 
                     $caret.on('click', e => {
-                        $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
-                        var $tr = $(e.currentTarget).parent().parent();
+                        let fileExpander = $(e.currentTarget);
+                        fileExpander.toggleClass('fa-caret-down fa-caret-right');
+                        let $tr = fileExpander.parent().parent();
 
-                        if ($(e.currentTarget).hasClass('fa-caret-down')) {
+                        if (fileExpander.hasClass('fa-caret-down')) {
                             $('.kb-dropzone').css('min-height', '75px');
-                            this.openFileInfo[fileName] = myFile;
+                            stagingAreaViewer.openFileInfo[fileName] = myFile;
                             $tr.after(
                                 this.renderMoreFileInfo(myFile)
                             );
                         } else {
                             $('.kb-dropzone').css('min-height', '200px');
                             $tr.next().detach();
-                            delete this.openFileInfo[fileName];
+                            delete stagingAreaViewer.openFileInfo[fileName];
+                        }
+                    });
+
+                    $('td:eq(2)', row).find('.kb-staging-table-body__name').tooltip({
+                        title: $('td:eq(2)', row).find('.kb-staging-table-body__name').text(),
+                        placement: 'top',
+                        delay: {
+                            show: Config.get('tooltip').showDelay,
+                            hide: Config.get('tooltip').hideDelay
                         }
                     });
 
                     $('td:eq(2)', row).find('button[data-decompress]')
                     .off('click')
                     .on('click', e => {
-                        var fileName = $(e.currentTarget).data().decompress;
-                        var myFile = getFileFromName(fileName);
+                        const decompressButton = $(e.currentTarget);
+                        const fileName = decompressButton.data().decompress;
+                        const myFile = getFileFromName(fileName);
 
-                        $(e.currentTarget).replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
+                        decompressButton.replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
 
-                        this.stagingServiceClient.decompress({
+                        stagingAreaViewer.stagingServiceClient.decompress({
                             path: myFile.name
                         })
-                            .then(() => this.updateView())
-                            .fail(xhr => {
-                                console.error("FAILED", xhr);
-                                alert(xhr.responseText);
-                            });
+                        .then(() => stagingAreaViewer.updateView())
+                        .fail(xhr => {
+                            console.error("FAILED", xhr);
+                            alert(xhr.responseText);
+                        });
 
                     });
+
+                    $('td:eq(5)', row).find('select').select2({
+                        placeholder: 'Select a type',
+                        containerCssClass: 'kb-staging-table-body__import-dropdown'
+                    }).on('select2:select', function(e) {
+
+                        $('td:eq(5)', row).find('.select2-selection').addClass('kb-staging-table-body__import-type-selected');
+                        
+                        //make checkbox for that row enabled
+                        //also set the data type so that we have the reference later when importing
+                        $('td:eq(0)', row).find('.kb-staging-table-body__checkbox-input')
+                        .prop('disabled',false)
+                        .attr('aria-label', 'Select to import file checkbox')
+                        .attr('data-type', e.currentTarget.value);
+
+                        //make sure select all checkbox is enabled
+                        $('#staging_table_select_all')
+                        .prop('disabled',false)
+                        .attr('aria-label', 'Select to import all files checkbox');
+                    });
+
+                    $('td:eq(5)', row).find('button[data-import]')
+                    .off('click')
+                    .on('click', e => {
+                        const dataImportButton = $(e.currentTarget);
+                        const importType = dataImportButton.prevAll('select').val();
+                        const importFile = getFileFromName(dataImportButton.data().import);
+                        stagingAreaViewer.initImportApp(importType, importFile);
+                        stagingAreaViewer.updateView();
+                    });
+
+                    $('td:eq(5)', row).find('button[data-download]').off('click').on('click', e => {
+                        let file = $(e.currentTarget).data('download');
+                        if (stagingAreaViewer.subpath) {
+                            file = stagingAreaViewer.subpath + '/' + file;
+                        }
+                        const url = Config.url('staging_api_url') + '/download/' + file;
+                        stagingAreaViewer.downloadFile(url);
+                    });
+
+                    $('td:eq(5)', row).find('button[data-delete]').off('click').on('click', e => {
+                        const file = $(e.currentTarget).data('delete');
+                        if (window.confirm('Really delete ' + file + '?')) {
+                            stagingAreaViewer.stagingServiceClient.delete({
+                                path: stagingAreaViewer.subpath + '/' + file
+                            }).then(() => {
+                                stagingAreaViewer.updateView();
+                            }).fail(xhr => {
+                                alert('Error ' + xhr.status + '\r' + xhr.responseText);
+                            });
+                        }
+                    });
                     
-                }.bind(this)
+                }.bind(stagingAreaViewer)
             });
+
         },
 
         renderMoreFileInfo: function (fileData) {
@@ -600,6 +674,63 @@ define([
                 );
         },
 
+        renderImportButton: function() {
+
+            let importButton = $('<button></button>')
+            .addClass('kb-staging-table-import__button btn btn-xs btn-primary')
+            .text('Import Selected');
+
+            this.$elem.find('div.kb-staging-table-import').append(importButton);
+
+            /* 
+                By default import button is disabled until the user selects a data type 
+            */
+            this.disableImportButton();
+        },
+
+        disableImportButton: function() {
+
+            this.$elem.find('button.kb-staging-table-import__button')
+            .addClass('kb-staging-table-import__button__disabled')
+            .tooltip({
+                title: 'Select a file/s to continue.',
+                delay: {
+                    show: Config.get('tooltip').showDelay,
+                    hide: Config.get('tooltip').hideDelay
+                }
+            })
+            .off('click');
+        },
+
+        enableImportButton: function() {
+            let stagingAreaViewer = this; 
+
+            this.$elem.find('button.kb-staging-table-import__button')
+            .removeClass('kb-staging-table-import__button__disabled')
+            .tooltip('disable')
+            .unbind('click')
+            .on('click', function() {
+                stagingAreaViewer.initImport();
+            })
+            .on('keyPress', function() {
+                stagingAreaViewer.initImport();
+            });
+        },
+
+        initImport: function() {
+            let stagingAreaViewer = this; 
+
+            //get all of the selected checkbox file names and import type
+            $('input.kb-staging-table-body__checkbox-input:checked')
+            .each(function (i) {
+                const importType = $(this).attr('data-type');
+                const importFile = $(this).attr('id');
+                stagingAreaViewer.initImportApp(importType, importFile);
+            });
+          
+            stagingAreaViewer.updateView();
+        },
+
         /**
          * Initializes an import app using the given file info as input.
          * Expects 'type' to match a KBase object type string that maps onto an importer.
@@ -607,30 +738,37 @@ define([
          *   name = string, name of the file
          */
         initImportApp: function (type, file) {
-            var appInfo = this.uploaders.app_info[type];
+            const appInfo = this.uploaders.app_info[type];
+
             if (appInfo) {
-                var tag = APIUtil.getAppVersionTag(),
-                    fileParam = file ? file.name : '',
+                let tag = APIUtil.getAppVersionTag(),
+                    fileParam = file || '',
                     inputs = {};
+
                 if (this.subpath) {
-                    fileParam = this.subpath + '/' + file.name;
+                    fileParam = this.subpath + '/' + file;
                 }
+
                 if (appInfo.app_input_param_type && appInfo.app_input_param_type === 'list') {
                     fileParam = [fileParam];
                 }
+
                 if (appInfo.app_input_param) {
                     inputs[appInfo.app_input_param] = fileParam;
                 }
+
                 if (appInfo.app_output_param) {
-                    inputs[appInfo.app_output_param] = file.name.replace(/\s/g, '_') + appInfo.app_output_suffix;
+                    inputs[appInfo.app_output_param] = file.replace(/\s/g, '_') + appInfo.app_output_suffix;
                 }
+
                 if (appInfo.app_static_params) {
-                    for (var p in appInfo.app_static_params) {
+                    for (let p in appInfo.app_static_params) {
                         if (appInfo.app_static_params.hasOwnProperty(p)) {
                             inputs[p] = appInfo.app_static_params[p];
                         }
                     }
                 }
+
                 Jupyter.narrative.addAndPopulateApp(appInfo.app_id, tag, inputs);
                 Jupyter.narrative.hideOverlay();
             }

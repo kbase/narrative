@@ -2,10 +2,8 @@
     <caption>Staging Area File List</caption>
     <thead class="kb-staging-table-header">
         <tr>
-            <!-- TODO: what behavior should select all checkbox have? -->
-            <th class="kb-staging-table-header__checkbox">
-                <input type="checkbox" name="select_all" value="1" id="">
-            </th>
+            <th class="kb-staging-table-header__checkbox" scope="col">
+                <input class="kb-staging-table-header__checkbox-input" type="checkbox" id="staging_table_select_all" disabled=true role="checkbox" aria-checked="false" tabindex="0" aria-label="Select to import all files checkbox: disabled until at least one data type is selected"></th>
             <th class="kb-staging-table-header__file" scope="col" aria-label="File or Folder sort column"></th>
             <th class="kb-staging-table-header__name" scope="col">Name</th>
             <th class="kb-staging-table-header__size" scope="col">Size</th>
@@ -21,7 +19,7 @@
             <td>{{name}}</td>
             <td>{{size}}</td>
             <td>{{mtime}}</td>
-            <td class="kb-staging-table-body__import">
+            <td role="option" class="kb-staging-table-body__import">
                 {{#if imported }}
                 <div>
                     <select>
@@ -30,18 +28,15 @@
                             <option value="{{id}}">{{name}}</option>
                         {{/each}}
                     </select>
-                    <!-- <button data-import="{{name}}" class="btn btn-xs btn-primary">
-                        <span><i class="fa fa-upload"></i></span>
-                    </button> -->
-                    <button data-download="{{name}}" class="kb-staging-table-body__download btn btn-xs btn-primary" aria-label="Download Data">
-                            <span><i class="fa fa-download"></i></span>
+                    <button data-download="{{name}}" class="kb-staging-table-body__download btn btn-xs btn-primary" role="button" aria-label="Download Data">
+                        <span><i class="fa fa-download"></i></span>
                     </button>
-                    <button data-delete="{{name}}" class="kb-staging-table-body__delete btn btn-xs btn-danger" aria-label="Delete File">
+                    <button data-delete="{{name}}" class="kb-staging-table-body__delete btn btn-xs btn-danger" role="button" aria-label="Delete File">
                         <span><i class="fa fa-trash"></i></span>
                     </button>
                 </div>
                 {{ else }}
-                    <button data-delete="{{name}}" class="kb-staging-table-body__delete btn btn-xs btn-danger pull-right" aria-label="Delete Folder">
+                    <button data-delete="{{name}}" class="kb-staging-table-body__delete btn btn-xs btn-danger pull-right" role="button" aria-label="Delete Folder">
                         <span><i class="fa fa-trash"></i></span>
                     </button>
                 {{/if}}
@@ -52,4 +47,6 @@
 </table>
 <div class='kb-staging-table-notice'>
     All files will be deleted after 90 days
+</div>
+<div class='kb-staging-table-import'>
 </div>

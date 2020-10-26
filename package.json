@@ -31,7 +31,7 @@
     "karma-requirejs": "1.1.0",
     "karma-safari-launcher": "1.0.0",
     "phantomjs-prebuilt": "2.1.16",
-    "puppeteer": "5.3.1",
+    "puppeteer": "5.4.0",
     "requirejs": "2.3.6",
     "selenium-standalone": "6.20.1",
     "selenium-webdriver": "3.6.0",

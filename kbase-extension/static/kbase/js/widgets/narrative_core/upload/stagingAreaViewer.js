@@ -284,10 +284,7 @@ define([
                     }
 
                     $(thead).find('th').eq(0)
-                    .on('click', (e) => {
-                        selectAllOrNone(e);
-                    })
-                    .on('keyPress', (e) => {
+                    .on('click keyPress', (e) => {
                         selectAllOrNone(e);
                     });                    
                 },
@@ -296,14 +293,14 @@ define([
                     orderable: false,
                     searchable: false,
                     render: function (data) {
+                        const fileId = stagingAreaViewer.uuidv4();
                         //render checkboxes disabled until the user selects a type
-                        return '<input class="kb-staging-table-body__checkbox-input"' + 
+                        return ('<input class="kb-staging-table-body__checkbox-input"' + 
                         'type="checkbox" disabled=true' + 
                         'aria-checked="false" tabindex="0"' +
                         'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
-                        'id="'+ $('<div/>').text(data).html() + '">';
-                        //TODO: this ID is not guaranteed if user uploads more than one file with same name - is that an edge case we care about? 
-
+                        'data-file-name="' + data + '"' + 
+                        'id="' + fileId + '">');
                     }
                 }, {
                     targets: 1, 
@@ -390,10 +387,7 @@ define([
 
                     $('td:eq(0)', row).find('input.kb-staging-table-body__checkbox-input')
                     .off('click')
-                    .on('click', (e) => {                        
-                        changeImportButton(e);
-                    })
-                    .on('keyPress', (e) => {
+                    .on('click keyPress', (e) => {                        
                         changeImportButton(e);
                     });
 
@@ -473,7 +467,7 @@ define([
                         .then(() => stagingAreaViewer.updateView())
                         .fail(xhr => {
                             console.error("FAILED", xhr);
-                            alert(xhr.responseText);
+                            alert("Error " + xhr.status + "\r" + xhr.responseText);
                         });
 
                     });
@@ -710,10 +704,7 @@ define([
             .removeClass('kb-staging-table-import__button__disabled')
             .tooltip('disable')
             .unbind('click')
-            .on('click', function() {
-                stagingAreaViewer.initImport();
-            })
-            .on('keyPress', function() {
+            .on('click keyPress', function() {
                 stagingAreaViewer.initImport();
             });
         },
@@ -723,9 +714,9 @@ define([
 
             //get all of the selected checkbox file names and import type
             $('input.kb-staging-table-body__checkbox-input:checked')
-            .each(function (i) {
+            .each(function () {
                 const importType = $(this).attr('data-type');
-                const importFile = $(this).attr('id');
+                const importFile = $(this).attr('data-file-name');
                 stagingAreaViewer.initImportApp(importType, importFile);
             });
           
@@ -735,8 +726,7 @@ define([
         /**
          * Initializes an import app using the given file info as input.
          * Expects 'type' to match a KBase object type string that maps onto an importer.
-         * Expects 'file' to be an object with the following attributes:
-         *   name = string, name of the file
+         * Expects 'file' to be a string that is the name of the file
          */
         initImportApp: function (type, file) {
             const appInfo = this.uploaders.app_info[type];
@@ -784,6 +774,20 @@ define([
                 );
             }
             this.tour.start();
+        },
+
+        uuidv4: function (a, b) {
+            for (
+            b = a = "";
+            a++ < 36;
+            b +=
+                (a * 51) & 52
+                ? (a ^ 15 ? 8 ^ (Math.random() * (a ^ 20 ? 16 : 4)) : 4).toString(
+                    16
+                    )
+                : "-"
+            );
+            return b;
         }
     });
 });

@@ -26,6 +26,7 @@ branches:
     - develop
     - master
     - py3-update
+    - truss
 
 before_install:
   - gem install coveralls-lcov

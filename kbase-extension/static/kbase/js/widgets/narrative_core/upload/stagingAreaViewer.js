@@ -43,6 +43,7 @@ define([
 
         options: {
             refreshIntervalDuration: 30000,
+            path: '/'
         },
 
         init: function (options) {
@@ -166,7 +167,7 @@ define([
 
             // Add ACL before going to the staging area
             // If it fails, it'll just do so silently.
-            var $globusLink = this.$elem.find('.globus_link');
+            var $globusLink = this.$elem.find('.globus_acl_link');
             $globusLink.click((e) => {
                 var globusWindow = window.open('', 'globus');
                 globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
@@ -272,7 +273,7 @@ define([
                             if (isFolder) {
                                 disp = '<button data-name="' + full[1] + '" class="btn btn-xs btn-default">' + disp + '</button>';
                             } else {
-                                disp = "<i class='fa fa-caret-right' data-caret='" + full[1] + "' style='cursor : pointer'></i> " + disp;
+                                disp = '<i class="fa fa-caret-right kb-pointer" data-caret="' + full[1] + '"></i> ' + disp;
                             }
                             return disp;
                         } else {
@@ -284,11 +285,14 @@ define([
                     sClass: 'staging-name',
                     mRender: function (data, type, full) {
                         if (type === 'display') {
-
-                            var decompressButton = '';
+                            let decompressButton = '';
 
                             if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
-                                decompressButton = "<button class='btn btn-default btn-xs' style='border : 1px solid #cccccc; border-radius : 1px' data-decompress='" + data + "'><i class='fa fa-expand'></i></button> ";
+                                decompressButton = '<button class="btn btn-default btn-xs kb-data-staging-decompress" data-decompress="' + data + '"><i class="fa fa-expand"></i></button>';
+                            }
+
+                            if (full[0] === 'true') {
+                                data = '<span class="kb-data-staging-folder" data-name="' + data + '">' + data + '</span>';
                             }
 
                             return '<div class="kb-data-staging-table-name">' + decompressButton +
@@ -333,6 +337,10 @@ define([
                             hide: Config.get('tooltip').hideDelay
                         }
                     });
+                    $('td:eq(1)', nRow).find('span.kb-data-staging-folder').off('click').on('click', e => {
+                        $(e.currentTarget).off('click');
+                        this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
+                    });
                     $('td:eq(4)', nRow).find('select').select2({
                         placeholder: 'Select format'
                     });
@@ -367,6 +375,7 @@ define([
 
 
                     $('td:eq(0)', nRow).find('button[data-name]').off('click').on('click', e => {
+                        $(e.currentTarget).off('click');
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     });
 
@@ -405,14 +414,12 @@ define([
 
                         if ($(e.currentTarget).hasClass('fa-caret-down')) {
                             $('.kb-dropzone').css('min-height', '75px');
-                            $('.dz-message').css('margin', '0em 0');
                             this.openFileInfo[fileName] = myFile;
                             $tr.after(
                                 this.renderMoreFileInfo(myFile)
                             );
                         } else {
                             $('.kb-dropzone').css('min-height', '200px');
-                            $('.dz-message').css('margin', '3em 0');
                             $tr.next().detach();
                             delete this.openFileInfo[fileName];
                         }

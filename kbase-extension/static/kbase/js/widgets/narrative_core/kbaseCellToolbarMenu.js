@@ -10,7 +10,7 @@ define([
     'kbase/js/widgets/appInfoPanel',
     'narrativeConfig',
     'custom/custom'
-], function(
+], function (
     $,
     html,
     Events,
@@ -88,14 +88,14 @@ define([
 
             if (url) {
                 return a({
-                    href: url,
-                    target: '_blank',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: doShowInfoModal
-                    })
-                },
-                label || 'ref');
+                        href: url,
+                        target: '_blank',
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: doShowInfoModal
+                        })
+                    },
+                    label || 'ref');
             }
             return '';
         }
@@ -134,7 +134,7 @@ define([
                 body: $('<div class="container"></div>'),
                 buttons: [
                     $('<a href="' + appStoreUrl + '" target="_blank" type="button" class="btn btn-default">View on App Store</a>'),
-                    $('<button type="button" class="btn btn-primary">Close</button>').click(function() {
+                    $('<button type="button" class="btn btn-primary">Close</button>').click(function () {
                         dialog.hide();
                     })
                 ],
@@ -149,9 +149,9 @@ define([
                 appModule: module,
                 tag: tag
             });
-            infoPanel.start({ node: dialog.getBody() });
+            infoPanel.start({node: dialog.getBody()});
 
-            dialog.getElement().on('hidden.bs.modal', function() {
+            dialog.getElement().on('hidden.bs.modal', function () {
                 dialog.destroy();
             });
             dialog.show();
@@ -174,16 +174,16 @@ define([
                 dataPlacement: 'left',
                 title: true,
                 dataOriginalTitle: 'Cell Settings',
-                id: events.addEvent({ type: 'click', handler: doToggleCellSettings })
+                id: events.addEvent({type: 'click', handler: doToggleCellSettings})
             }, [
-                span({ class: 'fa fa-cog', style: 'font-size: 14pt' })
+                span({class: 'fa fa-cog', style: 'font-size: 14pt'})
             ]);
         }
 
         function renderIcon(icon) {
             return span({
                 class: 'fa fa-' + icon.type + ' fa-sm',
-                style: { color: icon.color || '#000' }
+                style: {color: icon.color || '#000'}
             });
         }
 
@@ -202,8 +202,7 @@ define([
             var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
                 toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
                 dropdownId = html.genId(),
-                menuItems = [
-                ];
+                menuItems = [];
 
             if (cell.cell_type === 'code') {
                 menuItems.push({
@@ -213,7 +212,7 @@ define([
                         type: 'terminal',
                         color: 'black'
                     },
-                    id: events.addEvent({ type: 'click', handler: doToggleCodeView })
+                    id: events.addEvent({type: 'click', handler: doToggleCodeView})
                 });
             }
 
@@ -227,7 +226,7 @@ define([
                     },
                     id: events.addEvent({
                         type: 'click',
-                        handler: function() {
+                        handler: function () {
                             cell.showInfo();
                         }
                     })
@@ -264,7 +263,7 @@ define([
                         type: 'times',
                         color: 'red'
                     },
-                    id: events.addEvent({ type: 'click', handler: doDeleteCell })
+                    id: events.addEvent({type: 'click', handler: doDeleteCell})
                 });
             }
 
@@ -272,20 +271,22 @@ define([
                 return '';
             }
 
-            return span({ class: 'dropdown' }, [
+            return span({class: 'dropdown'}, [
                 button({
                     class: 'btn btn-xs btn-default dropdown-toggle',
                     type: 'button',
                     id: dropdownId,
                     dataToggle: 'dropdown',
                     ariaHaspopup: 'true',
-                    ariaExpanded: 'true'
-                }, [span({ class: 'fa fa-ellipsis-h fa-lg' })]),
+                    ariaExpanded: 'true',
+                    'aria-label': 'cell options',
+                    'data-test': 'cell-dropdown'
+                }, [span({class: 'fa fa-ellipsis-h fa-lg'})]),
                 ul({
                     class: 'dropdown-menu dropdown-menu-right',
                     ariaLabelledby: dropdownId
                 }, [
-                    menuItems.map(function(item) {
+                    menuItems.map(function (item) {
                         switch (item.type) {
                             case 'separator':
                                 return li({
@@ -330,19 +331,19 @@ define([
         }
 
         function minimizedStatus(mode, stage) {
-            if(mode === 'error' || mode === 'internal-error') {
+            if (mode === 'error' || mode === 'internal-error') {
                 return '<span style="color: red">Error</span>';
             }
-            if(mode === 'canceled' || mode === 'canceling') {
+            if (mode === 'canceled' || mode === 'canceling') {
                 return '<span style="color: orange">Canceled</span>';
             }
-            if(mode ==='processing' && stage === 'running') {
+            if (mode === 'processing' && stage === 'running') {
                 return 'Running';
             }
-            if(mode ==='processing' && stage === 'queued') {
+            if (mode === 'processing' && stage === 'queued') {
                 return 'Queued';
             }
-            if(mode === 'success') {
+            if (mode === 'success') {
                 return '<span style="color: green">Success</span>';
             }
             return '';
@@ -365,12 +366,15 @@ define([
             const appStatePretty = minimizedStatus(fsmMode, fsmStage);
             const collapsedCellStatus = cellCollapsed ? appStatePretty : '';
 
-            var events = Events.make({ node: container }),
+            var events = Events.make({node: container}),
                 buttons = [
-                    div({ class: 'buttons pull-right' }, [
-                        span({ class: 'kb-func-timestamp' }),
-                        span({ class: 'fa fa-circle-o-notch fa-spin', style: { color: 'rgb(42, 121, 191)', display: 'none' } }),
-                        span({ class: 'fa fa-exclamation-triangle', style: { color: 'rgb(255, 0, 0)', display: 'none' } }),
+                    div({class: 'buttons pull-right'}, [
+                        renderOptions(cell, events),
+                        span({
+                            class: 'fa fa-circle-o-notch fa-spin',
+                            style: {color: 'rgb(42, 121, 191)', display: 'none'}
+                        }),
+                        span({class: 'fa fa-exclamation-triangle', style: {color: 'rgb(255, 0, 0)', display: 'none'}}),
                         (readOnly ? null : button({
                             type: 'button',
                             class: 'btn btn-default btn-xs',
@@ -378,9 +382,11 @@ define([
                             dataPlacement: 'left',
                             title: true,
                             dataOriginalTitle: 'Move Cell Up',
-                            id: events.addEvent({ type: 'click', handler: doMoveCellUp })
+                            'data-test': 'cell-move-up',
+                            'aria-label': 'Move cell up',
+                            id: events.addEvent({type: 'click', handler: doMoveCellUp})
                         }, [
-                            span({ class: 'fa fa-arrow-up fa-lg' })
+                            span({class: 'fa fa-arrow-up fa-lg'})
                         ])),
                         (readOnly ? null : button({
                             type: 'button',
@@ -389,12 +395,14 @@ define([
                             dataPlacement: 'left',
                             title: true,
                             dataOriginalTitle: 'Move Cell Down',
-                            id: events.addEvent({ type: 'click', handler: doMoveCellDown })
+                            'data-test': 'cell-move-down',
+                            'aria-label': 'Move cell down',
+                            id: events.addEvent({type: 'click', handler: doMoveCellDown})
                         }, [
-                            span({ class: 'fa fa-arrow-down fa-lg' })
+                            span({class: 'fa fa-arrow-down fa-lg'})
                         ])),
-                        renderOptions(cell, events),
-                        (function() {
+
+                        (function () {
                             var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
                                 toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
                                 color = (toggleMinMax === 'maximized' ? '#000' : 'rgba(255,137,0,1)');
@@ -404,8 +412,10 @@ define([
                                 dataToggle: 'tooltip',
                                 dataPlacement: 'left',
                                 title: true,
+                                'data-test': 'cell-toggle-expansion',
+                                'aria-label': 'Expand or Collapse Cell',
                                 dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
-                                id: events.addEvent({ type: 'click', handler: doToggleMinMaxCell })
+                                id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
                             }, [
                                 span({
                                     class: 'fa fa-' + toggleIcon + '-square-o fa-lg',
@@ -427,20 +437,24 @@ define([
                         utils.getCellMeta(cell, 'kbase.cellState.message')
                     ])
                 ]),
-                content = div({ class: 'kb-cell-toolbar' }, [
-                    div({ class: '', style: {
-                        display: 'flex',
-                        flexDirection: 'row',
-                        height: '56px',
-                        justifyContent: 'space-between',
-                    } }, [
+                content = div({class: 'kb-cell-toolbar'}, [
+                    div({
+                        class: '', style: {
+                            display: 'flex',
+                            flexDirection: 'row',
+                            height: '56px',
+                            justifyContent: 'space-between',
+                        }
+                    }, [
                         div({
                             class: 'title-container',
                             style: {flexGrow: '1'}
                         }, [
-                            div({ class: 'title', style: {
-                                display: 'flex', height: '56px'
-                            } }, [
+                            div({
+                                class: 'title', style: {
+                                    display: 'flex', height: '56px'
+                                }
+                            }, [
                                 div({
                                     dataElement: 'icon',
                                     class: 'icon',
@@ -453,7 +467,7 @@ define([
                                 }, [
                                     buildIcon(cell)
                                 ]),
-                                div({ style: { flexGrow: '1' } }, [
+                                div({style: {flexGrow: '1'}}, [
                                     div({
                                         dataElement: 'title',
                                         class: 'title',
@@ -478,17 +492,19 @@ define([
                                     }, [getCellSubtitle(cell)])
                                 ]),
                                 div(
-                                    { style: {
-                                        margin: '0px 0px 0px auto',
-                                        minWidth: '65px'
-                                    }},
+                                    {
+                                        style: {
+                                            margin: '0px 0px 0px auto',
+                                            minWidth: '65px'
+                                        }
+                                    },
                                     [collapsedCellStatus]
                                 )
                             ])
                         ]),
                         div({
                             class: 'buttons-container',
-                            style: { minWidth: '110px' }
+                            style: {minWidth: '110px'}
                         }, [
                             buttons,
                             message
@@ -515,13 +531,13 @@ define([
                     role: 'button',
                     title: 'New version available',
                     dataContent: 'This app has a newer version available! ' +
-                                 'There\'s probably nothing wrong with this version, ' +
-                                 'but the new one may include new features. Add a new "' +
-                                 utils.getCellMeta(cell, 'kbase.appCell.newAppName') +
-                                 '" app cell for the update.',
-                    style: { color: '#f79b22' }
+                        'There\'s probably nothing wrong with this version, ' +
+                        'but the new one may include new features. Add a new "' +
+                        utils.getCellMeta(cell, 'kbase.appCell.newAppName') +
+                        '" app cell for the update.',
+                    style: {color: '#f79b22'}
                 }, [
-                    span({ class: 'fa fa-exclamation-triangle fa-lg' })
+                    span({class: 'fa fa-exclamation-triangle fa-lg'})
                 ]);
             } else {
                 return '';
@@ -539,7 +555,7 @@ define([
                 rendered.events.attachEvents();
 
                 // try this...
-                container.addEventListener('dblclick', function(e) {
+                container.addEventListener('dblclick', function (e) {
                     doToggleMinMaxCell(e);
                 });
             } catch (ex) {
@@ -553,7 +569,7 @@ define([
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         }
     };

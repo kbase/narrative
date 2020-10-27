@@ -40,6 +40,13 @@ The App Cell is, by far, the most complicated extension cell type. It has severa
 
 The reason for the App cell being an extension to code cells is the last point above: in essence, the primary UI components of the App cell serve as a fancy code generator. User interactions with form elements generate the code that can be used to start apps and view their results. Thus, anything that an app cell does with the UI can be done programmatically by an advanced user.
 
+> It should also be noted here that, regardless of the choice made, we may need to alter how app specs are made, interpreted, and rendered. The bulk import design has various inputs and outputs listed in horizontal rows while the existing app specs are rendered vertically. There's no notion of rows/columns in the app spec right now or how to visually display various inputs along a grid pattern. In order to effectively match the design we may need to do one of the following:
+> 1. Alter the app specs to support multiple in-line parameters while retaining backward compatibility (including documentation, etc.).
+> 2. Use a distinct app spec for importers that can include these options.
+> 3. Hard-code how all import apps look and feel in the Narrative interface itself.
+>
+> If we decide to update how app specs work, that means working in the `narrative_method_store` and `catalog` repos as well as internal documentation.
+
 ## Alternatives Considered
 
 * Implement the UI in the existing App Cell codebase

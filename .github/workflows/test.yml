@@ -1,10 +1,7 @@
 name: CI-testing
 
 on:
-  push:
-    branches: [ develop, master, truss ]
-  pull_request:
-    branches: [ develop, master, truss ]
+  [push, pull_request]
 
 jobs:
   build-and-test:

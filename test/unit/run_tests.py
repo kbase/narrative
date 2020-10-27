@@ -90,19 +90,26 @@ try:
         try:
             resp_unit = subprocess.check_call(test_command, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError:
-            pass
+            resp_unit = 1
     if options.integration:
         base_url = f"http://localhost:{JUPYTER_PORT}"
         env = os.environ.copy()
         env["BASE_URL"] = base_url
-        test_command = ["npx", "wdio", "test/integration/wdio.conf.js"]
+        test_command = [
+            "node",
+            "test/integration/launcher.js",
+            "test/integration/wdio.conf.js",
+        ]
+        print("starting integration tests")
         try:
             resp_integration = subprocess.check_call(
                 test_command, stderr=subprocess.STDOUT, env=env
             )
         except subprocess.CalledProcessError:
-            pass
+            resp_integration = 1
 finally:
     print("Done running tests, killing server.")
+    print(f"unit results: {resp_unit}")
+    print(f"integration results: {resp_integration}")
     os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
-    sys.exit(resp_unit | resp_integration)
+    sys.exit(resp_unit + resp_integration)

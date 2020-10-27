@@ -8,7 +8,7 @@ describe('Narrative tree page with login', () => {
 
     it('opens a narrative', async () => {
         await browser.url(Utils.makeURL('narrative/31932'));
-        const loadingBlocker = await $('#kb-loading-blocker');
+        const loadingBlocker = await $('#kb-loading-blockerxxx');
         const loadingText = await loadingBlocker.getText();
         expect(loadingText).toContain('Connecting to KBase services...');
     });

@@ -109,7 +109,5 @@ try:
             resp_integration = 1
 finally:
     print("Done running tests, killing server.")
-    print(f"unit results: {resp_unit}")
-    print(f"integration results: {resp_integration}")
     os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
     sys.exit(resp_unit + resp_integration)

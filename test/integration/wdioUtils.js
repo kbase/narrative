@@ -18,7 +18,7 @@ async function setSessionCookie () {
 }
 
 async function login() {
-    await browser.url(makeURL('narrative/static/kbase/ping.txt'));
+    await browser.url(makeURL('narrative/static/kbase/config/config.json'));
     await setSessionCookie();
     return;
 }

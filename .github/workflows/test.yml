@@ -47,6 +47,8 @@ jobs:
 
     - name: Run Narrative Test Suite
       shell: bash -l {0}
+      env:
+        KBASE_TEST_TOKEN: ${{ secrets.NARRATIVE_TEST_TOKEN }}
       run: make test
 
     - name: Send to Codecov

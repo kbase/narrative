@@ -42,7 +42,6 @@ Then, simply run (from the narrative root directory) `make test`.
 This calls a few subcommands, and those can be run independently for specific uses:
 
 - `make test-frontend-unit` will run only the unit tests on the frontend (i.e. those with the Karma runner)
-- `make test-frontend-e2e` will run only the frontend tests that make use of Selenium to simulate a browser on the real Narrative site.
 - `make test-backend` will run only the backend Python tests.
 
 ### Add Credentials for Tests

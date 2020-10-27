@@ -100,8 +100,8 @@ try:
         try:
             resp_integration = subprocess.check_call(
                 [
-                    "node",
-                    "test/integration/launcher.js",
+                    "npx",
+                    "wdio",
                     "test/integration/wdio.conf.js",
                 ],
                 stderr=subprocess.STDOUT,

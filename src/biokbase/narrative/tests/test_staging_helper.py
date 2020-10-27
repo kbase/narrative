@@ -2,6 +2,42 @@ from biokbase.narrative.staging.helper import Helper
 import unittest
 import os
 from mock import patch
+from urllib.error import HTTPError, URLError
+
+
+def mock_fetch_url(end_point, values=None, headers=None, method="GET", save_path=None):
+    if "list" in end_point:
+        print("mocking __fetch_url list endpoint")
+        return '[{"path": "tgu/test_file_1", "isFolder": false},\
+                    {"path": "tgu/test_dir", "isFolder": true},\
+                    {"path": "tgu/test_dir/test_file_2", "isFolder": false}]'
+    elif "jgi-metadata" in end_point:
+        print("mocking __fetch_url jgi-metadata endpoint")
+        return '{"file_name": "test_file", "file_status": "BACKUP_COMPLETE"}'
+    elif "metadata" in end_point:
+        print("mocking __fetch_url metadata endpoint")
+        return '{"head": "head_line", "tail": "tail_line", "lineCount": 10}'
+    elif "search" in end_point:
+        print("mocking __fetch_url search endpoint")
+        return (
+            '[{"isFolder": false, "mtime": 1515526154896, "name": "LMS-PROC-315.pdf"}]'
+        )
+    elif "delete" in end_point:
+        print("mocking __fetch_url delete endpoint")
+        return "successfully deleted tgu2/test.pdf"
+    elif "download" in end_point:
+        print("mocking __fetch_url download endpoint")
+    elif "mv" in end_point:
+        print("mocking __fetch_url mv endpoint")
+        return "successfully moved tgu2/test.pdf to tgu2/test_1.pdf"
+    else:
+        print(f"Not mocking unknown endpoint: {end_point}")
+        return
+
+
+def mock_bad_list(end_point, values=None, headers=None, method="GET", save_path=None):
+    # raise URLError(end_point, 401, "Unauthorized", headers, save_path)
+    raise ValueError("Error code: 401\nReason: Unauthorized")
 
 
 class StagingHelperTest(unittest.TestCase):
@@ -20,41 +56,14 @@ class StagingHelperTest(unittest.TestCase):
         self.assertEqual(self.good_fake_token, self.staging_helper._token)
 
     def test_staging_url(self):
-        self.assertTrue(
-            "kbase.us/services/staging_service" in self.staging_helper._staging_url
-        )
+        self.assertIsNotNone(self.staging_helper._staging_url)
 
-    def test_unauthorized_token(self):
+    @patch.object(Helper, "_Helper__fetch_url", side_effect=mock_bad_list)
+    def test_unauthorized_token(self, _fetch_url):
         with self.assertRaises(ValueError) as context:
             self.staging_helper.list()
         self.assertTrue("Reason: Unauthorized" in str(context.exception))
         self.assertTrue("Error code: 401" in str(context.exception))
-
-    def mock_fetch_url(
-        end_point, values=None, headers=None, method="GET", save_path=None
-    ):
-        if "list" in end_point:
-            print("mocking __fetch_url list endpoint")
-            return '[{"path": "tgu/test_file_1", "isFolder": false},\
-                     {"path": "tgu/test_dir", "isFolder": true},\
-                     {"path": "tgu/test_dir/test_file_2", "isFolder": false}]'
-        elif "jgi-metadata" in end_point:
-            print("mocking __fetch_url jgi-metadata endpoint")
-            return '{"file_name": "test_file", "file_status": "BACKUP_COMPLETE"}'
-        elif "metadata" in end_point:
-            print("mocking __fetch_url metadata endpoint")
-            return '{"head": "head_line", "tail": "tail_line", "lineCount": 10}'
-        elif "search" in end_point:
-            print("mocking __fetch_url search endpoint")
-            return '[{"isFolder": false, "mtime": 1515526154896, "name": "LMS-PROC-315.pdf"}]'
-        elif "delete" in end_point:
-            print("mocking __fetch_url delete endpoint")
-            return "successfully deleted tgu2/test.pdf"
-        elif "download" in end_point:
-            print("mocking __fetch_url download endpoint")
-        elif "mv" in end_point:
-            print("mocking __fetch_url mv endpoint")
-            return "successfully moved tgu2/test.pdf to tgu2/test_1.pdf"
 
     @patch.object(Helper, "_Helper__fetch_url", side_effect=mock_fetch_url)
     def test_list(self, _fetch_url):

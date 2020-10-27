@@ -8,7 +8,7 @@ A primary goal of the current data upload refactoring project includes enabling 
 * Monitoring the state of those jobs and restarting if necessary.
 * Viewing the results of those jobs.
 
-Currently, this work is done by users using one cell at a time. An App Cell is generated for each desired data file upload, which can be time-consuming and cluttering for Narratives. The new design to support bulk operations.
+Currently, this work is done by users using one cell at a time. An App Cell is generated for each desired data file upload, which can be time-consuming and cluttering for Narratives. The new design supports bulk operations.
 
 ## Author
 

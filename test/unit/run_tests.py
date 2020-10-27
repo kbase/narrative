@@ -88,10 +88,10 @@ try:
         print("starting unit tests")
         try:
             resp_unit = subprocess.check_call(
-                ["grunt", "test"], stderr=subprocess.STDOUT
+                ["grunt", "test"], stderr=subprocess.STDOUT, shell=False
             )
-        except subprocess.CalledProcessError:
-            resp_unit = 1
+        except subprocess.CalledProcessError as e:
+            resp_unit = e.returncode
     if options.integration:
         base_url = f"http://localhost:{JUPYTER_PORT}"
         env = os.environ.copy()
@@ -106,10 +106,18 @@ try:
                 ],
                 stderr=subprocess.STDOUT,
                 env=env,
+                shell=False,
             )
-        except subprocess.CalledProcessError:
-            resp_integration = 1
+        except subprocess.CalledProcessError as e:
+            resp_integration = e.returncode
 finally:
     print("Done running tests, killing server.")
     os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
-    sys.exit(resp_unit + resp_integration)
+    if resp_unit != 0:
+        print(f"Unit tests completed with code {resp_unit}")
+    if resp_integration != 0:
+        print(f"Integration tests completed with code {resp_integration}")
+    exit_code = 0
+    if resp_unit != 0 or resp_integration != 0:
+        exit_code = 1
+    sys.exit(exit_code)

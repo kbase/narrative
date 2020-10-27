@@ -31,7 +31,7 @@ Jupyter Notebook (and thus Narrative) cells come in three types - Code, Markdown
 }
 ```
 
-The App Cell is, by far, the most complicated extension cell type. It has 3 primary components that all serve different purposes:
+The App Cell is, by far, the most complicated extension cell type. It has several components that all serve different purposes:
 * A finite state machine (FSM) that's used to determine cell state.
 * A core system used to render the cell based on state.
 * A message bus that's used to communicate with the rest of the FE application, as well as the BE (kernel) to get job state.

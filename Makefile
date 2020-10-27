@@ -57,14 +57,6 @@ test-frontend-unit:
 	python test/unit/run_tests.py
 	@echo "done"
 
-# test-frontend-e2e should use Selenium to perform an end-
-# to-end test of the front end components, with a running
-# Narrative system.
-test-frontend-e2e:
-	@echo "running frontend end-to-end tests"
-	cd $(FRONTEND_TEST_DIR)
-	@echo "done"
-
 build-docs:
 	cd src && export PYTHONPATH=`pwd` && python2.7 setup.py doc
 	-mkdir docs

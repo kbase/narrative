@@ -8,8 +8,8 @@ if (process.env.BASE_URL) {
     baseUrl = process.env.BASE_URL;
 }
 let authToken = 'fakeToken';
-if (process.env.KBASE_TOKEN) {
-    authToken = process.env.KBASE_TOKEN;
+if (process.env.KBASE_TEST_TOKEN) {
+    authToken = process.env.KBASE_TEST_TOKEN;
 }
 
 const wdioConfig = {

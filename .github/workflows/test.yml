@@ -53,7 +53,7 @@ jobs:
       shell: bash -l {0}
       run: make test-frontend-unit
 
-    - name: Run Narrative Frontend Integration Tests:
+    - name: Run Narrative Frontend Integration Tests
       shell: bash -l {0}
       env:
         KBASE_TEST_TOKEN: ${{ secrets.NARRATIVE_TEST_TOKEN }}

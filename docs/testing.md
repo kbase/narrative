@@ -112,7 +112,7 @@ describe('Simple test runner', () => {
 });
 ```
 
-When running these locally, these expect that there's a valid authentication token in 
+When running these locally, these expect that there's a valid authentication token in the `KBASE_TEST_TOKEN` environment variable.
 
 ### Manual Testing and Debugging
 

@@ -50,7 +50,7 @@ test-backend:
 	@echo "done"
 
 test-frontend:
-	TOKEN="$(token)" python test/unit/run_tests.py -u -i
+	python test/unit/run_tests.py -u -i
 
 # test-frontend-unit should use karma and jasmine to test
 # each of the Javascript components of the Narrative.
@@ -62,7 +62,7 @@ test-frontend-unit:
 
 test-integration:
 	@echo "running integration tests"
-	TOKEN="$(token)" python test/unit/run_tests.py -i
+	python test/unit/run_tests.py -i
 	@echo "done"
 
 build-docs:

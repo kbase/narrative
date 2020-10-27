@@ -85,25 +85,27 @@ resp_unit = 0
 resp_integration = 0
 try:
     if options.unit:
-        test_command = ["grunt", "test"]
         print("starting unit tests")
         try:
-            resp_unit = subprocess.check_call(test_command, stderr=subprocess.STDOUT)
+            resp_unit = subprocess.check_call(
+                ["grunt", "test"], stderr=subprocess.STDOUT
+            )
         except subprocess.CalledProcessError:
             resp_unit = 1
     if options.integration:
         base_url = f"http://localhost:{JUPYTER_PORT}"
         env = os.environ.copy()
         env["BASE_URL"] = base_url
-        test_command = [
-            "node",
-            "test/integration/launcher.js",
-            "test/integration/wdio.conf.js",
-        ]
         print("starting integration tests")
         try:
             resp_integration = subprocess.check_call(
-                test_command, stderr=subprocess.STDOUT, env=env
+                [
+                    "node",
+                    "test/integration/launcher.js",
+                    "test/integration/wdio.conf.js",
+                ],
+                stderr=subprocess.STDOUT,
+                env=env,
             )
         except subprocess.CalledProcessError:
             resp_integration = 1

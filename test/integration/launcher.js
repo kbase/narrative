@@ -1,3 +1,7 @@
+/* eslint {strict: ['error', 'global']} */
+/* eslint no-console: 0 */
+'use strict';
+
 const Launcher = require('@wdio/cli').default;
 
 const configPath = process.argv[2];

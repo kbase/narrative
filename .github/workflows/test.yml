@@ -6,9 +6,9 @@ name: CI-testing
 # events
 on:
   push:
-    branches: [ develop, master ]
+    branches: [ develop, master, truss ]
   pull_request:
-    branches: [ develop, master ]
+    branches: [ develop, master, truss ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:

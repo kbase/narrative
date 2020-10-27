@@ -11,7 +11,7 @@ module.exports = function (config) {
                 failFast: false,
                 DEFAULT_TIMEOUT_INTERVAL: 20000
             },
-            requireJsShowNoTimestampsError: '^(?!.*(^/narrative/static/))',
+            requireJsShowNoTimestampsError: '^(?!.*(^/narrative/))',
             clearContext: false
         },
         plugins: [

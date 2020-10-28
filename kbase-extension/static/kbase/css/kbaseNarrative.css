@@ -79,7 +79,7 @@
 }
 
 .kb-staging-table-header__name {
-    width: 27%;
+    width: 26%;
 }
 
 .kb-staging-table-header__size,
@@ -241,6 +241,53 @@
     padding: 8px;
 }
 
+.kb-staging-table-import__button {
+    width: 160px;
+    height: 42px;
+    border-radius: 4px;
+    font-family: Public Sans, Arial, sans-serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 16px;
+    position: absolute;
+    right: 10px;
+    bottom: -50px;
+}
+
+.kb-staging-table-import__button.kb-staging-table-import__button__disabled,
+.kb-staging-table-import__button.kb-staging-table-import__button__disabled:active {
+    background-color: #8EAFD0;
+}
+
+.kb-staging-table-import__button.kb-staging-table-import__button__disabled:focus {
+    outline: none;
+}
+
+/* TODO: check in with design on positioning of tooltip, whether we want to display arrow */
+.kb-staging-table-import .tooltip {
+    background: #FFF;
+    box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+
+.kb-staging-table-import .tooltip .tooltip-inner {
+    background: #FFF;
+    color: #000;
+    font-family: Public Sans, Arial, sans-serif;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 12px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    width: 135px;
+    height: 56px;
+}
+
+.kb-staging-table-import .tooltip .tooltip-arrow { 
+    display: none;
+}
 /* 
     END staging data table modifiers 
 */
@@ -249,7 +296,11 @@
     cursor: pointer;
 }
 
-
+.kb-data-staging__container {
+    height: 604px;
+    padding: 10px;
+    overflow-y: auto;
+}
 
 .kb-data-staging-metadata-list {
   font-family: Oxygen, Arial, sans-serif;

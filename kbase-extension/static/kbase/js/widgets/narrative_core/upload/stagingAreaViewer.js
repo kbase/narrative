@@ -329,7 +329,7 @@ define([
                                 decompressButton = '<button class="btn btn-default btn-xs kb-staging-table-body__decompress" data-decompress="' + data + '"><i class="fa fa-expand"></i></button>';
                             }
 
-                            if (full[0] === 'true') {
+                            if (full[1] === 'true') {
                                 data = '<span class="kb-staging-table-body__folder" data-name="' + data + '">' + data + '</span>';
                             }
 
@@ -450,6 +450,13 @@ define([
                             show: Config.get('tooltip').showDelay,
                             hide: Config.get('tooltip').hideDelay
                         }
+                    });
+
+                    $('td:eq(2)', row).find('span.kb-staging-table-body__folder')
+                    .off('click')
+                    .on('click', e => {
+                        $(e.currentTarget).off('click');
+                        this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     });
 
                     $('td:eq(2)', row).find('button[data-decompress]')

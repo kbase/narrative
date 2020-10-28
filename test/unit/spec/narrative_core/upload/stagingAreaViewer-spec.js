@@ -158,7 +158,7 @@ define ([
             });
 
             await stagingViewer.setPath('//empty');
-            expect($targetNode.find('div.kb-staging-table').html()).toContain('No files found.');
+            expect($targetNode.find('tbody.kb-staging-table-body').html()).toContain('No files found.');
         });
 
         it('Should respond to activate and deactivate commands', () => {
@@ -193,7 +193,7 @@ define ([
         it('Should have multi-clicked folder names only fire once', async () => {
             spyOn(stagingViewer, 'updatePathFn');
             await stagingViewer.render();
-            stagingViewer.$elem.find('div.kb-staging-table-body__expander span').click().click().click();
+            stagingViewer.$elem.find('span.kb-staging-table-body__folder').click().click().click();
             expect(stagingViewer.updatePathFn).toHaveBeenCalledTimes(1);
         });
 

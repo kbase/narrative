@@ -31,11 +31,10 @@ define([
     'common/appUtils',
     'common/jupyter',
     'common/spec',
-    //    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
     'css!kbase/css/appCell.css',
-    'css!./styles/main.css',
+    'css!kbase/css/advancedViewCell.css',
     'bootstrap',
     'custom/custom'
 ], function(

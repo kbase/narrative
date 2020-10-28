@@ -1,6 +1,6 @@
 @import url("//fonts.googleapis.com/css?family=Roboto");
 
-.kb-dropzone div#upload-message {
+.kb-dropzone #upload-message {
   font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
 }
@@ -147,6 +147,12 @@
   cursor: pointer;
 }
 
+.kb-data-staging__container {
+  height: 604px;
+  padding: 5px;
+  overflow-y: auto;
+}
+
 .kb-data-staging-footer {
   font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
@@ -186,13 +192,13 @@
   line-height: 18px;
   text-align: center;
   text-transform: uppercase;
-  color: #4379B1;
+  color: #4379b1;
   height: 35px;
   margin: 8px;
   padding: 8px;
   position: relative;
   top: -3px;
-  letter-spacing: .5pt;
+  letter-spacing: 0.5pt;
   border-radius: 4px;
 }
 
@@ -320,9 +326,6 @@
 .kb-data-list-drag-target.-drag-hover {
   background-color: #effceb;
   border-color: green;
-}
-
-.kb-data-list-drag-target.-drag-hover {
   height: 90px;
   transition: all 0.25s ease;
 }
@@ -532,10 +535,9 @@ span#searchspan {
 
 .btn {
   /* don't use drop-shadow on profile menu */
-  box-shadow: none;
   -webkit-box-shadow: none;
-  moz-box-shadow: none;
-  xfont-size: 18px;
+  -moz-box-shadow: none;
+  box-shadow: none;
 }
 
 #signin-button .btn {
@@ -630,7 +632,7 @@ p#site-title {
 
 #search-area {
   position: relative;
-  font: 18px "RobotoBlack", Arial, sans-serif;
+  font: 18px 'RobotoBlack', Arial, sans-serif;
   font-weight: normal;
   color: #686868;
   padding: 11px 11px;
@@ -676,8 +678,6 @@ p#site-title {
   border-right: 5px solid #cecece;
   top: 70px;
   bottom: 0;
-
-  /* overflow-y: auto; */
 }
 
 .kb-side-overlay-container {
@@ -890,7 +890,7 @@ p#site-title {
 }
 
 #data-pane p {
-  margin: 0 0;
+  margin: 0;
 }
 
 #data-pane p span {
@@ -1084,7 +1084,6 @@ img.dataset-cell {
   background-image: url("../images/gears.png");
   background-position: right;
   background-repeat: no-repeat;
-  #background-color: #f2f2f2;
 }
 
 .dataset-cell p,
@@ -1181,7 +1180,6 @@ div.metadata {
 
 div.social {
   float: right;
-  display: block;
   width: 80px;
   padding: 0 10px;
   display: none;
@@ -1274,10 +1272,6 @@ p span.notification {
   padding-bottom: 5px;
 }
 
-#menubar .navbar {
-  margin-bottom: 5px;
-}
-
 #menubar .navbar .container {
   padding-left: 0;
   padding-right: 0;
@@ -1313,19 +1307,16 @@ p span.notification {
 }
 
 #menubar .navbar {
+  margin-bottom: 5px;
   width: 100%;
 }
 
 div#notebook_panel {
-  -webkit-box-shadow: none; /* 0 -1px 0px rgba(0, 0, 0, 0.1); */
-  -moz-box-shadow: none; /* 0 -1px 0px rgba(0, 0, 0, 0.1); */
-  box-shadow: none; /* 0 -1px 0px rgba(0, 0, 0, 0.1); */
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
 }
 
-/* #notebook {
-    padding-top: 1em;
-}
-*/
 .version-stamp a {
   padding-right: 320px;
   text-align: right;
@@ -1363,8 +1354,6 @@ div#notebook_panel {
   font-weight: bold;
   text-transform: uppercase;
   color: #2e618d;
-
-  /* border-bottom: 1px solid #CECECE; */
 }
 
 .kb-narr-side-panel .btn {
@@ -1549,8 +1538,6 @@ div#notebook_panel {
 /* Container for func list */
 .kb-function-body {
   height: 100%;
-
-  /* overflow-y: auto; */
   width: 100%;
 }
 
@@ -1705,14 +1692,10 @@ div#notebook_panel {
 
 .kb-function-dim {
   background-color: #eee !important;
-
-  /* border-color: #ddd !important; */
 }
 
 .kb-function-dim .panel-heading {
   background-color: #eee !important;
-
-  /* border-color: #000 !important; */
 }
 
 .kb-function-cat-dim {
@@ -1797,7 +1780,7 @@ div#notebook_panel {
 }
 
 .kb-cell-run h1 {
-  font-family: "Roboto";
+  font-family: 'Roboto';
   font-weight: normal;
   font-size: 12pt;
   line-height: 15px;
@@ -1813,7 +1796,7 @@ div#notebook_panel {
 }
 
 .kb-cell-run h2 {
-  font-family: "Roboto";
+  font-family: 'Roboto';
   font-weight: normal;
   font-size: 11pt;
   line-height: 150%;
@@ -1881,7 +1864,7 @@ td {
 }
 
 .kb-out-desc {
-  font-family: "Roboto";
+  font-family: 'Roboto';
   font-weight: normal;
   font-size: 12pt;
   line-height: 15px;
@@ -1892,7 +1875,7 @@ td {
 }
 
 .kb-err-desc {
-  font-family: "Roboto";
+  font-family: 'Roboto';
   font-weight: normal;
   font-size: 12pt;
   line-height: 15px;
@@ -1914,7 +1897,7 @@ td {
 .kb-func-timestamp {
   color: #555;
   font-size: 10pt;
-  font-family: "Roboto";
+  font-family: 'Roboto';
   margin-top: -3px;
   padding-right: 1em;
 }
@@ -2114,15 +2097,12 @@ control with padding, and then scooting the icon back into its column.
   font-size: 15px;
 }
 
-.kb-method-parameter-hint {
-  padding-left: 7px;
-}
-
 .kb-parameter-data-selection {
   font-weight: bold;
 }
 
 .kb-method-parameter-hint {
+  padding-left: 7px;
   color: #777;
   text-align: left;
   margin-top: 3px;
@@ -2208,7 +2188,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-panel-description {
-  font-family: "Roboto";
+  font-family: 'Roboto';
   font-weight: normal;
   font-size: 12pt;
   line-height: 15px;
@@ -2221,8 +2201,6 @@ control with padding, and then scooting the icon back into its column.
   line-height: 14px;
   color: #a63232;
   text-align: left;
-
-  /* pading-left:30px; */
   margin: 10px;
 }
 
@@ -2243,8 +2221,6 @@ control with padding, and then scooting the icon back into its column.
   font-size: 16pt;
   line-height: 18px;
   color: #555;
-
-  /* background:#f2dede; */
   text-align: left;
   padding-left: 20px;
   margin-top: 20px;
@@ -2258,14 +2234,10 @@ control with padding, and then scooting the icon back into its column.
 .kb-app-step-running {
   border: 3px solid #2196f3;
   z-index: auto;
-
-  /* animation: pulse 1s ease infinite;
-    -webkit-animation: pulse 1s ease infinite; */
-
-  /* opacity: 0.7; */
 }
 
 /* -- "next steps" text and links -- */
+
 .kb-app-next {
   border-top: 2px solid #cecece;
 }
@@ -2340,9 +2312,9 @@ button.kb-app-run {
   border: none;
   padding: 10px 20px;
   font-size: 13px;
-  box-shadow: 1px 1px 1px #ccc;
   -webkit-box-shadow: 1px 1px 1px #ccc;
-  moz-box-shadow: 1px 1px 1px #ccc;
+  -moz-box-shadow: 1px 1px 1px #ccc;
+  box-shadow: 1px 1px 1px #ccc;
 }
 
 button.kb-app-run:hover {
@@ -2364,9 +2336,9 @@ button.kb-method-run {
   border: none;
   padding: 10px 20px;
   font-size: 13px;
-  box-shadow: 1px 1px 1px #ccc;
   -webkit-box-shadow: 1px 1px 1px #ccc;
-  moz-box-shadow: 1px 1px 1px #ccc;
+  -moz-box-shadow: 1px 1px 1px #ccc;
+  box-shadow: 1px 1px 1px #ccc;
 }
 
 button.kb-method-run:hover {
@@ -2556,8 +2528,6 @@ button.kb-data-obj {
   width: 90px;
   text-align: right;
   color: rgba(0, 0, 0, 0.5);
-
-  /* padding: 0 0 5px 0; */
 }
 
 .kb-data-obj-panel-info dl dt::after {
@@ -2566,8 +2536,6 @@ button.kb-data-obj {
 
 .kb-data-obj-panel-info dl dd {
   margin: 0 0 0 100px;
-
-  /* padding: 0 0 5px 0; */
 }
 
 .kb-data-obj-panel-verlist span {
@@ -2687,7 +2655,7 @@ button.kb-data-obj {
 
 .narrative-card-palette-icon {
   position: relative;
-  color: "#888";
+  color: #888;
   left: 15px;
   top: -50px;
 }
@@ -2731,10 +2699,9 @@ button.kb-data-obj {
   border-left-width: 5px;
   border-left-color: #fff;
   color: #333;
+  -webkit-box-shadow: 1px 1px 1px 1px #fff;
+  -moz-box-shadow: 1px 1px 1px 1px #fff;
   box-shadow: 1px 1px 1px 1px #fff;
-
-  --webkit-box-shadow: 1px 1px 1px 1px #fff;
-  --moz-box-shadow: 1px 1px 1px 1px #fff;
 }
 
 .kb-function-dim .kb-data-list-obj-row {
@@ -2746,9 +2713,9 @@ button.kb-data-obj {
   border-left-style: solid;
   border-left-width: 5px;
   border-left-color: #4bb856;
-  box-shadow: 1px 1px 1px 1px #aaa;
   -webkit-box-shadow: 1px 1px 1px 1px #aaa;
-  moz-box-shadow: 1px 1px 1px 1px #aaa;
+  -moz-box-shadow: 1px 1px 1px 1px #aaa;
+  box-shadow: 1px 1px 1px 1px #aaa;
 }
 
 .palette {
@@ -2759,9 +2726,9 @@ button.kb-data-obj {
   border-left-style: solid;
   border-left-width: 5px;
   border-left-color: #4bb856;
-  box-shadow: 1px 1px 1px 1px #aaa;
   -webkit-box-shadow: 1px 1px 1px 1px #aaa;
-  moz-box-shadow: 1px 1px 1px 1px #aaa;
+  -moz-box-shadow: 1px 1px 1px 1px #aaa;
+  box-shadow: 1px 1px 1px 1px #aaa;
 }
 
 .kb-data-list-obj-row-main {
@@ -2776,9 +2743,9 @@ button.kb-data-obj {
   font-size: 18px;
   border: none;
   text-shadow: none !important;
-  box-shadow: none;
   -webkit-box-shadow: none;
-  moz-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
   margin: 0;
 }
 
@@ -2787,9 +2754,9 @@ button.kb-data-obj {
   background-color: #4379b1;
   color: #fff;
   border: none;
-  box-shadow: 1px 1px 3px #aaa;
   -webkit-box-shadow: 1px 1px 3px #aaa;
-  moz-box-shadow: 1px 1px 3px #aaa;
+  -moz-box-shadow: 1px 1px 3px #aaa;
+  box-shadow: 1px 1px 3px #aaa;
   text-align: center;
   width: 30pt;
   height: 30pt;
@@ -2799,22 +2766,35 @@ button.kb-data-obj {
 /* specialize buttons that hover over narrative */
 #kb-add-code-cell,
 #kb-add-md-cell {
-  box-shadow: #cecece 2px 2px 1px;
-  height: 40px;
-  width: 40px;
   background-color: #2196f3;
+  border-radius: 50%;
+  bottom: 15px;
+  box-shadow: #cecece 2px 2px 1px;
+  cursor: pointer;
+  color: #fff;
+  height: 40px;
   opacity: 0.5;
+  padding-top: 5px;
+  position: fixed;
+  width: 40px;
+  z-index: 5;
 }
 
 #kb-add-code-cell {
-  right: 100px;
+  right: 75px;
+  padding-left: 7px;
 }
 
 #kb-add-md-cell {
   margin-right: 20px;
+  right: 10px;
+  padding-left: 8px;
 }
 
+#kb-add-code-cell:hover,
+#kb-add-md-cell:hover,
 .kb-data-list-add-data-button:hover {
+  opacity: 1;
   cursor: pointer;
   background-color: #36618e;
 }
@@ -2829,9 +2809,9 @@ button.kb-data-obj {
   font-size: 14px;
   font-family: "Roboto", Helvetica, Arial, sans-serif;
   font-weight: 400;
-  box-shadow: 1px 1px 3px #aaa;
   -webkit-box-shadow: 1px 1px 3px #aaa;
-  moz-box-shadow: 1px 1px 3px #aaa;
+  -moz-box-shadow: 1px 1px 3px #aaa;
+  box-shadow: 1px 1px 3px #aaa;
 }
 
 .kb-data-list-add-data-text-button:hover {
@@ -2846,9 +2826,9 @@ button.kb-data-obj {
   border: none;
   padding: 5px 10px;
   font-size: 13px;
-  box-shadow: 1px 1px 3px #aaa;
   -webkit-box-shadow: 1px 1px 3px #aaa;
-  moz-box-shadow: 1px 1px 3px #aaa;
+  -moz-box-shadow: 1px 1px 3px #aaa;
+  box-shadow: 1px 1px 3px #aaa;
   margin: 5px;
 }
 
@@ -2869,9 +2849,9 @@ button.kb-data-obj {
   border: none;
   padding: 5px 10px;
   font-size: 13px;
-  box-shadow: 1px 1px 3px #aaa;
   -webkit-box-shadow: 1px 1px 3px #aaa;
-  moz-box-shadow: 1px 1px 3px #aaa;
+  -moz-box-shadow: 1px 1px 3px #aaa;
+  box-shadow: 1px 1px 3px #aaa;
   margin: 5px;
 }
 
@@ -2950,7 +2930,7 @@ button.kb-data-obj {
 .kb-data-list-name {
   color: #2e618d;
   font-size: 11pt;
-  font-family: "Oyxgen", Arial, sans-serif;
+  font-family: 'Oyxgen', Arial, sans-serif;
   font-weight: bold;
   margin: 2px;
   cursor: pointer;
@@ -3001,9 +2981,6 @@ button.kb-data-obj {
   font-size: 10pt;
   margin: 2px;
   margin-left: 10px;
-
-  /* Not a link anymore, so we disable for now
-    cursor: pointer; */
 }
 
 .kb-data-list-narrative-error {
@@ -3017,8 +2994,6 @@ button.kb-data-obj {
   font-size: 10pt;
   margin: 2px;
   margin-left: 10px;
-
-  /* cursor:pointer; */
 }
 
 .kb-data-list-more {
@@ -3035,9 +3010,9 @@ button.kb-data-obj {
   font-size: 12px;
   border: none;
   text-shadow: none !important;
-  box-shadow: none;
   -webkit-box-shadow: none;
-  moz-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
   margin: 0;
 }
 
@@ -3191,9 +3166,6 @@ button.kb-data-obj {
 
 .kbcb-app-card-title {
   font-size: 1.1em;
-
-  /* max-height: 2.6em;
-    overflow:hidden; */
 }
 
 .kbcb-app-card-module {
@@ -3291,9 +3263,6 @@ button.kb-data-obj {
 
 .kbcb-app-page-title {
   font-size: 2em;
-
-  /* max-height: 2.6em;
-    overflow:hidden; */
 }
 
 .kbcb-app-page-module {
@@ -3328,9 +3297,9 @@ button.kb-data-obj {
 .kb-share-user-permissions-dropdown {
   border-style: none;
   text-shadow: none !important;
-  box-shadow: none;
   -webkit-box-shadow: none;
-  moz-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
   padding: 2px;
   width: auto;
   height: auto;
@@ -3347,8 +3316,7 @@ button.kb-data-obj {
 }
 
 .kb-nar-manager-titles {
-  font-family: "Oxygen";
-  font-weight: bold;
+  font-family: 'Oxygen';
   color: #777;
   margin: 10px;
   margin-top: 20px;
@@ -3363,16 +3331,20 @@ button.kb-data-obj {
 .kb-import-content {
   position: relative;
   margin: 0 0 0 0;
-
-  /* overflow-x: hidden;
-    overflow-y: auto; */
-
-  /* height: 830px; */
   display: block;
 }
 
 .kb-import-content .btn-xs {
   border: none;
+}
+
+.ftp-file-header {
+  margin-bottom: 5px;
+  margin-top: 8px;
+}
+
+.globus-link:hover {
+  text-decoration: none;
 }
 
 .kb-import-content .upload-options button {
@@ -3451,11 +3423,6 @@ button.kb-data-obj {
   margin-bottom: 0;
 }
 
-/*
-.kb-import-item input[type="checkbox"] {
-    margin: 15px 30px 15px 0px;
-} */
-
 .kb-import-item .kb-import-checkbox {
   font-size: 1.5em;
   padding: 15px 20px 15px 20px;
@@ -3469,16 +3436,13 @@ button.kb-data-obj {
 .kb-import-info {
   display: inline-block;
   margin: 10px 20px 0 0;
+  font-weight: normal;
 }
 
 .kb-import-info span {
   font-size: 0.9em;
   font-weight: 700;
   color: #999;
-}
-
-.kb-import-info {
-  font-weight: normal;
 }
 
 .kb-import-status {
@@ -3516,15 +3480,10 @@ button.kb-data-obj {
 
 #kb-view-mode-narr div {
   display: inline-block;
-
-  /* background-color: #2196F3;
-    color: #BBDEFB; */
   color: #2196f3;
-  font-family: "Oxygen", Arial, sans-serif;
+  font-family: 'Oxygen', Arial, sans-serif;
   font-weight: bold;
   font-size: 16px;
-
-  /* font-weight: bold; */
   padding: 3px;
   margin-top: -3px;
   width: 147px;
@@ -3599,12 +3558,6 @@ button.kb-data-obj {
 
 /* Override the default max-width of the narrative box */
 
-/* .container { */
-
-/* max-width: 2000px !important; */
-
-/* } */
-
 /* Styles for KNHX trees to remove its document.write nonsense that breaks asynchronous loading */
 #popdiv {
   position: absolute;
@@ -3621,5 +3574,3 @@ button.kb-data-obj {
   border: none;
   display: inline;
 }
-
-/* bootstrap sillines */

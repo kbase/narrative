@@ -16,7 +16,7 @@ Currently, this work is done by users using one cell at a time. An App Cell is g
 
 ## Status
 
-In progress
+Accepted
 
 ## Background
 
@@ -55,7 +55,16 @@ The reason for the App cell being an extension to code cells is the last point a
 
 ## Decision Outcome
 
+The Bulk import UI will be developed in a new cell type, based on the existing app cell.
+
+Other points discussed:
+* We considered using a different interface than a cell, but decided that changing that entire paradigm right now would be too heavy of a burden on the design and product teams and would push back development efforts further. There was also no clear consensus on whether that's a desired result.
+* We discussed the implementation impacts of the importer app parameter layouts and decided to do something internal to the Narrative repo, as opposed to modifying the app specs in general. What the final implementation will be is left for later discussion.
+
+
 ## Consequences
+
+The team will need to develop a new cell type, which means building a new Jupyter notebook extension. We can mostly use the same startup code (from the `load_ipython_extension` function that's common among the other extensions). The team will also be spending time extracting components from the app cell that are embedded and making them more easily shareable with the new cell type.
 
 ## Pros and Cons of the Alternatives
 

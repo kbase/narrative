@@ -66,20 +66,13 @@ This just needs the path to the token file (with pre-pended slash), such as `"/t
 
 *TODO (10/24/2017): Unify these token configs!*
 
-### Testing with Travis-CI and Coveralls
+### Testing with Github Actions and Codecov
 
-These tests are run automatically on a pull request to the Narrative Github repo. These are currently run through [Travis-CI](https://travis-ci.org/) and the coverage reported with [Coveralls](https://coveralls.io/).
+These tests are run automatically on a pull request to the Narrative Github repo. These are currently run through [Github Actions](https://docs.github.com/en/free-pro-team@latest/actions) and the coverage reported with [Codecov](https://codecov.io/).
 
 Unit tests are automatically run without credentials, skipping various tests that are, really, more like integration tests.
 
-The integration tests that run with webdriver.io do require an authentication token. This is embedded in the `.travis.yml` file as a secure environment variable - the third (and last) one. That token will expire every 90 days and will need to be replaced. A new one can be generated from the KBase CI Account page with a valid developer account. This token can then be encrypted with the following commands. Note that Ruby is required.
-
-```
-gem install travis  # if not already installed
-travis encrypt KBASE_TOKEN=my_generated_token
-```
-This will emit a string that looks like `secure: "SDFSDFSDFSDF="` Use this string to replace the out of date token. It will become available in the test environment as `KBASE_TOKEN`, which is the variable that the `wdio.conf.js` file looks for.
-
+The integration tests that run with webdriver.io do require an authentication token. This is the `NARRATIVE_TEST_TOKEN` Github secret in the Narrative repo. It will become available in the test environment as `KBASE_TEST_TOKEN`, which is the variable that the `wdio.conf.js` file looks for.
 
 ### Adding Your Own Tests
 

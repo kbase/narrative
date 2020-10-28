@@ -173,8 +173,8 @@ define([
         },
 
         removeProgressBar: function($dropzoneElem) {
-            if (this.dropzone.getQueuedFiles().length === 0 &&
-            this.dropzone.getUploadingFiles().length === 0) {
+            if (!this.dropzone.getQueuedFiles().length &&
+            !this.dropzone.getUploadingFiles().length) {
                 $($dropzoneElem.find('#total-progress')).fadeOut(1000, function() {
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
                 });

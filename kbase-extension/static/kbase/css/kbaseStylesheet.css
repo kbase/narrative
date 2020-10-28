@@ -95,46 +95,46 @@
 }
 
 h1 {
-  font: 1.75em/2em 'RobotoBlack', Arial, sans-serif;
+  font: 1.75em/2em RobotoBlack, Arial, sans-serif;
   letter-spacing: 0;
   color: #232323;
   font-weight: normal;
 }
 
 h2 {
-  font: 1.5em/1.75em 'RobotoBlack', Arial, sans-serif;
+  font: 1.5em/1.75em RobotoBlack, Arial, sans-serif;
   font-weight: normal;
   color: #898989;
   letter-spacing: 0;
 }
 
 h3 {
-  font: 1.15em/1.25em 'RobotoBlack', Arial, sans-serif;
+  font: 1.15em/1.25em RobotoBlack, Arial, sans-serif;
   letter-spacing: 0;
   font-weight: normal;
 }
 
 h4 {
-  font: 1.15em/1.25em 'Oxygen', Arial, sans-serif;
+  font: 1.15em/1.25em Oxygen, Arial, sans-serif;
   font-style: italic;
   letter-spacing: 0.07em;
 }
 
 body {
-  font: 1.375em 'Oxygen', Arial, sans-serif;
+  font: 1.375em Oxygen, Arial, sans-serif;
   color: #333;
   background-color: #fff;
 }
 
 strong,
 b {
-  font-family: 'Oxygen', Arial, sans-serif;
+  font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
 }
 
 em,
 i {
-  font-family: 'Oxygen', Arial, sans-serif;
+  font-family: Oxygen, Arial, sans-serif;
   font-style: italic;
 }
 
@@ -142,7 +142,7 @@ strong em,
 em strong,
 b i,
 i b {
-  font-family: 'Oxygen', Arial, sans-serif;
+  font-family: Oxygen, Arial, sans-serif;
   font-style: italic;
   font-weight: bold;
 }
@@ -163,6 +163,6 @@ a:hover {
 
 pre,
 code {
-  font-family: 'OxygenMono', "Lucida Console", "Lucida Sans Typewriter", monospace;
+  font-family: OxygenMono, "Lucida Console", "Lucida Sans Typewriter", monospace;
   font-style: normal;
 }

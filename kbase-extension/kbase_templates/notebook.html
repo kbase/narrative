@@ -16,15 +16,13 @@ window.mathjax_url = "{{mathjax_url}}";
 <link rel="stylesheet" href="{{ static_url("components/bootstrap-tour/build/css/bootstrap-tour.min.css") }}" type="text/css" />
 <link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}">
 {{super()}}
-<link rel="stylesheet" href="{{ static_url("kbase/css/contigBrowserStyles.css") }}" type="text/css" />
 <link rel="stylesheet" href="{{ static_url("ext_components/datatables/media/css/dataTables.bootstrap.min.css") }}" type="text/css" />
-<link rel="stylesheet" href="{{ static_url("ext_components/select2/dist/css/select2.css") }}" type="text/css" />
+<link rel="stylesheet" href="{{ static_url("ext_components/select2/dist/css/select2.min.css") }}" type="text/css" />
 <link rel="stylesheet" href="{{ static_url("ext_components/select2-bootstrap-theme/dist/select2-bootstrap.min.css") }}" type="text/css" />
-<link rel="stylesheet" href="{{ static_url("ext_components/dropzone/dist/dropzone.css") }}" type="text/css" />
+<link rel="stylesheet" href="{{ static_url("ext_components/dropzone/dist/min/dropzone.min.css") }}" type="text/css" />
 
 <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
-<link rel="stylesheet" href=""  id='kernel-css'                             type="text/css" />
-
+<link rel="stylesheet" href=""  id="kernel-css"                             type="text/css" />
 {% endblock %}
 
 {% block bodyclasses %}notebook_app {{super()}}{% endblock %}
@@ -64,7 +62,7 @@ data-notebook-path="{{notebook_path | urlencode}}"
               <span class="kernel_indicator_name">Kernel</span>
               <i id="kernel_indicator_icon"></i>
             </p>
-            <i id="readonly-indicator" class="navbar-text" title='This notebook is read-only'>
+            <i id="readonly-indicator" class="navbar-text" title="This notebook is read-only">
                 <span class="fa-stack">
                     <i class="fa fa-save fa-stack-1x"></i>
                     <i class="fa fa-ban fa-stack-2x text-danger"></i>
@@ -105,14 +103,14 @@ data-notebook-path="{{notebook_path | urlencode}}"
         <div id="ipython-main-app">
             <div id="notebook_panel">
                 <div id="notebook" class="notebook__container"></div>
-                <div id='tooltip' class='ipython_tooltip' style='display:none'></div>
+                <div id="tooltip" class="ipython_tooltip" style="display: none"></div>
                 <div id="kb-ws-progress"></div>
             </div>
         </div>
     </div>
 </div>
 
-<div id='kb-error-dialog'></div>
+<div id="kb-error-dialog"></div>
 
 {% endblock %}
 
@@ -122,7 +120,7 @@ data-notebook-path="{{notebook_path | urlencode}}"
     <div id="pager-contents">
         <div id="pager-container" class="container"></div>
     </div>
-    <div id='pager-button-area'></div>
+    <div id="pager-button-area"></div>
 </div>
 
 {% endblock %}

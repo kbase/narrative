@@ -36,33 +36,17 @@ define([
 
         render: function() {
             const uploadConfig = Config.get('upload');
+            const globusUrlLinked = uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user;
             const $dropzoneElem = $(this.dropzoneTmpl({
                 userInfo: this.userInfo,
-                globusUrl: uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user
+                globusUrl: globusUrlLinked
             }));
 
             // there are two anchor elements with same class name .globus_linked.
             // One link takes the user to globus site,
             // and the other link takes user to how to link globus account.
-            $dropzoneElem.find('globus_linked').click(e => {
-                e.stopPropagation();
-                e.preventDefault();
-
-                if(e.target.href === uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user) {
-                    let stagingServiceClient = new StagingServiceClient({
-                        root: this.stagingUrl,
-                        token: Runtime.make().authToken()
-                    });
-                    var globusWindow = window.open('', 'dz-globus');
-                    globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
-                    stagingServiceClient.addAcl()
-                        .done(() => {
-                            window.open($(e.target).attr('href'), 'dz-globus');
-                            return true;
-                        });
-                } else {
-                    window.open(e.target.href, '_blank');
-                }
+            $dropzoneElem.find('globus_linked').click(function(e) {
+                this.uploadGlobusClickEvent(e, globusUrlLinked);
             });
             this.$elem.append($dropzoneElem);
             this.dropzone = new Dropzone($dropzoneElem.get(0), {
@@ -144,7 +128,7 @@ define([
                     if ($errorMessage.html().search('File is too big') !== -1){
                         errorText  = 'File size exceeds maximum of 20GB. Please '
                         $errorMessage.text('Error: ' + errorText);
-                        $errorMessage.append(this.makeGlobusErrorLink(uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user));
+                        $errorMessage.append(this.makeGlobusErrorLink(globusUrlLinked));
                     } else if (erroredFile && erroredFile.xhr && erroredFile.xhr.responseText) {
                         errorText = erroredFile.xhr.responseText;
                         $errorMessage.text('Error: ' + errorText);
@@ -155,6 +139,27 @@ define([
                         $dropzoneElem.append(this.makeClearAllButton());
                     }
                 });
+        },
+
+        uploadGlobusClickEvent: function(e, globusUrlLinked) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            if(e.target.href === globusUrlLinked) {
+                let stagingServiceClient = new StagingServiceClient({
+                    root: this.stagingUrl,
+                    token: Runtime.make().authToken()
+                });
+                var globusWindow = window.open('', 'dz-globus');
+                globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
+                stagingServiceClient.addAcl()
+                    .done(() => {
+                        window.open($(e.target).attr('href'), 'dz-globus');
+                        return true;
+                    });
+            } else {
+                window.open(e.target.href, '_blank');
+            }
         },
 
         makeClearAllButton: function() {
@@ -181,19 +186,22 @@ define([
             $('#clear-all-btn').remove();
         },
 
-        makeGlobusErrorLink: function(globusUrl) {
+        makeGlobusErrorLink: function(globusUrlLinked) {
             let url = 'https://docs.kbase.us/data/globus';
 
             let $globusErrorLink = $("<a>")
             .attr('id', 'globus_error_link')
             .attr('href', url)
-            .attr('target', '_blank')
+            // .attr('target', '_blank')
             .attr('aria-label', 'opens new window to kbase globus upload docs')
-            .text("upload with Globus.");
+            .text("upload with Globus.")
+            .click(function(e) {
+                this.uploadGlobusClickEvent(e, globusUrlLinked);
+            }.bind(this));
 
             if (this.userInfo.globusLinked){
                 $globusErrorLink
-                    .attr('href', globusUrl)
+                    .attr('href', globusUrlLinked)
                     .attr('aria-label', 'opens new window to upload via globus');
             }
 

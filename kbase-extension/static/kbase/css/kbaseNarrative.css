@@ -65,13 +65,15 @@
 }
 
 .dz-file {
-  width:100%;
+  width: 100%;
   border: 1px solid #EEEEEE;
-  margin: 2px 0px;
-  padding: 5px 0px;
-  font-family: Oxygen, Arial, sans-serif;
-  font-style: normal;
-  font-size: 16px;
+  margin: 2px 0;
+  padding: 5px 0;
+  font: normal, 16px, Oxygen, Arial, sans-serif;
+}
+
+.dz-file__progress__bar {
+  width: 0;
 }
 
 .dz-file__row {

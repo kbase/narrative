@@ -241,10 +241,6 @@
     padding: 8px;
 }
 
-.kb-staging-table-import {
-    position: relative;
-}
-
 .kb-staging-table-import__button {
     width: 160px;
     height: 42px;
@@ -255,8 +251,8 @@
     font-size: 14px;
     line-height: 16px;
     position: absolute;
-    right: 0;
-    margin-top: 16px;
+    right: 10px;
+    bottom: -50px;
 }
 
 .kb-staging-table-import__button.kb-staging-table-import__button__disabled,

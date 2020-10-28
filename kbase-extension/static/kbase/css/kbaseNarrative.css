@@ -122,7 +122,7 @@
 .kb-staging-table-header .kb-staging-table-header__file.sorting:before,
 .kb-staging-table-header .kb-staging-table-header__file.sorting_desc:before,
 .kb-staging-table-header .kb-staging-table-header__file.sorting_asc:before {
-    right: 0;
+    left: 9px;
 }
 
 .kb-staging-table .kb-staging-table-body td {

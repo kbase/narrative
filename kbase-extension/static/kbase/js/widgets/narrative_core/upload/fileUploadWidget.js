@@ -126,7 +126,7 @@ define([
 
                     // I don't know how to determine if the file was too big other than looking at the preview message
                     if ($errorMessage.html().search('File is too big') !== -1){
-                        errorText  = 'File size exceeds maximum of 20GB. Please '
+                        errorText  = 'File size exceeds maximum of 20GB. Please ';
                         $errorMessage.text('Error: ' + errorText);
                         $errorMessage.append(this.makeGlobusErrorLink(globusUrlLinked));
                     } else if (erroredFile && erroredFile.xhr && erroredFile.xhr.responseText) {
@@ -189,20 +189,22 @@ define([
         makeGlobusErrorLink: function(globusUrlLinked) {
             let url = 'https://docs.kbase.us/data/globus';
 
-            let $globusErrorLink = $("<a>")
-            .attr('id', 'globus_error_link')
-            .attr('href', url)
-            // .attr('target', '_blank')
-            .attr('aria-label', 'opens new window to kbase globus upload docs')
-            .text("upload with Globus.")
-            .click(function(e) {
-                this.uploadGlobusClickEvent(e, globusUrlLinked);
-            }.bind(this));
+            let $globusErrorLink = $('<a>')
+                .attr({
+                    'id': 'globus_error_link',
+                    'href': url,
+                    'aria-label': 'opens new window to kbase globus upload docs'
+                }).text("upload with Globus.")
+                .click(function(e) {
+                    this.uploadGlobusClickEvent(e, globusUrlLinked);
+                }.bind(this));
 
             if (this.userInfo.globusLinked){
                 $globusErrorLink
-                    .attr('href', globusUrlLinked)
-                    .attr('aria-label', 'opens new window to upload via globus');
+                    .attr({
+                        'href': globusUrlLinked,
+                        'aria-label': 'opens new window to upload via globus'
+                    })
             }
 
             return $globusErrorLink;

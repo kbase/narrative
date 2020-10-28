@@ -72,10 +72,6 @@
   font: normal, 16px, Oxygen, Arial, sans-serif;
 }
 
-.dz-file__progress__bar {
-  width: 0;
-}
-
 .dz-file__row {
   display: flex;
   align-items: center;
@@ -86,6 +82,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 20px;
+}
+
+.dz-file__upload-progress {
+  display: inline;
 }
 
 .dz-file__msg {
@@ -102,6 +102,7 @@
 .dz-file__progress__bar {
   margin-bottom: inherit;
   margin-left: 5px;
+  width: 0;
 }
 
 .dz-file__status {

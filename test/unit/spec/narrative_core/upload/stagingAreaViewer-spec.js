@@ -158,7 +158,7 @@ define ([
             });
 
             await stagingViewer.setPath('//empty');
-            expect($targetNode.find('#kb-data-staging-table').html()).toContain('No files found.');
+            expect($targetNode.find('div.kb-staging-table').html()).toContain('No files found.');
         });
 
         it('Should respond to activate and deactivate commands', () => {
@@ -179,21 +179,21 @@ define ([
         it('Should have clickable folder names', async () => {
             spyOn(stagingViewer, 'updatePathFn');
             await stagingViewer.render();
-            stagingViewer.$elem.find('span.kb-data-staging-folder').click();
+            stagingViewer.$elem.find('button[data-name="test_folder"]').click();
             expect(stagingViewer.updatePathFn).toHaveBeenCalledWith('//test_folder');
         });
 
         it('Should have multi-clicked folder buttons only fire once', async () => {
             spyOn(stagingViewer, 'updatePathFn');
             await stagingViewer.render();
-            stagingViewer.$elem.find('button[data-name]').click().click().click();
+            stagingViewer.$elem.find('button[data-name="test_folder"]').click().click().click();
             expect(stagingViewer.updatePathFn).toHaveBeenCalledTimes(1);
         });
 
         it('Should have multi-clicked folder names only fire once', async () => {
             spyOn(stagingViewer, 'updatePathFn');
             await stagingViewer.render();
-            stagingViewer.$elem.find('span.kb-data-staging-folder').click().click().click();
+            stagingViewer.$elem.find('div.kb-staging-table-body__expander span').click().click().click();
             expect(stagingViewer.updatePathFn).toHaveBeenCalledTimes(1);
         });
 
@@ -209,7 +209,7 @@ define ([
                 };
             spyOn(Jupyter.narrative, 'addAndPopulateApp');
             spyOn(Jupyter.narrative, 'hideOverlay');
-            stagingViewer.initImportApp(fileType, {name: fileName});
+            stagingViewer.initImportApp(fileType, fileName);
             expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(appId, tag, inputs);
             expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
         });

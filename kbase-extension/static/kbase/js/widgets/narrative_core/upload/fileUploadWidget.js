@@ -77,6 +77,7 @@ define([
                 parallelUploads: uploadConfig.parallel_uploads,
                 maxFilesize: uploadConfig.max_file_size,
                 timeout: uploadConfig.timeout,
+                userInfo: this.userInfo
             })
                 .on('totaluploadprogress', (progress) => {
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
@@ -133,13 +134,21 @@ define([
                     $errorElem.find('#dz_file_row_1').css({'display': 'flex', 'align-items': 'center'});
                     $errorElem.css('color', '#DF0002');
                     $errorElem.find('#error_icon').css('display', 'flex');
-
                     this.removeProgressBar($dropzoneElem);
+
+                    // Set error message
                     let errorText = 'unable to upload file!';
-                    if (erroredFile && erroredFile.xhr && erroredFile.xhr.responseText) {
+                    var $errorMessage = $errorElem.find('#error_message');
+
+                    // I don't know how to determine if the file was too big other than looking at the preview message
+                    if ($errorMessage.html().search('File is too big') !== -1){
+                        errorText  = 'File size exceeds maximum of 20GB. Please '
+                        $errorMessage.text('Error: ' + errorText);
+                        $errorMessage.append(this.makeGlobusErrorLink(uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user));
+                    } else if (erroredFile && erroredFile.xhr && erroredFile.xhr.responseText) {
                         errorText = erroredFile.xhr.responseText;
+                        $errorMessage.text('Error: ' + errorText);
                     }
-                    $dropzoneElem.find('#error_message').text('Error: ' + errorText);
 
                     // Check to see if there already a button in the dropzone area
                     if (!$dropzoneElem.find('#clear-all-btn').length){
@@ -170,6 +179,25 @@ define([
         deleteClearAllButton: function() {
             $('#clear-all-btn-container').remove();
             $('#clear-all-btn').remove();
+        },
+
+        makeGlobusErrorLink: function(globusUrl) {
+            let url = 'https://docs.kbase.us/data/globus';
+
+            let $globusErrorLink = $("<a>")
+            .attr('id', 'globus_error_link')
+            .attr('href', url)
+            .attr('target', '_blank')
+            .attr('aria-label', 'opens new window to kbase globus upload docs')
+            .text("upload with Globus.");
+
+            if (this.userInfo.globusLinked){
+                $globusErrorLink
+                    .attr('href', globusUrl)
+                    .attr('aria-label', 'opens new window to upload via globus');
+            }
+
+            return $globusErrorLink;
         },
 
         removeProgressBar: function($dropzoneElem) {

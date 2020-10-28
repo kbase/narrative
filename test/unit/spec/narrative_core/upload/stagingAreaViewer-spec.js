@@ -255,5 +255,29 @@ define ([
 
         });
 
+        it('should render the import selected button', async () => {
+            await stagingViewer.render();
+
+            const button = $targetNode.find('button.kb-staging-table-import__button');
+            
+            //initial state should be disabled until the user selects a data type for at least one file
+            expect(button.html()).toContain('Import Selected');
+            expect(button.hasClass('kb-staging-table-import__button__disabled')).toBeTrue();
+        });
+
+        it('should render checboxes for the file table', async () => {
+            await stagingViewer.render();
+
+            //initially the checkboxes are rendered disabled until a user selects a type
+            const tableCheckboxes = $targetNode.find('input.kb-staging-table-body__checkbox-input:disabled');
+
+            expect(tableCheckboxes.length).toBeGreaterThan(0);
+            expect(tableCheckboxes.attr('aria-label')).toContain('Select to import file checkbox: disabled until at least one data type is selected');
+
+            const headerCheckbox = $targetNode.find('input.kb-staging-table-header__checkbox-input:disabled');
+            
+            expect(headerCheckbox.length).toEqual(1);
+            expect(headerCheckbox.attr('aria-label')).toContain('Select to import all files checkbox: disabled until at least one data type is selected');
+        });
     });
 });

@@ -129,7 +129,9 @@ define([
                         errorText  = 'File size exceeds maximum of 20GB. Please ';
                         $errorMessage.text('Error: ' + errorText);
                         $errorMessage.append(this.makeGlobusErrorLink(globusUrlLinked));
-                    } else if (erroredFile && erroredFile.xhr && erroredFile.xhr.responseText) {
+                    }
+
+                    if (erroredFile && erroredFile.xhr && erroredFile.xhr.responseText) {
                         errorText = erroredFile.xhr.responseText;
                         $errorMessage.text('Error: ' + errorText);
                     }

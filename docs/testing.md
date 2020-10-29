@@ -63,15 +63,17 @@ In the `[users]` and `[token_files]` blocks, two sets of values are needed: test
 #### ***JavaScript***
 
 `test/testConfig.json`
-This just needs the path to the token file (with pre-pended slash), such as `"/test/narrativetest.tok"`.
+This just needs the path to the token file, which should be kept in the `test` directory, for example `"test/narrativetest.tok"`.
 
 *TODO (10/24/2017): Unify these token configs!*
 
 #### ***Frontend integration tests***
 
 There are currently two options here.
-1. Use the same token file as described above.
-2. Set your token in the `KBASE_TEST_TOKEN` environment variable before running integration tests. 
+1. Set your token in the `KBASE_TEST_TOKEN` environment variable before running integration tests. 
+2. Use the same token file as described above.
+
+These are checked in that order. That is, if there's a `KBASE_TEST_TOKEN` variable, that gets used. Otherwise, it checks for the token file referenced in `test/testConfig.json`. If both of those are absent, a fake test token is used, which might cause failures if your tests include authenticated services.
 
 ### Testing with Github Actions and Codecov
 
@@ -112,7 +114,7 @@ describe('Simple test runner', () => {
 });
 ```
 
-When running these locally, these require an auth token in either the `KBASE_TEST_TOKEN` environment variable, or in the file referenced by `test/testConfig.json` (see the [Add Credentials for Tests](#add-credentials-for-tests) section above).
+When running these locally, these require an auth token in either the `KBASE_TEST_TOKEN` environment variable, or in the file referenced by `test/testConfig.json` (see the [Add Credentials for Tests - JavaScript](#javascript) section above).
 
 ### Manual Testing and Debugging
 

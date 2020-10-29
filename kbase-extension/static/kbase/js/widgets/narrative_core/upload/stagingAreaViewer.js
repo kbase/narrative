@@ -486,7 +486,8 @@ define([
                         .select2({
                             placeholder: 'Select a type',
                             containerCssClass: 'kb-staging-table-body__import-dropdown'
-                        }).on('select2:select', function(e) {
+                        })
+                        .on('select2:select', function(e) {
 
                             $('td:eq(5)', row)
                                 .find('.select2-selection')
@@ -749,8 +750,8 @@ define([
             const appInfo = this.uploaders.app_info[type];
 
             if (appInfo) {
-                const tag = APIUtil.getAppVersionTag(),
-                    fileParam = file || '',
+                const tag = APIUtil.getAppVersionTag();
+                let fileParam = file || '',
                     inputs = {};
 
                 if (this.subpath) {

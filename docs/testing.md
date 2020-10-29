@@ -67,7 +67,7 @@ This just needs the path to the token file, which should be kept in the `test` d
 
 *TODO (10/24/2017): Unify these token configs!*
 
-#### ***Frontend integration tests***
+#### ***Frontend Integration Tests***
 
 There are currently two options here.
 1. Set your token in the `KBASE_TEST_TOKEN` environment variable before running integration tests. 
@@ -95,9 +95,9 @@ There are some service client Mocks available using the `mock` library. Check ou
 
 JavaScript tests follow the common Test Spec idiom. Here, we create a new spec file for each JavaScript module. These all live under `test/unit/spec` in roughly the same subdirectory as found under `kbase-extension/static/kbase/js`. There's an example spec in `test/unit/specTemplate.js` - you can just copy this to a new module, and modify to fit your needs.
 
-#### ***Front End Integration***
+#### ***Frontend Integration Tests***
 
-Integration tests are done using [webdriver.io](https://webdriver.io). The test scripts are written in Javascript and all resemble the common Mocha style. These tests are all under `test/integration/spec`. It's helpful for each of these files to include the `wdioUtils.js` module in `test/integration`. For each view that requires authentication (i.e. most of them), be sure to start your test with the async `login` function provided by that module. An example spec file might look like:
+Integration tests are done using [webdriver.io](https://webdriver.io). The test scripts are written in JavaScript and all resemble the common Mocha style. These tests are all under `test/integration/spec`. It's helpful for each of these files to include the `wdioUtils.js` module in `test/integration`. For each view that requires authentication (i.e. most of them), be sure to start your test with the async `login` function provided by that module. An example spec file might look like:
 
 ```javascript
 const Utils = require('../wdioUtils');
@@ -129,7 +129,7 @@ log.info("Your Logs Go Here")
 
 #### ***JavaScript***
 
-It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`.
+It can be useful to immediately see your changes in the narrative. For JavaScript changes, you will just have to reload the page. You can print messages to the console with `console.log`.
 
 To debug using the Karma Debugger complete the following steps:
 

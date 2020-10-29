@@ -194,7 +194,7 @@ define([
                     'id': 'globus_error_link',
                     'href': url,
                     'aria-label': 'opens new window to kbase globus upload docs'
-                }).text("upload with Globus.")
+                }).text('upload with Globus.')
                 .click(function(e) {
                     this.uploadGlobusClickEvent(e, globusUrlLinked);
                 }.bind(this));
@@ -204,7 +204,7 @@ define([
                     .attr({
                         'href': globusUrlLinked,
                         'aria-label': 'opens new window to upload via globus'
-                    })
+                    });
             }
 
             return $globusErrorLink;

@@ -101,7 +101,7 @@
     top: 1px;
     right: 4px;
     display: inline-block;
-    font-family: 'Glyphicons Halflings';
+    font-family: 'Glyphicons Halflings, Arial, sans-serif';
 }
 
 .kb-staging-table-header .sorting_asc:before {

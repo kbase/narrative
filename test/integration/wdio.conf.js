@@ -3,6 +3,9 @@
 /* eslint {strict: ['error', 'global']} */
 'use strict';
 
+const testConfig = require('../testConfig');
+const fs = require('fs');
+
 let baseUrl = 'http://localhost:8888';
 if (process.env.BASE_URL) {
     baseUrl = process.env.BASE_URL;
@@ -10,6 +13,14 @@ if (process.env.BASE_URL) {
 let authToken = 'fakeToken';
 if (process.env.KBASE_TEST_TOKEN) {
     authToken = process.env.KBASE_TEST_TOKEN;
+    console.log('loaded auth token from environment variable KBASE_TEST_TOKEN');
+}
+else if (testConfig && testConfig.token && testConfig.token.file && fs.existsSync(testConfig.token.file)) {
+    authToken = fs.readFileSync(testConfig.token.file, 'utf-8').trim();
+    console.log('loaded auth token from file ' + testConfig.token.file);
+}
+else {
+    console.log('continuing without valid test token');
 }
 
 const wdioConfig = {

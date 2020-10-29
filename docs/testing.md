@@ -43,6 +43,7 @@ This calls a few subcommands, and those can be run independently for specific us
 
 - `make test-frontend-unit` will run only the unit tests on the frontend (i.e. those with the Karma runner)
 - `make test-integration` will run the frontend integration tests that make use of webdriver.io to simulate the browser on a locally instantiated Narrative, but running against live KBase services.
+- `make test-frontend` will run both the frontend unit tests and integration tests as above.
 - `make test-frontend-e2e` will run only the frontend tests that make use of Selenium to simulate a browser on the real Narrative site.
 - `make test-backend` will run only the backend Python tests.
 
@@ -61,7 +62,7 @@ In the `[users]` and `[token_files]` blocks, two sets of values are needed: test
 
 ***JavaScript***
 
-`test/unit/testConfig.json`
+`test/testConfig.json`
 This just needs the path to the token file (with pre-pended slash), such as `"/test/narrativetest.tok"`
 
 *TODO (10/24/2017): Unify these token configs!*

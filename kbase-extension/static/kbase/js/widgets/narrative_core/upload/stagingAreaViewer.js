@@ -445,14 +445,15 @@ define([
                         }
                     });
 
-                    $('td:eq(2)', row).find('.kb-staging-table-body__name').tooltip({
-                        title: $('td:eq(2)', row).find('.kb-staging-table-body__name').text(),
-                        placement: 'top',
-                        delay: {
-                            show: Config.get('tooltip').showDelay,
-                            hide: Config.get('tooltip').hideDelay
-                        }
-                    });
+                    $('td:eq(2)', row).find('.kb-staging-table-body__name')
+                        .tooltip({
+                            title: $('td:eq(2)', row).find('.kb-staging-table-body__name').text(),
+                            placement: 'top',
+                            delay: {
+                                show: Config.get('tooltip').showDelay,
+                                hide: Config.get('tooltip').hideDelay
+                            }
+                        });
 
                     $('td:eq(2)', row).find('span.kb-staging-table-body__folder')
                         .off('click')
@@ -481,26 +482,28 @@ define([
 
                         });
 
-                    $('td:eq(5)', row)
-                        .find('select')
+                    $('td:eq(5)', row).find('select')
                         .select2({
                             placeholder: 'Select a type',
                             containerCssClass: 'kb-staging-table-body__import-dropdown'
                         }).on('select2:select', function(e) {
 
-                            $('td:eq(5)', row).find('.select2-selection').addClass('kb-staging-table-body__import-type-selected');
+                            $('td:eq(5)', row)
+                                .find('.select2-selection')
+                                .addClass('kb-staging-table-body__import-type-selected');
                             
                             //make checkbox for that row enabled
                             //also set the data type so that we have the reference later when importing
-                            $('td:eq(0)', row).find('.kb-staging-table-body__checkbox-input')
-                            .prop('disabled',false)
-                            .attr('aria-label', 'Select to import file checkbox')
-                            .attr('data-type', e.currentTarget.value);
+                            $('td:eq(0)', row)
+                                .find('.kb-staging-table-body__checkbox-input')
+                                .prop('disabled',false)
+                                .attr('aria-label', 'Select to import file checkbox')
+                                .attr('data-type', e.currentTarget.value);
 
                             //make sure select all checkbox is enabled
                             $('#staging_table_select_all')
-                            .prop('disabled',false)
-                            .attr('aria-label', 'Select to import all files checkbox');
+                                .prop('disabled',false)
+                                .attr('aria-label', 'Select to import all files checkbox');
                         });
 
                     $('td:eq(5)', row).find('button[data-import]')
@@ -513,8 +516,7 @@ define([
                             stagingAreaViewer.updateView();
                         });
 
-                    $('td:eq(5)', row)
-                        .find('button[data-download]')
+                    $('td:eq(5)', row).find('button[data-download]')
                         .off('click')
                         .on('click', e => {
                             let file = $(e.currentTarget).data('download');
@@ -525,8 +527,7 @@ define([
                             stagingAreaViewer.downloadFile(url);
                         });
 
-                    $('td:eq(5)', row)
-                        .find('button[data-delete]')
+                    $('td:eq(5)', row).find('button[data-delete]')
                         .off('click')
                         .on('click', e => {
                             const file = $(e.currentTarget).data('delete');

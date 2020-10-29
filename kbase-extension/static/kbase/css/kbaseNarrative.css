@@ -6,7 +6,7 @@
 }
 
 .kb-dropzone .dz-message {
-  font-family: Roboto;
+  font-family: Roboto, Arial, sans-serif;
   font-style: normal;
   font-weight: normal;
   font-size: 24px;
@@ -17,7 +17,7 @@
   margin: 2em 4.5em;
 }
 
-.text-button {
+.btn__text {
     background: #FFFFFF;
     box-sizing: border-box;
     border-radius: 4px;
@@ -35,26 +35,26 @@
     height: 34px;
 }
 
-.text-button:hover {
+.btn__text:hover {
     color: #36618E;
     border: 1px solid #ECF2F7;
     background-color: #ECF2F7;
     cursor: pointer;
 }
 
-.text-button:focus {
+.btn__text:focus {
     color: #36618E;
     border: 1px solid #E3EBF3;
     background-color: #E3EBF3;
 }
 
-.text-button:active {
+.btn__text:active {
     color: #36618E;
     border: 1px solid #D9E4EF;
     background-color: #D9E4EF;
 }
 
-.text-button:disabled {
+.btn__text:disabled {
     color: #929292;
     border: 1px solid #FAFAFA;
     background-color: #FAFAFA;
@@ -62,6 +62,64 @@
 
 .clear-all-dropzone {
     margin: 6px;
+}
+
+.dz-file {
+  width: 100%;
+  border: 1px solid #EEEEEE;
+  margin: 2px 0;
+  padding: 5px 0;
+  font: normal, 16px, Oxygen, Arial, sans-serif;
+}
+
+.dz-file__progress__bar {
+  width: 0;
+}
+
+.dz-file__row {
+  display: flex;
+  align-items: center;
+}
+
+.dz-file__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 20px;
+}
+
+.dz-file__msg {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+}
+
+.dz-file__msg__success {
+  display:none;
+  color: #4BAF4F;
+}
+
+.dz-file__progress__bar {
+  margin-bottom: inherit;
+  margin-left: 5px;
+}
+
+.dz-file__status {
+  display: none;
+  font-weight: bold;
+  align-items: center;
+}
+
+.dz-file__status__icon {
+  margin: 0 4px 0 8px;
+}
+
+.dz-file__status__success {
+  color: #4BAF4F;
+}
+
+.dz-file__status__error {
+  color: #DF0002;
 }
 
 #kb-data-staging-table_wrapper {
@@ -206,7 +264,7 @@
 }
 
 #kb-narr-name {
-  font-family: Oxygen;
+  font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
   font-size: 130%;
   padding-bottom: 7px;
@@ -221,13 +279,13 @@
 }
 
 #kb-narr-name > #save_widget {
-  font-family: Oxygen;
+  font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
   padding: 0;
 }
 
 #kb-narr-creator {
-  font-family: Oxygen;
+  font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
 }
 
@@ -241,6 +299,11 @@
   display: block;
   flex: 2;
   min-width: 0;
+}
+
+.kb-narr-namestamp__error_container {
+  font-size: 200%;
+  line-height: 1.5;
 }
 
 .ui-draggable.kb-data-inflight {
@@ -258,6 +321,12 @@
 
 .kb-data-list-drag-target {
   transition: all 0.25s ease;
+  display: block;
+  border: 2px orange dashed;
+  height: 40px;
+  text-align: center;
+  padding: 6px;
+  border-radius: 4px;
 }
 
 .kb-data-list-drag-target.-drag-active {
@@ -271,17 +340,7 @@
   transition: all 0.25s ease;
 }
 
-.kb-data-list-drag-target {
-  display: block;
-  border: 2px orange dashed;
-  height: 40px;
-  text-align: center;
-  padding: 6px;
-  border-radius: 4px;
-}
-
 #kb-notify-area {
-  display: inline-block;
   float: left;
   position: relative;
 }
@@ -318,7 +377,7 @@ nav[role="navigation"] ul li {
 nav[role="navigation"] ul li a {
   text-decoration: none;
   font-size: 1.2em;
-  font-family: Oxygen;
+  font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
   padding: 7px 1em;
   background-color: #5c9531;
@@ -416,6 +475,10 @@ span#searchspan {
 #kb-nav-menu {
   /* don't add shadows here */
   box-shadow: none;
+}
+
+.kb-nav-menu__container {
+  display: inline-block;
 }
 
 .kb-nav-btn > div {
@@ -573,15 +636,15 @@ p#site-title {
 
 #search-area {
   position: relative;
-  font: 18px 'RobotoBlack', Arial, sans-serif;
+  font: 18px RobotoBlack, Arial, sans-serif;
   font-weight: normal;
   color: #686868;
-  padding: 11px 11px;
+  padding: 11px;
   margin: 0 5px;
 }
 
 #search-area input {
-  padding: 11px 11px;
+  padding: 11px;
 }
 
 /* center pane */
@@ -1680,13 +1743,13 @@ div#notebook_panel {
 }
 
 .kb-cell-toolbar .subtitle {
-  font-family: "Roboto", Arial, sans-serif;
+  font-family: Roboto, Arial, sans-serif;
   font-size: 90%;
   color: #666;
 }
 
 .kb-cell-toolbar .info-link {
-  font-family: "Roboto", Arial, sans-serif;
+  font-family: Roboto, Arial, sans-serif;
   font-size: 90%;
   color: #666;
 }
@@ -1721,7 +1784,7 @@ div#notebook_panel {
 }
 
 .kb-cell-run h1 {
-  font-family: 'Roboto';
+  font-family: Roboto, Arial, sans-serif;
   font-weight: normal;
   font-size: 12pt;
   line-height: 15px;
@@ -1737,7 +1800,7 @@ div#notebook_panel {
 }
 
 .kb-cell-run h2 {
-  font-family: 'Roboto';
+  font-family: Roboto, Arial, sans-serif;
   font-weight: normal;
   font-size: 11pt;
   line-height: 150%;
@@ -1805,7 +1868,7 @@ td {
 }
 
 .kb-out-desc {
-  font-family: 'Roboto';
+  font-family: Roboto, Arial, sans-serif;
   font-weight: normal;
   font-size: 12pt;
   line-height: 15px;
@@ -1816,7 +1879,7 @@ td {
 }
 
 .kb-err-desc {
-  font-family: 'Roboto';
+  font-family: Roboto, Arial, sans-serif;
   font-weight: normal;
   font-size: 12pt;
   line-height: 15px;
@@ -1838,7 +1901,7 @@ td {
 .kb-func-timestamp {
   color: #555;
   font-size: 10pt;
-  font-family: 'Roboto';
+  font-family: Roboto, Arial, sans-serif;
   margin-top: -3px;
   padding-right: 1em;
 }
@@ -1986,7 +2049,7 @@ td {
 .kb-method-parameter-error-mssg {
   padding: 5px;
   text-align: center;
-  font-family: Oxygen, sans-serif;
+  font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
   font-size: 9pt;
   color: #f44336;
@@ -1994,7 +2057,7 @@ td {
 
 /* not sure how to get text in these divs to valign middle... */
 .kb-method-parameter-name {
-  font-family: Oxygen, sans-serif;
+  font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
   color: #777;
   text-align: right;
@@ -2073,7 +2136,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-method-advanced-options-controller-inactive {
-  font-family: Oxygen, sans-serif;
+  font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
   font-style: italic;
   font-size: 10pt;
@@ -2083,7 +2146,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-method-advanced-options-controller {
-  font-family: Oxygen, sans-serif;
+  font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
   font-style: italic;
   cursor: pointer;
@@ -2129,7 +2192,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-panel-description {
-  font-family: 'Roboto';
+  font-family: Roboto, Arial, sans-serif;
   font-weight: normal;
   font-size: 12pt;
   line-height: 15px;
@@ -2146,7 +2209,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-step-error-heading {
-  font-family: Oxygen, sans-serif;
+  font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
   font-size: 13pt;
   line-height: 14px;
@@ -2157,7 +2220,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-step-error-main-heading {
-  font-family: Oxygen, sans-serif;
+  font-family: Oxygen, Arial, sans-serif;
   cursor: pointer;
   font-size: 16pt;
   line-height: 18px;
@@ -2184,7 +2247,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-next h3 {
-  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-family: Roboto, Arial, sans-serif;
   font-size: 0.9em;
   font-style: italic;
   color: #888;
@@ -2198,7 +2261,7 @@ control with padding, and then scooting the icon back into its column.
 .kb-app-next-hide {
   float: right;
   color: #2196f3;
-  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-family: Roboto, Arial, sans-serif;
   font-size: 0.9em;
   margin-top: 0.25em;
   margin-right: 0.5em;
@@ -2206,7 +2269,7 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-app-next-unhide {
   color: #2196f3;
-  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-family: Roboto, Arial, sans-serif;
   font-size: 0.9em;
   margin-top: 0.25em;
 }
@@ -2524,7 +2587,7 @@ button.kb-data-obj {
   padding: 10px 20px;
   margin: 3px;
   font-size: 14px;
-  font-family: "Roboto", Helvetica, Arial, sans-serif;
+  font-family: Roboto, Arial, sans-serif;
   font-weight: 400;
   box-shadow: 1px 1px 3px #aaa;
 }
@@ -2548,7 +2611,7 @@ button.kb-data-obj {
   padding: 10px 20px;
   margin: 3px;
   font-size: 14px;
-  font-family: "Roboto", Helvetica, Arial, sans-serif;
+  font-family: Roboto, Arial, sans-serif;
   font-weight: 400;
   box-shadow: 1px 1px 3px #aaa;
 }
@@ -2748,7 +2811,7 @@ button.kb-data-obj {
   padding: 10px 20px;
   margin: 3px;
   font-size: 14px;
-  font-family: "Roboto", Helvetica, Arial, sans-serif;
+  font-family: Roboto, Arial, sans-serif;
   font-weight: 400;
   -webkit-box-shadow: 1px 1px 3px #aaa;
   -moz-box-shadow: 1px 1px 3px #aaa;
@@ -3257,7 +3320,7 @@ button.kb-data-obj {
 }
 
 .kb-nar-manager-titles {
-  font-family: 'Oxygen';
+  font-family: Oxygen, Arial, sans-serif;
   color: #777;
   margin: 10px;
   margin-top: 20px;
@@ -3293,7 +3356,7 @@ button.kb-data-obj {
   border: 1px solid #c4c4c4;
   box-sizing: border-box;
   border-radius: 6px;
-  font-family: Oxygen;
+  font-family: Oxygen, Arial, sans-serif;
   font-style: normal;
   font-weight: normal;
   font-size: 14px;
@@ -3422,7 +3485,7 @@ button.kb-data-obj {
 #kb-view-mode-narr div {
   display: inline-block;
   color: #2196f3;
-  font-family: 'Oxygen', Arial, sans-serif;
+  font-family: Oxygen, Arial, sans-serif;
   font-weight: bold;
   font-size: 16px;
   padding: 3px;
@@ -3452,7 +3515,7 @@ button.kb-data-obj {
 
 /* this is the banner for readonly mode */
 .navbar-right div.label-warning {
-  font-family: "Oxygen", Arial, sans-serif;
+  font-family: Oxygen, Arial, sans-serif;
   font-size: 16px;
   font-weight: bold;
 }
@@ -3468,7 +3531,7 @@ button.kb-data-obj {
 
    -Dan Gunter, Feb 10, 2015
 */
-#kb-loading-blocker {
+.kb-loading-blocker__container {
   position: absolute;
   top: 0;
   left: 0;
@@ -3478,18 +3541,23 @@ button.kb-data-obj {
   z-index: 9999;
 }
 
-#kb-loading-blocker p {
+.kb-loading-blocker__header {
   text-align: center;
   font-size: 24px;
   font-weight: bold;
 }
 
-#kb-loading-blocker .kb-loading-text {
+.kb-loading-blocker__text {
   width: 40%;
   margin-left: 30%;
   font-size: 16px;
   text-align: left;
-  line-height: 1.5em;
+  line-height: 1.5;
+}
+
+.kb-loading-blocker__image_container {
+  text-align: center;
+  padding-top: 10%;
 }
 
 .loading-warning {

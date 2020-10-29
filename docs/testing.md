@@ -44,7 +44,6 @@ This calls a few subcommands, and those can be run independently for specific us
 - `make test-frontend-unit` will run only the unit tests on the frontend (i.e. those with the Karma runner)
 - `make test-integration` will run the frontend integration tests that make use of webdriver.io to simulate the browser on a locally instantiated Narrative, but running against live KBase services. Note that this currently requires an authentication token. 
 - `make test-frontend` will run both the frontend unit tests and integration tests as above.
-- `make test-frontend-e2e` will run only the frontend tests that make use of Selenium to simulate a browser on the real Narrative site.
 - `make test-backend` will run only the backend Python tests.
 
 ### Add Credentials for Tests

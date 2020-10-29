@@ -151,7 +151,11 @@
 
 /* style for Import As dropdown container */
 
-/* set the width here, otherwise it will get overriden by datatables when changing the sort order */
+/* set the width here 
+  otherwise it will get overriden by datatables when changing the sort order 
+  it gets set directly on the element via inline css so we have to use important to override
+*/
+
 .kb-staging-table-body .select2 {
     width: 160px !important;
 }

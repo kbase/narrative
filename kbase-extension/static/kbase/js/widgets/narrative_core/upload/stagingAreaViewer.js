@@ -274,8 +274,8 @@ define([
                         let selectAllChecked = event.target.checked;
                         
                         $('input.kb-staging-table-body__checkbox-input:enabled')
-                        .prop('checked', selectAllChecked)
-                        .attr('aria-checked', selectAllChecked);
+                            .prop('checked', selectAllChecked)
+                            .attr('aria-checked', selectAllChecked);
 
                         //enable or disable import appropriately
                         if (selectAllChecked) {
@@ -286,9 +286,9 @@ define([
                     }
 
                     $(thead).find('th').eq(0)
-                    .on('click keyPress', (e) => {
-                        selectAllOrNone(e);
-                    });                    
+                        .on('click keyPress', (e) => {
+                            selectAllOrNone(e);
+                        });                    
                 },
                 columnDefs: [{
                     targets: 0,
@@ -388,17 +388,17 @@ define([
                     }
 
                     $('td:eq(0)', row).find('input.kb-staging-table-body__checkbox-input')
-                    .off('click')
-                    .on('click keyPress', (e) => {                        
-                        changeImportButton(e);
-                    });
+                        .off('click')
+                        .on('click keyPress', (e) => {                        
+                            changeImportButton(e);
+                        });
 
                     $('td:eq(1)', row).find('button[data-name]')
-                    .off('click')
-                    .on('click', e => {
-                        $(e.currentTarget).off('click');
-                        stagingAreaViewer.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
-                    });
+                        .off('click')
+                        .on('click', e => {
+                            $(e.currentTarget).off('click');
+                            stagingAreaViewer.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
+                        });
 
                     // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
                     let $caret = $('td:eq(1)', row).find('i[data-caret]'),
@@ -455,83 +455,91 @@ define([
                     });
 
                     $('td:eq(2)', row).find('span.kb-staging-table-body__folder')
-                    .off('click')
-                    .on('click', e => {
-                        $(e.currentTarget).off('click');
-                        this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
-                    });
-
-                    $('td:eq(2)', row).find('button[data-decompress]')
-                    .off('click')
-                    .on('click', e => {
-                        const decompressButton = $(e.currentTarget);
-                        const fileData = decompressButton.data().decompress;
-                        const decompressFile = getFileFromName(fileData);
-
-                        decompressButton.replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
-
-                        stagingAreaViewer.stagingServiceClient.decompress({
-                            path: decompressFile.name
-                        })
-                        .then(() => stagingAreaViewer.updateView())
-                        .fail(xhr => {
-                            console.error("FAILED", xhr);
-                            alert("Error " + xhr.status + "\r" + xhr.responseText);
+                        .off('click')
+                        .on('click', e => {
+                            $(e.currentTarget).off('click');
+                            this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                         });
 
-                    });
+                    $('td:eq(2)', row).find('button[data-decompress]')
+                        .off('click')
+                        .on('click', e => {
+                            const decompressButton = $(e.currentTarget);
+                            const fileData = decompressButton.data().decompress;
+                            const decompressFile = getFileFromName(fileData);
 
-                    $('td:eq(5)', row).find('select').select2({
-                        placeholder: 'Select a type',
-                        containerCssClass: 'kb-staging-table-body__import-dropdown'
-                    }).on('select2:select', function(e) {
+                            decompressButton.replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
 
-                        $('td:eq(5)', row).find('.select2-selection').addClass('kb-staging-table-body__import-type-selected');
-                        
-                        //make checkbox for that row enabled
-                        //also set the data type so that we have the reference later when importing
-                        $('td:eq(0)', row).find('.kb-staging-table-body__checkbox-input')
-                        .prop('disabled',false)
-                        .attr('aria-label', 'Select to import file checkbox')
-                        .attr('data-type', e.currentTarget.value);
-
-                        //make sure select all checkbox is enabled
-                        $('#staging_table_select_all')
-                        .prop('disabled',false)
-                        .attr('aria-label', 'Select to import all files checkbox');
-                    });
-
-                    $('td:eq(5)', row).find('button[data-import]')
-                    .off('click')
-                    .on('click', e => {
-                        const dataImportButton = $(e.currentTarget);
-                        const importType = dataImportButton.prevAll('select').val();
-                        const importFile = getFileFromName(dataImportButton.data().import);
-                        stagingAreaViewer.initImportApp(importType, importFile);
-                        stagingAreaViewer.updateView();
-                    });
-
-                    $('td:eq(5)', row).find('button[data-download]').off('click').on('click', e => {
-                        let file = $(e.currentTarget).data('download');
-                        if (stagingAreaViewer.subpath) {
-                            file = stagingAreaViewer.subpath + '/' + file;
-                        }
-                        const url = Config.url('staging_api_url') + '/download/' + file;
-                        stagingAreaViewer.downloadFile(url);
-                    });
-
-                    $('td:eq(5)', row).find('button[data-delete]').off('click').on('click', e => {
-                        const file = $(e.currentTarget).data('delete');
-                        if (window.confirm('Really delete ' + file + '?')) {
-                            stagingAreaViewer.stagingServiceClient.delete({
-                                path: stagingAreaViewer.subpath + '/' + file
-                            }).then(() => {
-                                stagingAreaViewer.updateView();
-                            }).fail(xhr => {
+                            stagingAreaViewer.stagingServiceClient.decompress({
+                                path: decompressFile.name
+                            })
+                            .then(() => stagingAreaViewer.updateView())
+                            .fail(xhr => {
+                                console.error('FAILED', xhr);
                                 alert('Error ' + xhr.status + '\r' + xhr.responseText);
                             });
-                        }
-                    });
+
+                        });
+
+                    $('td:eq(5)', row)
+                        .find('select')
+                        .select2({
+                            placeholder: 'Select a type',
+                            containerCssClass: 'kb-staging-table-body__import-dropdown'
+                        }).on('select2:select', function(e) {
+
+                            $('td:eq(5)', row).find('.select2-selection').addClass('kb-staging-table-body__import-type-selected');
+                            
+                            //make checkbox for that row enabled
+                            //also set the data type so that we have the reference later when importing
+                            $('td:eq(0)', row).find('.kb-staging-table-body__checkbox-input')
+                            .prop('disabled',false)
+                            .attr('aria-label', 'Select to import file checkbox')
+                            .attr('data-type', e.currentTarget.value);
+
+                            //make sure select all checkbox is enabled
+                            $('#staging_table_select_all')
+                            .prop('disabled',false)
+                            .attr('aria-label', 'Select to import all files checkbox');
+                        });
+
+                    $('td:eq(5)', row).find('button[data-import]')
+                        .off('click')
+                        .on('click', e => {
+                            const dataImportButton = $(e.currentTarget);
+                            const importType = dataImportButton.prevAll('select').val();
+                            const importFile = getFileFromName(dataImportButton.data().import);
+                            stagingAreaViewer.initImportApp(importType, importFile);
+                            stagingAreaViewer.updateView();
+                        });
+
+                    $('td:eq(5)', row)
+                        .find('button[data-download]')
+                        .off('click')
+                        .on('click', e => {
+                            let file = $(e.currentTarget).data('download');
+                            if (stagingAreaViewer.subpath) {
+                                file = stagingAreaViewer.subpath + '/' + file;
+                            }
+                            const url = Config.url('staging_api_url') + '/download/' + file;
+                            stagingAreaViewer.downloadFile(url);
+                        });
+
+                    $('td:eq(5)', row)
+                        .find('button[data-delete]')
+                        .off('click')
+                        .on('click', e => {
+                            const file = $(e.currentTarget).data('delete');
+                            if (window.confirm('Really delete ' + file + '?')) {
+                                stagingAreaViewer.stagingServiceClient.delete({
+                                    path: stagingAreaViewer.subpath + '/' + file
+                                }).then(() => {
+                                    stagingAreaViewer.updateView();
+                                }).fail(xhr => {
+                                    alert('Error ' + xhr.status + '\r' + xhr.responseText);
+                                });
+                            }
+                        });
                     
                 }.bind(stagingAreaViewer)
             });
@@ -681,8 +689,8 @@ define([
         renderImportButton: function() {
 
             let importButton = $('<button></button>')
-            .addClass('kb-staging-table-import__button btn btn-xs btn-primary')
-            .text('Import Selected');
+                .addClass('kb-staging-table-import__button btn btn-xs btn-primary')
+                .text('Import Selected');
 
             this.$elem.find('div.kb-staging-table-import').append(importButton);
 
@@ -695,27 +703,27 @@ define([
         disableImportButton: function() {
 
             this.$elem.find('button.kb-staging-table-import__button')
-            .addClass('kb-staging-table-import__button__disabled')
-            .tooltip({
-                title: 'Select a file/s to continue.',
-                delay: {
-                    show: Config.get('tooltip').showDelay,
-                    hide: Config.get('tooltip').hideDelay
-                }
-            })
-            .off('click');
+                .addClass('kb-staging-table-import__button__disabled')
+                .tooltip({
+                    title: 'Select a file/s to continue.',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                })
+                .off('click');
         },
 
         enableImportButton: function() {
             let stagingAreaViewer = this; 
 
             this.$elem.find('button.kb-staging-table-import__button')
-            .removeClass('kb-staging-table-import__button__disabled')
-            .tooltip('disable')
-            .off('click')
-            .on('click keyPress', function() {
-                stagingAreaViewer.initImport();
-            });
+                .removeClass('kb-staging-table-import__button__disabled')
+                .tooltip('disable')
+                .off('click')
+                .on('click keyPress', function() {
+                    stagingAreaViewer.initImport();
+                });
         },
 
         initImport: function() {
@@ -723,11 +731,11 @@ define([
 
             //get all of the selected checkbox file names and import type
             $('input.kb-staging-table-body__checkbox-input:checked')
-            .each(function () {
-                const importType = $(this).attr('data-type');
-                const importFile = $(this).attr('data-file-name');
-                stagingAreaViewer.initImportApp(importType, importFile);
-            });
+                .each(function () {
+                    const importType = $(this).attr('data-type');
+                    const importFile = $(this).attr('data-file-name');
+                    stagingAreaViewer.initImportApp(importType, importFile);
+                });
           
         },
 

@@ -333,13 +333,13 @@ table {
 .sidebar-header {
   font-size: 14px;
   color: #898989;
-  font-family: 'RobotoBlack', Arial, sans-serif;
+  font-family: RobotoBlack, Arial, sans-serif;
   letter-spacing: 0;
   font-weight: normal;
 }
 
 .view-header {
-  font: 1.5em/1.75em  'RobotoBlack', Arial, sans-serif;
+  font: 1.5em/1.75 RobotoBlack, Arial, sans-serif;
   font-weight: normal;
   color: #898989;
   letter-spacing: 0;
@@ -351,11 +351,6 @@ table {
   padding-left: 20px;
   padding-right: 20px;
   border: 1px solid #428bca;
-
-  /* FIXME: why does the font change here?! */
-
-  font-family: OxygenBold;
-  font-size: 14px;
 }
 
 .btn-narr {
@@ -365,7 +360,7 @@ table {
   padding-right: 20px;
   border: 1px solid #dbdbdb;
   color: #6da8cf;
-  font-family: 'RobotoBlack', Arial, sans-serif;
+  font-family: RobotoBlack, Arial, sans-serif;
   font-size: 14px;
 }
 
@@ -377,7 +372,7 @@ table {
   list-style: none;
   margin-bottom: 10px;
   text-align: left;
-  font-family: 'RobotoBlack', Arial, sans-serif;
+  font-family: RobotoBlack, Arial, sans-serif;
 }
 
 .nav-sidebar > li > a {
@@ -386,7 +381,7 @@ table {
 
 .navbar-nav {
   color: #6da8cf;
-  font-family: 'RobotoBlack', Arial, sans-serif;
+  font-family: RobotoBlack, Arial, sans-serif;
 }
 
 .navbar-nav > li > a:hover {

@@ -72,11 +72,6 @@
   font: normal, 16px, Oxygen, Arial, sans-serif;
 }
 
-.dz-file__row {
-  display: flex;
-  align-items: center;
-}
-
 .dz-file__name {
   white-space: nowrap;
   overflow: hidden;

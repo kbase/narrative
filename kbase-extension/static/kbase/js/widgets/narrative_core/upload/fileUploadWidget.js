@@ -78,7 +78,7 @@ define([
                     }
 
                 })
-                .on('success', (file, serverResponse) => {
+                .on('success', (file) => {
                     var $successElem = $(file.previewElement);
                     $successElem.find('#upload_progress_and_cancel').hide();
                     $successElem.find('#dz_file_row_1').css({'display': 'flex', 'align-items': 'center'});

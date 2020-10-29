@@ -42,6 +42,8 @@ Then, simply run (from the narrative root directory) `make test`.
 This calls a few subcommands, and those can be run independently for specific uses:
 
 - `make test-frontend-unit` will run only the unit tests on the frontend (i.e. those with the Karma runner)
+- `make test-integration` will run the frontend integration tests that make use of webdriver.io to simulate the browser on a locally instantiated Narrative, but running against live KBase services. Note that this currently requires an authentication token. 
+- `make test-frontend` will run both the frontend unit tests and integration tests as above.
 - `make test-frontend-e2e` will run only the frontend tests that make use of Selenium to simulate a browser on the real Narrative site.
 - `make test-backend` will run only the backend Python tests.
 
@@ -53,37 +55,70 @@ You can store auth token files in test/. These are single line files, containing
 
 Next, these credentials need to be referenced for both the back and front end. This version requires two configs - one for Python, and one for JavaScript.
 
-***Python***
+#### ***Python***
 
 `src/biokbase/narrative/tests/test.cfg`
 In the `[users]` and `[token_files]` blocks, two sets of values are needed: test_user and private_user. They don't have any special permissions, they just need to be different users.
 
-***JavaScript***
+#### ***JavaScript***
 
-`test/unit/testConfig.json`
-This just needs the path to the token file (with pre-pended slash), such as `"/test/narrativetest.tok"`
+`test/testConfig.json`
+This just needs the path to the token file, which should be kept in the `test` directory, for example `"test/narrativetest.tok"`.
 
 *TODO (10/24/2017): Unify these token configs!*
 
-### Testing with Travis-CI and Coveralls
+#### ***Frontend Integration Tests***
 
-These tests are run (without credentials) automatically on a pull request to the Narrative Github repo. These are currently run through [Travis-CI](https://travis-ci.org/) and the coverage reported with [Coveralls](https://coveralls.io/). There should be nothing you need to do to make this work.
+There are currently two options here.
+1. Set your token in the `KBASE_TEST_TOKEN` environment variable before running integration tests. 
+2. Use the same token file as described above.
+
+These are checked in that order. That is, if there's a `KBASE_TEST_TOKEN` variable, that gets used. Otherwise, it checks for the token file referenced in `test/testConfig.json`. If both of those are absent, a fake test token is used, which might cause failures if your tests include authenticated services.
+
+### Testing with Github Actions and Codecov
+
+These tests are run automatically on a pull request to the Narrative Github repo. These are currently run through [Github Actions](https://docs.github.com/en/free-pro-team@latest/actions) and the coverage reported with [Codecov](https://codecov.io/).
+
+Unit tests are automatically run without credentials, skipping various tests that are, really, more like integration tests.
+
+The integration tests that run with webdriver.io do require an authentication token. This is the `NARRATIVE_TEST_TOKEN` Github secret in the Narrative repo. It will become available in the test environment as `KBASE_TEST_TOKEN`, which is the variable that the `wdio.conf.js` file looks for.
 
 ### Adding Your Own Tests
 
-***Python***
+#### ***Python***
 
 Python tests should be per module, and should all be added to the `src/biokbase/narrative/tests`. The `test.cfg` file there is in INI file format, and should be added to, as necessary.
 
 There are some service client Mocks available using the `mock` library. Check out `test_appmanager.py` for some examples of how these can be used.
 
-***JavaScript***
+#### ***JavaScript***
 
 JavaScript tests follow the common Test Spec idiom. Here, we create a new spec file for each JavaScript module. These all live under `test/unit/spec` in roughly the same subdirectory as found under `kbase-extension/static/kbase/js`. There's an example spec in `test/unit/specTemplate.js` - you can just copy this to a new module, and modify to fit your needs.
 
+#### ***Frontend Integration Tests***
+
+Integration tests are done using [webdriver.io](https://webdriver.io). The test scripts are written in JavaScript and all resemble the common Mocha style. These tests are all under `test/integration/spec`. It's helpful for each of these files to include the `wdioUtils.js` module in `test/integration`. For each view that requires authentication (i.e. most of them), be sure to start your test with the async `login` function provided by that module. An example spec file might look like:
+
+```javascript
+const Utils = require('../wdioUtils');
+
+describe('Simple test runner', () => {
+    beforeEach(async () => await Utils.login());
+
+    it('opens a narrative', async () => {
+        await browser.url(Utils.makeURL('narrative/31932'));
+        const loadingBlocker = await $('#kb-loading-blocker');
+        const loadingText = await loadingBlocker.getText();
+        expect(loadingText).toContain('Connecting to KBase services...');
+    });
+});
+```
+
+When running these locally, these require an auth token in either the `KBASE_TEST_TOKEN` environment variable, or in the file referenced by `test/testConfig.json` (see the [Add Credentials for Tests - JavaScript](#javascript) section above).
+
 ### Manual Testing and Debugging
 
-***Python***
+#### ***Python***
 
 For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with `kbase-narrative`. You can print messages to the terminal using
 
@@ -92,9 +127,9 @@ log = logging.getLogger("tornado.application")
 log.info("Your Logs Go Here")
 ```
 
-***JavaScript***
+#### ***JavaScript***
 
-It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`
+It can be useful to immediately see your changes in the narrative. For JavaScript changes, you will just have to reload the page. You can print messages to the console with `console.log`.
 
 To debug using the Karma Debugger complete the following steps:
 

@@ -189,9 +189,9 @@ define([
         },
 
         makeGlobusErrorLink: function(globusUrlLinked) {
-            let url = 'https://docs.kbase.us/data/globus';
+            const url = 'https://docs.kbase.us/data/globus';
 
-            let $globusErrorLink = $('<a>')
+            const $globusErrorLink = $('<a>')
                 .attr({
                     'id': 'globus_error_link',
                     'href': url,

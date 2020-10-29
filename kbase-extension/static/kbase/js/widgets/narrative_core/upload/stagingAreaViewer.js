@@ -16,6 +16,7 @@ define([
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
     'kb_service/client/workspace',
+    'uuid',
     'jquery-dataTables',
     'select2'
 ], function (
@@ -35,7 +36,8 @@ define([
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml,
-    Workspace
+    Workspace,
+    UUID
 ) {
     'use strict';
     return new KBWidget({
@@ -293,7 +295,7 @@ define([
                     orderable: false,
                     searchable: false,
                     render: function (data) {
-                        const fileId = stagingAreaViewer.uuidv4();
+                        const fileId = new UUID(4).format();
                         //render checkboxes disabled until the user selects a type
                         return ('<input class="kb-staging-table-body__checkbox-input"' + 
                         'type="checkbox" disabled=true' + 
@@ -710,7 +712,7 @@ define([
             this.$elem.find('button.kb-staging-table-import__button')
             .removeClass('kb-staging-table-import__button__disabled')
             .tooltip('disable')
-            .unbind('click')
+            .off('click')
             .on('click keyPress', function() {
                 stagingAreaViewer.initImport();
             });
@@ -727,7 +729,6 @@ define([
                 stagingAreaViewer.initImportApp(importType, importFile);
             });
           
-            stagingAreaViewer.updateView();
         },
 
         /**
@@ -739,7 +740,7 @@ define([
             const appInfo = this.uploaders.app_info[type];
 
             if (appInfo) {
-                let tag = APIUtil.getAppVersionTag(),
+                const tag = APIUtil.getAppVersionTag(),
                     fileParam = file || '',
                     inputs = {};
 
@@ -760,10 +761,8 @@ define([
                 }
 
                 if (appInfo.app_static_params) {
-                    for (let p in appInfo.app_static_params) {
-                        if (appInfo.app_static_params.hasOwnProperty(p)) {
-                            inputs[p] = appInfo.app_static_params[p];
-                        }
+                    for (const p of Object.keys(appInfo.app_static_params)) {
+                        inputs[p] = appInfo.app_static_params[p];
                     }
                 }
 
@@ -781,20 +780,6 @@ define([
                 );
             }
             this.tour.start();
-        },
-
-        uuidv4: function (a, b) {
-            for (
-            b = a = "";
-            a++ < 36;
-            b +=
-                (a * 51) & 52
-                ? (a ^ 15 ? 8 ^ (Math.random() * (a ^ 20 ? 16 : 4)) : 4).toString(
-                    16
-                    )
-                : "-"
-            );
-            return b;
         }
     });
 });

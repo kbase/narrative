@@ -72,6 +72,7 @@ define([
             // Get this party started.
             this.setPath(options.path);
             this.openFileInfo = {};
+            this.selectedFileTypes = {};
 
             return this;
         },
@@ -362,12 +363,18 @@ define([
                         }
                     }
                 }],
-                rowCallback: function (row) {
+                rowCallback: function (row, data) {
                     const getFileFromName = function (fileData) {
                         return files.filter(function (file) {
                             return file.name === fileData;
                         })[0];
                     };
+
+                    //get the file name for this row
+                    //referenced in a few of the different columns
+                    const rowFileName = data[2];
+                    let rowFileData = getFileFromName(rowFileName);
+                    //console.log('file data for row ', rowFileData);
 
                     function changeImportButton(event) {
                         const checked = event.currentTarget.checked;
@@ -400,29 +407,21 @@ define([
                             stagingAreaViewer.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                         });
 
-                    // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
-                    let $caret = $('td:eq(1)', row).find('i[data-caret]'),
-                        fileName,
-                        myFile;
-
-                    if ($caret.length) {
-                        //next, we use that caret to find the fileName, and the file Data.
-                        fileName = $caret.data().caret;
-                        myFile = getFileFromName(fileName);
-                    }
+                    //First, we find the expansion caret in the first cell.
+                    let $caret = $('td:eq(1)', row).find('i[data-caret]');
 
                     $caret.off('click');
 
                     //now, if there's openFileInfo on it, that means that the user had the detailed view open during a refresh.
-                    if (fileName && stagingAreaViewer.openFileInfo[fileName]) {
+                    if ($caret.length && stagingAreaViewer.openFileInfo[rowFileName]) {
                         //so we note that we've already loaded the info.
-                        myFile.loaded = stagingAreaViewer.openFileInfo[fileName].loaded;
+                        rowFileData.loaded = stagingAreaViewer.openFileInfo[rowFileName].loaded;
                         //toggle the caret
                         $caret.toggleClass('fa-caret-down fa-caret-right');
                         //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
                         setTimeout(() => {
                             $caret.parent().parent().after(
-                                stagingAreaViewer.renderMoreFileInfo(myFile)
+                                stagingAreaViewer.renderMoreFileInfo(rowFileData)
                             )
                         }, 0);
                     }
@@ -434,20 +433,20 @@ define([
 
                         if (fileExpander.hasClass('fa-caret-down')) {
                             $('.kb-dropzone').css('min-height', '75px');
-                            stagingAreaViewer.openFileInfo[fileName] = myFile;
+                            stagingAreaViewer.openFileInfo[rowFileName] = rowFileData;
                             $tr.after(
-                                this.renderMoreFileInfo(myFile)
+                                this.renderMoreFileInfo(rowFileData)
                             );
                         } else {
                             $('.kb-dropzone').css('min-height', '200px');
                             $tr.next().detach();
-                            delete stagingAreaViewer.openFileInfo[fileName];
+                            delete stagingAreaViewer.openFileInfo[rowFileName];
                         }
                     });
 
                     $('td:eq(2)', row).find('.kb-staging-table-body__name')
                         .tooltip({
-                            title: $('td:eq(2)', row).find('.kb-staging-table-body__name').text(),
+                            title: rowFileName,
                             placement: 'top',
                             delay: {
                                 show: Config.get('tooltip').showDelay,
@@ -459,21 +458,18 @@ define([
                         .off('click')
                         .on('click', e => {
                             $(e.currentTarget).off('click');
-                            this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
+                            this.updatePathFn(this.path += '/' + rowFileName);
                         });
 
                     $('td:eq(2)', row).find('button[data-decompress]')
                         .off('click')
                         .on('click', e => {
                             const decompressButton = $(e.currentTarget);
-                            const fileData = decompressButton.data().decompress;
-                            const decompressFile = getFileFromName(fileData);
-
                             decompressButton.replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
 
                             stagingAreaViewer.stagingServiceClient
                                 .decompress({
-                                    path: decompressFile.name
+                                    path: rowFileName
                                 })
                                 .then(() => stagingAreaViewer.updateView())
                                 .fail(xhr => {
@@ -483,13 +479,19 @@ define([
 
                         });
 
-                    $('td:eq(5)', row).find('select')
+                    //find the element
+                    let importDropdown = $('td:eq(5)', row).find('select');
+                    importDropdown
                         .select2({
                             placeholder: 'Select a type',
                             containerCssClass: 'kb-staging-table-body__import-dropdown'
                         })
                         .on('select2:select', function(e) {
-                            
+                            const dataType = e.currentTarget.value;
+                            //add the file data to selected file types
+                            rowFileData.dataType = dataType;
+                            stagingAreaViewer.selectedFileTypes[rowFileName].dataType = dataType;
+
                             $('td:eq(5)', row)
                                 .find('.select2-selection')
                                 .addClass('kb-staging-table-body__import-type-selected');
@@ -500,7 +502,7 @@ define([
                                 .find('.kb-staging-table-body__checkbox-input')
                                 .prop('disabled',false)
                                 .attr('aria-label', 'Select to import file checkbox')
-                                .attr('data-type', e.currentTarget.value);
+                                .attr('data-type', dataType);
 
                             //make sure select all checkbox is enabled
                             $('#staging_table_select_all')

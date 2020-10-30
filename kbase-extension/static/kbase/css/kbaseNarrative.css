@@ -210,11 +210,12 @@
 
 .kb-staging-table-body .select2 {
     width: 160px !important;
+    margin: 4px 0;
 }
 
 /* TODO: can this class be merged with the one above? */
 .kb-staging-table-body .kb-staging-table-body__import-dropdown {
-    height: 42px;
+    height: 38px;
     background: #FFFFFF;
     border: 1px solid #DF0002;
     box-sizing: border-box;

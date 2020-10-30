@@ -515,29 +515,29 @@ define([
                         .on('click', e => {
                             const dataImportButton = $(e.currentTarget);
                             const importType = dataImportButton.prevAll('select').val();
-                            const importFile = getFileFromName(dataImportButton.data().import);
-                            stagingAreaViewer.initImportApp(importType, importFile);
+                            stagingAreaViewer.initImportApp(importType, rowFileName);
                             stagingAreaViewer.updateView();
                         });
 
                     $('td:eq(5)', row).find('button[data-download]')
                         .off('click')
-                        .on('click', e => {
-                            let file = $(e.currentTarget).data('download');
+                        .on('click', () => {
+                            let filePath = rowFileName;
+
                             if (stagingAreaViewer.subpath) {
-                                file = stagingAreaViewer.subpath + '/' + file;
+                                filePath = stagingAreaViewer.subpath + '/' + rowFileName;
                             }
+
                             const url = Config.url('staging_api_url') + '/download/' + file;
                             stagingAreaViewer.downloadFile(url);
                         });
 
                     $('td:eq(5)', row).find('button[data-delete]')
                         .off('click')
-                        .on('click', e => {
-                            const file = $(e.currentTarget).data('delete');
-                            if (window.confirm('Really delete ' + file + '?')) {
+                        .on('click', () => {
+                            if (window.confirm('Really delete ' + rowFileName + '?')) {
                                 stagingAreaViewer.stagingServiceClient.delete({
-                                    path: stagingAreaViewer.subpath + '/' + file
+                                    path: stagingAreaViewer.subpath + '/' + rowFileName
                                 }).then(() => {
                                     stagingAreaViewer.updateView();
                                 }).fail(xhr => {

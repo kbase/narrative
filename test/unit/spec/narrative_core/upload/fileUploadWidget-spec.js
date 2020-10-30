@@ -145,7 +145,7 @@ define([
             });
         });
 
-        it('Should create a clear all button when a file upload error occurs', (done) => {
+        it('Should render properly when a file upload error occurs', (done) => {
             // Set the file max size to 0
             fuWidget.dropzone.options.maxFilesize = 1;
 
@@ -164,8 +164,9 @@ define([
             fuWidget.dropzone.addFile(mockFile);
             setTimeout(() => {
                 expect(adderMock).toHaveBeenCalled();
-                var clearAllButton = document.getElementById('clear-all-btn');
-                expect(clearAllButton).toBeDefined();
+                expect(document.getElementById('clear-all-btn')).toBeDefined();
+                expect(document.getElementById('upload_progress_and_cancel')).toBeNull();
+                expect(document.getElementById('error_icon')).toBeDefined();
                 done();
             });
         });

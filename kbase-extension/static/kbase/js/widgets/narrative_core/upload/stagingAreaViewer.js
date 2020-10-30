@@ -471,14 +471,15 @@ define([
 
                             decompressButton.replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
 
-                            stagingAreaViewer.stagingServiceClient.decompress({
-                                path: decompressFile.name
-                            })
-                            .then(() => stagingAreaViewer.updateView())
-                            .fail(xhr => {
-                                console.error('FAILED', xhr);
-                                alert('Error ' + xhr.status + '\r' + xhr.responseText);
-                            });
+                            stagingAreaViewer.stagingServiceClient
+                                .decompress({
+                                    path: decompressFile.name
+                                })
+                                .then(() => stagingAreaViewer.updateView())
+                                .fail(xhr => {
+                                    console.error('FAILED', xhr);
+                                    alert('Error ' + xhr.status + '\r' + xhr.responseText);
+                                });
 
                         });
 
@@ -488,7 +489,7 @@ define([
                             containerCssClass: 'kb-staging-table-body__import-dropdown'
                         })
                         .on('select2:select', function(e) {
-
+                            
                             $('td:eq(5)', row)
                                 .find('.select2-selection')
                                 .addClass('kb-staging-table-body__import-type-selected');

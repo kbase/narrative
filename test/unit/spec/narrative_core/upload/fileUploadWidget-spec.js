@@ -163,10 +163,44 @@ define([
 
             fuWidget.dropzone.addFile(mockFile);
             setTimeout(() => {
-                expect(adderMock).toHaveBeenCalled();
-                expect(document.getElementById('clear-all-btn')).toBeDefined();
-                expect(document.getElementById('upload_progress_and_cancel')).toBeNull();
-                expect(document.getElementById('error_icon')).toBeDefined();
+                let $fileTemplate = fuWidget.$elem;
+                expect(document.getElementById('clear_all_button')).toBeDefined();
+                expect($fileTemplate.find('#upload_progress_and_cancel').css('display')).toEqual('none');
+                expect($fileTemplate.find('#error_icon').css('display')).toEqual('flex');
+                expect($fileTemplate.find('#globus_error_link').attr('href')).toEqual('https://docs.kbase.us/data/globus');
+                done();
+            });
+        });
+
+        it('Should provide a link to a globus accout when file upload maxfile size error occurs', (done) => {
+            $targetNode = $('<div>');
+            var uploadWidget = new FileUploadWidget($targetNode, {
+                path: '/',
+                userInfo: {
+                    user: fakeUser,
+                    globusLinked: true
+                }
+            });
+
+            // Set the file max size to 0
+            uploadWidget.dropzone.options.maxFilesize = 1;
+
+            // Create file
+            const filename='foo.txt';
+            mockUploadEndpoint(filename, fakeUser, false);
+            var mockFile = createMockFile(filename);
+            Object.defineProperty(mockFile, 'size', {value: Math.pow(1024, 4), writable: false});
+
+            // Create mock calls
+            const adderMock = jasmine.createSpy('adderMock');
+            uploadWidget.dropzone.on('addedfile', () => {
+                adderMock();
+            });
+
+            uploadWidget.dropzone.addFile(mockFile);
+            setTimeout(() => {
+                let $fileTemplate = uploadWidget.$elem;
+                expect($fileTemplate.find('#globus_error_link').attr('href')).toEqual('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' + fakeUser);
                 done();
             });
         });

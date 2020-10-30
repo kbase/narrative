@@ -44,6 +44,12 @@ define ([
                         mtime: 1532738637555,
                         size: 49233,
                         source: 'KBase upload'
+                    }, {
+                        name: 'fake_sra_reads.sra',
+                        path: fakeUser + '/fake_sra_reads.sra',
+                        mtime: 1532738637555,
+                        size: 49233,
+                        source: 'KBase upload'
                     }
                 ])
             });
@@ -230,29 +236,75 @@ define ([
         });
 
         it('should properly render the import as dropdown', async () => {            
-            let file = {
-                name: 'render_file_test.fa',
-                path: fakeUser + '/render_file_test.fa',
-                mtime: 1532738637555,
-                size: 49233,
-                source: 'KBase upload',
-                isFolder: false,
-                imported: {}
-            };
-
             await stagingViewer.render();
-            stagingViewer.renderFiles([file]);
             let placeholder = $targetNode.find('span.select2-selection__placeholder').html();
             expect(placeholder).toContain('Select a type');
 
             //The options that should be in the import as dropdown
-            let menuOptions = ['FASTQ Reads', 'SRA Reads', 'GenBank Genome', 'GFF Genome', 'GFF Metagenome', 'Expression Matrix', 'Media', 'FBA Model', 'Assembly', 'Phenotype Set', 'Sample Set'];
-            let foundOptions = $targetNode.find('.select2-hidden-accessible').html();
+            const menuOptions = ['FASTQ Reads', 'SRA Reads', 'GenBank Genome', 'GFF Genome', 'GFF Metagenome', 'Expression Matrix', 'Media', 'FBA Model', 'Assembly', 'Phenotype Set', 'Sample Set'];
+            const foundOptions = $targetNode.find('.select2-hidden-accessible').html();
 
             menuOptions.forEach(option => {
                 expect(foundOptions).toContain(option);
             });
 
+        });
+
+        it('renders the dropdown correctly when a type is selected', async () => {
+            await stagingViewer.render();
+
+            //find the fake sra reads row specifically (via the download button, then chaining back up to the select dropdown above - since we don't have a unique ID for these select drodpowns it's the best mehtod for now)
+            let selectDropdown = $targetNode.find('[data-download="fake_sra_reads.sra"]').siblings('select');
+
+            //set the value of the dropdown
+            selectDropdown.val('sra_reads')
+                .trigger('change')
+                .trigger('select2:select');
+           
+            //check that the dropdown renders correctly
+            let select2 = $targetNode.find('[title="SRA Reads"]');
+            expect(select2).toBeDefined();
+            expect(select2.attr('title')).toContain('SRA Reads');
+            expect(select2.html()).toContain('SRA Reads');
+        });
+
+        it('should render checboxes for the file table', async () => {
+            await stagingViewer.render();
+
+            //initially the checkboxes are rendered disabled until a user selects a type
+            const tableCheckboxes = $targetNode.find('input.kb-staging-table-body__checkbox-input:disabled');
+
+            expect(tableCheckboxes.length).toBeGreaterThan(0);
+            expect(tableCheckboxes.attr('aria-label')).toContain('Select to import file checkbox: disabled until at least one data type is selected');
+
+            const headerCheckbox = $targetNode.find('#staging_table_select_all');
+            
+            expect(headerCheckbox.length).toEqual(1);
+            expect(headerCheckbox.attr('aria-label')).toContain('Select to import all files checkbox: disabled until at least one data type is selected');
+        });
+
+        it('checkboxes will be enabled when a type is selected', async () => {
+
+            await stagingViewer.render();
+
+            //find the fake sra reads one specifically
+            let selectDropdown = $targetNode.find('[data-download="fake_sra_reads.sra"]').siblings('select');
+
+            selectDropdown.val('sra_reads')
+                .trigger('change')
+                .trigger('select2:select');
+
+            //check that the table checkbox is enabled
+            const tableCheckbox = $targetNode.find('input.kb-staging-table-body__checkbox-input:enabled');
+
+            expect(tableCheckbox.length).toEqual(1);
+            expect(tableCheckbox.attr('aria-label')).toContain('Select to import file checkbox');
+
+            const headerCheckbox = $targetNode.find('#staging_table_select_all');
+            
+            //TODO: for some weird reason the header checkbox isn't showing as enabled, even though the click event fires. not sure what is going on here
+            expect(headerCheckbox.length).toEqual(1);
+            expect(headerCheckbox.attr('aria-label')).toContain('Select to import all files checkbox');
         });
 
         it('should render the import selected button', async () => {
@@ -265,19 +317,23 @@ define ([
             expect(button.hasClass('kb-staging-table-import__button__disabled')).toBeTrue();
         });
 
-        it('should render checboxes for the file table', async () => {
+        it('should enable the import button when a type is selected', async() => {
             await stagingViewer.render();
 
-            //initially the checkboxes are rendered disabled until a user selects a type
-            const tableCheckboxes = $targetNode.find('input.kb-staging-table-body__checkbox-input:disabled');
+            //find the fake sra reads one specifically
+            let selectDropdown = $targetNode.find('[data-download="fake_sra_reads.sra"]').siblings('select');
 
-            expect(tableCheckboxes.length).toBeGreaterThan(0);
-            expect(tableCheckboxes.attr('aria-label')).toContain('Select to import file checkbox: disabled until at least one data type is selected');
+            selectDropdown.val('sra_reads')
+                .trigger('change')
+                .trigger('select2:select');
 
-            const headerCheckbox = $targetNode.find('input.kb-staging-table-header__checkbox-input:disabled');
-            
-            expect(headerCheckbox.length).toEqual(1);
-            expect(headerCheckbox.attr('aria-label')).toContain('Select to import all files checkbox: disabled until at least one data type is selected');
+            //check the checkbox
+            $targetNode.find('input.kb-staging-table-body__checkbox-input:enabled')
+                .click();
+
+            const button = $targetNode.find('button.kb-staging-table-import__button');
+
+            expect(button.hasClass('kb-staging-table-import__button__disabled')).toBeFalse();
         });
     });
 });

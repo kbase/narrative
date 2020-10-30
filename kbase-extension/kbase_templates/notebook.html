@@ -16,15 +16,13 @@ window.mathjax_url = "{{mathjax_url}}";
 <link rel="stylesheet" href="{{ static_url("components/bootstrap-tour/build/css/bootstrap-tour.min.css") }}" type="text/css" />
 <link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}">
 {{super()}}
-<link rel="stylesheet" href="{{ static_url("kbase/css/contigBrowserStyles.css") }}" type="text/css" />
 <link rel="stylesheet" href="{{ static_url("ext_components/datatables/media/css/dataTables.bootstrap.min.css") }}" type="text/css" />
-<link rel="stylesheet" href="{{ static_url("ext_components/select2/dist/css/select2.css") }}" type="text/css" />
+<link rel="stylesheet" href="{{ static_url("ext_components/select2/dist/css/select2.min.css") }}" type="text/css" />
 <link rel="stylesheet" href="{{ static_url("ext_components/select2-bootstrap-theme/dist/select2-bootstrap.min.css") }}" type="text/css" />
-<link rel="stylesheet" href="{{ static_url("ext_components/dropzone/dist/dropzone.css") }}" type="text/css" />
+<link rel="stylesheet" href="{{ static_url("ext_components/dropzone/dist/min/dropzone.min.css") }}" type="text/css" />
 
 <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
-<link rel="stylesheet" href=""  id='kernel-css'                             type="text/css" />
-
+<link rel="stylesheet" href=""  id="kernel-css"                             type="text/css" />
 {% endblock %}
 
 {% block bodyclasses %}notebook_app {{super()}}{% endblock %}
@@ -64,7 +62,7 @@ data-notebook-path="{{notebook_path | urlencode}}"
               <span class="kernel_indicator_name">Kernel</span>
               <i id="kernel_indicator_icon"></i>
             </p>
-            <i id="readonly-indicator" class="navbar-text" title='This notebook is read-only'>
+            <i id="readonly-indicator" class="navbar-text" title="This notebook is read-only">
                 <span class="fa-stack">
                     <i class="fa fa-save fa-stack-1x"></i>
                     <i class="fa fa-ban fa-stack-2x text-danger"></i>
@@ -96,25 +94,23 @@ data-notebook-path="{{notebook_path | urlencode}}"
     </div>
     <div id="content-column">
         <span id="kb-add-code-cell"
-              class="kb-data-list-add-data-button fa fa-terminal fa-2x"
-              style="position:fixed; bottom:15px; right:75px; z-index:5"
+              class="fa fa-terminal fa-2x"
               data-toggle="tooltip" data-placement="top" Title="Add Code Cell"></span>
         <span id="kb-add-md-cell"
-              class="kb-data-list-add-data-button fa fa-paragraph fa-2x"
-              style="position:fixed; bottom:15px; right:10px; z-index:5"
+              class="fa fa-paragraph fa-2x"
               data-toggle="tooltip" data-placement="top" Title="Add Markdown Cell"></span>
 
         <div id="ipython-main-app">
             <div id="notebook_panel">
-                <div id="notebook"></div>
-                <div id='tooltip' class='ipython_tooltip' style='display:none'></div>
+                <div id="notebook" class="notebook__container"></div>
+                <div id="tooltip" class="ipython_tooltip" style="display: none"></div>
                 <div id="kb-ws-progress"></div>
             </div>
         </div>
     </div>
 </div>
 
-<div id='kb-error-dialog'></div>
+<div id="kb-error-dialog"></div>
 
 {% endblock %}
 
@@ -124,7 +120,7 @@ data-notebook-path="{{notebook_path | urlencode}}"
     <div id="pager-contents">
         <div id="pager-container" class="container"></div>
     </div>
-    <div id='pager-button-area'></div>
+    <div id="pager-button-area"></div>
 </div>
 
 {% endblock %}
@@ -140,8 +136,4 @@ data-notebook-path="{{notebook_path | urlencode}}"
 <!-- Because the narrative (in this version) requires that some Javascript is loaded before
     running the main IPython stack, a little wrapper script had to be written. More details there. -->
 <script src="{{ static_url("narrativeMain.js") }}" charset="utf-8"></script>
-
-<!-- not used in this version, but left behind for posterity.
-    <script src="{{ static_url("notebook/js/main.js") }}" charset="utf-8"></script>
--->
 {% endblock %}

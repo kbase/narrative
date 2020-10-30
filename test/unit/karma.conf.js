@@ -11,14 +11,13 @@ module.exports = function (config) {
                 failFast: false,
                 DEFAULT_TIMEOUT_INTERVAL: 20000
             },
-            requireJsShowNoTimestampsError: '^(?!.*(^/narrative/static/))',
+            requireJsShowNoTimestampsError: '^(?!.*(^/narrative/))',
             clearContext: false
         },
         plugins: [
             'karma-jasmine',
             'karma-chrome-launcher',
             'karma-firefox-launcher',
-            'karma-phantomjs-launcher',
             'karma-requirejs',
             'karma-coverage',
             'karma-mocha-reporter',
@@ -43,7 +42,7 @@ module.exports = function (config) {
             {pattern: 'kbase-extension/static/**/*.js', included: false, served: true},
             {pattern: 'kbase-extension/static/**/*.gif', included: false, served: true},
             {pattern: 'nbextensions/appcell2/widgets/tabs/*.js', included: false},
-            {pattern: 'test/unit/testConfig.json', included: false, served: true, nocache: true},
+            {pattern: 'test/testConfig.json', included: false, served: true, nocache: true},
             {pattern: 'test/*.tok', included: false, served: true, nocache: true},
             {pattern: 'test/data/**/*', included: false, served: true},
             'test/unit/testUtil.js',

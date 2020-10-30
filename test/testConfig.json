@@ -1,7 +1,7 @@
 {
     "token": {
         "user": "wjriehl",
-        "file": "/test/wjriehl.tok"
+        "file": "test/wjriehl.tok"
     },
     "currentNarrative": "bar",
     "data": [{

@@ -2,7 +2,7 @@
 define('testUtil', [
     'bluebird',
     'narrativeConfig',
-    'json!/test/unit/testConfig.json'
+    'json!/test/testConfig.json'
 ], function(Promise, Config, TestConfig) {
     'use strict';
 
@@ -72,7 +72,7 @@ define('testUtil', [
         userId = TestConfig.token.user;
         var tokenFile = TestConfig.token.file;
         return new Promise(function(resolve) {
-            require(['text!' + tokenFile],
+            require(['text!/' + tokenFile],
                 function(loadedToken) {
                     token = loadedToken.trim();
                     console.warn('Loaded token file ' + tokenFile);

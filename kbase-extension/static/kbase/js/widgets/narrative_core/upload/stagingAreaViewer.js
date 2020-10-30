@@ -70,6 +70,8 @@ define([
             this.userInfo = options.userInfo;
 
             // Get this party started.
+            //setting first load so setPath doesn't call updateView() as that will happen via narrativeStagingDataTab
+            this.firstLoad = true;
             this.setPath(options.path);
             this.openFileInfo = {};
             this.selectedFileTypes = {};
@@ -154,7 +156,13 @@ define([
                 subpathTokens--;
             }
             this.subpath = subpath.slice(subpath.length - subpathTokens).join('/');
-            return this.updateView();
+            
+            //we don't need to call to update the view if it's the first time as narrative staging data tab will do the rendering for us
+            if (this.firstLoad) {
+                this.firstLoad = false;
+            } else {
+                return this.updateView();
+            }
         },
 
         renderFileHeader: function () {

@@ -28,6 +28,7 @@ module.exports = function (config) {
             'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js': ['coverage'],
             'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage'],
             'nbextensions/appcell2/widgets/tabs/*.js': ['coverage'],
+            'kbase-extension/static/kbase/js/*.js': ['coverage']
         },
         files: [
             'kbase-extension/static/narrative_paths.js',

@@ -35,7 +35,7 @@
     "karma-mocha-reporter": "2.2.5",
     "karma-requirejs": "1.1.0",
     "karma-safari-launcher": "1.0.0",
-    "puppeteer": "5.4.0",
+    "puppeteer": "5.4.1",
     "requirejs": "2.3.6",
     "selenium-standalone": "6.20.1",
     "selenium-webdriver": "3.6.0",

@@ -57,7 +57,7 @@
 .btn__text:disabled {
     color: #929292;
     border: 1px solid #FAFAFA;
-    background-color: #FAFAFA;
+    background-color: #fafafa;
 }
 
 .clear-all-dropzone {
@@ -117,44 +117,252 @@
   color: #DF0002;
 }
 
-#kb-data-staging-table_wrapper {
-    margin-top: 44px;
+/* BEGIN staging data table modifiers */
+.kb-staging-table {
+  table-layout: fixed;
 }
 
-.kb-data-staging-decompress {
-  border: 1px solid #ccc;
-  border-radius: 1px;
+.kb-staging-table-header__checkbox {
+    width: 2%;
 }
 
-.kb-data-staging-table-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.kb-staging-table-header__file {
+    width: 4%;
 }
 
-.kb-data-staging-folder:hover {
-  cursor: pointer;
-  text-decoration: underline;
+.kb-staging-table-header__name {
+    width: 26%;
 }
+
+.kb-staging-table-header__size,
+.kb-staging-table-header__age {
+    width: 8%;
+}
+
+.kb-staging-table-header__import {
+    width: 22%;
+}
+
+/* Overriding default datatables sort icons so they come before the header title rather than after */
+.kb-staging-table-header .sorting:before,
+.kb-staging-table-header .sorting_desc:before,
+.kb-staging-table-header .sorting_asc:before {
+    opacity: 0.2;
+    content: "\e150";
+    position: relative;
+    top: 1px;
+    right: 4px;
+    display: inline-block;
+    font-family: 'Glyphicons Halflings', Arial, sans-serif;
+}
+
+.kb-staging-table-header .sorting_asc:before {
+    content: "\e155";
+}
+
+.kb-staging-table-header .sorting_desc:before {
+    content: "\e156";
+}
+
+.kb-staging-table .kb-staging-table-header .sorting:after,
+.kb-staging-table .kb-staging-table-header .sorting_desc:after,
+.kb-staging-table .kb-staging-table-header .sorting_asc:after {
+    display: none;
+} 
+
+/* Special positioning for folder sort icon as there is no title*/
+.kb-staging-table-header .kb-staging-table-header__file.sorting:before,
+.kb-staging-table-header .kb-staging-table-header__file.sorting_desc:before,
+.kb-staging-table-header .kb-staging-table-header__file.sorting_asc:before {
+    left: 9px;
+}
+
+.kb-staging-table .kb-staging-table-body td {
+    vertical-align: middle;
+}
+
+.kb-staging-table-body__expander {
+    text-align: center;
+}
+
+.kb-staging-table-body__decompress {
+    border: 1px solid #cccccc;
+    border-radius : 1px;
+}
+
+.kb-staging-table-body__name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kb-staging-table-body__folder:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* style for Import As dropdown container */
+
+/* set the width here 
+  otherwise it will get overriden by datatables when changing the sort order 
+  it gets set directly on the element via inline css so we have to use important to override
+*/
+
+.kb-staging-table-body .select2 {
+    width: 160px !important;
+    margin: 4px 0;
+}
+
+/* TODO: can this class be merged with the one above? */
+.kb-staging-table-body .kb-staging-table-body__import-dropdown {
+    height: 38px;
+    background: #FFFFFF;
+    border: 1px solid #DF0002;
+    box-sizing: border-box;
+    border-radius: 4px;
+}
+
+/* When user clicks into the dropdown or chooses a selection box change border color */
+.select2-container--open .kb-staging-table-body__import-dropdown,
+.select2-container--focus .kb-staging-table-body__import-dropdown,
+.kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected {
+    border: 1px solid #C4C4C4;
+}
+
+/* style for Import As dropdown container text */
+.kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__rendered {
+    position: absolute;
+    left: 8.87%;
+    right: 5.41%;
+    top: 30.95%;
+    bottom: 30.95%;
+    font-size: 14px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    color: #000000;
+}
+
+/* Import as dropdown placeholder text is red */
+.kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__placeholder {
+    color: #DF0002;
+}
+
+/* Change placeholder color when user clicks in */
+.kb-staging-table-body .select2-container--open .select2-selection__placeholder,
+.select2-container--focus .select2-selection__placeholder {
+    color: #000000;
+}
+
+/* style for Import As dropdown container arrow */
+.kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__arrow {
+    position: absolute;
+    height: 16px;
+    left: 87.76%;
+    right: 5.44%;
+    top: 30.95%;
+    bottom: 30.95%;
+}
+
+/* Before user makes a selection arrow is red */
+.kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__arrow b {
+    border-color: #DF0002 transparent transparent transparent;
+}
+
+/* after user makes a selection, or when in focus, arrow is grey */
+.kb-staging-table-body .kb-staging-table-body__import-dropdown:focus .select2-selection__arrow b,
+.kb-staging-table-body .kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected .select2-selection__arrow b {
+    border-color: #888 transparent transparent transparent;
+}
+
+.kb-staging-table-body__download {
+    font-size: 9px;
+    margin-left: 5px;
+}
+
+.kb-staging-table-body__delete {
+    color: #4379B1;
+    background: none;
+    font-size: 16px;
+    line-height: 18.4px;
+    box-shadow: none;
+}
+
+.kb-staging-table-body__delete:hover,
+.kb-staging-table-body__delete:active {
+    color: #286090;
+    background: none;
+}
+
+.kb-staging-table-notice {
+    font-family: Oxygen, Arial, sans-serif;
+    font-weight: bold;
+    font-size: 105%;
+    text-align: center;
+    background-color: #EEEEEE;
+    height: 32px;
+    padding: 8px;
+}
+
+.kb-staging-table-import__button {
+    width: 160px;
+    height: 42px;
+    border-radius: 4px;
+    font-family: Public Sans, Arial, sans-serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 16px;
+    position: absolute;
+    right: 10px;
+    bottom: -50px;
+}
+
+.kb-staging-table-import__button.kb-staging-table-import__button__disabled,
+.kb-staging-table-import__button.kb-staging-table-import__button__disabled:active {
+    background-color: #8EAFD0;
+}
+
+.kb-staging-table-import__button.kb-staging-table-import__button__disabled:focus {
+    outline: none;
+}
+
+/* TODO: check in with design on positioning of tooltip, whether we want to display arrow */
+.kb-staging-table-import .tooltip {
+    background: #FFF;
+    box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+
+.kb-staging-table-import .tooltip .tooltip-inner {
+    background: #FFF;
+    color: #000;
+    font-family: Public Sans, Arial, sans-serif;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 12px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    width: 135px;
+    height: 56px;
+}
+
+.kb-staging-table-import .tooltip .tooltip-arrow { 
+    display: none;
+}
+/* 
+    END staging data table modifiers 
+*/
 
 .kb-data-breadcrumb .kb-pointer a {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 .kb-data-staging__container {
-  height: 604px;
-  padding: 5px;
-  overflow-y: auto;
-}
-
-.kb-data-staging-footer {
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: bold;
-  font-size: 105%;
-  text-align: center;
-  background-color: #eee;
-  height: 32px;
-  padding: 8px;
+    height: 604px;
+    padding: 10px;
+    overflow-y: auto;
 }
 
 .kb-data-staging-metadata-list {
@@ -3326,7 +3534,6 @@ button.kb-data-obj {
 /* End kbaseData.css */
 
 /* styling for data import overlay  */
-
 .kb-import-content {
   position: relative;
   margin: 0 0 0 0;

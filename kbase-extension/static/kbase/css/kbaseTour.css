@@ -25,10 +25,7 @@
   font-size: 12pt;
 }
 
-.kb-tour > .popover-content {
-  background-color: #eee;
-}
-
+.kb-tour > .popover-content,
 .kb-tour > .popover-navigation {
   background-color: #eee;
 }

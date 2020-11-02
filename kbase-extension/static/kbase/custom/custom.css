@@ -5,9 +5,18 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 (or the specific css file if available)
 */
 @font-face {
-  font-family: 'Glyphicons Halflings';
-  src: url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot');
-  src: url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff2') format('woff2'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff') format('woff'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.ttf') format('truetype'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular') format('svg');
+  font-family: "Glyphicons Halflings";
+  src: url(../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot);
+  src:
+    url(../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot?#iefix) format("embedded-opentype"),
+    url(../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff2) format("woff2"),
+    url(../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff) format("woff"),
+    url(../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.ttf) format("truetype"),
+    url(../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular) format("svg");
+}
+
+#ipython-main-app {
+  position: relative;
 }
 
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
@@ -80,29 +89,23 @@ div.text_cell_input {
 }
 
 div.cell {
-  margin: 8px 0 8px 0;
+  margin: 8px 0;
   padding: 0;
   border: 1px solid #ccc;
-  border-left: 5px solid #ccc;
+  border-left-width: 5px;
   border-radius: 0;
 }
 
 div.cell.selected {
   margin-left: 0;
   border: 1px solid #4bb856;
-  border-left: 5px solid #4bb856;
+  border-left-width: 5px;
   padding-left: 0;
-  background-color: #e8efff;
-  background: none;
-  -webkit-transition: box-shadow 0.2s ease-in-out;
-  -moz-transition: box-shadow 0.2s ease-in-out;
-  -o-transition: box-shadow 0.2s ease-in-out;
   transition: box-shadow 0.2s ease-in-out;
-  -webkit-box-shadow: 0 1px 2px #aaa, 0 5px 5px #aaa;
-  -moz-box-shadow: 0 1px 2px #aaa, 0 5px 5px #aaa;
   box-shadow: 0 1px 2px #aaa, 0 5px 5px #aaa;
 }
 
+div.cell.selected,
 div.cell.selected::before {
   background: none;
 }
@@ -119,7 +122,7 @@ div.cell.opened {
 
 div.cell.selected.kb-error {
   border: 1px solid #d9534f;
-  border-left: 5px solid #d9534f;
+  border-left-width: 5px;
 }
 
 div#notebook {
@@ -135,14 +138,7 @@ div#notebook {
   background-color: #e0e0e0;
 }
 
-.prompt {
-  min-width: 10ex;
-  padding-top: 10px;
-}
-
 #notebook-container {
-  -webkit-box-shadow: none;
-  -moz-box-shadow: none;
   box-shadow: none;
   width: auto;
   min-width: 460px;
@@ -168,19 +164,16 @@ div#notebook {
 }
 
 .kb-narr-side-panel .btn-group .btn {
-  padding: 3px 4px 3px 4px;
+  padding: 3px 4px;
   font-size: 16px;
 }
 
 .btn-subtle {
-  color: #888;
   margin: 0;
 }
 
-.btn-subtle .fa {
-  color: #888;
-}
-
+.btn-subtle,
+.btn-subtle .fa,
 .btn-subtle .fa::before {
   color: #888;
 }
@@ -199,25 +192,22 @@ div#notebook {
   flex: 0 auto;
 }
 
-.notebook_app .celltoolbar > .button_container:nth-child(1) {
+.notebook_app .celltoolbar > .button_container:first-child {
   flex: auto;
 }
 
 .notebook_app .celltoolbar_container {
-  border-bottom: 1px silver solid;
+  border-bottom: 1px solid #c0c0c0;
 }
 
 .notebook_app .prompt {
   padding-top: 0;
-  color: silver;
+  color: #c0c0c0;
   width: 75px;
 }
 
+.notebook_app .cell.selected div.text_cell_render,
 .notebook_app .cell.unselected div.text_cell_render {
-  border: 1px solid transparent;
-}
-
-.notebook_app .cell.selected div.text_cell_render {
   border: 1px solid transparent;
 }
 
@@ -227,7 +217,7 @@ div#notebook {
 }
 
 .notebook_app .btn.disabled .fa {
-  color: silver;
+  color: #c0c0c0;
 }
 
 .text_cell.kb-cell .rendered_html table {
@@ -255,9 +245,9 @@ div#notebook {
   padding-bottom: 0;
 }
 
-.rendered_html tr,
+.rendered_html td,
 .rendered_html th,
-.rendered_html td {
+.rendered_html tr {
   text-align: inherit;
 }
 
@@ -268,31 +258,22 @@ div#notebook {
 /* narrative cell icons */
 
 .cell.selected .prompt .method-icon {
-  color: rgb(103, 58, 183);
+  color: rgb(103 58 183);
 }
 
 .cell.selected .prompt .app-icon {
-  color: rgb(0, 150, 136);
+  color: rgb(0 150 136);
 }
 
-.cell.selected .prompt .markdown-icon {
-  color: #000;
-}
-
-.cell.selected .prompt .app-output-icon {
-  color: #000;
-}
-
+.cell.selected .prompt .app-output-icon,
+.cell.selected .prompt .data-viewer-icon,
+.cell.selected .prompt .markdown-icon,
 .cell.selected .prompt .method-output-icon {
   color: #000;
 }
 
-.cell.selected .prompt .data-viewer-icon {
-  color: #000;
-}
-
 .cell.selected .prompt .error-icon {
-  color: red;
+  color: #f00;
 }
 
 .cell.selected .prompt.input_prompt {
@@ -354,10 +335,8 @@ p {
  * Cool though this is, it's a problem on app cells.
  * This hunk of CSS should remove it until we can better work it in to our design.
  */
-div.code_cell:hover .run_this_cell {
-  visibility: hidden !important;
-}
 
+div.code_cell:hover .run_this_cell,
 div.code_cell:hover div.input_prompt.run_this_cell {
   visibility: hidden !important;
 }

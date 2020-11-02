@@ -19,7 +19,7 @@
   margin-top: -5px;
 }
 
-.btn.kb-flat-btn:hover,
-.btn.kb-flat-btn:active {
+.btn.kb-flat-btn:active,
+.btn.kb-flat-btn:hover {
   background-color: #ccc;
 }

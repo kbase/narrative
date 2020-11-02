@@ -16,10 +16,10 @@
 /**
  * Adjusts the font size and stroke width of the base-position axis.
  */
-.kbcb-widget .kbcb-axis path,
-.kbcb-widget .kbcb-axis line {
+.kbcb-widget .kbcb-axis line,
+.kbcb-widget .kbcb-axis path {
   fill: none;
-  stroke: black;
+  stroke: #000;
   shape-rendering: crispEdges;
 }
 

@@ -15,7 +15,7 @@
 .modal .modal-title {
   font-family: Oxygen, Arial, sans-serif;
   font-size: 130%;
-  font-weight: bold;
+  font-weight: 700;
   color: #2e618d;
 }
 
@@ -38,7 +38,7 @@
     as it breaks.
 */
 
-.modal input[type="checkbox"] {
+.modal input[type=checkbox] {
   margin-top: 1px;
 }
 
@@ -64,16 +64,16 @@
 }
 
 .panel-info.kb-panel-light .panel-title {
-  color: blue;
+  color: #00f;
 }
 
 .panel.kb-panel-light > .panel-heading {
   background-color: transparent;
-  font-weight: bold;
+  font-weight: 700;
   color: #666;
   padding-left: 0;
   padding-bottom: 2px;
-  border-bottom: 1px #ccc solid;
+  border-bottom: 1px solid #ccc;
 }
 
 .panel.kb-panel-light .panel-body {
@@ -86,10 +86,10 @@
 
 .panel.kb-panel-container > .panel-heading {
   background-color: transparent;
-  font-weight: bold;
+  font-weight: 700;
   padding-left: 0;
   padding-bottom: 2px;
-  border-bottom: 2px #ccc solid;
+  border-bottom: 2px solid #ccc;
   margin-bottom: 10px;
 }
 

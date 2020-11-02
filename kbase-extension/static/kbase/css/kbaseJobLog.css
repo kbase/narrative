@@ -1,5 +1,5 @@
 #kblog-header {
-  margin: 5px 0 5px 0;
+  margin: 5px 0;
 }
 
 #kblog-panel {
@@ -15,9 +15,9 @@
 
 .kblog-header {
   display: flex;
-  font-family: monospace;
 }
 
+.kblog-header,
 .kblog-line {
   font-family: monospace;
 }
@@ -40,11 +40,6 @@
   white-space: nowrap;
 
   /* makes text unselectable */
-  -moz-user-select: -moz-none;
-  -ms-user-select: none;
-  -khtml-user-select: none;
-  -webkit-user-select: none;
-  -o-user-select: none;
   user-select: none;
 }
 
@@ -57,14 +52,14 @@
 
 .kb-error,
 .kb-error .kblog-line-num {
-  color: darkred;
+  color: #8b0000;
   text-decoration: underline;
-  font-weight: bold;
+  font-weight: 700;
   font-size: 12px;
-  background-color: rgb(255, 245, 245);
+  background-color: rgb(255 245 245);
 }
 
-#kblog-msg,
-#kblog-err {
+#kblog-err,
+#kblog-msg {
   margin-top: 5px;
 }

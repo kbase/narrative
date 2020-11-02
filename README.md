@@ -88,8 +88,6 @@ Long version: [Local Narrative setup](docs/install/local_install.md)
 
 ## Architecture
 
-***In progress!***
-
 The Narrative sits on top of the Jupyter Notebook, so most of its architecture is a mirror of that. However, the Narrative's interaction with other KBase elements - namely the data stores and job running services - merits its own description. This will be ongoing (and evolving!), but a brief description of how a job gets run and registered is available here:
 
 [Narrative App/Method Running](docs/developer/narrative_app_error_states.md)

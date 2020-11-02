@@ -5,7 +5,7 @@
   "private": true,
   "repository": "github.com/kbase/narrative",
   "devDependencies": {
-    "@types/puppeteer": "^3.0.2",
+    "@types/puppeteer": "^3.0.4",
     "@wdio/cli": "^6.6.0",
     "@wdio/local-runner": "^6.6.0",
     "@wdio/mocha-framework": "^6.6.0",

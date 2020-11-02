@@ -19,7 +19,7 @@ define([
     'uuid',
     'jquery-dataTables',
     'select2'
-  ], function (
+], function (
     $,
     KBaseTabs,
     StagingServiceClient,
@@ -38,7 +38,7 @@ define([
     FilePathHtml,
     Workspace,
     UUID
-  ) {
+) {
     'use strict';
     return new KBWidget({
         name: 'StagingAreaViewer',
@@ -498,8 +498,8 @@ define([
                     */
                     function enableCheckboxes(dataType) {
                         $('td:eq(5)', row)
-                        .find('.select2-selection')
-                        .addClass('kb-staging-table-body__import-type-selected');
+                            .find('.select2-selection')
+                            .addClass('kb-staging-table-body__import-type-selected');
                     
                         //make checkbox for that row enabled
                         //also set the data type so that we have the reference later when importing
@@ -527,8 +527,8 @@ define([
                             .val(storedFileData.dataType)
                             .trigger('change');
   
-                            //enable the checkboxes
-                            enableCheckboxes(storedFileData.dataType);
+                        //enable the checkboxes
+                        enableCheckboxes(storedFileData.dataType);
                     } 
                     
                     //otherwise we set the dropdowns with a placeholder
@@ -548,7 +548,6 @@ define([
                             //store the type we selected along with file data so we can persist on a view update
                             rowFileData.dataType = dataType;
                             stagingAreaViewer.selectedFileTypes[rowFileName] = rowFileData;
-                            console.log('stored file data: ', stagingAreaViewer.selectedFileTypes);
                             
                             enableCheckboxes(dataType);
                         });
@@ -838,4 +837,4 @@ define([
             this.tour.start();
         }
     });
-  });
+});

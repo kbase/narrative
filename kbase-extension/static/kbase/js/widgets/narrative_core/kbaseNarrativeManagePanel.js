@@ -9,7 +9,6 @@ define([
     'jquery',
     'base/js/namespace',
     'narrativeConfig',
-    'narrativeManager',
     'util/display',
     'bluebird',
     'kbwidget',
@@ -24,7 +23,6 @@ define([
     $,
     Jupyter,
     Config,
-    NarrativeManager,
     DisplayUtil,
     Promise,
     KBWidget,
@@ -100,7 +98,6 @@ define([
 
         loggedInCallback: function (event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
-            this.manager = new NarrativeManager({ws_url: this.options.ws_url, nms_url: this.options.nms_url}, auth);
             this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
 
             this.my_user_id = auth.user_id;
@@ -112,7 +109,6 @@ define([
         },
         loggedOutCallback: function () {
             this.ws = null;
-            this.manager = null;
             this.my_user_id = null;
             return this;
         },

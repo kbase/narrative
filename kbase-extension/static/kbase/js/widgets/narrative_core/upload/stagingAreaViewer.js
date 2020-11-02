@@ -489,6 +489,13 @@ define([
                     //find the element
                     let importDropdown = $('td:eq(5)', row).find('select');
   
+                    /* 
+                        when a user selects a data type from the import as dropdown
+                        enable the checkbox for that row (so user can import)
+                        make sure the "select all" checkbox is also enabled
+
+                        accepts dataType: string (the identifier of what the data type is e.g. sra_reads)
+                    */
                     function enableCheckboxes(dataType) {
                         $('td:eq(5)', row)
                         .find('.select2-selection')
@@ -533,6 +540,7 @@ define([
                             });
                     }
   
+                    //set the behavior on the import dropdown when a user selects a type
                     importDropdown
                         .on('select2:select', function(e) {
                             const dataType = e.currentTarget.value;

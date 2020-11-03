@@ -1,13 +1,82 @@
 module.exports = function(grunt) {
-    // Project configuration
+
     'use strict';
-    grunt.loadNpmTasks('grunt-contrib-requirejs');
-    grunt.loadNpmTasks('grunt-filerev');
-    grunt.loadNpmTasks('grunt-regex-replace');
-    grunt.loadNpmTasks('grunt-karma');
-    grunt.loadNpmTasks('grunt-coveralls');
-    grunt.loadNpmTasks('grunt-jasmine-nodejs');
-    grunt.loadNpmTasks('grunt-contrib-uglify-es');
+
+    require('load-grunt-tasks')(grunt);
+
+    // files required for the 'page.html' template
+    const kbaseStaticDir = 'kbase-extension/static/kbase/',
+
+    staticFilesNoConcat = [
+        kbaseStaticDir + 'custom/*.css',
+        kbaseStaticDir + 'css/*.css',
+        '!' + kbaseStaticDir + 'css/*_concat.css',
+    ],
+
+    pageCssFiles = [
+        "custom/custom.css",
+        "css/kbaseStylesheet.css",
+        "css/kbaseNarrative.css",
+        "css/kbaseIcons.css",
+        "css/landingPages.css",
+        "css/kbaseEditor.css",
+        "css/kbaseNotify.css",
+        "css/methodCell.css",
+        "css/bootstrapHelper.css",
+        "css/buttons.css",
+        "css/contigBrowserStyles.css", // may need to move this out
+        "css/kbaseJobLog.css",
+        "css/kbaseTour.css",
+        "css/batchMode.css",
+    ].map( s => kbaseStaticDir + s ),
+
+    dynamicallyLoadedCssFiles =         [
+        "css/appCell.css",
+        "css/advancedViewCell.css",
+        "css/editorCell.css",
+    ].map( s => kbaseStaticDir + s ),
+
+    allCssFiles = pageCssFiles.concat(dynamicallyLoadedCssFiles),
+
+    cssFileHeader = '/** This file is generated automatically; edits will not be saved.\n'
+    + 'Please edit the original source files in kbase-extension/static/kbase/* '
+    + 'and run "grunt concat" to regenerate this file. */\n\n',
+
+    // stylelint options
+    stylelintOptions = {
+        configFile: '.stylelintrc.json',
+        formatter: 'string',
+        ignoreDisables: false,
+        failOnError: false,
+        reportNeedlessDisables: true,
+        fix: true,
+    },
+
+    // clean up existing css - edits files in place
+    cleanExistingCssOptions = {
+        processors: [
+            // remove vendor prefixes
+            require('postcss-unprefix')(),
+            require('postcss-remove-prefixes')(),
+            // clean up and minification
+            require('cssnano')({
+                preset: [
+                    "default",
+                    {
+                        "normalizeWhitespace": {
+                            "exclude": true
+                        },
+                        "discardComments": false,
+                        "colormin": false,
+                        "minifyFontValues": false,
+                    }
+                ]
+            }),
+            require('stylelint')({
+                options: stylelintOptions
+            })
+        ],
+    }
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -157,19 +226,87 @@ module.exports = function(grunt) {
             'ui-common': {
                 src: 'build/test-coverage/lcov/**/*.info',
             }
-        }
+        },
+        // file concatenation
+        concat: {
+            options: {
+                banner: cssFileHeader,
+            },
+            // css for the "page" template
+            pageCss: {
+                src: pageCssFiles,
+                dest: kbaseStaticDir + 'css/page_concat.css',
+                nonull: true,
+            },
+            // a single file containing all the KBase css!
+            allCss: {
+                src: allCssFiles,
+                dest: kbaseStaticDir + 'css/all_concat.css',
+                nonull: true,
+            }
+        },
 
+        // check the source css files are not completely horrendous
+        stylelint: {
+            options: stylelintOptions,
+            kbaseCss: {
+                src: staticFilesNoConcat,
+            },
+        },
+
+        // Run CSS / SCSS-related tasks
+        // these all modify files in place
+        postcss: {
+            // clean up the files in kbase-extension/static/kbase/(css|custom)/*.css
+            kbaseCss: {
+                options: cleanExistingCssOptions,
+                src: staticFilesNoConcat,
+            },
+            // autoprefix and minify the concatenated css files
+            concat: {
+                options: {
+                    processors: [
+                        // add vendor prefixes
+                        require('autoprefixer')(),
+                        // add minification later
+                        // require('cssnano')([
+                        //     "default",
+                        //     {
+                        //         "normalizeWhitespace": {
+                        //             "exclude": true
+                        //         },
+                        //     }
+                        // ]),
+                    ],
+                },
+                src: [
+                    'kbase-extension/static/kbase/css/*_concat.css',
+                ],
+            }
+        },
+
+        // watch css files for any changes
+        // when they change, regenerate the concat'd css files
+        watch: {
+            files: staticFilesNoConcat,
+            tasks: [
+                'concat',
+                'postcss:concat'
+            ],
+        },
     });
+
+    grunt.registerTask('build_css', [
+        'postcss:kbaseCss',
+        // run the stylelint task to fix formatting, etc.
+        'stylelint:kbaseCss',
+        'concat',
+        'postcss:concat'
+    ]);
 
     grunt.registerTask('minify', [
         'requirejs',
         'uglify',
-        'regex-replace'
-    ]);
-
-    grunt.registerTask('build', [
-        'requirejs',
-        'filerev',
         'regex-replace'
     ]);
 

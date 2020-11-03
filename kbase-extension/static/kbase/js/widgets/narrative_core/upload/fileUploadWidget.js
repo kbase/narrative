@@ -166,13 +166,9 @@ define([
             e.preventDefault();
 
             if(e.target.href === globusUrlLinked) {
-                let stagingServiceClient = new StagingServiceClient({
-                    root: this.stagingUrl,
-                    token: Runtime.make().authToken()
-                });
                 var globusWindow = window.open('', 'dz-globus');
                 globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
-                stagingServiceClient.addAcl()
+                this.stagingServiceClient.addAcl()
                     .done(() => {
                         window.open($(e.target).attr('href'), 'dz-globus');
                         return true;

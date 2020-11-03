@@ -32,60 +32,6 @@
   background-color: rgb(0 0 0 / 0.03);
 }
 
-.kb-app-row-clip-btn-addon,
-.kb-app-row-close-btn-addon {
-  background: transparent;
-  border: 0;
-}
-
-.kb-app-row-clip-btn-addon {
-  padding: 0 10px 0 0;
-  height: 100%;
-}
-
-.kb-app-row-clip-btn-addon:active::after {
-  background-color: #fff;
-  border-radius: 3px;
-  border: 1px solid #808080;
-  content: "copied!";
-  margin-top: -5px;
-  padding: 7px;
-  position: absolute;
-}
-
-.kb-input-group-wide {
-  width: 100%;
-}
-
-.kb-input-row-flex {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.cell.selected .btn-default.kb-app-row-close-btn {
-  color: #808080;
-}
-
-.kb-app-row-clip-btn,
-.kb-app-row-close-btn {
-  height: 100%;
-  margin-left: 1px;
-  border: none;
-  background-color: transparent;
-  color: #808080;
-}
-
-/* let's just do this as a normal button hover effect */
-
-.kb-app-parameter-right-error-bar {
-  height: 28px;
-
-  /* firefox wants it explicitly wired */
-
-  background: #f00;
-}
-
 /* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
 
 .kb-app-cell .kb-app-parameter-row-hover {
@@ -122,24 +68,14 @@
   margin: 0;
 }
 
-.kb-app-field-feedback,
-.kb-input-group-addon {
-  background: transparent;
-  border: 0;
-}
-
-.kb-input-group-addon {
-  padding: 0 0 0 10px;
-}
-
 /*
-This set of styles is a to accomodate the required/satisfied icon which appears
+This set of styles is to accommodate the required/satisfied icon which appears
 between the select input control and the help text to the right of it. The
 problem is that within the columns used for layout the select is set to 100% width
 and yet the icon is placed right next to it. The result is that the icon is shoved
 to the right of the select control and into the next column, overlapping the
 help text. The old app handling this was to scoot the help text far enough over
-to accomodate the the icon intruding into its space. This technique makes space
+to accommodate the the icon intruding into its space. This technique makes space
 in the column in which the icon lives, and does this by shrinking the select
 control with padding, and then scooting the icon back into its column.
 */
@@ -208,27 +144,6 @@ control with padding, and then scooting the icon back into its column.
   padding: 3px 5px;
 }
 
-.report-widget .panel-title > [data-toggle=collapse]::before {
-  display: inline-block;
-  margin-left: 0;
-  margin-right: 4px;
-  font-family: FontAwesome;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 90%;
-  width: 12px;
-  color: #c0c0c0;
-  line-height: 1;
-  vertical-align: baseline;
-  content: "\f078 ";
-}
-
-.report-widget .panel-title > [data-toggle=collapse].collapsed::before {
-  margin-left: 2px;
-  margin-right: 2px;
-  content: "\f054 ";
-}
-
 .kb-app-cell .panel-title > [data-toggle=collapse]::before {
   display: inline-block;
   margin-left: 0;
@@ -250,18 +165,114 @@ control with padding, and then scooting the icon back into its column.
   content: "\f054 ";
 }
 
-/* tweaks to elemnts that should be dimmed when the cell is not selected */
-
-.unselected .kb-app-cell {
-  opacity: 0.5;
-}
-
 .kb-app-cell .advanced-parameter-showing {
   display: block;
 }
 
 .kb-app-cell .advanced-parameter-hidden {
   display: none;
+}
+
+.kb-app-cell [data-element=run-control-panel] {
+  width: 100%;
+}
+
+.kb-app-cell [data-element=tab-pane] {
+  border-top: 2px solid rgb(33 150 243);
+}
+
+.kb-app-cell [data-element=tab-pane] > div:empty {
+  padding: 0;
+}
+
+.kb-app-cell [data-element=tab-pane] > div {
+  padding: 4px;
+}
+
+.kb-app-row-clip-btn-addon,
+.kb-app-row-close-btn-addon {
+  background: transparent;
+  border: 0;
+}
+
+.kb-app-row-clip-btn-addon {
+  padding: 0 10px 0 0;
+  height: 100%;
+}
+
+.kb-app-row-clip-btn-addon:active::after {
+  background-color: #fff;
+  border-radius: 3px;
+  border: 1px solid #808080;
+  content: "copied!";
+  margin-top: -5px;
+  padding: 7px;
+  position: absolute;
+}
+
+.kb-input-group-wide {
+  width: 100%;
+}
+
+.kb-input-row-flex {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.cell.selected .btn-default.kb-app-row-close-btn {
+  color: #808080;
+}
+
+.kb-app-row-clip-btn,
+.kb-app-row-close-btn {
+  height: 100%;
+  margin-left: 1px;
+  border: none;
+  background-color: transparent;
+  color: #808080;
+}
+
+.kb-app-parameter-right-error-bar {
+  height: 28px;
+  background: #f00;
+}
+
+.kb-app-field-feedback,
+.kb-input-group-addon {
+  background: transparent;
+  border: 0;
+}
+
+.kb-input-group-addon {
+  padding: 0 0 0 10px;
+}
+
+.report-widget .panel-title > [data-toggle=collapse]::before {
+  display: inline-block;
+  margin-left: 0;
+  margin-right: 4px;
+  font-family: FontAwesome;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 90%;
+  width: 12px;
+  color: #c0c0c0;
+  line-height: 1;
+  vertical-align: baseline;
+  content: "\f078 ";
+}
+
+.report-widget .panel-title > [data-toggle=collapse].collapsed::before {
+  margin-left: 2px;
+  margin-right: 2px;
+  content: "\f054 ";
+}
+
+/* tweaks to elemnts that should be dimmed when the cell is not selected */
+
+.unselected .kb-app-cell {
+  opacity: 0.5;
 }
 
 .kb-elapsed-time {
@@ -413,22 +424,6 @@ warning: orange
   background-color: #fff;
   border: 2px solid #888;
   margin-bottom: 4px;
-}
-
-.kb-app-cell [data-element=run-control-panel] {
-  width: 100%;
-}
-
-.kb-app-cell [data-element=tab-pane] {
-  border-top: 2px solid rgb(33 150 243);
-}
-
-.kb-app-cell [data-element=tab-pane] > div:empty {
-  padding: 0;
-}
-
-.kb-app-cell [data-element=tab-pane] > div {
-  padding: 4px;
 }
 
 .kb-app-status-ok {

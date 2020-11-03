@@ -151,12 +151,6 @@ control with padding, and then scooting the icon back into its column.
   content: "\f054 ";
 }
 
-/* tweaks to elemnts that should be dimmed when the cell is not selected */
-
-.unselected .kb-editor-cell {
-  opacity: 0.5;
-}
-
 .kb-editor-cell .advanced-parameter-showing {
   display: block;
 }
@@ -165,12 +159,39 @@ control with padding, and then scooting the icon back into its column.
   display: none;
 }
 
-.kb-elapsed-time {
-  font-family: monospace;
+.kb-editor-cell [data-element=run-control-panel] {
+  width: 100%;
 }
 
-.kb-elapsed-time.-active {
-  color: #0f0;
+.kb-editor-cell [data-element=tab-pane] {
+  border-top: 2px solid rgb(33 150 243);
+}
+
+.kb-editor-cell [data-element=tab-pane] > div:empty {
+  padding: 0;
+}
+
+.kb-editor-cell [data-element=tab-pane] > div {
+  padding: 4px;
+}
+
+.kb-editor-cell .btn-primary.kb-btn-action.-rerun {
+  color: rgb(33 150 243);
+}
+
+.kb-editor-cell .btn-primary.kb-btn-action.-run {
+  color: rgb(75 184 86);
+}
+
+.kb-editor-cell .btn-danger.kb-btn-action.-cancel,
+.kb-editor-cell .btn-danger.kb-btn-action.-reset {
+  color: rgb(209 82 65);
+}
+
+/* tweaks to elemnts that should be dimmed when the cell is not selected */
+
+.unselected .kb-editor-cell {
+  opacity: 0.5;
 }
 
 .kb-editor-cell-info-desc {
@@ -300,59 +321,4 @@ warning: orange
   color: #888;
   border: 2px solid #888;
   margin-bottom: 4px;
-}
-
-.kb-editor-cell [data-element=run-control-panel] {
-  width: 100%;
-}
-
-.kb-editor-cell [data-element=tab-pane] {
-  border-top: 2px solid rgb(33 150 243);
-}
-
-.kb-editor-cell [data-element=tab-pane] > div:empty {
-  padding: 0;
-}
-
-.kb-editor-cell [data-element=tab-pane] > div {
-  padding: 4px;
-}
-
-.kb-editor-cell .btn-primary.kb-btn-action.-rerun {
-  color: rgb(33 150 243);
-}
-
-.kb-editor-cell .btn-primary.kb-btn-action.-run {
-  color: rgb(75 184 86);
-}
-
-.kb-editor-cell .btn-danger.kb-btn-action.-cancel,
-.kb-editor-cell .btn-danger.kb-btn-action.-reset {
-  color: rgb(209 82 65);
-}
-
-.kb-app-status-ok {
-  color: rgb(75 184 86);
-}
-
-.kb-app-status-warning {
-  color: #ffa500;
-}
-
-.kb-app-status-danger,
-.kb-app-status-error {
-  color: rgb(209 82 65);
-}
-
-.kb-app-status-default {
-  color: rgb(33 150 243);
-}
-
-/* app cell panels */
-
-/* TODO: higher level selector */
-
-.parameter-panel .info-panel {
-  padding-top: 4px;
-  background: transparent;
 }

@@ -644,6 +644,8 @@ span#searchspan {
 .navbar-kbase {
   border-bottom: 5px solid #cecece !important;
   padding: 8px;
+  background-color: #fff;
+  box-shadow: 0 1px 10px rgb(0 0 0 / 0.1);
 }
 
 .navbar-kbase a:hover {

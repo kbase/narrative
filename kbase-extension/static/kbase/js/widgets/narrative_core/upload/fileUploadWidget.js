@@ -6,6 +6,7 @@ define([
     'dropzone',
     'handlebars',
     'StagingServiceClient',
+    'bluebird',
     'text!kbase/templates/data_staging/dropzone_area.html',
     'text!kbase/templates/data_staging/dropped_file.html'
 ], function(
@@ -16,6 +17,7 @@ define([
     Dropzone,
     Handlebars,
     StagingServiceClient,
+    Promise,
     DropzoneAreaHtml,
     DropFileHtml
 ) {
@@ -30,6 +32,13 @@ define([
             this.path = options.path;
             this.stagingUrl = Config.url('staging_api_url');
             this.userInfo = options.userInfo;
+
+            var runtime = Runtime.make();
+            this.stagingServiceClient = new StagingServiceClient({
+                root: Config.url('staging_api_url'),
+                token: runtime.authToken()
+            });
+
             this.render();
             return this;
         },
@@ -111,6 +120,16 @@ define([
                     $('#clear-all-btn').remove();
                     $dropzoneElem.find('#global-info').css({'display': 'none'});
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
+                })
+                .on('canceled', (file) => {
+                    Promise.resolve(this.stagingServiceClient.delete({
+                        path: file.fullPath ? file.fullPath : file.name
+                    }))
+                    .catch(xhr => {
+                        //TODO ask design how to alert a user that their file could not be deleted
+                        throw new Error(xhr.responseText ? xhr.responseText : 'Unknown error - unable to delete file from staging area');
+                    })
+
                 })
                 .on('error', (erroredFile) => {
                     var $errorElem = $(erroredFile.previewElement);

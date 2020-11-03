@@ -174,7 +174,7 @@ define([
 
         it('Should provide a link to a globus accout when file upload maxfile size error occurs', (done) => {
             $targetNode = $('<div>');
-            var uploadWidget = new FileUploadWidget($targetNode, {
+            let uploadWidget = new FileUploadWidget($targetNode, {
                 path: '/',
                 userInfo: {
                     user: fakeUser,
@@ -204,6 +204,41 @@ define([
                 done();
             });
         });
+
+        it('Should cancel a file when warning button clicked', () => {
+            $targetNode = $('<div>');
+            let uploadWidget = new FileUploadWidget($targetNode, {
+                path: '/',
+                userInfo: {
+                    user: fakeUser,
+                    globusLinked: false
+                }
+            });
+
+            const filename='foo.txt';
+            mockUploadEndpoint(filename, fakeUser, false);
+            const mockFile = createMockFile(filename);
+            const cancelMock = jasmine.createSpy('cancelMock');
+            const sendingMock = jasmine.createSpy('sendingMock');
+
+            uploadWidget.dropzone.on('canceled', () => {
+                cancelMock();
+            });
+
+            uploadWidget.dropzone.on('sending', () => {
+                sendingMock();
+            });
+
+            uploadWidget.dropzone.addFile(mockFile);
+            let $cancelButton = uploadWidget.$elem.find('.cancel');
+            $cancelButton.click();
+
+            setTimeout(() => {
+                expect(sendingMock).toHaveBeenCalled();
+                expect(cancelMock).toHaveBeenCalled();
+                done();
+            });
+        })
 
     });
 });

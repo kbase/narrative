@@ -288,8 +288,8 @@
     box-shadow: none;
 }
 
-.kb-staging-table-body__delete:hover,
-.kb-staging-table-body__delete:active {
+.kb-staging-table-body__import .kb-staging-table-body__delete:hover,
+.kb-staging-table-body__import .kb-staging-table-body__delete:active {
     color: #286090;
     background: none;
 }

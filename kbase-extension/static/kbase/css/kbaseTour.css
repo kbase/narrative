@@ -1,33 +1,33 @@
 .kb-tour {
-  background-color: #2196f3;
+  background-color: rgb(33 150 243);
 }
 
 .kb-tour.popover.top > .arrow::after {
-  border-top-color: #2196f3;
+  border-top-color: rgb(33 150 243);
 }
 
 .kb-tour.popover.bottom > .arrow::after {
-  border-bottom-color: #2196f3;
+  border-bottom-color: rgb(33 150 243);
 }
 
 .kb-tour.popover.right > .arrow::after {
-  border-right-color: #2196f3;
+  border-right-color: rgb(33 150 243);
 }
 
 .kb-tour.popover.left > .arrow::after {
-  border-left-color: #2196f3;
+  border-left-color: rgb(33 150 243);
 }
 
 .kb-tour > h3.popover-title {
-  background-color: #2196f3;
-  color: #fff;
+  background-color: rgb(33 150 243);
+  color: rgb(255 255 255);
   font-family: Oxygen, Arial, sans-serif;
   font-size: 12pt;
 }
 
 .kb-tour > .popover-content,
 .kb-tour > .popover-navigation {
-  background-color: #eee;
+  background-color: rgb(238 238 238);
 }
 
 .kb-tour > .close-btn {

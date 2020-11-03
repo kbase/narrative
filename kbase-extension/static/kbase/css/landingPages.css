@@ -63,7 +63,7 @@ table {
   height: 0;
   margin-left: 2px;
   vertical-align: middle;
-  border-color: currentcolor transparent #fff;
+  border-color: currentColor transparent rgb(255 255 255);
   border-style: dotted solid solid;
   border-width: 0 4px 4px;
   content: "";
@@ -80,12 +80,12 @@ table {
 }
 
 .selected-ws {
-  background-color: #428bca;
-  color: #fff;
+  background-color: rgb(66 139 202);
+  color: rgb(255 255 255);
 }
 
 .selected-ws:hover { /* fixme */
-  background-color: #428bca !important;
+  background-color: rgb(66 139 202) !important;
 }
 
 .side-bar-switch {
@@ -160,13 +160,13 @@ table {
   display: inline-block;
   padding: 5px 15px;
   margin: 10px;
-  box-shadow: 7px 7px 5px #888;
+  box-shadow: 7px 7px 5px rgb(136 136 136);
 }
 
 .modal-cover-content {
   padding: 5px;
-  background: #fff;
-  border: 1px solid #666;
+  background: rgb(255 255 255);
+  border: 1px solid rgb(102 102 102);
   border-radius: 3px;
 }
 
@@ -203,24 +203,24 @@ table {
 .ncheck {
   width: 15px;
   height: 15px;
-  border: 1px solid #ccc;
+  border: 1px solid rgb(204 204 204);
   margin-left: auto;
   margin-right: auto;
 }
 
 .ncheck:hover {
-  border: 1px solid #444;
+  border: 1px solid rgb(68 68 68);
 }
 
 .ncheck-btn {
   width: 15px;
   height: 15px;
-  border: 1px solid #888;
+  border: 1px solid rgb(136 136 136);
   margin: 4px 0 4px -1px;
 }
 
 .ncheck-btn:hover {
-  border: 1px solid #444;
+  border: 1px solid rgb(68 68 68);
 }
 
 .ncheck-checked {
@@ -268,7 +268,7 @@ table {
 }
 
 .group-item-expander {
-  background: #f2f2f2; /* #d6eaff; */
+  background: rgb(242 242 242); /* #d6eaff; */
 }
 
 .group-item-expander:hover {
@@ -295,7 +295,7 @@ table {
 }
 
 .FixedHeader_Header {
-  background: #fff;
+  background: rgb(255 255 255);
   margin: -6px 0 0;
   height: 44px;
 }
@@ -319,7 +319,7 @@ table {
 
 .sidebar-header,
 .view-header {
-  color: #898989;
+  color: rgb(137 137 137);
   letter-spacing: 0;
 }
 
@@ -329,8 +329,8 @@ table {
 }
 
 .active .btn-narr {
-  background-color: #bbe8f9;
-  border: 1px solid #428bca;
+  background-color: rgb(187 232 249);
+  border: 1px solid rgb(66 139 202);
 }
 
 .active .btn-narr,
@@ -341,9 +341,9 @@ table {
 }
 
 .btn-narr {
-  background-color: #f2f2f2;
-  border: 1px solid #dbdbdb;
-  color: #6da8cf;
+  background-color: rgb(242 242 242);
+  border: 1px solid rgb(219 219 219);
+  color: rgb(109 168 207);
   font-family: RobotoBlack, Arial, sans-serif;
   font-size: 14px;
 }
@@ -364,24 +364,24 @@ table {
 }
 
 .navbar-nav {
-  color: #6da8cf;
+  color: rgb(109 168 207);
   font-family: RobotoBlack, Arial, sans-serif;
 }
 
 .navbar-nav > li > a:hover {
-  background-color: #fff;
+  background-color: rgb(255 255 255);
 }
 
 .navbar-nav > li.active:hover,
 .navbar-nav > li.active > a {
-  color: #2a6496 !important;
+  color: rgb(42 100 150) !important;
   box-sizing: border-box;
   height: 50px;
-  border-bottom: 4px solid #428bca;
+  border-bottom: 4px solid rgb(66 139 202);
 }
 
 .navbar-nav > .active:hover {
-  color: #2a6496;
+  color: rgb(42 100 150);
 }
 
 #wrap {
@@ -412,7 +412,7 @@ table {
 #footer ul li::after {
   content: "\2022";
   padding-left: 10px;
-  color: #bbb;
+  color: rgb(187 187 187);
   font-size: 10px;
 }
 
@@ -427,8 +427,8 @@ table {
 }
 
 #footer .disclaimer {
-  background-color: #a94442;
-  color: #fff;
+  background-color: rgb(169 68 66);
+  color: rgb(255 255 255);
   display: block;
   text-align: center;
   font-weight: 700;
@@ -439,9 +439,9 @@ table {
 
 .KBSnode rect {
   cursor: pointer;
-  fill: #fff;
+  fill: rgb(255 255 255);
   fill-opacity: 0.5;
-  stroke: #3182bd;
+  stroke: rgb(49 130 189);
   stroke-width: 1.5px;
 }
 

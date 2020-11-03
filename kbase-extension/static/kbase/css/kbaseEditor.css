@@ -3,8 +3,8 @@
  */
 
 .modal-body .dataTables_processing {
-  border: 1px solid #aaa;
-  background: #e8f9ff;
+  border: 1px solid rgb(170 170 170);
+  background: rgb(232 249 255);
   opacity: 0.8;
 }
 
@@ -31,23 +31,23 @@
 
 /* override button staylings that were removed */
 .kb-editor .btn-primary {
-  background-color: #337ab7 !important;
-  border-color: #2e6da4 !important;
+  background-color: rgb(51 122 183) !important;
+  border-color: rgb(46 109 164) !important;
 }
 
 .kb-editor .btn-danger {
-  background-color: #d9534f !important;
-  border-color: #d43f3a !important;
+  background-color: rgb(217 83 79) !important;
+  border-color: rgb(212 63 58) !important;
 }
 
 /* override icon stylings in button that were removed */
 .kb-editor .btn i {
-  color: #fff;
+  color: rgb(255 255 255);
 }
 
 /* override table border styling */
 .kb-editor table {
-  border: 1px solid #bbb;
+  border: 1px solid rgb(187 187 187);
 }
 
 /**
@@ -63,7 +63,7 @@
 
 .kb-editor-table > tbody > tr > td:first-child .fa-square-o {
   font-size: 1.4em;
-  color: #666;
+  color: rgb(102 102 102);
 }
 
 .kb-editor-table > tbody > tr > td:first-child:hover {
@@ -71,12 +71,12 @@
 }
 
 .kb-editor-table > tbody > tr > td:first-child:hover .fa-square-o {
-  color: #000;
+  color: rgb(0 0 0);
 }
 
 .kb-editor-table > tbody > tr.row-select .fa-square-o::before {
   content: "\f046";
-  color: #444;
+  color: rgb(68 68 68);
 }
 
 .kb-editor-table > tbody > tr > td.editable {
@@ -89,5 +89,5 @@
   position: absolute;
   bottom: 0;
   right: 2px;
-  color: #888;
+  color: rgb(136 136 136);
 }

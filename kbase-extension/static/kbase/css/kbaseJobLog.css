@@ -3,13 +3,13 @@
 }
 
 #kblog-panel {
-  background-color: #f5f5f5;
-  border: 1px solid #cecece;
+  background-color: rgb(245 245 245);
+  border: 1px solid rgb(206 206 206);
   height: 350px;
   padding: 5px;
   resize: vertical;
   overflow: auto;
-  color: #000;
+  color: rgb(0 0 0);
   vertical-align: top;
 }
 
@@ -23,7 +23,7 @@
 }
 
 .kblog-line:hover {
-  background-color: #ddd;
+  background-color: rgb(221 221 221);
 }
 
 .kblog-num-wrapper {
@@ -36,7 +36,7 @@
   flex-shrink: 0;
   width: 3rem;
   text-align: right;
-  color: #999;
+  color: rgb(153 153 153);
   white-space: nowrap;
 
   /* makes text unselectable */
@@ -52,7 +52,7 @@
 
 .kb-error,
 .kb-error .kblog-line-num {
-  color: #8b0000;
+  color: rgb(139 0 0);
   text-decoration: underline;
   font-weight: 700;
   font-size: 12px;

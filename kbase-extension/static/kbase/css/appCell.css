@@ -15,11 +15,11 @@
 /** new app parameter styling **/
 
 .kb-app-cell .kb-app-parameter-panel {
-  border-left: 3px solid #fff;
+  border-left: 3px solid rgb(255 255 255);
 }
 
 .kb-app-cell .kb-app-parameter-panel-hover {
-  border-left: 3px solid #428bca;
+  border-left: 3px solid rgb(66 139 202);
 }
 
 .kb-app-cell .kb-app-parameter-row {
@@ -35,12 +35,12 @@
 /* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
 
 .kb-app-cell .kb-app-parameter-row-hover {
-  background: #f9f9f9;
+  background: rgb(249 249 249);
 }
 
 .kb-app-cell .kb-app-parameter-row .message.-error {
-  background: #f2dede;
-  color: #f44336;
+  background: rgb(242 222 222);
+  color: rgb(244 67 54);
 }
 
 .kb-app-cell .kb-app-parameter-row .message {
@@ -52,7 +52,7 @@
 
 .kb-app-cell .kb-app-parameter-name {
   font-family: Oxygen, Arial, sans-serif;
-  color: #777;
+  color: rgb(119 119 119);
   text-align: left;
   vertical-align: bottom;
   padding-right: 4px;
@@ -88,7 +88,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-cell .kb-app-parameter-required-glyph {
-  color: #f44336;
+  color: rgb(244 67 54);
 }
 
 .kb-app-cell .kb-parameter-data-selection {
@@ -96,21 +96,21 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-cell .kb-app-parameter-hint {
-  color: #777;
+  color: rgb(119 119 119);
   text-align: left;
   margin-top: 3px;
   padding-left: 7px;
 }
 
 .kb-app-cell .kb-app-parameter-accepted-glyph {
-  color: #4bb856;
+  color: rgb(75 184 86);
 }
 
 .kb-app-cell .kb-app-advanced-options-controller-inactive,
 .kb-app-cell .kb-app-parameter-info,
 .kb-app-cell .kb-parameter-data-row-add,
 .kb-app-cell .kb-parameter-data-row-remove {
-  color: #777;
+  color: rgb(119 119 119);
 }
 
 .kb-app-cell .kb-app-advanced-options-controller,
@@ -125,22 +125,22 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-app-cell .kb-app-advanced-options-controller {
   cursor: pointer;
-  color: #08c;
+  color: rgb(0 136 204);
 }
 
 .kb-app-cell .kb-app-advanced-options-controller:hover {
-  color: #2a6496;
+  color: rgb(42 100 150);
 }
 
 .kb-app-cell .kb-app-footer {
   width: 100%;
   overflow: none;
-  background-color: #f5f5f5;
+  background-color: rgb(245 245 245);
   padding: 10px;
 }
 
 .kb-app-cell .kb-app-subtitle {
-  background-color: #f5f5f5;
+  background-color: rgb(245 245 245);
   padding: 3px 5px;
 }
 
@@ -153,7 +153,7 @@ control with padding, and then scooting the icon back into its column.
   font-weight: 400;
   font-size: 90%;
   width: 12px;
-  color: #c0c0c0;
+  color: rgb(192 192 192);
   line-height: 1;
   vertical-align: baseline;
   content: "\f078 ";
@@ -201,9 +201,9 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-row-clip-btn-addon:active::after {
-  background-color: #fff;
+  background-color: rgb(255 255 255);
   border-radius: 3px;
-  border: 1px solid #808080;
+  border: 1px solid rgb(128 128 128);
   content: "copied!";
   margin-top: -5px;
   padding: 7px;
@@ -221,7 +221,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .cell.selected .btn-default.kb-app-row-close-btn {
-  color: #808080;
+  color: rgb(128 128 128);
 }
 
 .kb-app-row-clip-btn,
@@ -230,12 +230,12 @@ control with padding, and then scooting the icon back into its column.
   margin-left: 1px;
   border: none;
   background-color: transparent;
-  color: #808080;
+  color: rgb(128 128 128);
 }
 
 .kb-app-parameter-right-error-bar {
   height: 28px;
-  background: #f00;
+  background: rgb(255 0 0);
 }
 
 .kb-app-field-feedback,
@@ -257,7 +257,7 @@ control with padding, and then scooting the icon back into its column.
   font-weight: 400;
   font-size: 90%;
   width: 12px;
-  color: #c0c0c0;
+  color: rgb(192 192 192);
   line-height: 1;
   vertical-align: baseline;
   content: "\f078 ";
@@ -280,30 +280,30 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-elapsed-time.-active {
-  color: #0f0;
+  color: rgb(0 255 0);
 }
 
 .kb-app-cell-info-desc {
-  border: 1px solid #777;
+  border: 1px solid rgb(119 119 119);
   padding: 10px;
   margin-right: 10px;
   min-height: 100px;
 }
 
 .kb-app-cell-info {
-  color: #777;
+  color: rgb(119 119 119);
   font-family: Oxygen, Arial, sans-serif;
   font-size: 12pt;
 }
 
 .kb-app-cell-info .header {
-  border-bottom: 1px solid #777;
+  border-bottom: 1px solid rgb(119 119 119);
   padding: 5px 0;
   margin-bottom: 8px;
 }
 
 .kb-app-cell-info .value {
-  color: #000;
+  color: rgb(0 0 0);
 }
 
 /*
@@ -336,16 +336,16 @@ warning: orange
 
 .btn.batch-active {
   box-shadow: inset 0 3px 7px rgb(0 0 0 / 0.125);
-  background-color: #eee;
-  border-color: #adadad;
+  background-color: rgb(238 238 238);
+  border-color: rgb(173 173 173);
 }
 
 .btn.batch-active:hover {
-  background-color: #ccc;
+  background-color: rgb(204 204 204);
 }
 
 .btn.kb-app-cell-btn {
-  background-color: #fff;
+  background-color: rgb(255 255 255);
   margin-bottom: 4px;
 }
 
@@ -369,7 +369,7 @@ warning: orange
 .btn.kb-app-cell-btn.btn-primary.active,
 .btn.kb-app-cell-btn.btn-primary:active,
 .btn.kb-app-cell-btn.btn-primary:hover {
-  color: #fff;
+  color: rgb(255 255 255);
   background-color: rgb(33 150 243);
 }
 
@@ -381,7 +381,7 @@ warning: orange
 
 .btn.kb-app-cell-btn.btn-primary.active:hover {
   color: rgb(33 150 243);
-  background-color: #ddd;
+  background-color: rgb(221 221 221);
   border-bottom: 2px solid rgb(33 150 243);
   margin-bottom: 4px;
 }
@@ -394,23 +394,24 @@ warning: orange
 }
 
 .btn.kb-app-cell-btn.btn-danger:hover {
-  color: #fff;
-  background-color: rgb(209 82 65);
   border-bottom: 6px solid rgb(209 82 65);
+}
+
+.btn.kb-app-cell-btn.btn-danger.active,
+.btn.kb-app-cell-btn.btn-danger:hover {
+  color: rgb(255 255 255);
+  background-color: rgb(209 82 65);
   margin-bottom: 0;
 }
 
 .btn.kb-app-cell-btn.btn-danger.active {
-  color: #fff;
-  background-color: rgb(209 82 65);
   border: solid rgb(209 82 65);
   border-width: 2px 2px 6px;
-  margin-bottom: 0;
 }
 
 .btn.kb-app-cell-btn.btn-danger.active:hover {
   color: rgb(209 82 65);
-  background-color: #ddd;
+  background-color: rgb(221 221 221);
   border-bottom: 2px solid rgb(209 82 65);
   margin-bottom: 4px;
 }
@@ -420,9 +421,9 @@ warning: orange
 .btn.kb-app-cell-btn.disabled,
 .btn.kb-app-cell-btn.disabled:active,
 .btn.kb-app-cell-btn.disabled:hover {
-  color: #888;
-  background-color: #fff;
-  border: 2px solid #888;
+  color: rgb(136 136 136);
+  background-color: rgb(255 255 255);
+  border: 2px solid rgb(136 136 136);
   margin-bottom: 4px;
 }
 
@@ -431,7 +432,7 @@ warning: orange
 }
 
 .kb-app-status-warning {
-  color: #ffa500;
+  color: rgb(255 165 0);
 }
 
 .kb-app-status-danger,
@@ -459,14 +460,14 @@ warning: orange
 }
 
 .tt-hint {
-  color: #999;
+  color: rgb(153 153 153);
 }
 
 .tt-menu {
   /* used to be tt-dropdown-menu in older versions */
   margin-top: 4px;
   padding: 4px 0;
-  background-color: #fff;
+  background-color: rgb(255 255 255);
   border: 1px solid rgb(0 0 0 / 0.2);
   border-radius: 4px;
   box-shadow: 0 5px 10px rgb(0 0 0 / 0.2);
@@ -480,8 +481,8 @@ warning: orange
 
 .tt-suggestion.tt-cursor,
 .tt-suggestion:hover {
-  color: #fff;
-  background-color: #0097cf;
+  color: rgb(255 255 255);
+  background-color: rgb(0 151 207);
 }
 
 .tt-suggestion p {

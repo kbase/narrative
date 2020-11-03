@@ -96,7 +96,7 @@
 
 h1 {
   font: 1.75em/2em RobotoBlack, Arial, sans-serif;
-  color: #232323;
+  color: rgb(35 35 35);
   font-weight: 400;
 }
 
@@ -108,7 +108,7 @@ h2 {
 h2 {
   font: 1.5em/1.75em RobotoBlack, Arial, sans-serif;
   font-weight: 400;
-  color: #898989;
+  color: rgb(137 137 137);
 }
 
 h3 {
@@ -125,8 +125,8 @@ h4 {
 
 body {
   font: 1.375em Oxygen, Arial, sans-serif;
-  color: #333;
-  background-color: #fff;
+  color: rgb(51 51 51);
+  background-color: rgb(255 255 255);
 }
 
 b,
@@ -153,13 +153,13 @@ strong em {
 }
 
 a {
-  color: #08c;
+  color: rgb(0 136 204);
   text-decoration: none;
 }
 
 a:hover,
 a:visited {
-  color: #2a6496;
+  color: rgb(42 100 150);
 }
 
 a:hover {

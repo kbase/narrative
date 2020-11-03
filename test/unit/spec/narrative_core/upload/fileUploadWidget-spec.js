@@ -205,7 +205,7 @@ define([
             });
         });
 
-        it('Should cancel a file when warning button clicked', () => {
+        it('Should cancel a file when warning button clicked', (done) => {
             $targetNode = $('<div>');
             let uploadWidget = new FileUploadWidget($targetNode, {
                 path: '/',
@@ -219,14 +219,9 @@ define([
             mockUploadEndpoint(filename, fakeUser, false);
             const mockFile = createMockFile(filename);
             const cancelMock = jasmine.createSpy('cancelMock');
-            const sendingMock = jasmine.createSpy('sendingMock');
 
             uploadWidget.dropzone.on('canceled', () => {
                 cancelMock();
-            });
-
-            uploadWidget.dropzone.on('sending', () => {
-                sendingMock();
             });
 
             uploadWidget.dropzone.addFile(mockFile);
@@ -234,11 +229,10 @@ define([
             $cancelButton.click();
 
             setTimeout(() => {
-                expect(sendingMock).toHaveBeenCalled();
                 expect(cancelMock).toHaveBeenCalled();
                 done();
             });
-        })
+        });
 
     });
 });

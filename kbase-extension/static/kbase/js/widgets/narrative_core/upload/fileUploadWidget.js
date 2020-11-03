@@ -126,7 +126,6 @@ define([
                         path: file.fullPath ? file.fullPath : file.name
                     }))
                     .catch(xhr => {
-                        //TODO ask design how to alert a user that their file could not be deleted
                         throw new Error(xhr.responseText ? xhr.responseText : 'Unknown error - unable to delete file from staging area');
                     })
 

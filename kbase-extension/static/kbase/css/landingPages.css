@@ -312,9 +312,7 @@ table {
 }
 
 .sidebar-header {
-  font-size: 14px;
-  font-family: RobotoBlack, Arial, sans-serif;
-  font-weight: 400;
+  font: normal 400 14px RobotoBlack, Arial, sans-serif;
 }
 
 .sidebar-header,
@@ -324,8 +322,7 @@ table {
 }
 
 .view-header {
-  font: 1.5em/1.75 RobotoBlack, Arial, sans-serif;
-  font-weight: 400;
+  font: normal 400 1.5em/1.75 RobotoBlack, Arial, sans-serif;
 }
 
 .active .btn-narr {
@@ -344,8 +341,7 @@ table {
   background-color: rgb(242 242 242);
   border: 1px solid rgb(219 219 219);
   color: rgb(109 168 207);
-  font-family: RobotoBlack, Arial, sans-serif;
-  font-size: 14px;
+  font: 14px RobotoBlack, Arial, sans-serif;
 }
 
 .nav-sidebar {

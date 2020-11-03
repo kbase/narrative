@@ -31,8 +31,8 @@
 }
 
 .kb-editor-cell .kb-app-parameter-row .message {
-  text-align: center;
   font-family: Oxygen, Arial, sans-serif;
+  text-align: center;
 }
 
 /* not sure how to get text in these divs to valign middle... */
@@ -101,11 +101,7 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-editor-cell .kb-app-advanced-options-controller,
 .kb-editor-cell .kb-app-advanced-options-controller-inactive {
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
-  font-style: italic;
-  font-size: 10pt;
-  line-height: 14px;
+  font: italic 700 10pt/14px Oxygen, Arial, sans-serif;
   text-align: center;
 }
 
@@ -134,13 +130,9 @@ control with padding, and then scooting the icon back into its column.
   display: inline-block;
   margin-left: 0;
   margin-right: 4px;
-  font-family: FontAwesome;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 90%;
+  font: normal 400 90%/1 FontAwesome;
   width: 12px;
   color: rgb(192 192 192);
-  line-height: 1;
   vertical-align: baseline;
   content: "\f078 ";
 }
@@ -203,8 +195,7 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-editor-cell-info {
   color: rgb(119 119 119);
-  font-family: Oxygen, Arial, sans-serif;
-  font-size: 12pt;
+  font: 12pt Oxygen, Arial, sans-serif;
 }
 
 .kb-editor-cell-info .header {

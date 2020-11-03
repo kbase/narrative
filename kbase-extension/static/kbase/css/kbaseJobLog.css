@@ -19,7 +19,7 @@
 
 .kblog-header,
 .kblog-line {
-  font-family: monospace;
+  font-family: OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
 }
 
 .kblog-line:hover {

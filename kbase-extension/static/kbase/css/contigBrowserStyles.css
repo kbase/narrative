@@ -24,8 +24,7 @@
 }
 
 .kbcb-widget .kbcb-axis text {
-  font-family: sans-serif;
-  font-size: 11px;
+  font: 11px sans-serif;
 }
 
 /**

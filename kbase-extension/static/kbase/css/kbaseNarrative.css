@@ -6,10 +6,7 @@
 }
 
 .kb-dropzone .dz-message {
-  font-family: Roboto, Arial, sans-serif;
-  font-weight: 400;
-  font-size: 24px;
-  line-height: 28px;
+  font: normal 400 24px/28px Roboto, Arial, sans-serif;
   color: rgb(0 0 0);
   mix-blend-mode: normal;
   margin: 2em 4.5em;
@@ -26,10 +23,7 @@
   box-sizing: border-box;
   border-radius: 4px;
   border: 1px solid rgb(255 255 255);
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 18px;
+  font: normal 700 14px/18px Oxygen, Arial, sans-serif;
   outline: none;
   text-transform: uppercase;
   color: rgb(67 121 177);
@@ -132,82 +126,82 @@
 }
 
 .kb-staging-table-header__checkbox {
-    width: 2%;
+  width: 2%;
 }
 
 .kb-staging-table-header__file {
-    width: 4%;
+  width: 4%;
 }
 
 .kb-staging-table-header__name {
-    width: 26%;
+  width: 26%;
 }
 
-.kb-staging-table-header__size,
-.kb-staging-table-header__age {
-    width: 8%;
+.kb-staging-table-header__age,
+.kb-staging-table-header__size {
+  width: 8%;
 }
 
 .kb-staging-table-header__import {
-    width: 22%;
+  width: 22%;
 }
 
 /* Overriding default datatables sort icons so they come before the header title rather than after */
-.kb-staging-table-header .sorting:before,
-.kb-staging-table-header .sorting_desc:before,
-.kb-staging-table-header .sorting_asc:before {
-    opacity: 0.2;
-    content: "\e150";
-    position: relative;
-    top: 1px;
-    right: 4px;
-    display: inline-block;
-    font-family: 'Glyphicons Halflings', Arial, sans-serif;
+.kb-staging-table-header .sorting::before,
+.kb-staging-table-header .sorting_asc::before,
+.kb-staging-table-header .sorting_desc::before {
+  opacity: 0.2;
+  content: "\e150";
+  position: relative;
+  top: 1px;
+  right: 4px;
+  display: inline-block;
+  font-family: "Glyphicons Halflings", Arial, sans-serif;
 }
 
-.kb-staging-table-header .sorting_asc:before {
-    content: "\e155";
+.kb-staging-table-header .sorting_asc::before {
+  content: "\e155";
 }
 
-.kb-staging-table-header .sorting_desc:before {
-    content: "\e156";
+.kb-staging-table-header .sorting_desc::before {
+  content: "\e156";
 }
 
-.kb-staging-table .kb-staging-table-header .sorting:after,
-.kb-staging-table .kb-staging-table-header .sorting_desc:after,
-.kb-staging-table .kb-staging-table-header .sorting_asc:after {
-    display: none;
+.kb-staging-table .kb-staging-table-header .sorting::after,
+.kb-staging-table .kb-staging-table-header .sorting_asc::after,
+.kb-staging-table .kb-staging-table-header .sorting_desc::after {
+  display: none;
 }
 
-/* Special positioning for folder sort icon as there is no title*/
-.kb-staging-table-header .kb-staging-table-header__file.sorting:before,
-.kb-staging-table-header .kb-staging-table-header__file.sorting_desc:before,
-.kb-staging-table-header .kb-staging-table-header__file.sorting_asc:before {
-    left: 9px;
+/* Special positioning for folder sort icon as there is no title */
+.kb-staging-table-header .kb-staging-table-header__file.sorting::before,
+.kb-staging-table-header .kb-staging-table-header__file.sorting_asc::before,
+.kb-staging-table-header .kb-staging-table-header__file.sorting_desc::before {
+  left: 9px;
 }
 
 .kb-staging-table .kb-staging-table-body td {
-    vertical-align: middle;
+  vertical-align: middle;
 }
 
 .kb-staging-table-body__expander {
-    text-align: center;
+  text-align: center;
 }
 
 .kb-staging-table-body__decompress {
-    border: 1px solid #cccccc;
-    border-radius : 1px;
+  border: 1px solid rgb(204 204 204);
+  border-radius: 1px;
 }
 
 .kb-staging-table-body__name {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .kb-staging-table-body__folder:hover {
-    cursor: pointer;
-    text-decoration: underline;
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 /* style for Import As dropdown container */
@@ -218,169 +212,156 @@
 */
 
 .kb-staging-table-body .select2 {
-    width: 160px !important;
-    margin: 4px 0;
+  width: 160px !important;
+  margin: 4px 0;
 }
 
 /* TODO: can this class be merged with the one above? */
 .kb-staging-table-body .kb-staging-table-body__import-dropdown {
-    height: 38px;
-    background: #FFFFFF;
-    border: 1px solid #DF0002;
-    box-sizing: border-box;
-    border-radius: 4px;
+  height: 38px;
+  background: rgb(255 255 255);
+  border: 1px solid rgb(223 0 2);
+  box-sizing: border-box;
+  border-radius: 4px;
 }
 
 /* When user clicks into the dropdown or chooses a selection box change border color */
-.select2-container--open .kb-staging-table-body__import-dropdown,
+.kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected,
 .select2-container--focus .kb-staging-table-body__import-dropdown,
-.kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected {
-    border: 1px solid #C4C4C4;
+.select2-container--open .kb-staging-table-body__import-dropdown {
+  border: 1px solid rgb(196 196 196);
 }
 
 /* style for Import As dropdown container text */
 .kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__rendered {
-    position: absolute;
-    left: 8.87%;
-    right: 5.41%;
-    top: 30.95%;
-    bottom: 30.95%;
-    font-size: 14px;
-    line-height: 16px;
-    display: flex;
-    align-items: center;
-    color: #000000;
+  position: absolute;
+  left: 8.87%;
+  right: 5.41%;
+  top: 30.95%;
+  bottom: 30.95%;
+  font-size: 14px;
+  line-height: 16px;
+  display: flex;
+  align-items: center;
+  color: rgb(0 0 0);
 }
 
 /* Import as dropdown placeholder text is red */
 .kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__placeholder {
-    color: #DF0002;
+  color: rgb(223 0 2);
 }
 
 /* Change placeholder color when user clicks in */
 .kb-staging-table-body .select2-container--open .select2-selection__placeholder,
 .select2-container--focus .select2-selection__placeholder {
-    color: #000000;
+  color: rgb(0 0 0);
 }
 
 /* style for Import As dropdown container arrow */
 .kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__arrow {
-    position: absolute;
-    height: 16px;
-    left: 87.76%;
-    right: 5.44%;
-    top: 30.95%;
-    bottom: 30.95%;
+  position: absolute;
+  height: 16px;
+  left: 87.76%;
+  right: 5.44%;
+  top: 30.95%;
+  bottom: 30.95%;
 }
 
 /* Before user makes a selection arrow is red */
 .kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__arrow b {
-    border-color: #DF0002 transparent transparent transparent;
+  border-color: rgb(223 0 2) transparent transparent;
 }
 
 /* after user makes a selection, or when in focus, arrow is grey */
-.kb-staging-table-body .kb-staging-table-body__import-dropdown:focus .select2-selection__arrow b,
-.kb-staging-table-body .kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected .select2-selection__arrow b {
-    border-color: #888 transparent transparent transparent;
+.kb-staging-table-body .kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected .select2-selection__arrow b,
+.kb-staging-table-body .kb-staging-table-body__import-dropdown:focus .select2-selection__arrow b {
+  border-color: rgb(136 136 136) transparent transparent;
 }
 
 .kb-staging-table-body__download {
-    font-size: 9px;
-    margin-left: 5px;
+  font-size: 9px;
+  margin-left: 5px;
 }
 
 .kb-staging-table-body__delete {
-    color: #4379B1;
-    background: none;
-    font-size: 16px;
-    line-height: 18.4px;
-    box-shadow: none;
+  color: rgb(67 121 177);
+  background: none;
+  font-size: 16px;
+  line-height: 18.4px;
+  box-shadow: none;
 }
 
-.kb-staging-table-body__import .kb-staging-table-body__delete:hover,
-.kb-staging-table-body__import .kb-staging-table-body__delete:active {
-    color: #286090;
-    background: none;
+.kb-staging-table-body__import .kb-staging-table-body__delete:active,
+.kb-staging-table-body__import .kb-staging-table-body__delete:hover {
+  color: rgb(40 96 144);
+  background: none;
 }
 
 .kb-staging-table-notice {
-    font-family: Oxygen, Arial, sans-serif;
-    font-weight: bold;
-    font-size: 105%;
-    text-align: center;
-    background-color: #EEEEEE;
-    height: 32px;
-    padding: 8px;
+  font: normal 700 16px/20px Oxygen, Arial, sans-serif;
+  text-align: center;
+  background-color: rgb(238 238 238);
+  height: 32px;
+  padding: 8px;
 }
 
 .kb-staging-table-import__button {
-    width: 160px;
-    height: 42px;
-    border-radius: 4px;
-    font-family: Public Sans, Arial, sans-serif;
-    font-style: normal;
-    font-weight: bold;
-    font-size: 14px;
-    line-height: 16px;
-    position: absolute;
-    right: 10px;
-    bottom: -50px;
+  width: 160px;
+  height: 42px;
+  border-radius: 4px;
+  font: normal 700 14px/16px Oxygen, Arial, sans-serif;
+  position: absolute;
+  right: 10px;
+  bottom: -50px;
 }
 
 .kb-staging-table-import__button.kb-staging-table-import__button__disabled,
 .kb-staging-table-import__button.kb-staging-table-import__button__disabled:active {
-    background-color: #8EAFD0;
+  background-color: rgb(142 175 208);
 }
 
 .kb-staging-table-import__button.kb-staging-table-import__button__disabled:focus {
-    outline: none;
+  outline: none;
 }
 
 /* TODO: check in with design on positioning of tooltip, whether we want to display arrow */
 .kb-staging-table-import .tooltip {
-    background: #FFF;
-    box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.15);
-    border-radius: 4px;
+  background: rgb(255 255 255);
+  box-shadow: 2px 4px 6px rgb(0 0 0 / 0.15);
+  border-radius: 4px;
 }
 
 .kb-staging-table-import .tooltip .tooltip-inner {
-    background: #FFF;
-    color: #000;
-    font-family: Public Sans, Arial, sans-serif;
-    font-style: normal;
-    font-weight: normal;
-    font-size: 12px;
-    line-height: 16px;
-    display: flex;
-    align-items: center;
-    width: 135px;
-    height: 56px;
+  background: rgb(255 255 255);
+  color: rgb(0 0 0);
+  font: normal 400 12px/16px Oxygen, Arial, sans-serif;
+  display: flex;
+  align-items: center;
+  width: 135px;
+  height: 56px;
 }
 
 .kb-staging-table-import .tooltip .tooltip-arrow {
-    display: none;
+  display: none;
 }
+
 /*
     END staging data table modifiers
 */
 
 .kb-data-breadcrumb .kb-pointer a {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .kb-data-staging__container {
-    height: 604px;
-    padding: 10px;
-    overflow-y: auto;
+  height: 604px;
+  padding: 10px;
+  overflow-y: auto;
 }
 
-.kb-data-staging-footer,
 .kb-data-staging-metadata-list {
   font-family: Oxygen, Arial, sans-serif;
   font-weight: 700;
-}
-
-.kb-data-staging-metadata-list {
   width: 115px;
   display: inline-block;
   font-size: 90%;
@@ -389,8 +370,7 @@
 .kb-data-staging-metadata-file-lines {
   white-space: pre;
   overflow: scroll;
-  font-family: monospace;
-  font-size: 90%;
+  font: 90% OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
   background-color: rgb(221 221 221);
   max-height: 200px;
 }
@@ -400,11 +380,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-family: Oxygen, Arial, sans-serif;
-  font-style: normal;
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 18px;
+  font: normal 700 14px/18px Oxygen, Arial, sans-serif;
   text-align: center;
   text-transform: uppercase;
   color: rgb(67 121 177);
@@ -435,11 +411,7 @@
 }
 
 .kb-data-stagingarea {
-  font-family: Oxygen, Arial, sans-serif;
-  font-style: normal;
-  font-weight: 700;
-  font-size: 24px;
-  line-height: 30px;
+  font: normal 700 24px/30px Oxygen, Arial, sans-serif;
 }
 
 .kb-data-staging-spacer {
@@ -455,7 +427,7 @@
 
 .kb-ga-seq {
   word-wrap: break-word;
-  font-family: monospace;
+  font-family: OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
   max-width: 300px;
   max-height: 100px;
   overflow-y: auto;
@@ -480,9 +452,7 @@
 }
 
 #kb-narr-name {
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
-  font-size: 130%;
+  font: normal 700 18px/1.2 Oxygen, Arial, sans-serif;
   padding-bottom: 7px;
   white-space: nowrap;
   overflow: hidden;
@@ -586,9 +556,7 @@ nav[role=navigation] ul li {
 
 nav[role=navigation] ul li a {
   text-decoration: none;
-  font-size: 1.2em;
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
+  font: normal 700 1.2em Oxygen, Arial, sans-serif;
   padding: 7px 1em;
   background-color: rgb(92 149 49);
   color: rgb(255 255 255);
@@ -1508,10 +1476,7 @@ div#notebook_panel {
 .creator-stamp {
   height: 1em;
   color: rgb(0 102 152);
-  font-size: 120%;
-  line-height: 1em;
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
+  font: normal 700 120% Oxygen, Arial, sans-serif;
 }
 
 .panel {
@@ -1529,9 +1494,7 @@ div#notebook_panel {
 
 .kb-narr-side-panel .kb-title {
   padding: 10px 5px;
-  font-size: 14pt;
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
+  font: normal 700 19px Oxygen, Arial, sans-serif;
   text-transform: uppercase;
   color: rgb(46 97 141);
 }
@@ -1707,8 +1670,8 @@ div#notebook_panel {
   margin-right: 4px;
   margin-top: -4px;
   cursor: pointer;
-  color: rgb(136 136 136); /* Chrome/Safari */ /* Firefox */
-  user-select: none; /* IE10+ */
+  color: rgb(136 136 136);
+  user-select: none;
 }
 
 /* Container for func list */
@@ -1896,16 +1859,13 @@ div#notebook_panel {
 }
 
 .kb-cell-toolbar .title {
-  font-size: 120%;
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
+  font: normal 700 120% Oxygen, Arial, sans-serif;
   color: rgb(46 97 141);
 }
 
 .kb-cell-toolbar .info-link,
 .kb-cell-toolbar .subtitle {
-  font-family: Roboto, Arial, sans-serif;
-  font-size: 90%;
+  font: 90% Roboto, Arial, sans-serif;
   color: rgb(102 102 102);
 }
 
@@ -1939,10 +1899,7 @@ div#notebook_panel {
 }
 
 .kb-cell-run h1 {
-  font-family: Roboto, Arial, sans-serif;
-  font-weight: 400;
-  font-size: 12pt;
-  line-height: 15px;
+  font: normal 400 12pt/15px Roboto, Arial, sans-serif;
   color: rgb(46 97 141);
   margin: 3px 13px 3px 3px;
   opacity: inherit;
@@ -1955,10 +1912,7 @@ div#notebook_panel {
 }
 
 .kb-cell-run h2 {
-  font-family: Roboto, Arial, sans-serif;
-  font-weight: 400;
-  font-size: 11pt;
-  line-height: 150%;
+  font: normal 400 11pt/1.5 Roboto, Arial, sans-serif;
   color: rgb(102 102 102);
   margin: 3px;
   opacity: inherit;
@@ -2028,10 +1982,7 @@ td {
 
 .kb-err-desc,
 .kb-out-desc {
-  font-family: Roboto, Arial, sans-serif;
-  font-weight: 400;
-  font-size: 12pt;
-  line-height: 15px;
+  font: normal 400 12pt/15px Roboto, Arial, sans-serif;
   margin: 3px;
   opacity: inherit;
   display: inline;
@@ -2052,8 +2003,7 @@ td {
 
 .kb-func-timestamp {
   color: rgb(85 85 85);
-  font-size: 10pt;
-  font-family: Roboto, Arial, sans-serif;
+  font: 10pt Roboto, Arial, sans-serif;
   margin-top: -3px;
   padding-right: 1em;
 }
@@ -2076,6 +2026,8 @@ td {
 
 .kb-func-panel .panel-body {
   padding: 0 10px;
+
+  /* TODO: change to a standard font! */
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
@@ -2121,10 +2073,8 @@ td {
 
 /*** styling for the jobs manager */
 .kb-jobs-title {
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
+  font: normal 700 1.2em Oxygen, Arial, sans-serif;
   color: rgb(24 90 133);
-  font-size: 1.2em;
 }
 
 .kb-jobs-title .glyphicon-info-sign {
@@ -2288,11 +2238,7 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-method-advanced-options-controller,
 .kb-method-advanced-options-controller-inactive {
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
-  font-style: italic;
-  font-size: 10pt;
-  line-height: 14px;
+  font: italic 700 10pt/14px Oxygen, Arial, sans-serif;
   text-align: center;
 }
 
@@ -2337,32 +2283,24 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-panel-description {
-  font-family: Roboto, Arial, sans-serif;
-  font-weight: 400;
-  font-size: 12pt;
-  line-height: 15px;
+  font: normal 400 12pt/15px Roboto, Arial, sans-serif;
   color: rgb(46 97 141);
 }
 
 .kb-app-step-error-mssg {
-  font-family: sans-serif;
-  font-size: 11pt;
-  line-height: 14px;
+  font: 11px/14px sans-serif;
   color: rgb(166 50 50);
   text-align: left;
   margin: 10px;
 }
 
 .kb-app-step-error-heading {
-  font-weight: 700;
-  font-size: 13pt;
-  line-height: 14px;
+  font: normal 700 13pt/14px Oxygen, Arial, sans-serif;
   padding-left: 5px;
 }
 
 .kb-app-step-error-heading,
 .kb-app-step-error-main-heading {
-  font-family: Oxygen, Arial, sans-serif;
   color: rgb(85 85 85);
   text-align: left;
   margin-top: 20px;
@@ -2370,7 +2308,7 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-app-step-error-main-heading {
   cursor: pointer;
-  font-size: 16pt;
+  font: 16pt/18px Oxygen, Arial, sans-serif;
   line-height: 18px;
   padding-left: 20px;
 }
@@ -2392,9 +2330,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-next h3 {
-  font-family: Roboto, Arial, sans-serif;
-  font-size: 0.9em;
-  font-style: italic;
+  font: italic 400 0.9em Roboto, Arial, sans-serif;
   color: rgb(136 136 136);
   float: left;
   padding: 0.5em 0 0.25em;
@@ -2409,8 +2345,7 @@ control with padding, and then scooting the icon back into its column.
 .kb-app-next-hide,
 .kb-app-next-unhide {
   color: rgb(33 150 243);
-  font-family: Roboto, Arial, sans-serif;
-  font-size: 0.9em;
+  font: 0.9em Roboto, Arial, sans-serif;
   margin-top: 0.25em;
 }
 
@@ -2696,9 +2631,7 @@ button.kb-data-obj {
   border: none;
   padding: 10px 20px;
   margin: 3px;
-  font-size: 14px;
-  font-family: Roboto, Arial, sans-serif;
-  font-weight: 400;
+  font: normal 400 14px Roboto, Arial, sans-serif;
   box-shadow: 1px 1px 3px rgb(170 170 170);
 }
 
@@ -2720,9 +2653,7 @@ button.kb-data-obj {
   border: none;
   padding: 10px 20px;
   margin: 3px;
-  font-size: 14px;
-  font-family: Roboto, Arial, sans-serif;
-  font-weight: 400;
+  font: normal 400 14px Roboto, Arial, sans-serif;
   box-shadow: 1px 1px 3px rgb(170 170 170);
 }
 
@@ -2904,9 +2835,7 @@ button.kb-data-obj {
   border: none;
   padding: 10px 20px;
   margin: 3px;
-  font-size: 14px;
-  font-family: Roboto, Arial, sans-serif;
-  font-weight: 400;
+  font: normal 400 14px Roboto, Arial, sans-serif;
   box-shadow: 1px 1px 3px rgb(170 170 170);
 }
 
@@ -3019,9 +2948,7 @@ button.kb-data-obj {
 
 .kb-data-list-name {
   color: rgb(46 97 141);
-  font-size: 11pt;
-  font-family: Oyxgen, Arial, sans-serif;
-  font-weight: 700;
+  font: normal 700 11pt Oxygen, Arial, sans-serif;
   margin: 2px;
   cursor: pointer;
 }
@@ -3104,6 +3031,8 @@ button.kb-data-obj {
 }
 
 .kb-data-list-more-div,
+.kb-data-list-more-div td,
+.kb-data-list-more-div th,
 .kb-data-list-more-div tr {
   color: rgb(119 119 119);
   font-size: 10pt;
@@ -3125,13 +3054,6 @@ button.kb-data-obj {
 .kb-data-list-more-div th {
   font-weight: 700;
   text-align: right;
-}
-
-.kb-data-list-more-div td,
-.kb-data-list-more-div th {
-  color: rgb(119 119 119);
-  font-size: 10pt;
-  margin: 2px;
 }
 
 .kb-data-list-more-div td {
@@ -3387,11 +3309,9 @@ button.kb-data-obj {
 }
 
 .kb-nar-manager-titles {
-  font-family: Oxygen, Arial, sans-serif;
+  font: normal 700 14pt Oxygen, Arial, sans-serif;
   color: rgb(119 119 119);
   margin: 20px 10px 10px;
-  font-size: 14pt;
-  font-weight: 700;
 }
 
 /* End kbaseData.css */
@@ -3421,11 +3341,7 @@ button.kb-data-obj {
   border: 1px solid rgb(196 196 196);
   box-sizing: border-box;
   border-radius: 6px;
-  font-family: Oxygen, Arial, sans-serif;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 18px;
+  font: normal 400 14px/18px Oxygen, Arial, sans-serif;
 
   /* identical to box height */
   text-align: center;
@@ -3483,7 +3399,7 @@ button.kb-data-obj {
 .kb-import-item hr {
   width: 85%;
   border: 2px solid rgb(234 234 234);
-  margin-top: 15px; /* override */
+  margin-top: 15px;
   margin-bottom: 0;
 }
 
@@ -3515,12 +3431,12 @@ button.kb-data-obj {
 
 /* Error dialog */
 .kb-error-dialog strong {
-  color: rgb(0 100 0); /*  Douglas Adams forever */
+  color: rgb(0 100 0);
 }
 
 .kb-err-text {
   color: rgb(0 0 0);
-  font-family: Consolas, "Courier New", monospace;
+  font-family: OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
 }
 
 .kb-err-warn {
@@ -3545,9 +3461,7 @@ button.kb-data-obj {
 #kb-view-mode-narr div {
   display: inline-block;
   color: rgb(33 150 243);
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
-  font-size: 16px;
+  font: normal 700 16px Oxygen, Arial, sans-serif;
   padding: 3px;
   margin-top: -3px;
   width: 147px;
@@ -3575,9 +3489,7 @@ button.kb-data-obj {
 
 /* this is the banner for readonly mode */
 .navbar-right div.label-warning {
-  font-family: Oxygen, Arial, sans-serif;
-  font-size: 16px;
-  font-weight: 700;
+  font: normal 700 16px Oxygen, Arial, sans-serif;
 }
 
 /* Show this over the whole narrative UI until the
@@ -3639,7 +3551,7 @@ button.kb-data-obj {
 
 #popdiv a.alt {
   padding-left: 9px;
-  font: 12px monospace;
+  font: 12px OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
   border: none;
   display: inline;
 }

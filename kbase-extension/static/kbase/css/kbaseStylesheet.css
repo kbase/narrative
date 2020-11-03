@@ -95,9 +95,8 @@
 }
 
 h1 {
-  font: 1.75em/2em RobotoBlack, Arial, sans-serif;
+  font: 400 1.75em/2em RobotoBlack, Arial, sans-serif;
   color: rgb(35 35 35);
-  font-weight: 400;
 }
 
 h1,
@@ -106,20 +105,17 @@ h2 {
 }
 
 h2 {
-  font: 1.5em/1.75em RobotoBlack, Arial, sans-serif;
-  font-weight: 400;
+  font: normal 400 1.5em/1.75em RobotoBlack, Arial, sans-serif;
   color: rgb(137 137 137);
 }
 
 h3 {
-  font: 1.15em/1.25em RobotoBlack, Arial, sans-serif;
+  font: normal 400 1.15em/1.25em RobotoBlack, Arial, sans-serif;
   letter-spacing: 0;
-  font-weight: 400;
 }
 
 h4 {
-  font: 1.15em/1.25em Oxygen, Arial, sans-serif;
-  font-style: italic;
+  font: italic 400 1.15em/1.25em Oxygen, Arial, sans-serif;
   letter-spacing: 0.07em;
 }
 
@@ -168,6 +164,6 @@ a:hover {
 
 code,
 pre {
-  font-family: OxygenMono, "Lucida Console", "Lucida Sans Typewriter", monospace;
+  font-family: OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
   font-style: normal;
 }

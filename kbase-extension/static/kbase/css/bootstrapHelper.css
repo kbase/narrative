@@ -13,9 +13,7 @@
 */
 
 .modal .modal-title {
-  font-family: Oxygen, Arial, sans-serif;
-  font-size: 130%;
-  font-weight: 700;
+  font: normal 700 130% Oxygen, Arial, sans-serif;
   color: rgb(46 97 141);
 }
 

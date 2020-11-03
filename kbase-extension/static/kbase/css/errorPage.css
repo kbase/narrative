@@ -11,7 +11,7 @@
 
 .access-error__heading,
 .generic-error__heading {
-  font-weight: bold;
+  font-weight: 700;
   font-size: 200%;
   line-height: 1.5;
 }

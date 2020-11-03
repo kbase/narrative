@@ -8,24 +8,23 @@
   z-index: 9999999;
   visibility: hidden;
   opacity: 0.8;
-  background-color: #222;
-  color: #fff;
+  background-color: rgb(34 34 34);
+  color: rgb(255 255 255);
   padding: 0.5em;
 }
 
 /**
  * Adjusts the font size and stroke width of the base-position axis.
  */
-.kbcb-widget .kbcb-axis path,
-.kbcb-widget .kbcb-axis line {
+.kbcb-widget .kbcb-axis line,
+.kbcb-widget .kbcb-axis path {
   fill: none;
-  stroke: black;
+  stroke: rgb(0 0 0);
   shape-rendering: crispEdges;
 }
 
 .kbcb-widget .kbcb-axis text {
-  font-family: sans-serif;
-  font-size: 11px;
+  font: 11px sans-serif;
 }
 
 /**
@@ -38,20 +37,20 @@
  * And highlighted features should be colored last (not currently used).
  */
 .kbcb-feature {
-  stroke: #000;
-  fill: #f00;
+  stroke: rgb(0 0 0);
+  fill: rgb(255 0 0);
 }
 
 .kbcb-operon {
-  fill: #0f0;
+  fill: rgb(0 255 0);
 }
 
 .kbcb-center {
-  fill: #00f;
+  fill: rgb(0 0 255);
 }
 
 .kbcb-highlight {
-  fill: #fff;
+  fill: rgb(255 255 255);
 }
 
 /**

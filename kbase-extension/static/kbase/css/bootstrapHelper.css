@@ -13,10 +13,8 @@
 */
 
 .modal .modal-title {
-  font-family: Oxygen, Arial, sans-serif;
-  font-size: 130%;
-  font-weight: bold;
-  color: #2e618d;
+  font: normal 700 130% Oxygen, Arial, sans-serif;
+  color: rgb(46 97 141);
 }
 
 /*
@@ -38,7 +36,7 @@
     as it breaks.
 */
 
-.modal input[type="checkbox"] {
+.modal input[type=checkbox] {
   margin-top: 1px;
 }
 
@@ -52,28 +50,28 @@
 */
 
 .panel-danger.kb-panel-light .panel-title {
-  color: #a94442;
+  color: rgb(169 68 66);
 }
 
 .panel-success.kb-panel-light .panel-title {
-  color: #3c763d;
+  color: rgb(60 118 61);
 }
 
 .panel-warning.kb-panel-light .panel-title {
-  color: #8a6d3b;
+  color: rgb(138 109 59);
 }
 
 .panel-info.kb-panel-light .panel-title {
-  color: blue;
+  color: rgb(0 0 255);
 }
 
 .panel.kb-panel-light > .panel-heading {
   background-color: transparent;
-  font-weight: bold;
-  color: #666;
+  font-weight: 700;
+  color: rgb(102 102 102);
   padding-left: 0;
   padding-bottom: 2px;
-  border-bottom: 1px #ccc solid;
+  border-bottom: 1px solid rgb(204 204 204);
 }
 
 .panel.kb-panel-light .panel-body {
@@ -86,10 +84,10 @@
 
 .panel.kb-panel-container > .panel-heading {
   background-color: transparent;
-  font-weight: bold;
+  font-weight: 700;
   padding-left: 0;
   padding-bottom: 2px;
-  border-bottom: 2px #ccc solid;
+  border-bottom: 2px solid rgb(204 204 204);
   margin-bottom: 10px;
 }
 
@@ -106,6 +104,6 @@
 
 .btn-toolbar.kb-btn-toolbar-cell-widget {
   margin-bottom: 20px;
-  background-color: #eee;
+  background-color: rgb(238 238 238);
   padding: 6px;
 }

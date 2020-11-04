@@ -316,10 +316,10 @@ define([
                         const fileId = new UUID(4).format();
                         //render checkboxes disabled until the user selects a type
                         return ('<div class="kb-staging-table-body__checkbox-disabled" ' + 
-                            'aria-haspopup="true">' +
+                            'aria-haspopup="true" tabindex="0" data-toggle="tooltip">' +
                             '<input class="kb-staging-table-body__checkbox-input"' + 
                             'type="checkbox" role="checkbox" disabled=true ' + 
-                            'aria-checked="false" tabindex="0"' +
+                            'aria-checked="false" ' +
                             'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
                             'data-file-name="' + data + '"' + 
                             'id="' + fileId + '">' +
@@ -789,10 +789,12 @@ define([
                 .addClass('kb-staging-table-import__button__disabled')
                 .tooltip({
                     title: 'Select a file/s to continue.',
+                    container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
                         hide: Config.get('tooltip').hideDelay
-                    }
+                    },
+                    template: '<div class="kb-staging-table-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
                 })
                 .off('click');
         },

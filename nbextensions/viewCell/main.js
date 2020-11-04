@@ -33,9 +33,6 @@ define([
     'kb_service/utils',
     'kb_service/client/workspace',
     './widgets/appInfoDialog',
-
-    // for effect
-    'css!kbase/css/appCell.css',
     'bootstrap',
     'custom/custom'
 ], function(

@@ -15,8 +15,7 @@ define([
     'common/ui',
     'common/events',
     'common/fsm',
-    'kb_common/html',
-    'css!kbase/css/kbaseJobLog.css'
+    'kb_common/html'
 ], function(
     Promise,
     Runtime,

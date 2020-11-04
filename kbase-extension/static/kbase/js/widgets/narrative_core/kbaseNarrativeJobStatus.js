@@ -26,7 +26,6 @@ define([
     'text!kbase/templates/job_status/log_panel.html',
     'text!kbase/templates/job_status/log_line.html',
     'text!kbase/templates/job_status/new_objects.html',
-    'css!kbase/css/kbaseJobLog.css',
     'bootstrap'
 ], function (
     Promise,

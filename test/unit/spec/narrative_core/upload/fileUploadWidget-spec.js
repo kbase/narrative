@@ -205,7 +205,7 @@ define([
             });
         });
 
-        it('Should cancel a file when warning button clicked', (done) => {
+        it('Should contain a cancel warning button', () => {
             $targetNode = $('<div>');
             let uploadWidget = new FileUploadWidget($targetNode, {
                 path: '/',
@@ -215,23 +215,21 @@ define([
                 }
             });
 
+            // Create file
             const filename='foo.txt';
             mockUploadEndpoint(filename, fakeUser, false);
-            const mockFile = createMockFile(filename);
-            const cancelMock = jasmine.createSpy('cancelMock');
+            var mockFile = createMockFile(filename);
 
-            uploadWidget.dropzone.on('canceled', () => {
-                cancelMock();
+            const adderMock = jasmine.createSpy('adderMock');
+            uploadWidget.dropzone.on('addedfile', () => {
+                adderMock();
             });
 
             uploadWidget.dropzone.addFile(mockFile);
             let $cancelButton = uploadWidget.$elem.find('.cancel');
-            $cancelButton.click();
-
-            setTimeout(() => {
-                expect(cancelMock).toHaveBeenCalled();
-                done();
-            });
+            expect($cancelButton).toBeDefined();
+            console.log($cancelButton);
+            expect($cancelButton.attr('data-dz-remove')).toBeDefined();
         });
 
     });

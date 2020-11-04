@@ -25,7 +25,6 @@ define([
     'kb_service/utils',
     'kb_service/client/workspace',
     './appCell',
-    'css!kbase/css/appCell.css',
     'bootstrap',
     'custom/custom'
 ], function(

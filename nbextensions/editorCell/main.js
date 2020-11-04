@@ -32,8 +32,6 @@ define([
     'common/jupyter',
     'kb_service/utils',
     'kb_service/client/workspace',
-    'css!kbase/css/appCell.css',
-    'css!kbase/css/editorCell.css',
     'bootstrap',
     'custom/custom'
 ], function(

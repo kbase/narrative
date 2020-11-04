@@ -33,8 +33,6 @@ define([
     'common/spec',
     'kb_service/utils',
     'kb_service/client/workspace',
-    'css!kbase/css/appCell.css',
-    'css!kbase/css/advancedViewCell.css',
     'bootstrap',
     'custom/custom'
 ], function(

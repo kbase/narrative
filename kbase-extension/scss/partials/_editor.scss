@@ -92,7 +92,7 @@
 
       &:hover::after {
         content: "\f044";
-        font-family: FontAwesome;
+        font-family: $typeface-font-awesome;
         position: absolute;
         bottom: 0;
         right: 2px;

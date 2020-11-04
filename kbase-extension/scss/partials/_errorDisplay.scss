@@ -1,6 +1,4 @@
-#header, #site {
-  display: block;
-}
+/* Note that this does not get compiled to produce static/css/errorPage.css -- that file is a single standalone declaration */
 
 .access-error__container, .generic-error__container {
   text-align: center;

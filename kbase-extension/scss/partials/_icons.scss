@@ -3,7 +3,7 @@
 }
 
 [class*=" icon-"]::before, [class^=icon-]::before, [data-icon]::before {
-  font-family: kbase-icons !important;
+  font-family: $typeface-kbase-icons !important;
   font-style: normal !important;
   font-weight: 400 !important;
   font-variant: normal !important;

@@ -156,7 +156,7 @@
     top: 1px;
     right: 4px;
     display: inline-block;
-    font-family: "Glyphicons Halflings", Arial, sans-serif;
+    font-family: $typeface-glyphicons;
   }
 
   .sorting_asc::before {
@@ -2097,9 +2097,7 @@ td {
 
   .panel-body {
     padding: 0 10px;
-
-    /* TODO: change to a standard font! */
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: $typeface-page-text;
   }
 
   > {

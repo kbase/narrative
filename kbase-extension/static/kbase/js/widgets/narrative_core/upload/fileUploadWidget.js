@@ -124,11 +124,9 @@ define([
                 .on('canceled', (file) => {
                     Promise.resolve(this.stagingServiceClient.delete({
                         path: file.fullPath ? file.fullPath : file.name
-                    }))
-                    .catch(xhr => {
+                    })).catch(xhr => {
                         throw new Error(xhr.responseText ? xhr.responseText : 'Unknown error - unable to delete file from staging area');
-                    })
-
+                    });
                 })
                 .on('error', (erroredFile) => {
                     var $errorElem = $(erroredFile.previewElement);

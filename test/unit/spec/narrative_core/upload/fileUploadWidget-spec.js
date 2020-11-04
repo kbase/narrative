@@ -228,7 +228,6 @@ define([
             uploadWidget.dropzone.addFile(mockFile);
             let $cancelButton = uploadWidget.$elem.find('.cancel');
             expect($cancelButton).toBeDefined();
-            console.log($cancelButton);
             expect($cancelButton.attr('data-dz-remove')).toBeDefined();
         });
 

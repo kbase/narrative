@@ -122,11 +122,16 @@ define([
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
                 })
                 .on('canceled', (file) => {
-                    Promise.resolve(this.stagingServiceClient.delete({
-                        path: file.fullPath ? file.fullPath : file.name
-                    })).catch(xhr => {
-                        throw new Error(xhr.responseText ? xhr.responseText : 'Unknown error - unable to delete file from staging area');
-                    });
+                    let path = file.fullPath ? file.fullPath : file.name;
+                    if (path){
+                        Promise.resolve(this.stagingServiceClient.delete({
+                            path: path
+                        })).catch(xhr => {
+                            throw new Error(xhr.responseText ? xhr.responseText : 'Unknown error - unable to delete file from staging area');
+                        });
+                    } else {
+                        throw new Error('Unable to locate path for file to delete');
+                    }
                 })
                 .on('error', (erroredFile) => {
                     var $errorElem = $(erroredFile.previewElement);

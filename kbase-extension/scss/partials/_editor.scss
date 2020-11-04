@@ -1,0 +1,103 @@
+/**
+ * CSS related to editing tools.  This currently includes media and model editing
+ */
+
+.modal-body .dataTables_processing {
+  border: 1px solid rgb(170 170 170);
+  background: rgb(232 249 255);
+  opacity: 0.8;
+}
+
+.kb-editor {
+  margin: 0 10px;
+
+  .tab-content {
+    margin: 5px 0 0;
+  }
+
+  .controls {
+    margin: 5px 0;
+
+    .btn {
+      margin: 0 10px;
+    }
+  }
+
+  .btn-primary {
+    background-color: rgb(51 122 183) !important;
+    border-color: rgb(46 109 164) !important;
+  }
+
+  .btn-danger {
+    background-color: rgb(217 83 79) !important;
+    border-color: rgb(212 63 58) !important;
+  }
+
+  .btn i {
+    color: rgb(255 255 255);
+  }
+
+  table {
+    border: 1px solid rgb(187 187 187);
+  }
+}
+
+/**
+ * Override KBase stylings that override jupyter styling.
+ * Should be removed after Bill's refactoring.
+ */
+
+/* override button staylings that were removed */
+
+/* override icon stylings in button that were removed */
+
+/* override table border styling */
+
+/**
+ * General editor styling
+ */
+
+.kb-editor-table {
+  width: 100% !important;
+
+  /* override datatables hackory */
+
+  > tbody > tr {
+    > td:first-child {
+      width: 1%;
+
+      /* checkboxes are expected on editable tables */
+
+      .fa-square-o {
+        font-size: 1.4em;
+        color: rgb(102 102 102);
+      }
+
+      &:hover {
+        cursor: pointer;
+
+        .fa-square-o {
+          color: rgb(0 0 0);
+        }
+      }
+    }
+
+    &.row-select .fa-square-o::before {
+      content: "\f046";
+      color: rgb(68 68 68);
+    }
+
+    > td.editable {
+      position: relative;
+
+      &:hover::after {
+        content: "\f044";
+        font-family: FontAwesome;
+        position: absolute;
+        bottom: 0;
+        right: 2px;
+        color: rgb(136 136 136);
+      }
+    }
+  }
+}

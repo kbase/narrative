@@ -181,6 +181,11 @@
     vertical-align: middle;
 }
 
+.kb-staging-table-body__checkbox-disabled .kb-staging-table-body__checkbox-input:disabled,
+.kb-staging-table-header__checkbox-disabled .kb-staging-table-header__checkbox-input:disabled {
+  cursor: default;
+}
+
 .kb-staging-table-body__expander {
     text-align: center;
 }
@@ -207,13 +212,11 @@
   otherwise it will get overriden by datatables when changing the sort order 
   it gets set directly on the element via inline css so we have to use important to override
 */
-
 .kb-staging-table-body .select2 {
     width: 160px !important;
     margin: 4px 0;
 }
 
-/* TODO: can this class be merged with the one above? */
 .kb-staging-table-body .kb-staging-table-body__import-dropdown {
     height: 38px;
     background: #FFFFFF;
@@ -327,14 +330,13 @@
     outline: none;
 }
 
-/* TODO: check in with design on positioning of tooltip, whether we want to display arrow */
-.kb-staging-table-import .tooltip {
+.kb-staging-table-import__tooltip.tooltip {
     background: #FFF;
     box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.15);
     border-radius: 4px;
 }
 
-.kb-staging-table-import .tooltip .tooltip-inner {
+.kb-staging-table-import__tooltip.tooltip .tooltip-inner {
     background: #FFF;
     color: #000;
     font-family: Public Sans, Arial, sans-serif;
@@ -348,9 +350,6 @@
     height: 56px;
 }
 
-.kb-staging-table-import .tooltip .tooltip-arrow { 
-    display: none;
-}
 /* 
     END staging data table modifiers 
 */

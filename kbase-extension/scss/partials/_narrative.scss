@@ -1,19 +1,20 @@
 @import url("//fonts.googleapis.com/css?family=Roboto");
 
-.kb-dropzone #upload-message {
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
+.kb-dropzone {
+  #upload-message {
+    font-family: $typeface-page-text;
+    font-weight: 700;
+  }
+
+  .dz-message {
+    font: normal 400 24px/28px $typeface-alt-page-text;
+    color: rgb(0 0 0);
+    mix-blend-mode: normal;
+    margin: 2em 4.5em;
+  }
 }
 
-.kb-dropzone .dz-message {
-  font: normal 400 24px/28px Roboto, Arial, sans-serif;
-  color: rgb(0 0 0);
-  mix-blend-mode: normal;
-  margin: 2em 4.5em;
-}
-
-.btn__text,
-.kb-dropzone .dz-message {
+.btn__text, .kb-dropzone .dz-message {
   font-style: normal;
   text-align: center;
 }
@@ -23,36 +24,36 @@
   box-sizing: border-box;
   border-radius: 4px;
   border: 1px solid rgb(255 255 255);
-  font: normal 700 14px/18px Oxygen, Arial, sans-serif;
+  font: normal 700 14px/18px $typeface-page-text;
   outline: none;
   text-transform: uppercase;
   color: rgb(67 121 177);
   height: 34px;
-}
 
-.btn__text:hover {
-  color: rgb(54 97 142);
-  border: 1px solid rgb(236 242 247);
-  background-color: rgb(236 242 247);
-  cursor: pointer;
-}
+  &:hover {
+    color: rgb(54 97 142);
+    border: 1px solid rgb(236 242 247);
+    background-color: rgb(236 242 247);
+    cursor: pointer;
+  }
 
-.btn__text:focus {
-  color: rgb(54 97 142);
-  border: 1px solid rgb(227 235 243);
-  background-color: rgb(227 235 243);
-}
+  &:focus {
+    color: rgb(54 97 142);
+    border: 1px solid rgb(227 235 243);
+    background-color: rgb(227 235 243);
+  }
 
-.btn__text:active {
-  color: rgb(54 97 142);
-  border: 1px solid rgb(217 228 239);
-  background-color: rgb(217 228 239);
-}
+  &:active {
+    color: rgb(54 97 142);
+    border: 1px solid rgb(217 228 239);
+    background-color: rgb(217 228 239);
+  }
 
-.btn__text:disabled {
-  color: rgb(146 146 146);
-  border: 1px solid rgb(250 250 250);
-  background-color: rgb(250 250 250);
+  &:disabled {
+    color: rgb(146 146 146);
+    border: 1px solid rgb(250 250 250);
+    background-color: rgb(250 250 250);
+  }
 }
 
 .clear-all-dropzone {
@@ -64,7 +65,7 @@
   border: 1px solid rgb(238 238 238);
   margin: 2px 0;
   padding: 5px 0;
-  font: normal, 16px, Oxygen, Arial, sans-serif;
+  font: 16px $typeface-page-text;
 }
 
 .dz-file__progress__bar {
@@ -87,8 +88,7 @@
   line-height: 20px;
 }
 
-.dz-file__msg,
-.dz-file__name {
+.dz-file__msg, .dz-file__name {
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -121,6 +121,7 @@
 }
 
 /* BEGIN staging data table modifiers */
+
 .kb-staging-table {
   table-layout: fixed;
 }
@@ -137,8 +138,7 @@
   width: 26%;
 }
 
-.kb-staging-table-header__age,
-.kb-staging-table-header__size {
+.kb-staging-table-header__age, .kb-staging-table-header__size {
   width: 8%;
 }
 
@@ -147,37 +147,39 @@
 }
 
 /* Overriding default datatables sort icons so they come before the header title rather than after */
-.kb-staging-table-header .sorting::before,
-.kb-staging-table-header .sorting_asc::before,
-.kb-staging-table-header .sorting_desc::before {
-  opacity: 0.2;
-  content: "\e150";
-  position: relative;
-  top: 1px;
-  right: 4px;
-  display: inline-block;
-  font-family: "Glyphicons Halflings", Arial, sans-serif;
+
+.kb-staging-table-header {
+  .sorting::before, .sorting_asc::before, .sorting_desc::before {
+    opacity: 0.2;
+    content: "\e150";
+    position: relative;
+    top: 1px;
+    right: 4px;
+    display: inline-block;
+    font-family: $typeface-glyphicons;
+  }
+
+  .sorting_asc::before {
+    content: "\e155";
+  }
+
+  .sorting_desc::before {
+    content: "\e156";
+  }
 }
 
-.kb-staging-table-header .sorting_asc::before {
-  content: "\e155";
-}
-
-.kb-staging-table-header .sorting_desc::before {
-  content: "\e156";
-}
-
-.kb-staging-table .kb-staging-table-header .sorting::after,
-.kb-staging-table .kb-staging-table-header .sorting_asc::after,
-.kb-staging-table .kb-staging-table-header .sorting_desc::after {
-  display: none;
+.kb-staging-table .kb-staging-table-header {
+  .sorting::after, .sorting_asc::after, .sorting_desc::after {
+    display: none;
+  }
 }
 
 /* Special positioning for folder sort icon as there is no title */
-.kb-staging-table-header .kb-staging-table-header__file.sorting::before,
-.kb-staging-table-header .kb-staging-table-header__file.sorting_asc::before,
-.kb-staging-table-header .kb-staging-table-header__file.sorting_desc::before {
-  left: 9px;
+
+.kb-staging-table-header .kb-staging-table-header__file {
+  &.sorting::before, &.sorting_asc::before, &.sorting_desc::before {
+    left: 9px;
+  }
 }
 
 .kb-staging-table .kb-staging-table-body td {
@@ -211,72 +213,88 @@
   it gets set directly on the element via inline css so we have to use important to override
 */
 
-.kb-staging-table-body .select2 {
-  width: 160px !important;
-  margin: 4px 0;
+.kb-staging-table-body {
+  .select2 {
+    width: 160px !important;
+    margin: 4px 0;
+  }
+
+  .kb-staging-table-body__import-dropdown {
+    height: 38px;
+    background: rgb(255 255 255);
+    border: 1px solid rgb(223 0 2);
+    box-sizing: border-box;
+    border-radius: 4px;
+  }
 }
 
 /* TODO: can this class be merged with the one above? */
-.kb-staging-table-body .kb-staging-table-body__import-dropdown {
-  height: 38px;
-  background: rgb(255 255 255);
-  border: 1px solid rgb(223 0 2);
-  box-sizing: border-box;
-  border-radius: 4px;
-}
 
 /* When user clicks into the dropdown or chooses a selection box change border color */
-.kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected,
-.select2-container--focus .kb-staging-table-body__import-dropdown,
-.select2-container--open .kb-staging-table-body__import-dropdown {
+
+.kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected, .select2-container--focus .kb-staging-table-body__import-dropdown, .select2-container--open .kb-staging-table-body__import-dropdown {
   border: 1px solid rgb(196 196 196);
 }
 
 /* style for Import As dropdown container text */
-.kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__rendered {
-  position: absolute;
-  left: 8.87%;
-  right: 5.41%;
-  top: 30.95%;
-  bottom: 30.95%;
-  font-size: 14px;
-  line-height: 16px;
-  display: flex;
-  align-items: center;
-  color: rgb(0 0 0);
+
+.kb-staging-table-body {
+  .kb-staging-table-body__import-dropdown {
+    .select2-selection__rendered {
+      position: absolute;
+      left: 8.87%;
+      right: 5.41%;
+      top: 30.95%;
+      bottom: 30.95%;
+      font-size: 14px;
+      line-height: 16px;
+      display: flex;
+      align-items: center;
+      color: rgb(0 0 0);
+    }
+
+    .select2-selection__placeholder {
+      color: rgb(223 0 2);
+    }
+  }
+
+  .select2-container--open .select2-selection__placeholder {
+    color: rgb(0 0 0);
+  }
 }
 
 /* Import as dropdown placeholder text is red */
-.kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__placeholder {
-  color: rgb(223 0 2);
-}
 
 /* Change placeholder color when user clicks in */
-.kb-staging-table-body .select2-container--open .select2-selection__placeholder,
+
 .select2-container--focus .select2-selection__placeholder {
   color: rgb(0 0 0);
 }
 
 /* style for Import As dropdown container arrow */
-.kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__arrow {
-  position: absolute;
-  height: 16px;
-  left: 87.76%;
-  right: 5.44%;
-  top: 30.95%;
-  bottom: 30.95%;
+
+.kb-staging-table-body .kb-staging-table-body__import-dropdown {
+  .select2-selection__arrow {
+    position: absolute;
+    height: 16px;
+    left: 87.76%;
+    right: 5.44%;
+    top: 30.95%;
+    bottom: 30.95%;
+
+    b {
+      border-color: rgb(223 0 2) transparent transparent;
+    }
+  }
+
+  &.kb-staging-table-body__import-type-selected .select2-selection__arrow b, &:focus .select2-selection__arrow b {
+    border-color: rgb(136 136 136) transparent transparent;
+  }
 }
 
 /* Before user makes a selection arrow is red */
-.kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__arrow b {
-  border-color: rgb(223 0 2) transparent transparent;
-}
 
 /* after user makes a selection, or when in focus, arrow is grey */
-.kb-staging-table-body .kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected .select2-selection__arrow b,
-.kb-staging-table-body .kb-staging-table-body__import-dropdown:focus .select2-selection__arrow b {
-  border-color: rgb(136 136 136) transparent transparent;
-}
 
 .kb-staging-table-body__download {
   font-size: 9px;
@@ -291,14 +309,15 @@
   box-shadow: none;
 }
 
-.kb-staging-table-body__import .kb-staging-table-body__delete:active,
-.kb-staging-table-body__import .kb-staging-table-body__delete:hover {
-  color: rgb(40 96 144);
-  background: none;
+.kb-staging-table-body__import .kb-staging-table-body__delete {
+  &:active, &:hover {
+    color: rgb(40 96 144);
+    background: none;
+  }
 }
 
 .kb-staging-table-notice {
-  font: normal 700 16px/20px Oxygen, Arial, sans-serif;
+  font: normal 700 16px/20px $typeface-page-text;
   text-align: center;
   background-color: rgb(238 238 238);
   height: 32px;
@@ -309,40 +328,44 @@
   width: 160px;
   height: 42px;
   border-radius: 4px;
-  font: normal 700 14px/16px Oxygen, Arial, sans-serif;
+  font: normal 700 14px/16px $typeface-page-text;
   position: absolute;
   right: 10px;
   bottom: -50px;
-}
 
-.kb-staging-table-import__button.kb-staging-table-import__button__disabled,
-.kb-staging-table-import__button.kb-staging-table-import__button__disabled:active {
-  background-color: rgb(142 175 208);
-}
+  &.kb-staging-table-import__button__disabled {
+    background-color: rgb(142 175 208);
 
-.kb-staging-table-import__button.kb-staging-table-import__button__disabled:focus {
-  outline: none;
+    &:active {
+      background-color: rgb(142 175 208);
+    }
+
+    &:focus {
+      outline: none;
+    }
+  }
 }
 
 /* TODO: check in with design on positioning of tooltip, whether we want to display arrow */
+
 .kb-staging-table-import .tooltip {
   background: rgb(255 255 255);
   box-shadow: 2px 4px 6px rgb(0 0 0 / 0.15);
   border-radius: 4px;
-}
 
-.kb-staging-table-import .tooltip .tooltip-inner {
-  background: rgb(255 255 255);
-  color: rgb(0 0 0);
-  font: normal 400 12px/16px Oxygen, Arial, sans-serif;
-  display: flex;
-  align-items: center;
-  width: 135px;
-  height: 56px;
-}
+  .tooltip-inner {
+    background: rgb(255 255 255);
+    color: rgb(0 0 0);
+    font: normal 400 12px/16px $typeface-page-text;
+    display: flex;
+    align-items: center;
+    width: 135px;
+    height: 56px;
+  }
 
-.kb-staging-table-import .tooltip .tooltip-arrow {
-  display: none;
+  .tooltip-arrow {
+    display: none;
+  }
 }
 
 /*
@@ -360,27 +383,26 @@
 }
 
 .kb-data-staging-metadata-list {
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
+  font: normal 700 90% $typeface-page-text;
   width: 115px;
   display: inline-block;
-  font-size: 90%;
 }
 
 .kb-data-staging-metadata-file-lines {
   white-space: pre;
   overflow: scroll;
-  font: 90% OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font: 90% $typeface-fixed-width;
   background-color: rgb(221 221 221);
   max-height: 200px;
 }
 
 /* https://www.figma.com/file/T30UN3QhWhhV5SpXiqY1ij/KBase-component-library?node-id=1%3A4 */
+
 .kb-data-staging-button {
   background: none;
   border: none;
   cursor: pointer;
-  font: normal 700 14px/18px Oxygen, Arial, sans-serif;
+  font: normal 700 14px/18px $typeface-page-text;
   text-align: center;
   text-transform: uppercase;
   color: rgb(67 121 177);
@@ -391,27 +413,27 @@
   top: -3px;
   letter-spacing: 0.5pt;
   border-radius: 4px;
-}
 
-.kb-data-staging-button:hover {
-  background: rgb(67 121 177 / 0.1);
-}
+  &:hover {
+    background: rgb(67 121 177 / 0.1);
+  }
 
-.kb-data-staging-button:focus {
-  background: rgb(67 121 177 / 0.15);
-}
+  &:focus {
+    background: rgb(67 121 177 / 0.15);
+  }
 
-.kb-data-staging-button:active {
-  background: rgb(67 121 177 / 0.2);
-}
+  &:active {
+    background: rgb(67 121 177 / 0.2);
+  }
 
-.kb-data-staging-button:disabled {
-  background: rgb(0 0 0 / 0.02);
-  color: rgb(146 146 146);
+  &:disabled {
+    background: rgb(0 0 0 / 0.02);
+    color: rgb(146 146 146);
+  }
 }
 
 .kb-data-stagingarea {
-  font: normal 700 24px/30px Oxygen, Arial, sans-serif;
+  font: normal 700 24px/30px $typeface-page-text;
 }
 
 .kb-data-staging-spacer {
@@ -427,7 +449,7 @@
 
 .kb-ga-seq {
   word-wrap: break-word;
-  font-family: OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-family: $typeface-fixed-width;
   max-width: 300px;
   max-height: 100px;
   overflow-y: auto;
@@ -436,6 +458,7 @@
 /**
  * Shim to make sure jQuery-ui dialogs are always on front of other DOM elements.
  */
+
 .ui-front {
   z-index: 1000;
 }
@@ -452,25 +475,24 @@
 }
 
 #kb-narr-name {
-  font: normal 700 18px/1.2 Oxygen, Arial, sans-serif;
+  font: normal 700 18px/1.2 $typeface-page-text;
   padding-bottom: 7px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  &:hover {
+    text-overflow: inherit;
+    white-space: normal;
+  }
+
+  > #save_widget {
+    padding: 0;
+  }
 }
 
-#kb-narr-name:hover {
-  text-overflow: inherit;
-  white-space: normal;
-}
-
-#kb-narr-name > #save_widget {
-  padding: 0;
-}
-
-#kb-narr-creator,
-#kb-narr-name > #save_widget {
-  font-family: Oxygen, Arial, sans-serif;
+#kb-narr-creator, #kb-narr-name > #save_widget {
+  font-family: $typeface-page-text;
   font-weight: 700;
 }
 
@@ -494,11 +516,11 @@
   background-color: rgb(254 255 214) !important;
   border-radius: 4px;
   z-index: 1000;
-}
 
-.ui-draggable.kb-data-inflight.-over {
-  border-color: rgb(0 128 0);
-  background-color: rgb(239 252 235) !important;
+  &.-over {
+    border-color: rgb(0 128 0);
+    background-color: rgb(239 252 235) !important;
+  }
 }
 
 .kb-data-list-drag-target {
@@ -509,17 +531,17 @@
   text-align: center;
   padding: 6px;
   border-radius: 4px;
-}
 
-.kb-data-list-drag-target.-drag-active {
-  background-color: rgb(254 255 214);
-}
+  &.-drag-active {
+    background-color: rgb(254 255 214);
+  }
 
-.kb-data-list-drag-target.-drag-hover {
-  background-color: rgb(239 252 235);
-  border-color: rgb(0 128 0);
-  height: 90px;
-  transition: all 0.25s ease;
+  &.-drag-hover {
+    background-color: rgb(239 252 235);
+    border-color: rgb(0 128 0);
+    height: 90px;
+    transition: all 0.25s ease;
+  }
 }
 
 #kb-notify-area {
@@ -546,23 +568,23 @@ header[role=banner] {
 nav[role=navigation] ul {
   margin: 1.2em 0 0.5em;
   padding-left: 0;
-}
 
-nav[role=navigation] ul li {
-  display: inline;
-  margin: 0 0.5em;
-  vertical-align: middle;
-}
+  li {
+    display: inline;
+    margin: 0 0.5em;
+    vertical-align: middle;
 
-nav[role=navigation] ul li a {
-  text-decoration: none;
-  font: normal 700 1.2em Oxygen, Arial, sans-serif;
-  padding: 7px 1em;
-  background-color: rgb(92 149 49);
-  color: rgb(255 255 255);
-  border-radius: 8px;
-  box-shadow: inset 0 3px 8px rgb(0 0 0 / 0.125);
-  border: 1px solid rgb(92 149 49);
+    a {
+      text-decoration: none;
+      font: normal 700 1.2em $typeface-page-text;
+      padding: 7px 1em;
+      background-color: rgb(92 149 49);
+      color: rgb(255 255 255);
+      border-radius: 8px;
+      box-shadow: inset 0 3px 8px rgb(0 0 0 / 0.125);
+      border: 1px solid rgb(92 149 49);
+    }
+  }
 }
 
 input#search_terms {
@@ -614,15 +636,16 @@ span#searchspan {
   padding: 8px;
   background-color: rgb(255 255 255);
   box-shadow: 0 1px 10px rgb(0 0 0 / 0.1);
-}
 
-.navbar-kbase a:hover {
-  cursor: pointer;
+  a:hover {
+    cursor: pointer;
+  }
 }
 
 /* Top bar nav buttons
    --------------------------
 */
+
 .kb-nav-btn {
   background-color: rgb(255 255 255);
   padding: 1px 7px;
@@ -653,13 +676,15 @@ span#searchspan {
   display: inline-block;
 }
 
-.kb-nav-btn > div {
-  color: rgb(102 102 102) !important;
-}
+.kb-nav-btn {
+  > div {
+    color: rgb(102 102 102) !important;
+  }
 
-.kb-nav-btn .kb-nav-btn-txt {
-  font-size: 10pt;
-  margin-top: -5px;
+  .kb-nav-btn-txt {
+    font-size: 10pt;
+    margin-top: -5px;
+  }
 }
 
 .navbar-right .kb-nav-btn:hover {
@@ -669,23 +694,22 @@ span#searchspan {
 .kb-nav-btn-upgrade {
   background-color: rgb(75 184 86) !important;
   display: none;
-}
 
-.kb-nav-btn-upgrade .fa::before,
-.kb-nav-btn-upgrade > div {
-  color: rgb(255 255 255) !important;
-}
+  .fa::before, > div {
+    color: rgb(255 255 255) !important;
+  }
 
-.kb-nav-btn-upgrade:hover {
-  background-color: rgb(67 160 71) !important;
-}
+  &:hover {
+    background-color: rgb(67 160 71) !important;
+  }
 
-.kb-nav-btn-upgrade.warning {
-  background-color: rgb(244 67 54) !important;
-}
+  &.warning {
+    background-color: rgb(244 67 54) !important;
 
-.kb-nav-btn-upgrade.warning:hover {
-  background-color: rgb(220 60 49) !important;
+    &:hover {
+      background-color: rgb(220 60 49) !important;
+    }
+  }
 }
 
 .kb-nav-menu-icon {
@@ -694,10 +718,10 @@ span#searchspan {
   text-align: center;
   vertical-align: middle;
   margin-right: 5px;
-}
 
-.kb-nav-menu-icon .fa {
-  font-size: 150%;
+  .fa {
+    font-size: 150%;
+  }
 }
 
 #kb-ipy-menu {
@@ -779,39 +803,38 @@ p#site-title {
   padding: 6px 0;
   border: 0;
   border-radius: 4px;
+
+  &:first-child {
+    border-right: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  &:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
 }
 
-#search-box-name:first-child {
-  border-right: 0;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-#search-box-name:last-child {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-#search-input,
-#search-select {
+#search-input {
   margin: -11px 0;
 }
 
 #search-select {
+  margin: -11px 0;
   width: 150px;
 }
 
 #search-area {
   position: relative;
-  font: 18px RobotoBlack, Arial, sans-serif;
-  font-weight: 400;
+  font: normal 400 18px $typeface-alt-page-text;
   color: rgb(104 104 104);
   margin: 0 5px;
-}
-
-#search-area,
-#search-area input {
   padding: 11px;
+
+  input {
+    padding: 11px;
+  }
 }
 
 /* center pane */
@@ -825,6 +848,7 @@ p#site-title {
 }
 
 /* footer */
+
 #bottom-tabs {
   clear: left;
   position: fixed;
@@ -832,20 +856,18 @@ p#site-title {
   width: 1170px;
   margin: 0 auto;
   border-top: 1px solid rgb(170 170 170);
-}
-
-#bottom-tabs,
-#bottom-tabs p a {
   background-color: rgb(255 255 255);
-}
 
-#bottom-tabs p a {
-  border: 1px solid rgb(1 136 65);
-  padding: 14px 20px;
-  font-size: 14px;
+  p a {
+    background-color: rgb(255 255 255);
+    border: 1px solid rgb(1 136 65);
+    padding: 14px 20px;
+    font-size: 14px;
+  }
 }
 
 /* left pane styling */
+
 #left-column {
   width: 380px;
   position: fixed;
@@ -877,10 +899,10 @@ p#site-title {
   color: rgb(255 255 255);
   font-weight: 700;
   font-size: 10pt;
-}
 
-.kb-side-overlay-close:hover {
-  color: rgb(255 165 0);
+  &:hover {
+    color: rgb(255 165 0);
+  }
 }
 
 .kb-side-panel {
@@ -904,10 +926,10 @@ p#site-title {
   cursor: pointer;
   z-index: 1;
   position: fixed;
-}
 
-#kb-side-toggle-in:hover {
-  color: rgb(255 255 255);
+  &:hover {
+    color: rgb(255 255 255);
+  }
 }
 
 .kb-side-toggle {
@@ -922,10 +944,10 @@ p#site-title {
   font-weight: 700;
   user-select: none;
   cursor: pointer;
-}
 
-.kb-side-toggle:hover {
-  color: rgb(255 255 255);
+  &:hover {
+    color: rgb(255 255 255);
+  }
 }
 
 .kb-side-header {
@@ -948,30 +970,30 @@ p#site-title {
   border-top: 6px solid rgb(128 128 128);
 }
 
-.kb-side-header.active,
-.kb-side-header:hover {
-  border-bottom: 6px solid rgb(16 206 52);
-}
+.kb-side-header {
+  &.active, &:hover {
+    border-bottom: 6px solid rgb(16 206 52);
+  }
 
-.kb-side-header.active {
-  color: rgb(255 255 255);
-  cursor: auto;
+  &.active {
+    color: rgb(255 255 255);
+    cursor: auto;
+  }
 }
 
 .kb-side-separator {
   border-bottom: 5px solid rgb(206 206 206);
 }
 
-.kb-side-tab.active {
-  display: inherit;
-}
-
 .kb-side-tab {
+  &.active {
+    display: inherit;
+  }
+
   display: none;
 }
 
-.kb-narr-side-panel-set,
-.kb-side-tab {
+.kb-narr-side-panel-set, .kb-side-tab {
   height: 100%;
 }
 
@@ -1004,10 +1026,10 @@ p#site-title {
   position: absolute;
   right: 7px;
   font-size: 0.8em;
-}
 
-#data-add-btn:hover {
-  color: rgb(0 0 0);
+  &:hover {
+    color: rgb(0 0 0);
+  }
 }
 
 #data-tab-nav {
@@ -1015,32 +1037,32 @@ p#site-title {
   padding-top: 10px;
   background-color: rgb(0 187 187);
   width: 100%;
-}
 
-#data-tab-nav ul {
-  padding-bottom: 0;
-  bottom: 0;
-  top: 50px;
-}
+  ul {
+    padding-bottom: 0;
+    bottom: 0;
+    top: 50px;
 
-#data-tab-nav ul li {
-  display: inline;
-  border: 1px solid rgb(0 0 0);
-  padding: 4px 10px;
-  background-color: rgb(221 221 221);
-}
+    li {
+      display: inline;
+      border: 1px solid rgb(0 0 0);
+      padding: 4px 10px;
+      background-color: rgb(221 221 221);
 
-#data-tab-nav ul li a:hover {
-  text-decoration: none;
-  color: rgb(170 0 0);
-}
+      a {
+        &:hover {
+          text-decoration: none;
+          color: rgb(170 0 0);
+        }
 
-#data-tab-nav ul li a {
-  color: rgb(0 0 0);
-}
+        color: rgb(0 0 0);
+      }
 
-#data-tab-nav ul li.selected {
-  background-color: rgb(255 255 255);
+      &.selected {
+        background-color: rgb(255 255 255);
+      }
+    }
+  }
 }
 
 #data-view-panel {
@@ -1055,30 +1077,30 @@ p#site-title {
   margin-top: 1px;
   border-bottom: 1px solid rgb(170 170 170);
   overflow: auto;
-}
 
-#data-pane p {
-  margin: 0;
-}
+  p {
+    margin: 0;
 
-#data-pane p span {
-  display: block;
-  padding: 2px 10px;
-  color: rgb(255 255 255);
-  border: 1px solid rgb(255 255 255);
-  width: 123px;
-  margin: 0;
-  text-align: center;
-}
+    span {
+      display: block;
+      padding: 2px 10px;
+      color: rgb(255 255 255);
+      border: 1px solid rgb(255 255 255);
+      width: 123px;
+      margin: 0;
+      text-align: center;
 
-#data-pane p span.tab1 {
-  float: right;
-  background: linear-gradient(rgb(102 102 102), rgb(187 187 187));
-  color: rgb(255 255 255);
-}
+      &.tab1 {
+        float: right;
+        background: linear-gradient(rgb(102 102 102), rgb(187 187 187));
+        color: rgb(255 255 255);
+      }
 
-#data-pane p span.tab2 {
-  background: linear-gradient(rgb(204 204 204), rgb(153 153 153));
+      &.tab2 {
+        background: linear-gradient(rgb(204 204 204), rgb(153 153 153));
+      }
+    }
+  }
 }
 
 #function-pane {
@@ -1116,12 +1138,12 @@ h3.pane-title {
 ul.pane-list {
   margin: 0;
   padding: 2px;
-}
 
-ul.pane-list li {
-  list-style: none;
-  padding: 1px;
-  margin-left: 5px;
+  li {
+    list-style: none;
+    padding: 1px;
+    margin-left: 5px;
+  }
 }
 
 /* --- KBase method list styles -- */
@@ -1139,11 +1161,11 @@ ul.pane-list li {
   font-weight: 700;
   text-shadow: -1px 0 rgb(119 119 119), 0 1px rgb(119 119 119), 1px 0 rgb(119 119 119), 0 -1px rgb(119 119 119);
   cursor: pointer;
-}
 
-.kb-method-list-logo:hover {
-  border-width: 5px;
-  padding-top: 2.5pt;
+  &:hover {
+    border-width: 5px;
+    padding-top: 2.5pt;
+  }
 }
 
 .kb-method-list-more-div {
@@ -1151,10 +1173,10 @@ ul.pane-list li {
   font-size: 10pt;
   margin: 2px;
   text-align: justify;
-}
 
-.kb-method-list-more-div > div:last-child {
-  text-align: right;
+  > div:last-child {
+    text-align: right;
+  }
 }
 
 .kb-method-search-clear {
@@ -1164,72 +1186,81 @@ ul.pane-list li {
 }
 
 /* A function in the function pane */
-li.function a {
-  text-decoration: none;
-  color: rgb(80 130 50);
-}
 
-li.function a:visited {
-  /* don't recolor */
-  color: rgb(80 130 50);
+li {
+  &.function a {
+    text-decoration: none;
+    color: rgb(80 130 50);
+
+    &:visited {
+      /* don't recolor */
+      color: rgb(80 130 50);
+    }
+  }
+
+  &.dataset a {
+    text-decoration: none;
+    color: rgb(130 80 50);
+
+    &:visited {
+      /* don't recolor */
+      color: rgb(130 80 50);
+    }
+  }
 }
 
 /* dataset in data pane */
-li.dataset a {
-  text-decoration: none;
-  color: rgb(130 80 50);
-}
-
-li.dataset a:visited {
-  /* don't recolor */
-  color: rgb(130 80 50);
-}
 
 /* dialog box + forms styling */
 
 .dialog-box {
   padding: 20px;
-}
 
-.dialog-box ul li {
-  padding: 50px 5px;
-  border-bottom: 1px solid rgb(170 170 170);
-  font-size: 1.2em;
-}
+  ul li {
+    padding: 50px 5px;
+    border-bottom: 1px solid rgb(170 170 170);
+    font-size: 1.2em;
 
-.dialog-box ul li:first-child {
-  padding-top: 20px;
-}
+    &:first-child {
+      padding-top: 20px;
+    }
 
-.dialog-box ul li:last-child {
-  border-bottom: none;
+    &:last-child {
+      border-bottom: none;
+    }
+  }
 }
 
 fieldset {
   margin: 0 0 15px;
   border: none;
-}
 
-fieldset label {
-  margin: 0 0 3px;
-  font-weight: 700;
-  font-size: 1em;
-}
+  label {
+    margin: 0 0 3px;
+    font-weight: 700;
+    font-size: 1em;
+  }
 
-fieldset input[type=password],
-fieldset input[type=text],
-fieldset select {
-  width: 200px;
+  input {
+    &[type=password], &[type=text] {
+      width: 200px;
+    }
+  }
+
+  select {
+    width: 200px;
+  }
 }
 
 /* styling of cells */
 
-div.dataset-cell,
-div.function-cell {
-  width: 90%;
-  margin: 3px auto;
-  padding: 7px 17px;
-  border: 1px solid rgb(204 204 204);
+div {
+  &.dataset-cell, &.function-cell {
+    width: 90%;
+    margin: 3px auto;
+    padding: 7px 17px;
+    border: 1px solid rgb(204 204 204);
+  }
 }
 
 img.dataset-cell {
@@ -1243,13 +1274,11 @@ img.dataset-cell {
   background-repeat: no-repeat;
 }
 
-.dataset-cell p,
-.function-cell p {
+.dataset-cell p, .function-cell p {
   font-size: 0.875em;
 }
 
-.dataset-cell h2,
-.function-cell h2 {
+.dataset-cell h2, .function-cell h2 {
   margin-bottom: 0;
   font-size: 1.1em;
 }
@@ -1262,10 +1291,10 @@ img.dataset-cell {
   height: 1em;
   border: 2px solid rgb(255 255 255);
   color: rgb(17 17 17);
-}
 
-.textcell:hover {
-  border: 2px dotted rgb(204 204 204);
+  &:hover {
+    border: 2px dotted rgb(204 204 204);
+  }
 }
 
 p.textcuepara {
@@ -1276,22 +1305,21 @@ p.textcuepara {
   display: none;
 }
 
-div.texttools p,
-div.tools p {
-  margin: 0;
+div {
+  &.texttools p, &.tools p {
+    margin: 0;
+  }
+
+  &.textarea {
+    width: 650px;
+    border: none;
+    padding: 0;
+    height: auto;
+    min-height: 1.2em;
+  }
 }
 
-div.textarea {
-  width: 650px;
-  border: none;
-  padding: 0;
-  height: auto;
-  min-height: 1.2em;
-}
-
-.texttools,
-.tools,
-div.textarea {
+.texttools, .tools, div.textarea {
   display: none;
 }
 
@@ -1299,12 +1327,12 @@ div.textarea {
   height: 1em;
   margin-top: 0.5em;
   margin-left: 10px;
-}
 
-.tools a {
-  border: 1px solid rgb(1 136 65);
-  padding: 2px 4px;
-  font-size: 13px;
+  a {
+    border: 1px solid rgb(1 136 65);
+    padding: 2px 4px;
+    font-size: 13px;
+  }
 }
 
 #narrative-header .tools {
@@ -1327,19 +1355,21 @@ img.remove {
   background-color: fbfaed;
 }
 
-div.metadata {
-  display: block;
-  width: 200px;
-  padding: 0 10px;
-  height: 100px;
-  float: left;
-}
+div {
+  &.metadata {
+    display: block;
+    width: 200px;
+    padding: 0 10px;
+    height: 100px;
+    float: left;
+  }
 
-div.social {
-  float: right;
-  width: 80px;
-  padding: 0 10px;
-  display: none;
+  &.social {
+    float: right;
+    width: 80px;
+    padding: 0 10px;
+    display: none;
+  }
 }
 
 p span.notification {
@@ -1356,50 +1386,53 @@ p span.notification {
 
 .dropdown-submenu {
   position: relative;
-}
 
-.dropdown-submenu > .dropdown-menu {
-  top: 0;
-  left: 100%;
-  margin-top: -6px;
-  margin-left: -1px;
-  border-radius: 0 6px 6px;
-}
+  > .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -6px;
+    margin-left: -1px;
+    border-radius: 0 6px 6px;
+  }
 
-.dropdown-submenu:hover > .dropdown-menu {
-  display: block;
-}
+  &:hover {
+    > .dropdown-menu {
+      display: block;
+    }
 
-.dropdown-submenu > a::after {
-  display: block;
-  content: " ";
-  float: right;
-  width: 0;
-  height: 0;
-  border-color: transparent transparent transparent rgb(204 204 204);
-  border-style: solid;
-  border-width: 5px 0 5px 5px;
-  margin-top: 5px;
-  margin-right: -10px;
-}
+    > a::after {
+      border-left-color: rgb(255 255 255);
+    }
+  }
 
-.dropdown-submenu:hover > a::after {
-  border-left-color: rgb(255 255 255);
-}
+  > a::after {
+    display: block;
+    content: " ";
+    float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent transparent transparent rgb(204 204 204);
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    margin-top: 5px;
+    margin-right: -10px;
+  }
 
-.dropdown-submenu.pull-left {
-  float: none;
-}
+  &.pull-left {
+    float: none;
 
-.dropdown-submenu.pull-left > .dropdown-menu {
-  left: -100%;
-  margin-left: 10px;
-  border-radius: 6px 0 6px 6px;
+    > .dropdown-menu {
+      left: -100%;
+      margin-left: 10px;
+      border-radius: 6px 0 6px 6px;
+    }
+  }
 }
 
 /** End Bootstrap 3 submenu fix **/
 
 /* Fixes to bring toolbars up to Bootstrap 3 */
+
 #maintoolbar {
   position: relative;
   top: 5px;
@@ -1421,14 +1454,15 @@ p span.notification {
   background-color: rgb(249 249 249);
   border-bottom: 2px solid rgb(221 221 221);
   padding-bottom: 5px;
-}
 
-#menubar .navbar .container {
-  padding-left: 0;
-  padding-right: 0;
+  .navbar .container {
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 
 /* some more bootstrap hacks */
+
 .navbar {
   min-height: 0;
   background-image: none;
@@ -1440,13 +1474,7 @@ p span.notification {
   padding-bottom: 7px;
 }
 
-.btn-danger,
-.btn-default,
-.btn-info,
-.btn-primary,
-.btn-success,
-.btn-warning,
-.panel-default > .panel-heading {
+.btn-danger, .btn-default, .btn-info, .btn-primary, .btn-success, .btn-warning, .panel-default > .panel-heading {
   background-image: none;
 }
 
@@ -1467,8 +1495,7 @@ div#notebook_panel {
   color: rgb(0 136 204) !important;
 }
 
-.creator-stamp,
-.version-stamp a {
+.creator-stamp, .version-stamp a {
   padding-right: 320px;
   text-align: right;
 }
@@ -1476,31 +1503,31 @@ div#notebook_panel {
 .creator-stamp {
   height: 1em;
   color: rgb(0 102 152);
-  font: normal 700 120% Oxygen, Arial, sans-serif;
+  font: normal 700 120% $typeface-page-text;
 }
 
 .panel {
   margin-bottom: 0;
 }
 
-#kb-jobs-panel,
-.kb-narr-side-panel {
+#kb-jobs-panel {
   margin-bottom: 5px;
 }
 
 .kb-narr-side-panel {
+  margin-bottom: 5px;
   height: 100%;
-}
 
-.kb-narr-side-panel .kb-title {
-  padding: 10px 5px;
-  font: normal 700 19px Oxygen, Arial, sans-serif;
-  text-transform: uppercase;
-  color: rgb(46 97 141);
-}
+  .kb-title {
+    padding: 10px 5px;
+    font: normal 700 19px $typeface-page-text;
+    text-transform: uppercase;
+    color: rgb(46 97 141);
+  }
 
-.kb-narr-side-panel .btn {
-  border: none;
+  .btn {
+    border: none;
+  }
 }
 
 /* From user and job state service */
@@ -1559,6 +1586,7 @@ div#notebook_panel {
 }
 
 /* For connecting lines */
+
 .kb-line {
   background-color: rgb(211 211 211);
   position: absolute;
@@ -1569,12 +1597,12 @@ div#notebook_panel {
 .nav-tabs .glyphicon-remove {
   margin: 0 0 0 3px;
   color: rgb(170 170 170);
-}
 
-.nav-tabs .glyphicon-remove:hover {
-  color: rgb(102 102 102);
-  cursor: hand;
-  cursor: pointer;
+  &:hover {
+    color: rgb(102 102 102);
+    cursor: hand;
+    cursor: pointer;
+  }
 }
 
 /**
@@ -1591,41 +1619,50 @@ div#notebook_panel {
  * Putting them here in the hopes they don't clobber anything else, the way
  * the rest of dataTables might...
  */
+
 .paging_full_numbers {
   height: 22px;
   line-height: 22px;
-}
 
-.paging_full_numbers a:active {
-  outline: none;
-}
+  a {
+    &:active {
+      outline: none;
+    }
 
-.paging_full_numbers a:hover {
-  text-decoration: none;
-}
+    &:hover {
+      text-decoration: none;
+    }
 
-.paging_full_numbers a.paginate_active,
-.paging_full_numbers a.paginate_button {
-  border: 1px solid rgb(170 170 170);
-  border-radius: 5px;
-  padding: 2px 5px;
-  margin: 0 3px;
-  cursor: pointer;
-  *cursor: hand;
-  color: rgb(51 51 51) !important;
-}
+    &.paginate_active {
+      border: 1px solid rgb(170 170 170);
+      border-radius: 5px;
+      padding: 2px 5px;
+      margin: 0 3px;
+      cursor: pointer;
+      *cursor: hand;
+      color: rgb(51 51 51) !important;
+    }
 
-.paging_full_numbers a.paginate_button {
-  background-color: rgb(221 221 221);
-}
+    &.paginate_button {
+      border: 1px solid rgb(170 170 170);
+      border-radius: 5px;
+      padding: 2px 5px;
+      margin: 0 3px;
+      cursor: pointer;
+      *cursor: hand;
+      color: rgb(51 51 51) !important;
+      background-color: rgb(221 221 221);
 
-.paging_full_numbers a.paginate_button:hover {
-  background-color: rgb(204 204 204);
-  text-decoration: none !important;
-}
+      &:hover {
+        background-color: rgb(204 204 204);
+        text-decoration: none !important;
+      }
+    }
 
-.paging_full_numbers a.paginate_active {
-  background-color: rgb(153 179 255);
+    &.paginate_active {
+      background-color: rgb(153 179 255);
+    }
+  }
 }
 
 /** End kbaseNarrFuncResults.css **/
@@ -1639,6 +1676,7 @@ div#notebook_panel {
  */
 
 /* Header for panel */
+
 .kb-function-header {
   padding: 10px 0;
   color: rgb(0 100 182);
@@ -1651,19 +1689,19 @@ div#notebook_panel {
 .kb-narr-panel-body {
   height: 100%;
   padding: 3px;
-}
 
-.kb-narr-panel-body > div {
-  height: 100%;
+  > div {
+    height: 100%;
+  }
 }
 
 .kb-narr-panel-body-wrapper {
   overflow-y: auto;
   height: 100%;
-}
 
-.kb-narr-panel-body-wrapper > div {
-  height: 100%;
+  > div {
+    height: 100%;
+  }
 }
 
 .kb-narr-panel-toggle {
@@ -1675,52 +1713,57 @@ div#notebook_panel {
 }
 
 /* Container for func list */
+
 .kb-function-body {
   height: 100%;
   width: 100%;
-}
 
-.kb-function-body .accordion .panel .panel-body {
-  padding: 0 0 0 5px;
-}
+  .accordion .panel .panel-body {
+    padding: 0 0 0 5px;
+  }
 
-.kb-function-body ul {
-  border: 1px solid rgb(221 221 221);
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  width: 100%;
-}
+  ul {
+    border: 1px solid rgb(221 221 221);
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
 
-.kb-function-body li {
-  padding: 5px;
-  width: 100%;
-  text-align: left;
+  li {
+    padding: 5px;
+    width: 100%;
+    text-align: left;
+
+    &:nth-child(odd) {
+      background-color: rgb(238 238 238);
+      border-bottom: 1px solid rgb(221 221 221);
+    }
+
+    &:nth-child(2n) {
+      background-color: rgb(255 255 255);
+      border-bottom: 1px solid rgb(221 221 221);
+    }
+
+    &:hover {
+      text-decoration: underline;
+      cursor: pointer;
+      background-color: rgb(244 245 214);
+    }
+  }
+
+  a {
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
 }
 
 /* alt. rows */
-.kb-function-body li:nth-child(odd) {
-  background-color: rgb(238 238 238);
-  border-bottom: 1px solid rgb(221 221 221);
-}
-
-.kb-function-body li:nth-child(2n) {
-  background-color: rgb(255 255 255);
-  border-bottom: 1px solid rgb(221 221 221);
-}
-
-.kb-function-body li:hover {
-  text-decoration: underline;
-  cursor: pointer;
-  background-color: rgb(244 245 214);
-}
 
 /* Link to a function */
-
-.kb-function-body a,
-.kb-function-body a:hover {
-  text-decoration: none;
-}
 
 .kb-function-error {
   background-color: rgb(242 222 222) !important;
@@ -1729,16 +1772,17 @@ div#notebook_panel {
 }
 
 /* Help on a function */
+
 .kb-function-help {
   padding: 0 3px;
   float: right;
   cursor: pointer;
   color: rgb(86 85 158);
   font-size: 14pt;
-}
 
-.kb-function-help:hover {
-  color: rgb(0 0 0);
+  &:hover {
+    color: rgb(0 0 0);
+  }
 }
 
 .kb-function-help-popup {
@@ -1748,47 +1792,47 @@ div#notebook_panel {
   z-index: 99;
   cursor: pointer;
   max-width: 300px;
-}
 
-.kb-function-help-popup h1 {
-  margin: -10px 0 0;
-  padding: 0;
-  font-size: 110%;
-  color: rgb(48 118 162);
-}
+  h1 {
+    margin: -10px 0 0;
+    padding: 0;
+    font-size: 110%;
+    color: rgb(48 118 162);
+  }
 
-.kb-function-help-popup h2 {
-  margin: 10px 0 -10px;
-  padding-top: 5px;
-  font-size: 80%;
-  color: rgb(153 153 153);
-  font-style: italic;
-  text-align: right;
-  font-weight: 100;
-}
+  h2 {
+    margin: 10px 0 -10px;
+    padding-top: 5px;
+    font-size: 80%;
+    color: rgb(153 153 153);
+    font-style: italic;
+    text-align: right;
+    font-weight: 100;
+  }
 
-.kb-function-help-popup .header {
-  background-color: rgb(255 255 255);
-  color: rgb(48 118 162);
-  font-weight: 700;
-  font-size: 120%;
-  margin: 0;
-  padding: 0;
-}
+  .header {
+    background-color: rgb(255 255 255);
+    color: rgb(48 118 162);
+    font-weight: 700;
+    font-size: 120%;
+    margin: 0;
+    padding: 0;
+  }
 
-.kb-function-help-popup a {
-  font-weight: 700;
-  text-decoration: underline;
-}
+  a {
+    font-weight: 700;
+    text-decoration: underline;
+  }
 
-.kb-function-help-popup .version {
-  font-size: 80%;
-  color: rgb(102 102 102);
-}
+  .version {
+    font-size: 80%;
+    color: rgb(102 102 102);
+  }
 
-.kb-function-help-popup .body {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  .body {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
 }
 
 #kb-function-help {
@@ -1798,23 +1842,23 @@ div#notebook_panel {
   z-index: 99;
   cursor: pointer;
   width: 250px;
-}
 
-#kb-function-help h1 {
-  margin: -10px 0 0;
-  padding: 0;
-  font-size: 110%;
-  color: rgb(48 118 162);
-}
+  h1 {
+    margin: -10px 0 0;
+    padding: 0;
+    font-size: 110%;
+    color: rgb(48 118 162);
+  }
 
-#kb-function-help h2 {
-  margin: 10px 0 -10px;
-  padding-top: 5px;
-  font-size: 80%;
-  color: rgb(153 153 153);
-  font-style: italic;
-  text-align: right;
-  font-weight: 100;
+  h2 {
+    margin: 10px 0 -10px;
+    padding-top: 5px;
+    font-size: 80%;
+    color: rgb(153 153 153);
+    font-style: italic;
+    text-align: right;
+    font-weight: 100;
+  }
 }
 
 #kb-function-error-traceback {
@@ -1824,15 +1868,22 @@ div#notebook_panel {
   overflow-x: scroll;
 }
 
-.kb-function-dim,
-.kb-function-dim .panel-heading {
+.kb-function-dim {
   background-color: rgb(238 238 238) !important;
+
+  .panel-heading {
+    background-color: rgb(238 238 238) !important;
+  }
 }
 
-.kb-function-cat-dim,
-.kb-function-cat-dim .panel-heading {
+.kb-function-cat-dim {
   background-color: rgb(221 221 221) !important;
   border-color: rgb(221 221 221) !important;
+
+  .panel-heading {
+    background-color: rgb(221 221 221) !important;
+    border-color: rgb(221 221 221) !important;
+  }
 }
 
 .kb-function-toggle {
@@ -1841,32 +1892,33 @@ div#notebook_panel {
   cursor: pointer;
 }
 
-.kb-cell-toolbar .buttons {
-  font-weight: 700;
-  color: rgb(206 206 206) !important;
-}
+.kb-cell-toolbar {
+  .buttons {
+    font-weight: 700;
+    color: rgb(206 206 206) !important;
+  }
 
-.kb-cell-toolbar .btn {
-  border: none;
-}
+  .btn {
+    border: none;
+  }
 
-.kb-cell-toolbar .icon {
-  display: inline-block;
-  padding: 0;
-  margin-right: 4px;
-  vertical-align: top;
-  overflow: hidden;
-}
+  .icon {
+    display: inline-block;
+    padding: 0;
+    margin-right: 4px;
+    vertical-align: top;
+    overflow: hidden;
+  }
 
-.kb-cell-toolbar .title {
-  font: normal 700 120% Oxygen, Arial, sans-serif;
-  color: rgb(46 97 141);
-}
+  .title {
+    font: normal 700 120% $typeface-page-text;
+    color: rgb(46 97 141);
+  }
 
-.kb-cell-toolbar .info-link,
-.kb-cell-toolbar .subtitle {
-  font: 90% Roboto, Arial, sans-serif;
-  color: rgb(102 102 102);
+  .info-link, .subtitle {
+    font: 90% $typeface-alt-page-text;
+    color: rgb(102 102 102);
+  }
 }
 
 .kb-toolbar-open {
@@ -1896,37 +1948,39 @@ div#notebook_panel {
 .kb-cell-run {
   z-index: auto;
   opacity: 1;
-}
 
-.kb-cell-run h1 {
-  font: normal 400 12pt/15px Roboto, Arial, sans-serif;
-  color: rgb(46 97 141);
-  margin: 3px 13px 3px 3px;
-  opacity: inherit;
-  display: inline;
-}
+  h1 {
+    font: normal 400 12pt/15px $typeface-alt-page-text;
+    color: rgb(46 97 141);
+    margin: 3px 13px 3px 3px;
+    opacity: inherit;
+    display: inline;
+  }
 
-.kb-cell-run div.kb-func-desc {
-  opacity: inherit;
-  display: block;
-}
+  div.kb-func-desc {
+    opacity: inherit;
+    display: block;
+  }
 
-.kb-cell-run h2 {
-  font: normal 400 11pt/1.5 Roboto, Arial, sans-serif;
-  color: rgb(102 102 102);
-  margin: 3px;
-  opacity: inherit;
-}
+  h2 {
+    font: normal 400 11pt/1.5 $typeface-alt-page-text;
+    color: rgb(102 102 102);
+    margin: 3px;
+    opacity: inherit;
+  }
 
-.kb-cell-run form input[type=submit] {
-  float: right;
-  opacity: inherit;
-  margin-top: 5px;
-}
+  form {
+    input[type=submit] {
+      float: right;
+      opacity: inherit;
+      margin-top: 5px;
+    }
 
-.kb-cell-run form .buttons {
-  float: right;
-  margin-top: 5px;
+    .buttons {
+      float: right;
+      margin-top: 5px;
+    }
+  }
 }
 
 .kb-cell-params table {
@@ -1935,40 +1989,58 @@ div#notebook_panel {
   opacity: inherit;
   margin-left: auto;
   margin-right: auto;
+
+  > tr {
+    border: none;
+    vertical-align: middle;
+  }
 }
 
-.kb-cell-params table > tr,
 td {
   border: none;
   vertical-align: middle;
 }
 
-.kb-cell-params tbody > tr > td,
-.kb-cell-params tbody > tr > th,
-.kb-cell-params tfoot > tr > td,
-.kb-cell-params tfoot > tr > th,
-.kb-cell-params thead > tr > td,
-.kb-cell-params thead > tr > th {
-  padding: 2px 4px;
-}
+.kb-cell-params {
+  tbody > tr > {
+    td, th {
+      padding: 2px 4px;
+    }
+  }
 
-.kb-cell-params tr:hover td,
-.kb-cell-params tr:hover th {
-  background: rgb(238 238 238);
+  tfoot > tr > {
+    td, th {
+      padding: 2px 4px;
+    }
+  }
+
+  thead > tr > {
+    td, th {
+      padding: 2px 4px;
+    }
+  }
+
+  tr:hover {
+    td, th {
+      background: rgb(238 238 238);
+    }
+  }
 }
 
 /* grey out the form while running */
+
 .kb-cell-run.running form {
   opacity: 0.6;
 }
 
 /* progress "meter" */
+
 .kb-cell-progress {
   display: none;
-}
 
-.kb-cell-progress.running {
-  display: block;
+  &.running {
+    display: block;
+  }
 }
 
 .kb-cell-progressbar {
@@ -1980,9 +2052,8 @@ td {
   color: rgb(46 97 141);
 }
 
-.kb-err-desc,
-.kb-out-desc {
-  font: normal 400 12pt/15px Roboto, Arial, sans-serif;
+.kb-err-desc, .kb-out-desc {
+  font: normal 400 12pt/15px $typeface-alt-page-text;
   margin: 3px;
   opacity: inherit;
   display: inline;
@@ -2003,7 +2074,7 @@ td {
 
 .kb-func-timestamp {
   color: rgb(85 85 85);
-  font: 10pt Roboto, Arial, sans-serif;
+  font: 10pt $typeface-alt-page-text;
   margin-top: -3px;
   padding-right: 1em;
 }
@@ -2012,34 +2083,36 @@ td {
   color: rgb(192 192 192);
 }
 
-.kb-func-panel,
-.kb-func-panel > .panel-heading {
+.kb-func-panel {
   border-color: rgb(188 232 241);
   border-radius: 1px;
-}
 
-.kb-func-panel > .panel-heading {
-  color: rgb(49 112 143);
-  background-color: rgb(217 237 247);
-  padding: 5px 10px;
-}
+  > .panel-heading {
+    border-color: rgb(188 232 241);
+    border-radius: 1px;
+    color: rgb(49 112 143);
+    background-color: rgb(217 237 247);
+    padding: 5px 10px;
+  }
 
-.kb-func-panel .panel-body {
-  padding: 0 10px;
+  .panel-body {
+    padding: 0 10px;
+    font-family: $typeface-page-text;
+  }
 
-  /* TODO: change to a standard font! */
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
+  > {
+    .panel-heading + .panel-collapse .panel-body {
+      border-top-color: rgb(188 232 241);
+    }
 
-.kb-func-panel > .panel-heading + .panel-collapse .panel-body {
-  border-top-color: rgb(188 232 241);
-}
-
-.kb-func-panel > .panel-footer + .panel-collapse .panel-body {
-  border-bottom-color: rgb(188 232 241);
+    .panel-footer + .panel-collapse .panel-body {
+      border-bottom-color: rgb(188 232 241);
+    }
+  }
 }
 
 /** output cell styling */
+
 .kb-cell-output .panel {
   border-radius: 0;
 }
@@ -2053,14 +2126,17 @@ td {
   padding: 5px 10px;
 }
 
-.rendered_html .kb-cell-output ul {
-  margin: 0 0 10px;
+.rendered_html {
+  .kb-cell-output ul {
+    margin: 0 0 10px;
+  }
+
+  :link {
+    text-decoration: none;
+  }
 }
 
 /* override from some jupyter style? */
-.rendered_html :link {
-  text-decoration: none;
-}
 
 .kb-cell-output .nav > li > a {
   padding: 5px 10px;
@@ -2072,29 +2148,30 @@ td {
 }
 
 /*** styling for the jobs manager */
-.kb-jobs-title {
-  font: normal 700 1.2em Oxygen, Arial, sans-serif;
-  color: rgb(24 90 133);
-}
 
-.kb-jobs-title .glyphicon-info-sign {
-  font-size: 0.9em;
+.kb-jobs-title {
+  font: normal 700 1.2em $typeface-page-text;
+  color: rgb(24 90 133);
+
+  .glyphicon-info-sign {
+    font-size: 0.9em;
+  }
 }
 
 .kb-jobs-info-table {
   margin: 0 2px;
   width: 95%;
-}
 
-.kb-jobs-info-table th {
-  font-family: Oxygen, Arial, sans-serif;
-  font-weight: 700;
-  color: rgb(119 119 119);
-  vertical-align: top;
-  padding-right: 5px;
-  width: 30%;
-  max-width: 30%;
-  min-width: 30%;
+  th {
+    font-family: $typeface-page-text;
+    font-weight: 700;
+    color: rgb(119 119 119);
+    vertical-align: top;
+    padding-right: 5px;
+    width: 30%;
+    max-width: 30%;
+    min-width: 30%;
+  }
 }
 
 .kb-jobs-item {
@@ -2124,6 +2201,7 @@ td {
 }
 
 /** new method parameter styling **/
+
 .kb-method-parameter-panel {
   border-left: 3px solid rgb(255 255 255);
 }
@@ -2139,6 +2217,7 @@ td {
 }
 
 /* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
+
 .kb-method-parameter-row-hover {
   background: rgb(249 249 249);
 }
@@ -2152,16 +2231,15 @@ td {
   text-align: center;
   font-size: 9pt;
   color: rgb(244 67 54);
-}
-
-/* not sure how to get text in these divs to valign middle... */
-.kb-method-parameter-error-mssg,
-.kb-method-parameter-name {
-  font-family: Oxygen, Arial, sans-serif;
+  font-family: $typeface-page-text;
   font-weight: 700;
 }
 
+/* not sure how to get text in these divs to valign middle... */
+
 .kb-method-parameter-name {
+  font-family: $typeface-page-text;
+  font-weight: 700;
   color: rgb(119 119 119);
   text-align: right;
   vertical-align: middle;
@@ -2175,10 +2253,21 @@ td {
   vertical-align: middle;
   white-space: nowrap;
   padding-left: 10px;
-}
 
-.kb-method-parameter-input input {
-  font-weight: 700;
+  input {
+    font-weight: 700;
+  }
+
+  > div {
+    /* allow space for the required (red arrow), satisfied (green checkbox) icon */
+    padding-right: 20px;
+  }
+
+  .kb-method-parameter-accepted-glyph, .kb-method-parameter-required-glyph {
+    /* This scoots the icon inside */
+    margin-left: -15px;
+    font-size: 15px;
+  }
 }
 
 /*
@@ -2192,17 +2281,6 @@ to accomodate the the icon intruding into its space. This technique makes space
 in the column in which the icon lives, and does this by shrinking the select
 control with padding, and then scooting the icon back into its column.
 */
-.kb-method-parameter-input > div {
-  /* allow space for the required (red arrow), satisfied (green checkbox) icon */
-  padding-right: 20px;
-}
-
-.kb-method-parameter-input .kb-method-parameter-accepted-glyph,
-.kb-method-parameter-input .kb-method-parameter-required-glyph {
-  /* This scoots the icon inside */
-  margin-left: -15px;
-  font-size: 15px;
-}
 
 .kb-parameter-data-selection {
   font-weight: 700;
@@ -2229,26 +2307,22 @@ control with padding, and then scooting the icon back into its column.
   margin-left: 7px;
 }
 
-.kb-method-advanced-options-controller-inactive,
-.kb-method-parameter-info,
-.kb-parameter-data-row-add,
-.kb-parameter-data-row-remove {
+.kb-method-advanced-options-controller-inactive, .kb-method-parameter-info, .kb-parameter-data-row-add, .kb-parameter-data-row-remove {
   color: rgb(119 119 119);
 }
 
-.kb-method-advanced-options-controller,
-.kb-method-advanced-options-controller-inactive {
-  font: italic 700 10pt/14px Oxygen, Arial, sans-serif;
+.kb-method-advanced-options-controller, .kb-method-advanced-options-controller-inactive {
+  font: italic 700 10pt/14px $typeface-page-text;
   text-align: center;
 }
 
 .kb-method-advanced-options-controller {
   cursor: pointer;
   color: rgb(0 136 204);
-}
 
-.kb-method-advanced-options-controller:hover {
-  color: rgb(42 100 150);
+  &:hover {
+    color: rgb(42 100 150);
+  }
 }
 
 .kb-method-footer {
@@ -2283,7 +2357,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-panel-description {
-  font: normal 400 12pt/15px Roboto, Arial, sans-serif;
+  font: normal 400 12pt/15px $typeface-alt-page-text;
   color: rgb(46 97 141);
 }
 
@@ -2295,21 +2369,19 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-step-error-heading {
-  font: normal 700 13pt/14px Oxygen, Arial, sans-serif;
+  font: normal 700 13pt/14px $typeface-page-text;
   padding-left: 5px;
-}
-
-.kb-app-step-error-heading,
-.kb-app-step-error-main-heading {
   color: rgb(85 85 85);
   text-align: left;
   margin-top: 20px;
 }
 
 .kb-app-step-error-main-heading {
+  color: rgb(85 85 85);
+  text-align: left;
+  margin-top: 20px;
   cursor: pointer;
-  font: 16pt/18px Oxygen, Arial, sans-serif;
-  line-height: 18px;
+  font: 16pt/18px $typeface-page-text;
   padding-left: 20px;
 }
 
@@ -2327,14 +2399,14 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-app-next {
   border-top: 2px solid rgb(206 206 206);
-}
 
-.kb-app-next h3 {
-  font: italic 400 0.9em Roboto, Arial, sans-serif;
-  color: rgb(136 136 136);
-  float: left;
-  padding: 0.5em 0 0.25em;
-  margin: 0;
+  h3 {
+    font: italic 400 0.9em $typeface-alt-page-text;
+    color: rgb(136 136 136);
+    float: left;
+    padding: 0.5em 0 0.25em;
+    margin: 0;
+  }
 }
 
 .kb-app-next-hide {
@@ -2345,7 +2417,7 @@ control with padding, and then scooting the icon back into its column.
 .kb-app-next-hide,
 .kb-app-next-unhide {
   color: rgb(33 150 243);
-  font: 0.9em Roboto, Arial, sans-serif;
+  font: 0.9em $typeface-alt-page-text;
   margin-top: 0.25em;
 }
 
@@ -2370,40 +2442,42 @@ control with padding, and then scooting the icon back into its column.
   }
 }
 
-button.kb-app-run {
-  background-color: rgb(33 150 243);
-  border-radius: 1px;
-  color: rgb(255 255 255);
-  border: none;
-  padding: 10px 20px;
-  font-size: 13px;
-  box-shadow: 1px 1px 1px rgb(204 204 204);
-}
+button {
+  &.kb-app-run {
+    background-color: rgb(33 150 243);
+    border-radius: 1px;
+    color: rgb(255 255 255);
+    border: none;
+    padding: 10px 20px;
+    font-size: 13px;
+    box-shadow: 1px 1px 1px rgb(204 204 204);
 
-button.kb-app-run:hover {
-  background-color: rgb(30 136 229);
-}
+    &:hover {
+      background-color: rgb(30 136 229);
+    }
 
-button.kb-app-run.kb-app-cancel {
-  background-color: rgb(244 67 54);
-}
+    &.kb-app-cancel {
+      background-color: rgb(244 67 54);
 
-button.kb-app-run.kb-app-cancel:hover {
-  background-color: rgb(229 57 53);
-}
+      &:hover {
+        background-color: rgb(229 57 53);
+      }
+    }
+  }
 
-button.kb-method-run {
-  background-color: rgb(33 150 243);
-  border-radius: 1px;
-  color: rgb(255 255 255);
-  border: none;
-  padding: 10px 20px;
-  font-size: 13px;
-  box-shadow: 1px 1px 1px rgb(204 204 204);
-}
+  &.kb-method-run {
+    background-color: rgb(33 150 243);
+    border-radius: 1px;
+    color: rgb(255 255 255);
+    border: none;
+    padding: 10px 20px;
+    font-size: 13px;
+    box-shadow: 1px 1px 1px rgb(204 204 204);
 
-button.kb-method-run:hover {
-  background-color: rgb(30 136 229);
+    &:hover {
+      background-color: rgb(30 136 229);
+    }
+  }
 }
 
 /***********
@@ -2417,6 +2491,7 @@ button.kb-method-run:hover {
 /*
 For data in KBase workspace
 */
+
 .modal-body {
   max-height: 100%;
 }
@@ -2424,38 +2499,39 @@ For data in KBase workspace
 /* === Tooltips  === */
 
 /* see bootstrap styles, e.g. bootstrap.css, for the original definitions */
+
 div[class=tooltip-inner] {
   max-width: 400px;
   white-space: pre-wrap;
   text-align: left;
 }
 
-.notebook_app .tooltip {
-  z-index: 2000 !important;
-}
+.notebook_app {
+  .tooltip {
+    z-index: 2000 !important;
+  }
 
-.notebook_app .tooltip-inner {
-  background-color: rgb(27 105 182);
-}
+  .tooltip-inner {
+    background-color: rgb(27 105 182);
+  }
 
-.notebook_app .tooltip.top-left .tooltip-arrow,
-.notebook_app .tooltip.top-right .tooltip-arrow,
-.notebook_app .tooltip.top .tooltip-arrow {
-  border-top-color: rgb(27 105 182);
-}
+  .tooltip {
+    &.top-left .tooltip-arrow, &.top-right .tooltip-arrow, &.top .tooltip-arrow {
+      border-top-color: rgb(27 105 182);
+    }
 
-.notebook_app .tooltip.right .tooltip-arrow {
-  border-right-color: rgb(27 105 182);
-}
+    &.right .tooltip-arrow {
+      border-right-color: rgb(27 105 182);
+    }
 
-.notebook_app .tooltip.left .tooltip-arrow {
-  border-left-color: rgb(27 105 182);
-}
+    &.left .tooltip-arrow {
+      border-left-color: rgb(27 105 182);
+    }
 
-.notebook_app .tooltip.bottom-left .tooltip-arrow,
-.notebook_app .tooltip.bottom-right .tooltip-arrow,
-.notebook_app .tooltip.bottom .tooltip-arrow {
-  border-bottom-color: rgb(27 105 182);
+    &.bottom-left .tooltip-arrow, &.bottom-right .tooltip-arrow, &.bottom .tooltip-arrow {
+      border-bottom-color: rgb(27 105 182);
+    }
+  }
 }
 
 .kb-data-main-panel {
@@ -2483,31 +2559,31 @@ div[class=tooltip-inner] {
 }
 
 /* Data table */
-.kb-data-table thead {
-  max-width: 100%;
-  width: 281px;
-}
 
 .kb-data-table {
+  thead {
+    max-width: 100%;
+    width: 281px;
+  }
+
   max-height: 265px;
   width: 100% !important;
-}
 
-.kb-data-table tbody tr {
-  border-bottom: 1px solid rgb(220 220 220);
-}
+  tbody tr {
+    border-bottom: 1px solid rgb(220 220 220);
 
-.kb-data-table tbody tr td {
-  max-height: 16px;
-  padding: 5px;
-  font-size: 1em;
-  max-width: 100px;
-}
+    td {
+      max-height: 16px;
+      padding: 5px;
+      font-size: 1em;
+      max-width: 100px;
+    }
 
-.kb-data-table tbody tr:hover,
-.kb-data-table tbody tr td.highlighted {
-  background-color: rgb(244 245 214);
-  cursor: pointer;
+    &:hover, td.highlighted {
+      background-color: rgb(244 245 214);
+      cursor: pointer;
+    }
+  }
 }
 
 .kb-data-obj-name {
@@ -2521,11 +2597,11 @@ div[class=tooltip-inner] {
 .kb-data-loading {
   height: 100%;
   text-align: center;
-}
-
-.kb-data-loading,
-.kb-data-loading img {
   vertical-align: middle;
+
+  img {
+    vertical-align: middle;
+  }
 }
 
 #kb-ws .dataTables_filter {
@@ -2539,20 +2615,22 @@ div[class=tooltip-inner] {
  */
 
 /*  Button to activate the object pane */
+
 button.kb-data-obj {
   float: right;
 }
 
 /* Panel */
+
 .kb-data-obj-panel {
   background: linear-gradient(180deg, rgb(0 210 255), rgb(178 173 203));
   padding: 0;
   margin: 10px;
-}
 
-.kb-data-obj-panel button.close {
-  margin: 5px;
-  font-size: 125%;
+  button.close {
+    margin: 5px;
+    font-size: 125%;
+  }
 }
 
 .kb-data-obj-panel-info {
@@ -2569,22 +2647,22 @@ button.kb-data-obj {
 
 .kb-data-obj-panel-info dl {
   margin: 0;
-}
 
-.kb-data-obj-panel-info dl dt {
-  float: left;
-  clear: left;
-  width: 90px;
-  text-align: right;
-  color: rgb(0 0 0 / 0.5);
-}
+  dt {
+    float: left;
+    clear: left;
+    width: 90px;
+    text-align: right;
+    color: rgb(0 0 0 / 0.5);
 
-.kb-data-obj-panel-info dl dt::after {
-  content: ":";
-}
+    &::after {
+      content: ":";
+    }
+  }
 
-.kb-data-obj-panel-info dl dd {
-  margin: 0 0 0 100px;
+  dd {
+    margin: 0 0 0 100px;
+  }
 }
 
 .kb-data-obj-panel-verlist span {
@@ -2594,24 +2672,26 @@ button.kb-data-obj {
   background-color: rgb(255 255 255 / 0.5);
   color: rgb(0 0 0 / 0.5);
   cursor: pointer;
+
+  &.selected {
+    background-color: rgb(33 150 243);
+    color: rgb(255 255 255);
+    cursor: default;
+  }
 }
 
-.kb-data-obj-panel-verlist span.selected {
-  background-color: rgb(33 150 243);
-  color: rgb(255 255 255);
-  cursor: default;
-}
+.kb-data-obj-panel-graph {
+  table {
+    background-color: rgb(255 255 255 / 0.9);
+    width: 100%;
+    border: none;
+    color: rgb(0 0 0 / 0.8);
+  }
 
-.kb-data-obj-panel-graph table {
-  background-color: rgb(255 255 255 / 0.9);
-  width: 100%;
-  border: none;
-  color: rgb(0 0 0 / 0.8);
-}
-
-.kb-data-obj-panel-graph thead tr {
-  background-color: rgb(230 230 230);
-  color: rgb(0 0 0 / 1);
+  thead tr {
+    background-color: rgb(230 230 230);
+    color: rgb(0 0 0 / 1);
+  }
 }
 
 .kb-data-obj-graph-ref-to {
@@ -2624,6 +2704,7 @@ button.kb-data-obj {
  */
 
 /* default blue button in the new style */
+
 .kb-primary-btn {
   background-color: rgb(33 150 243);
   border-radius: 1px;
@@ -2631,21 +2712,22 @@ button.kb-data-obj {
   border: none;
   padding: 10px 20px;
   margin: 3px;
-  font: normal 400 14px Roboto, Arial, sans-serif;
+  font: normal 400 14px $typeface-alt-page-text;
   box-shadow: 1px 1px 3px rgb(170 170 170);
-}
 
-.kb-primary-btn:hover {
-  background-color: rgb(30 136 229);
-}
+  &:hover {
+    background-color: rgb(30 136 229);
+  }
 
-.kb-primary-btn[disabled] {
-  box-shadow: none;
-  background-color: rgb(187 222 251);
-  color: rgb(255 255 255);
+  &[disabled] {
+    box-shadow: none;
+    background-color: rgb(187 222 251);
+    color: rgb(255 255 255);
+  }
 }
 
 /* gray button in the new style */
+
 .kb-default-btn {
   background-color: rgb(245 245 245);
   border-radius: 1px;
@@ -2653,17 +2735,17 @@ button.kb-data-obj {
   border: none;
   padding: 10px 20px;
   margin: 3px;
-  font: normal 400 14px Roboto, Arial, sans-serif;
+  font: normal 400 14px $typeface-alt-page-text;
   box-shadow: 1px 1px 3px rgb(170 170 170);
-}
 
-.kb-default-btn:hover {
-  background-color: rgb(206 206 206);
-}
+  &:hover {
+    background-color: rgb(206 206 206);
+  }
 
-.kb-default-btn[disabled] {
-  box-shadow: none;
-  color: rgb(170 170 170);
+  &[disabled] {
+    box-shadow: none;
+    color: rgb(170 170 170);
+  }
 }
 
 .kb-btn-sm {
@@ -2717,28 +2799,28 @@ button.kb-data-obj {
   display: flex;
   padding: 0;
   justify-content: center;
-}
 
-.narrative-card-action-button > span {
-  margin-right: 5px;
+  > span {
+    margin-right: 5px;
+  }
 }
 
 .narrative-card-action-button-name {
   display: inline-block;
 }
 
-.narrative-data-panel-btnToolbar > span {
-  color: rgb(136 136 136);
-}
-
 .narrative-data-panel-btnToolbar {
+  > span {
+    color: rgb(136 136 136);
+  }
+
   display: flex;
   justify-content: center;
 }
 
 /* data list */
-.kb-data-list-obj-row,
-.narrative-card-row {
+
+.kb-data-list-obj-row, .narrative-card-row {
   transition: all 0.1s ease;
   border-left: 5px solid rgb(255 255 255);
   color: rgb(51 51 51);
@@ -2749,8 +2831,7 @@ button.kb-data-obj {
   border-left-color: rgb(238 238 238);
 }
 
-.kb-data-list-obj-row:hover,
-.narrative-card-row:hover {
+.kb-data-list-obj-row:hover, .narrative-card-row:hover {
   border-left: 5px solid rgb(75 184 86);
   box-shadow: 1px 1px 1px 1px rgb(170 170 170);
 }
@@ -2771,6 +2852,7 @@ button.kb-data-obj {
 }
 
 /* again the css hover over div inherits strangly, so we use js */
+
 .kb-data-list-nav-buttons {
   padding: 5px 8px;
   font-size: 18px;
@@ -2793,8 +2875,8 @@ button.kb-data-obj {
 }
 
 /* specialize buttons that hover over narrative */
-#kb-add-code-cell,
-#kb-add-md-cell {
+
+#kb-add-code-cell, #kb-add-md-cell {
   background-color: rgb(33 150 243);
   border-radius: 50%;
   bottom: 15px;
@@ -2820,9 +2902,7 @@ button.kb-data-obj {
   padding-left: 8px;
 }
 
-#kb-add-code-cell:hover,
-#kb-add-md-cell:hover,
-.kb-data-list-add-data-button:hover {
+#kb-add-code-cell:hover, #kb-add-md-cell:hover, .kb-data-list-add-data-button:hover {
   opacity: 1;
   cursor: pointer;
   background-color: rgb(54 97 142);
@@ -2835,15 +2915,16 @@ button.kb-data-obj {
   border: none;
   padding: 10px 20px;
   margin: 3px;
-  font: normal 400 14px Roboto, Arial, sans-serif;
+  font: normal 400 14px $typeface-alt-page-text;
   box-shadow: 1px 1px 3px rgb(170 170 170);
-}
 
-.kb-data-list-add-data-text-button:hover {
-  background-color: rgb(54 97 142);
+  &:hover {
+    background-color: rgb(54 97 142);
+  }
 }
 
 /* buttons */
+
 .kb-data-list-btn {
   background-color: rgb(33 150 243);
   border-radius: 1px;
@@ -2853,16 +2934,16 @@ button.kb-data-obj {
   font-size: 13px;
   box-shadow: 1px 1px 3px rgb(170 170 170);
   margin: 5px;
-}
 
-.kb-data-list-btn:hover {
-  background-color: rgb(30 136 229);
-}
+  &:hover {
+    background-color: rgb(30 136 229);
+  }
 
-.kb-data-list-btn[disabled] {
-  box-shadow: none;
-  background-color: rgb(187 222 251);
-  color: rgb(255 255 255);
+  &[disabled] {
+    box-shadow: none;
+    background-color: rgb(187 222 251);
+    color: rgb(255 255 255);
+  }
 }
 
 .kb-data-list-cancel-btn {
@@ -2874,10 +2955,10 @@ button.kb-data-obj {
   font-size: 13px;
   box-shadow: 1px 1px 3px rgb(170 170 170);
   margin: 5px;
-}
 
-.kb-data-list-cancel-btn:hover {
-  background-color: rgb(206 206 206);
+  &:hover {
+    background-color: rgb(206 206 206);
+  }
 }
 
 .kb-data-list-row-hr {
@@ -2902,6 +2983,7 @@ button.kb-data-obj {
 
 /* For shifting over logos that are stacked on
  * top of eachother */
+
 .kb-data-list-logo-shifted1 {
   margin-left: 1px;
   margin-top: 1px;
@@ -2931,6 +3013,7 @@ button.kb-data-obj {
 }
 
 /*  Nested item indent (crude!!) */
+
 .kb-data-list-level1 {
   margin-left: 25px;
 }
@@ -2948,13 +3031,13 @@ button.kb-data-obj {
 
 .kb-data-list-name {
   color: rgb(46 97 141);
-  font: normal 700 11pt Oxygen, Arial, sans-serif;
+  font: normal 700 11pt $typeface-page-text;
   margin: 2px;
   cursor: pointer;
-}
 
-.kb-data-list-name:hover {
-  text-decoration: underline;
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .kb-data-list-version {
@@ -2965,28 +3048,27 @@ button.kb-data-obj {
   cursor: default;
 }
 
-.kb-data-list-date,
-.kb-data-list-type {
+.kb-data-list-date, .kb-data-list-type {
   color: rgb(119 119 119);
   font-size: 10pt;
   margin: 2px;
   cursor: default;
 }
 
-.kb-data-list-date,
-.kb-data-list-edit-by {
+.kb-data-list-date {
   white-space: nowrap;
 }
 
 .kb-data-list-edit-by {
+  white-space: nowrap;
   color: rgb(119 119 119);
   font-size: 10pt;
   margin: 2px 2px 2px 0;
   cursor: pointer;
-}
 
-.kb-data-list-edit-by:hover {
-  color: rgb(68 68 68);
+  &:hover {
+    color: rgb(68 68 68);
+  }
 }
 
 .kb-data-list-narinfo {
@@ -3028,38 +3110,44 @@ button.kb-data-obj {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.kb-data-list-more-div,
-.kb-data-list-more-div td,
-.kb-data-list-more-div th,
-.kb-data-list-more-div tr {
   color: rgb(119 119 119);
   font-size: 10pt;
   margin: 2px;
-}
 
-.kb-data-list-more-div tr:hover {
-  background-color: rgb(238 238 238);
-}
+  td, th {
+    color: rgb(119 119 119);
+    font-size: 10pt;
+    margin: 2px;
+  }
 
-.kb-data-list-more-div tr:nth-child(odd) {
-  background-color: rgb(245 245 245);
-}
+  tr {
+    color: rgb(119 119 119);
+    font-size: 10pt;
+    margin: 2px;
 
-.kb-data-list-more-div tr:hover:nth-child(odd) {
-  background-color: rgb(238 238 238);
-}
+    &:hover {
+      background-color: rgb(238 238 238);
+    }
 
-.kb-data-list-more-div th {
-  font-weight: 700;
-  text-align: right;
-}
+    &:nth-child(odd) {
+      background-color: rgb(245 245 245);
+    }
 
-.kb-data-list-more-div td {
-  text-align: left;
-  padding-left: 8px;
-  word-break: break-all;
+    &:hover:nth-child(odd) {
+      background-color: rgb(238 238 238);
+    }
+  }
+
+  th {
+    font-weight: 700;
+    text-align: right;
+  }
+
+  td {
+    text-align: left;
+    padding-left: 8px;
+    word-break: break-all;
+  }
 }
 
 .kb-data-list-job-name:hover {
@@ -3067,25 +3155,30 @@ button.kb-data-obj {
 }
 
 /* Indent nested box */
+
 .kb-data-list-box > .kb-data-list-box {
   margin-left: 40px;
 }
 
 /* Control buttons */
-.kb-data-list-ctl span.inviso {
-  /* like mayo on wonderbread */
-  color: rgb(255 255 255);
-  background-color: rgb(255 255 255);
-  text-shadow: none;
-}
 
-.kb-data-list-ctl[enabled] {
-  background-color: rgb(211 211 211);
+.kb-data-list-ctl {
+  span.inviso {
+    /* like mayo on wonderbread */
+    color: rgb(255 255 255);
+    background-color: rgb(255 255 255);
+    text-shadow: none;
+  }
+
+  &[enabled] {
+    background-color: rgb(211 211 211);
+  }
 }
 
 /* end data list */
 
 /* APP CATALOG SLIDEOUT BROWSER STYLES */
+
 .kbcb-browser-container {
   margin: 0 auto;
 
@@ -3127,6 +3220,7 @@ button.kb-data-obj {
 }
 
 /* when the entire app card is a link, use this style */
+
 .kbcb-app-card-link {
   text-decoration: none;
 }
@@ -3170,8 +3264,7 @@ button.kb-data-obj {
   font-size: 1.1em;
 }
 
-.kbcb-app-card-authors,
-.kbcb-app-card-module {
+.kbcb-app-card-authors, .kbcb-app-card-module {
   font-size: 0.8em;
 }
 
@@ -3205,14 +3298,11 @@ button.kb-data-obj {
   color: rgb(255 165 0);
 }
 
-.kbcb-star-default,
-.kbcb-star-favorite,
-.kbcb-star-nonfavorite {
+.kbcb-star-default, .kbcb-star-favorite, .kbcb-star-nonfavorite {
   cursor: pointer;
 }
 
-.kbcb-star-default:hover,
-.kbcb-star-nonfavorite:hover {
+.kbcb-star-default:hover, .kbcb-star-nonfavorite:hover {
   color: rgb(255 0 0);
 }
 
@@ -3220,8 +3310,7 @@ button.kb-data-obj {
   color: rgb(255 165 0);
 }
 
-.kbcb-run-count,
-.kbcb-star-count {
+.kbcb-run-count, .kbcb-star-count {
   margin-left: 0.3em;
   display: inline-block;
 }
@@ -3233,14 +3322,15 @@ button.kb-data-obj {
 .kbcb-hover {
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.12), 0 1px 2px rgb(0 0 0 / 0.24);
   transition: all 0.2s ease-in-out;
-}
 
-.kbcb-hover:hover {
-  box-shadow: 0 10px 20px rgb(0 0 0 / 0.19), 0 6px 6px rgb(0 0 0 / 0.23);
-  cursor: pointer;
+  &:hover {
+    box-shadow: 0 10px 20px rgb(0 0 0 / 0.19), 0 6px 6px rgb(0 0 0 / 0.23);
+    cursor: pointer;
+  }
 }
 
 /* styles for App page */
+
 .kbcb-app-page {
   background: rgb(241 241 245);
   border-radius: 2px;
@@ -3289,6 +3379,7 @@ button.kb-data-obj {
 /* END CATALOG SLIDEOUT BROWSER STYLES */
 
 /* share panel styles */
+
 .kb-share-user-permissions-dropdown {
   border-style: none;
   text-shadow: none !important;
@@ -3300,16 +3391,17 @@ button.kb-data-obj {
 
 .kb-share-select {
   width: 200px;
+
+  .select2-selection__choice {
+    width: 100% !important;
+    background-color: rgb(245 245 245) !important;
+  }
 }
 
 /* hack to make the selection fill the width */
-.kb-share-select .select2-selection__choice {
-  width: 100% !important;
-  background-color: rgb(245 245 245) !important;
-}
 
 .kb-nar-manager-titles {
-  font: normal 700 14pt Oxygen, Arial, sans-serif;
+  font: normal 700 14pt $typeface-page-text;
   color: rgb(119 119 119);
   margin: 20px 10px 10px;
 }
@@ -3317,14 +3409,15 @@ button.kb-data-obj {
 /* End kbaseData.css */
 
 /* styling for data import overlay  */
+
 .kb-import-content {
   position: relative;
   margin: 0;
   display: block;
-}
 
-.kb-import-content .btn-xs {
-  border: none;
+  .btn-xs {
+    border: none;
+  }
 }
 
 .ftp-file-header {
@@ -3341,7 +3434,7 @@ button.kb-data-obj {
   border: 1px solid rgb(196 196 196);
   box-sizing: border-box;
   border-radius: 6px;
-  font: normal 400 14px/18px Oxygen, Arial, sans-serif;
+  font: normal 400 14px/18px $typeface-page-text;
 
   /* identical to box height */
   text-align: center;
@@ -3349,24 +3442,24 @@ button.kb-data-obj {
   width: 140px;
   height: 42px;
   margin: 0 6px;
-}
 
-.kb-import-content .upload-options button:hover {
-  border: 1px solid rgb(207 207 207);
-  background-color: rgb(250 250 250);
-}
+  &:hover {
+    border: 1px solid rgb(207 207 207);
+    background-color: rgb(250 250 250);
+  }
 
-.kb-import-content .upload-options button:focus {
-  background-color: rgb(242 242 242);
-}
+  &:focus {
+    background-color: rgb(242 242 242);
+  }
 
-.kb-import-content .upload-options button:active {
-  background-color: rgb(230 230 230);
-}
+  &:active {
+    background-color: rgb(230 230 230);
+  }
 
-.kb-import-content .upload-options button:disabled {
-  background-color: rgb(250 250 250);
-  color: rgb(146 146 146);
+  &:disabled {
+    background-color: rgb(250 250 250);
+    color: rgb(146 146 146);
+  }
 }
 
 .kb-overlay-footer {
@@ -3374,55 +3467,53 @@ button.kb-data-obj {
   width: 100%;
   bottom: 0;
   height: 50px;
+
+  .btn-default, .btn-primary {
+    margin: 15px 15px 0 0;
+  }
 }
 
-.kb-overlay-footer .btn-default,
-.kb-overlay-footer .btn-primary {
-  margin: 15px 15px 0 0;
-}
-
-.kb-import-filter,
-.kb-import-search {
+.kb-import-filter, .kb-import-search {
   margin: 10px 40px 10px 10px;
 }
 
 .kb-import-item {
   margin: 0 20px 0 5px;
   padding: 20px 0 0;
-}
 
-.kb-import-item:hover {
-  background-color: rgb(248 248 248);
-  box-shadow: 0 0 2px rgb(170 170 170);
-}
+  &:hover {
+    background-color: rgb(248 248 248);
+    box-shadow: 0 0 2px rgb(170 170 170);
+  }
 
-.kb-import-item hr {
-  width: 85%;
-  border: 2px solid rgb(234 234 234);
-  margin-top: 15px;
-  margin-bottom: 0;
-}
+  hr {
+    width: 85%;
+    border: 2px solid rgb(234 234 234);
+    margin-top: 15px;
+    margin-bottom: 0;
+  }
 
-.kb-import-item .kb-import-checkbox {
-  font-size: 1.5em;
-  padding: 15px 20px;
-  opacity: 0.4;
-}
+  .kb-import-checkbox {
+    font-size: 1.5em;
+    padding: 15px 20px;
+    opacity: 0.4;
+  }
 
-.kb-import-item .fa-check-square-o {
-  opacity: 1 !important;
+  .fa-check-square-o {
+    opacity: 1 !important;
+  }
 }
 
 .kb-import-info {
   display: inline-block;
   margin: 10px 20px 0 0;
   font-weight: 400;
-}
 
-.kb-import-info span {
-  font-size: 0.9em;
-  font-weight: 700;
-  color: rgb(153 153 153);
+  span {
+    font-size: 0.9em;
+    font-weight: 700;
+    color: rgb(153 153 153);
+  }
 }
 
 .kb-import-status {
@@ -3430,13 +3521,14 @@ button.kb-data-obj {
 }
 
 /* Error dialog */
+
 .kb-error-dialog strong {
   color: rgb(0 100 0);
 }
 
 .kb-err-text {
   color: rgb(0 0 0);
-  font-family: OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-family: $typeface-fixed-width;
 }
 
 .kb-err-warn {
@@ -3446,6 +3538,7 @@ button.kb-data-obj {
 }
 
 /* View-only (read-only) */
+
 #kb-ro-btn {
   margin-right: 20px;
 }
@@ -3461,7 +3554,7 @@ button.kb-data-obj {
 #kb-view-mode-narr div {
   display: inline-block;
   color: rgb(33 150 243);
-  font: normal 700 16px Oxygen, Arial, sans-serif;
+  font: normal 700 16px $typeface-page-text;
   padding: 3px;
   margin-top: -3px;
   width: 147px;
@@ -3470,6 +3563,7 @@ button.kb-data-obj {
 }
 
 /* little space for control-close icon */
+
 #kb-view-mode-narr-hide {
   display: block;
   height: 41px;
@@ -3480,16 +3574,18 @@ button.kb-data-obj {
   color: rgb(187 222 251);
   background-color: rgb(33 150 243);
   padding-left: 5px;
+
+  span {
+    margin-top: 10px;
+  }
 }
 
 /* move icon down a bit */
-#kb-view-mode-narr-hide span {
-  margin-top: 10px;
-}
 
 /* this is the banner for readonly mode */
+
 .navbar-right div.label-warning {
-  font: normal 700 16px Oxygen, Arial, sans-serif;
+  font: normal 700 16px $typeface-page-text;
 }
 
 /* Show this over the whole narrative UI until the
@@ -3503,6 +3599,7 @@ button.kb-data-obj {
 
    -Dan Gunter, Feb 10, 2015
 */
+
 .kb-loading-blocker__container {
   position: absolute;
   top: 0;
@@ -3540,6 +3637,7 @@ button.kb-data-obj {
 /* Override the default max-width of the narrative box */
 
 /* Styles for KNHX trees to remove its document.write nonsense that breaks asynchronous loading */
+
 #popdiv {
   position: absolute;
   background-color: rgb(252 252 252);
@@ -3547,11 +3645,11 @@ button.kb-data-obj {
   z-index: 10000;
   visibility: hidden;
   font-size: 12px;
-}
 
-#popdiv a.alt {
-  padding-left: 9px;
-  font: 12px OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
-  border: none;
-  display: inline;
+  a.alt {
+    padding-left: 9px;
+    font: 12px $typeface-fixed-width;
+    border: none;
+    display: inline;
+  }
 }

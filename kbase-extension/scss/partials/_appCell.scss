@@ -1,0 +1,449 @@
+/* Wrapper class
+  All classes below may be wrapped in this class to avoid polluting
+  the Narrative styles.
+*/
+
+.kb-app-cell {
+  font-family: $typeface-page-text;
+
+  .kb-app-warning {
+    font-family: $typeface-page-text;
+    text-align: center;
+  }
+
+  .kb-app-parameter-panel {
+    border-left: 3px solid rgb(255 255 255);
+  }
+
+  .kb-app-parameter-panel-hover {
+    border-left: 3px solid rgb(66 139 202);
+  }
+
+  .kb-app-parameter-row {
+    margin: 0;
+    padding: 5px;
+    border-radius: 5px;
+
+    &:hover {
+      background-color: rgb(0 0 0 / 0.03);
+    }
+  }
+
+  .kb-app-parameter-row-hover {
+    background: rgb(249 249 249);
+  }
+
+  .kb-app-parameter-row .message {
+    &.-error {
+      background: rgb(242 222 222);
+      color: rgb(244 67 54);
+    }
+
+    text-align: center;
+    font-family: $typeface-page-text;
+  }
+
+  .kb-app-parameter-name {
+    font-family: $typeface-page-text;
+    color: rgb(119 119 119);
+    text-align: left;
+    vertical-align: bottom;
+    padding-right: 4px;
+    padding-left: 0;
+    white-space: normal;
+  }
+
+  .kb-app-parameter-input {
+    vertical-align: middle;
+
+    select.form-control {
+      margin: 0;
+    }
+
+    .kb-app-parameter-accepted-glyph, .kb-app-parameter-required-glyph {
+      /* This scoots the icon inside */
+      font-size: 15px;
+      margin-left: 0;
+    }
+  }
+
+  .kb-app-parameter-required-glyph {
+    color: rgb(244 67 54);
+  }
+
+  .kb-parameter-data-selection {
+    font-weight: 700;
+  }
+
+  .kb-app-parameter-hint {
+    color: rgb(119 119 119);
+    text-align: left;
+    margin-top: 3px;
+    padding-left: 7px;
+  }
+
+  .kb-app-parameter-accepted-glyph {
+    color: rgb(75 184 86);
+  }
+
+  .kb-app-advanced-options-controller-inactive, .kb-app-parameter-info, .kb-parameter-data-row-add, .kb-parameter-data-row-remove {
+    color: rgb(119 119 119);
+  }
+
+  .kb-app-advanced-options-controller, .kb-app-advanced-options-controller-inactive {
+    font: italic 700 10pt/14px $typeface-page-text;
+    text-align: center;
+  }
+
+  .kb-app-advanced-options-controller {
+    cursor: pointer;
+    color: rgb(0 136 204);
+
+    &:hover {
+      color: rgb(42 100 150);
+    }
+  }
+
+  .kb-app-footer {
+    width: 100%;
+    overflow: none;
+    background-color: rgb(245 245 245);
+    padding: 10px;
+  }
+
+  .kb-app-subtitle {
+    background-color: rgb(245 245 245);
+    padding: 3px 5px;
+  }
+
+  .panel-title > [data-toggle=collapse] {
+    &::before {
+      display: inline-block;
+      margin-left: 0;
+      margin-right: 4px;
+      font: normal 400 90% FontAwesome;
+      width: 12px;
+      color: rgb(192 192 192);
+      line-height: 1;
+      vertical-align: baseline;
+      content: "\f078 ";
+    }
+
+    &.collapsed::before {
+      margin-left: 2px;
+      margin-right: 2px;
+      content: "\f054 ";
+    }
+  }
+
+  .advanced-parameter-showing {
+    display: block;
+  }
+
+  .advanced-parameter-hidden {
+    display: none;
+  }
+
+  [data-element=run-control-panel] {
+    width: 100%;
+  }
+
+  [data-element=tab-pane] {
+    border-top: 2px solid rgb(33 150 243);
+
+    > div {
+      &:empty {
+        padding: 0;
+      }
+
+      padding: 4px;
+    }
+  }
+}
+
+.kb-app-row-clip-btn-addon, .kb-app-row-close-btn-addon {
+  background: transparent;
+  border: 0;
+}
+
+.kb-app-row-clip-btn-addon {
+  padding: 0 10px 0 0;
+  height: 100%;
+
+  &:active::after {
+    background-color: rgb(255 255 255);
+    border-radius: 3px;
+    border: 1px solid rgb(128 128 128);
+    content: "copied!";
+    margin-top: -5px;
+    padding: 7px;
+    position: absolute;
+  }
+}
+
+.kb-input-group-wide {
+  width: 100%;
+}
+
+.kb-input-row-flex {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.cell.selected .btn-default.kb-app-row-close-btn {
+  color: rgb(128 128 128);
+}
+
+.kb-app-row-clip-btn, .kb-app-row-close-btn {
+  height: 100%;
+  margin-left: 1px;
+  border: none;
+  background-color: transparent;
+  color: rgb(128 128 128);
+}
+
+.kb-app-parameter-right-error-bar {
+  height: 28px;
+  background: rgb(255 0 0);
+}
+
+.kb-app-field-feedback {
+  background: transparent;
+  border: 0;
+}
+
+.kb-input-group-addon {
+  background: transparent;
+  border: 0;
+  padding: 0 0 0 10px;
+}
+
+.report-widget .panel-title > [data-toggle=collapse] {
+  &::before {
+    display: inline-block;
+    margin-left: 0;
+    margin-right: 4px;
+    font: normal 400 90% FontAwesome;
+    width: 12px;
+    color: rgb(192 192 192);
+    line-height: 1;
+    vertical-align: baseline;
+    content: "\f078 ";
+  }
+
+  &.collapsed::before {
+    margin-left: 2px;
+    margin-right: 2px;
+    content: "\f054 ";
+  }
+}
+
+/* tweaks to elemnts that should be dimmed when the cell is not selected */
+
+.unselected .kb-app-cell {
+  opacity: 0.5;
+}
+
+.kb-elapsed-time {
+  font-family: $typeface-fixed-width;
+
+  &.-active {
+    color: rgb(0 255 0);
+  }
+}
+
+.kb-app-cell-info-desc {
+  border: 1px solid rgb(119 119 119);
+  padding: 10px;
+  margin-right: 10px;
+  min-height: 100px;
+}
+
+.kb-app-cell-info {
+  color: rgb(119 119 119);
+  font: 12pt $typeface-page-text;
+
+  .header {
+    border-bottom: 1px solid rgb(119 119 119);
+    padding: 5px 0;
+    margin-bottom: 8px;
+  }
+
+  .value {
+    color: rgb(0 0 0);
+  }
+}
+
+/*
+
+Buttons
+
+*/
+
+.btn {
+  &.batch-active {
+    box-shadow: inset 0 3px 7px rgb(0 0 0 / 0.125);
+    background-color: rgb(238 238 238);
+    border-color: rgb(173 173 173);
+
+    &:hover {
+      background-color: rgb(204 204 204);
+    }
+  }
+
+  &.kb-app-cell-btn {
+    background-color: rgb(255 255 255);
+    margin-bottom: 4px;
+    color: rgb(33 150 243);
+    border: 2px solid rgb(33 150 243);
+
+    &.btn-primary {
+      color: rgb(33 150 243);
+      border: 2px solid rgb(33 150 243);
+
+      &:hover {
+        border-bottom: 6px solid rgb(33 150 243);
+        margin-bottom: 0;
+      }
+
+      &.active, &:active, &:hover {
+        color: rgb(255 255 255);
+        background-color: rgb(33 150 243);
+      }
+
+      &.active {
+        border: solid rgb(33 150 243);
+        border-width: 2px 2px 6px;
+        margin-bottom: 0;
+
+        &:hover {
+          color: rgb(33 150 243);
+          background-color: rgb(221 221 221);
+          border-bottom: 2px solid rgb(33 150 243);
+          margin-bottom: 4px;
+        }
+      }
+    }
+
+    &.btn-danger {
+      color: rgb(209 82 65);
+      border: 2px solid rgb(209 82 65);
+
+      &:hover {
+        border-bottom: 6px solid rgb(209 82 65);
+      }
+
+      &.active, &:hover {
+        color: rgb(255 255 255);
+        background-color: rgb(209 82 65);
+        margin-bottom: 0;
+      }
+
+      &.active {
+        border: solid rgb(209 82 65);
+        border-width: 2px 2px 6px;
+
+        &:hover {
+          color: rgb(209 82 65);
+          background-color: rgb(221 221 221);
+          border-bottom: 2px solid rgb(209 82 65);
+          margin-bottom: 4px;
+        }
+      }
+    }
+
+    &.disabled {
+      color: rgb(136 136 136);
+      background-color: rgb(255 255 255);
+      border: 2px solid rgb(136 136 136);
+      margin-bottom: 4px;
+
+      &:active, &:hover {
+        color: rgb(136 136 136);
+        background-color: rgb(255 255 255);
+        border: 2px solid rgb(136 136 136);
+        margin-bottom: 4px;
+      }
+    }
+  }
+}
+
+/* Primary Button Style */
+
+/* Hovering over an active cell is different, it tries to make the tab look
+   disassociated but using a gray background so it doesnt look like an inactive
+   tab */
+
+/* DANGER - for error */
+
+/* DISABLED is gray border and text */
+
+.kb-app-status {
+
+  &-ok {
+    color: rgb(75 184 86);
+  }
+
+  &-warning {
+    color: rgb(255 165 0);
+  }
+
+  &-danger, &-error {
+    color: rgb(209 82 65);
+  }
+
+  &-default {
+    color: rgb(33 150 243);
+  }
+}
+
+
+/* app cell panels */
+
+/* TODO: higher level selector */
+
+.parameter-panel .info-panel {
+  padding-top: 4px;
+  background: transparent;
+}
+
+.tt-input, .tt-query {
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.075);
+  width: 100%;
+}
+
+.tt-hint {
+  color: rgb(153 153 153);
+}
+
+.tt-menu {
+  /* used to be tt-dropdown-menu in older versions */
+  margin-top: 4px;
+  padding: 4px 0;
+  background-color: rgb(255 255 255);
+  border: 1px solid rgb(0 0 0 / 0.2);
+  border-radius: 4px;
+  box-shadow: 0 5px 10px rgb(0 0 0 / 0.2);
+  width: 100%;
+}
+
+.tt-suggestion {
+  padding: 3px 20px;
+  line-height: 24px;
+
+  &.tt-cursor, &:hover {
+    color: rgb(255 255 255);
+    background-color: rgb(0 151 207);
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.tt-header {
+  font-size: 75%;
+  font-style: italic;
+  padding-left: 5px;
+}

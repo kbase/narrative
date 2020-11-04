@@ -12,19 +12,25 @@
   document structure which modal dialogs in no way can represent!)
 */
 
-.modal .modal-title {
-  font: normal 700 130% Oxygen, Arial, sans-serif;
-  color: rgb(46 97 141);
+.modal {
+  .modal-title {
+    font: normal 700 130% $typeface-page-text;
+    color: rgb(46 97 141);
+  }
+
+  &.kb-modal-alert .modal-title {
+    color: unset;
+  }
+
+  input[type=checkbox] {
+    margin-top: 1px;
+  }
 }
 
 /*
     Unset the global modal title color set above for alert modals, which
     may set the color style based on the alert type.
 */
-
-.modal.kb-modal-alert .modal-title {
-  color: unset;
-}
 
 /*
     The BS checkbox appears too low, due to the top margin, when used with a label
@@ -35,10 +41,6 @@
     accomodate this.) Anyway, we roll with it but try to patch up the styling
     as it breaks.
 */
-
-.modal input[type=checkbox] {
-  margin-top: 1px;
-}
 
 .panel.kb-panel-light {
   border: none;
@@ -65,34 +67,38 @@
   color: rgb(0 0 255);
 }
 
-.panel.kb-panel-light > .panel-heading {
-  background-color: transparent;
-  font-weight: 700;
-  color: rgb(102 102 102);
-  padding-left: 0;
-  padding-bottom: 2px;
-  border-bottom: 1px solid rgb(204 204 204);
-}
+.panel {
+  &.kb-panel-light {
+    > .panel-heading {
+      background-color: transparent;
+      font-weight: 700;
+      color: rgb(102 102 102);
+      padding-left: 0;
+      padding-bottom: 2px;
+      border-bottom: 1px solid rgb(204 204 204);
+    }
 
-.panel.kb-panel-light .panel-body {
-  padding: 0;
-}
+    .panel-body {
+      padding: 0;
+    }
+  }
 
-.panel.kb-panel-container {
-  border: none;
-}
+  &.kb-panel-container {
+    border: none;
 
-.panel.kb-panel-container > .panel-heading {
-  background-color: transparent;
-  font-weight: 700;
-  padding-left: 0;
-  padding-bottom: 2px;
-  border-bottom: 2px solid rgb(204 204 204);
-  margin-bottom: 10px;
-}
+    > .panel-heading {
+      background-color: transparent;
+      font-weight: 700;
+      padding-left: 0;
+      padding-bottom: 2px;
+      border-bottom: 2px solid rgb(204 204 204);
+      margin-bottom: 10px;
+    }
 
-.panel.kb-panel-container .panel-body {
-  padding-top: 0;
+    .panel-body {
+      padding-top: 0;
+    }
+  }
 }
 
 /*

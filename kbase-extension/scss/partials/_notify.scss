@@ -6,8 +6,8 @@
   color: rgb(255 255 255);
   background-color: rgb(0 0 0);
   opacity: 0.8;
-}
 
-.kb-notify.kb-notify-success {
-  color: rgb(0 204 9);
+  &.kb-notify-success {
+    color: rgb(0 204 9);
+  }
 }

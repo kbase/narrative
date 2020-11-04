@@ -228,16 +228,20 @@ define([
                 sort_by: sorting
             }]);
 
+            // Build table rows
             const rows = [];
             obj['samples'].forEach(sample => {
+                // Count number of replicates in the sample, some values are static, so just look at arrays.
                 const numReplicates = Math.max(
                     ...Object.values(sample).map(val => Array.isArray(val) ? val.length : 1)
                 );
+                // Create one row per replicate
                 for (let i = 0; i < numReplicates; i++) {
                     const replicate_data = {};
                     Object.keys(sample).forEach(key => {
-                        const key_varies = Array.isArray(sample[key]);
-                        replicate_data[key] = key_varies ? sample[key][i] : sample[key];
+                        // check if this value varries across replicates
+                        const value_varies = Array.isArray(sample[key]);
+                        replicate_data[key] = value_varies ? sample[key][i] : sample[key];
                     });
                     rows.push(headers.map(({ id }) => replicate_data[id]));
                 }

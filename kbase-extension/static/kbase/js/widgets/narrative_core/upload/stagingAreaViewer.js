@@ -303,7 +303,8 @@ define([
                             delay: {
                                 show: Config.get('tooltip').showDelay,
                                 hide: Config.get('tooltip').hideDelay
-                            }
+                            },
+                            template: '<div class="kb-staging-table-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
                         }); 
 
                 },
@@ -534,8 +535,8 @@ define([
 
                         //get rid of the disabled class and disable the tooltip
                         $('td:eq(0)', row)
-                            .find('div.kb-staging-table__checkbox-disabled')
-                            .removeClass('kb-staging-table__checkbox-disabled')
+                            .find('div.kb-staging-table-body__checkbox-disabled')
+                            .removeClass('kb-staging-table-body__checkbox-disabled')
                             .tooltip('disable');
   
                         //make sure select all checkbox is enabled

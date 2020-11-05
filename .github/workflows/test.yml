@@ -37,11 +37,6 @@ jobs:
           sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json
           jupyter notebook --version
 
-    - name: Set up environment
-      shell: bash -l {0}
-      run: |
-        echo "KBASE_TEST_TOKEN=${{ secrets.NARRATIVE_TEST_TOKEN }}" >> $GITHUB_ENV
-
     - name: Run Narrative Backend Tests
       shell: bash -l {0}
       run: make test-backend
@@ -52,6 +47,8 @@ jobs:
 
     - name: Run Narrative Frontend Integration Tests
       shell: bash -l {0}
+      env:
+        KBASE_TEST_TOKEN: "${{ secrets.NARRATIVE_TEST_TOKEN }}"
       run: |
         make test-integration
 

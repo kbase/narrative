@@ -18,6 +18,9 @@ define([
 
     class BulkImportCell {
         constructor(cell) {
+            if (cell.cell_type !== 'code') {
+                throw new Error('Can only create Bulk Import Cells out of code cells!');
+            }
             this.cell = cell;
             this.kbaseNode = null;
             this.runtime = Runtime.make();
@@ -32,7 +35,7 @@ define([
          */
         setupCell() {
             if (!BulkImportCell.isBulkImportCell(this.cell)) {
-                return;
+                throw new Error('Can only set up real bulk import cells');
             }
 
             this.cell.getIcon = function() {
@@ -42,7 +45,7 @@ define([
             this.cell.renderIcon = function() {
                 const iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
                 if (iconNode) {
-                    iconNode.innerHTML = this.cell.getIcon();
+                    iconNode.innerHTML = this.getIcon();
                 }
             };
 

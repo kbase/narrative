@@ -296,6 +296,15 @@ define([
                     $(thead).find('th').eq(0)
                         .on('click keyPress', (e) => {
                             selectAllOrNone(e);
+                        }).tooltip({
+                            title: 'Select a type to import.',
+                            container: '.kb-staging-table-header__checkbox-disabled',
+                            placement: 'right',
+                            delay: {
+                                show: Config.get('tooltip').showDelay,
+                                hide: Config.get('tooltip').hideDelay
+                            },
+                            template: '<div class="kb-staging-table-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
                         }); 
                 },
                 columnDefs: [{
@@ -406,7 +415,6 @@ define([
                     $('td:eq(0)', row).find('div.kb-staging-table-body__checkbox-disabled')
                         .tooltip({
                             title: 'Select a type to import.',
-                            container: 'body',
                             placement: 'right',
                             delay: {
                                 show: Config.get('tooltip').showDelay,
@@ -526,6 +534,7 @@ define([
                         //get rid of the disabled class and disable the tooltip
                         $('td:eq(0)', row)
                             .find('div.kb-staging-table-body__checkbox-disabled')
+                            .removeAttr('aria-haspopup')
                             .removeClass('kb-staging-table-body__checkbox-disabled')
                             .tooltip('disable');
   
@@ -536,7 +545,7 @@ define([
 
                         //disable the tooltip for the select all div
                         $('div.kb-staging-table-header__checkbox-disabled')
-                            .removeAttr('data-toggle')
+                            .removeAttr('aria-haspopup')
                             .removeClass('kb-staging-table-header__checkbox-disabled')
                             .tooltip('disable');
 
@@ -615,26 +624,6 @@ define([
                             }
                         });
                     
-                },
-                drawCallback: function(settings) {
-                    console.log('in the draw callback with!!: ', settings);
-
-                    let test = stagingAreaViewer.$elem.find('div.kb-staging-table-header__checkbox-disabled');
-                    console.log('test is: ', test);
-                    //initialize the tooltips (WHYYY)
-                    stagingAreaViewer.$elem.find('div.kb-staging-table-header__checkbox-disabled').tooltip({
-                        title: 'Select a type to import.',
-                        container: 'body',
-                        placement: 'right',
-                        selector: '.kb-staging-table-header__checkbox-disabled',
-                        delay: {
-                            show: Config.get('tooltip').showDelay,
-                            hide: Config.get('tooltip').hideDelay
-                        },
-                        template: '<div class="kb-staging-table-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
-                    });
-
-
                 }.bind(stagingAreaViewer)
             });
   

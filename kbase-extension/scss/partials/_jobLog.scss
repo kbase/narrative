@@ -15,15 +15,15 @@
 
 .kblog-header {
   display: flex;
+  font-family: $typeface-fixed-width;
 }
 
-.kblog-header,
 .kblog-line {
-  font-family: OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
-}
+  font-family: $typeface-fixed-width;
 
-.kblog-line:hover {
-  background-color: rgb(221 221 221);
+  &:hover {
+    background-color: rgb(221 221 221);
+  }
 }
 
 .kblog-num-wrapper {
@@ -50,16 +50,22 @@
   margin-left: 6px;
 }
 
-.kb-error,
-.kb-error .kblog-line-num {
+.kb-error {
   color: rgb(139 0 0);
   text-decoration: underline;
   font-weight: 700;
   font-size: 12px;
   background-color: rgb(255 245 245);
+
+  .kblog-line-num {
+    color: rgb(139 0 0);
+    text-decoration: underline;
+    font-weight: 700;
+    font-size: 12px;
+    background-color: rgb(255 245 245);
+  }
 }
 
-#kblog-err,
-#kblog-msg {
+#kblog-err, #kblog-msg {
   margin-top: 5px;
 }

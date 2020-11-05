@@ -12,8 +12,7 @@ define([
     'util/jobLogViewer',
     './jobStateViewer',
     './jobStateList',
-    './jobInputParams',
-    'css!kbase/css/batchMode'
+    './jobInputParams'
 ], function (
     Promise,
     html,

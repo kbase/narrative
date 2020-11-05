@@ -1,13 +1,8 @@
 module.exports = function(grunt) {
-    // Project configuration
+
     'use strict';
-    grunt.loadNpmTasks('grunt-contrib-requirejs');
-    grunt.loadNpmTasks('grunt-filerev');
-    grunt.loadNpmTasks('grunt-regex-replace');
-    grunt.loadNpmTasks('grunt-karma');
-    grunt.loadNpmTasks('grunt-coveralls');
-    grunt.loadNpmTasks('grunt-jasmine-nodejs');
-    grunt.loadNpmTasks('grunt-contrib-uglify-es');
+
+    require('load-grunt-tasks')(grunt);
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -157,19 +152,56 @@ module.exports = function(grunt) {
             'ui-common': {
                 src: 'build/test-coverage/lcov/**/*.info',
             }
-        }
+        },
 
+        // Run CSS / SCSS-related tasks
+        // these files are modified in place
+        postcss: {
+            // autoprefix and minify the concatenated css files
+            concat: {
+                options: {
+                    processors: [
+                        // add vendor prefixes
+                        require('autoprefixer')(),
+                        // minify
+                        require('cssnano')([
+                            "default",
+                            {
+                                "normalizeWhitespace": {
+                                    "exclude": true
+                                },
+                            }
+                        ]),
+                    ],
+                },
+                src: [
+                    'kbase-extension/static/kbase/css/*_concat.css',
+                    'kbase-extension/static/kbase/css/appCell.css',
+                    'kbase-extension/static/kbase/css/editorCell.css'
+                ],
+            }
+        },
+
+        // runs the npm command to compile scss -> css and run autoprefixer on it
+        shell: {
+            compile_css: {
+                command: 'npm run compile_css',
+            },
+        },
+
+        // watch scss files for any changes
+        // when they change, regenerate the compiled css files
+        watch: {
+            files: 'kbase-extension/scss/**/*.scss',
+            tasks: [
+                'shell:compile_css',
+            ],
+        },
     });
 
     grunt.registerTask('minify', [
         'requirejs',
         'uglify',
-        'regex-replace'
-    ]);
-
-    grunt.registerTask('build', [
-        'requirejs',
-        'filerev',
         'regex-replace'
     ]);
 

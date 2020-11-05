@@ -1,0 +1,31 @@
+/* Note that this does not get compiled to produce static/css/errorPage.css -- that file is a single standalone declaration */
+
+.access-error__container, .generic-error__container {
+  text-align: center;
+  margin: 2rem;
+}
+
+.access-error__heading, .generic-error__heading {
+  font-weight: 700;
+  font-size: 200%;
+  line-height: 1.5;
+}
+
+.access-error__text, .generic-error__text {
+  font-size: 150%;
+  line-height: 2;
+}
+
+.access-request-form__container {
+  margin-top: 2rem;
+}
+
+.access-request-progress__container {
+  display: none;
+  margin-top: 1rem;
+}
+
+.access-request-result {
+  font-size: 125%;
+  margin-top: 2rem;
+}

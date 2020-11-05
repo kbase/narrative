@@ -155,7 +155,7 @@ define([
                 subpathTokens--;
             }
             this.subpath = subpath.slice(subpath.length - subpathTokens).join('/');
-            
+
             //we don't need to call to update the view if it's the first time as narrative staging data tab will do the rendering for us
             if (this.firstLoad) {
                 this.firstLoad = false;
@@ -259,7 +259,7 @@ define([
          * keys: files (list of file info) and error (optional error)
          */
         renderFiles: function (files) {
-            let stagingAreaViewer = this; 
+            let stagingAreaViewer = this;
             files = files || [];
             const emptyMsg = 'No files found.';
 
@@ -267,7 +267,7 @@ define([
                 files: files,
                 uploaders: stagingAreaViewer.uploaders.dropdown_order
             }));
-            
+
             stagingAreaViewer.$elem.append($fileTable);
             stagingAreaViewer.$elem.find('table').dataTable({
                 language: {
@@ -276,11 +276,11 @@ define([
                 dom: '<"file-path pull-left">frtip',
                 autoWidth: false,
                 order: [[4, 'desc']],
-                headerCallback: function (thead) {     
-               
+                headerCallback: function (thead) {
+
                     function selectAllOrNone (event) {
                         let selectAllChecked = event.target.checked;
-                        
+
                         $('input.kb-staging-table-body__checkbox-input:enabled')
                             .prop('checked', selectAllChecked)
                             .attr('aria-checked', selectAllChecked);
@@ -296,7 +296,7 @@ define([
                     $(thead).find('th').eq(0)
                         .on('click keyPress', (e) => {
                             selectAllOrNone(e);
-                        });                    
+                        });
                 },
                 columnDefs: [{
                     targets: 0,
@@ -305,15 +305,15 @@ define([
                     render: function (data) {
                         const fileId = new UUID(4).format();
                         //render checkboxes disabled until the user selects a type
-                        return ('<input class="kb-staging-table-body__checkbox-input"' + 
-                        'type="checkbox" disabled=true' + 
+                        return ('<input class="kb-staging-table-body__checkbox-input"' +
+                        'type="checkbox" disabled=true' +
                         'aria-checked="false" tabindex="0"' +
                         'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
-                        'data-file-name="' + data + '"' + 
+                        'data-file-name="' + data + '"' +
                         'id="' + fileId + '">');
                     }
                 }, {
-                    targets: 1, 
+                    targets: 1,
                     render: function (data, type, full) {
                         if (type === 'display') {
                             var isFolder = data === 'true' ? true : false;
@@ -383,7 +383,7 @@ define([
                         if (checked) {
                             stagingAreaViewer.enableImportButton();
                         } else {
-                            /* 
+                            /*
                                 check state of all checkboxes
                                 if any are checked we leave import button enabled
                             */
@@ -397,7 +397,7 @@ define([
 
                     $('td:eq(0)', row).find('input.kb-staging-table-body__checkbox-input')
                         .off('click')
-                        .on('click keyPress', (e) => {                        
+                        .on('click keyPress', (e) => {
                             changeImportButton(e);
                         });
 
@@ -497,11 +497,11 @@ define([
                             containerCssClass: 'kb-staging-table-body__import-dropdown'
                         })
                         .on('select2:select', function(e) {
-                            
+
                             $('td:eq(5)', row)
                                 .find('.select2-selection')
                                 .addClass('kb-staging-table-body__import-type-selected');
-                            
+
                             //make checkbox for that row enabled
                             //also set the data type so that we have the reference later when importing
                             $('td:eq(0)', row)
@@ -551,7 +551,7 @@ define([
                                 });
                             }
                         });
-                    
+
                 }.bind(stagingAreaViewer)
             });
 
@@ -705,8 +705,8 @@ define([
 
             this.$elem.find('div.kb-staging-table-import').append(importButton);
 
-            /* 
-                By default import button is disabled until the user selects a data type 
+            /*
+                By default import button is disabled until the user selects a data type
             */
             this.disableImportButton();
         },
@@ -726,7 +726,7 @@ define([
         },
 
         enableImportButton: function() {
-            let stagingAreaViewer = this; 
+            let stagingAreaViewer = this;
 
             this.$elem.find('button.kb-staging-table-import__button')
                 .removeClass('kb-staging-table-import__button__disabled')
@@ -738,16 +738,19 @@ define([
         },
 
         initImport: function() {
-            let stagingAreaViewer = this; 
+            let stagingAreaViewer = this;
+
+            Jupyter.narrative.insertBulkImportCell();
+            Jupyter.narrative.hideOverlay();
 
             //get all of the selected checkbox file names and import type
-            $('input.kb-staging-table-body__checkbox-input:checked')
-                .each(function () {
-                    const importType = $(this).attr('data-type');
-                    const importFile = $(this).attr('data-file-name');
-                    stagingAreaViewer.initImportApp(importType, importFile);
-                });
-          
+            // $('input.kb-staging-table-body__checkbox-input:checked')
+            //     .each(function () {
+            //         const importType = $(this).attr('data-type');
+            //         const importFile = $(this).attr('data-file-name');
+            //         stagingAreaViewer.initImportApp(importType, importFile);
+            //     });
+
         },
 
         /**

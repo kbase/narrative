@@ -1253,5 +1253,14 @@ define([
         delete this.kbaseWidgets[cellId];
     };
 
+    Narrative.prototype.insertBulkImportCell = function () {
+        const cellType = 'app-bulk-import';
+        const cellData = {
+            type: cellType
+        };
+        const cell = Jupyter.narrative.insertAndSelectCellBelow('code', null, cellData);
+        return cell;
+    };
+
     return Narrative;
 });

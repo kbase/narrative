@@ -14,23 +14,23 @@ to install and update the npm packages required by the narrative. If there are e
 
 ### Building style files
 
-KBase serves concatenated, minified css files (generally named `*_concat.css`) to minimise download size and HTTP hits. These are produced from the source files in `kbase-extension/static/kbase/css` using a grunt task.
+KBase serves concatenated, minified css files (generally named `*_concat.css`) to minimise download size and HTTP hits. These are produced from the scss source files in `kbase-extension/scss` by an npm script which triggers the sass compiler and then runs Autoprefixer on the output.
 
-To update the css files, run the grunt task:
+To update the css files, run the task:
 
 ```sh
-grunt build_css
+npm run compile_css
 ```
 
-If this is not run, edits to the css source files will not be reflected in the css served by the browser.
+If this is not run, edits to the scss source files will not be reflected in the css served by the browser.
 
 Individual concatenated files can be produced by running
 
 ```sh
-grunt concat:<filesetName>
+sass kbase-extension/scss/input_file.scss /path/to/output_file.css
 ```
 
-where `filesetName` is one of the lists of files specified at the top of the `Gruntfile.js`.
+where `input_file.scss` is one of the files in the `kbase-extension/scss` directory.
 
 There is also a `watch` task that will automatically generate the concatenated, minified css files when there is a change to the source files. If you plan to make changes to frontend styling, run
 

@@ -5,10 +5,10 @@
 
 .job-info {
   cursor: pointer;
-}
 
-.job-info.job-selected {
-  background-color: rgb(238 238 238);
+  &.job-selected {
+    background-color: rgb(238 238 238);
+  }
 }
 
 .batch-mode-list {

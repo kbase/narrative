@@ -3,6 +3,7 @@
 /*
  * Styling for the tooltip that pops up when a feature is highlighted.
  */
+
 .kbcb-tooltip {
   position: absolute;
   z-index: 9999999;
@@ -16,15 +17,17 @@
 /**
  * Adjusts the font size and stroke width of the base-position axis.
  */
-.kbcb-widget .kbcb-axis line,
-.kbcb-widget .kbcb-axis path {
-  fill: none;
-  stroke: rgb(0 0 0);
-  shape-rendering: crispEdges;
-}
 
-.kbcb-widget .kbcb-axis text {
-  font: 11px sans-serif;
+.kbcb-widget .kbcb-axis {
+  line, path {
+    fill: none;
+    stroke: rgb(0 0 0);
+    shape-rendering: crispEdges;
+  }
+
+  text {
+    font: 11px sans-serif;
+  }
 }
 
 /**
@@ -36,6 +39,7 @@
  * The 'center' feature is colored after that.
  * And highlighted features should be colored last (not currently used).
  */
+
 .kbcb-feature {
   stroke: rgb(0 0 0);
   fill: rgb(255 0 0);
@@ -56,6 +60,7 @@
 /**
  * The below controls styling for the (optional) button panel
  */
+
 .kbcb-buttons {
   margin-left: auto;
   margin-right: auto;

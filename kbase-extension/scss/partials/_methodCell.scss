@@ -8,8 +8,8 @@
 
 .code_cell div.input_area {
   display: none;
-}
 
-.code_cell div.input_area.-show {
-  display: block;
+  &.-show {
+    display: block;
+  }
 }

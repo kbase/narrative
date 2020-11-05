@@ -174,7 +174,7 @@ define([
 
         it('Should provide a link to a globus accout when file upload maxfile size error occurs', (done) => {
             $targetNode = $('<div>');
-            var uploadWidget = new FileUploadWidget($targetNode, {
+            let uploadWidget = new FileUploadWidget($targetNode, {
                 path: '/',
                 userInfo: {
                     user: fakeUser,
@@ -203,6 +203,32 @@ define([
                 expect($fileTemplate.find('#globus_error_link').attr('href')).toEqual('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' + fakeUser);
                 done();
             });
+        });
+
+        it('Should contain a cancel warning button', () => {
+            $targetNode = $('<div>');
+            let uploadWidget = new FileUploadWidget($targetNode, {
+                path: '/',
+                userInfo: {
+                    user: fakeUser,
+                    globusLinked: false
+                }
+            });
+
+            // Create file
+            const filename='foo.txt';
+            mockUploadEndpoint(filename, fakeUser, false);
+            var mockFile = createMockFile(filename);
+
+            const adderMock = jasmine.createSpy('adderMock');
+            uploadWidget.dropzone.on('addedfile', () => {
+                adderMock();
+            });
+
+            uploadWidget.dropzone.addFile(mockFile);
+            let $cancelButton = uploadWidget.$elem.find('.cancel');
+            expect($cancelButton).toBeDefined();
+            expect($cancelButton.attr('data-dz-remove')).toBeDefined();
         });
 
     });

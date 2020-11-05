@@ -6,6 +6,7 @@ define([
     'dropzone',
     'handlebars',
     'StagingServiceClient',
+    'bluebird',
     'text!kbase/templates/data_staging/dropzone_area.html',
     'text!kbase/templates/data_staging/dropped_file.html'
 ], function(
@@ -16,6 +17,7 @@ define([
     Dropzone,
     Handlebars,
     StagingServiceClient,
+    Promise,
     DropzoneAreaHtml,
     DropFileHtml
 ) {
@@ -30,6 +32,13 @@ define([
             this.path = options.path;
             this.stagingUrl = Config.url('staging_api_url');
             this.userInfo = options.userInfo;
+
+            var runtime = Runtime.make();
+            this.stagingServiceClient = new StagingServiceClient({
+                root: Config.url('staging_api_url'),
+                token: runtime.authToken()
+            });
+
             this.render();
             return this;
         },
@@ -112,6 +121,18 @@ define([
                     $dropzoneElem.find('#global-info').css({'display': 'none'});
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
                 })
+                .on('canceled', (file) => {
+                    let path = file.fullPath ? file.fullPath : file.name;
+                    if (path){
+                        Promise.resolve(this.stagingServiceClient.delete({
+                            path: path
+                        })).catch(xhr => {
+                            throw new Error(xhr.responseText ? xhr.responseText : 'Unknown error - unable to delete file from staging area');
+                        });
+                    } else {
+                        throw new Error('Unable to locate path for file to delete');
+                    }
+                })
                 .on('error', (erroredFile) => {
                     var $errorElem = $(erroredFile.previewElement);
                     $errorElem.find('#upload_progress_and_cancel').hide();
@@ -148,13 +169,9 @@ define([
             e.preventDefault();
 
             if(e.target.href === globusUrlLinked) {
-                let stagingServiceClient = new StagingServiceClient({
-                    root: this.stagingUrl,
-                    token: Runtime.make().authToken()
-                });
                 var globusWindow = window.open('', 'dz-globus');
                 globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
-                stagingServiceClient.addAcl()
+                this.stagingServiceClient.addAcl()
                     .done(() => {
                         window.open($(e.target).attr('href'), 'dz-globus');
                         return true;

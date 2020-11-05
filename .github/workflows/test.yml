@@ -7,8 +7,8 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: goanpeca/setup-miniconda@v1
+    - uses: actions/checkout@v2.3.4
+    - uses: conda-incubator/setup-miniconda@v1.7.0
       with:
         miniconda-version: 'latest'
         activate-environment: test-environment
@@ -18,7 +18,7 @@ jobs:
         condarc-file: test/condarc.yml
 
     - name: Use Node JS 10.x
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v2.1.2
       with:
         node-version: 10.x
 
@@ -38,6 +38,7 @@ jobs:
           jupyter notebook --version
 
     - name: Set up environment
+      shell: bash -l {0}
       run: |
         echo "KBASE_TEST_TOKEN=${{ secrets.NARRATIVE_TEST_TOKEN }}" >> $GITHUB_ENV
 
@@ -55,7 +56,7 @@ jobs:
         make test-integration
 
     - name: Send to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v1.0.14
       with:
         file: |
           ./coverage.xml

@@ -46,9 +46,7 @@ define([
             const cell = createMockCell('code');
             expect(cell.getIcon).not.toBeDefined();
             expect(cell.renderIcon).not.toBeDefined();
-            const cellWidget = new BulkImportCell(cell);
-            cellWidget.initialize();
-            cellWidget.setupCell();
+            const cellWidget = new BulkImportCell(cell, true);
             expect(cellWidget).toBeDefined();
             expect(cell.getIcon).toBeDefined();
             expect(cell.renderIcon).toBeDefined();
@@ -62,9 +60,7 @@ define([
 
         it('should have a cell that can render its icon', () => {
             const cell = createMockCell('code');
-            const cellWidget = new BulkImportCell(cell);
-            cellWidget.initialize();
-            cellWidget.setupCell();
+            const cellWidget = new BulkImportCell(cell, true);
             expect(cell).toBe(cellWidget.cell);
             expect(cell.getIcon()).toContain('fa-stack');
             cell.renderIcon();
@@ -78,24 +74,20 @@ define([
         it('can tell whether a cell is bulk import cell with a static function', () => {
             const codeCell = createMockCell('code');
             expect(BulkImportCell.isBulkImportCell(codeCell)).toBeFalsy();
-            const cellWidget = new BulkImportCell(codeCell);
-            cellWidget.initialize();
+            new BulkImportCell(codeCell, true);
             expect(BulkImportCell.isBulkImportCell(codeCell)).toBeTruthy();
         });
 
         it('should fail to set up a cell that is not a bulk import cell (has been initialized)', () => {
             const cell = createMockCell('code');
-            const cellWidget = new BulkImportCell(cell);
-            expect(() => cellWidget.setupCell()).toThrow();
+            expect(() => new BulkImportCell(cell, false)).toThrow();
         });
 
         it('should be able to delete its cell', () => {
             const cell = createMockCell('code');
             Jupyter.notebook = mockNotebook();
             spyOn(Jupyter.notebook, 'delete_cell');
-            const cellWidget = new BulkImportCell(cell);
-            cellWidget.initialize();
-            cellWidget.setupCell();
+            const cellWidget = new BulkImportCell(cell, true);
 
             cellWidget.deleteCell();
             expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();

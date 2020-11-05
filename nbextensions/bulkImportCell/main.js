@@ -31,8 +31,7 @@ define([
     BulkImportCell
 ) {
     'use strict';
-    const runtime = Runtime.make(),
-        t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         CELL_TYPE = 'app-bulk-import';
@@ -44,9 +43,8 @@ define([
     function setupNotebook() {
         return Promise.all(Jupyter.notebook.get_cells().map(function(cell) {
             if (BulkImportCell.isBulkImportCell(cell)) {
-                const bulkImportCell = new BulkImportCell(cell);
                 try {
-                    bulkImportCell.setupCell(cell);
+                    const bulkImportCell = new BulkImportCell(cell);
                 }
                 catch(error) {
 
@@ -88,18 +86,6 @@ define([
      * The work is carried out asynchronously through an orphan promise.
      */
     function load_ipython_extension() {
-        // Listen for interesting narrative jquery events...
-        // dataUpdated.Narrative is emitted by the data sidebar list
-        // after it has fetched and updated its data. Not the best of
-        // triggers that the ws has changed, not the worst.
-        $(document).on('dataUpdated.Narrative', () => {
-            // Tell each cell that the workspace has been updated.
-            // This is what is interesting, no?
-            runtime.bus().emit('workspace-changed');
-        });
-
-        // TODO: get the kbase specific info out of the notebook, specifically
-        // the workspace name, ...
 
         setupNotebook()
             .then(() => {
@@ -114,10 +100,8 @@ define([
                         return;
                     }
 
-                    const bulkImportCell = new BulkImportCell(cell);
-                    bulkImportCell.initialize(setupData.appTag, setupData.fileMap);
                     try {
-                        bulkImportCell.setupCell();
+                        const bulkImportCell = new BulkImportCell(cell, true);
                     }
                     catch(error) {
                         console.error('Error while creating bulk import cell', error);

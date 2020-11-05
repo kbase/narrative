@@ -17,7 +17,7 @@ define([
     const CELL_TYPE = 'app-bulk-import';
 
     class BulkImportCell {
-        constructor(cell) {
+        constructor(cell, initialize) {
             if (cell.cell_type !== 'code') {
                 throw new Error('Can only create Bulk Import Cells out of code cells!');
             }
@@ -27,6 +27,10 @@ define([
             this.busEventManager = BusEventManager.make({
                 bus: this.runtime.bus()
             });
+            if (initialize) {
+                this.initialize();
+            }
+            this.setupCell();
         }
 
         /**

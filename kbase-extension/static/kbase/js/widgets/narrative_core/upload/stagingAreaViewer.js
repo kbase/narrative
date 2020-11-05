@@ -738,19 +738,8 @@ define([
         },
 
         initImport: function() {
-            let stagingAreaViewer = this;
-
             Jupyter.narrative.insertBulkImportCell();
             Jupyter.narrative.hideOverlay();
-
-            //get all of the selected checkbox file names and import type
-            // $('input.kb-staging-table-body__checkbox-input:checked')
-            //     .each(function () {
-            //         const importType = $(this).attr('data-type');
-            //         const importFile = $(this).attr('data-file-name');
-            //         stagingAreaViewer.initImportApp(importType, importFile);
-            //     });
-
         },
 
         /**

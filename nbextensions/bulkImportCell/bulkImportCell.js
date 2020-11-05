@@ -2,8 +2,6 @@ define([
     'uuid',
     'common/appUtils',
     'common/utils',
-    'common/dom',
-    'common/html',
     'common/runtime',
     'common/busEventManager',
     'base/js/namespace'
@@ -11,16 +9,12 @@ define([
     Uuid,
     AppUtils,
     Utils,
-    Dom,
-    Html,
     Runtime,
     BusEventManager,
     Jupyter
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
-    const t = Html.tag,
-        div = t('div');
 
     class BulkImportCell {
         constructor(cell) {
@@ -42,13 +36,13 @@ define([
             }
 
             this.cell.getIcon = function() {
-                return AppUtils.makeGenericIcon('upload', 'purple');
+                return AppUtils.makeGenericIcon('upload', '#bf6c97');
             };
 
             this.cell.renderIcon = function() {
                 const iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
                 if (iconNode) {
-                    iconNode.innerHTML = AppUtils.makeGenericIcon('upload', 'purple');
+                    iconNode.innerHTML = this.cell.getIcon();
                 }
             };
 
@@ -60,10 +54,7 @@ define([
             });
             this.busEventManager.add(this.cellBus.on('delete-cell', () => this.deleteCell()));
 
-            Utils.setCellMeta(this.cell, 'kbase.attributes.lastLoaded', (new Date()).toUTCString());
-
-            const dom = Dom.make({ node: this.cell.input[0] });
-            this.kbaseNode = dom.createNode(div({ dataSubareaType: 'app-cell-input' }));
+            this.kbaseNode = document.createElement('div');
             // inserting after, with raw dom, means telling the parent node
             // to insert a node before the node following the one we are
             // referencing. If there is no next sibling, the null value
@@ -71,13 +62,17 @@ define([
             this.cell.input[0].parentNode.insertBefore(this.kbaseNode, this.cell.input[0].nextSibling);
             this.kbaseNode.innerHTML = 'I am a bulk import cell!';
 
-            Utils.setCellMeta(this.cell, 'kbase.bulkImportCell.user-settings.showCodeInputArea', false);
+            let meta = this.cell.metadata;
+            meta.kbase.attributes.lastLoaded = new Date().toUTCString();
+
             this.cell.renderMinMax();
             // force toolbar rerender.
-            this.cell.metadata = this.cell.metadata;
-
+            this.cell.metadata = meta;
         }
 
+        /**
+         * Deletes the cell from the notebook after doing internal cleanup.
+         */
         deleteCell() {
             this.busEventManager.removeAll();
             const cellIndex = Jupyter.notebook.find_cell_index(this.cell);
@@ -95,18 +90,22 @@ define([
                         id: new Uuid(4).format(),
                         status: 'new',
                         created: (new Date()).toUTCString(),
-                        title: 'Bulk Import',
-                        subtitle: 'For importing. In bulk.'
+                        title: 'Import from Staging Area',
+                        subtitle: 'Import files into your Narrative as data objects'
                     },
-                    type: CELL_TYPE
+                    type: CELL_TYPE,
+                    bulkImportCell: {
+                        'user-settings': {
+                            showCodeInputArea: false
+                        }
+                    }
                 }
             };
             this.cell.metadata = meta;
-            return this.setupCell();
         }
 
         /**
-         *
+         * Returns true if the given cell should be treated as a bulk import cell
          * @param {Cell} cell - a Jupyter Notebook cell
          */
         static isBulkImportCell(cell) {

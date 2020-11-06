@@ -38,7 +38,6 @@ jobs:
           jupyter notebook --version
 
     -name: Set up environment vars
-      shell: bash -l {0}
       run: |
         echo "KBASE_TEST_TOKEN=${{ secrets.NARRATIVE_TEST_TOKEN }}" >> $GITHUB_ENV
 
@@ -52,8 +51,6 @@ jobs:
 
     - name: Run Narrative Frontend Integration Tests
       shell: bash -l {0}
-      # env:
-      #   KBASE_TEST_TOKEN: ${{ secrets.NARRATIVE_TEST_TOKEN }}
       run: |
         make test-integration
 

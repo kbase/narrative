@@ -2,11 +2,13 @@
 define([
     'jquery',
     '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
-    'base/js/namespace'
+    'base/js/namespace',
+    'common/runtime'
 ], (
     $,
     BulkImportCell,
-    Jupyter
+    Jupyter,
+    Runtime
 ) => {
     'use strict';
 
@@ -34,9 +36,14 @@ define([
         return mockCell;
     }
 
-    function mockNotebook() {
+    /**
+     * Includes a callback that can be invoked when delete_cell is called, so we
+     * can more easily track it's use asynchronously during a test.
+     * @param {function} deleteCallback called when delete_cell gets invoked
+     */
+    function mockNotebook(deleteCallback) {
         return {
-            delete_cell: () => {},
+            delete_cell: () => deleteCallback ? deleteCallback() : null,
             find_cell_index: () => 1,
         };
     }
@@ -91,6 +98,24 @@ define([
 
             cellWidget.deleteCell();
             expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
+        });
+
+        it('responds to a delete-cell bus message', (done) => {
+            const runtime = Runtime.make();
+            const cell = createMockCell('code');
+            Jupyter.notebook = mockNotebook(() => {
+                done();
+            });
+            spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
+            new BulkImportCell(cell, true);
+            runtime.bus().send({}, {
+                channel: {
+                    cell: cell.metadata.kbase.attributes.id
+                },
+                key: {
+                    type: 'delete-cell'
+                }
+            });
         });
     });
 });

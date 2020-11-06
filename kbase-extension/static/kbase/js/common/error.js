@@ -2,7 +2,9 @@
 /*jslint white:true,browser:true*/
 
 define([
-], function () {
+    'common/ui',
+    'kb_common/html',
+], function (UI, html) {
     'use strict';
 
 
@@ -78,9 +80,38 @@ define([
         }
     }
 
+    function reportCellError(title, preamble, error) {
+        const t = html.tag,
+            div = t('div'),
+            p = t('p');
+
+        const ui = UI.make({
+            node: document.body
+        });
+        ui.showInfoDialog({
+            title: 'Error',
+            body: div({
+                style: {
+                    margin: '10px'
+                }
+            }, [
+                ui.buildPanel({
+                    title: title,
+                    type: 'danger',
+                    body: ui.buildErrorTabs({
+                        preamble: p(preamble),
+                        error: error
+                    })
+                })
+            ])
+        });
+
+    }
+
 
     return {
         grokError: grokError,
-        KBError: KBError
+        KBError: KBError,
+        reportCellError: reportCellError
     };
 });

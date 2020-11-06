@@ -16,62 +16,38 @@ define([
     'jquery',
     'base/js/namespace',
     'bluebird',
-    'common/runtime',
-    'common/ui',
-    'kb_common/html',
+    'common/error',
     './bulkImportCell',
     'custom/custom'
 ], function(
     $,
     Jupyter,
     Promise,
-    Runtime,
-    UI,
-    html,
+    Error,
     BulkImportCell
 ) {
     'use strict';
-    const t = html.tag,
-        div = t('div'),
-        p = t('p'),
-        CELL_TYPE = 'app-bulk-import';
+    const CELL_TYPE = 'app-bulk-import';
 
     /**
      * This gets called on extension initialization. This iterates over all existing cells,
-     * and if it's a bulk import cell, then we init the module that says so.
+     * and if it's a bulk import cell, then we init the wrapping BulkImportCell class.
      */
     function setupNotebook() {
-        return Promise.all(Jupyter.notebook.get_cells().map(function(cell) {
+        return Promise.all(Jupyter.notebook.get_cells().map((cell) => {
             if (BulkImportCell.isBulkImportCell(cell)) {
                 try {
                     const bulkImportCell = new BulkImportCell(cell);
                 }
                 catch(error) {
-
                     // If we have an error here, there is a serious problem setting up the cell and it is not usable.
                     // What to do? The safest thing to do is inform the user, and then strip out the cell, leaving
                     // in it's place a markdown cell with the error info.
                     // For now, just pop up an error dialog;
-                    var ui = UI.make({
-                        node: document.body
-                    });
-                    ui.showInfoDialog({
-                        title: 'Error',
-                        body: div({
-                            style: {
-                                margin: '10px'
-                            }
-                        }, [
-                            ui.buildPanel({
-                                title: 'Error Starting App Cell',
-                                type: 'danger',
-                                body: ui.buildErrorTabs({
-                                    preamble: p('There was an error starting the app cell.'),
-                                    error: error
-                                })
-                            })
-                        ])
-                    });
+
+                    Error.reportCellError('Error starting bulk import cell',
+                        'There was an error starting the bulk import cell',
+                        error);
                 }
             }
         }));
@@ -80,13 +56,10 @@ define([
     /*
      * Called directly by Jupyter during the notebook startup process.
      * Called after the notebook is loaded and the dom structure is created.
-     * The job of this call is to mutate the notebook and cells to suite
-     * oneself, set up any services or other things needed for operation of
-     * the notebook or cells.
-     * The work is carried out asynchronously through an orphan promise.
+     * The job of this call is to mutate the notebook and cells to be aware of
+     * the bulk import cells.
      */
     function load_ipython_extension() {
-
         setupNotebook()
             .then(() => {
                 $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
@@ -104,28 +77,10 @@ define([
                         const bulkImportCell = new BulkImportCell(cell, true);
                     }
                     catch(error) {
-                        console.error('Error while creating bulk import cell', error);
                         Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
-                        var ui = UI.make({
-                            node: document.body
-                        });
-                        ui.showInfoDialog({
-                            title: 'Error',
-                            body: div({
-                                style: {
-                                    margin: '10px'
-                                }
-                            }, [
-                                ui.buildPanel({
-                                    title: 'Error Inserting App Cell',
-                                    type: 'danger',
-                                    body: ui.buildErrorTabs({
-                                        preamble: p('Could not insert the App Cell due to errors.'),
-                                        error: error
-                                    })
-                                })
-                            ])
-                        });
+                        Error.reportCellError('Error inserting bulk import cell',
+                            'Could not insert the App Cell due to errors.',
+                            error);
                     }
                 });
             });

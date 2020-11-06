@@ -72,9 +72,10 @@ define([
                         !(setupData.type === CELL_TYPE)) {
                         return;
                     }
+                    let importData = setupData.typesToFiles || {};
 
                     try {
-                        new BulkImportCell(cell, true);
+                        new BulkImportCell(cell, true, importData);
                     }
                     catch(error) {
                         Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));

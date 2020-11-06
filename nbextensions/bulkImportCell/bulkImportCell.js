@@ -25,14 +25,19 @@ define([
          * The constructor does the work of initializing the bulk import cell module. It
          * modifies the cell metadata, if the initialize parameter is truthy, and extends the
          * cell object to do things we need it to, like respond to minimization requests and
-         * render its icon.
+         * render its icon. This modification also includes the contents of typesToFiles if
+         * present.
+         *
+         * If initialize is falsy, no changes are made to the structure, even if typesToFiles is
+         * present and contains new data.
          * @param {Cell} cell a Jupyter notebook cell. This should be a code cell, and will throw
          * an Error if it is not.
          * @param {boolean} initialize if true, this will initialize the bulk import cell
          * structure that gets serialized in the cell metadata. This should ONLY be set true when
          * creating a new bulk import cell, not loading a narrative that already contains one
+         * @param {object} typesToFiles keys = data types, values = arrays of files to import
          */
-        constructor(cell, initialize) {
+        constructor(cell, initialize, typesToFiles) {
             if (cell.cell_type !== 'code') {
                 throw new Error('Can only create Bulk Import Cells out of code cells!');
             }
@@ -44,7 +49,7 @@ define([
                 bus: this.runtime.bus()
             });
             if (initialize) {
-                this.initialize();
+                this.initialize(typesToFiles);
             }
             this.setupCell();
         }
@@ -63,8 +68,10 @@ define([
         /**
          * Does the initial pass on newly created cells to initialize its metadata and get it
          * set up for a new life as a Bulk Import Cell.
+         *
+         * @param {object} typesToFiles a map from object type to an array of files.
          */
-        initialize() {
+        initialize(typesToFiles) {
             const meta = {
                 kbase: {
                     attributes: {
@@ -78,7 +85,8 @@ define([
                     bulkImportCell: {
                         'user-settings': {
                             showCodeInputArea: false
-                        }
+                        },
+                        inputs: typesToFiles
                     }
                 }
             };

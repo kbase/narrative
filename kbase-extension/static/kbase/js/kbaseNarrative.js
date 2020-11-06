@@ -1253,12 +1253,18 @@ define([
         delete this.kbaseWidgets[cellId];
     };
 
-    Narrative.prototype.insertBulkImportCell = function () {
+    /**
+     * This inserts a new bulk import cell below the currently selected cell.
+     * Its input is a map from object type to a list of files to be uploaded of that type.
+     * @param {object} typesToFiles keys = types, values = list of files mapped to that type
+     */
+    Narrative.prototype.insertBulkImportCell = function (typesToFiles) {
         const cellType = 'app-bulk-import';
         const cellData = {
-            type: cellType
+            type: cellType,
+            typesToFiles: typesToFiles ? typesToFiles : {}
         };
-        const cell = Jupyter.narrative.insertAndSelectCellBelow('code', null, cellData);
+        const cell = this.insertAndSelectCellBelow('code', null, cellData);
         return cell;
     };
 

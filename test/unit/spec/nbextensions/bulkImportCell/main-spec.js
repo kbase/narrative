@@ -8,5 +8,7 @@ define([
         it('should have a load_ipython_extension function', () => {
             expect(Main.load_ipython_extension).toBeDefined();
         });
+
+
     });
 });

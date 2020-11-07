@@ -89,7 +89,7 @@ module.exports = function (config) {
         browserNoActivityTimeout: 30000,
         singleRun: true,
         proxies: {
-            '/narrative/nbextensions': '/base/nbextensions',//'http://localhost:32323/narrative/nbextensions',
+            '/narrative/nbextensions': '/base/nbextensions',
             '/narrative/static/': '/base/kbase-extension/static/',
             '/narrative/static/base': 'http://localhost:32323/narrative/static/base',
             '/narrative/static/notebook': 'http://localhost:32323/narrative/static/notebook',

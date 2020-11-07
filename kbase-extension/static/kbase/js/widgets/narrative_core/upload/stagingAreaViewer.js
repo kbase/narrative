@@ -804,7 +804,7 @@ define([
                         stagingAreaViewer.initImportApp(importType, importFile);
                     }
                 });
-            if (bulkMapping) {
+            if (Object.keys(bulkMapping).length) {
                 Jupyter.narrative.insertBulkImportCell(bulkMapping);
             }
             Jupyter.narrative.hideOverlay();

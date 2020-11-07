@@ -35,14 +35,19 @@ define([
          * @param {boolean} initialize if true, this will initialize the bulk import cell
          * structure that gets serialized in the cell metadata. This should ONLY be set true when
          * creating a new bulk import cell, not loading a narrative that already contains one
-         * @param {object} typesToFiles keys = data types, values = arrays of files to import
+         * @param {object} typesToFiles keys = data type strings, values = arrays of file paths
+         * to import
+         * e.g.: {
+         *     'fastq_reads': ['file1.fq', 'file2.fq']
+         * }
          */
         constructor(cell, initialize, typesToFiles) {
             if (cell.cell_type !== 'code') {
                 throw new Error('Can only create Bulk Import Cells out of code cells!');
             }
             this.cell = cell;
-            this.kbaseNode = null;  // this is the
+            // this is the DOM element used as the container for everything controlled by this cell.
+            this.kbaseNode = null;
             this.runtime = Runtime.make();
             this.cellBus = null;
             this.busEventManager = BusEventManager.make({
@@ -69,7 +74,11 @@ define([
          * Does the initial pass on newly created cells to initialize its metadata and get it
          * set up for a new life as a Bulk Import Cell.
          *
-         * @param {object} typesToFiles a map from object type to an array of files.
+         * @param {object} typesToFiles keys = data type strings, values = arrays of file paths
+         * to import
+         * e.g.: {
+         *     'fastq_reads': ['file1.fq', 'file2.fq']
+         * }
          */
         initialize(typesToFiles) {
             const meta = {

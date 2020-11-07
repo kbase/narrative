@@ -88,9 +88,10 @@ define([
 
     }
 
-    // MAIN
-    // module state instantiation
-
+    /**
+     * The main entrypoint for this extension, this either loads up the extension right away,
+     * or waits on loading to finish.
+     */
     function load() {
         /* Only initialize after the notebook is fully loaded. */
         if (Jupyter.notebook._fully_loaded) {
@@ -109,5 +110,5 @@ define([
     };
 }, (err) => {
     'use strict';
-    console.error('ERROR loading bulkImportCell main', err);
+    console.error('Error while loading the bulkImportCell extension', err);
 });

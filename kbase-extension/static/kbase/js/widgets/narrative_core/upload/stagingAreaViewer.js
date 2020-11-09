@@ -710,13 +710,13 @@ define([
                                 .append($upa)
                         },
                         {
-                            tab: 'First 10 lines',
+                            tab: 'First 1024 chars',
                             content: $.jqElem('div')
                                 .addClass('kb-data-staging-metadata-file-lines')
                                 .append(data.head)
                         },
                         {
-                            tab: 'Last 10 lines',
+                            tab: 'Last 1024 chars',
                             content: $.jqElem('div')
                                 .addClass('kb-data-staging-metadata-file-lines')
                                 .append(data.tail)

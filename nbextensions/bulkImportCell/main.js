@@ -60,7 +60,7 @@ define([
      * the bulk import cells.
      */
     function load_ipython_extension() {
-        setupNotebook()
+        return setupNotebook()
             .then(() => {
                 $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
                     const cell = payload.cell,
@@ -72,7 +72,7 @@ define([
                         !(setupData.type === CELL_TYPE)) {
                         return;
                     }
-                    let importData = setupData.typesToFiles || {};
+                    const importData = setupData.typesToFiles || {};
 
                     try {
                         new BulkImportCell(cell, true, importData);
@@ -91,15 +91,18 @@ define([
     /**
      * The main entrypoint for this extension, this either loads up the extension right away,
      * or waits on loading to finish.
+     * It returns a Promise that gets resolved when `load_python_extension` is executed.
      */
     function load() {
         /* Only initialize after the notebook is fully loaded. */
         if (Jupyter.notebook._fully_loaded) {
-            load_ipython_extension();
+            return load_ipython_extension();
         }
         else {
-            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
-                load_ipython_extension();
+            return Promise.try(() => {
+                $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+                    load_ipython_extension();
+                });
             });
         }
     }

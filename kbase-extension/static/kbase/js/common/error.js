@@ -103,9 +103,7 @@ define([
         ui.showInfoDialog({
             title: 'Error',
             body: div({
-                style: {
-                    margin: '10px'
-                }
+                class: 'error-dialog__body'
             }, [
                 ui.buildPanel({
                     title: title,

@@ -789,7 +789,6 @@ define([
                 .addClass('kb-staging-table-import__button__disabled')
                 .tooltip({
                     title: 'Select a file/s to continue.',
-                    container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
                         hide: Config.get('tooltip').hideDelay

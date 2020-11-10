@@ -29,6 +29,7 @@
     "grunt-regex-replace": "0.4.0",
     "grunt-shell": "^3.0.1",
     "grunt-stylelint": "^0.15.0",
+    "husky": "^4.3.0",
     "jasmine-ajax": "4.0.0",
     "jasmine-core": "3.5.0",
     "jasmine-jquery": "2.1.1",
@@ -42,8 +43,10 @@
     "karma-requirejs": "1.1.0",
     "karma-safari-launcher": "1.0.0",
     "load-grunt-tasks": "^5.1.0",
-    "postcss": "^8.1.4",
+    "postcss": "^8.1.7",
+    "postcss-cli": "^8.2.0",
     "postcss-remove-prefixes": "^1.2.0",
+    "postcss-scss": "^3.0.4",
     "postcss-unprefix": "^2.1.4",
     "requirejs": "2.3.6",
     "sass": "^1.28.0",
@@ -53,6 +56,7 @@
     "string.prototype.startswith": "1.0.0",
     "stylelint": "^13.7.2",
     "stylelint-color-format": "^1.1.0",
+    "stylelint-config-idiomatic-order": "^8.1.0",
     "stylelint-config-recommended": "^3.0.0",
     "stylelint-config-sass-guidelines": "^7.1.0",
     "stylelint-config-standard": "^20.0.0",
@@ -64,11 +68,20 @@
   "browserslist": [
     "defaults"
   ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run husky_msg && npm run compile_css",
+      "pre-push": "npm run husky_msg && npm run update_browserslist"
+    }
+  },
   "scripts": {
     "bower": "bower install",
+    "husky_msg": "echo Running git hooks -- see the 'husky' section of package.json for details",
     "test": "grunt test",
     "update_browserslist": "npx browserslist@latest --update-db",
     "compile_css": "sass kbase-extension/scss/:kbase-extension/static/kbase/css/ && grunt postcss:concat",
+    "watch_css": "grunt watch",
+    "stylelint": "stylelint --config .stylelintrc.scss.yaml --fix kbase-extension/scss/**/*.scss",
     "sassv": "sass --version"
   },
   "dependencies": {}

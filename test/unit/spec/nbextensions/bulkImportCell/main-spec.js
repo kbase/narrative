@@ -89,22 +89,5 @@ define([
                 });
         });
 
-        it('should start up the extension after the notebook starts up', (done) => {
-            Jupyter.notebook = Mocks.buildMockNotebook({
-                fullyLoaded: false
-            });
-            spyOn(Jupyter.notebook, 'get_cells').and.callThrough();
-            Main.load_ipython_extension()
-                .then(() => {
-                    expect(Jupyter.notebook.get_cells).not.toHaveBeenCalled();
-                    $([Jupyter.events]).trigger('notebook_loaded.Notebook');
-                    setTimeout(() => {
-                        expect(Jupyter.notebook.get_cells).toHaveBeenCalled();
-                        done();
-                    }, 1000);
-                })
-                .catch(err => { console.error('wat error', err); done.fail('should not have failed', err);} );
-        });
-
     });
 });

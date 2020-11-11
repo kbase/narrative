@@ -27,7 +27,8 @@ module.exports = function (config) {
             'kbase-extension/static/kbase/js/**/!(api)/*.js': ['coverage'],
             'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js': ['coverage'],
             'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage'],
-            'nbextensions/appcell2/widgets/tabs/*.js': ['coverage'],
+            'nbextensions/appCell2/widgets/tabs/*.js': ['coverage'],
+            'nbextensions/bulkImportCell/**/*.js': ['coverage'],
             'kbase-extension/static/kbase/js/*.js': ['coverage']
         },
         files: [
@@ -41,11 +42,13 @@ module.exports = function (config) {
             {pattern: 'kbase-extension/static/kbase/config/**/*.yaml', included: false, served: true},
             {pattern: 'kbase-extension/static/**/*.js', included: false, served: true},
             {pattern: 'kbase-extension/static/**/*.gif', included: false, served: true},
-            {pattern: 'nbextensions/appcell2/widgets/tabs/*.js', included: false},
+            {pattern: 'nbextensions/appCell2/**/*.js', included: false, served: true},
+            {pattern: 'nbextensions/bulkImportCell/**/*.js', included: false},
             {pattern: 'test/testConfig.json', included: false, served: true, nocache: true},
             {pattern: 'test/*.tok', included: false, served: true, nocache: true},
             {pattern: 'test/data/**/*', included: false, served: true},
             'test/unit/testUtil.js',
+            'test/unit/mocks.js',
             'test/unit/test-main.js'
         ],
         exclude: [
@@ -87,7 +90,7 @@ module.exports = function (config) {
         browserNoActivityTimeout: 30000,
         singleRun: true,
         proxies: {
-            '/narrative/nbextensions': 'http://localhost:32323/narrative/nbextensions',
+            '/narrative/nbextensions': '/base/nbextensions',
             '/narrative/static/': '/base/kbase-extension/static/',
             '/narrative/static/base': 'http://localhost:32323/narrative/static/base',
             '/narrative/static/notebook': 'http://localhost:32323/narrative/static/notebook',

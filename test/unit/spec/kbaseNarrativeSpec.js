@@ -1,7 +1,6 @@
 /*global define*/
-/*global describe, it, expect*/
+/*global describe, it, expect, spyOn, beforeEach, afterEach*/
 /*global jasmine*/
-/*global beforeEach, afterEach, beforeAll*/
 /*jslint white: true*/
 
 define ([
@@ -161,5 +160,11 @@ define ([
             expect(narr.getAuthToken()).toBe(FAKE_TOKEN);
         });
 
+        it('Should create a new bulk import cell on request', () => {
+            const narr = new Narrative();
+            spyOn(narr, 'insertAndSelectCell');
+            narr.insertBulkImportCell({});
+            expect(narr.insertAndSelectCell).toHaveBeenCalled();
+        });
     });
 });

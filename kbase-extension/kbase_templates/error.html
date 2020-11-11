@@ -5,7 +5,9 @@
 
 {% block stylesheet %}
 {{super()}}
-    <link rel="stylesheet" href="{{ static_url("kbase/css/errorPage.css") }}" type="text/css" />
+<style type="text/css">
+  #header, #site { display: block }
+</style>
 {% endblock %}
 
 {% block loading_message %}

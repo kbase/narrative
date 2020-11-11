@@ -6,12 +6,14 @@
     <title>{% block title %}KBase Narrative{% endblock %}</title>
     {% block favicon %}<link id="favicon" rel="shortcut icon" type="image/x-icon" href="{{static_url("kbase/images/KBase_favicon.ico") }}">{% endblock %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <link rel="stylesheet" href="{{static_url("components/jquery-ui/themes/smoothness/jquery-ui.min.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{static_url("components/jquery-typeahead/dist/jquery.typeahead.min.css") }}" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     {% block stylesheet %}
-    <link rel="stylesheet" href="{{ static_url("style/style.min.css") }}" type="text/css"/>
+    <!-- All Jupyter CSS now served as a single minified file, jupyter.min.css
+      <link rel="stylesheet" href="{{static_url("components/jquery-ui/themes/smoothness/jquery-ui.min.css") }}" type="text/css" />
+      <link rel="stylesheet" href="{{static_url("components/jquery-typeahead/dist/jquery.typeahead.min.css") }}" type="text/css" />
+      <link rel="stylesheet" href="{{ static_url("style/style.min.css") }}" type="text/css"/>
+    -->
+    <link rel="stylesheet" href="{{ static_url("kbase/css/jupyter.min.css") }}" type="text/css"/>
     {% endblock %}
     <link rel="stylesheet" href="{{ static_url("kbase/css/all_concat.css") }}" type="text/css" />
 

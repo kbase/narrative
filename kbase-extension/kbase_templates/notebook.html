@@ -13,8 +13,10 @@
 window.mathjax_url = "{{mathjax_url}}";
 </script>
 
-<link rel="stylesheet" href="{{ static_url("components/bootstrap-tour/build/css/bootstrap-tour.min.css") }}" type="text/css" />
-<link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}" type="text/css" />
+<!-- All Jupyter CSS now served as a single minified file, jupyter.min.css
+  <link rel="stylesheet" href="{{ static_url("components/bootstrap-tour/build/css/bootstrap-tour.min.css") }}" type="text/css" />
+  <link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}" type="text/css" />
+-->
 {{super()}}
 <link rel="stylesheet" href=""  id="kernel-css" type="text/css" />
 <link rel="stylesheet" href="{{ static_url("ext_components/datatables/media/css/dataTables.bootstrap.min.css") }}" type="text/css" />

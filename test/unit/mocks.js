@@ -78,12 +78,11 @@ define('narrativeMocks', [
                     inputs: {}
                 };
                 meta.attributes.title = 'Import from Staging Area',
-                meta.attributes.subtitle = 'Import files into your Narrative as data objects'
+                meta.attributes.subtitle = 'Import files into your Narrative as data objects';
                 break;
             case 'app':
                 meta.appCell = {
-
-                }
+                };
                 break;
             default:
                 // if we don't know the cell type, return a blank metadata

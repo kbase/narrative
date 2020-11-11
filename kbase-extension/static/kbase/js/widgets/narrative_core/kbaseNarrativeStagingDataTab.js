@@ -84,8 +84,10 @@ define([
                         userId: Jupyter.narrative.userId
                     });
 
-                    this.uploadWidget.dropzone.on('complete', () => {
-                        this.updateView();
+                    this.uploadWidget.dropzone.on('complete', (file) => {
+                        if(file.status !== 'canceled') {
+                            this.updateView();
+                        }
                     });
 
                     this.stagingAreaViewer = new StagingAreaViewer(this.$myFiles, {

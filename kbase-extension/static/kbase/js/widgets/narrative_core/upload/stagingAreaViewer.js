@@ -277,8 +277,7 @@ define([
                 dom: '<"file-path pull-left">frtip',
                 autoWidth: false,
                 order: [[4, 'desc']],
-                headerCallback: function (thead) {
-
+                headerCallback: function (thead) {     
                     function selectAllOrNone (event) {
                         let selectAllChecked = event.target.checked;
 
@@ -297,7 +296,16 @@ define([
                     $(thead).find('th').eq(0)
                         .on('click keyPress', (e) => {
                             selectAllOrNone(e);
-                        });
+                        }).tooltip({
+                            title: 'Select a type to import.',
+                            container: '.kb-staging-table-header__checkbox-disabled',
+                            placement: 'right',
+                            delay: {
+                                show: Config.get('tooltip').showDelay,
+                                hide: Config.get('tooltip').hideDelay
+                            },
+                            template: '<div class="kb-staging-table-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
+                        }); 
                 },
                 columnDefs: [{
                     targets: 0,
@@ -306,12 +314,15 @@ define([
                     render: function (data) {
                         const fileId = new UUID(4).format();
                         //render checkboxes disabled until the user selects a type
-                        return ('<input class="kb-staging-table-body__checkbox-input"' +
-                        'type="checkbox" disabled=true' +
-                        'aria-checked="false" tabindex="0"' +
-                        'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
-                        'data-file-name="' + data + '"' +
-                        'id="' + fileId + '">');
+                        return ('<div class="kb-staging-table-body__checkbox-disabled" ' + 
+                            'aria-haspopup="true" tabindex="0">' +
+                            '<input class="kb-staging-table-body__checkbox-input"' + 
+                            'type="checkbox" role="checkbox" disabled=true ' + 
+                            'aria-checked="false" ' +
+                            'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
+                            'data-file-name="' + data + '"' + 
+                            'id="' + fileId + '">' +
+                        '</div>');
                     }
                 }, {
                     targets: 1,
@@ -401,6 +412,17 @@ define([
                         }
                     }
 
+                    $('td:eq(0)', row).find('div.kb-staging-table-body__checkbox-disabled')
+                        .tooltip({
+                            title: 'Select a type to import.',
+                            placement: 'right',
+                            delay: {
+                                show: Config.get('tooltip').showDelay,
+                                hide: Config.get('tooltip').hideDelay
+                            },
+                            template: '<div class="kb-staging-table-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
+                        });
+  
                     $('td:eq(0)', row).find('input.kb-staging-table-body__checkbox-input')
                         .off('click')
                         .on('click keyPress', (e) => {
@@ -509,10 +531,24 @@ define([
                             .attr('aria-label', 'Select to import file checkbox')
                             .attr('data-type', dataType);
 
+                        //get rid of the disabled class and disable the tooltip
+                        $('td:eq(0)', row)
+                            .find('div.kb-staging-table-body__checkbox-disabled')
+                            .removeAttr('aria-haspopup')
+                            .removeClass('kb-staging-table-body__checkbox-disabled')
+                            .tooltip('disable');
+  
                         //make sure select all checkbox is enabled
                         $('#staging_table_select_all')
                             .prop('disabled',false)
                             .attr('aria-label', 'Select to import all files checkbox');
+
+                        //disable the tooltip for the select all div
+                        $('div.kb-staging-table-header__checkbox-disabled')
+                            .removeAttr('aria-haspopup')
+                            .removeClass('kb-staging-table-header__checkbox-disabled')
+                            .tooltip('disable');
+
                     }
 
                     const storedFileData = stagingAreaViewer.selectedFileTypes[rowFileName];
@@ -674,13 +710,13 @@ define([
                                 .append($upa)
                         },
                         {
-                            tab: 'First 10 lines',
+                            tab: 'First 1024 chars',
                             content: $.jqElem('div')
                                 .addClass('kb-data-staging-metadata-file-lines')
                                 .append(data.head)
                         },
                         {
-                            tab: 'Last 10 lines',
+                            tab: 'Last 1024 chars',
                             content: $.jqElem('div')
                                 .addClass('kb-data-staging-metadata-file-lines')
                                 .append(data.tail)
@@ -756,7 +792,8 @@ define([
                     delay: {
                         show: Config.get('tooltip').showDelay,
                         hide: Config.get('tooltip').hideDelay
-                    }
+                    },
+                    template: '<div class="kb-staging-table-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
                 })
                 .off('click');
         },

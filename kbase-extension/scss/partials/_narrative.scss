@@ -182,8 +182,13 @@
   }
 }
 
+.kb-staging-table.table-condensed .kb-staging-table-header th {
+  padding: 5px 0;
+}
+
 .kb-staging-table .kb-staging-table-body td {
   vertical-align: middle;
+
 }
 
 .kb-staging-table-body__expander {
@@ -227,8 +232,6 @@
     border-radius: 4px;
   }
 }
-
-/* TODO: can this class be merged with the one above? */
 
 /* When user clicks into the dropdown or chooses a selection box change border color */
 
@@ -346,26 +349,25 @@
   }
 }
 
-/* TODO: check in with design on positioning of tooltip, whether we want to display arrow */
+.kb-staging-table-body__checkbox-disabled .kb-staging-table-body__checkbox-input:disabled,
+.kb-staging-table-header__checkbox-disabled .kb-staging-table-header__checkbox-input:disabled {
+  cursor: default;
+}
 
-.kb-staging-table-import .tooltip {
+.kb-staging-table-import__tooltip.tooltip {
   background: rgb(255 255 255);
   box-shadow: 2px 4px 6px rgb(0 0 0 / 0.15);
   border-radius: 4px;
+}
 
-  .tooltip-inner {
-    background: rgb(255 255 255);
-    color: rgb(0 0 0);
-    font: normal 400 12px/16px $typeface-page-text;
-    display: flex;
-    align-items: center;
-    width: 135px;
-    height: 56px;
-  }
-
-  .tooltip-arrow {
-    display: none;
-  }
+.kb-staging-table-import__tooltip.tooltip .tooltip-inner {
+  background: rgb(255 255 255);
+  color: rgb(0 0 0);
+  font: normal 400 12px/16px $typeface-page-text;
+  display: flex;
+  align-items: center;
+  width: 135px;
+  height: 56px;
 }
 
 /*

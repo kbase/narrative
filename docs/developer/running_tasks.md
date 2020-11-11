@@ -53,3 +53,21 @@ npm run stylelint
 ```
 
 The linter config (in `.stylelint.yaml`) includes a number of rules to ensure that the scss content is error-free and (relatively) uniform. Running it will automatically fix some stylistic issues (e.g. ordering of lines within stanzas), but others may need to be fixed manually. Please note there are some issues in the SCSS files that are more difficult to fix, due to the styling set in the Jupyter notebook css.
+
+### Python formatting and linting
+
+The narrative repo installation includes the modules [black](https://github.com/psf/black), for code formatting, and [flake8](https://flake8.pycqa.org/) for code QA. You can run these manually using the aliases set up in the `package.json` file:
+
+```sh
+$ npm run black  # autoformats python code
+```
+
+```sh
+$ npm run flake8  # runs flake8 code linter
+```
+
+or trigger them directly from the command line, e.g.
+
+```sh
+$ flake8 .
+```

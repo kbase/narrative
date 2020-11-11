@@ -78,6 +78,8 @@
   "scripts": {
     "bower": "bower install",
     "husky_msg": "echo Running git hooks -- see the 'husky' section of package.json for details",
+    "black": "black -v --exclude '.+Impl.py' .",
+    "flake8": "flake8 .",
     "test": "grunt test",
     "update_browserslist": "npx browserslist@latest --update-db",
     "compile_css": "sass kbase-extension/scss/:kbase-extension/static/kbase/css/ && grunt postcss:concat",

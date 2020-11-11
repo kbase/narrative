@@ -93,22 +93,11 @@ For general testing instructions and guidance refer to [docs/testing.md](docs/te
 
 ## NPM Scripts
 
-A number of npm scripts are available to automate parts of the development process. See [docs/developer/running_tasks.md](docs/developer/running_tasks.md) for more information.
+A number of commands are available to automate parts of the development process. See [docs/developer/running_tasks.md](docs/developer/running_tasks.md) for more information.
 
 ## Git Hooks
 
-### Python pre-commit hooks
-
-Our git [pre-commit](https://pre-commit.com/#install) [hooks](/.pre-commit-config.yaml) allow you to run flake8 and black upon `git commit` and save you from having to run these linters manually.
-
-- change into the base directory
-- `pip install pre-commit`
-- `pre-commit install` to set up the git hook scripts
-- edit a python file and `git commit -m <comment>` it in to test out the installation
-
-### NPM / JavaScript hooks
-
-The narrative repo uses the NPM module [Husky](https://www.npmjs.com/package/husky) to install and execute JavaScript-based git hooks. This includes compiling css from the scss source files, and updating the current list of browsers used by Autoprefixer to generate the appropriate browser prefixes in the css files. If you run `npm install`, or use the standard install process, husky (and thus the husky git hooks) will automatically be installed and run.
+The narrative repo uses the NPM module [Husky](https://www.npmjs.com/package/husky) to install and execute git hooks. This includes compiling css from the scss source files, and updating the current list of browsers used by Autoprefixer to generate the appropriate browser prefixes in the css files. If you run `npm install`, or use the standard install process, husky (and thus the husky git hooks) will automatically be installed and run.
 
 The `husky` key in [package.json](package.json) lists the hooks that are run. See [docs/developer/running_tasks.md](docs/developer/running_tasks.md) for more information on the npm scripts that are executed.
 
@@ -117,6 +106,7 @@ Husky hooks can be skipped by setting the environment variable:
 ```
 HUSKY_SKIP_HOOKS=1
 ```
+
 ## Submitting code
 
 Follow the gitflow directions located at [docs/git-workflow.md](docs/git-workflow.md) to submit code to this repository.

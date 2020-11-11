@@ -8,6 +8,7 @@ define([
     'common/events',
     'base/js/namespace',
     'kb_common/html',
+    './cellControlPanel'
 ], (
     Uuid,
     AppUtils,
@@ -17,15 +18,13 @@ define([
     UI,
     Events,
     Jupyter,
-    html
+    html,
+    CellControlPanel
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
 
-    const tag = html.tag,
-        div = tag('div'),
-        span = tag('span'),
-        a = tag('a');
+    const div = html.tag('div');
 
     /**
      * This class creates and manages the bulk import cell. This works with, and wraps around,
@@ -65,83 +64,6 @@ define([
                 bus: this.runtime.bus()
             });
             this.ui = null;
-            this.actionButtons = {
-                current: {
-                    name: null,
-                    disabled: null
-                },
-                availableButtons: {
-                    runApp: {
-                        help: 'Run the app',
-                        type: 'success',
-                        classes: ['-run'],
-                        label: 'Run'
-                    },
-                    cancel: {
-                        help: 'Cancel the running app',
-                        type: 'danger',
-                        classes: ['-cancel'],
-                        label: 'Cancel'
-                    },
-                    reRunApp: {
-                        help: 'Edit and re-run the app',
-                        type: 'default',
-                        classes: ['-rerun'],
-                        label: 'Reset'
-                    },
-                    resetApp: {
-                        help: 'Reset the app and return to Edit mode',
-                        type: 'default',
-                        classes: ['-reset'],
-                        label: 'Reset'
-                    },
-                    offline: {
-                        help: 'Currently disconnected from the server.',
-                        type: 'danger',
-                        classes: ['-cancel'],
-                        label: 'Offline'
-                    }
-                }
-            };
-
-            this.controlBarTabs = {
-                selectedTab: null,
-                tabs: {
-                    configure: {
-                        label: 'Configure',
-                        // widget: configureWidget()
-                    },
-                    viewConfigure: {
-                        label: 'View Configure',
-                        // widget: viewConfigureWidget()
-                    },
-                    batchConfigure: {
-                        label: 'Configure Batch',
-                        // widget: batchConfigureWidget()
-                    },
-                    viewBatchConfigure: {
-                        label: 'View Batch Configure',
-                        // widget: viewBatchConfigureWidget()
-                    },
-                    info: {
-                        label: 'Info',
-                        // widget: infoTabWidget,
-                    },
-                    logs: {
-                        label: 'Job Status',
-                        // widget: logTabWidget
-                    },
-                    results: {
-                        label: 'Result',
-                        // widget: resultsTabWidget
-                    },
-                    error: {
-                        label: 'Error',
-                        type: 'danger',
-                        // widget: errorTabWidget
-                    }
-                }
-            };
 
             if (initialize) {
                 this.initialize(typesToFiles);
@@ -263,9 +185,49 @@ define([
             let meta = this.cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             this.cell.metadata = meta;
-
-
             this.render();
+            this.updateState();
+        }
+
+        updateState() {
+            this.controlPanel.setTabState({
+                configure: {
+                    enabled: true,
+                    visible: true
+                },
+                viewConfigure: {
+                    enabled: false,
+                    visible: false
+                },
+                info: {
+                    enabled: true,
+                    visible: true
+                },
+                logs: {
+                    enabled: false,
+                    visible: true
+                },
+                results: {
+                    enabled: false,
+                    visible: true
+                },
+                error: {
+                    enabled: false,
+                    visible: false
+                }
+            });
+            this.controlPanel.setActionState({
+                name: 'runApp',
+                enabled: false
+            });
+        }
+
+        toggleTab(tab) {
+            alert(tab);
+        }
+
+        runAction(action) {
+            alert(action);
         }
 
         /**
@@ -273,204 +235,106 @@ define([
          */
         deleteCell() {
             this.busEventManager.removeAll();
+            this.controlPanel.stop();
             const cellIndex = Jupyter.notebook.find_cell_index(this.cell);
             Jupyter.notebook.delete_cell(cellIndex);
         }
 
-        toggleTab(tab) {
-            alert(tab);
-        }
-
-        buildRunControlPanelRunButtons(events) {
-            const style = {
-                padding: '6px'
-            };
-            const buttonList = Object.keys(this.actionButtons.availableButtons).map((key) => {
-                const button = this.actionButtons.availableButtons[key],
-                    classes = [].concat(button.classes);
-                let icon;
-                if (button.icon) {
-                    icon = {
-                        name: button.icon.name,
-                        size: 2
-                    };
-                }
-                return this.ui.buildButton({
-                    tip: button.help,
-                    name: key,
-                    events: events,
-                    type: button.type || 'default',
-                    classes: classes,
-                    hidden: true,
-                    // Overriding button class styles for this context.
-                    style: {
-                        width: '80px'
+        buildControlPanel(events) {
+            this.tabSet = {
+                selectedTab: 'configure',
+                tabs: {
+                    configure: {
+                        label: 'Configure',
+                        // widget: configureWidget()
                     },
-                    event: {
-                        type: 'actionButton',
-                        data: {
-                            action: key
-                        }
+                    viewConfigure: {
+                        label: 'View Configure',
+                        // widget: viewConfigureWidget()
                     },
-                    icon: icon,
-                    label: button.label
-                });
-            });
-
-            var buttonDiv = div({
-                class: 'btn-group',
-                style: style
-            }, buttonList);
-            return buttonDiv;
-        }
-
-        buildRunControlPanelDisplayButtons(events) {
-            const buttons = Object.keys(this.controlBarTabs.tabs).map((key) => {
-                const tab = this.controlBarTabs.tabs[key];
-                let icon;
-                if (!tab) {
-                    console.warn('Tab not defined: ' + key);
-                    return;
-                }
-                if (tab.icon) {
-                    if (typeof tab.icon === 'string') {
-                        icon = {
-                            name: tab.icon,
-                            size: 2
-                        };
-                    } else {
-                        icon.size = 2;
+                    info: {
+                        label: 'Info',
+                        // widget: infoTabWidget,
+                    },
+                    logs: {
+                        label: 'Job Status',
+                        // widget: logTabWidget
+                    },
+                    results: {
+                        label: 'Result',
+                        // widget: resultsTabWidget
+                    },
+                    error: {
+                        label: 'Error',
+                        type: 'danger',
+                        // widget: errorTabWidget
                     }
                 }
-                return this.ui.buildButton({
-                    label: tab.label,
-                    name: key,
-                    events: events,
-                    type: tab.type || 'primary',
-                    // hidden: true,
-                    features: tab.features,
-                    classes: ['kb-app-cell-btn'],
-                    event: {
-                        type: 'control-panel-tab',
-                        data: {
-                            tab: key
-                        }
+            };
+            this.actionButtons = {
+                current: {
+                    name: null,
+                    disabled: null
+                },
+                availableButtons: {
+                    runApp: {
+                        help: 'Run the app',
+                        type: 'success',
+                        classes: ['-run'],
+                        label: 'Run'
                     },
-                    icon: icon
-                });
-            }).filter(function(x) {
-                return x ? true : false;
-            });
-            this.cellBus.on('control-panel-tab', (message) => {
-                var tab = message.data.tab;
-                this.toggleTab(tab);
-            });
-
-            var outdatedBtn = a({
-                tabindex: '0',
-                type: 'button',
-                class: 'btn hidden',
-                dataContainer: 'body',
-                container: 'body',
-                dataToggle: 'popover',
-                dataPlacement: 'bottom',
-                dataTrigger: 'focus',
-                dataElement: 'outdated',
-                role: 'button',
-                title: 'New version available',
-                style: {
-                    color: '#f79b22',
-                    padding: '6px 0 0 0'
+                    cancel: {
+                        help: 'Cancel the running app',
+                        type: 'danger',
+                        classes: ['-cancel'],
+                        label: 'Cancel'
+                    },
+                    reRunApp: {
+                        help: 'Edit and re-run the app',
+                        type: 'default',
+                        classes: ['-rerun'],
+                        label: 'Reset'
+                    },
+                    resetApp: {
+                        help: 'Reset the app and return to Edit mode',
+                        type: 'default',
+                        classes: ['-reset'],
+                        label: 'Reset'
+                    },
+                    offline: {
+                        help: 'Currently disconnected from the server.',
+                        type: 'danger',
+                        classes: ['-cancel'],
+                        label: 'Offline'
+                    }
                 }
-            }, span({
-                class: 'fa fa-exclamation-triangle fa-2x'
-            }));
-            buttons.unshift(outdatedBtn);
-
-            return buttons;
-        }
-
-        buildRunControlPanel(events) {
-            return div({ dataElement: 'run-control-panel' }, [
-                div({
-                    style: { border: '1px silver solid', height: '50px', position: 'relative', display: 'flex', flexDirection: 'row' }
-                }, [
-                    div({
-                        style: {
-                            height: '50px',
-                            overflow: 'hidden',
-                            textAlign: 'left',
-                            lineHeight: '50px',
-                            verticalAlign: 'middle',
-                            display: 'flex',
-                            flexDirection: 'row'
-                        }
-                    }, [
-                        this.buildRunControlPanelRunButtons(events)
-                    ]),
-                    div({
-                        dataElement: 'status',
-                        style: {
-                            width: '450px',
-                            height: '50px',
-                            overflow: 'hidden'
-                        }
-                    }, [
-                        div({
-                            style: {
-                                height: '50px',
-                                marginTop: '0px',
-                                textAlign: 'left',
-                                lineHeight: '50px',
-                                verticalAlign: 'middle'
-                            }
-                        }, [
-                            div([
-                                span({ dataElement: 'execMessage' })
-                            ])
-                        ])
-                    ]),
-                    div({
-                        dataElement: 'toolbar',
-                        style: {
-                            position: 'absolute',
-                            right: '0',
-                            top: '0',
-                            height: '50px'
-                        }
-                    }, [
-                        div({
-                            style: {
-                                display: 'inline-block',
-                                right: '0',
-                                height: '50px',
-                                lineHeight: '50px',
-                                paddingRight: '15px',
-                                verticalAlign: 'bottom'
-                            }
-                        }, [
-                            div({
-                                class: 'btn-toolbar',
-                                style: {
-                                    display: 'inline-block',
-                                    verticalAlign: 'bottom'
-                                }
-                            }, this.buildRunControlPanelDisplayButtons(events))
-                        ])
-                    ])
-                ]),
-                div({
-                    dataElement: 'tab-pane'
-                }, [
-                    div({ dataElement: 'widget' })
-                ])
-            ]);
+            };
+            this.controlPanel = new CellControlPanel({
+                bus: this.cellBus,
+                ui: this.ui,
+                tabs: {
+                    toggleAction: this.toggleTab,
+                    tabs: this.tabSet
+                },
+                action: {
+                    runAction: this.runAction,
+                    actions: this.actionButtons
+                }
+            });
+            return this.controlPanel.buildLayout(events);
         }
 
         renderLayout() {
             const events = Events.make(),
-                content = div({ class: 'kbase-extension kb-app-cell', style: { display: 'flex', alignItems: 'stretch' } }, [
-                    div({ class: 'prompt', dataElement: 'prompt', style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' } }, [
+                content = div({
+                    class: 'kbase-extension kb-app-cell',
+                    style: { display: 'flex', alignItems: 'stretch' }
+                }, [
+                    div({
+                        class: 'prompt',
+                        dataElement: 'prompt',
+                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' }
+                    }, [
                         div({ dataElement: 'status' })
                     ]),
                     div({
@@ -478,9 +342,12 @@ define([
                         dataElement: 'body',
                         style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1', width: '100%' }
                     }, [
-                        div({ dataElement: 'widget', style: { display: 'block', width: '100%' } }, [
+                        div({
+                            dataElement: 'widget',
+                            style: { display: 'block', width: '100%' }
+                        }, [
                             div({ class: 'container-fluid' }, [
-                                this.buildRunControlPanel(events)
+                                this.buildControlPanel(events)
                             ])
                         ])
                     ])
@@ -499,11 +366,7 @@ define([
             const layout = this.renderLayout();
             this.kbaseNode.innerHTML = layout.content;
             layout.events.attachEvents(this.kbaseNode);
-
         }
-
-
-
     }
 
     return BulkImportCell;

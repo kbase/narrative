@@ -182,10 +182,6 @@
   }
 }
 
-.kb-staging-table.table-condensed .kb-staging-table-header th {
-  padding: 5px 0;
-}
-
 .kb-staging-table .kb-staging-table-body td {
   vertical-align: middle;
 
@@ -347,11 +343,6 @@
       outline: none;
     }
   }
-}
-
-.kb-staging-table-body__checkbox-disabled .kb-staging-table-body__checkbox-input:disabled,
-.kb-staging-table-header__checkbox-disabled .kb-staging-table-header__checkbox-input:disabled {
-  cursor: default;
 }
 
 .kb-staging-table-import__tooltip.tooltip {

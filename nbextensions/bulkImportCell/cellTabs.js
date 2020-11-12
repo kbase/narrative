@@ -36,13 +36,15 @@ define([
 
         setState(newState) {
             this.state = newState;
-            for (const tabId of Object.keys(this.state)) {
-                const tabState = this.state[tabId];
+            for (const tabId of Object.keys(this.state.tabs)) {
+                const tabState = this.state.tabs[tabId];
                 if (tabState) {
                     tabState.enabled ? this.ui.enableButton(tabId) : this.ui.disableButton(tabId);
                     tabState.visible ? this.ui.showButton(tabId) : this.ui.hideButton(tabId);
                 }
+                this.ui.deactivateButton(tabId);
             }
+            this.ui.activateButton(this.state.selected);
         }
 
         buildLayout(ui, events) {

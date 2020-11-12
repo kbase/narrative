@@ -118,11 +118,6 @@ define([
                     }, [
                         this.cellTabs.buildLayout(events)
                     ])
-                ]),
-                div({
-                    dataElement: 'tab-pane'
-                }, [
-                    div({ dataElement: 'widget' })
                 ])
             ]);
         }

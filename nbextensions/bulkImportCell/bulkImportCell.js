@@ -8,7 +8,8 @@ define([
     'common/events',
     'base/js/namespace',
     'kb_common/html',
-    './cellControlPanel'
+    './cellControlPanel',
+    './tabs/configure'
 ], (
     Uuid,
     AppUtils,
@@ -19,12 +20,27 @@ define([
     Events,
     Jupyter,
     html,
-    CellControlPanel
+    CellControlPanel,
+    ConfigureWidget
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
 
     const div = html.tag('div');
+
+    class DefaultWidget {
+        constructor() {
+
+        }
+
+        start(options) {
+            alert('starting default widget');
+        }
+
+        stop() {
+
+        }
+    }
 
     /**
      * This class creates and manages the bulk import cell. This works with, and wraps around,
@@ -64,7 +80,8 @@ define([
                 bus: this.runtime.bus()
             });
             this.ui = null;
-
+            this.tabWidget = null;  // the widget currently in view
+            this.state = this.getInitialState();
             if (initialize) {
                 this.initialize(typesToFiles);
             }
@@ -190,40 +207,28 @@ define([
         }
 
         updateState() {
-            this.controlPanel.setTabState({
-                configure: {
-                    enabled: true,
-                    visible: true
-                },
-                viewConfigure: {
-                    enabled: false,
-                    visible: false
-                },
-                info: {
-                    enabled: true,
-                    visible: true
-                },
-                logs: {
-                    enabled: false,
-                    visible: true
-                },
-                results: {
-                    enabled: false,
-                    visible: true
-                },
-                error: {
-                    enabled: false,
-                    visible: false
-                }
-            });
-            this.controlPanel.setActionState({
-                name: 'runApp',
-                enabled: false
-            });
+            this.controlPanel.setTabState(this.state.tabState);
+            this.controlPanel.setActionState(this.state.actionState);
         }
 
+        /**
+         * Should do the following steps:
+         * 1. if there's a tab showing, stop() it and detach it
+         * 2. update the tabs state to be selected
+         * @param {string} tab id of the tab to display
+         */
         toggleTab(tab) {
-            alert(tab);
+            this.state.tabState.selected = tab;
+            this.controlPanel.setTabState(this.state.tabState);
+            if (this.tabWidget !== null) {
+                this.tabWidget.stop();
+            }
+            this.tabWidget = new this.tabSet.tabs[tab].widget();
+            let node = document.createElement('div');
+            this.ui.getElement('cell-container.tab-pane.widget').appendChild(node);
+            this.tabWidget.start({
+                node: node
+            });
         }
 
         runAction(action) {
@@ -240,34 +245,73 @@ define([
             Jupyter.notebook.delete_cell(cellIndex);
         }
 
+        getInitialState() {
+            return {
+                tabState: {
+                    selected: 'configure',
+                    tabs: {
+                        configure: {
+                            enabled: true,
+                            visible: true,
+                        },
+                        viewConfigure: {
+                            enabled: false,
+                            visible: false
+                        },
+                        info: {
+                            enabled: true,
+                            visible: true
+                        },
+                        logs: {
+                            enabled: false,
+                            visible: true
+                        },
+                        results: {
+                            enabled: false,
+                            visible: true
+                        },
+                        error: {
+                            enabled: false,
+                            visible: false
+                        }
+                    }
+                },
+                actionState: {
+                    name: 'runApp',
+                    enabled: false
+                }
+            };
+        }
+
         buildControlPanel(events) {
+            this.tabState = this.getInitialState();
             this.tabSet = {
                 selectedTab: 'configure',
                 tabs: {
                     configure: {
                         label: 'Configure',
-                        // widget: configureWidget()
+                        widget: ConfigureWidget
                     },
                     viewConfigure: {
                         label: 'View Configure',
-                        // widget: viewConfigureWidget()
+                        widget: DefaultWidget
                     },
                     info: {
                         label: 'Info',
-                        // widget: infoTabWidget,
+                        widget: DefaultWidget,
                     },
                     logs: {
                         label: 'Job Status',
-                        // widget: logTabWidget
+                        widget: DefaultWidget
                     },
                     results: {
                         label: 'Result',
-                        // widget: resultsTabWidget
+                        widget: DefaultWidget
                     },
                     error: {
                         label: 'Error',
                         type: 'danger',
-                        // widget: errorTabWidget
+                        widget: DefaultWidget
                     }
                 }
             };
@@ -313,11 +357,11 @@ define([
                 bus: this.cellBus,
                 ui: this.ui,
                 tabs: {
-                    toggleAction: this.toggleTab,
+                    toggleAction: this.toggleTab.bind(this),
                     tabs: this.tabSet
                 },
                 action: {
-                    runAction: this.runAction,
+                    runAction: this.runAction.bind(this),
                     actions: this.actionButtons
                 }
             });
@@ -346,8 +390,13 @@ define([
                             dataElement: 'widget',
                             style: { display: 'block', width: '100%' }
                         }, [
-                            div({ class: 'container-fluid' }, [
-                                this.buildControlPanel(events)
+                            div({ class: 'container-fluid', dataElement: 'cell-container' }, [
+                                this.buildControlPanel(events),
+                                div({
+                                    dataElement: 'tab-pane'
+                                }, [
+                                    div({ dataElement: 'widget' })
+                                ])
                             ])
                         ])
                     ])

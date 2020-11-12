@@ -8,7 +8,8 @@ define([
     'common/events',
     'base/js/namespace',
     'kb_common/html',
-    './cellControlPanel'
+    './cellControlPanel',
+    'common/cellComponents/tabs/infoTab',
 ], (
     Uuid,
     AppUtils,
@@ -19,7 +20,8 @@ define([
     Events,
     Jupyter,
     html,
-    CellControlPanel
+    CellControlPanel,
+    infoTabWidget,
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
@@ -254,7 +256,7 @@ define([
                     },
                     info: {
                         label: 'Info',
-                        // widget: infoTabWidget,
+                        widget: infoTabWidget,
                     },
                     logs: {
                         label: 'Job Status',

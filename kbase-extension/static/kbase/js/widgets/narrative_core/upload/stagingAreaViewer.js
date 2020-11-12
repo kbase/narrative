@@ -59,6 +59,13 @@ define([
                 root: Config.url('staging_api_url'),
                 token: runtime.authToken()
             });
+            
+            Handlebars.registerHelper('ifIn', function(elem, list, options) {
+                if(list.indexOf(elem) > -1) {
+                    return options.fn(this);
+                }
+                return options.inverse(this);
+            });
 
             this.ftpFileTableTmpl = Handlebars.compile(FtpFileTableHtml);
             this.ftpFileHeaderTmpl = Handlebars.compile(FtpFileHeaderHtml);
@@ -70,6 +77,7 @@ define([
             // Get this party started.
             this.setPath(options.path);
             this.openFileInfo = {};
+            
 
             return this;
         },
@@ -218,7 +226,7 @@ define([
             });
         },
 
-        downloadFile: function(url) {
+        downloadFile: function (url) {
             const hiddenIFrameID = 'hiddenDownloader';
             let iframe = document.getElementById(hiddenIFrameID);
             if (iframe === null) {
@@ -240,6 +248,71 @@ define([
             this.$elem.append(errorElem);
         },
 
+        returnFakeSortedMappings: function (staging_files) {
+
+            const file_names = staging_files.map(f => f['path']);
+            // call to api with this
+
+            var rv = [{'id': 7, 'title': 'decompress/unpack1', 'app_weight': 1},{'id': 78, 'title': 'decompress/unpack0', 'app_weight': 1}];
+            var rv2 = [{'id': 7, 'title': 'decompress/unpack1', 'app_weight': 1},{'id': 78, 'title': 'decompress/unpack0', 'app_weight': 1}];
+            var rv3 = [{ 'id': 7, 'title': 'AloneMappiung', 'app_weight': 1 }];
+            var mappings = [null, rv, rv2,rv3,rv2,rv2,rv2,rv2];
+
+            // Sort by weight
+            mappings.forEach(function(mapping) {
+                try {
+                    if (mapping) {
+                        mapping.sort((a, b) => (a.app_weight < b.app_weight));
+                        // document.write(JSON.stringify(mapping),'<br>');
+                    }
+                } catch (err) {
+                    console.log('Mapping is malformed', err);
+                }
+            });
+            
+            staging_files.map(function (element, index)
+            {   
+                var retrieved = mappings[index] || null;
+                element['mappings'] = null;
+                if (retrieved) {
+                    
+                    element['mappings'] = retrieved.map(f => f['title']);
+                }
+                
+
+            });
+            
+   
+            return staging_files;
+        },
+
+        returnRealResponse: function () {
+            //API CALL
+
+            // SORT
+
+
+            //TODO Return real response, with response sorted by weight, then by title
+
+        },
+
+        detectFileMappings: function (files) {
+            /*
+            Add a list of top matches for each file, sorted by weight, then sorted by name
+             */
+            console.log("Check order")
+            console.log(this.uploaders.dropdown_order);
+            console.log(files);
+            console.log('Welcome to the jungle');
+            var mappings = this.returnFakeSortedMappings(files);
+            // document.write("<pre>")
+            // document.write(JSON.stringify(mappings, null, 2));
+            console.log('Returning mappings',mappings);
+            return mappings;
+
+        },
+
+
         /**
          * This renders the files datatable. If there's no data, it gives a message
          * about no files being present. If there's an error, that gets put in the table instead.
@@ -249,8 +322,12 @@ define([
         renderFiles: function (files) {
             files = files || [];
             const emptyMsg = 'No files found.';
+            console.log("Welcome and bonvienu");
+            var files_with_mappings = this.detectFileMappings(files,);
+            // TODO Search for "selected" fields and add them to the files,
+            // so they are reselected upon refresh / finished download, otherwise user will have to reselect them all
             var $fileTable = $(this.ftpFileTableTmpl({
-                files: files,
+                files: files_with_mappings,
                 uploaders: this.uploaders.dropdown_order
             }));
             this.$elem.append($fileTable);
@@ -527,18 +604,18 @@ define([
                                 .append($.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('MD5')).append(data.md5 || 'Not provided'))
                                 .append($upa)
                         },
-                        {
-                            tab: 'First 10 lines',
-                            content: $.jqElem('div')
-                                .addClass('kb-data-staging-metadata-file-lines')
-                                .append(data.head)
-                        },
-                        {
-                            tab: 'Last 10 lines',
-                            content: $.jqElem('div')
-                                .addClass('kb-data-staging-metadata-file-lines')
-                                .append(data.tail)
-                        }]
+                            {
+                                tab: 'First 10 lines',
+                                content: $.jqElem('div')
+                                    .addClass('kb-data-staging-metadata-file-lines')
+                                    .append(data.head)
+                            },
+                            {
+                                tab: 'Last 10 lines',
+                                content: $.jqElem('div')
+                                    .addClass('kb-data-staging-metadata-file-lines')
+                                    .append(data.tail)
+                            }]
                     });
 
                     // attempt to load up a jgi metadata file, via the jgi-metadata endpoint. It'll only succeed if a jgi metadata file exists
@@ -624,7 +701,8 @@ define([
         },
 
         startTour: function () {
-            var tourStartFn = function () {}
+            var tourStartFn = function () {
+            }
 
             if (!this.tour) {
                 this.tour = new UploadTour.Tour(

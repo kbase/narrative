@@ -178,7 +178,6 @@
 }
 
 /* Special positioning for folder sort icon as there is no title */
-
 .kb-staging-table-header .kb-staging-table-header__file {
   &.sorting::before,
   &.sorting_asc::before,
@@ -272,33 +271,23 @@
     }
   }
 
+  /* Import as dropdown placeholder text is red
+    Change placeholder color when user clicks in */
+  .select2-container--focus .select2-selection__placeholder,
   .select2-container--open .select2-selection__placeholder {
     color: rgb(0 0 0);
   }
 }
 
-/* TODO: can this class be merged with the one above? */
-
 /* When user clicks into the dropdown or chooses a selection box change border color */
-
 .kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected,
 .select2-container--focus .kb-staging-table-body__import-dropdown,
 .select2-container--open .kb-staging-table-body__import-dropdown {
   border: 1px solid rgb(196 196 196);
 }
 
-/* Import as dropdown placeholder text is red */
-
-/* Change placeholder color when user clicks in */
-
-.select2-container--focus .select2-selection__placeholder {
-  color: rgb(0 0 0);
-}
-
-/* Before user makes a selection arrow is red */
-
-/* after user makes a selection, or when in focus, arrow is grey */
-
+/* Before user makes a selection arrow is red
+   after user makes a selection, or when in focus, arrow is grey */
 .kb-staging-table-body__download {
   margin-left: 5px;
   font-size: 9px;

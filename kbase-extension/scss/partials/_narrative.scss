@@ -1,24 +1,4 @@
-@import url('//fonts.googleapis.com/css?family=Roboto');
-
-.kb-dropzone {
-  #upload-message {
-    font-family: $typeface-page-text;
-    font-weight: 700;
-  }
-
-  .dz-message {
-    margin: 2em 4.5em;
-    color: rgb(0 0 0);
-    font: normal 400 24px/28px $typeface-alt-page-text;
-    mix-blend-mode: normal;
-  }
-}
-
-.btn__text,
-.kb-dropzone .dz-message {
-  font-style: normal;
-  text-align: center;
-}
+@import url(//fonts.googleapis.com/css?family=Roboto);
 
 .btn__text {
   height: 34px;
@@ -29,6 +9,7 @@
   color: rgb(67 121 177);
   font: normal 700 14px/18px $typeface-page-text;
   outline: none;
+  text-align: center;
   text-transform: uppercase;
 
   &:hover {
@@ -57,7 +38,7 @@
   }
 }
 
-.clear-all-dropzone {
+.dz-clear-all__button {
   margin: 6px;
 }
 
@@ -70,7 +51,6 @@
 }
 
 .dz-file__progress__bar {
-  width: 0;
   margin-bottom: inherit;
   margin-left: 5px;
 }
@@ -126,27 +106,10 @@
 
 .kb-staging-table {
   table-layout: fixed;
-}
 
-.kb-staging-table-header__checkbox {
-  width: 2%;
-}
-
-.kb-staging-table-header__file {
-  width: 4%;
-}
-
-.kb-staging-table-header__name {
-  width: 26%;
-}
-
-.kb-staging-table-header__age,
-.kb-staging-table-header__size {
-  width: 8%;
-}
-
-.kb-staging-table-header__import {
-  width: 22%;
+  .kb-staging-table-body td {
+    vertical-align: middle;
+  }
 }
 
 /* Overriding default datatables sort icons so they come before the header title rather than after */
@@ -171,6 +134,39 @@
   .sorting_desc::before {
     content: '\e156';
   }
+
+  /* .kb-staging-table-header__checkbox */
+  &__checkbox {
+    width: 2%;
+  }
+
+  /* .kb-staging-table-header__file */
+  &__file {
+    width: 4%;
+
+    /* Special positioning for folder sort icon as there is no title */
+    &.sorting::before,
+    &.sorting_asc::before,
+    &.sorting_desc::before {
+      left: 9px;
+    }
+  }
+
+  /* .kb-staging-table-header__name */
+  &__name {
+    width: 26%;
+  }
+
+  /* .kb-staging-table-header__age, .kb-staging-table-header__size */
+  &__age,
+  &__size {
+    width: 8%;
+  }
+
+  /* .kb-staging-table-header__import */
+  &__import {
+    width: 22%;
+  }
 }
 
 .kb-staging-table .kb-staging-table-header {
@@ -193,11 +189,6 @@
 
 .kb-staging-table.table-condensed .kb-staging-table-header th {
   padding: 5px 0;
-}
-
-.kb-staging-table .kb-staging-table-body td {
-  vertical-align: middle;
-
 }
 
 .kb-staging-table-body__expander {
@@ -233,27 +224,17 @@
     margin: 4px 0;
   }
 
+  /* style for Import As dropdown container text */
   .kb-staging-table-body__import-dropdown {
     height: 38px;
     box-sizing: border-box;
     border: 1px solid rgb(223 0 2);
     background: rgb(255 255 255);
     border-radius: 4px;
-  }
-}
 
-/* When user clicks into the dropdown or chooses a selection box change border color */
+    /* When user clicks into the dropdown or chooses a selection box change border color */
 
-.kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected,
-.select2-container--focus .kb-staging-table-body__import-dropdown,
-.select2-container--open .kb-staging-table-body__import-dropdown {
-  border: 1px solid rgb(196 196 196);
-}
-
-/* style for Import As dropdown container text */
-
-.kb-staging-table-body {
-  .kb-staging-table-body__import-dropdown {
+    /* style for Import As dropdown container text */
     .select2-selection__rendered {
       position: absolute;
       top: 30.95%;
@@ -270,11 +251,40 @@
     .select2-selection__placeholder {
       color: rgb(223 0 2);
     }
+
+    /* style for Import As dropdown container arrow */
+    .select2-selection__arrow {
+      position: absolute;
+      top: 30.95%;
+      right: 5.44%;
+      bottom: 30.95%;
+      left: 87.76%;
+      height: 16px;
+
+      b {
+        border-color: rgb(223 0 2) transparent transparent;
+      }
+    }
+
+    &.kb-staging-table-body__import-type-selected .select2-selection__arrow b,
+    &:focus .select2-selection__arrow b {
+      border-color: rgb(136 136 136) transparent transparent;
+    }
   }
 
   .select2-container--open .select2-selection__placeholder {
     color: rgb(0 0 0);
   }
+}
+
+/* TODO: can this class be merged with the one above? */
+
+/* When user clicks into the dropdown or chooses a selection box change border color */
+
+.kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected,
+.select2-container--focus .kb-staging-table-body__import-dropdown,
+.select2-container--open .kb-staging-table-body__import-dropdown {
+  border: 1px solid rgb(196 196 196);
 }
 
 /* Import as dropdown placeholder text is red */
@@ -283,28 +293,6 @@
 
 .select2-container--focus .select2-selection__placeholder {
   color: rgb(0 0 0);
-}
-
-/* style for Import As dropdown container arrow */
-
-.kb-staging-table-body .kb-staging-table-body__import-dropdown {
-  .select2-selection__arrow {
-    position: absolute;
-    top: 30.95%;
-    right: 5.44%;
-    bottom: 30.95%;
-    left: 87.76%;
-    height: 16px;
-
-    b {
-      border-color: rgb(223 0 2) transparent transparent;
-    }
-  }
-
-  &.kb-staging-table-body__import-type-selected .select2-selection__arrow b,
-  &:focus .select2-selection__arrow b {
-    border-color: rgb(136 136 136) transparent transparent;
-  }
 }
 
 /* Before user makes a selection arrow is red */
@@ -418,7 +406,7 @@
   top: -3px;
   height: 35px;
   padding: 8px;
-  border: none;
+  border: 0;
   margin: 8px;
   background: none;
   border-radius: 4px;
@@ -460,6 +448,26 @@
   border: 2px dashed rgb(33 150 243) !important;
   margin-bottom: 5px;
   overflow-y: auto;
+
+  &-progress__header {
+    display: none;
+    border-bottom: 1px solid rgb(238 238 238);
+    margin-bottom: 5px;
+  }
+
+  .dz-message {
+    margin: 2em 4.5em;
+    color: rgb(0 0 0);
+    font: normal 400 24px/28px $typeface-alt-page-text;
+    mix-blend-mode: normal;
+    text-align: center;
+  }
+
+  /* .kb-dropzone__message--upload */
+  &__message--upload {
+    font-family: $typeface-page-text;
+    font-weight: 700;
+  }
 }
 
 .kb-ga-seq {
@@ -500,14 +508,14 @@
     text-overflow: inherit;
     white-space: normal;
   }
+}
 
-  > #save_widget {
-    padding: 0;
-  }
+#save_widget {
+  padding: 0;
 }
 
 #kb-narr-creator,
-#kb-narr-name > #save_widget {
+#save_widget {
   font-family: $typeface-page-text;
   font-weight: 700;
 }
@@ -603,7 +611,7 @@ nav[role=navigation] ul {
   }
 }
 
-input#search_terms {
+input#search_terms { /* FIXME */
   position: relative;
   left: -0.5em;
   display: inline;
@@ -618,7 +626,7 @@ input#search_terms {
   font-size: 1em;
 }
 
-span#searchspan {
+span#searchspan { /* FIXME */
   display: inline-block;
   width: 50%;
 }
@@ -665,12 +673,21 @@ span#searchspan {
 .kb-nav-btn {
   min-width: 50px;
   padding: 1px 7px;
-  border: none;
+  border: 0;
   margin: 0 5px 0 0;
   background-color: rgb(255 255 255);
   box-shadow: 0 0 3px rgb(206 206 206);
   font-size: 24px;
   text-shadow: none !important;
+
+  > div {
+    color: rgb(102 102 102) !important;
+  }
+
+  .kb-nav-btn-txt {
+    margin-top: -5px;
+    font-size: 13px;
+  }
 }
 
 .navbar-right .fa::before {
@@ -684,23 +701,11 @@ span#searchspan {
 }
 
 #kb-nav-menu {
-  /* don't add shadows here */
   box-shadow: none;
 }
 
 .kb-nav-menu__container {
   display: inline-block;
-}
-
-.kb-nav-btn {
-  > div {
-    color: rgb(102 102 102) !important;
-  }
-
-  .kb-nav-btn-txt {
-    margin-top: -5px;
-    font-size: 10pt;
-  }
 }
 
 .navbar-right .kb-nav-btn:hover {
@@ -754,7 +759,7 @@ span#searchspan {
 }
 
 #signin-button .btn {
-  border: none;
+  border: 0;
 }
 
 .btn-xs .glyphicon-user {
@@ -786,7 +791,7 @@ body > #header {
   box-sizing: border-box;
 }
 
-p#site-title {
+p#site-title { /* FIXME */
   width: 46px;
   height: 46px;
   margin: 5px;
@@ -980,15 +985,7 @@ p#site-title {
   font-weight: 700;
   text-align: center;
   user-select: none;
-}
 
-.kb-overlay-active {
-  border-top: 6px solid rgb(128 128 128);
-  border-bottom: 6px solid rgb(128 128 128);
-  background-color: rgb(128 128 128);
-}
-
-.kb-side-header {
   &.active,
   &:hover {
     border-bottom: 6px solid rgb(16 206 52);
@@ -998,6 +995,12 @@ p#site-title {
     color: rgb(255 255 255);
     cursor: auto;
   }
+}
+
+.kb-overlay-active {
+  border-top: 6px solid rgb(128 128 128);
+  border-bottom: 6px solid rgb(128 128 128);
+  background-color: rgb(128 128 128);
 }
 
 .kb-side-separator {
@@ -1201,7 +1204,7 @@ ul.pane-list {
 
 .kb-method-search-clear {
   border: 1px solid rgb(206 206 206);
-  border-left: none;
+  border-left: 0;
   cursor: pointer;
 }
 
@@ -1246,13 +1249,13 @@ li {
     }
 
     &:last-child {
-      border-bottom: none;
+      border-bottom: 0;
     }
   }
 }
 
 fieldset {
-  border: none;
+  border: 0;
   margin: 0 0 15px;
 
   label {
@@ -1283,6 +1286,37 @@ div {
     border: 1px solid rgb(204 204 204);
     margin: 3px auto;
   }
+
+  &.texttools,
+  &.tools {
+    p {
+      margin: 0;
+    }
+  }
+
+  &.textarea {
+    display: none;
+    width: 650px;
+    height: auto;
+    min-height: 1.2em;
+    padding: 0;
+    border: 0;
+  }
+
+  &.metadata {
+    display: block;
+    width: 200px;
+    height: 100px;
+    padding: 0 10px;
+    float: left;
+  }
+
+  &.social {
+    display: none;
+    width: 80px;
+    padding: 0 10px;
+    float: right;
+  }
 }
 
 img.dataset-cell {
@@ -1296,15 +1330,16 @@ img.dataset-cell {
   background-repeat: no-repeat;
 }
 
-.dataset-cell p,
-.function-cell p {
-  font-size: 0.875em;
-}
+.dataset-cell,
+.function-cell {
+  p {
+    font-size: 0.875em;
+  }
 
-.dataset-cell h2,
-.function-cell h2 {
-  margin-bottom: 0;
-  font-size: 1.1em;
+  h2 {
+    margin-bottom: 0;
+    font-size: 1.1em;
+  }
 }
 
 .textcell {
@@ -1329,28 +1364,16 @@ p.textcuepara {
   color: rgb(204 204 204);
 }
 
-div {
-  &.texttools p,
-  &.tools p {
-    margin: 0;
-  }
-
-  &.textarea {
-    width: 650px;
-    height: auto;
-    min-height: 1.2em;
-    padding: 0;
-    border: none;
-  }
-}
-
-.texttools,
-.tools,
-div.textarea {
+.texttools {
   display: none;
+
+  img {
+    vertical-align: middle;
+  }
 }
 
 .tools {
+  display: none;
   height: 1em;
   margin-top: 0.5em;
   margin-left: 10px;
@@ -1370,33 +1393,12 @@ div.textarea {
   width: 30em;
 }
 
-.texttools img {
-  vertical-align: middle;
-}
-
 img.remove {
   float: right;
 }
 
 .ui-state-highlight {
   background-color: fbfaed;
-}
-
-div {
-  &.metadata {
-    display: block;
-    width: 200px;
-    height: 100px;
-    padding: 0 10px;
-    float: left;
-  }
-
-  &.social {
-    display: none;
-    width: 80px;
-    padding: 0 10px;
-    float: right;
-  }
 }
 
 p span.notification {
@@ -1407,7 +1409,7 @@ p span.notification {
 }
 
 /**
- * Bootstrap 3 submenu hack^H^H^H^H fix
+ * Bootstrap 3 submenu fix
  * http://stackoverflow.com/questions/18023493/bootstrap-3-dropdown-sub-menu-missing
  */
 
@@ -1464,7 +1466,7 @@ p span.notification {
   position: relative;
   top: 5px;
   min-height: 0;
-  border: none !important;
+  border: 0 !important;
   background-color: rgb(249 249 249) !important;
   background-image: none !important;
   box-shadow: none;
@@ -1520,7 +1522,7 @@ p span.notification {
   margin-bottom: 5px;
 }
 
-div#notebook_panel {
+div#notebook_panel { /* FIXME Jupyter css */
   box-shadow: none;
 }
 
@@ -1560,7 +1562,7 @@ div#notebook_panel {
   }
 
   .btn {
-    border: none;
+    border: 0;
   }
 }
 
@@ -1671,6 +1673,7 @@ div#notebook_panel {
       padding: 2px 5px;
       border: 1px solid rgb(170 170 170);
       margin: 0 3px;
+      background-color: rgb(153 179 255);
       border-radius: 5px;
       color: rgb(51 51 51) !important;
       cursor: pointer;
@@ -1691,10 +1694,6 @@ div#notebook_panel {
         background-color: rgb(204 204 204);
         text-decoration: none !important;
       }
-    }
-
-    &.paginate_active {
-      background-color: rgb(153 179 255);
     }
   }
 }
@@ -1933,7 +1932,7 @@ div#notebook_panel {
   }
 
   .btn {
-    border: none;
+    border: 0;
   }
 
   .icon {
@@ -2019,20 +2018,20 @@ div#notebook_panel {
 }
 
 .kb-cell-params table {
-  border: none;
+  border: 0;
   margin-right: auto;
   margin-bottom: 10px;
   margin-left: auto;
   opacity: inherit;
 
   > tr {
-    border: none;
+    border: 0;
     vertical-align: middle;
   }
 }
 
 td {
-  border: none;
+  border: 0;
   vertical-align: middle;
 }
 
@@ -2229,7 +2228,7 @@ td {
 }
 
 .kb-jobs-item:last-child {
-  border-bottom: none;
+  border-bottom: 0;
 }
 
 .kb-jobs-error-modal {
@@ -2312,7 +2311,7 @@ td {
 }
 
 /*
-This set of styles is a to accomodate the required/satisfied icon which appears
+This set of styles is a to accommodate the required/satisfied icon which appears
 between the select input control and the help text to the right of it. The
 problem is that within the columns used for layout the select is set to 100% width
 and yet the icon is placed right next to it. The result is that the icon is shoved
@@ -2488,9 +2487,10 @@ control with padding, and then scooting the icon back into its column.
 }
 
 button {
-  &.kb-app-run {
+  &.kb-app-run,
+  &.kb-method-run {
     padding: 10px 20px;
-    border: none;
+    border: 0;
     background-color: rgb(33 150 243);
     border-radius: 1px;
     box-shadow: 1px 1px 1px rgb(204 204 204);
@@ -2500,27 +2500,15 @@ button {
     &:hover {
       background-color: rgb(30 136 229);
     }
+  }
 
+  &.kb-app-run {
     &.kb-app-cancel {
       background-color: rgb(244 67 54);
 
       &:hover {
         background-color: rgb(229 57 53);
       }
-    }
-  }
-
-  &.kb-method-run {
-    padding: 10px 20px;
-    border: none;
-    background-color: rgb(33 150 243);
-    border-radius: 1px;
-    box-shadow: 1px 1px 1px rgb(204 204 204);
-    color: rgb(255 255 255);
-    font-size: 13px;
-
-    &:hover {
-      background-color: rgb(30 136 229);
     }
   }
 }
@@ -2552,15 +2540,13 @@ div[class=tooltip-inner] {
 }
 
 .notebook_app {
-  .tooltip {
-    z-index: 2000 !important;
-  }
-
   .tooltip-inner {
     background-color: rgb(27 105 182);
   }
 
   .tooltip {
+    z-index: 2000 !important;
+
     &.top-left .tooltip-arrow,
     &.top-right .tooltip-arrow,
     &.top .tooltip-arrow {
@@ -2693,6 +2679,18 @@ button.kb-data-obj {
   height: 100%;
   padding: 10px;
   background: transparent;
+
+  table {
+    width: 100%;
+    border: 0;
+    background-color: rgb(255 255 255 / 0.9);
+    color: rgb(0 0 0 / 0.8);
+  }
+
+  thead tr {
+    background-color: rgb(230 230 230);
+    color: rgb(0 0 0 / 1);
+  }
 }
 
 .kb-data-obj-panel-info dl {
@@ -2730,20 +2728,6 @@ button.kb-data-obj {
   }
 }
 
-.kb-data-obj-panel-graph {
-  table {
-    width: 100%;
-    border: none;
-    background-color: rgb(255 255 255 / 0.9);
-    color: rgb(0 0 0 / 0.8);
-  }
-
-  thead tr {
-    background-color: rgb(230 230 230);
-    color: rgb(0 0 0 / 1);
-  }
-}
-
 .kb-data-obj-graph-ref-to {
   margin-top: 8px;
 }
@@ -2757,7 +2741,7 @@ button.kb-data-obj {
 
 .kb-primary-btn {
   padding: 10px 20px;
-  border: none;
+  border: 0;
   margin: 3px;
   background-color: rgb(33 150 243);
   border-radius: 1px;
@@ -2780,7 +2764,7 @@ button.kb-data-obj {
 
 .kb-default-btn {
   padding: 10px 20px;
-  border: none;
+  border: 0;
   margin: 3px;
   background-color: rgb(245 245 245);
   border-radius: 1px;
@@ -2907,7 +2891,7 @@ button.kb-data-obj {
 
 .kb-data-list-nav-buttons {
   padding: 5px 8px;
-  border: none;
+  border: 0;
   margin: 0;
   box-shadow: none;
   font-size: 18px;
@@ -2917,7 +2901,7 @@ button.kb-data-obj {
 .kb-data-list-add-data-button {
   width: 30pt;
   height: 30pt;
-  border: none;
+  border: 0;
   background-color: rgb(67 121 177);
   border-radius: 50%;
   box-shadow: 1px 1px 3px rgb(170 170 170);
@@ -2965,7 +2949,7 @@ button.kb-data-obj {
 
 .kb-data-list-add-data-text-button {
   padding: 10px 20px;
-  border: none;
+  border: 0;
   margin: 3px;
   background-color: rgb(67 121 177);
   border-radius: 1px;
@@ -2982,7 +2966,7 @@ button.kb-data-obj {
 
 .kb-data-list-btn {
   padding: 5px 10px;
-  border: none;
+  border: 0;
   margin: 5px;
   background-color: rgb(33 150 243);
   border-radius: 1px;
@@ -3003,7 +2987,7 @@ button.kb-data-obj {
 
 .kb-data-list-cancel-btn {
   padding: 5px 10px;
-  border: none;
+  border: 0;
   margin: 5px;
   background-color: rgb(245 245 245);
   border-radius: 1px;
@@ -3155,7 +3139,7 @@ button.kb-data-obj {
 
 .kb-data-list-more-btn {
   padding: 2px 4px;
-  border: none;
+  border: 0;
   margin: 0;
   box-shadow: none;
   font-size: 12px;
@@ -3447,7 +3431,7 @@ button.kb-data-obj {
   width: auto;
   height: auto;
   padding: 2px;
-  border-style: none;
+  border: 0;
   box-shadow: none;
   text-shadow: none !important;
 }
@@ -3479,7 +3463,7 @@ button.kb-data-obj {
   margin: 0;
 
   .btn-xs {
-    border: none;
+    border: 0;
   }
 }
 
@@ -3645,8 +3629,6 @@ button.kb-data-obj {
   }
 }
 
-/* move icon down a bit */
-
 /* this is the banner for readonly mode */
 
 .navbar-right div.label-warning {
@@ -3689,14 +3671,19 @@ button.kb-data-obj {
   text-align: left;
 }
 
+.kb-loading-blocker__text--warning {
+  position: absolute;
+  display: none;
+  width: 40%;
+  margin-left: 30%;
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: left;
+}
+
 .kb-loading-blocker__image_container {
   padding-top: 10%;
   text-align: center;
-}
-
-.loading-warning {
-  position: absolute;
-  display: none;
 }
 
 /* Override the default max-width of the narrative box */
@@ -3714,7 +3701,7 @@ button.kb-data-obj {
   a.alt {
     display: inline;
     padding-left: 9px;
-    border: none;
+    border: 0;
     font: 12px $typeface-fixed-width;
   }
 }

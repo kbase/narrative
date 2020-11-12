@@ -46,23 +46,17 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
   }
 }
 
-.notebook_app {
-  background-color: rgb(255 255 255);
-  overflow-y: hidden;
-}
-
 .celltoolbar {
   height: auto;
   padding-top: 0;
   padding-bottom: 2px;
-  border: none;
+  border: 0;
   border-left: 1px solid transparent;
   background: none;
 }
 
 div {
   &.input_area {
-    /* a little padding to match the prompt */
     padding-top: 4px;
     border: 1px solid rgb(206 206 206);
     border-radius: 0;
@@ -96,11 +90,21 @@ div {
       &::before {
         background: none;
       }
+
+      /* div.cell.selected.kb-error */
+      &.kb-error {
+        border: 1px solid rgb(217 83 79);
+        border-left-width: 5px;
+      }
     }
 
     &.opened {
       padding-top: 0;
     }
+  }
+
+  &#notebook {  /* FIXME Jupyter css */
+    padding: 0;
   }
 }
 
@@ -108,17 +112,6 @@ div {
   padding-left: 0;
   border-left: 5px solid rgb(102 187 106);
   background: none;
-}
-
-div {
-  &.cell.selected.kb-error {
-    border: 1px solid rgb(217 83 79);
-    border-left-width: 5px;
-  }
-
-  &#notebook {
-    padding: 0;
-  }
 }
 
 #notebook_name {
@@ -148,8 +141,6 @@ div {
   }
 }
 
-/* margin left doesn't really seeem to play well */
-
 .btn-toolbar {
   padding-left: 0;
   margin-left: 0;
@@ -174,6 +165,9 @@ div {
 }
 
 .notebook_app {
+  background-color: rgb(255 255 255);
+  overflow-y: hidden;
+
   .btn.active {
     box-shadow: none;
   }

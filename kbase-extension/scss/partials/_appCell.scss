@@ -205,7 +205,7 @@
 .kb-app-row-clip-btn,
 .kb-app-row-close-btn {
   height: 100%;
-  border: none;
+  border: 0;
   margin-left: 1px;
   background-color: transparent;
   color: rgb(128 128 128);
@@ -409,7 +409,6 @@ Buttons
     color: rgb(33 150 243);
   }
 }
-
 
 /* app cell panels */
 

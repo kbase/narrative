@@ -1,53 +1,70 @@
-#kblog-header {
-  margin: 5px 0;
-}
+#kblog {
+  /* #kblog-header */
+  &-header {
+    margin: 5px 0;
+  }
 
-#kblog-panel {
-  overflow: auto;
-  height: 350px;
-  padding: 5px;
-  border: 1px solid rgb(206 206 206);
-  background-color: rgb(245 245 245);
-  color: rgb(0 0 0);
-  resize: vertical;
-  vertical-align: top;
-}
+  /* #kblog-panel */
+  &-panel {
+    overflow: auto;
+    height: 350px;
+    padding: 5px;
+    border: 1px solid rgb(206 206 206);
+    background-color: rgb(245 245 245);
+    color: rgb(0 0 0);
+    resize: vertical;
+    vertical-align: top;
+  }
 
-.kblog-header {
-  display: flex;
-  font-family: $typeface-fixed-width;
-}
-
-.kblog-line {
-  font-family: $typeface-fixed-width;
-
-  &:hover {
-    background-color: rgb(221 221 221);
+  /* #kblog-err, #kblog-msg */
+  &-err,
+  &-msg {
+    margin-top: 5px;
   }
 }
 
-.kblog-num-wrapper {
-  display: flex;
-  flex-direction: row;
-  font-size: 85%;
-}
+.kblog {
+  /* .kblog-header */
+  &-header {
+    display: flex;
+    font-family: $typeface-fixed-width;
+  }
 
-.kblog-line-num {
-  width: 3rem;
-  flex-shrink: 0;
-  color: rgb(153 153 153);
-  text-align: right;
+  /* .kblog-line */
+  &-line {
+    font-family: $typeface-fixed-width;
 
-  /* makes text unselectable */
-  user-select: none;
-  white-space: nowrap;
-}
+    &:hover {
+      background-color: rgb(221 221 221);
+    }
+  }
 
-.kblog-text {
-  flex: 1;
-  margin-left: 6px;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
+  /* .kblog-num-wrapper */
+  &-num-wrapper {
+    display: flex;
+    flex-direction: row;
+    font-size: 85%;
+  }
+
+  /* .kblog-line-num */
+  &-line-num {
+    width: 3rem;
+    flex-shrink: 0;
+    color: rgb(153 153 153);
+    text-align: right;
+
+    /* makes text unselectable */
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  /* .kblog-text */
+  &-text {
+    flex: 1;
+    margin-left: 6px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
 }
 
 .kb-error {
@@ -55,18 +72,12 @@
   color: rgb(139 0 0);
   font-size: 12px;
   font-weight: 700;
-  text-decoration: underline;
 
-  .kblog-line-num {
+  /* .kb-error-line-num */
+  &-line-num {
     background-color: rgb(255 245 245);
     color: rgb(139 0 0);
     font-size: 12px;
     font-weight: 700;
-    text-decoration: underline;
   }
-}
-
-#kblog-err,
-#kblog-msg {
-  margin-top: 5px;
 }

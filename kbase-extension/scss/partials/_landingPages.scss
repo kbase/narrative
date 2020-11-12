@@ -1,4 +1,5 @@
 .app-icon:hover {
+  opacity: 0.9;
   text-decoration: none;
 }
 
@@ -7,10 +8,6 @@
   &:hover {
     text-decoration: none;
   }
-}
-
-.app-icon:hover {
-  opacity: 0.9;
 }
 
 #kbase-search-box {
@@ -22,15 +19,12 @@
   padding: 0 15px 0 0;
 }
 
-/* bootstrap overrides */
-
+/* override bootstrap .wrapper */
 .wrapper {
   width: 95%;
   margin-right: auto;
   margin-left: auto;
 }
-
-/* end bootstrap overrides */
 
 #core-model {
   overflow-x: auto;

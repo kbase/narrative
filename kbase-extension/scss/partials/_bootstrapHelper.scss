@@ -41,16 +41,6 @@
     accomodate this.) Anyway, we roll with it but try to patch up the styling
     as it breaks.
 */
-
-.panel.kb-panel-light {
-  border: none;
-  margin-bottom: 10px;
-}
-
-/* colors copied shamelessly from peeking at bootstrap
-   http://getbootstrap.com/css/
-*/
-
 .panel-danger.kb-panel-light .panel-title {
   color: rgb(169 68 66);
 }
@@ -69,6 +59,9 @@
 
 .panel {
   &.kb-panel-light {
+    border: 0;
+    margin-bottom: 10px;
+
     > .panel-heading {
       padding-bottom: 2px;
       padding-left: 0;
@@ -84,7 +77,7 @@
   }
 
   &.kb-panel-container {
-    border: none;
+    border: 0;
 
     > .panel-heading {
       padding-bottom: 2px;
@@ -102,7 +95,7 @@
 }
 
 /*
-  The button bar in a cell widgetis located at the bottom of the inputs, but
+  The button bar in a cell widget is located at the bottom of the inputs, but
   above any outputs.
   These styles attempt to help the button toolbar, which represents the actions
   the user can take, be visually distinct from the other bits surrounding it.

@@ -413,7 +413,7 @@
   color: rgb(67 121 177);
   cursor: pointer;
   font: normal 700 14px/18px $typeface-page-text;
-  letter-spacing: 0.5pt;
+  letter-spacing: 0.7px;
   text-align: center;
   text-transform: uppercase;
 
@@ -914,13 +914,13 @@ p#site-title { /* FIXME */
   padding: 6px;
   background-color: rgb(33 150 243);
   color: rgb(255 255 255);
-  font-size: 12pt;
+  font-size: 16px;
 }
 
 .kb-side-overlay-close {
   color: rgb(255 255 255);
   cursor: pointer;
-  font-size: 10pt;
+  font-size: 13px;
   font-weight: 700;
 
   &:hover {
@@ -945,7 +945,7 @@ p#site-title { /* FIXME */
   background-color: rgb(33 150 243);
   color: rgb(187 222 251);
   cursor: pointer;
-  font-size: 12pt;
+  font-size: 16px;
   font-weight: 700;
   text-align: center;
   user-select: none;
@@ -963,7 +963,7 @@ p#site-title { /* FIXME */
   background-color: rgb(33 150 243);
   color: rgb(187 222 251);
   cursor: pointer;
-  font-size: 12pt;
+  font-size: 16px;
   font-weight: 700;
   text-align: center;
   user-select: none;
@@ -981,7 +981,7 @@ p#site-title { /* FIXME */
   background-color: rgb(33 150 243);
   color: rgb(187 222 251);
   cursor: pointer;
-  font-size: 12pt;
+  font-size: 16px;
   font-weight: 700;
   text-align: center;
   user-select: none;
@@ -1173,20 +1173,20 @@ ul.pane-list {
 
 .kb-method-list-logo {
   display: inline-block;
-  width: 30pt;
-  height: 30pt;
-  padding-top: 6pt;
+  width: 40px;
+  height: 40px;
+  padding-top: 8px;
   border: 0 solid rgb(85 85 85);
   background-color: rgb(96 125 139);
   color: rgb(255 255 255);
   cursor: pointer;
-  font-size: 18pt;
+  font-size: 24px;
   font-weight: 700;
   text-align: center;
   text-shadow: -1px 0 rgb(119 119 119), 0 1px rgb(119 119 119), 1px 0 rgb(119 119 119), 0 -1px rgb(119 119 119);
 
   &:hover {
-    padding-top: 2.5pt;
+    padding-top: 3px;
     border-width: 5px;
   }
 }
@@ -1194,7 +1194,7 @@ ul.pane-list {
 .kb-method-list-more-div {
   margin: 2px;
   color: rgb(119 119 119);
-  font-size: 10pt;
+  font-size: 13px;
   text-align: justify;
 
   > div:last-child {
@@ -1811,7 +1811,7 @@ div#notebook_panel { /* FIXME Jupyter css */
   color: rgb(86 85 158);
   cursor: pointer;
   float: right;
-  font-size: 14pt;
+  font-size: 19px;
 
   &:hover {
     color: rgb(0 0 0);
@@ -1987,7 +1987,7 @@ div#notebook_panel { /* FIXME Jupyter css */
     display: inline;
     margin: 3px 13px 3px 3px;
     color: rgb(46 97 141);
-    font: normal 400 12pt/15px $typeface-alt-page-text;
+    font: normal 400 16px/1 $typeface-alt-page-text;
     opacity: inherit;
   }
 
@@ -1999,7 +1999,7 @@ div#notebook_panel { /* FIXME Jupyter css */
   h2 {
     margin: 3px;
     color: rgb(102 102 102);
-    font: normal 400 11pt/1.5 $typeface-alt-page-text;
+    font: normal 400 15px/1.5 $typeface-alt-page-text;
     opacity: inherit;
   }
 
@@ -2094,7 +2094,7 @@ td {
 .kb-out-desc {
   display: inline;
   margin: 3px;
-  font: normal 400 12pt/15px $typeface-alt-page-text;
+  font: normal 400 16px/1 $typeface-alt-page-text;
   opacity: inherit;
 }
 
@@ -2115,7 +2115,7 @@ td {
   padding-right: 1em;
   margin-top: -3px;
   color: rgb(85 85 85);
-  font: 10pt $typeface-alt-page-text;
+  font: 13px $typeface-alt-page-text;
 }
 
 .unselected .kb-func-timestamp {
@@ -2224,7 +2224,7 @@ td {
 }
 
 .kb-jobs-error-btn {
-  font-size: 10pt;
+  font-size: 13px;
 }
 
 .kb-jobs-item:last-child {
@@ -2269,7 +2269,7 @@ td {
   padding: 5px;
   color: rgb(244 67 54);
   font-family: $typeface-page-text;
-  font-size: 9pt;
+  font-size: 12px;
   font-weight: 700;
   text-align: center;
 }
@@ -2356,7 +2356,7 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-method-advanced-options-controller,
 .kb-method-advanced-options-controller-inactive {
-  font: italic 700 10pt/14px $typeface-page-text;
+  font: italic 700 13px/14px $typeface-page-text;
   text-align: center;
 }
 
@@ -2402,7 +2402,7 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-app-panel-description {
   color: rgb(46 97 141);
-  font: normal 400 12pt/15px $typeface-alt-page-text;
+  font: normal 400 16px/1 $typeface-alt-page-text;
 }
 
 .kb-app-step-error-mssg {
@@ -2416,7 +2416,7 @@ control with padding, and then scooting the icon back into its column.
   padding-left: 5px;
   margin-top: 20px;
   color: rgb(85 85 85);
-  font: normal 700 13pt/14px $typeface-page-text;
+  font: normal 700 17px/1 $typeface-page-text;
   text-align: left;
 }
 
@@ -2425,7 +2425,7 @@ control with padding, and then scooting the icon back into its column.
   margin-top: 20px;
   color: rgb(85 85 85);
   cursor: pointer;
-  font: 16pt/18px $typeface-page-text;
+  font: 21px/1 $typeface-page-text;
   text-align: left;
 }
 
@@ -2899,8 +2899,8 @@ button.kb-data-obj {
 }
 
 .kb-data-list-add-data-button {
-  width: 30pt;
-  height: 30pt;
+  width: 40px;
+  height: 40px;
   border: 0;
   background-color: rgb(67 121 177);
   border-radius: 50%;
@@ -3007,14 +3007,14 @@ button.kb-data-obj {
 
 .kb-data-list-logo {
   display: inline-block;
-  width: 30pt;
-  height: 30pt;
-  padding-top: 6pt;
+  width: 40px;
+  height: 40px;
+  padding-top: 8px;
   border: 0 solid rgb(85 85 85);
   background-color: rgb(96 125 139);
   border-radius: 50%;
   color: rgb(255 255 255);
-  font-size: 18pt;
+  font-size: 24px;
   font-weight: 700;
   text-align: center;
   text-shadow: -1px 0 rgb(119 119 119), 0 1px rgb(119 119 119), 1px 0 rgb(119 119 119), 0 -1px rgb(119 119 119);
@@ -3072,7 +3072,7 @@ button.kb-data-obj {
   margin: 2px;
   color: rgb(46 97 141);
   cursor: pointer;
-  font: normal 700 11pt $typeface-page-text;
+  font: normal 700 15px $typeface-page-text;
 
   &:hover {
     text-decoration: underline;
@@ -3082,7 +3082,7 @@ button.kb-data-obj {
 .kb-data-list-version {
   color: rgb(119 119 119);
   cursor: default;
-  font-size: 9pt;
+  font-size: 12px;
   font-style: italic;
   white-space: nowrap;
 }
@@ -3092,7 +3092,7 @@ button.kb-data-obj {
   margin: 2px;
   color: rgb(119 119 119);
   cursor: default;
-  font-size: 10pt;
+  font-size: 13px;
 }
 
 .kb-data-list-date {
@@ -3103,7 +3103,7 @@ button.kb-data-obj {
   margin: 2px 2px 2px 0;
   color: rgb(119 119 119);
   cursor: pointer;
-  font-size: 10pt;
+  font-size: 13px;
   white-space: nowrap;
 
   &:hover {
@@ -3114,26 +3114,26 @@ button.kb-data-obj {
 .kb-data-list-narinfo {
   margin: 2px 2px 2px 10px;
   color: rgb(119 119 119);
-  font-size: 10pt;
+  font-size: 13px;
 }
 
 .kb-data-list-narrative-error {
   margin: 2px;
   color: rgb(244 67 54);
-  font-size: 10pt;
+  font-size: 13px;
 }
 
 .kb-data-list-narrative {
   margin: 2px 2px 2px 10px;
   color: rgb(119 119 119);
-  font-size: 10pt;
+  font-size: 13px;
 }
 
 .kb-data-list-more {
   padding: 0;
   margin: 0 0 0 15px;
   color: rgb(119 119 119);
-  font-size: 8pt;
+  font-size: 11px;
   white-space: nowrap;
 }
 
@@ -3152,19 +3152,19 @@ button.kb-data-obj {
   align-items: center;
   margin: 2px;
   color: rgb(119 119 119);
-  font-size: 10pt;
+  font-size: 13px;
 
   td,
   th {
     margin: 2px;
     color: rgb(119 119 119);
-    font-size: 10pt;
+    font-size: 13px;
   }
 
   tr {
     margin: 2px;
     color: rgb(119 119 119);
-    font-size: 10pt;
+    font-size: 13px;
 
     &:hover {
       background-color: rgb(238 238 238);
@@ -3450,7 +3450,7 @@ button.kb-data-obj {
 .kb-nar-manager-titles {
   margin: 20px 10px 10px;
   color: rgb(119 119 119);
-  font: normal 700 14pt $typeface-page-text;
+  font: normal 700 19px $typeface-page-text;
 }
 
 /* End kbaseData.css */
@@ -3597,7 +3597,7 @@ button.kb-data-obj {
   padding: 0;
   margin: -15px 0 0 1em;
   cursor: pointer;
-  font-size: 13pt;
+  font-size: 17px;
 }
 
 #kb-view-mode-narr div {

@@ -620,15 +620,15 @@
 
 		    // build header cell
 		    var caret = document.createElement("table");
-		    caret.setAttribute("style", "float: right; margin: 0px; border: none;");
+		    caret.setAttribute("style", "float: right; margin: 0px; border: 0;");
 		    var caret_tr1 = document.createElement("tr");
-		    caret_tr1.setAttribute("style", "border: none;");
+		    caret_tr1.setAttribute("style", "border: 0;");
 		    var caret_td1 = document.createElement("td");
-		    caret_td1.setAttribute("style", "padding: 0px 2px; line-height: 0px; border: none;");
+		    caret_td1.setAttribute("style", "padding: 0px 2px; line-height: 0px; border: 0;");
 		    var caret_tr2 = document.createElement("tr");
-		    caret_tr2.setAttribute("style", "border: none;");
+		    caret_tr2.setAttribute("style", "border: 0;");
 		    var caret_td2 = document.createElement("td");
-		    caret_td2.setAttribute("style", "padding: 0px 2px; line-height: 0px; border: none;");
+		    caret_td2.setAttribute("style", "padding: 0px 2px; line-height: 0px; border: 0;");
 		    caret_td1.appendChild(desc);
 		    caret_td2.appendChild(asc);
 		    caret_tr1.appendChild(caret_td1);
@@ -800,7 +800,7 @@
 	    // create the navigation
 	    // first, previous
 	    var prev_td = document.createElement("td");
-	    prev_td.setAttribute("style", "text-align: left; width: 45px; border: none;");
+	    prev_td.setAttribute("style", "text-align: left; width: 45px; border: 0;");
 	    prev_td.innerHTML = "&nbsp;";
 	    if (offset > 0) {
 		var first = document.createElement("i");
@@ -834,7 +834,7 @@
 
 	    // next, last
 	    var next_td = document.createElement("td");
-	    next_td.setAttribute("style", "text-align: right; width: 45px; border: none;");
+	    next_td.setAttribute("style", "text-align: right; width: 45px; border: 0;");
 	    next_td.innerHTML = "&nbsp;";
 	    if (offset + rows < (renderer.settings.numrows || tdata.length)) {
 		var last = document.createElement("i");
@@ -874,14 +874,14 @@
 
 	    // display of window offset
 	    var showing = document.createElement("td");
-	    showing.setAttribute("style", "text-align: center; border: none;");
+	    showing.setAttribute("style", "text-align: center; border: 0;");
 	    showing.innerHTML = "showing rows "+ ((renderer.settings.offset || offset) + 1) +"-"+(disp.length + (renderer.settings.offset || offset))+" of "+(renderer.settings.numrows || tdata.length);
 
 	    // create the table to host navigation
 	    var bottom_table = document.createElement("table");
-	    bottom_table.setAttribute("style", "width: 100%; border: none;");
+	    bottom_table.setAttribute("style", "width: 100%; border: 0;");
 	    var bottom_row = document.createElement("tr");
-	    bottom_row.setAttribute("style", "border: none;");
+	    bottom_row.setAttribute("style", "border: 0;");
 	    bottom_row.appendChild(prev_td);
 	    bottom_row.appendChild(showing);
 	    bottom_row.appendChild(next_td);
@@ -1007,13 +1007,13 @@
 		    col_sel.style.display = "none";
 		}
 	    });
-	    var colsel_html = "<input type='button' class='btn btn-xs btn-default' style='float: right;' value='OK' onclick='rendererTable["+index+"].update_visible_columns("+index+");'><table id='table_colsel_table_"+index+"' style='border: none;'>";
+	    var colsel_html = "<input type='button' class='btn btn-xs btn-default' style='float: right;' value='OK' onclick='rendererTable["+index+"].update_visible_columns("+index+");'><table id='table_colsel_table_"+index+"' style='border: 0;'>";
 	    for (var ii=0;ii<renderer.settings.header.length;ii++) {
 		var checked = " checked";
 		if (renderer.settings.invisible_columns[ii]) {
 		    checked = "";
 		}
-		colsel_html += "<tr style='border: none;'><td style='border: none;'><input style='margin-right: 5px;' type='checkbox'"+checked+"></td><td style='border: none;'>"+renderer.settings.header[ii]+"</td></tr>";
+		colsel_html += "<tr style='border: 0;'><td style='border: 0;'><input style='margin-right: 5px;' type='checkbox'"+checked+"></td><td style='border: 0;'>"+renderer.settings.header[ii]+"</td></tr>";
 	    }
 	    colsel_html += "</table>";
 	    col_sel.innerHTML = colsel_html;

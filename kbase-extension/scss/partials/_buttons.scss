@@ -1,11 +1,11 @@
 /* A flat button, with no unselected background color, but with hover and click styles */
 
 .btn.kb-flat-btn {
-  background-color: rgb(255 255 255);
   border: none;
-  text-shadow: none !important;
   margin: 0;
+  background-color: rgb(255 255 255);
   color: rgb(102 102 102);
+  text-shadow: none !important;
 }
 
 .kb-flat-btn-wrapper {
@@ -17,11 +17,12 @@
 
 .btn.kb-flat-btn {
   .kb-nav-btn-txt {
-    font-size: 10pt;
     margin-top: -5px;
+    font-size: 10pt;
   }
 
-  &:active, &:hover {
+  &:active,
+  &:hover {
     background-color: rgb(204 204 204);
   }
 }

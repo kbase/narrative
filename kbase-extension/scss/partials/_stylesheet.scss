@@ -1,13 +1,13 @@
 
 h1 {
-  font: 400 1.75em/2em $typeface-display;
   color: rgb(35 35 35);
+  font: 400 1.75em/2em $typeface-display;
   letter-spacing: 0;
 }
 
 h2 {
-  font: normal 400 1.5em/1.75em $typeface-display;
   color: rgb(137 137 137);
+  font: normal 400 1.5em/1.75em $typeface-display;
   letter-spacing: 0;
 }
 
@@ -22,12 +22,13 @@ h4 {
 }
 
 body {
-  font: 1.375em $typeface-page-text;
-  color: rgb(51 51 51);
   background-color: rgb(255 255 255);
+  color: rgb(51 51 51);
+  font: 1.375em $typeface-page-text;
 }
 
-b, strong {
+b,
+strong {
   font-family: $typeface-page-text;
   font-weight: 700;
 }
@@ -62,7 +63,10 @@ strong em {
   font-style: italic;
 }
 
-b i, em strong, i b, strong em {
+b i,
+em strong,
+i b,
+strong em {
   font-weight: 700;
 }
 
@@ -70,7 +74,8 @@ a {
   color: rgb(0 136 204);
   text-decoration: none;
 
-  &:hover, &:visited {
+  &:hover,
+  &:visited {
     color: rgb(42 100 150);
   }
 
@@ -79,7 +84,8 @@ a {
   }
 }
 
-code, pre {
+code,
+pre {
   font-family: $typeface-fixed-width;
   font-style: normal;
 }

@@ -24,8 +24,8 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 /* disable the standard notebook, bottom spacer */
 
 #notebook > .end_space {
-  min-height: 0;
   height: 0;
+  min-height: 0;
 }
 
 @media (min-width: 1200px) {
@@ -47,26 +47,25 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 }
 
 .notebook_app {
-  overflow-y: hidden;
   background-color: rgb(255 255 255);
+  overflow-y: hidden;
 }
 
 .celltoolbar {
   height: auto;
-  background: none;
-  border: none;
-  border-left: 1px solid transparent;
   padding-top: 0;
   padding-bottom: 2px;
+  border: none;
+  border-left: 1px solid transparent;
+  background: none;
 }
 
 div {
   &.input_area {
-    border: 1px solid rgb(206 206 206);
-    border-radius: 0;
-
     /* a little padding to match the prompt */
     padding-top: 4px;
+    border: 1px solid rgb(206 206 206);
+    border-radius: 0;
   }
 
   &.output_subarea {
@@ -79,20 +78,20 @@ div {
   }
 
   &.cell {
-    margin: 8px 0;
     padding: 0;
     border: 1px solid rgb(204 204 204);
     border-left-width: 5px;
+    margin: 8px 0;
     border-radius: 0;
 
     &.selected {
-      margin-left: 0;
+      padding-left: 0;
       border: 1px solid rgb(75 184 86);
       border-left-width: 5px;
-      padding-left: 0;
-      transition: box-shadow 0.2s ease-in-out;
-      box-shadow: 0 1px 2px rgb(170 170 170), 0 5px 5px rgb(170 170 170);
+      margin-left: 0;
       background: none;
+      box-shadow: 0 1px 2px rgb(170 170 170), 0 5px 5px rgb(170 170 170);
+      transition: box-shadow 0.2s ease-in-out;
 
       &::before {
         background: none;
@@ -106,9 +105,9 @@ div {
 }
 
 .edit_mode div.cell.selected {
+  padding-left: 0;
   border-left: 5px solid rgb(102 187 106);
   background: none;
-  padding-left: 0;
 }
 
 div {
@@ -126,34 +125,34 @@ div {
   color: rgb(0 102 152);
 
   &:hover {
-    cursor: pointer;
     background-color: rgb(224 224 224);
+    cursor: pointer;
   }
 }
 
 #notebook-container {
-  box-shadow: none;
-  width: auto;
-  min-width: 460px;
   position: fixed;
-  left: 380px;
   top: 70px;
   right: 0;
   bottom: 0;
+  left: 380px;
   overflow: auto;
+  width: auto;
+  min-width: 460px;
+  box-shadow: none;
 
   &::after {
-    content: "";
-    height: 100px;
     display: block;
+    height: 100px;
+    content: '';
   }
 }
 
 /* margin left doesn't really seeem to play well */
 
 .btn-toolbar {
-  margin-left: 0;
   padding-left: 0;
+  margin-left: 0;
 }
 
 .kb-narr-side-panel .btn-group .btn {
@@ -196,20 +195,21 @@ div {
   }
 
   .prompt {
+    width: 75px;
     padding-top: 0;
     color: rgb(192 192 192);
-    width: 75px;
   }
 
   .cell {
-    &.selected div.text_cell_render, &.unselected div.text_cell_render {
+    &.selected div.text_cell_render,
+    &.unselected div.text_cell_render {
       border: 1px solid transparent;
     }
   }
 
   .buttons .dropdown-menu {
-    height: auto !important;
     overflow: visible !important;
+    height: auto !important;
   }
 
   .btn.disabled .fa {
@@ -253,7 +253,9 @@ div {
 }
 
 .rendered_html {
-  td, th, tr {
+  td,
+  th,
+  tr {
     text-align: inherit;
   }
 
@@ -275,7 +277,10 @@ div {
         color: rgb(0 150 136);
       }
 
-      .app-output-icon, .data-viewer-icon, .markdown-icon, .method-output-icon {
+      .app-output-icon,
+      .data-viewer-icon,
+      .markdown-icon,
+      .method-output-icon {
         color: rgb(0 0 0);
       }
 
@@ -352,7 +357,8 @@ p {
 
 div.code_cell {
   &:hover {
-    .run_this_cell, div.input_prompt.run_this_cell {
+    .run_this_cell,
+    div.input_prompt.run_this_cell {
       visibility: hidden !important;
     }
   }
@@ -363,6 +369,6 @@ div.code_cell {
 }
 
 .run_this_cell {
-  padding: 0 !important;
   width: 0 !important;
+  padding: 0 !important;
 }

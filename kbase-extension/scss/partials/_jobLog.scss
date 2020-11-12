@@ -3,13 +3,13 @@
 }
 
 #kblog-panel {
-  background-color: rgb(245 245 245);
-  border: 1px solid rgb(206 206 206);
+  overflow: auto;
   height: 350px;
   padding: 5px;
-  resize: vertical;
-  overflow: auto;
+  border: 1px solid rgb(206 206 206);
+  background-color: rgb(245 245 245);
   color: rgb(0 0 0);
+  resize: vertical;
   vertical-align: top;
 }
 
@@ -27,45 +27,46 @@
 }
 
 .kblog-num-wrapper {
-  font-size: 85%;
   display: flex;
   flex-direction: row;
+  font-size: 85%;
 }
 
 .kblog-line-num {
-  flex-shrink: 0;
   width: 3rem;
-  text-align: right;
+  flex-shrink: 0;
   color: rgb(153 153 153);
-  white-space: nowrap;
+  text-align: right;
 
   /* makes text unselectable */
   user-select: none;
+  white-space: nowrap;
 }
 
 .kblog-text {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
   flex: 1;
   margin-left: 6px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 .kb-error {
-  color: rgb(139 0 0);
-  text-decoration: underline;
-  font-weight: 700;
-  font-size: 12px;
   background-color: rgb(255 245 245);
+  color: rgb(139 0 0);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
 
   .kblog-line-num {
-    color: rgb(139 0 0);
-    text-decoration: underline;
-    font-weight: 700;
-    font-size: 12px;
     background-color: rgb(255 245 245);
+    color: rgb(139 0 0);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: underline;
   }
 }
 
-#kblog-err, #kblog-msg {
+#kblog-err,
+#kblog-msg {
   margin-top: 5px;
 }

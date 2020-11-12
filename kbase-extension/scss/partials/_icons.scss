@@ -2,35 +2,37 @@
   content: attr(data-icon);
 }
 
-[class*=" icon-"]::before, [class^=icon-]::before, [data-icon]::before {
+[class*=' icon-']::before,
+[class^=icon-]::before,
+[data-icon]::before {
   font-family: $typeface-kbase-icons !important;
   font-style: normal !important;
-  font-weight: 400 !important;
   font-variant: normal !important;
-  text-transform: none !important;
+  font-weight: 400 !important;
   speak: none;
+  text-transform: none !important;
 }
 
 .icon-compare::before {
-  content: "a";
+  content: 'a';
 }
 
 .icon-genome::before {
-  content: "b";
+  content: 'b';
 }
 
 .icon-metabolism::before {
-  content: "c";
+  content: 'c';
 }
 
 .icon-metagenome::before {
-  content: "d";
+  content: 'd';
 }
 
 .icon-reads::before {
-  content: "e";
+  content: 'e';
 }
 
 .icon-tree::before {
-  content: "f";
+  content: 'f';
 }

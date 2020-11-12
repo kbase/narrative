@@ -22,15 +22,7 @@ To update the css files, run the task:
 npm run compile_css
 ```
 
-If this is not run, edits to the scss source files will not be reflected in the css served by the browser.
-
-Individual concatenated files can be produced by running
-
-```sh
-sass kbase-extension/scss/input_file.scss /path/to/output_file.css
-```
-
-where `input_file.scss` is one of the files in the `kbase-extension/scss` directory.
+If this is not run, edits to the scss source files will not be reflected in the css file served by the browser.
 
 There is also a `watch` task that will automatically generate the concatenated, minified css files when there is a change to the source files. If you plan to make changes to frontend styling, run
 
@@ -40,7 +32,42 @@ grunt watch
 
 in a terminal window to launch a watcher process that regenerates the css files when changes are made. It is recommended that you have this running in a terminal window when running the `kbase-narrative` script in another window.
 
-
 ### Style file styling
 
-The narrative repo uses the [PostCSS](https://github.com/postcss/postcss) system for post-processing css; this includes minification and [Autoprefixer](https://github.com/postcss/autoprefixer) for adding browser prefixes. Additions to the source files should be written without vendor prefixes as these will be added automatically.
+The narrative repo uses the [PostCSS](https://github.com/postcss/postcss) system for post-processing css; this includes minification and [Autoprefixer](https://github.com/postcss/autoprefixer) for adding browser prefixes. SCSS linting is provided by [Stylelint](https://stylelint.io).
+
+**Additions to the source files should be written without vendor prefixes as these will be added automatically.**
+
+### Autoprefixer
+
+The narrative repo uses [Autoprefixer](https://github.com/postcss/autoprefixer) to add browser prefixes to css, with the browser support list set to Autoprefixer's `default` setting. The `update_browserslist` npm script is used by Autoprefixer to pull in the latest browser configurations, and is run as a git hook. If running the script returns a message that the list of browsers has been updated, please commit the updated `package-lock.json` file.
+
+For more information, see the [browserslist best practices and updating sections](https://github.com/browserslist/browserslist#best-practices).
+
+### Stylelint
+
+To lint the scss files, run the command
+
+```
+npm run stylelint
+```
+
+The linter config (in `.stylelint.yaml`) includes a number of rules to ensure that the scss content is error-free and (relatively) uniform. Running it will automatically fix some stylistic issues (e.g. ordering of lines within stanzas), but others may need to be fixed manually. Please note there are some issues in the SCSS files that are more difficult to fix, due to the styling set in the Jupyter notebook css.
+
+### Python formatting and linting
+
+The narrative repo installation includes the modules [black](https://github.com/psf/black), for code formatting, and [flake8](https://flake8.pycqa.org/) for code QA. You can run these manually using the aliases set up in the `package.json` file:
+
+```sh
+$ npm run black  # autoformats python code
+```
+
+```sh
+$ npm run flake8  # runs flake8 code linter
+```
+
+or trigger them directly from the command line, e.g.
+
+```sh
+$ flake8 .
+```

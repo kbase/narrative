@@ -16,7 +16,7 @@
       "font-family-no-missing-generic-family-keyword": [
         true,
         {
-          "ignoreFontFamilies": ["FontAwesome", "kbase-icons"]
+          "ignoreFontFamilies": ["FontAwesome", "Glyphicons Halflings", "kbase-icons"]
         }
       ],
       "length-zero-no-unit": true,

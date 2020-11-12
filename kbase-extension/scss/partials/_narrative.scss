@@ -126,26 +126,31 @@
   table-layout: fixed;
 }
 
-.kb-staging-table .kb-staging-table-header .kb-staging-table-header__checkbox {
-  width: 20px;
-  padding-right: 0;
-}
+.kb-staging-table .kb-staging-table-header {
 
-.kb-staging-table-header__file {
-  width: 20px;
-  padding-right: 0px;  
-}
+  .kb-staging-table-header__checkbox {
+    width: 20px;
+    padding-right: 0;
+  }
+  
+  .kb-staging-table-header__file {
+    width: 41px;
+    padding-right: 0;
+  }
+  
+  .kb-staging-table-header__name {
+    width: 238px;
+  }
 
-.kb-staging-table-header__name {
-  width: 263px;
-}
+  .kb-staging-table-header__age, 
+  .kb-staging-table-header__size {
+    width: 56px;
+  }
 
-.kb-staging-table-header__age, .kb-staging-table-header__size {
-  width: 81px;
-}
+  .kb-staging-table-header__import {
+    width: 197px;
+  }
 
-.kb-staging-table-header__import {
-  width: 222px;
 }
 
 /* Overriding default datatables sort icons so they come before the header title rather than after */

@@ -16,7 +16,8 @@
     - [Without Conda](#without-conda)
 - [Architecture](#architecture)
 - [Testing](#testing)
-  - [Manual Testing](#manual-testing)
+- [NPM scripts](#npm-scripts)
+- [Git Hooks](#git-hooks)
 - [Submitting Code](#submitting-code)
 
 ## About
@@ -38,16 +39,6 @@ Requires the following:
 -   Anaconda/Miniconda as an environment manager (<https://www.anaconda.com/>)
 -   Node.js (latest LTS recommended)
 -   Bower 1.8.8+
-
-### Git Pre-commit installation
-
-Our git [pre-commit](https://pre-commit.com/#install) [hooks](/.pre-commit-config.yaml) allow you to run flake8 and black upon `git commit` and save you from having to run these linters manually.
-
-- change into the base directory
-- `pip install pre-commit`
-- `pre-commit install` to set up the git hook scripts
-- edit a python file and `git commit -m <comment>` it in to test out the installation
-
 
 ### *Using a Conda Environment*
 
@@ -99,6 +90,22 @@ When deployed in production, the Narrative Interface is compiled into a [Docker]
 ## Testing
 
 For general testing instructions and guidance refer to [docs/testing.md](docs/testing.md). For information about headless browser testing refer to [docs/HeadlessTesting.md](docs/HeadlessTesting.md).
+
+## NPM Scripts
+
+A number of commands are available to automate parts of the development process. See [docs/developer/running_tasks.md](docs/developer/running_tasks.md) for more information.
+
+## Git Hooks
+
+The narrative repo uses the NPM module [Husky](https://www.npmjs.com/package/husky) to install and execute git hooks. This includes compiling css from the scss source files, and updating the current list of browsers used by Autoprefixer to generate the appropriate browser prefixes in the css files. If you run `npm install`, or use the standard install process, husky (and thus the husky git hooks) will automatically be installed and run.
+
+The `husky` key in [package.json](package.json) lists the hooks that are run. See [docs/developer/running_tasks.md](docs/developer/running_tasks.md) for more information on the npm scripts that are executed.
+
+Husky hooks can be skipped by setting the environment variable:
+
+```
+HUSKY_SKIP_HOOKS=1
+```
 
 ## Submitting code
 

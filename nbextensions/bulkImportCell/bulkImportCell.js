@@ -4,17 +4,27 @@ define([
     'common/utils',
     'common/runtime',
     'common/busEventManager',
-    'base/js/namespace'
+    'common/ui',
+    'common/events',
+    'base/js/namespace',
+    'kb_common/html',
+    './cellControlPanel'
 ], (
     Uuid,
     AppUtils,
     Utils,
     Runtime,
     BusEventManager,
-    Jupyter
+    UI,
+    Events,
+    Jupyter,
+    html,
+    CellControlPanel
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
+
+    const div = html.tag('div');
 
     /**
      * This class creates and manages the bulk import cell. This works with, and wraps around,
@@ -53,6 +63,8 @@ define([
             this.busEventManager = BusEventManager.make({
                 bus: this.runtime.bus()
             });
+            this.ui = null;
+
             if (initialize) {
                 this.initialize(typesToFiles);
             }
@@ -144,7 +156,11 @@ define([
             // referencing. If there is no next sibling, the null value
             // causes insertBefore to actually ... insert at the end!
             this.cell.input[0].parentNode.insertBefore(this.kbaseNode, this.cell.input[0].nextSibling);
-            this.kbaseNode.innerHTML = 'I am a bulk import cell!';
+
+            this.ui = UI.make({
+                node: this.kbaseNode,
+                bus: this.cellBus
+            });
         }
 
         /**
@@ -169,8 +185,49 @@ define([
             let meta = this.cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             this.cell.metadata = meta;
-
             this.render();
+            this.updateState();
+        }
+
+        updateState() {
+            this.controlPanel.setTabState({
+                configure: {
+                    enabled: true,
+                    visible: true
+                },
+                viewConfigure: {
+                    enabled: false,
+                    visible: false
+                },
+                info: {
+                    enabled: true,
+                    visible: true
+                },
+                logs: {
+                    enabled: false,
+                    visible: true
+                },
+                results: {
+                    enabled: false,
+                    visible: true
+                },
+                error: {
+                    enabled: false,
+                    visible: false
+                }
+            });
+            this.controlPanel.setActionState({
+                name: 'runApp',
+                enabled: false
+            });
+        }
+
+        toggleTab(tab) {
+            alert(tab);
+        }
+
+        runAction(action) {
+            alert(action);
         }
 
         /**
@@ -178,17 +235,138 @@ define([
          */
         deleteCell() {
             this.busEventManager.removeAll();
+            this.controlPanel.stop();
             const cellIndex = Jupyter.notebook.find_cell_index(this.cell);
             Jupyter.notebook.delete_cell(cellIndex);
+        }
+
+        buildControlPanel(events) {
+            this.tabSet = {
+                selectedTab: 'configure',
+                tabs: {
+                    configure: {
+                        label: 'Configure',
+                        // widget: configureWidget()
+                    },
+                    viewConfigure: {
+                        label: 'View Configure',
+                        // widget: viewConfigureWidget()
+                    },
+                    info: {
+                        label: 'Info',
+                        // widget: infoTabWidget,
+                    },
+                    logs: {
+                        label: 'Job Status',
+                        // widget: logTabWidget
+                    },
+                    results: {
+                        label: 'Result',
+                        // widget: resultsTabWidget
+                    },
+                    error: {
+                        label: 'Error',
+                        type: 'danger',
+                        // widget: errorTabWidget
+                    }
+                }
+            };
+            this.actionButtons = {
+                current: {
+                    name: null,
+                    disabled: null
+                },
+                availableButtons: {
+                    runApp: {
+                        help: 'Run the app',
+                        type: 'success',
+                        classes: ['-run'],
+                        label: 'Run'
+                    },
+                    cancel: {
+                        help: 'Cancel the running app',
+                        type: 'danger',
+                        classes: ['-cancel'],
+                        label: 'Cancel'
+                    },
+                    reRunApp: {
+                        help: 'Edit and re-run the app',
+                        type: 'default',
+                        classes: ['-rerun'],
+                        label: 'Reset'
+                    },
+                    resetApp: {
+                        help: 'Reset the app and return to Edit mode',
+                        type: 'default',
+                        classes: ['-reset'],
+                        label: 'Reset'
+                    },
+                    offline: {
+                        help: 'Currently disconnected from the server.',
+                        type: 'danger',
+                        classes: ['-cancel'],
+                        label: 'Offline'
+                    }
+                }
+            };
+            this.controlPanel = new CellControlPanel({
+                bus: this.cellBus,
+                ui: this.ui,
+                tabs: {
+                    toggleAction: this.toggleTab,
+                    tabs: this.tabSet
+                },
+                action: {
+                    runAction: this.runAction,
+                    actions: this.actionButtons
+                }
+            });
+            return this.controlPanel.buildLayout(events);
+        }
+
+        renderLayout() {
+            const events = Events.make(),
+                content = div({
+                    class: 'kbase-extension kb-app-cell',
+                    style: { display: 'flex', alignItems: 'stretch' }
+                }, [
+                    div({
+                        class: 'prompt',
+                        dataElement: 'prompt',
+                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' }
+                    }, [
+                        div({ dataElement: 'status' })
+                    ]),
+                    div({
+                        class: 'body',
+                        dataElement: 'body',
+                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1', width: '100%' }
+                    }, [
+                        div({
+                            dataElement: 'widget',
+                            style: { display: 'block', width: '100%' }
+                        }, [
+                            div({ class: 'container-fluid' }, [
+                                this.buildControlPanel(events)
+                            ])
+                        ])
+                    ])
+                ]);
+            return {
+                content: content,
+                events: events
+            };
+
         }
 
         /**
          * Renders the view.
          */
         render() {
-            this.kbaseNode.innerHTML = 'I am a bulk import cell!';
+            const layout = this.renderLayout();
+            this.kbaseNode.innerHTML = layout.content;
+            layout.events.attachEvents(this.kbaseNode);
         }
-
     }
 
     return BulkImportCell;

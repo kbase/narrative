@@ -22,22 +22,25 @@ page = """<html>
 </html>
 """
 data = json.load(f)
+
+
 def color_lookup(name):
-    colors = data['colors']
+    colors = data["colors"]
     if name == "Genome":
-        return '#2196F3'
-    if name ==  "FBAModel":
-        return '#4CAF50'
-    if name ==  "FBA":
-        return '#F44336'
-    if name ==  "ContigSet":
-        return '#FF9800'
-    if name ==  "ProteomeComparison":
-        return '#3F51B5'
-    if name ==  "Tree":
-        return '#795548'
+        return "#2196F3"
+    if name == "FBAModel":
+        return "#4CAF50"
+    if name == "FBA":
+        return "#F44336"
+    if name == "ContigSet":
+        return "#FF9800"
+    if name == "ProteomeComparison":
+        return "#3F51B5"
+    if name == "Tree":
+        return "#795548"
     code = sum([ord(c) for c in name])
-    return colors[ code % len(colors) ]
+    return colors[code % len(colors)]
+
 
 def row(name, icons):
     r = '<tr><td style="padding-top: 2em">{}</td>'.format(name)
@@ -46,10 +49,13 @@ def row(name, icons):
     r += '<i class="fa fa-circle fa-stack-2x" style="color: {}"></i>'.format(color)
     for icon in icons:
         r += '<i class="fa fa-inverse fa-stack-1x {}"></i>'.format(icon)
-    r += '</td></tr>'
+    r += "</td></tr>"
     return r
-def section(data):
-    return '\n'.join([row(key, data[key]) for key in sorted(data.keys())])
 
-kw = {k: section(data[k]) for k in ('methods', 'data')}
+
+def section(data):
+    return "\n".join([row(key, data[key]) for key in sorted(data.keys())])
+
+
+kw = {k: section(data[k]) for k in ("methods", "data")}
 print(page.format(**kw))

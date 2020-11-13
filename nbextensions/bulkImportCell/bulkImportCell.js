@@ -250,9 +250,10 @@ define([
             if (toggleTab.class) {
                 this.tabWidget = new toggleTab.widget();
             } else {
+                // TODO: update jobId with actual value
                 this.tabWidget = toggleTab.widget.make({
-                    model: this.model
-                    // jobId: selectedJobId
+                    model: this.model,
+                    jobId: undefined
                 });
             }
 

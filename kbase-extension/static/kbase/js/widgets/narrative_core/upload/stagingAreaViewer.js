@@ -591,8 +591,8 @@ define([
                 const nodes = fullDataTable.fnGetNodes();
 
                 $('input.kb-staging-table-body__checkbox-input:enabled', nodes)
-                .prop('checked', selectAllChecked)
-                .attr('aria-checked', selectAllChecked);
+                    .prop('checked', selectAllChecked)
+                    .attr('aria-checked', selectAllChecked);
                 
                 //enable or disable import appropriately
                 if (selectAllChecked) {

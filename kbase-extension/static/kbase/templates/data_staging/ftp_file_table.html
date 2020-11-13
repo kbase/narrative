@@ -19,24 +19,25 @@
                 {{#if imported }}
                 <div class="pull-right" style="margin-left: -5px">
                     <select id="import-type" style="width: 118px;">
-
-                        
                         {{#if mappings}}
                             <optgroup label="Suggested Types">
-                            {{# unless mappings.[1]}}
-                            <option value="{{mappings.[0].id}}" selected>{{mappings.[0].title}}</option>
+                            {{# unless mappings.[1]}} 
+                            <!-- If there is only one match -->
+                                <option value="{{mappings.[0].id}}" selected>{{mappings.[0].title}} (detected)</option>
                             {{ else }}
+                                <option hidden>Select a type</option>
                                 {{#each mappings as |mapping|}}
-                                <option value="{{mapping}}">{{mapping}} Mapping</option>
+                                <option value="{{id}}">{{title}} (detected)</option>
                                 {{/each}}
                             {{/unless}}
+                            </optgroup>
                             <optgroup label="Other Types">
                                 {{#each ../uploaders}}
                                 <option value="{{id}}">{{name}}</option>
                                 {{/each}}
                             </optgroup>
                         {{ else }}
-                            <option>Select a type</option>
+                            <option hidden>Select a type</option>
                             {{#each ../uploaders}}
                                 <option value="{{id}}">{{name}}</option>
                             {{/each}}

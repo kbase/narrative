@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 define([
     'jquery',
     'kbaseTabs',
@@ -253,12 +254,12 @@ define([
             const file_names = staging_files.map(f => f['path']);
             // call to api with this
 
-            var rv = [{'id': 7, 'title': 'decompress/unpack1', 'app_weight': 1},{'id': 78, 'title': 'decompress/unpack0', 'app_weight': 1}];
-            var rv2 = [{'id': 7, 'title': 'decompress/unpack1', 'app_weight': 1},{'id': 78, 'title': 'decompress/unpack0', 'app_weight': 1}];
-            var rv3 = [{ 'id': 7, 'title': 'AloneMappiung', 'app_weight': 1 }];
-            var mappings = [null, rv, rv2,rv3,rv2,rv2,rv2,rv2];
+            var rv = [{ 'id': 'fastq_reads', 'title': 'fastq_reads', 'app_weight': 1 },
+                { 'id': 'sra_reads', 'title': 'sra_reads', 'app_weight': 1 }];
+            var rv3 = [{ 'id': 'sra_reads', 'title': 'Unzip', 'app_weight': 1 }];
+            var mappings = [null, rv, rv3,rv, rv3,rv, rv3,rv, rv3,rv, rv3,rv, rv3,rv, rv3,rv, rv3,rv, rv3,rv, rv3];
 
-            // Sort by weight
+            // Sort by weight (Shouldn't we probably just do this in the staging service?)
             mappings.forEach(function(mapping) {
                 try {
                     if (mapping) {
@@ -272,12 +273,12 @@ define([
             
             staging_files.map(function (element, index)
             {   
-                var retrieved = mappings[index] || null;
-                element['mappings'] = null;
-                if (retrieved) {
+                // var retrieved = mappings[index] || null;
+                element['mappings'] = mappings[index] || null;
+                // if (retrieved) {
                     
-                    element['mappings'] = retrieved.map(f => f['title']);
-                }
+                //     element['mappings'] = retrieved.map(f => f['title']);
+                // }
                 
 
             });
@@ -286,11 +287,56 @@ define([
             return staging_files;
         },
 
-        returnRealResponse: function () {
-            //API CALL
+        returnRealResponse: function (staging_files) {
+            const file_names = staging_files.map(f => f['path']);
+            const fileList = $.param({ 'file_list': file_names }, true);
+            console.log("Filenames are", file_names);
+            
 
+            // const root = this.stagingServiceClient.root;
+            // const token = this.stagingServiceClient.token;
+            // const endpoint2 = this.stagingServiceClient.routes.importer_mappings.path;
+            const endpoint = 'https://ci.kbase.us/services/staging_service/importer_mappings/?';
+            $.get({
+                'url': endpoint + fileList,
+                'method': 'GET',
+               
+            }).done(function (data) {
+                if (console && console.log) {
+                    console.log('Sample of data:', data.slice(0, 100));
+                }
+            });
+
+
+            // //API CALL
+            
+            
+            
+            
+            // console.log("fileList is", fileList);
+            // const mappings = this.stagingServiceClient.importer_mappings({
+            //     path: fileList
+            // });
+            console.log("Mappings are", mappings);
             // SORT
-
+            // mappings.forEach(function(mapping) {
+            //     try {
+            //         if (mapping) {
+            //             mapping.sort((a, b) => (a.app_weight < b.app_weight));
+            //         }
+            //     } catch (err) {
+            //         console.log('Mapping is malformed', err);
+            //     }
+            // });
+            
+            // staging_files.map(function (element, index)
+            // {   
+            //     element['mappings'] = mappings[index] || null;
+            // });
+            return {};
+            
+            
+            return staging_files;
 
             //TODO Return real response, with response sorted by weight, then by title
 
@@ -304,7 +350,9 @@ define([
             console.log(this.uploaders.dropdown_order);
             console.log(files);
             console.log('Welcome to the jungle');
-            var mappings = this.returnFakeSortedMappings(files);
+            // var mappings = this.returnFakeSortedMappings(files);
+            var mappings = this.returnRealResponse(files);
+
             // document.write("<pre>")
             // document.write(JSON.stringify(mappings, null, 2));
             console.log('Returning mappings',mappings);

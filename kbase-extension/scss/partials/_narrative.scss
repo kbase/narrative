@@ -106,10 +106,10 @@
 
 .kb-staging-table {
   table-layout: fixed;
+}
 
-  .kb-staging-table-body td {
-    vertical-align: middle;
-  }
+.kb-staging-table .kb-staging-table-body td {
+  vertical-align: middle;
 }
 
 /* Overriding default datatables sort icons so they come before the header title rather than after */
@@ -175,6 +175,29 @@
   .sorting_desc::after {
     display: none;
   }
+
+  .kb-staging-table-header__checkbox {
+    width: 15px;
+    padding-right: 5px;
+  }
+  
+  .kb-staging-table-header__file {
+    width: 41px;
+    padding-right: 0;
+  }
+  
+  .kb-staging-table-header__name {
+    width: 238px;
+  }
+
+  .kb-staging-table-header__age, 
+  .kb-staging-table-header__size {
+    width: 56px;
+  }
+
+  .kb-staging-table-header__import {
+    width: 197px;
+  }
 }
 
 /* Special positioning for folder sort icon as there is no title */
@@ -184,10 +207,6 @@
   &.sorting_desc::before {
     left: 9px;
   }
-}
-
-.kb-staging-table.table-condensed .kb-staging-table-header th {
-  padding: 5px 0;
 }
 
 .kb-staging-table-body__expander {
@@ -337,11 +356,6 @@
       outline: none;
     }
   }
-}
-
-.kb-staging-table-body__checkbox-disabled .kb-staging-table-body__checkbox-input:disabled,
-.kb-staging-table-header__checkbox-disabled .kb-staging-table-header__checkbox-input:disabled {
-  cursor: default;
 }
 
 .kb-staging-table-import__tooltip.tooltip {

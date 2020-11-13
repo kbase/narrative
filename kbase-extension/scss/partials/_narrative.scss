@@ -1,75 +1,56 @@
-@import url("//fonts.googleapis.com/css?family=Roboto");
-
-.kb-dropzone {
-  #upload-message {
-    font-family: $typeface-page-text;
-    font-weight: 700;
-  }
-
-  .dz-message {
-    font: normal 400 24px/28px $typeface-alt-page-text;
-    color: rgb(0 0 0);
-    mix-blend-mode: normal;
-    margin: 2em 4.5em;
-  }
-}
-
-.btn__text, .kb-dropzone .dz-message {
-  font-style: normal;
-  text-align: center;
-}
+@import url(//fonts.googleapis.com/css?family=Roboto);
 
 .btn__text {
-  background: rgb(255 255 255);
+  height: 34px;
   box-sizing: border-box;
-  border-radius: 4px;
   border: 1px solid rgb(255 255 255);
+  background: rgb(255 255 255);
+  border-radius: 4px;
+  color: rgb(67 121 177);
   font: normal 700 14px/18px $typeface-page-text;
   outline: none;
+  text-align: center;
   text-transform: uppercase;
-  color: rgb(67 121 177);
-  height: 34px;
 
   &:hover {
-    color: rgb(54 97 142);
     border: 1px solid rgb(236 242 247);
     background-color: rgb(236 242 247);
+    color: rgb(54 97 142);
     cursor: pointer;
   }
 
   &:focus {
-    color: rgb(54 97 142);
     border: 1px solid rgb(227 235 243);
     background-color: rgb(227 235 243);
+    color: rgb(54 97 142);
   }
 
   &:active {
-    color: rgb(54 97 142);
     border: 1px solid rgb(217 228 239);
     background-color: rgb(217 228 239);
+    color: rgb(54 97 142);
   }
 
   &:disabled {
-    color: rgb(146 146 146);
     border: 1px solid rgb(250 250 250);
     background-color: rgb(250 250 250);
+    color: rgb(146 146 146);
   }
 }
 
-.clear-all-dropzone {
+.dz-clear-all__button {
   margin: 6px;
 }
 
 .dz-file {
   width: 100%;
+  padding: 5px 0;
   border: 1px solid rgb(238 238 238);
   margin: 2px 0;
-  padding: 5px 0;
   font: 16px $typeface-page-text;
 }
 
 .dz-file__progress__bar {
-  width: 0;
   margin-bottom: inherit;
   margin-left: 5px;
 }
@@ -84,11 +65,12 @@
 }
 
 .dz-file__name {
-  white-space: nowrap;
   line-height: 20px;
+  white-space: nowrap;
 }
 
-.dz-file__msg, .dz-file__name {
+.dz-file__msg,
+.dz-file__name {
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -104,8 +86,8 @@
 
 .dz-file__status {
   display: none;
-  font-weight: 700;
   align-items: center;
+  font-weight: 700;
 }
 
 .dz-file__status__icon {
@@ -124,71 +106,88 @@
 
 .kb-staging-table {
   table-layout: fixed;
-}
 
-.kb-staging-table-header__checkbox {
-  width: 2%;
-}
-
-.kb-staging-table-header__file {
-  width: 4%;
-}
-
-.kb-staging-table-header__name {
-  width: 26%;
-}
-
-.kb-staging-table-header__age, .kb-staging-table-header__size {
-  width: 8%;
-}
-
-.kb-staging-table-header__import {
-  width: 22%;
+  .kb-staging-table-body td {
+    vertical-align: middle;
+  }
 }
 
 /* Overriding default datatables sort icons so they come before the header title rather than after */
 
 .kb-staging-table-header {
-  .sorting::before, .sorting_asc::before, .sorting_desc::before {
-    opacity: 0.2;
-    content: "\e150";
+  .sorting::before,
+  .sorting_asc::before,
+  .sorting_desc::before {
     position: relative;
     top: 1px;
     right: 4px;
     display: inline-block;
+    content: '\e150';
     font-family: $typeface-glyphicons;
+    opacity: 0.2;
   }
 
   .sorting_asc::before {
-    content: "\e155";
+    content: '\e155';
   }
 
   .sorting_desc::before {
-    content: "\e156";
+    content: '\e156';
+  }
+
+  /* .kb-staging-table-header__checkbox */
+  &__checkbox {
+    width: 2%;
+  }
+
+  /* .kb-staging-table-header__file */
+  &__file {
+    width: 4%;
+
+    /* Special positioning for folder sort icon as there is no title */
+    &.sorting::before,
+    &.sorting_asc::before,
+    &.sorting_desc::before {
+      left: 9px;
+    }
+  }
+
+  /* .kb-staging-table-header__name */
+  &__name {
+    width: 26%;
+  }
+
+  /* .kb-staging-table-header__age, .kb-staging-table-header__size */
+  &__age,
+  &__size {
+    width: 8%;
+  }
+
+  /* .kb-staging-table-header__import */
+  &__import {
+    width: 22%;
   }
 }
 
 .kb-staging-table .kb-staging-table-header {
-  .sorting::after, .sorting_asc::after, .sorting_desc::after {
+  .sorting::after,
+  .sorting_asc::after,
+  .sorting_desc::after {
     display: none;
   }
 }
 
 /* Special positioning for folder sort icon as there is no title */
-
 .kb-staging-table-header .kb-staging-table-header__file {
-  &.sorting::before, &.sorting_asc::before, &.sorting_desc::before {
+  &.sorting::before,
+  &.sorting_asc::before,
+  &.sorting_desc::before {
     left: 9px;
   }
 }
 
 .kb-staging-table.table-condensed .kb-staging-table-header th {
   padding: 5px 0;
-}
-
-.kb-staging-table .kb-staging-table-body td {
-  vertical-align: middle;
-
 }
 
 .kb-staging-table-body__expander {
@@ -201,9 +200,9 @@
 }
 
 .kb-staging-table-body__name {
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .kb-staging-table-body__folder:hover {
@@ -224,117 +223,108 @@
     margin: 4px 0;
   }
 
+  /* style for Import As dropdown container text */
   .kb-staging-table-body__import-dropdown {
     height: 38px;
-    background: rgb(255 255 255);
-    border: 1px solid rgb(223 0 2);
     box-sizing: border-box;
+    border: 1px solid rgb(223 0 2);
+    background: rgb(255 255 255);
     border-radius: 4px;
-  }
-}
 
-/* When user clicks into the dropdown or chooses a selection box change border color */
+    /* When user clicks into the dropdown or chooses a selection box change border color */
 
-.kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected, .select2-container--focus .kb-staging-table-body__import-dropdown, .select2-container--open .kb-staging-table-body__import-dropdown {
-  border: 1px solid rgb(196 196 196);
-}
-
-/* style for Import As dropdown container text */
-
-.kb-staging-table-body {
-  .kb-staging-table-body__import-dropdown {
+    /* style for Import As dropdown container text */
     .select2-selection__rendered {
       position: absolute;
-      left: 8.87%;
-      right: 5.41%;
       top: 30.95%;
+      right: 5.41%;
       bottom: 30.95%;
-      font-size: 14px;
-      line-height: 16px;
+      left: 8.87%;
       display: flex;
       align-items: center;
       color: rgb(0 0 0);
+      font-size: 14px;
+      line-height: 16px;
     }
 
     .select2-selection__placeholder {
       color: rgb(223 0 2);
     }
+
+    /* style for Import As dropdown container arrow */
+    .select2-selection__arrow {
+      position: absolute;
+      top: 30.95%;
+      right: 5.44%;
+      bottom: 30.95%;
+      left: 87.76%;
+      height: 16px;
+
+      b {
+        border-color: rgb(223 0 2) transparent transparent;
+      }
+    }
+
+    &.kb-staging-table-body__import-type-selected .select2-selection__arrow b,
+    &:focus .select2-selection__arrow b {
+      border-color: rgb(136 136 136) transparent transparent;
+    }
   }
 
+  /* Import as dropdown placeholder text is red
+    Change placeholder color when user clicks in */
+  .select2-container--focus .select2-selection__placeholder,
   .select2-container--open .select2-selection__placeholder {
     color: rgb(0 0 0);
   }
 }
 
-/* Import as dropdown placeholder text is red */
-
-/* Change placeholder color when user clicks in */
-
-.select2-container--focus .select2-selection__placeholder {
-  color: rgb(0 0 0);
+/* When user clicks into the dropdown or chooses a selection box change border color */
+.kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected,
+.select2-container--focus .kb-staging-table-body__import-dropdown,
+.select2-container--open .kb-staging-table-body__import-dropdown {
+  border: 1px solid rgb(196 196 196);
 }
 
-/* style for Import As dropdown container arrow */
-
-.kb-staging-table-body .kb-staging-table-body__import-dropdown {
-  .select2-selection__arrow {
-    position: absolute;
-    height: 16px;
-    left: 87.76%;
-    right: 5.44%;
-    top: 30.95%;
-    bottom: 30.95%;
-
-    b {
-      border-color: rgb(223 0 2) transparent transparent;
-    }
-  }
-
-  &.kb-staging-table-body__import-type-selected .select2-selection__arrow b, &:focus .select2-selection__arrow b {
-    border-color: rgb(136 136 136) transparent transparent;
-  }
-}
-
-/* Before user makes a selection arrow is red */
-
-/* after user makes a selection, or when in focus, arrow is grey */
-
+/* Before user makes a selection arrow is red
+   after user makes a selection, or when in focus, arrow is grey */
 .kb-staging-table-body__download {
-  font-size: 9px;
   margin-left: 5px;
+  font-size: 9px;
 }
 
 .kb-staging-table-body__delete {
-  color: rgb(67 121 177);
   background: none;
+  box-shadow: none;
+  color: rgb(67 121 177);
   font-size: 16px;
   line-height: 18.4px;
-  box-shadow: none;
 }
 
 .kb-staging-table-body__import .kb-staging-table-body__delete {
-  &:active, &:hover {
-    color: rgb(40 96 144);
+  &:active,
+  &:hover {
     background: none;
+    color: rgb(40 96 144);
   }
 }
 
 .kb-staging-table-notice {
-  font: normal 700 16px/20px $typeface-page-text;
-  text-align: center;
-  background-color: rgb(238 238 238);
   height: 32px;
   padding: 8px;
+  background-color: rgb(238 238 238);
+  font: normal 700 16px/20px $typeface-page-text;
+  text-align: center;
 }
 
 .kb-staging-table-import__button {
+  position: absolute;
+  right: 10px;
+  bottom: -50px;
   width: 160px;
   height: 42px;
   border-radius: 4px;
   font: normal 700 14px/16px $typeface-page-text;
-  position: absolute;
-  right: 10px;
-  bottom: -50px;
 
   &.kb-staging-table-import__button__disabled {
     background-color: rgb(142 175 208);
@@ -356,18 +346,18 @@
 
 .kb-staging-table-import__tooltip.tooltip {
   background: rgb(255 255 255);
-  box-shadow: 2px 4px 6px rgb(0 0 0 / 0.15);
   border-radius: 4px;
-}
+  box-shadow: 2px 4px 6px rgb(0 0 0 / 0.15);
 
-.kb-staging-table-import__tooltip.tooltip .tooltip-inner {
-  background: rgb(255 255 255);
-  color: rgb(0 0 0);
-  font: normal 400 12px/16px $typeface-page-text;
-  display: flex;
-  align-items: center;
-  width: 135px;
-  height: 56px;
+  .tooltip-inner {
+    display: flex;
+    width: 135px;
+    height: 56px;
+    align-items: center;
+    background: rgb(255 255 255);
+    color: rgb(0 0 0);
+    font: normal 400 12px/16px $typeface-page-text;
+  }
 }
 
 /*
@@ -385,36 +375,36 @@
 }
 
 .kb-data-staging-metadata-list {
-  font: normal 700 90% $typeface-page-text;
-  width: 115px;
   display: inline-block;
+  width: 115px;
+  font: normal 700 90% $typeface-page-text;
 }
 
 .kb-data-staging-metadata-file-lines {
-  white-space: pre;
   overflow: scroll;
-  font: 90% $typeface-fixed-width;
-  background-color: rgb(221 221 221);
   max-height: 200px;
+  background-color: rgb(221 221 221);
+  font: 90% $typeface-fixed-width;
+  white-space: pre;
 }
 
 /* https://www.figma.com/file/T30UN3QhWhhV5SpXiqY1ij/KBase-component-library?node-id=1%3A4 */
 
 .kb-data-staging-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font: normal 700 14px/18px $typeface-page-text;
-  text-align: center;
-  text-transform: uppercase;
-  color: rgb(67 121 177);
-  height: 35px;
-  margin: 8px;
-  padding: 8px;
   position: relative;
   top: -3px;
-  letter-spacing: 0.5pt;
+  height: 35px;
+  padding: 8px;
+  border: 0;
+  margin: 8px;
+  background: none;
   border-radius: 4px;
+  color: rgb(67 121 177);
+  cursor: pointer;
+  font: normal 700 14px/18px $typeface-page-text;
+  letter-spacing: 0.7px;
+  text-align: center;
+  text-transform: uppercase;
 
   &:hover {
     background: rgb(67 121 177 / 0.1);
@@ -443,18 +433,38 @@
 }
 
 .kb-dropzone {
+  max-height: 150px;
   border: 2px dashed rgb(33 150 243) !important;
   margin-bottom: 5px;
-  max-height: 150px;
   overflow-y: auto;
+
+  &-progress__header {
+    display: none;
+    border-bottom: 1px solid rgb(238 238 238);
+    margin-bottom: 5px;
+  }
+
+  .dz-message {
+    margin: 2em 4.5em;
+    color: rgb(0 0 0);
+    font: normal 400 24px/28px $typeface-alt-page-text;
+    mix-blend-mode: normal;
+    text-align: center;
+  }
+
+  /* .kb-dropzone__message--upload */
+  &__message--upload {
+    font-family: $typeface-page-text;
+    font-weight: 700;
+  }
 }
 
 .kb-ga-seq {
-  word-wrap: break-word;
-  font-family: $typeface-fixed-width;
   max-width: 300px;
   max-height: 100px;
+  font-family: $typeface-fixed-width;
   overflow-y: auto;
+  word-wrap: break-word;
 }
 
 /**
@@ -466,45 +476,46 @@
 }
 
 .whiteout-pane {
-  height: 100%;
-  width: 100%;
   position: absolute;
+  z-index: 1001;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
   background-color: rgb(255 255 255);
   text-align: center;
-  z-index: 1001;
 }
 
 #kb-narr-name {
-  font: normal 700 18px/1.2 $typeface-page-text;
-  padding-bottom: 7px;
-  white-space: nowrap;
   overflow: hidden;
+  padding-bottom: 7px;
+  font: normal 700 18px/1.2 $typeface-page-text;
   text-overflow: ellipsis;
+  white-space: nowrap;
 
   &:hover {
     text-overflow: inherit;
     white-space: normal;
   }
-
-  > #save_widget {
-    padding: 0;
-  }
 }
 
-#kb-narr-creator, #kb-narr-name > #save_widget {
+#save_widget {
+  padding: 0;
+}
+
+#kb-narr-creator,
+#save_widget {
   font-family: $typeface-page-text;
   font-weight: 700;
 }
 
 .kb-narr-namestamp {
-  margin: 5px auto 0;
+  display: block;
+  min-width: 0;
+  flex: 2;
   padding-left: 20px;
   border-left: 2px solid rgb(206 206 206);
-  display: block;
-  flex: 2;
-  min-width: 0;
+  margin: 5px auto 0;
 }
 
 .kb-narr-namestamp__error_container {
@@ -513,11 +524,11 @@
 }
 
 .ui-draggable.kb-data-inflight {
+  z-index: 1000;
   display: block;
   border: 2px solid rgb(128 128 128);
   background-color: rgb(254 255 214) !important;
   border-radius: 4px;
-  z-index: 1000;
 
   &.-over {
     border-color: rgb(0 128 0);
@@ -526,50 +537,50 @@
 }
 
 .kb-data-list-drag-target {
-  transition: all 0.25s ease;
   display: block;
-  border: 2px dashed rgb(255 165 0);
   height: 40px;
-  text-align: center;
   padding: 6px;
+  border: 2px dashed rgb(255 165 0);
   border-radius: 4px;
+  text-align: center;
+  transition: all 0.25s ease;
 
   &.-drag-active {
     background-color: rgb(254 255 214);
   }
 
   &.-drag-hover {
-    background-color: rgb(239 252 235);
-    border-color: rgb(0 128 0);
     height: 90px;
+    border-color: rgb(0 128 0);
+    background-color: rgb(239 252 235);
     transition: all 0.25s ease;
   }
 }
 
 #kb-notify-area {
-  float: left;
   position: relative;
+  float: left;
 }
 
 .kb-navbar-buttons {
   display: inline-block;
   padding-right: 15px;
-  margin-right: 15px;
   border-right: 2px solid rgb(206 206 206);
+  margin-right: 15px;
 }
 
 header[role=banner] {
   position: absolute;
+  z-index: 999;
   top: 0;
   width: 100%;
-  background-color: rgb(255 255 255);
   border-bottom: 1px solid rgb(206 206 206);
-  z-index: 999;
+  background-color: rgb(255 255 255);
 }
 
 nav[role=navigation] ul {
-  margin: 1.2em 0 0.5em;
   padding-left: 0;
+  margin: 1.2em 0 0.5em;
 
   li {
     display: inline;
@@ -577,34 +588,34 @@ nav[role=navigation] ul {
     vertical-align: middle;
 
     a {
-      text-decoration: none;
-      font: normal 700 1.2em $typeface-page-text;
       padding: 7px 1em;
+      border: 1px solid rgb(92 149 49);
       background-color: rgb(92 149 49);
-      color: rgb(255 255 255);
       border-radius: 8px;
       box-shadow: inset 0 3px 8px rgb(0 0 0 / 0.125);
-      border: 1px solid rgb(92 149 49);
+      color: rgb(255 255 255);
+      font: normal 700 1.2em $typeface-page-text;
+      text-decoration: none;
     }
   }
 }
 
-input#search_terms {
-  padding: 0.4em 1em;
-  display: inline;
-  border-color: rgb(92 149 49);
+input#search_terms { /* FIXME */
   position: relative;
   left: -0.5em;
-  font-size: 1em;
+  display: inline;
+  padding: 0.4em 1em;
+  border-color: rgb(92 149 49);
   margin-top: -3px;
   background-image: url(../images/search.png);
-  background-size: 22px;
-  background-repeat: no-repeat;
   background-position: 100%;
+  background-repeat: no-repeat;
+  background-size: 22px;
   border-radius: 0 4px 4px 0;
+  font-size: 1em;
 }
 
-span#searchspan {
+span#searchspan { /* FIXME */
   display: inline-block;
   width: 50%;
 }
@@ -634,8 +645,8 @@ span#searchspan {
 }
 
 .navbar-kbase {
-  border-bottom: 5px solid rgb(206 206 206) !important;
   padding: 8px;
+  border-bottom: 5px solid rgb(206 206 206) !important;
   background-color: rgb(255 255 255);
   box-shadow: 0 1px 10px rgb(0 0 0 / 0.1);
 
@@ -649,14 +660,23 @@ span#searchspan {
 */
 
 .kb-nav-btn {
-  background-color: rgb(255 255 255);
-  padding: 1px 7px;
-  font-size: 24px;
-  border: none;
-  text-shadow: none !important;
-  box-shadow: 0 0 3px rgb(206 206 206);
-  margin: 0 5px 0 0;
   min-width: 50px;
+  padding: 1px 7px;
+  border: 0;
+  margin: 0 5px 0 0;
+  background-color: rgb(255 255 255);
+  box-shadow: 0 0 3px rgb(206 206 206);
+  font-size: 24px;
+  text-shadow: none !important;
+
+  > div {
+    color: rgb(102 102 102) !important;
+  }
+
+  .kb-nav-btn-txt {
+    margin-top: -5px;
+    font-size: 13px;
+  }
 }
 
 .navbar-right .fa::before {
@@ -670,7 +690,6 @@ span#searchspan {
 }
 
 #kb-nav-menu {
-  /* don't add shadows here */
   box-shadow: none;
 }
 
@@ -678,26 +697,16 @@ span#searchspan {
   display: inline-block;
 }
 
-.kb-nav-btn {
-  > div {
-    color: rgb(102 102 102) !important;
-  }
-
-  .kb-nav-btn-txt {
-    font-size: 10pt;
-    margin-top: -5px;
-  }
-}
-
 .navbar-right .kb-nav-btn:hover {
   background-color: rgb(245 245 245);
 }
 
 .kb-nav-btn-upgrade {
-  background-color: rgb(75 184 86) !important;
   display: none;
+  background-color: rgb(75 184 86) !important;
 
-  .fa::before, > div {
+  .fa::before,
+  > div {
     color: rgb(255 255 255) !important;
   }
 
@@ -717,9 +726,9 @@ span#searchspan {
 .kb-nav-menu-icon {
   display: inline-block;
   width: 20px;
+  margin-right: 5px;
   text-align: center;
   vertical-align: middle;
-  margin-right: 5px;
 
   .fa {
     font-size: 150%;
@@ -727,9 +736,10 @@ span#searchspan {
 }
 
 #kb-ipy-menu {
+  margin-right: 0;
+
   /* restore rounded corners */
   border-radius: 4px !important;
-  margin-right: 0;
 }
 
 .btn {
@@ -738,7 +748,7 @@ span#searchspan {
 }
 
 #signin-button .btn {
-  border: none;
+  border: 0;
 }
 
 .btn-xs .glyphicon-user {
@@ -751,13 +761,13 @@ span#searchspan {
 .narrative-menu-container {
   position: fixed;
   z-index: 499;
-  background-color: rgb(255 255 255);
   width: 100%;
-  border-bottom: 1px solid rgb(171 171 171);
-  padding-bottom: 30px;
   padding-top: 10px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid rgb(171 171 171);
   margin-top: -10px;
   margin-left: auto;
+  background-color: rgb(255 255 255);
 }
 
 p.clear {
@@ -770,20 +780,20 @@ body > #header {
   box-sizing: border-box;
 }
 
-p#site-title {
-  height: 46px;
+p#site-title { /* FIXME */
   width: 46px;
+  height: 46px;
+  margin: 5px;
   background: url(../images/kbase_logo.png) no-repeat;
   background-size: 46px;
-  margin: 5px;
   float: left;
   text-indent: -9999px;
 }
 
 #login-info {
   position: absolute;
-  right: 0;
   top: 7px;
+  right: 0;
   margin: 5px;
   font-size: 1.2em;
 }
@@ -795,10 +805,10 @@ p#site-title {
 .search-box {
   position: relative;
   display: inline;
-  border-collapse: separate;
-  margin: -11px 0;
-  padding: 10px 1px;
   width: 200px;
+  padding: 10px 1px;
+  margin: -11px 0;
+  border-collapse: separate;
 }
 
 #search-box-name {
@@ -808,13 +818,13 @@ p#site-title {
 
   &:first-child {
     border-right: 0;
-    border-top-right-radius: 0;
     border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
   }
 
   &:last-child {
-    border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
   }
 }
 
@@ -823,16 +833,16 @@ p#site-title {
 }
 
 #search-select {
-  margin: -11px 0;
   width: 150px;
+  margin: -11px 0;
 }
 
 #search-area {
   position: relative;
-  font: normal 400 18px $typeface-alt-page-text;
-  color: rgb(104 104 104);
-  margin: 0 5px;
   padding: 11px;
+  margin: 0 5px;
+  color: rgb(104 104 104);
+  font: normal 400 18px $typeface-alt-page-text;
 
   input {
     padding: 11px;
@@ -843,27 +853,27 @@ p#site-title {
 
 #workspace {
   position: fixed;
-  width: 878px;
   top: 173px;
   bottom: 42px;
   overflow: auto;
+  width: 878px;
 }
 
 /* footer */
 
 #bottom-tabs {
-  clear: left;
   position: fixed;
   bottom: 0;
   width: 1170px;
-  margin: 0 auto;
   border-top: 1px solid rgb(170 170 170);
+  margin: 0 auto;
   background-color: rgb(255 255 255);
+  clear: left;
 
   p a {
-    background-color: rgb(255 255 255);
-    border: 1px solid rgb(1 136 65);
     padding: 14px 20px;
+    border: 1px solid rgb(1 136 65);
+    background-color: rgb(255 255 255);
     font-size: 14px;
   }
 }
@@ -871,36 +881,36 @@ p#site-title {
 /* left pane styling */
 
 #left-column {
-  width: 380px;
   position: fixed;
-  border-right: 5px solid rgb(206 206 206);
   top: 70px;
   bottom: 0;
+  width: 380px;
+  border-right: 5px solid rgb(206 206 206);
 }
 
 .kb-side-overlay-container {
-  width: 730px;
-  border: 1px solid rgb(206 206 206);
-  z-index: 1030;
-  background: rgb(255 255 255);
   position: fixed;
+  z-index: 1030;
+  width: 730px;
   max-height: calc(100% - 73px);
+  border: 1px solid rgb(206 206 206);
+  background: rgb(255 255 255);
   overflow-y: auto;
 }
 
 .kb-side-overlay-header {
   width: 100%;
+  padding: 6px;
   background-color: rgb(33 150 243);
   color: rgb(255 255 255);
-  padding: 6px;
-  font-size: 12pt;
+  font-size: 16px;
 }
 
 .kb-side-overlay-close {
-  cursor: pointer;
   color: rgb(255 255 255);
+  cursor: pointer;
+  font-size: 13px;
   font-weight: 700;
-  font-size: 10pt;
 
   &:hover {
     color: rgb(255 165 0);
@@ -908,26 +918,26 @@ p#site-title {
 }
 
 .kb-side-panel {
-  overflow-y: hidden;
   height: 100%;
+  overflow-y: hidden;
 }
 
 #kb-side-toggle-in {
-  display: none;
-  top: 70px;
-  width: 22px;
-  border-bottom: 6px solid rgb(206 206 206);
-  border-right: 6px solid rgb(206 206 206);
-  font-size: 12pt;
-  text-align: center;
-  background-color: rgb(33 150 243);
-  padding: 12px 6px;
-  color: rgb(187 222 251);
-  font-weight: 700;
-  user-select: none;
-  cursor: pointer;
-  z-index: 1;
   position: fixed;
+  z-index: 1;
+  top: 70px;
+  display: none;
+  width: 22px;
+  padding: 12px 6px;
+  border-right: 6px solid rgb(206 206 206);
+  border-bottom: 6px solid rgb(206 206 206);
+  background-color: rgb(33 150 243);
+  color: rgb(187 222 251);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  user-select: none;
 
   &:hover {
     color: rgb(255 255 255);
@@ -936,16 +946,16 @@ p#site-title {
 
 .kb-side-toggle {
   display: inline-block;
-  font-size: 12pt;
-  text-align: center;
-  border-bottom: 6px solid rgb(33 150 243);
-  border-top: 6px solid rgb(33 150 243);
-  background-color: rgb(33 150 243);
   padding: 6px;
+  border-top: 6px solid rgb(33 150 243);
+  border-bottom: 6px solid rgb(33 150 243);
+  background-color: rgb(33 150 243);
   color: rgb(187 222 251);
-  font-weight: 700;
-  user-select: none;
   cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  user-select: none;
 
   &:hover {
     color: rgb(255 255 255);
@@ -954,26 +964,19 @@ p#site-title {
 
 .kb-side-header {
   display: inline-block;
-  font-size: 12pt;
-  text-align: center;
-  border-bottom: 6px solid rgb(33 150 243);
-  border-top: 6px solid rgb(33 150 243);
-  background-color: rgb(33 150 243);
   padding: 6px;
+  border-top: 6px solid rgb(33 150 243);
+  border-bottom: 6px solid rgb(33 150 243);
+  background-color: rgb(33 150 243);
   color: rgb(187 222 251);
-  font-weight: 700;
-  user-select: none;
   cursor: pointer;
-}
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  user-select: none;
 
-.kb-overlay-active {
-  background-color: rgb(128 128 128);
-  border-bottom: 6px solid rgb(128 128 128);
-  border-top: 6px solid rgb(128 128 128);
-}
-
-.kb-side-header {
-  &.active, &:hover {
+  &.active,
+  &:hover {
     border-bottom: 6px solid rgb(16 206 52);
   }
 
@@ -983,19 +986,26 @@ p#site-title {
   }
 }
 
+.kb-overlay-active {
+  border-top: 6px solid rgb(128 128 128);
+  border-bottom: 6px solid rgb(128 128 128);
+  background-color: rgb(128 128 128);
+}
+
 .kb-side-separator {
   border-bottom: 5px solid rgb(206 206 206);
 }
 
 .kb-side-tab {
+  display: none;
+
   &.active {
     display: inherit;
   }
-
-  display: none;
 }
 
-.kb-narr-side-panel-set, .kb-side-tab {
+.kb-narr-side-panel-set,
+.kb-side-tab {
   height: 100%;
 }
 
@@ -1008,15 +1018,15 @@ p#site-title {
   z-index: 10;
   right: 0;
   bottom: 0;
-  opacity: 0.5;
   background-color: rgb(0 0 0);
+  opacity: 0.5;
 }
 
 #data-header {
   padding: 10px 0;
+  background-color: rgb(0 153 153);
   color: rgb(255 255 255);
   font-weight: 700;
-  background-color: rgb(0 153 153);
 }
 
 #data-title {
@@ -1024,9 +1034,9 @@ p#site-title {
 }
 
 #data-add-btn {
-  padding: 0 0 -10px;
   position: absolute;
   right: 7px;
+  padding: 0 0 -10px;
   font-size: 0.8em;
 
   &:hover {
@@ -1035,29 +1045,29 @@ p#site-title {
 }
 
 #data-tab-nav {
-  border-bottom: 1px solid rgb(170 170 170);
-  padding-top: 10px;
-  background-color: rgb(0 187 187);
   width: 100%;
+  padding-top: 10px;
+  border-bottom: 1px solid rgb(170 170 170);
+  background-color: rgb(0 187 187);
 
   ul {
-    padding-bottom: 0;
-    bottom: 0;
     top: 50px;
+    bottom: 0;
+    padding-bottom: 0;
 
     li {
       display: inline;
-      border: 1px solid rgb(0 0 0);
       padding: 4px 10px;
+      border: 1px solid rgb(0 0 0);
       background-color: rgb(221 221 221);
 
       a {
-        &:hover {
-          text-decoration: none;
-          color: rgb(170 0 0);
-        }
-
         color: rgb(0 0 0);
+
+        &:hover {
+          color: rgb(170 0 0);
+          text-decoration: none;
+        }
       }
 
       &.selected {
@@ -1069,33 +1079,33 @@ p#site-title {
 
 #data-view-panel {
   height: 150px;
-  border: 1px solid rgb(170 170 170);
   padding: 10px;
+  border: 1px solid rgb(170 170 170);
   overflow-y: auto;
 }
 
 #data-pane {
-  height: 69%;
-  margin-top: 1px;
-  border-bottom: 1px solid rgb(170 170 170);
   overflow: auto;
+  height: 69%;
+  border-bottom: 1px solid rgb(170 170 170);
+  margin-top: 1px;
 
   p {
     margin: 0;
 
     span {
       display: block;
-      padding: 2px 10px;
-      color: rgb(255 255 255);
-      border: 1px solid rgb(255 255 255);
       width: 123px;
+      padding: 2px 10px;
+      border: 1px solid rgb(255 255 255);
       margin: 0;
+      color: rgb(255 255 255);
       text-align: center;
 
       &.tab1 {
-        float: right;
         background: linear-gradient(rgb(102 102 102), rgb(187 187 187));
         color: rgb(255 255 255);
+        float: right;
       }
 
       &.tab2 {
@@ -1106,14 +1116,14 @@ p#site-title {
 }
 
 #function-pane {
+  overflow: auto;
   height: 30%;
   margin-top: 1px;
-  overflow: auto;
 }
 
 .left-pane {
-  font-size: 14px;
   position: relative;
+  font-size: 14px;
 }
 
 #kb-function-panel .kb-function-body {
@@ -1122,11 +1132,11 @@ p#site-title {
 }
 
 h3.pane-title {
-  margin: 0;
   position: relative;
-  background-color: rgb(224 224 224);
   padding: 3px 5px;
   border: 1px solid rgb(194 194 194);
+  margin: 0;
+  background-color: rgb(224 224 224);
   font-size: 16px;
 }
 
@@ -1138,42 +1148,42 @@ h3.pane-title {
 }
 
 ul.pane-list {
-  margin: 0;
   padding: 2px;
+  margin: 0;
 
   li {
-    list-style: none;
     padding: 1px;
     margin-left: 5px;
+    list-style: none;
   }
 }
 
 /* --- KBase method list styles -- */
 
 .kb-method-list-logo {
-  width: 30pt;
-  height: 30pt;
-  color: rgb(255 255 255);
-  background-color: rgb(96 125 139);
-  border: 0 solid rgb(85 85 85);
-  text-align: center;
   display: inline-block;
-  padding-top: 6pt;
-  font-size: 18pt;
-  font-weight: 700;
-  text-shadow: -1px 0 rgb(119 119 119), 0 1px rgb(119 119 119), 1px 0 rgb(119 119 119), 0 -1px rgb(119 119 119);
+  width: 40px;
+  height: 40px;
+  padding-top: 8px;
+  border: 0 solid rgb(85 85 85);
+  background-color: rgb(96 125 139);
+  color: rgb(255 255 255);
   cursor: pointer;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: -1px 0 rgb(119 119 119), 0 1px rgb(119 119 119), 1px 0 rgb(119 119 119), 0 -1px rgb(119 119 119);
 
   &:hover {
+    padding-top: 3px;
     border-width: 5px;
-    padding-top: 2.5pt;
   }
 }
 
 .kb-method-list-more-div {
-  color: rgb(119 119 119);
-  font-size: 10pt;
   margin: 2px;
+  color: rgb(119 119 119);
+  font-size: 13px;
   text-align: justify;
 
   > div:last-child {
@@ -1182,17 +1192,17 @@ ul.pane-list {
 }
 
 .kb-method-search-clear {
-  cursor: pointer;
   border: 1px solid rgb(206 206 206);
-  border-left: none;
+  border-left: 0;
+  cursor: pointer;
 }
 
 /* A function in the function pane */
 
 li {
   &.function a {
-    text-decoration: none;
     color: rgb(80 130 50);
+    text-decoration: none;
 
     &:visited {
       /* don't recolor */
@@ -1201,8 +1211,8 @@ li {
   }
 
   &.dataset a {
-    text-decoration: none;
     color: rgb(130 80 50);
+    text-decoration: none;
 
     &:visited {
       /* don't recolor */
@@ -1228,23 +1238,24 @@ li {
     }
 
     &:last-child {
-      border-bottom: none;
+      border-bottom: 0;
     }
   }
 }
 
 fieldset {
+  border: 0;
   margin: 0 0 15px;
-  border: none;
 
   label {
     margin: 0 0 3px;
-    font-weight: 700;
     font-size: 1em;
+    font-weight: 700;
   }
 
   input {
-    &[type=password], &[type=text] {
+    &[type=password],
+    &[type=text] {
       width: 200px;
     }
   }
@@ -1257,17 +1268,49 @@ fieldset {
 /* styling of cells */
 
 div {
-  &.dataset-cell, &.function-cell {
+  &.dataset-cell,
+  &.function-cell {
     width: 90%;
-    margin: 3px auto;
     padding: 7px 17px;
     border: 1px solid rgb(204 204 204);
+    margin: 3px auto;
+  }
+
+  &.texttools,
+  &.tools {
+    p {
+      margin: 0;
+    }
+  }
+
+  &.textarea {
+    display: none;
+    width: 650px;
+    height: auto;
+    min-height: 1.2em;
+    padding: 0;
+    border: 0;
+  }
+
+  &.metadata {
+    display: block;
+    width: 200px;
+    height: 100px;
+    padding: 0 10px;
+    float: left;
+  }
+
+  &.social {
+    display: none;
+    width: 80px;
+    padding: 0 10px;
+    float: right;
   }
 }
 
 img.dataset-cell {
-  margin: 3px auto;
   padding: 0;
+  margin: 3px auto;
 }
 
 .function-cell {
@@ -1276,23 +1319,26 @@ img.dataset-cell {
   background-repeat: no-repeat;
 }
 
-.dataset-cell p, .function-cell p {
-  font-size: 0.875em;
-}
+.dataset-cell,
+.function-cell {
+  p {
+    font-size: 0.875em;
+  }
 
-.dataset-cell h2, .function-cell h2 {
-  margin-bottom: 0;
-  font-size: 1.1em;
+  h2 {
+    margin-bottom: 0;
+    font-size: 1.1em;
+  }
 }
 
 .textcell {
   width: 90%;
-  margin: 3px auto;
-  padding: 5px 17px;
-  font-size: 1em;
   height: 1em;
+  padding: 5px 17px;
   border: 2px solid rgb(255 255 255);
+  margin: 3px auto;
   color: rgb(17 17 17);
+  font-size: 1em;
 
   &:hover {
     border: 2px dotted rgb(204 204 204);
@@ -1300,53 +1346,40 @@ img.dataset-cell {
 }
 
 p.textcuepara {
-  color: rgb(204 204 204);
+  display: none;
+  height: 1em;
   padding: 0;
   margin: 0;
-  height: 1em;
-  display: none;
+  color: rgb(204 204 204);
 }
 
-div {
-  &.texttools p, &.tools p {
-    margin: 0;
-  }
-
-  &.textarea {
-    width: 650px;
-    border: none;
-    padding: 0;
-    height: auto;
-    min-height: 1.2em;
-  }
-}
-
-.texttools, .tools, div.textarea {
+.texttools {
   display: none;
+
+  img {
+    vertical-align: middle;
+  }
 }
 
 .tools {
+  display: none;
   height: 1em;
   margin-top: 0.5em;
   margin-left: 10px;
 
   a {
-    border: 1px solid rgb(1 136 65);
     padding: 2px 4px;
+    border: 1px solid rgb(1 136 65);
     font-size: 13px;
   }
 }
 
 #narrative-header .tools {
-  display: block;
-  width: 30em;
   position: relative;
   top: -2em;
   left: 350px;
-}
-
-.texttools img {
-  vertical-align: middle;
+  display: block;
+  width: 30em;
 }
 
 img.remove {
@@ -1357,32 +1390,15 @@ img.remove {
   background-color: fbfaed;
 }
 
-div {
-  &.metadata {
-    display: block;
-    width: 200px;
-    padding: 0 10px;
-    height: 100px;
-    float: left;
-  }
-
-  &.social {
-    float: right;
-    width: 80px;
-    padding: 0 10px;
-    display: none;
-  }
-}
-
 p span.notification {
-  background-color: rgb(255 51 51);
-  color: rgb(255 255 255);
   padding: 4px 8px;
+  background-color: rgb(255 51 51);
   border-radius: 1em;
+  color: rgb(255 255 255);
 }
 
 /**
- * Bootstrap 3 submenu hack^H^H^H^H fix
+ * Bootstrap 3 submenu fix
  * http://stackoverflow.com/questions/18023493/bootstrap-3-dropdown-sub-menu-missing
  */
 
@@ -1409,15 +1425,15 @@ p span.notification {
 
   > a::after {
     display: block;
-    content: " ";
-    float: right;
     width: 0;
     height: 0;
-    border-color: transparent transparent transparent rgb(204 204 204);
-    border-style: solid;
     border-width: 5px 0 5px 5px;
+    border-style: solid;
+    border-color: transparent transparent transparent rgb(204 204 204);
     margin-top: 5px;
     margin-right: -10px;
+    content: ' ';
+    float: right;
   }
 
   &.pull-left {
@@ -1439,9 +1455,9 @@ p span.notification {
   position: relative;
   top: 5px;
   min-height: 0;
-  border: none !important;
-  background-image: none !important;
+  border: 0 !important;
   background-color: rgb(249 249 249) !important;
+  background-image: none !important;
   box-shadow: none;
 }
 
@@ -1451,15 +1467,15 @@ p span.notification {
 
 #menubar {
   position: absolute;
-  width: 100%;
   top: 3px;
-  background-color: rgb(249 249 249);
-  border-bottom: 2px solid rgb(221 221 221);
+  width: 100%;
   padding-bottom: 5px;
+  border-bottom: 2px solid rgb(221 221 221);
+  background-color: rgb(249 249 249);
 
   .navbar .container {
-    padding-left: 0;
     padding-right: 0;
+    padding-left: 0;
   }
 }
 
@@ -1467,8 +1483,8 @@ p span.notification {
 
 .navbar {
   min-height: 0;
-  background-image: none;
   background-color: rgb(248 248 248);
+  background-image: none;
 }
 
 #menubar .navbar-nav > li > a {
@@ -1476,7 +1492,13 @@ p span.notification {
   padding-bottom: 7px;
 }
 
-.btn-danger, .btn-default, .btn-info, .btn-primary, .btn-success, .btn-warning, .panel-default > .panel-heading {
+.btn-danger,
+.btn-default,
+.btn-info,
+.btn-primary,
+.btn-success,
+.btn-warning,
+.panel-default > .panel-heading {
   background-image: none;
 }
 
@@ -1485,11 +1507,11 @@ p span.notification {
 }
 
 #menubar .navbar {
-  margin-bottom: 5px;
   width: 100%;
+  margin-bottom: 5px;
 }
 
-div#notebook_panel {
+div#notebook_panel { /* FIXME Jupyter css */
   box-shadow: none;
 }
 
@@ -1497,7 +1519,8 @@ div#notebook_panel {
   color: rgb(0 136 204) !important;
 }
 
-.creator-stamp, .version-stamp a {
+.creator-stamp,
+.version-stamp a {
   padding-right: 320px;
   text-align: right;
 }
@@ -1517,18 +1540,18 @@ div#notebook_panel {
 }
 
 .kb-narr-side-panel {
-  margin-bottom: 5px;
   height: 100%;
+  margin-bottom: 5px;
 
   .kb-title {
     padding: 10px 5px;
+    color: rgb(46 97 141);
     font: normal 700 19px $typeface-page-text;
     text-transform: uppercase;
-    color: rgb(46 97 141);
   }
 
   .btn {
-    border: none;
+    border: 0;
   }
 }
 
@@ -1553,9 +1576,9 @@ div#notebook_panel {
 }
 
 .kbujs-loading-modal {
-  text-align: center;
   font-size: 16px;
   font-weight: 700;
+  text-align: center;
 }
 
 .kbujs-refresh-btn {
@@ -1564,14 +1587,14 @@ div#notebook_panel {
 }
 
 .kbujs-jobs-table {
-  margin-left: auto !important;
   margin-right: auto !important;
+  margin-left: auto !important;
 }
 
 .kbujs-loading {
   height: 100%;
-  vertical-align: middle;
   text-align: center;
+  vertical-align: middle;
 }
 
 .kbujs-delete-job {
@@ -1579,19 +1602,19 @@ div#notebook_panel {
 }
 
 .kbujs-error-traceback {
-  white-space: nowrap;
-  float: left;
   max-width: 516px;
   max-height: 250px;
+  float: left;
   overflow-x: scroll;
   overflow-y: scroll;
+  white-space: nowrap;
 }
 
 /* For connecting lines */
 
 .kb-line {
-  background-color: rgb(211 211 211);
   position: absolute;
+  background-color: rgb(211 211 211);
 }
 
 /* tab.js */
@@ -1636,33 +1659,30 @@ div#notebook_panel {
     }
 
     &.paginate_active {
-      border: 1px solid rgb(170 170 170);
-      border-radius: 5px;
       padding: 2px 5px;
+      border: 1px solid rgb(170 170 170);
       margin: 0 3px;
+      background-color: rgb(153 179 255);
+      border-radius: 5px;
+      color: rgb(51 51 51) !important;
       cursor: pointer;
       *cursor: hand;
-      color: rgb(51 51 51) !important;
     }
 
     &.paginate_button {
-      border: 1px solid rgb(170 170 170);
-      border-radius: 5px;
       padding: 2px 5px;
+      border: 1px solid rgb(170 170 170);
       margin: 0 3px;
+      background-color: rgb(221 221 221);
+      border-radius: 5px;
+      color: rgb(51 51 51) !important;
       cursor: pointer;
       *cursor: hand;
-      color: rgb(51 51 51) !important;
-      background-color: rgb(221 221 221);
 
       &:hover {
         background-color: rgb(204 204 204);
         text-decoration: none !important;
       }
-    }
-
-    &.paginate_active {
-      background-color: rgb(153 179 255);
     }
   }
 }
@@ -1681,11 +1701,11 @@ div#notebook_panel {
 
 .kb-function-header {
   padding: 10px 0;
+  margin-bottom: 3px;
+  background-color: rgb(182 233 248);
   color: rgb(0 100 182);
   font-weight: 700;
-  background-color: rgb(182 233 248);
   text-align: center;
-  margin-bottom: 3px;
 }
 
 .kb-narr-panel-body {
@@ -1698,8 +1718,8 @@ div#notebook_panel {
 }
 
 .kb-narr-panel-body-wrapper {
-  overflow-y: auto;
   height: 100%;
+  overflow-y: auto;
 
   > div {
     height: 100%;
@@ -1707,50 +1727,50 @@ div#notebook_panel {
 }
 
 .kb-narr-panel-toggle {
-  margin-right: 4px;
   margin-top: -4px;
-  cursor: pointer;
+  margin-right: 4px;
   color: rgb(136 136 136);
+  cursor: pointer;
   user-select: none;
 }
 
 /* Container for func list */
 
 .kb-function-body {
-  height: 100%;
   width: 100%;
+  height: 100%;
 
   .accordion .panel .panel-body {
     padding: 0 0 0 5px;
   }
 
   ul {
-    border: 1px solid rgb(221 221 221);
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
     width: 100%;
+    padding: 0;
+    border: 1px solid rgb(221 221 221);
+    margin: 0;
+    list-style-type: none;
   }
 
   li {
-    padding: 5px;
     width: 100%;
+    padding: 5px;
     text-align: left;
 
     &:nth-child(odd) {
-      background-color: rgb(238 238 238);
       border-bottom: 1px solid rgb(221 221 221);
+      background-color: rgb(238 238 238);
     }
 
     &:nth-child(2n) {
-      background-color: rgb(255 255 255);
       border-bottom: 1px solid rgb(221 221 221);
+      background-color: rgb(255 255 255);
     }
 
     &:hover {
-      text-decoration: underline;
-      cursor: pointer;
       background-color: rgb(244 245 214);
+      cursor: pointer;
+      text-decoration: underline;
     }
   }
 
@@ -1768,19 +1788,19 @@ div#notebook_panel {
 /* Link to a function */
 
 .kb-function-error {
+  border-color: rgb(238 211 215) !important;
   background-color: rgb(242 222 222) !important;
   color: rgb(185 74 72);
-  border-color: rgb(238 211 215) !important;
 }
 
 /* Help on a function */
 
 .kb-function-help {
   padding: 0 3px;
-  float: right;
-  cursor: pointer;
   color: rgb(86 85 158);
-  font-size: 14pt;
+  cursor: pointer;
+  float: right;
+  font-size: 19px;
 
   &:hover {
     color: rgb(0 0 0);
@@ -1789,36 +1809,36 @@ div#notebook_panel {
 
 .kb-function-help-popup {
   position: absolute;
+  z-index: 99;
   top: 0;
   left: 300px;
-  z-index: 99;
-  cursor: pointer;
   max-width: 300px;
+  cursor: pointer;
 
   h1 {
-    margin: -10px 0 0;
     padding: 0;
-    font-size: 110%;
+    margin: -10px 0 0;
     color: rgb(48 118 162);
+    font-size: 110%;
   }
 
   h2 {
-    margin: 10px 0 -10px;
     padding-top: 5px;
-    font-size: 80%;
+    margin: 10px 0 -10px;
     color: rgb(153 153 153);
+    font-size: 80%;
     font-style: italic;
-    text-align: right;
     font-weight: 100;
+    text-align: right;
   }
 
   .header {
+    padding: 0;
+    margin: 0;
     background-color: rgb(255 255 255);
     color: rgb(48 118 162);
-    font-weight: 700;
     font-size: 120%;
-    margin: 0;
-    padding: 0;
+    font-weight: 700;
   }
 
   a {
@@ -1827,8 +1847,8 @@ div#notebook_panel {
   }
 
   .version {
-    font-size: 80%;
     color: rgb(102 102 102);
+    font-size: 80%;
   }
 
   .body {
@@ -1839,35 +1859,35 @@ div#notebook_panel {
 
 #kb-function-help {
   position: absolute;
+  z-index: 99;
   top: 400px;
   left: 300px;
-  z-index: 99;
-  cursor: pointer;
   width: 250px;
+  cursor: pointer;
 
   h1 {
-    margin: -10px 0 0;
     padding: 0;
-    font-size: 110%;
+    margin: -10px 0 0;
     color: rgb(48 118 162);
+    font-size: 110%;
   }
 
   h2 {
-    margin: 10px 0 -10px;
     padding-top: 5px;
-    font-size: 80%;
+    margin: 10px 0 -10px;
     color: rgb(153 153 153);
+    font-size: 80%;
     font-style: italic;
-    text-align: right;
     font-weight: 100;
+    text-align: right;
   }
 }
 
 #kb-function-error-traceback {
-  white-space: nowrap;
-  float: left;
   max-width: 250px;
+  float: left;
   overflow-x: scroll;
+  white-space: nowrap;
 }
 
 .kb-function-dim {
@@ -1879,47 +1899,48 @@ div#notebook_panel {
 }
 
 .kb-function-cat-dim {
-  background-color: rgb(221 221 221) !important;
   border-color: rgb(221 221 221) !important;
+  background-color: rgb(221 221 221) !important;
 
   .panel-heading {
-    background-color: rgb(221 221 221) !important;
     border-color: rgb(221 221 221) !important;
+    background-color: rgb(221 221 221) !important;
   }
 }
 
 .kb-function-toggle {
   color: rgb(0 136 204);
-  font-style: italic;
   cursor: pointer;
+  font-style: italic;
 }
 
 .kb-cell-toolbar {
   .buttons {
-    font-weight: 700;
     color: rgb(206 206 206) !important;
+    font-weight: 700;
   }
 
   .btn {
-    border: none;
+    border: 0;
   }
 
   .icon {
     display: inline-block;
+    overflow: hidden;
     padding: 0;
     margin-right: 4px;
     vertical-align: top;
-    overflow: hidden;
   }
 
   .title {
-    font: normal 700 120% $typeface-page-text;
     color: rgb(46 97 141);
+    font: normal 700 120% $typeface-page-text;
   }
 
-  .info-link, .subtitle {
-    font: 90% $typeface-alt-page-text;
+  .info-link,
+  .subtitle {
     color: rgb(102 102 102);
+    font: 90% $typeface-alt-page-text;
   }
 }
 
@@ -1929,8 +1950,8 @@ div#notebook_panel {
 }
 
 .selected .kb-toolbar-open {
-  border-left: 1px solid rgb(75 184 86);
   border-bottom: 1px solid rgb(75 184 86);
+  border-left: 1px solid rgb(75 184 86);
   background-color: rgb(223 240 216);
 }
 
@@ -1952,78 +1973,82 @@ div#notebook_panel {
   opacity: 1;
 
   h1 {
-    font: normal 400 12pt/15px $typeface-alt-page-text;
-    color: rgb(46 97 141);
-    margin: 3px 13px 3px 3px;
-    opacity: inherit;
     display: inline;
+    margin: 3px 13px 3px 3px;
+    color: rgb(46 97 141);
+    font: normal 400 16px/1 $typeface-alt-page-text;
+    opacity: inherit;
   }
 
   div.kb-func-desc {
-    opacity: inherit;
     display: block;
+    opacity: inherit;
   }
 
   h2 {
-    font: normal 400 11pt/1.5 $typeface-alt-page-text;
-    color: rgb(102 102 102);
     margin: 3px;
+    color: rgb(102 102 102);
+    font: normal 400 15px/1.5 $typeface-alt-page-text;
     opacity: inherit;
   }
 
   form {
     input[type=submit] {
+      margin-top: 5px;
       float: right;
       opacity: inherit;
-      margin-top: 5px;
     }
 
     .buttons {
-      float: right;
       margin-top: 5px;
+      float: right;
     }
   }
 }
 
 .kb-cell-params table {
-  border: none;
-  margin-bottom: 10px;
-  opacity: inherit;
-  margin-left: auto;
+  border: 0;
   margin-right: auto;
+  margin-bottom: 10px;
+  margin-left: auto;
+  opacity: inherit;
 
   > tr {
-    border: none;
+    border: 0;
     vertical-align: middle;
   }
 }
 
 td {
-  border: none;
+  border: 0;
   vertical-align: middle;
 }
 
 .kb-cell-params {
   tbody > tr > {
-    td, th {
+    td,
+    th {
       padding: 2px 4px;
     }
   }
 
   tfoot > tr > {
-    td, th {
+    td,
+    th {
       padding: 2px 4px;
     }
   }
 
   thead > tr > {
-    td, th {
+    td,
+    th {
       padding: 2px 4px;
     }
   }
 
   tr:hover {
-    td, th {
+    td,
+    th {
       background: rgb(238 238 238);
     }
   }
@@ -2054,11 +2079,12 @@ td {
   color: rgb(46 97 141);
 }
 
-.kb-err-desc, .kb-out-desc {
-  font: normal 400 12pt/15px $typeface-alt-page-text;
-  margin: 3px;
-  opacity: inherit;
+.kb-err-desc,
+.kb-out-desc {
   display: inline;
+  margin: 3px;
+  font: normal 400 16px/1 $typeface-alt-page-text;
+  opacity: inherit;
 }
 
 .kb-err-desc {
@@ -2070,15 +2096,15 @@ td {
 }
 
 .kb-out-header {
-  background-color: rgb(221 221 221);
   padding: 10px;
+  background-color: rgb(221 221 221);
 }
 
 .kb-func-timestamp {
-  color: rgb(85 85 85);
-  font: 10pt $typeface-alt-page-text;
-  margin-top: -3px;
   padding-right: 1em;
+  margin-top: -3px;
+  color: rgb(85 85 85);
+  font: 13px $typeface-alt-page-text;
 }
 
 .unselected .kb-func-timestamp {
@@ -2090,11 +2116,11 @@ td {
   border-radius: 1px;
 
   > .panel-heading {
+    padding: 5px 10px;
     border-color: rgb(188 232 241);
+    background-color: rgb(217 237 247);
     border-radius: 1px;
     color: rgb(49 112 143);
-    background-color: rgb(217 237 247);
-    padding: 5px 10px;
   }
 
   .panel-body {
@@ -2120,8 +2146,8 @@ td {
 }
 
 .kb-cell-output-content {
-  overflow-x: auto;
   padding: 5px;
+  overflow-x: auto;
 }
 
 .kb-cell-output .panel .panel-heading {
@@ -2145,15 +2171,15 @@ td {
 }
 
 .kb-cell-error .panel-heading {
-  background-image: none;
   padding: 5px 10px;
+  background-image: none;
 }
 
 /*** styling for the jobs manager */
 
 .kb-jobs-title {
-  font: normal 700 1.2em $typeface-page-text;
   color: rgb(24 90 133);
+  font: normal 700 1.2em $typeface-page-text;
 
   .glyphicon-info-sign {
     font-size: 0.9em;
@@ -2161,25 +2187,25 @@ td {
 }
 
 .kb-jobs-info-table {
-  margin: 0 2px;
   width: 95%;
+  margin: 0 2px;
 
   th {
+    width: 30%;
+    min-width: 30%;
+    max-width: 30%;
+    padding-right: 5px;
+    color: rgb(119 119 119);
     font-family: $typeface-page-text;
     font-weight: 700;
-    color: rgb(119 119 119);
     vertical-align: top;
-    padding-right: 5px;
-    width: 30%;
-    max-width: 30%;
-    min-width: 30%;
   }
 }
 
 .kb-jobs-item {
+  padding-bottom: 3px;
   border-bottom: 2px solid rgb(221 221 221);
   margin-bottom: 5px;
-  padding-bottom: 3px;
 }
 
 .kb-jobs-error {
@@ -2187,19 +2213,19 @@ td {
 }
 
 .kb-jobs-error-btn {
-  font-size: 10pt;
+  font-size: 13px;
 }
 
 .kb-jobs-item:last-child {
-  border-bottom: none;
+  border-bottom: 0;
 }
 
 .kb-jobs-error-modal {
   width: 485px;
-  word-wrap: break-word;
   max-height: 220px;
-  overflow-y: auto;
   overflow-x: hidden;
+  overflow-y: auto;
+  word-wrap: break-word;
 }
 
 /** new method parameter styling **/
@@ -2213,8 +2239,8 @@ td {
 }
 
 .kb-method-parameter-row {
-  margin: 0;
   padding: 5px;
+  margin: 0;
   border-radius: 5px;
 }
 
@@ -2230,31 +2256,31 @@ td {
 
 .kb-method-parameter-error-mssg {
   padding: 5px;
-  text-align: center;
-  font-size: 9pt;
   color: rgb(244 67 54);
   font-family: $typeface-page-text;
+  font-size: 12px;
   font-weight: 700;
+  text-align: center;
 }
 
 /* not sure how to get text in these divs to valign middle... */
 
 .kb-method-parameter-name {
-  font-family: $typeface-page-text;
-  font-weight: 700;
-  color: rgb(119 119 119);
-  text-align: right;
-  vertical-align: middle;
-  margin-top: 3px;
   padding-right: 0;
   padding-left: 0;
+  margin-top: 3px;
+  color: rgb(119 119 119);
+  font-family: $typeface-page-text;
+  font-weight: 700;
+  text-align: right;
+  vertical-align: middle;
   white-space: normal;
 }
 
 .kb-method-parameter-input {
+  padding-left: 10px;
   vertical-align: middle;
   white-space: nowrap;
-  padding-left: 10px;
 
   input {
     font-weight: 700;
@@ -2265,7 +2291,8 @@ td {
     padding-right: 20px;
   }
 
-  .kb-method-parameter-accepted-glyph, .kb-method-parameter-required-glyph {
+  .kb-method-parameter-accepted-glyph,
+  .kb-method-parameter-required-glyph {
     /* This scoots the icon inside */
     margin-left: -15px;
     font-size: 15px;
@@ -2273,7 +2300,7 @@ td {
 }
 
 /*
-This set of styles is a to accomodate the required/satisfied icon which appears
+This set of styles is a to accommodate the required/satisfied icon which appears
 between the select input control and the help text to the right of it. The
 problem is that within the columns used for layout the select is set to 100% width
 and yet the icon is placed right next to it. The result is that the icon is shoved
@@ -2290,37 +2317,41 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-method-parameter-hint {
   padding-left: 7px;
+  margin-top: 3px;
   color: rgb(119 119 119);
   text-align: left;
-  margin-top: 3px;
 }
 
 .kb-method-parameter-required-glyph {
-  color: rgb(244 67 54);
   margin-left: 7px;
+  color: rgb(244 67 54);
 }
 
 .kb-method-parameter-accepted-glyph {
-  color: rgb(75 184 86);
   margin-left: 7px;
+  color: rgb(75 184 86);
 }
 
 .kb-method-parameter-info {
   margin-left: 7px;
 }
 
-.kb-method-advanced-options-controller-inactive, .kb-method-parameter-info, .kb-parameter-data-row-add, .kb-parameter-data-row-remove {
+.kb-method-advanced-options-controller-inactive,
+.kb-method-parameter-info,
+.kb-parameter-data-row-add,
+.kb-parameter-data-row-remove {
   color: rgb(119 119 119);
 }
 
-.kb-method-advanced-options-controller, .kb-method-advanced-options-controller-inactive {
-  font: italic 700 10pt/14px $typeface-page-text;
+.kb-method-advanced-options-controller,
+.kb-method-advanced-options-controller-inactive {
+  font: italic 700 13px/14px $typeface-page-text;
   text-align: center;
 }
 
 .kb-method-advanced-options-controller {
-  cursor: pointer;
   color: rgb(0 136 204);
+  cursor: pointer;
 
   &:hover {
     color: rgb(42 100 150);
@@ -2328,15 +2359,15 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-method-footer {
-  width: 100%;
   overflow: none;
-  background-color: rgb(245 245 245);
+  width: 100%;
   padding: 10px;
+  background-color: rgb(245 245 245);
 }
 
 .kb-method-subtitle {
-  background-color: rgb(245 245 245);
   padding: 3px 5px;
+  background-color: rgb(245 245 245);
 }
 
 /* -- App/method panel styling -- */
@@ -2359,42 +2390,42 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-panel-description {
-  font: normal 400 12pt/15px $typeface-alt-page-text;
   color: rgb(46 97 141);
+  font: normal 400 16px/1 $typeface-alt-page-text;
 }
 
 .kb-app-step-error-mssg {
-  font: 11px/14px sans-serif;
-  color: rgb(166 50 50);
-  text-align: left;
   margin: 10px;
+  color: rgb(166 50 50);
+  font: 11px/14px sans-serif;
+  text-align: left;
 }
 
 .kb-app-step-error-heading {
-  font: normal 700 13pt/14px $typeface-page-text;
   padding-left: 5px;
-  color: rgb(85 85 85);
-  text-align: left;
   margin-top: 20px;
+  color: rgb(85 85 85);
+  font: normal 700 17px/1 $typeface-page-text;
+  text-align: left;
 }
 
 .kb-app-step-error-main-heading {
-  color: rgb(85 85 85);
-  text-align: left;
-  margin-top: 20px;
-  cursor: pointer;
-  font: 16pt/18px $typeface-page-text;
   padding-left: 20px;
+  margin-top: 20px;
+  color: rgb(85 85 85);
+  cursor: pointer;
+  font: 21px/1 $typeface-page-text;
+  text-align: left;
 }
 
 .kb-app-step-error {
-  border: 3px solid rgb(209 72 54);
   z-index: auto;
+  border: 3px solid rgb(209 72 54);
 }
 
 .kb-app-step-running {
-  border: 3px solid rgb(33 150 243);
   z-index: auto;
+  border: 3px solid rgb(33 150 243);
 }
 
 /* -- "next steps" text and links -- */
@@ -2403,24 +2434,24 @@ control with padding, and then scooting the icon back into its column.
   border-top: 2px solid rgb(206 206 206);
 
   h3 {
-    font: italic 400 0.9em $typeface-alt-page-text;
-    color: rgb(136 136 136);
-    float: left;
     padding: 0.5em 0 0.25em;
     margin: 0;
+    color: rgb(136 136 136);
+    float: left;
+    font: italic 400 0.9em $typeface-alt-page-text;
   }
 }
 
 .kb-app-next-hide {
-  float: right;
   margin-right: 0.5em;
+  float: right;
 }
 
 .kb-app-next-hide,
 .kb-app-next-unhide {
+  margin-top: 0.25em;
   color: rgb(33 150 243);
   font: 0.9em $typeface-alt-page-text;
-  margin-top: 0.25em;
 }
 
 .kb-app-next div {
@@ -2445,39 +2476,28 @@ control with padding, and then scooting the icon back into its column.
 }
 
 button {
-  &.kb-app-run {
+  &.kb-app-run,
+  &.kb-method-run {
+    padding: 10px 20px;
+    border: 0;
     background-color: rgb(33 150 243);
     border-radius: 1px;
-    color: rgb(255 255 255);
-    border: none;
-    padding: 10px 20px;
-    font-size: 13px;
     box-shadow: 1px 1px 1px rgb(204 204 204);
+    color: rgb(255 255 255);
+    font-size: 13px;
 
     &:hover {
       background-color: rgb(30 136 229);
     }
+  }
 
+  &.kb-app-run {
     &.kb-app-cancel {
       background-color: rgb(244 67 54);
 
       &:hover {
         background-color: rgb(229 57 53);
       }
-    }
-  }
-
-  &.kb-method-run {
-    background-color: rgb(33 150 243);
-    border-radius: 1px;
-    color: rgb(255 255 255);
-    border: none;
-    padding: 10px 20px;
-    font-size: 13px;
-    box-shadow: 1px 1px 1px rgb(204 204 204);
-
-    &:hover {
-      background-color: rgb(30 136 229);
     }
   }
 }
@@ -2504,21 +2524,21 @@ For data in KBase workspace
 
 div[class=tooltip-inner] {
   max-width: 400px;
-  white-space: pre-wrap;
   text-align: left;
+  white-space: pre-wrap;
 }
 
 .notebook_app {
-  .tooltip {
-    z-index: 2000 !important;
-  }
-
   .tooltip-inner {
     background-color: rgb(27 105 182);
   }
 
   .tooltip {
-    &.top-left .tooltip-arrow, &.top-right .tooltip-arrow, &.top .tooltip-arrow {
+    z-index: 2000 !important;
+
+    &.top-left .tooltip-arrow,
+    &.top-right .tooltip-arrow,
+    &.top .tooltip-arrow {
       border-top-color: rgb(27 105 182);
     }
 
@@ -2530,7 +2550,9 @@ div[class=tooltip-inner] {
       border-left-color: rgb(27 105 182);
     }
 
-    &.bottom-left .tooltip-arrow, &.bottom-right .tooltip-arrow, &.bottom .tooltip-arrow {
+    &.bottom-left .tooltip-arrow,
+    &.bottom-right .tooltip-arrow,
+    &.bottom .tooltip-arrow {
       border-bottom-color: rgb(27 105 182);
     }
   }
@@ -2538,8 +2560,8 @@ div[class=tooltip-inner] {
 
 .kb-data-main-panel {
   height: 100%;
-  margin-bottom: 5px;
   max-height: 425px;
+  margin-bottom: 5px;
 }
 
 #data-tabs {
@@ -2563,25 +2585,26 @@ div[class=tooltip-inner] {
 /* Data table */
 
 .kb-data-table {
-  thead {
-    max-width: 100%;
-    width: 281px;
-  }
-
-  max-height: 265px;
   width: 100% !important;
+  max-height: 265px;
+
+  thead {
+    width: 281px;
+    max-width: 100%;
+  }
 
   tbody tr {
     border-bottom: 1px solid rgb(220 220 220);
 
     td {
+      max-width: 100px;
       max-height: 16px;
       padding: 5px;
       font-size: 1em;
-      max-width: 100px;
     }
 
-    &:hover, td.highlighted {
+    &:hover,
+    td.highlighted {
       background-color: rgb(244 245 214);
       cursor: pointer;
     }
@@ -2589,11 +2612,11 @@ div[class=tooltip-inner] {
 }
 
 .kb-data-obj-name {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
   display: inline-block;
+  overflow: hidden;
   max-width: 88%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .kb-data-loading {
@@ -2625,9 +2648,9 @@ button.kb-data-obj {
 /* Panel */
 
 .kb-data-obj-panel {
-  background: linear-gradient(180deg, rgb(0 210 255), rgb(178 173 203));
   padding: 0;
   margin: 10px;
+  background: linear-gradient(180deg, rgb(0 210 255), rgb(178 173 203));
 
   button.close {
     margin: 5px;
@@ -2636,29 +2659,41 @@ button.kb-data-obj {
 }
 
 .kb-data-obj-panel-info {
-  background: rgb(255 255 255 / 0.5);
   height: 100%;
   padding: 10px;
+  background: rgb(255 255 255 / 0.5);
 }
 
 .kb-data-obj-panel-graph {
-  background: transparent;
   height: 100%;
   padding: 10px;
+  background: transparent;
+
+  table {
+    width: 100%;
+    border: 0;
+    background-color: rgb(255 255 255 / 0.9);
+    color: rgb(0 0 0 / 0.8);
+  }
+
+  thead tr {
+    background-color: rgb(230 230 230);
+    color: rgb(0 0 0 / 1);
+  }
 }
 
 .kb-data-obj-panel-info dl {
   margin: 0;
 
   dt {
-    float: left;
-    clear: left;
     width: 90px;
-    text-align: right;
+    clear: left;
     color: rgb(0 0 0 / 0.5);
+    float: left;
+    text-align: right;
 
     &::after {
-      content: ":";
+      content: ':';
     }
   }
 
@@ -2670,8 +2705,8 @@ button.kb-data-obj {
 .kb-data-obj-panel-verlist span {
   padding: 0 5px;
   margin-left: 3px;
-  border-radius: 2px;
   background-color: rgb(255 255 255 / 0.5);
+  border-radius: 2px;
   color: rgb(0 0 0 / 0.5);
   cursor: pointer;
 
@@ -2679,20 +2714,6 @@ button.kb-data-obj {
     background-color: rgb(33 150 243);
     color: rgb(255 255 255);
     cursor: default;
-  }
-}
-
-.kb-data-obj-panel-graph {
-  table {
-    background-color: rgb(255 255 255 / 0.9);
-    width: 100%;
-    border: none;
-    color: rgb(0 0 0 / 0.8);
-  }
-
-  thead tr {
-    background-color: rgb(230 230 230);
-    color: rgb(0 0 0 / 1);
   }
 }
 
@@ -2708,22 +2729,22 @@ button.kb-data-obj {
 /* default blue button in the new style */
 
 .kb-primary-btn {
+  padding: 10px 20px;
+  border: 0;
+  margin: 3px;
   background-color: rgb(33 150 243);
   border-radius: 1px;
-  color: rgb(255 255 255);
-  border: none;
-  padding: 10px 20px;
-  margin: 3px;
-  font: normal 400 14px $typeface-alt-page-text;
   box-shadow: 1px 1px 3px rgb(170 170 170);
+  color: rgb(255 255 255);
+  font: normal 400 14px $typeface-alt-page-text;
 
   &:hover {
     background-color: rgb(30 136 229);
   }
 
   &[disabled] {
-    box-shadow: none;
     background-color: rgb(187 222 251);
+    box-shadow: none;
     color: rgb(255 255 255);
   }
 }
@@ -2731,14 +2752,14 @@ button.kb-data-obj {
 /* gray button in the new style */
 
 .kb-default-btn {
+  padding: 10px 20px;
+  border: 0;
+  margin: 3px;
   background-color: rgb(245 245 245);
   border-radius: 1px;
-  color: rgb(85 85 85);
-  border: none;
-  padding: 10px 20px;
-  margin: 3px;
-  font: normal 400 14px $typeface-alt-page-text;
   box-shadow: 1px 1px 3px rgb(170 170 170);
+  color: rgb(85 85 85);
+  font: normal 400 14px $typeface-alt-page-text;
 
   &:hover {
     background-color: rgb(206 206 206);
@@ -2765,10 +2786,10 @@ button.kb-data-obj {
 
 .narrative-card-row-main {
   display: flex;
-  align-items: center;
   width: 98%;
-  margin: 0 2px;
+  align-items: center;
   padding: 0 4px;
+  margin: 0 2px;
 }
 
 .narrative-data-list-subcontent {
@@ -2777,16 +2798,16 @@ button.kb-data-obj {
 
 .narrative-card-ellipsis {
   display: flex;
+  width: 20px;
   align-items: center;
   justify-content: center;
-  width: 20px;
 }
 
 .narrative-card-palette-icon {
   position: relative;
-  color: rgb(136 136 136);
-  left: 15px;
   top: -50px;
+  left: 15px;
+  color: rgb(136 136 136);
 }
 
 .narrative-card-action-button-wrapper {
@@ -2796,11 +2817,11 @@ button.kb-data-obj {
 }
 
 .narrative-card-action-button {
+  display: flex;
   width: calc(100% - 6px);
   height: 80%;
-  display: flex;
-  padding: 0;
   justify-content: center;
+  padding: 0;
 
   > span {
     margin-right: 5px;
@@ -2812,28 +2833,30 @@ button.kb-data-obj {
 }
 
 .narrative-data-panel-btnToolbar {
+  display: flex;
+  justify-content: center;
+
   > span {
     color: rgb(136 136 136);
   }
-
-  display: flex;
-  justify-content: center;
 }
 
 /* data list */
 
-.kb-data-list-obj-row, .narrative-card-row {
-  transition: all 0.1s ease;
+.kb-data-list-obj-row,
+.narrative-card-row {
   border-left: 5px solid rgb(255 255 255);
-  color: rgb(51 51 51);
   box-shadow: 1px 1px 1px 1px rgb(255 255 255);
+  color: rgb(51 51 51);
+  transition: all 0.1s ease;
 }
 
 .kb-function-dim .kb-data-list-obj-row {
   border-left-color: rgb(238 238 238);
 }
 
-.kb-data-list-obj-row:hover, .narrative-card-row:hover {
+.kb-data-list-obj-row:hover,
+.narrative-card-row:hover {
   border-left: 5px solid rgb(75 184 86);
   box-shadow: 1px 1px 1px 1px rgb(170 170 170);
 }
@@ -2849,48 +2872,49 @@ button.kb-data-obj {
 
 .kb-data-list-obj-row-main {
   width: 100%;
-  margin: 0;
   padding: 0;
+  margin: 0;
 }
 
 /* again the css hover over div inherits strangly, so we use js */
 
 .kb-data-list-nav-buttons {
   padding: 5px 8px;
-  font-size: 18px;
-  border: none;
-  text-shadow: none !important;
-  box-shadow: none;
+  border: 0;
   margin: 0;
+  box-shadow: none;
+  font-size: 18px;
+  text-shadow: none !important;
 }
 
 .kb-data-list-add-data-button {
-  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border: 0;
   background-color: rgb(67 121 177);
-  color: rgb(255 255 255);
-  border: none;
-  box-shadow: 1px 1px 3px rgb(170 170 170);
-  text-align: center;
-  width: 30pt;
-  height: 30pt;
   border-radius: 50%;
+  box-shadow: 1px 1px 3px rgb(170 170 170);
+  color: rgb(255 255 255);
+  cursor: pointer;
+  text-align: center;
 }
 
 /* specialize buttons that hover over narrative */
 
-#kb-add-code-cell, #kb-add-md-cell {
+#kb-add-code-cell,
+#kb-add-md-cell {
+  position: fixed;
+  z-index: 5;
+  bottom: 15px;
+  width: 40px;
+  height: 40px;
+  padding-top: 5px;
   background-color: rgb(33 150 243);
   border-radius: 50%;
-  bottom: 15px;
   box-shadow: 2px 2px 1px rgb(206 206 206);
-  cursor: pointer;
   color: rgb(255 255 255);
-  height: 40px;
+  cursor: pointer;
   opacity: 0.5;
-  padding-top: 5px;
-  position: fixed;
-  width: 40px;
-  z-index: 5;
 }
 
 #kb-add-code-cell {
@@ -2899,26 +2923,28 @@ button.kb-data-obj {
 }
 
 #kb-add-md-cell {
-  margin-right: 20px;
   right: 10px;
   padding-left: 8px;
+  margin-right: 20px;
 }
 
-#kb-add-code-cell:hover, #kb-add-md-cell:hover, .kb-data-list-add-data-button:hover {
-  opacity: 1;
-  cursor: pointer;
+#kb-add-code-cell:hover,
+#kb-add-md-cell:hover,
+.kb-data-list-add-data-button:hover {
   background-color: rgb(54 97 142);
+  cursor: pointer;
+  opacity: 1;
 }
 
 .kb-data-list-add-data-text-button {
+  padding: 10px 20px;
+  border: 0;
+  margin: 3px;
   background-color: rgb(67 121 177);
   border-radius: 1px;
-  color: rgb(255 255 255);
-  border: none;
-  padding: 10px 20px;
-  margin: 3px;
-  font: normal 400 14px $typeface-alt-page-text;
   box-shadow: 1px 1px 3px rgb(170 170 170);
+  color: rgb(255 255 255);
+  font: normal 400 14px $typeface-alt-page-text;
 
   &:hover {
     background-color: rgb(54 97 142);
@@ -2928,35 +2954,35 @@ button.kb-data-obj {
 /* buttons */
 
 .kb-data-list-btn {
+  padding: 5px 10px;
+  border: 0;
+  margin: 5px;
   background-color: rgb(33 150 243);
   border-radius: 1px;
-  color: rgb(255 255 255);
-  border: none;
-  padding: 5px 10px;
-  font-size: 13px;
   box-shadow: 1px 1px 3px rgb(170 170 170);
-  margin: 5px;
+  color: rgb(255 255 255);
+  font-size: 13px;
 
   &:hover {
     background-color: rgb(30 136 229);
   }
 
   &[disabled] {
-    box-shadow: none;
     background-color: rgb(187 222 251);
+    box-shadow: none;
     color: rgb(255 255 255);
   }
 }
 
 .kb-data-list-cancel-btn {
+  padding: 5px 10px;
+  border: 0;
+  margin: 5px;
   background-color: rgb(245 245 245);
   border-radius: 1px;
-  color: rgb(136 136 136);
-  border: none;
-  padding: 5px 10px;
-  font-size: 13px;
   box-shadow: 1px 1px 3px rgb(170 170 170);
-  margin: 5px;
+  color: rgb(136 136 136);
+  font-size: 13px;
 
   &:hover {
     background-color: rgb(206 206 206);
@@ -2969,17 +2995,17 @@ button.kb-data-obj {
 }
 
 .kb-data-list-logo {
-  width: 30pt;
-  height: 30pt;
-  color: rgb(255 255 255);
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  padding-top: 8px;
+  border: 0 solid rgb(85 85 85);
   background-color: rgb(96 125 139);
   border-radius: 50%;
-  border: 0 solid rgb(85 85 85);
-  text-align: center;
-  display: inline-block;
-  padding-top: 6pt;
-  font-size: 18pt;
+  color: rgb(255 255 255);
+  font-size: 24px;
   font-weight: 700;
+  text-align: center;
   text-shadow: -1px 0 rgb(119 119 119), 0 1px rgb(119 119 119), 1px 0 rgb(119 119 119), 0 -1px rgb(119 119 119);
 }
 
@@ -2987,23 +3013,23 @@ button.kb-data-obj {
  * top of eachother */
 
 .kb-data-list-logo-shifted1 {
-  margin-left: 1px;
   margin-top: 1px;
+  margin-left: 1px;
 }
 
 .kb-data-list-logo-shiftedx1 {
-  margin-left: 8px;
   margin-top: 6px;
+  margin-left: 8px;
 }
 
 .kb-data-list-logo-shifted2 {
-  margin-left: 9px;
   margin-top: 7px;
+  margin-left: 9px;
 }
 
 .kb-data-list-logo-shiftedx2 {
-  margin-left: 16px;
   margin-top: 12px;
+  margin-left: 16px;
 }
 
 .kb-data-list-logo-font1 {
@@ -3026,16 +3052,16 @@ button.kb-data-obj {
 
 .kb-data-list-info {
   width: 80%;
-  padding: 6px 0;
   min-height: 60px;
+  padding: 6px 0;
   border-bottom: 1px solid rgb(224 224 224);
 }
 
 .kb-data-list-name {
-  color: rgb(46 97 141);
-  font: normal 700 11pt $typeface-page-text;
   margin: 2px;
+  color: rgb(46 97 141);
   cursor: pointer;
+  font: normal 700 15px $typeface-page-text;
 
   &:hover {
     text-decoration: underline;
@@ -3044,17 +3070,18 @@ button.kb-data-obj {
 
 .kb-data-list-version {
   color: rgb(119 119 119);
-  font-size: 9pt;
+  cursor: default;
+  font-size: 12px;
   font-style: italic;
   white-space: nowrap;
-  cursor: default;
 }
 
-.kb-data-list-date, .kb-data-list-type {
-  color: rgb(119 119 119);
-  font-size: 10pt;
+.kb-data-list-date,
+.kb-data-list-type {
   margin: 2px;
+  color: rgb(119 119 119);
   cursor: default;
+  font-size: 13px;
 }
 
 .kb-data-list-date {
@@ -3062,11 +3089,11 @@ button.kb-data-obj {
 }
 
 .kb-data-list-edit-by {
-  white-space: nowrap;
-  color: rgb(119 119 119);
-  font-size: 10pt;
   margin: 2px 2px 2px 0;
+  color: rgb(119 119 119);
   cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
 
   &:hover {
     color: rgb(68 68 68);
@@ -3074,58 +3101,59 @@ button.kb-data-obj {
 }
 
 .kb-data-list-narinfo {
-  color: rgb(119 119 119);
-  font-size: 10pt;
   margin: 2px 2px 2px 10px;
+  color: rgb(119 119 119);
+  font-size: 13px;
 }
 
 .kb-data-list-narrative-error {
-  color: rgb(244 67 54);
-  font-size: 10pt;
   margin: 2px;
+  color: rgb(244 67 54);
+  font-size: 13px;
 }
 
 .kb-data-list-narrative {
-  color: rgb(119 119 119);
-  font-size: 10pt;
   margin: 2px 2px 2px 10px;
+  color: rgb(119 119 119);
+  font-size: 13px;
 }
 
 .kb-data-list-more {
-  color: rgb(119 119 119);
-  font-size: 8pt;
   padding: 0;
   margin: 0 0 0 15px;
+  color: rgb(119 119 119);
+  font-size: 11px;
   white-space: nowrap;
 }
 
 .kb-data-list-more-btn {
   padding: 2px 4px;
-  font-size: 12px;
-  border: none;
-  text-shadow: none !important;
-  box-shadow: none;
+  border: 0;
   margin: 0;
+  box-shadow: none;
+  font-size: 12px;
+  text-shadow: none !important;
 }
 
 .kb-data-list-more-div {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: rgb(119 119 119);
-  font-size: 10pt;
   margin: 2px;
+  color: rgb(119 119 119);
+  font-size: 13px;
 
-  td, th {
-    color: rgb(119 119 119);
-    font-size: 10pt;
+  td,
+  th {
     margin: 2px;
+    color: rgb(119 119 119);
+    font-size: 13px;
   }
 
   tr {
-    color: rgb(119 119 119);
-    font-size: 10pt;
     margin: 2px;
+    color: rgb(119 119 119);
+    font-size: 13px;
 
     &:hover {
       background-color: rgb(238 238 238);
@@ -3146,8 +3174,8 @@ button.kb-data-obj {
   }
 
   td {
-    text-align: left;
     padding-left: 8px;
+    text-align: left;
     word-break: break-all;
   }
 }
@@ -3166,9 +3194,10 @@ button.kb-data-obj {
 
 .kb-data-list-ctl {
   span.inviso {
+    background-color: rgb(255 255 255);
+
     /* like mayo on wonderbread */
     color: rgb(255 255 255);
-    background-color: rgb(255 255 255);
     text-shadow: none;
   }
 
@@ -3233,28 +3262,28 @@ button.kb-data-obj {
 }
 
 .kbcb-app-card-container {
-  margin: 0.4em;
+  position: relative;
+  display: block;
   width: 300px;
   height: 110px;
-  display: block;
-  position: relative;
+  margin: 0.4em;
   float: left;
 }
 
 .kbcb-app-card {
-  background: rgb(241 241 245);
-  border-radius: 2px;
+  overflow: hidden;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  background: rgb(241 241 245);
+  border-radius: 2px;
+  color: rgb(102 102 102);
   text-align: center;
   vertical-align: middle;
-  color: rgb(102 102 102);
 }
 
 .kbcb-app-card-header {
-  max-height: 90px;
   overflow: hidden;
+  max-height: 90px;
   text-align: left;
 }
 
@@ -3266,24 +3295,25 @@ button.kb-data-obj {
   font-size: 1.1em;
 }
 
-.kbcb-app-card-authors, .kbcb-app-card-module {
+.kbcb-app-card-authors,
+.kbcb-app-card-module {
   font-size: 0.8em;
 }
 
 .kbcb-app-card-subtitle {
+  overflow: hidden;
   padding: 10px;
   font-size: 0.9em;
-  overflow: hidden;
 }
 
 .kbcb-app-card-footer {
-  font-size: 0.9em;
   position: absolute;
   bottom: 0;
   left: 0;
-  margin: 0 5px 5px;
   width: 100%;
+  margin: 0 5px 5px;
   color: rgb(136 136 136);
+  font-size: 0.9em;
 }
 
 .kbcb-app-card-logo {
@@ -3300,11 +3330,14 @@ button.kb-data-obj {
   color: rgb(255 165 0);
 }
 
-.kbcb-star-default, .kbcb-star-favorite, .kbcb-star-nonfavorite {
+.kbcb-star-default,
+.kbcb-star-favorite,
+.kbcb-star-nonfavorite {
   cursor: pointer;
 }
 
-.kbcb-star-default:hover, .kbcb-star-nonfavorite:hover {
+.kbcb-star-default:hover,
+.kbcb-star-nonfavorite:hover {
   color: rgb(255 0 0);
 }
 
@@ -3312,9 +3345,10 @@ button.kb-data-obj {
   color: rgb(255 165 0);
 }
 
-.kbcb-run-count, .kbcb-star-count {
-  margin-left: 0.3em;
+.kbcb-run-count,
+.kbcb-star-count {
   display: inline-block;
+  margin-left: 0.3em;
 }
 
 .kbcb-info:hover {
@@ -3336,8 +3370,8 @@ button.kb-data-obj {
 .kbcb-app-page {
   background: rgb(241 241 245);
   border-radius: 2px;
-  text-align: center;
   color: rgb(102 102 102);
+  text-align: center;
 }
 
 .kbcb-app-page-header {
@@ -3357,8 +3391,8 @@ button.kb-data-obj {
 }
 
 .kbcb-app-page-authors {
-  font-size: 1em;
   margin: 0.3em 0 0;
+  font-size: 1em;
 }
 
 .kbcb-app-page-subtitle {
@@ -3367,9 +3401,9 @@ button.kb-data-obj {
 }
 
 .kbcb-app-page-stats-bar {
-  font-size: 1.2em;
-  padding: 0 2em 0.8em 3em;
   width: 100%;
+  padding: 0 2em 0.8em 3em;
+  font-size: 1.2em;
 }
 
 .kbcb-app-page-logo {
@@ -3383,12 +3417,12 @@ button.kb-data-obj {
 /* share panel styles */
 
 .kb-share-user-permissions-dropdown {
-  border-style: none;
-  text-shadow: none !important;
-  box-shadow: none;
-  padding: 2px;
   width: auto;
   height: auto;
+  padding: 2px;
+  border: 0;
+  box-shadow: none;
+  text-shadow: none !important;
 }
 
 .kb-share-select {
@@ -3403,9 +3437,9 @@ button.kb-data-obj {
 /* hack to make the selection fill the width */
 
 .kb-nar-manager-titles {
-  font: normal 700 14pt $typeface-page-text;
-  color: rgb(119 119 119);
   margin: 20px 10px 10px;
+  color: rgb(119 119 119);
+  font: normal 700 19px $typeface-page-text;
 }
 
 /* End kbaseData.css */
@@ -3414,17 +3448,17 @@ button.kb-data-obj {
 
 .kb-import-content {
   position: relative;
-  margin: 0;
   display: block;
+  margin: 0;
 
   .btn-xs {
-    border: none;
+    border: 0;
   }
 }
 
 .ftp-file-header {
-  margin-bottom: 5px;
   margin-top: 8px;
+  margin-bottom: 5px;
 }
 
 .globus-link:hover {
@@ -3432,18 +3466,18 @@ button.kb-data-obj {
 }
 
 .kb-import-content .upload-options button {
-  background: rgb(255 255 255);
-  border: 1px solid rgb(196 196 196);
+  width: 140px;
+  height: 42px;
   box-sizing: border-box;
+  border: 1px solid rgb(196 196 196);
+  margin: 0 6px;
+  background: rgb(255 255 255);
   border-radius: 6px;
+  color: rgb(0 0 0);
   font: normal 400 14px/18px $typeface-page-text;
 
   /* identical to box height */
   text-align: center;
-  color: rgb(0 0 0);
-  width: 140px;
-  height: 42px;
-  margin: 0 6px;
 
   &:hover {
     border: 1px solid rgb(207 207 207);
@@ -3466,22 +3500,24 @@ button.kb-data-obj {
 
 .kb-overlay-footer {
   position: absolute;
-  width: 100%;
   bottom: 0;
+  width: 100%;
   height: 50px;
 
-  .btn-default, .btn-primary {
+  .btn-default,
+  .btn-primary {
     margin: 15px 15px 0 0;
   }
 }
 
-.kb-import-filter, .kb-import-search {
+.kb-import-filter,
+.kb-import-search {
   margin: 10px 40px 10px 10px;
 }
 
 .kb-import-item {
-  margin: 0 20px 0 5px;
   padding: 20px 0 0;
+  margin: 0 20px 0 5px;
 
   &:hover {
     background-color: rgb(248 248 248);
@@ -3496,8 +3532,8 @@ button.kb-data-obj {
   }
 
   .kb-import-checkbox {
-    font-size: 1.5em;
     padding: 15px 20px;
+    font-size: 1.5em;
     opacity: 0.4;
   }
 
@@ -3512,9 +3548,9 @@ button.kb-data-obj {
   font-weight: 400;
 
   span {
+    color: rgb(153 153 153);
     font-size: 0.9em;
     font-weight: 700;
-    color: rgb(153 153 153);
   }
 }
 
@@ -3534,9 +3570,9 @@ button.kb-data-obj {
 }
 
 .kb-err-warn {
+  margin-top: 0.5em;
   color: rgb(178 34 34);
   font-style: italic;
-  margin-top: 0.5em;
 }
 
 /* View-only (read-only) */
@@ -3547,42 +3583,40 @@ button.kb-data-obj {
 
 #kb-view-mode {
   display: inline-block;
-  font-size: 13pt;
-  margin: -15px 0 0 1em;
   padding: 0;
+  margin: -15px 0 0 1em;
   cursor: pointer;
+  font-size: 17px;
 }
 
 #kb-view-mode-narr div {
+  position: fixed;
   display: inline-block;
-  color: rgb(33 150 243);
-  font: normal 700 16px $typeface-page-text;
+  width: 147px;
   padding: 3px;
   margin-top: -3px;
-  width: 147px;
+  color: rgb(33 150 243);
+  font: normal 700 16px $typeface-page-text;
   text-align: left;
-  position: fixed;
 }
 
 /* little space for control-close icon */
 
 #kb-view-mode-narr-hide {
   display: block;
-  height: 41px;
   width: 15px;
+  height: 41px;
+  padding-left: 5px;
+  background-color: rgb(33 150 243);
+  color: rgb(187 222 251);
+  cursor: pointer;
   float: left;
   font-size: 16px;
-  cursor: pointer;
-  color: rgb(187 222 251);
-  background-color: rgb(33 150 243);
-  padding-left: 5px;
 
   span {
     margin-top: 10px;
   }
 }
-
-/* move icon down a bit */
 
 /* this is the banner for readonly mode */
 
@@ -3604,36 +3638,41 @@ button.kb-data-obj {
 
 .kb-loading-blocker__container {
   position: absolute;
+  z-index: 9999;
   top: 0;
   left: 0;
-  background-color: rgb(255 255 255);
   width: 100%;
   height: 100%;
-  z-index: 9999;
+  background-color: rgb(255 255 255);
 }
 
 .kb-loading-blocker__header {
-  text-align: center;
   font-size: 24px;
   font-weight: 700;
+  text-align: center;
 }
 
 .kb-loading-blocker__text {
   width: 40%;
   margin-left: 30%;
   font-size: 16px;
-  text-align: left;
   line-height: 1.5;
+  text-align: left;
+}
+
+.kb-loading-blocker__text--warning {
+  position: absolute;
+  display: none;
+  width: 40%;
+  margin-left: 30%;
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: left;
 }
 
 .kb-loading-blocker__image_container {
-  text-align: center;
   padding-top: 10%;
-}
-
-.loading-warning {
-  position: absolute;
-  display: none;
+  text-align: center;
 }
 
 /* Override the default max-width of the narrative box */
@@ -3642,16 +3681,16 @@ button.kb-data-obj {
 
 #popdiv {
   position: absolute;
-  background-color: rgb(252 252 252);
-  border: 1px solid rgb(204 204 204);
   z-index: 10000;
-  visibility: hidden;
+  border: 1px solid rgb(204 204 204);
+  background-color: rgb(252 252 252);
   font-size: 12px;
+  visibility: hidden;
 
   a.alt {
-    padding-left: 9px;
-    font: 12px $typeface-fixed-width;
-    border: none;
     display: inline;
+    padding-left: 9px;
+    border: 0;
+    font: 12px $typeface-fixed-width;
   }
 }

@@ -6,11 +6,13 @@ define([
     'common/busEventManager',
     'common/ui',
     'common/events',
+    'common/props',
     'base/js/namespace',
     'kb_common/html',
     './cellControlPanel',
     'common/cellComponents/tabs/infoTab',
-    './tabs/configure'
+    './tabs/configure',
+    'json!./testAppObj.json'
 ], (
     Uuid,
     AppUtils,
@@ -19,11 +21,13 @@ define([
     BusEventManager,
     UI,
     Events,
+    Props,
     Jupyter,
     html,
     CellControlPanel,
-    infoTabWidget,
-    ConfigureWidget
+    InfoTabWidget,
+    ConfigureWidget,
+    TestAppObj
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
@@ -35,7 +39,7 @@ define([
 
         }
 
-        start(options) {
+        start() {
             alert('starting default widget');
         }
 
@@ -87,6 +91,18 @@ define([
             if (initialize) {
                 this.initialize(typesToFiles);
             }
+            /**
+             * TODO: Detemine what the cell metadata is and how to work with it.
+             * The appCell data is currently mocked (snagged it from ci)
+             * Data will need to be updataed as a part of DATAUP-309
+             */
+            this.model = Props.make({
+                data: TestAppObj,
+                onUpdate: function(props) {
+                    Utils.setMeta(this.cell, 'appCell', props.getRawObject());
+                }
+            });
+
             this.setupCell();
         }
 
@@ -220,12 +236,26 @@ define([
          * @param {string} tab id of the tab to display
          */
         toggleTab(tab) {
-            this.state.tabState.selected = tab;
+            var widgetNode = this.ui.getElement('cell-container.tab-pane.widget');
+            if (widgetNode.firstChild) {
+                widgetNode.removeChild(widgetNode.firstChild);
+            }
+
             this.controlPanel.setTabState(this.state.tabState);
             if (this.tabWidget !== null) {
                 this.tabWidget.stop();
             }
-            this.tabWidget = new this.tabSet.tabs[tab].widget();
+            let toggleTab = this.tabSet.tabs[tab];
+
+            if (toggleTab.class) {
+                this.tabWidget = new toggleTab.widget();
+            } else {
+                this.tabWidget = toggleTab.widget.make({
+                    model: this.model
+                    // jobId: selectedJobId
+                });
+            }
+
             let node = document.createElement('div');
             this.ui.getElement('cell-container.tab-pane.widget').appendChild(node);
             this.tabWidget.start({
@@ -292,31 +322,38 @@ define([
                 tabs: {
                     configure: {
                         label: 'Configure',
-                        widget: ConfigureWidget
+                        widget: ConfigureWidget,
+                        class: true
                     },
                     viewConfigure: {
                         label: 'View Configure',
-                        widget: DefaultWidget
+                        widget: DefaultWidget,
+                        class: true
                     },
                     info: {
                         label: 'Info',
-                        widget: infoTabWidget,
+                        widget: InfoTabWidget,
+                        class: false
                     },
                     logs: {
                         label: 'Job Status',
-                        widget: DefaultWidget
+                        widget: DefaultWidget,
+                        class: true
                     },
                     results: {
                         label: 'Result',
-                        widget: DefaultWidget
+                        widget: DefaultWidget,
+                        class: true
                     },
                     error: {
                         label: 'Error',
                         type: 'danger',
-                        widget: DefaultWidget
+                        widget: DefaultWidget,
+                        class: true
                     }
                 }
             };
+
             this.actionButtons = {
                 current: {
                     name: null,

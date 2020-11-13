@@ -270,29 +270,15 @@ define([
             }));
 
             stagingAreaViewer.$elem.append($fileTable);
-            stagingAreaViewer.$elem.find('table').dataTable({
+            
+            const fullDataTable = stagingAreaViewer.$elem.find('table').dataTable({
                 language: {
                     emptyTable: emptyMsg
                 },
                 dom: '<"file-path pull-left">frtip',
                 autoWidth: false,
                 order: [[4, 'desc']],
-                headerCallback: function (thead) {     
-                    function selectAllOrNone (event) {
-                        let selectAllChecked = event.target.checked;
-
-                        $('input.kb-staging-table-body__checkbox-input:enabled')
-                            .prop('checked', selectAllChecked)
-                            .attr('aria-checked', selectAllChecked);
-
-                        //enable or disable import appropriately
-                        if (selectAllChecked) {
-                            stagingAreaViewer.enableImportButton();
-                        } else {
-                            stagingAreaViewer.disableImportButton();
-                        }
-                    }
-
+                headerCallback: function (thead) {
                     $(thead).find('th').eq(0)
                         .on('click keyPress', (e) => {
                             selectAllOrNone(e);
@@ -590,6 +576,31 @@ define([
 
                 }.bind(stagingAreaViewer)
             });
+
+            /* 
+                Used to manage the select all checkbox in the header
+                has to be outside of the main DataTable call 
+                so that we can get entire table data 
+                not just what is drawn in the current dom
+                aka dealing with pagination
+            */ 
+            function selectAllOrNone (event) {
+                const selectAllChecked = event.target.checked;
+
+                //get all of the rows in the data table
+                const nodes = fullDataTable.fnGetNodes();
+
+                $('input.kb-staging-table-body__checkbox-input:enabled', nodes)
+                .prop('checked', selectAllChecked)
+                .attr('aria-checked', selectAllChecked);
+                
+                //enable or disable import appropriately
+                if (selectAllChecked) {
+                    stagingAreaViewer.enableImportButton();
+                } else {
+                    stagingAreaViewer.disableImportButton();
+                }
+            }
 
         },
 

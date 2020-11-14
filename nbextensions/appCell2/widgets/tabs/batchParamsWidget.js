@@ -156,7 +156,7 @@ define([
                         key: {
                             type: 'get-param-state',
                         },
-                        handle: function (message) {
+                        handle: function () {
                             return paramsBus.request(
                                 { id: parameterSpec.id },
                                 {
@@ -331,7 +331,7 @@ define([
                     type: 'batch-mode-toggle',
                 },
             });
-            bus.on('batch-mode-toggle', function (message) {
+            bus.on('batch-mode-toggle', function () {
                 paramsBus.emit('toggle-batch-mode');
                 ui.getButton('batch-toggle').classList.toggle('batch-active');
             });

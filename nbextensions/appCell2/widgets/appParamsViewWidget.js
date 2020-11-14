@@ -227,20 +227,10 @@ define([
                 }
             }
             // Also update the count in the paramters.
-            var events = Events.make({ node: container });
-
-            var message;
-            if (settings.showAdvanced) {
-                if (advancedInputs.length > 1) {
-                    message =
-                        String(advancedInputs.length) +
-                        ' advanced parameters showing';
-                } else {
-                    message =
-                        String(advancedInputs.length) +
-                        ' advanced parameter showing';
-                }
-                var showAdvancedButton = ui.buildButton({
+            var events = Events.make({ node: container }),
+                message,
+                status = 'hidden',
+                showAdvancedButtonConfig = {
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -248,40 +238,30 @@ define([
                         type: 'toggle-advanced',
                     },
                     events: events,
-                });
+                };
 
-                ui.setContent(
-                    [areaElement, 'advanced-hidden-message'],
-                    '(' + message + ') ' + showAdvancedButton
-                );
-            } else {
-                if (advancedInputs.length > 1) {
-                    message =
-                        String(advancedInputs.length) +
-                        ' advanced parameters hidden';
-                } else {
-                    message =
-                        String(advancedInputs.length) +
-                        ' advanced parameter hidden';
-                }
-                var showAdvancedButton = ui.buildButton({
-                    label: 'show advanced',
-                    type: 'link',
-                    name: 'advanced-parameters-toggler',
-                    event: {
-                        type: 'toggle-advanced',
-                    },
-                    events: events,
-                });
-
-                ui.setContent(
-                    [areaElement, 'advanced-hidden-message'],
-                    '(' + message + ') ' + showAdvancedButton
-                );
+            if (settings.showAdvanced) {
+                showAdvancedButtonConfig['label'].replace('hide', 'show');
+                status = 'shown';
             }
-
+            if (advancedInputs.length > 1) {
+                message =
+                    String(advancedInputs.length) +
+                    ' advanced parameters ' +
+                    status;
+            } else {
+                message =
+                    String(advancedInputs.length) +
+                    ' advanced parameter ' +
+                    status;
+            }
+            ui.setContent(
+                [areaElement, 'advanced-hidden-message'],
+                '(' + message + ') ' + ui.buildButton()
+            );
             events.attachEvents();
         }
+
 
         function renderBatchModeMessage() {
             return ui.buildPanel({

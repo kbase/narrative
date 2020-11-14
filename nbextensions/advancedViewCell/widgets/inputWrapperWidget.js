@@ -1,8 +1,4 @@
-define([
-    'kb_common/html'
-], function (
-    html
-) {
+define(['kb_common/html'], function (html) {
     'use strict';
     var t = html.tag,
         div = t('div');
@@ -22,7 +18,9 @@ define([
             // convert our root node to a container for hosting the rows.
             // TODO: double check this.
             container.classList.add('container-fluid');
-            return wrappedWidget.attach(container.querySelector('#' + wrappedId));
+            return wrappedWidget.attach(
+                container.querySelector('#' + wrappedId)
+            );
         }
 
         function start() {
@@ -39,13 +37,13 @@ define([
         return {
             attach: attach,
             start: start,
-            run: run
+            run: run,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

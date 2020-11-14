@@ -1,19 +1,13 @@
 /*global define*/ // eslint-disable-line no-redeclare
-define([
-    'common/format',
-    'common/utils',
-], function(
-    format,
-    utils
-) {
+define(['common/format', 'common/utils'], function (format, utils) {
     'use strict';
 
     const toBoolean = utils.toBoolean;
 
-    const DOMTagA = function(innerHTML, options) {
+    const DOMTagA = function (innerHTML, options) {
         const tag = document.createElement('a');
-        if(options) {
-            if(options.class) {
+        if (options) {
+            if (options.class) {
                 tag.classList = options.class.split(' ');
             }
             tag.href = options.href;
@@ -29,17 +23,19 @@ define([
         return item;
     };
 
-    const appendChildren = function(node, children) {
-        children.forEach(function(child) { node.appendChild(child); });
+    const appendChildren = function (node, children) {
+        children.forEach(function (child) {
+            node.appendChild(child);
+        });
     };
 
-    const listLinks = function(links) {
+    const listLinks = function (links) {
         const out = [];
         const separator = document.createTextNode(', ');
         const conjunction = document.createTextNode(' and ');
-        links.forEach(function(link, ix) {
+        links.forEach(function (link, ix) {
             out.push(link);
-            if(ix < links.length - 2) {
+            if (ix < links.length - 2) {
                 out.push(separator.cloneNode());
             } else if (ix === links.length - 2) {
                 out.push(conjunction);
@@ -53,10 +49,9 @@ define([
 
         function start(arg) {
             const appSpec = model.getItem('app.spec');
-            const appRef = [
-                appSpec.info.id,
-                model.getItem('app').tag
-            ].filter(toBoolean).join('/');
+            const appRef = [appSpec.info.id, model.getItem('app').tag]
+                .filter(toBoolean)
+                .join('/');
 
             const methodFullInfo = appSpec.full_info;
 
@@ -67,39 +62,42 @@ define([
             // RUN COUNT AND AVERAGE RUNTIME
             const execStats = model.getItem('executionStats');
             let avgRuntime;
-            if( execStats
-                && execStats.total_exec_time
-                && execStats.number_of_calls > 0
+            if (
+                execStats &&
+                execStats.total_exec_time &&
+                execStats.number_of_calls > 0
             ) {
-                avgRuntime = format.niceDuration(1000*(
-                    execStats.total_exec_time/execStats.number_of_calls
-                ));
+                avgRuntime = format.niceDuration(
+                    1000 *
+                        (execStats.total_exec_time / execStats.number_of_calls)
+                );
             }
             let runtimeAvgListItem = document.createTextNode('');
-            if(avgRuntime) {
-                runtimeAvgListItem = DOMTagLI(''
-                    + `This app has been run ${execStats.number_of_calls}`
-                    + ` times and its average execution time is ${avgRuntime}.`
+            if (avgRuntime) {
+                runtimeAvgListItem = DOMTagLI(
+                    '' +
+                        `This app has been run ${execStats.number_of_calls}` +
+                        ` times and its average execution time is ${avgRuntime}.`
                 );
             }
 
             // LIST OF PARAMETERS
             const parametersList = document.createElement('ul');
-            appSpec.parameters.forEach(function(param) {
+            appSpec.parameters.forEach(function (param) {
                 const textOptions = param.text_options;
                 let types = [];
-                if(textOptions && Array.isArray(textOptions.valid_ws_types)) {
-                    const typesArray = (textOptions.valid_ws_types
-                        .map(function(type) {
-                            const linkType = DOMTagA(type, {
-                                class: 'cm-em',
-                                href: '/#spec/type/' + type,
-                                target: '_blank'
-                            });
-                            return linkType;
-                        })
-                    );
-                    if(typesArray.length) {
+                if (textOptions && Array.isArray(textOptions.valid_ws_types)) {
+                    const typesArray = textOptions.valid_ws_types.map(function (
+                        type
+                    ) {
+                        const linkType = DOMTagA(type, {
+                            class: 'cm-em',
+                            href: '/#spec/type/' + type,
+                            target: '_blank',
+                        });
+                        return linkType;
+                    });
+                    if (typesArray.length) {
                         types = listLinks(typesArray);
                     }
                 }
@@ -107,32 +105,32 @@ define([
                 const paramUIName = document.createElement('span');
                 paramUIName.innerHTML = param.ui_name;
                 li.appendChild(paramUIName);
-                if(types.length) {
+                if (types.length) {
                     li.appendChild(document.createTextNode(': '));
                 }
                 appendChildren(li, types);
                 parametersList.appendChild(li);
             });
             const parametersListItem = document.createElement('li');
-            parametersListItem.appendChild(document.createTextNode(
-                'Parameters: '
-            ));
+            parametersListItem.appendChild(
+                document.createTextNode('Parameters: ')
+            );
             parametersListItem.appendChild(parametersList);
 
             // AUTHORS/OWNERS
             const authors = appSpec.info.authors;
             let authorsListItem = document.createTextNode('');
-            if(authors.length) {
-                const authorsArray = authors.map(function(author) {
+            if (authors.length) {
+                const authorsArray = authors.map(function (author) {
                     return DOMTagA(author, {
                         href: '/#people/' + author,
-                        target: '_blank'
+                        target: '_blank',
                     });
                 });
                 authorsListItem = document.createElement('li');
-                authorsListItem.appendChild(document.createTextNode(
-                    'Authors: '
-                ));
+                authorsListItem.appendChild(
+                    document.createTextNode('Authors: ')
+                );
                 appendChildren(authorsListItem, listLinks(authorsArray));
             }
 
@@ -140,10 +138,10 @@ define([
             const versionListItem = DOMTagLI(`Version: ${appSpec.info.ver}`);
 
             // CATALOG LINK
-            const linkCatalog = DOMTagA(
-                'View Full Documentation',
-                { href: '/#appcatalog/app/' + appRef, target: '_blank' }
-            );
+            const linkCatalog = DOMTagA('View Full Documentation', {
+                href: '/#appcatalog/app/' + appRef,
+                target: '_blank',
+            });
             const linkCatalogListItem = document.createElement('li');
             linkCatalogListItem.appendChild(linkCatalog);
 
@@ -171,14 +169,13 @@ define([
         return {
             hide: () => {},
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });
-

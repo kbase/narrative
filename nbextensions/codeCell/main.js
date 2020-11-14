@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -15,7 +12,7 @@ define([
     'common/jupyter',
     'kb_common/html',
     './widgets/codeCell',
-    'custom/custom'
+    'custom/custom',
 ], function (
     Promise,
     $,
@@ -40,7 +37,10 @@ define([
         cell.minimize = function () {
             var inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea');
+                showCode = utils.getCellMeta(
+                    cell,
+                    'kbase.codeCell.userSettings.showCodeInputArea'
+                );
 
             if (showCode) {
                 inputArea.classList.remove('-show');
@@ -51,7 +51,10 @@ define([
         cell.maximize = function () {
             var inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea');
+                showCode = utils.getCellMeta(
+                    cell,
+                    'kbase.codeCell.userSettings.showCodeInputArea'
+                );
 
             if (showCode) {
                 if (!inputArea.classList.contains('-show')) {
@@ -65,13 +68,24 @@ define([
         cell.getIcon = function () {
             var iconColor = 'silver';
             var icon;
-            icon = span({ class: 'fa fa-inverse fa-stack-1x fa-' + 'terminal' });
+            icon = span({
+                class: 'fa fa-inverse fa-stack-1x fa-' + 'terminal',
+            });
 
             return span({ style: '' }, [
-                span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } }, [
-                    span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }),
-                    icon
-                ])
+                span(
+                    {
+                        class: 'fa-stack fa-2x',
+                        style: { textAlign: 'center', color: iconColor },
+                    },
+                    [
+                        span({
+                            class: 'fa fa-square fa-stack-2x',
+                            style: { color: iconColor },
+                        }),
+                        icon,
+                    ]
+                ),
             ]);
         };
 
@@ -79,7 +93,12 @@ define([
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('-show');
-                utils.setCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea', this.isCodeShowing(), true);
+                utils.setCellMeta(
+                    cell,
+                    'kbase.codeCell.userSettings.showCodeInputArea',
+                    this.isCodeShowing(),
+                    true
+                );
                 // NB purely for side effect - toolbar refresh
                 cell.metadata = cell.metadata;
             }
@@ -90,7 +109,11 @@ define([
         if (cell.cell_type !== 'code') {
             return;
         }
-        if (cell.metadata.kbase && cell.metadata.kbase.type && (cell.metadata.kbase.type !== 'code')) {
+        if (
+            cell.metadata.kbase &&
+            cell.metadata.kbase.type &&
+            cell.metadata.kbase.type !== 'code'
+        ) {
             return;
         }
 
@@ -104,14 +127,18 @@ define([
         // can chose to override this and this choice should be remembered.
         // import/job cells dont' show code input area as regular code cells do.
         if (utils.getCellMeta(cell, 'kbase.codeCell.jobInfo')) {
-            utils.setCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea', false);
+            utils.setCellMeta(
+                cell,
+                'kbase.codeCell.userSettings.showCodeInputArea',
+                false
+            );
         }
 
         var widget = CodeCell.make({
-            cell: cell
+            cell: cell,
         });
         widget.bus.emit('run', {
-            node: null
+            node: null,
         });
 
         cell.renderMinMax();
@@ -127,15 +154,15 @@ define([
             cell: cell,
             kbase: {
                 type: 'code',
-                language: 'python'
-            }
+                language: 'python',
+            },
         });
     }
 
     function upgradeCell(cell, data) {
         data = data || {};
         var meta = cell.metadata || {},
-            cellId = data.cellId || (new Uuid(4).format());
+            cellId = data.cellId || new Uuid(4).format();
 
         // Accomodate import/job cells.
         // For now we create an import property on the side.
@@ -143,7 +170,7 @@ define([
         if (data && data.state) {
             jobInfo = {
                 jobId: data.jobId,
-                state: data.state
+                state: data.state,
             };
         }
 
@@ -157,13 +184,13 @@ define([
                 lastLoaded: new Date().toGMTString(),
                 icon: 'code',
                 title: data.title || 'Code Cell',
-                subtitle: data.language
+                subtitle: data.language,
             },
             codeCell: {
                 userSettings: {
-                    showCodeInputArea: true
-                }
-            }
+                    showCodeInputArea: true,
+                },
+            },
         };
 
         if (jobInfo) {
@@ -215,21 +242,31 @@ define([
             }
         });
 
-        $([Jupyter.events]).on('insertedAtIndex.Cell', function (event, payload) {
+        $([Jupyter.events]).on('insertedAtIndex.Cell', function (
+            event,
+            payload
+        ) {
             var cell = payload.cell;
             var setupData = payload.data;
             var jupyterCellType = payload.type;
             // var hasKBaseMetadata = payload.cell.metadata && payload.cell.metadata.kbase;
-            if (jupyterCellType === 'code' &&
-                (!setupData || setupData.type === 'code')) {
+            if (
+                jupyterCellType === 'code' &&
+                (!setupData || setupData.type === 'code')
+            ) {
                 try {
                     upgradeCell(cell, setupData);
                     setupCell(cell);
                 } catch (err) {
                     console.error('ERROR creating cell', err);
                     // delete cell.
-                    $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(setupData.cell));
-                    alert('Could not insert cell due to errors.\n' + err.message);
+                    $(document).trigger(
+                        'deleteCell.Narrative',
+                        Jupyter.notebook.find_cell_index(setupData.cell)
+                    );
+                    alert(
+                        'Could not insert cell due to errors.\n' + err.message
+                    );
                 }
             }
         });
@@ -239,8 +276,7 @@ define([
         /* Only initialize after the notebook is fully loaded. */
         if (Jupyter.notebook._fully_loaded) {
             initializeExtension();
-        }
-        else {
+        } else {
             $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
                 initializeExtension();
             });
@@ -249,8 +285,9 @@ define([
 
     return {
         // This is the sole ipython/jupyter api call
-        load_ipython_extension: load
+        load_ipython_extension: load,
     };
 }, function (err) {
+    'use strict';
     console.error('ERROR loading codeCell main', err);
 });

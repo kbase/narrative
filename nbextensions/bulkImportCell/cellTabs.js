@@ -1,8 +1,4 @@
-define([
-    'common/html'
-], (
-    html
-) => {
+define(['common/html'], (html) => {
     'use strict';
 
     const div = html.tag('div'),
@@ -39,8 +35,12 @@ define([
             for (const tabId of Object.keys(this.state.tabs)) {
                 const tabState = this.state.tabs[tabId];
                 if (tabState) {
-                    tabState.enabled ? this.ui.enableButton(tabId) : this.ui.disableButton(tabId);
-                    tabState.visible ? this.ui.showButton(tabId) : this.ui.hideButton(tabId);
+                    tabState.enabled
+                        ? this.ui.enableButton(tabId)
+                        : this.ui.disableButton(tabId);
+                    tabState.visible
+                        ? this.ui.showButton(tabId)
+                        : this.ui.hideButton(tabId);
                 }
                 this.ui.deactivateButton(tabId);
             }
@@ -48,102 +48,106 @@ define([
         }
 
         buildLayout(ui, events) {
-            return div({
-                style: {
-                    display: 'inline-block',
-                    right: '0',
-                    height: '50px',
-                    lineHeight: '50px',
-                    paddingRight: '15px',
-                    verticalAlign: 'bottom'
-                }
-            }, [
-                div({
-                    class: 'btn-toolbar',
+            return div(
+                {
                     style: {
                         display: 'inline-block',
-                        verticalAlign: 'bottom'
-                    }
-                }, [
-                    this.buildTabButtons(ui, events)
-                ])
-            ]);
+                        right: '0',
+                        height: '50px',
+                        lineHeight: '50px',
+                        paddingRight: '15px',
+                        verticalAlign: 'bottom',
+                    },
+                },
+                [
+                    div(
+                        {
+                            class: 'btn-toolbar',
+                            style: {
+                                display: 'inline-block',
+                                verticalAlign: 'bottom',
+                            },
+                        },
+                        [this.buildTabButtons(ui, events)]
+                    ),
+                ]
+            );
         }
 
         buildTabButtons(events) {
-            const buttons = Object.keys(this.controlBarTabs.tabs).map((key) => {
-                const tab = this.controlBarTabs.tabs[key];
-                let icon;
-                if (!tab) {
-                    console.warn('Tab not defined: ' + key);
-                    return;
-                }
-                if (tab.icon) {
-                    if (typeof tab.icon === 'string') {
-                        icon = {
-                            name: tab.icon,
-                            size: 2
-                        };
-                    } else {
-                        icon.size = 2;
+            const buttons = Object.keys(this.controlBarTabs.tabs)
+                .map((key) => {
+                    const tab = this.controlBarTabs.tabs[key];
+                    let icon;
+                    if (!tab) {
+                        console.warn('Tab not defined: ' + key);
+                        return;
                     }
-                }
-                return this.ui.buildButton({
-                    label: tab.label,
-                    name: key,
-                    events: events,
-                    type: tab.type || 'primary',
-                    hidden: true,
-                    features: tab.features,
-                    classes: ['kb-app-cell-btn'],
-                    event: {
-                        type: 'control-panel-tab',
-                        data: {
-                            tab: key
+                    if (tab.icon) {
+                        if (typeof tab.icon === 'string') {
+                            icon = {
+                                name: tab.icon,
+                                size: 2,
+                            };
+                        } else {
+                            icon.size = 2;
                         }
-                    },
-                    icon: icon
+                    }
+                    return this.ui.buildButton({
+                        label: tab.label,
+                        name: key,
+                        events: events,
+                        type: tab.type || 'primary',
+                        hidden: true,
+                        features: tab.features,
+                        classes: ['kb-app-cell-btn'],
+                        event: {
+                            type: 'control-panel-tab',
+                            data: {
+                                tab: key,
+                            },
+                        },
+                        icon: icon,
+                    });
+                })
+                .filter(function (x) {
+                    return x ? true : false;
                 });
-            }).filter(function(x) {
-                return x ? true : false;
-            });
             this.bus.on('control-panel-tab', (message) => {
                 var tab = message.data.tab;
                 this.tabToggleAction(tab);
             });
 
-            var outdatedBtn = a({
-                tabindex: '0',
-                type: 'button',
-                class: 'btn hidden',
-                dataContainer: 'body',
-                container: 'body',
-                dataToggle: 'popover',
-                dataPlacement: 'bottom',
-                dataTrigger: 'focus',
-                dataElement: 'outdated',
-                role: 'button',
-                title: 'New version available',
-                style: {
-                    color: '#f79b22',
-                    padding: '6px 0 0 0'
-                }
-            }, span({
-                class: 'fa fa-exclamation-triangle fa-2x'
-            }));
+            var outdatedBtn = a(
+                {
+                    tabindex: '0',
+                    type: 'button',
+                    class: 'btn hidden',
+                    dataContainer: 'body',
+                    container: 'body',
+                    dataToggle: 'popover',
+                    dataPlacement: 'bottom',
+                    dataTrigger: 'focus',
+                    dataElement: 'outdated',
+                    role: 'button',
+                    title: 'New version available',
+                    style: {
+                        color: '#f79b22',
+                        padding: '6px 0 0 0',
+                    },
+                },
+                span({
+                    class: 'fa fa-exclamation-triangle fa-2x',
+                })
+            );
             buttons.unshift(outdatedBtn);
 
             return buttons;
         }
 
-        start() {
+        start() {}
 
-        }
-
-        stop() {
-
-        }
-
+        stop() {}
     }
 
     return CellTabs;

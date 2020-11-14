@@ -1,8 +1,4 @@
-define([
-    'common/html',
-    './cellTabs',
-    './actionButton'
-], (
+define(['common/html', './cellTabs', './actionButton'], (
     html,
     CellTabs,
     ActionButton
@@ -51,20 +47,18 @@ define([
                 ui: this.ui,
                 bus: this.bus,
                 toggleAction: options.tabs.toggleAction,
-                tabs: options.tabs.tabs
+                tabs: options.tabs.tabs,
             });
 
             this.actionButton = new ActionButton({
                 ui: this.ui,
                 bus: this.bus,
                 runAction: options.action.runAction,
-                actions: options.action.actions
+                actions: options.action.actions,
             });
         }
 
-        start() {
-
-        }
+        start() {}
 
         stop() {
             this.cellTabs.stop();
@@ -81,44 +75,62 @@ define([
 
         buildLayout(events) {
             return div({ dataElement: 'run-control-panel' }, [
-                div({
-                    style: { border: '1px silver solid', height: '50px', position: 'relative', display: 'flex', flexDirection: 'row' }
-                }, [
-                    this.actionButton.buildLayout(events),
-                    div({
-                        dataElement: 'status',
+                div(
+                    {
                         style: {
-                            width: '450px',
+                            border: '1px silver solid',
                             height: '50px',
-                            overflow: 'hidden'
-                        }
-                    }, [
-                        div({
-                            style: {
-                                height: '50px',
-                                marginTop: '0px',
-                                textAlign: 'left',
-                                lineHeight: '50px',
-                                verticalAlign: 'middle'
-                            }
-                        }, [
-                            div([
-                                span({ dataElement: 'execMessage' })
-                            ])
-                        ])
-                    ]),
-                    div({
-                        dataElement: 'toolbar',
-                        style: {
-                            position: 'absolute',
-                            right: '0',
-                            top: '0',
-                            height: '50px'
-                        }
-                    }, [
-                        this.cellTabs.buildLayout(events)
-                    ])
-                ])
+                            position: 'relative',
+                            display: 'flex',
+                            flexDirection: 'row',
+                        },
+                    },
+                    [
+                        this.actionButton.buildLayout(events),
+                        div(
+                            {
+                                dataElement: 'status',
+                                style: {
+                                    width: '450px',
+                                    height: '50px',
+                                    overflow: 'hidden',
+                                },
+                            },
+                            [
+                                div(
+                                    {
+                                        style: {
+                                            height: '50px',
+                                            marginTop: '0px',
+                                            textAlign: 'left',
+                                            lineHeight: '50px',
+                                            verticalAlign: 'middle',
+                                        },
+                                    },
+                                    [
+                                        div([
+                                            span({
+                                                dataElement: 'execMessage',
+                                            }),
+                                        ]),
+                                    ]
+                                ),
+                            ]
+                        ),
+                        div(
+                            {
+                                dataElement: 'toolbar',
+                                style: {
+                                    position: 'absolute',
+                                    right: '0',
+                                    top: '0',
+                                    height: '50px',
+                                },
+                            },
+                            [this.cellTabs.buildLayout(events)]
+                        ),
+                    ]
+                ),
             ]);
         }
     }

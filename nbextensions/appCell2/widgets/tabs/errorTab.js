@@ -1,24 +1,22 @@
-/*global define*/
-/*jslint white:true,browser:true,nomen:true*/
-
-define([
-    'bluebird',
-    'uuid',
-    'common/ui',
-    'kb_common/html'
-], function(Promise, Uuid, UI, html) {
+define(['bluebird', 'uuid', 'common/ui', 'kb_common/html'], function (
+    Promise,
+    Uuid,
+    UI,
+    html
+) {
     'use strict';
 
     var t = html.tag,
         div = t('div'),
         pre = t('pre'),
         ul = t('ul'),
-        li = t('li'),
-        pre = t('pre');
+        li = t('li');
 
     function convertJobError(errorInfo) {
         var errorId = new Uuid(4).format(),
-            errorType, errorMessage, errorDetail;
+            errorType,
+            errorMessage,
+            errorDetail;
         if (errorInfo.error) {
             // Classic KBase rpc error message
             errorType = errorInfo.name;
@@ -26,8 +24,10 @@ define([
             errorDetail = errorInfo.error;
         } else if (errorInfo.name) {
             errorType = 'unknown';
-            errorMessage = errorInfo.name + ' (code: ' + String(errorInfo.code) + ')';
-            errorDetail = 'This error occurred during execution of the app job.';
+            errorMessage =
+                errorInfo.name + ' (code: ' + String(errorInfo.code) + ')';
+            errorDetail =
+                'This error occurred during execution of the app job.';
         } else {
             errorType = 'unknown';
             errorMessage = 'Unknown error (check console for ' + errorId + ')';
@@ -39,8 +39,9 @@ define([
             type: errorType,
             message: errorMessage,
             detail: errorDetail,
-            advice: 'If the app fails consistently, ' +
-            'please contact us at https://www.kbase.us/support ',
+            advice:
+                'If the app fails consistently, ' +
+                'please contact us at https://www.kbase.us/support ',
         };
     }
 
@@ -49,29 +50,30 @@ define([
             location: 'app cell',
             type: errorInfo.title,
             message: errorInfo.message,
-            advice: ul({ style: { paddingLeft: '1.2em' } }, errorInfo.advice.map(function(adv) {
-                return li(adv);
-            })),
-            detail: errorInfo.detail
+            advice: ul(
+                { style: { paddingLeft: '1.2em' } },
+                errorInfo.advice.map(function (adv) {
+                    return li(adv);
+                })
+            ),
+            detail: errorInfo.detail,
         };
     }
 
     function renderErrorLayout() {
         return div([
-            div({ style: { fontWeight: 'bold' } }, [
-                'Type'
-            ]),
+            div({ style: { fontWeight: 'bold' } }, ['Type']),
             div({ dataElement: 'type' }),
             div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                'Message'
+                'Message',
             ]),
             div({ dataElement: 'message' }),
             div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                'Advice'
+                'Advice',
             ]),
             div({ dataElement: 'advice' }),
             div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                'Detail'
+                'Detail',
             ]),
             pre({
                 dataElement: 'detail',
@@ -80,21 +82,21 @@ define([
                     maxHeight: '100rem',
                     overflowY: 'auto',
                     padding: '4px',
-                    wordBreak: 'break-word'
-                }
+                    wordBreak: 'break-word',
+                },
             }),
-            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                'Info'
-            ]),
-            div({ dataElement: 'info' })
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, ['Info']),
+            div({ dataElement: 'info' }),
         ]);
     }
 
     function factory(config) {
-        var container, ui, model = config.model;
+        var container,
+            ui,
+            model = config.model;
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 container = arg.node;
 
                 // Very simple for now, just render the results json in a prettier than normal fashion.
@@ -105,15 +107,19 @@ define([
 
                 var viewModel;
                 if (model.hasItem('exec.jobState.error')) {
-                    viewModel = convertJobError(model.getItem('exec.jobState.error'));
+                    viewModel = convertJobError(
+                        model.getItem('exec.jobState.error')
+                    );
                 } else if (model.hasItem('internalError')) {
-                    viewModel = convertInternalError(model.getItem('internalError'));
+                    viewModel = convertInternalError(
+                        model.getItem('internalError')
+                    );
                 } else {
                     viewModel = {
                         location: 'unknown',
                         type: 'unknown',
                         message: 'An unknown error was detected',
-                        detail: ''
+                        detail: '',
                     };
                 }
                 console.error('errorTab', viewModel);
@@ -123,20 +129,20 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 container.innerHTML = 'Bye from error';
             });
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

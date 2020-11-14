@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -15,9 +12,8 @@ define([
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
 
-    'common/runtime'
+    'common/runtime',
     // All the input widgets
-
 ], function (
     Promise,
     $,
@@ -37,7 +33,6 @@ define([
 
     var t = html.tag,
         form = t('form'),
-        span = t('span'),
         div = t('div');
 
     function factory(config) {
@@ -52,10 +47,9 @@ define([
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
-                showAdvanced: null
+                showAdvanced: null,
             },
             widgets = [];
-
 
         // DATA
         /*
@@ -87,7 +81,6 @@ define([
          * - input app - input, select
          */
 
-
         // RENDERING
 
         /*
@@ -96,7 +89,8 @@ define([
         */
 
         function makeFieldWidget(appSpec, parameterSpec, value) {
-            return paramResolver.loadInputControl(parameterSpec)
+            return paramResolver
+                .loadInputControl(parameterSpec)
                 .then(function (inputWidget) {
                     var fieldWidget = FieldWidget.make({
                         inputControlFactory: inputWidget,
@@ -107,113 +101,123 @@ define([
                         parameterSpec: parameterSpec,
                         workspaceId: workspaceInfo.id,
                         referenceType: 'name',
-                        paramsChannelName: paramsBus.channelName
+                        paramsChannelName: paramsBus.channelName,
                     });
 
                     // Forward all changed parameters to the controller. That is our main job!
                     fieldWidget.bus.on('changed', function (message) {
-                        paramsBus.send({
-                            parameter: parameterSpec.id,
-                            newValue: message.newValue
-                        }, {
-                            key: {
-                                type: 'parameter-changed',
-                                parameter: parameterSpec.id
+                        paramsBus.send(
+                            {
+                                parameter: parameterSpec.id,
+                                newValue: message.newValue,
+                            },
+                            {
+                                key: {
+                                    type: 'parameter-changed',
+                                    parameter: parameterSpec.id,
+                                },
                             }
-                        });
+                        );
 
                         paramsBus.emit('parameter-changed', {
                             parameter: parameterSpec.id,
-                            newValue: message.newValue
+                            newValue: message.newValue,
                         });
                     });
 
                     fieldWidget.bus.on('touched', function () {
                         paramsBus.emit('parameter-touched', {
-                            parameter: parameterSpec.id
+                            parameter: parameterSpec.id,
                         });
                     });
-
 
                     // An input widget may ask for the current model value at any time.
                     fieldWidget.bus.on('sync', function () {
                         paramsBus.emit('parameter-sync', {
-                            parameter: parameterSpec.id
+                            parameter: parameterSpec.id,
                         });
                     });
 
                     fieldWidget.bus.on('sync-params', function (message) {
                         paramsBus.emit('sync-params', {
                             parameters: message.parameters,
-                            replyToChannel: fieldWidget.bus.channelName
+                            replyToChannel: fieldWidget.bus.channelName,
                         });
                     });
 
                     fieldWidget.bus.on('set-param-state', function (message) {
                         paramsBus.emit('set-param-state', {
                             id: parameterSpec.id,
-                            state: message.state
+                            state: message.state,
                         });
                     });
 
                     fieldWidget.bus.respond({
                         key: {
-                            type: 'get-param-state'
+                            type: 'get-param-state',
                         },
                         handle: function (message) {
-                            return paramsBus.request({ id: parameterSpec.id }, {
-                                key: {
-                                    type: 'get-param-state'
+                            return paramsBus.request(
+                                { id: parameterSpec.id },
+                                {
+                                    key: {
+                                        type: 'get-param-state',
+                                    },
                                 }
-                            });
-                        }
+                            );
+                        },
                     });
-
 
                     /*
                      * Or in fact any parameter value at any time...
                      */
-                    fieldWidget.bus.on('get-parameter-value', function (message) {
-                        paramsBus.request({
-                                parameter: message.parameter
-                            }, {
-                                key: 'get-parameter-value'
-                            })
+                    fieldWidget.bus.on('get-parameter-value', function (
+                        message
+                    ) {
+                        paramsBus
+                            .request(
+                                {
+                                    parameter: message.parameter,
+                                },
+                                {
+                                    key: 'get-parameter-value',
+                                }
+                            )
                             .then(function (message) {
                                 bus.emit('parameter-value', {
-                                    parameter: message.parameter
+                                    parameter: message.parameter,
                                 });
                             });
                     });
 
                     fieldWidget.bus.respond({
                         key: {
-                            type: 'get-parameter'
+                            type: 'get-parameter',
                         },
                         handle: function (message) {
                             if (message.parameterName) {
                                 return paramsBus.request(message, {
                                     key: {
-                                        type: 'get-parameter'
-                                    }
+                                        type: 'get-parameter',
+                                    },
                                 });
                             } else {
                                 return null;
                             }
-                        }
+                        },
                     });
 
                     // Just pass the update along to the input widget.
                     paramsBus.listen({
                         key: {
                             type: 'update',
-                            parameter: parameterSpec.id
+                            parameter: parameterSpec.id,
                         },
                         handle: function (message) {
                             fieldWidget.bus.emit('update', {
-                                value: message.value
+                                value: message.value,
                             });
-                        }
+                        },
                     });
 
                     return fieldWidget;
@@ -225,15 +229,21 @@ define([
 
             var areaElement = area + '-area',
                 areaSelector = '[data-element="' + areaElement + '"]',
-                advancedInputs = container.querySelectorAll(areaSelector + ' [data-advanced-parameter]');
+                advancedInputs = container.querySelectorAll(
+                    areaSelector + ' [data-advanced-parameter]'
+                );
 
             if (advancedInputs.length === 0) {
                 ui.setContent([areaElement, 'advanced-hidden-message'], '');
                 return;
             }
 
-            var removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
-                addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
+            var removeClass = settings.showAdvanced
+                    ? 'advanced-parameter-hidden'
+                    : 'advanced-parameter-showing',
+                addClass = settings.showAdvanced
+                    ? 'advanced-parameter-showing'
+                    : 'advanced-parameter-hidden';
             for (var i = 0; i < advancedInputs.length; i += 1) {
                 var input = advancedInputs[i];
                 input.classList.remove(removeClass);
@@ -252,38 +262,52 @@ define([
             var showAdvancedButton;
             if (settings.showAdvanced) {
                 if (advancedInputs.length > 1) {
-                    message = String(advancedInputs.length) + ' advanced parameters showing';
+                    message =
+                        String(advancedInputs.length) +
+                        ' advanced parameters showing';
                 } else {
-                    message = String(advancedInputs.length) + ' advanced parameter showing';
+                    message =
+                        String(advancedInputs.length) +
+                        ' advanced parameter showing';
                 }
                 showAdvancedButton = ui.buildButton({
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
                     event: {
-                        type: 'toggle-advanced'
+                        type: 'toggle-advanced',
                     },
-                    events: events
+                    events: events,
                 });
 
-                ui.setContent([areaElement, 'advanced-hidden-message'], '(' + message + ') ' + showAdvancedButton);
+                ui.setContent(
+                    [areaElement, 'advanced-hidden-message'],
+                    '(' + message + ') ' + showAdvancedButton
+                );
             } else {
                 if (advancedInputs.length > 1) {
-                    message = String(advancedInputs.length) + ' advanced parameters hidden';
+                    message =
+                        String(advancedInputs.length) +
+                        ' advanced parameters hidden';
                 } else {
-                    message = String(advancedInputs.length) + ' advanced parameter hidden';
+                    message =
+                        String(advancedInputs.length) +
+                        ' advanced parameter hidden';
                 }
                 showAdvancedButton = ui.buildButton({
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
                     event: {
-                        type: 'toggle-advanced'
+                        type: 'toggle-advanced',
                     },
-                    events: events
+                    events: events,
                 });
 
-                ui.setContent([areaElement, 'advanced-hidden-message'], '(' + message + ') ' + showAdvancedButton);
+                ui.setContent(
+                    [areaElement, 'advanced-hidden-message'],
+                    '(' + message + ') ' + showAdvancedButton
+                );
             }
 
             events.attachEvents();
@@ -304,27 +328,33 @@ define([
                 classes: classes,
                 hidden: false,
                 event: {
-                    type: 'batch-mode-toggle'
-                }
+                    type: 'batch-mode-toggle',
+                },
             });
-            bus.on('batch-mode-toggle', function(message) {
+            bus.on('batch-mode-toggle', function (message) {
                 paramsBus.emit('toggle-batch-mode');
                 ui.getButton('batch-toggle').classList.toggle('batch-active');
             });
-            return div({
-                class: 'btn-group',
-                style: { padding: '3px' },
-            }, btn);
+            return div(
+                {
+                    class: 'btn-group',
+                    style: { padding: '3px' },
+                },
+                btn
+            );
         }
 
         function renderLayout() {
             var events = Events.make(),
                 batchToggleBtn = buildBatchToggleButton(batchMode, events),
                 formContent = [batchToggleBtn, div('batch mode!')],
-                content = form({ dataElement: 'input-widget-form' }, formContent);
+                content = form(
+                    { dataElement: 'input-widget-form' },
+                    formContent
+                );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -334,7 +364,7 @@ define([
             container = node;
             ui = UI.make({
                 node: container,
-                bus: bus
+                bus: bus,
             });
             var layout = renderLayout();
             container.innerHTML = layout.content;
@@ -387,24 +417,26 @@ define([
                 paramMap[param.id] = param;
                 return param.id;
             });
-            var layout = orderedParams.map(function (parameterId) {
-                var id = html.genId();
-                view[parameterId] = {
-                    id: id
-                };
+            var layout = orderedParams
+                .map(function (parameterId) {
+                    var id = html.genId();
+                    view[parameterId] = {
+                        id: id,
+                    };
 
-                return div({
-                    id: id,
-                    dataParameter: parameterId
-                });
-            }).join('\n');
+                    return div({
+                        id: id,
+                        dataParameter: parameterId,
+                    });
+                })
+                .join('\n');
 
             return {
                 content: layout,
                 layout: orderedParams,
                 params: params,
                 view: view,
-                paramMap: paramMap
+                paramMap: paramMap,
             };
         }
 
@@ -419,31 +451,41 @@ define([
             return Promise.try(function () {
                 var params = model.getItem('parameters'),
                     inputParams = makeParamsLayout(
-                        params.layout.filter(function (id) {
-                            return (params.specs[id].ui.class === 'input');
-                        })
-                        .map(function (id) {
-                            return params.specs[id];
-                        })),
+                        params.layout
+                            .filter(function (id) {
+                                return params.specs[id].ui.class === 'input';
+                            })
+                            .map(function (id) {
+                                return params.specs[id];
+                            })
+                    ),
                     outputParams = makeParamsLayout(
-                        params.layout.filter(function (id) {
-                            return (params.specs[id].ui.class === 'output');
-                        })
-                        .map(function (id) {
-                            return params.specs[id];
-                        })),
+                        params.layout
+                            .filter(function (id) {
+                                return params.specs[id].ui.class === 'output';
+                            })
+                            .map(function (id) {
+                                return params.specs[id];
+                            })
+                    ),
                     parameterParams = makeParamsLayout(
-                        params.layout.filter(function (id) {
-                            return (params.specs[id].ui.class === 'parameter');
-                        })
-                        .map(function (id) {
-                            return params.specs[id];
-                        }));
+                        params.layout
+                            .filter(function (id) {
+                                return (
+                                    params.specs[id].ui.class === 'parameter'
+                                );
+                            })
+                            .map(function (id) {
+                                return params.specs[id];
+                            })
+                    );
 
                 return Promise.resolve()
                     .then(function () {
                         if (inputParams.layout.length === 0) {
-                            ui.getElement('input-objects-area').classList.add('hidden');
+                            ui.getElement('input-objects-area').classList.add(
+                                'hidden'
+                            );
                             // places.inputFields.innerHTML = span({
                             //     style: {
                             //         fontStyle: 'italic'
@@ -451,85 +493,149 @@ define([
                             // }, 'This app does not have input objects');
                         } else {
                             places.inputFields.innerHTML = inputParams.content;
-                            return Promise.all(inputParams.layout.map(function (parameterId) {
-                                var spec = inputParams.paramMap[parameterId];
-                                try {
-                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id])
-                                        .then(function (widget) {
+                            return Promise.all(
+                                inputParams.layout.map(function (parameterId) {
+                                    var spec =
+                                        inputParams.paramMap[parameterId];
+                                    try {
+                                        return makeFieldWidget(
+                                            appSpec,
+                                            spec,
+                                            initialParams[spec.id]
+                                        ).then(function (widget) {
                                             widgets.push(widget);
 
                                             return widget.start({
-                                                node: document.getElementById(inputParams.view[parameterId].id)
+                                                node: document.getElementById(
+                                                    inputParams.view[
+                                                        parameterId
+                                                    ].id
+                                                ),
                                             });
                                         });
-                                } catch (ex) {
-                                    console.error('Error making input field widget', ex);
-                                    var errorDisplay = div({
-                                        style: {
-                                            border: '1px red solid'
-                                        }
-                                    }, [
-                                        ex.message
-                                    ]);
-                                    document.getElementById(inputParams.view[parameterId].id).innerHTML = errorDisplay;
-                                }
-                            }));
+                                    } catch (ex) {
+                                        console.error(
+                                            'Error making input field widget',
+                                            ex
+                                        );
+                                        var errorDisplay = div(
+                                            {
+                                                style: {
+                                                    border: '1px red solid',
+                                                },
+                                            },
+                                            [ex.message]
+                                        );
+                                        document.getElementById(
+                                            inputParams.view[parameterId].id
+                                        ).innerHTML = errorDisplay;
+                                    }
+                                })
+                            );
                         }
                     })
                     .then(function () {
                         if (outputParams.layout.length === 0) {
-                            ui.getElement('output-objects-area').classList.add('hidden');
+                            ui.getElement('output-objects-area').classList.add(
+                                'hidden'
+                            );
                             // places.outputFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'This app does not create any named output objects');
                         } else {
-                            places.outputFields.innerHTML = outputParams.content;
-                            return Promise.all(outputParams.layout.map(function (parameterId) {
-                                var spec = outputParams.paramMap[parameterId];
-                                try {
-                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id])
-                                        .then(function (widget) {
+                            places.outputFields.innerHTML =
+                                outputParams.content;
+                            return Promise.all(
+                                outputParams.layout.map(function (parameterId) {
+                                    var spec =
+                                        outputParams.paramMap[parameterId];
+                                    try {
+                                        return makeFieldWidget(
+                                            appSpec,
+                                            spec,
+                                            initialParams[spec.id]
+                                        ).then(function (widget) {
                                             widgets.push(widget);
 
                                             return widget.start({
-                                                node: document.getElementById(outputParams.view[parameterId].id)
+                                                node: document.getElementById(
+                                                    outputParams.view[
+                                                        parameterId
+                                                    ].id
+                                                ),
                                             });
                                         });
-                                } catch (ex) {
-                                    console.error('Error making input field widget', ex);
-                                    var errorDisplay = div({ style: { border: '1px red solid' } }, [
-                                        ex.message
-                                    ]);
-                                    document.getElementById(outputParams.view[parameterId].id).innerHTML = errorDisplay;
-                                }
-                            }));
+                                    } catch (ex) {
+                                        console.error(
+                                            'Error making input field widget',
+                                            ex
+                                        );
+                                        var errorDisplay = div(
+                                            {
+                                                style: {
+                                                    border: '1px red solid',
+                                                },
+                                            },
+                                            [ex.message]
+                                        );
+                                        document.getElementById(
+                                            outputParams.view[parameterId].id
+                                        ).innerHTML = errorDisplay;
+                                    }
+                                })
+                            );
                         }
                     })
                     .then(function () {
                         if (parameterParams.layout.length === 0) {
                             // TODO: should be own node
-                            ui.getElement('parameters-area').classList.add('hidden');
+                            ui.getElement('parameters-area').classList.add(
+                                'hidden'
+                            );
                             // places.parameterFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No parameters for this app');
                         } else {
-                            places.parameterFields.innerHTML = parameterParams.content;
+                            places.parameterFields.innerHTML =
+                                parameterParams.content;
 
-                            return Promise.all(parameterParams.layout.map(function (parameterId) {
-                                var spec = parameterParams.paramMap[parameterId];
-                                try {
-                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id])
-                                        .then(function (widget) {
+                            return Promise.all(
+                                parameterParams.layout.map(function (
+                                    parameterId
+                                ) {
+                                    var spec =
+                                        parameterParams.paramMap[parameterId];
+                                    try {
+                                        return makeFieldWidget(
+                                            appSpec,
+                                            spec,
+                                            initialParams[spec.id]
+                                        ).then(function (widget) {
                                             widgets.push(widget);
 
                                             return widget.start({
-                                                node: document.getElementById(parameterParams.view[spec.id].id)
+                                                node: document.getElementById(
+                                                    parameterParams.view[
+                                                        spec.id
+                                                    ].id
+                                                ),
                                             });
                                         });
-                                } catch (ex) {
-                                    console.error('Error making input field widget', ex);
-                                    var errorDisplay = div({ style: { border: '1px red solid' } }, [
-                                        ex.message
-                                    ]);
-                                    document.getElementById(parameterParams.view[spec.id].id).innerHTML = errorDisplay;
-                                }
-                            }));
+                                    } catch (ex) {
+                                        console.error(
+                                            'Error making input field widget',
+                                            ex
+                                        );
+                                        var errorDisplay = div(
+                                            {
+                                                style: {
+                                                    border: '1px red solid',
+                                                },
+                                            },
+                                            [ex.message]
+                                        );
+                                        document.getElementById(
+                                            parameterParams.view[spec.id].id
+                                        ).innerHTML = errorDisplay;
+                                    }
+                                })
+                            );
                         }
                     })
                     .then(function () {
@@ -556,8 +662,8 @@ define([
                         widget.bus.send(message, {
                             key: {
                                 type: 'parameter-changed',
-                                parameter: message.parameter
-                            }
+                                parameter: message.parameter,
+                            },
                         });
                         // bus.emit('parameter-changed', message);
                     });
@@ -565,10 +671,9 @@ define([
 
                 return Promise.try(() => {
                     attachEvents();
-                })
-                    .catch((err) => {
-                        console.error('ERROR in start', err);
-                    });
+                }).catch((err) => {
+                    console.error('ERROR in start', err);
+                });
             });
         }
 
@@ -580,21 +685,22 @@ define([
 
         // CONSTRUCTION
 
-        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
-
+        bus = runtime
+            .bus()
+            .makeChannelBus({ description: 'A app params widget' });
 
         return {
             start: start,
             stop: stop,
             bus: function () {
                 return bus;
-            }
+            },
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

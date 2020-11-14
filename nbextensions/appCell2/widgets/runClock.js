@@ -2,18 +2,15 @@ define([
     'bluebird',
     'common/runtime',
     'kb_common/html',
-    'common/format'
-], function (
-    Promise,
-    Runtime,
-    html,
-    format
-) {
+    'common/format',
+], function (Promise, Runtime, html, format) {
+    'use strict';
+
     var t = html.tag,
         span = t('span');
 
-    function factory(config) {
-        var config = config || {},
+    function factory(conf) {
+        var config = conf || {},
             container,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
@@ -24,7 +21,7 @@ define([
         function buildLayout() {
             return span({
                 id: clockId,
-                style: {}
+                style: {},
             });
         }
 
@@ -45,16 +42,26 @@ define([
                         busConnection.stop();
                     }
                 } catch (err) {
-                    console.error('Error handling clock tick, closing clock', err);
+                    console.error(
+                        'Error handling clock tick, closing clock',
+                        err
+                    );
                     stop();
                 }
             } else {
                 if (!clockNode) {
-                    console.warn('Could not find clock node at' + clockId, 'Stopping the clock');
+                    console.warn(
+                        'Could not find clock node at' + clockId,
+                        'Stopping the clock'
+                    );
                     stop();
                     return;
                 }
-                clockNode.innerHTML = [config.prefix || '', format.niceDuration(elapsed), config.suffix || ''].join('');
+                clockNode.innerHTML = [
+                    config.prefix || '',
+                    format.niceDuration(elapsed),
+                    config.suffix || '',
+                ].join('');
             }
         }
 
@@ -80,13 +87,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

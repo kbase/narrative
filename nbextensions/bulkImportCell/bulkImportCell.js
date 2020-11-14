@@ -9,7 +9,7 @@ define([
     'base/js/namespace',
     'kb_common/html',
     './cellControlPanel',
-    './tabs/configure'
+    './tabs/configure',
 ], (
     Uuid,
     AppUtils,
@@ -29,17 +29,13 @@ define([
     const div = html.tag('div');
 
     class DefaultWidget {
-        constructor() {
-
-        }
+        constructor() {}
 
         start(options) {
             alert('starting default widget');
         }
 
-        stop() {
-
-        }
+        stop() {}
     }
 
     /**
@@ -69,7 +65,9 @@ define([
          */
         constructor(cell, initialize, typesToFiles) {
             if (cell.cell_type !== 'code') {
-                throw new Error('Can only create Bulk Import Cells out of code cells!');
+                throw new Error(
+                    'Can only create Bulk Import Cells out of code cells!'
+                );
             }
             this.cell = cell;
             // this is the DOM element used as the container for everything controlled by this cell.
@@ -77,10 +75,10 @@ define([
             this.runtime = Runtime.make();
             this.cellBus = null;
             this.busEventManager = BusEventManager.make({
-                bus: this.runtime.bus()
+                bus: this.runtime.bus(),
             });
             this.ui = null;
-            this.tabWidget = null;  // the widget currently in view
+            this.tabWidget = null; // the widget currently in view
             this.state = this.getInitialState();
             if (initialize) {
                 this.initialize(typesToFiles);
@@ -115,18 +113,19 @@ define([
                     attributes: {
                         id: new Uuid(4).format(),
                         status: 'new',
-                        created: (new Date()).toUTCString(),
+                        created: new Date().toUTCString(),
                         title: 'Import from Staging Area',
-                        subtitle: 'Import files into your Narrative as data objects'
+                        subtitle:
+                            'Import files into your Narrative as data objects',
                     },
                     type: CELL_TYPE,
                     bulkImportCell: {
                         'user-settings': {
-                            showCodeInputArea: false
+                            showCodeInputArea: false,
                         },
-                        inputs: typesToFiles
-                    }
-                }
+                        inputs: typesToFiles,
+                    },
+                },
             };
             this.cell.metadata = meta;
         }
@@ -137,13 +136,15 @@ define([
          */
         specializeCell() {
             // returns a DOM node with an icon to be rendered elsewhere
-            this.cell.getIcon = function() {
+            this.cell.getIcon = function () {
                 return AppUtils.makeGenericIcon('upload', '#bf6c97');
             };
 
             // this renders the cell's icon in its toolbar
-            this.cell.renderIcon = function() {
-                const iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
+            this.cell.renderIcon = function () {
+                const iconNode = this.element[0].querySelector(
+                    '.celltoolbar [data-element="icon"]'
+                );
                 if (iconNode) {
                     iconNode.innerHTML = this.getIcon();
                 }
@@ -156,11 +157,13 @@ define([
         setupMessageBus() {
             this.cellBus = this.runtime.bus().makeChannelBus({
                 name: {
-                    cell: Utils.getMeta(this.cell, 'attributes', 'id')
+                    cell: Utils.getMeta(this.cell, 'attributes', 'id'),
                 },
-                description: 'parent bus for BulkImportCell'
+                description: 'parent bus for BulkImportCell',
             });
-            this.busEventManager.add(this.cellBus.on('delete-cell', () => this.deleteCell()));
+            this.busEventManager.add(
+                this.cellBus.on('delete-cell', () => this.deleteCell())
+            );
         }
 
         /**
@@ -172,11 +175,14 @@ define([
             // to insert a node before the node following the one we are
             // referencing. If there is no next sibling, the null value
             // causes insertBefore to actually ... insert at the end!
-            this.cell.input[0].parentNode.insertBefore(this.kbaseNode, this.cell.input[0].nextSibling);
+            this.cell.input[0].parentNode.insertBefore(
+                this.kbaseNode,
+                this.cell.input[0].nextSibling
+            );
 
             this.ui = UI.make({
                 node: this.kbaseNode,
-                bus: this.cellBus
+                bus: this.cellBus,
             });
         }
 
@@ -225,9 +231,11 @@ define([
             }
             this.tabWidget = new this.tabSet.tabs[tab].widget();
             let node = document.createElement('div');
-            this.ui.getElement('cell-container.tab-pane.widget').appendChild(node);
+            this.ui
+                .getElement('cell-container.tab-pane.widget')
+                .appendChild(node);
             this.tabWidget.start({
-                node: node
+                node: node,
             });
         }
 
@@ -256,30 +264,30 @@ define([
                         },
                         viewConfigure: {
                             enabled: false,
-                            visible: false
+                            visible: false,
                         },
                         info: {
                             enabled: true,
-                            visible: true
+                            visible: true,
                         },
                         logs: {
                             enabled: false,
-                            visible: true
+                            visible: true,
                         },
                         results: {
                             enabled: false,
-                            visible: true
+                            visible: true,
                         },
                         error: {
                             enabled: false,
-                            visible: false
-                        }
-                    }
+                            visible: false,
+                        },
+                    },
                 },
                 actionState: {
                     name: 'runApp',
-                    enabled: false
-                }
+                    enabled: false,
+                },
             };
         }
 
@@ -290,11 +298,11 @@ define([
                 tabs: {
                     configure: {
                         label: 'Configure',
-                        widget: ConfigureWidget
+                        widget: ConfigureWidget,
                     },
                     viewConfigure: {
                         label: 'View Configure',
-                        widget: DefaultWidget
+                        widget: DefaultWidget,
                     },
                     info: {
                         label: 'Info',
@@ -302,110 +310,144 @@ define([
                     },
                     logs: {
                         label: 'Job Status',
-                        widget: DefaultWidget
+                        widget: DefaultWidget,
                     },
                     results: {
                         label: 'Result',
-                        widget: DefaultWidget
+                        widget: DefaultWidget,
                     },
                     error: {
                         label: 'Error',
                         type: 'danger',
-                        widget: DefaultWidget
-                    }
-                }
+                        widget: DefaultWidget,
+                    },
+                },
             };
             this.actionButtons = {
                 current: {
                     name: null,
-                    disabled: null
+                    disabled: null,
                 },
                 availableButtons: {
                     runApp: {
                         help: 'Run the app',
                         type: 'success',
                         classes: ['-run'],
-                        label: 'Run'
+                        label: 'Run',
                     },
                     cancel: {
                         help: 'Cancel the running app',
                         type: 'danger',
                         classes: ['-cancel'],
-                        label: 'Cancel'
+                        label: 'Cancel',
                     },
                     reRunApp: {
                         help: 'Edit and re-run the app',
                         type: 'default',
                         classes: ['-rerun'],
-                        label: 'Reset'
+                        label: 'Reset',
                     },
                     resetApp: {
                         help: 'Reset the app and return to Edit mode',
                         type: 'default',
                         classes: ['-reset'],
-                        label: 'Reset'
+                        label: 'Reset',
                     },
                     offline: {
                         help: 'Currently disconnected from the server.',
                         type: 'danger',
                         classes: ['-cancel'],
-                        label: 'Offline'
-                    }
-                }
+                        label: 'Offline',
+                    },
+                },
             };
             this.controlPanel = new CellControlPanel({
                 bus: this.cellBus,
                 ui: this.ui,
                 tabs: {
                     toggleAction: this.toggleTab.bind(this),
-                    tabs: this.tabSet
+                    tabs: this.tabSet,
                 },
                 action: {
                     runAction: this.runAction.bind(this),
-                    actions: this.actionButtons
-                }
+                    actions: this.actionButtons,
+                },
             });
             return this.controlPanel.buildLayout(events);
         }
 
         renderLayout() {
             const events = Events.make(),
-                content = div({
-                    class: 'kbase-extension kb-app-cell',
-                    style: { display: 'flex', alignItems: 'stretch' }
-                }, [
-                    div({
-                        class: 'prompt',
-                        dataElement: 'prompt',
-                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' }
-                    }, [
-                        div({ dataElement: 'status' })
-                    ]),
-                    div({
-                        class: 'body',
-                        dataElement: 'body',
-                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1', width: '100%' }
-                    }, [
-                        div({
-                            dataElement: 'widget',
-                            style: { display: 'block', width: '100%' }
-                        }, [
-                            div({ class: 'container-fluid', dataElement: 'cell-container' }, [
-                                this.buildControlPanel(events),
-                                div({
-                                    dataElement: 'tab-pane'
-                                }, [
-                                    div({ dataElement: 'widget' })
-                                ])
-                            ])
-                        ])
-                    ])
-                ]);
+                content = div(
+                    {
+                        class: 'kbase-extension kb-app-cell',
+                        style: { display: 'flex', alignItems: 'stretch' },
+                    },
+                    [
+                        div(
+                            {
+                                class: 'prompt',
+                                dataElement: 'prompt',
+                                style: {
+                                    display: 'flex',
+                                    alignItems: 'stretch',
+                                    flexDirection: 'column',
+                                },
+                            },
+                            [div({ dataElement: 'status' })]
+                        ),
+                        div(
+                            {
+                                class: 'body',
+                                dataElement: 'body',
+                                style: {
+                                    display: 'flex',
+                                    alignItems: 'stretch',
+                                    flexDirection: 'column',
+                                    flex: '1',
+                                    width: '100%',
+                                },
+                            },
+                            [
+                                div(
+                                    {
+                                        dataElement: 'widget',
+                                        style: {
+                                            display: 'block',
+                                            width: '100%',
+                                        },
+                                    },
+                                    [
+                                        div(
+                                            {
+                                                class: 'container-fluid',
+                                                dataElement: 'cell-container',
+                                            },
+                                            [
+                                                this.buildControlPanel(events),
+                                                div(
+                                                    {
+                                                        dataElement: 'tab-pane',
+                                                    },
+                                                    [
+                                                        div({
+                                                            dataElement:
+                                                                'widget',
+                                                        }),
+                                                    ]
+                                                ),
+                                            ]
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ]
+                );
             return {
                 content: content,
-                events: events
+                events: events,
             };
-
         }
 
         /**

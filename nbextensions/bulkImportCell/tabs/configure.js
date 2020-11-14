@@ -1,8 +1,4 @@
-define([
-
-], (
-
-) => {
+define([], () => {
     'use strict';
 
     class ConfigureWidget {

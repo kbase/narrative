@@ -4,36 +4,20 @@ define([
     'common/ui',
     'common/format',
     'kb_common/html',
-    './jobStateListRow'
-], function(
-    Promise,
-    Runtime,
-    UI,
-    format,
-    html,
-    JobStateListRow
-) {
+    './jobStateListRow',
+], function (Promise, Runtime, UI, format, html, JobStateListRow) {
     'use strict';
 
     var t = html.tag,
-        div = t('div'),
-        p = t('p'),
-        span = t('span'),
         table = t('table'),
-        tr = t('tr'),
-        td = t('td'),
-        th = t('th'),
         tbody = t('tbody');
 
-
     function renderTable() {
-        return table({class: 'table'}, [
-            tbody()
-        ]);
+        return table({ class: 'table' }, [tbody()]);
     }
 
     function factory(config) {
-        var container, ui, listeners = [],
+        var container,
             runtime = Runtime.make(),
             widgets = {},
             model = config.model,
@@ -50,40 +34,58 @@ define([
         }
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 container = arg.node;
                 container.classList.add('batch-mode-list');
-                ui = UI.make({ node: container });
+                UI.make({ node: container });
                 container.innerHTML = renderTable();
                 parentJobId = arg.parentJobId;
 
                 return Promise.try(() => {
-                    createJobStateWidget('parent', parentJobId, model.getItem('exec.jobState.status'), arg.clickFunction, true);
-                    container.getElementsByTagName('tr')[0].classList.add('job-selected'); // start with the parent selected
+                    createJobStateWidget(
+                        'parent',
+                        parentJobId,
+                        model.getItem('exec.jobState.status'),
+                        arg.clickFunction,
+                        true
+                    );
+                    container
+                        .getElementsByTagName('tr')[0]
+                        .classList.add('job-selected'); // start with the parent selected
 
-                    for (var i=0; i<Math.max(arg.batchSize, arg.childJobs.length); i++) {
+                    for (
+                        var i = 0;
+                        i < Math.max(arg.batchSize, arg.childJobs.length);
+                        i++
+                    ) {
                         var jobId = null,
                             initialState = null;
                         if (i < arg.childJobs.length) {
                             jobId = arg.childJobs[i].job_id;
                             initialState = arg.childJobs[i].status;
                         }
-                        createJobStateWidget(i, jobId, initialState, arg.clickFunction);  // can make null ones. these need to be updated.
+                        createJobStateWidget(
+                            i,
+                            jobId,
+                            initialState,
+                            arg.clickFunction
+                        ); // can make null ones. these need to be updated.
                     }
-                })
-                .then(() => { startParentListener() });
+                }).then(() => {
+                    startParentListener();
+                });
             });
         }
 
         function startParentListener() {
             parentListener = runtime.bus().listen({
                 channel: {
-                    jobId: parentJobId
+                    jobId: parentJobId,
                 },
                 key: {
-                    type: 'job-status'
+                    type: 'job-status',
                 },
-                handle: handleJobStatusUpdate
+                handle: handleJobStatusUpdate,
             });
         }
 
@@ -110,18 +112,28 @@ define([
          * @param {int} jobIndex
          * @param {string} jobId
          */
-        function createJobStateWidget(jobIndex, jobId, initialState, clickFunction, isParentJob) {
+        function createJobStateWidget(
+            jobIndex,
+            jobId,
+            initialState,
+            clickFunction,
+            isParentJob
+        ) {
             widgets[jobIndex] = JobStateListRow.make({
-                model: model
+                model: model,
             });
             widgets[jobIndex].start({
                 node: createTableRow(jobIndex),
-                name: isParentJob ? 'Parent Job' : 'Child Job ' + (jobIndex+1),
+                name: isParentJob
+                    ? 'Parent Job'
+                    : 'Child Job ' + (jobIndex + 1),
                 jobId: jobId,
                 initialState: initialState,
                 isParentJob: isParentJob ? true : false,
-                clickFunction: function(jobRow, jobId, isParentJob) {
-                    Array.from(container.getElementsByClassName('job-selected')).forEach((elem) => {
+                clickFunction: function (jobRow, jobId, isParentJob) {
+                    Array.from(
+                        container.getElementsByClassName('job-selected')
+                    ).forEach((elem) => {
                         elem.classList.remove('job-selected');
                     });
                     if (jobId) {
@@ -129,29 +141,28 @@ define([
                         clickFunction({
                             jobId: jobId,
                             isParentJob: isParentJob,
-                            jobIndex: jobIndex
+                            jobIndex: jobIndex,
                         });
                     }
-                }
+                },
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 runtime.bus().removeListener(parentListener);
             });
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
-
 });

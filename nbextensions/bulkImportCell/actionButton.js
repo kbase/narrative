@@ -1,8 +1,4 @@
-define([
-    'common/html'
-], (
-    html
-) => {
+define(['common/html'], (html) => {
     'use strict';
 
     const div = html.tag('div');
@@ -35,33 +31,36 @@ define([
         }
 
         buildLayout(events) {
-            return div({
-                style: {
-                    height: '50px',
-                    overflow: 'hidden',
-                    textAlign: 'left',
-                    lineHeight: '50px',
-                    verticalAlign: 'middle',
-                    display: 'flex',
-                    flexDirection: 'row'
-                }
-            }, [
-                this.buildActionButtons(events)
-            ]);
+            return div(
+                {
+                    style: {
+                        height: '50px',
+                        overflow: 'hidden',
+                        textAlign: 'left',
+                        lineHeight: '50px',
+                        verticalAlign: 'middle',
+                        display: 'flex',
+                        flexDirection: 'row',
+                    },
+                },
+                [this.buildActionButtons(events)]
+            );
         }
 
         buildActionButtons(events) {
             const style = {
-                padding: '6px'
+                padding: '6px',
             };
-            const buttonList = Object.keys(this.actionButtons.availableButtons).map((key) => {
+            const buttonList = Object.keys(
+                this.actionButtons.availableButtons
+            ).map((key) => {
                 const button = this.actionButtons.availableButtons[key],
                     classes = [].concat(button.classes);
                 let icon;
                 if (button.icon) {
                     icon = {
                         name: button.icon.name,
-                        size: 2
+                        size: 2,
                     };
                 }
                 return this.ui.buildButton({
@@ -73,16 +72,16 @@ define([
                     // hidden: true,
                     // Overriding button class styles for this context.
                     style: {
-                        width: '80px'
+                        width: '80px',
                     },
                     event: {
                         type: 'actionButton',
                         data: {
-                            action: key
-                        }
+                            action: key,
+                        },
                     },
                     icon: icon,
-                    label: button.label
+                    label: button.label,
                 });
             });
             this.bus.on('actionButton', (message) => {
@@ -90,10 +89,13 @@ define([
                 this.runAction(action);
             });
 
-            var buttonDiv = div({
-                class: 'btn-group',
-                style: style
-            }, buttonList);
+            var buttonDiv = div(
+                {
+                    class: 'btn-group',
+                    style: style,
+                },
+                buttonList
+            );
             return buttonDiv;
         }
 
@@ -105,21 +107,20 @@ define([
          */
         setState(newState) {
             this.state = newState;
-            for (const btnName of Object.keys(this.actionButtons.availableButtons)) {
+            for (const btnName of Object.keys(
+                this.actionButtons.availableButtons
+            )) {
                 this.ui.hideButton(btnName);
             }
             this.ui.showButton(this.state.name);
-            this.state.enabled ? this.ui.enableButton(this.state.name) : this.ui.disableButton(this.state.name);
+            this.state.enabled
+                ? this.ui.enableButton(this.state.name)
+                : this.ui.disableButton(this.state.name);
         }
 
-        start() {
+        start() {}
 
-        }
-
-        stop() {
-
-        }
-
+        stop() {}
     }
 
     return CellActionButton;

@@ -61,8 +61,8 @@ define([
                 token: runtime.authToken()
             });
             
-            Handlebars.registerHelper('ifIn', function(elem, list, options) {
-                if(list.indexOf(elem) > -1) {
+            Handlebars.registerHelper('ifIn', function (elem, list, options) {
+                if (list.indexOf(elem) > -1) {
                     return options.fn(this);
                 }
                 return options.inverse(this);
@@ -100,8 +100,8 @@ define([
         },
 
         /**
-         * Returns a Promise that resolves once the rendering is done.
-         */
+             * Returns a Promise that resolves once the rendering is done.
+             */
         render: function () {
             return this.updateView();
         },
@@ -146,9 +146,9 @@ define([
         },
 
         /**
-         * Expect that 'path' is only any subdirectories. The root directory is still the
-         * user id.
-         */
+             * Expect that 'path' is only any subdirectories. The root directory is still the
+             * user id.
+             */
         setPath: function (path) {
             this.path = path;
             // factor out the current subdirectory path into its own variable
@@ -249,116 +249,55 @@ define([
             this.$elem.append(errorElem);
         },
 
-        returnFakeSortedMappings: function (staging_files) {
+    
 
-            const file_names = staging_files.map(f => f['path']);
-            // call to api with this
-
-            var rv = [{ 'id': 'fastq_reads', 'title': 'fastq_reads', 'app_weight': 1 },
-                { 'id': 'sra_reads', 'title': 'sra_reads', 'app_weight': 1 }];
-            var rv3 = [{ 'id': 'sra_reads', 'title': 'Unzip', 'app_weight': 1 }];
-            var mappings = [null, rv, rv3,rv, rv3,rv, rv3,rv, rv3,rv, rv3,rv, rv3,rv, rv3,rv, rv3,rv, rv3,rv, rv3];
-
-            // Sort by weight (Shouldn't we probably just do this in the staging service?)
-            mappings.forEach(function(mapping) {
-                try {
-                    if (mapping) {
-                        mapping.sort((a, b) => (a.app_weight < b.app_weight));
-                        // document.write(JSON.stringify(mapping),'<br>');
-                    }
-                } catch (err) {
-                    console.log('Mapping is malformed', err);
-                }
-            });
-            
-            staging_files.map(function (element, index)
-            {   
-                // var retrieved = mappings[index] || null;
-                element['mappings'] = mappings[index] || null;
-                // if (retrieved) {
-                    
-                //     element['mappings'] = retrieved.map(f => f['title']);
-                // }
-                
-
-            });
-            
-   
-            return staging_files;
-        },
-
-        returnRealResponse: function (staging_files) {
-            const file_names = staging_files.map(f => f['path']);
-            const fileList = $.param({ 'file_list': file_names }, true);
-            console.log("Filenames are", file_names);
-            
-
-            // const root = this.stagingServiceClient.root;
-            // const token = this.stagingServiceClient.token;
-            // const endpoint2 = this.stagingServiceClient.routes.importer_mappings.path;
-            const endpoint = 'https://ci.kbase.us/services/staging_service/importer_mappings/?';
-            $.get({
-                'url': endpoint + fileList,
-                'method': 'GET',
-               
-            }).done(function (data) {
-                if (console && console.log) {
-                    console.log('Sample of data:', data.slice(0, 100));
-                }
-            });
-
-
-            // //API CALL
-            
-            
-            
-            
-            // console.log("fileList is", fileList);
-            // const mappings = this.stagingServiceClient.importer_mappings({
-            //     path: fileList
-            // });
-            console.log("Mappings are", mappings);
-            // SORT
-            // mappings.forEach(function(mapping) {
-            //     try {
-            //         if (mapping) {
-            //             mapping.sort((a, b) => (a.app_weight < b.app_weight));
-            //         }
-            //     } catch (err) {
-            //         console.log('Mapping is malformed', err);
-            //     }
-            // });
-            
-            // staging_files.map(function (element, index)
-            // {   
-            //     element['mappings'] = mappings[index] || null;
-            // });
-            return {};
-            
-            
-            return staging_files;
-
-            //TODO Return real response, with response sorted by weight, then by title
-
-        },
-
-        detectFileMappings: function (files) {
+        identifyImporterMappings: function (stagingFiles) {
             /*
-            Add a list of top matches for each file, sorted by weight, then sorted by name
-             */
-            console.log("Check order")
-            console.log(this.uploaders.dropdown_order);
-            console.log(files);
-            console.log('Welcome to the jungle');
-            // var mappings = this.returnFakeSortedMappings(files);
-            var mappings = this.returnRealResponse(files);
+                Add a list of top matches for each file, sorted by weight
+                 */
+            const fileNames = stagingFiles.map(f => f['path']);
+            const fileList = $.param({ 'file_list': fileNames }, true);
+            var mappings = [];
+            this.stagingServiceClient.importer_mappings({
+                file_list: fileList
+            }).then(function (data) {
+                console.log("Successfuly get them");
+                //Extract mappings, sort by weight, assign mappings to staging files
+                mappings = JSON.parse(data)['mappings'];
 
-            // document.write("<pre>")
-            // document.write(JSON.stringify(mappings, null, 2));
-            console.log('Returning mappings',mappings);
-            return mappings;
+                console.log("Successfuly parse them");
+                mappings.forEach(function (mapping) {
+                    try {
+                        if (mapping) {
+                            mapping.sort((a, b) => (a.app_weight < b.app_weight));
+                        }
+                    } catch (err) {
+                        console.log('Mapping is malformed', err);
+                    }
+                });
 
+                stagingFiles.map(function (element, index) {
+                    element['mappings'] = mappings[index] || null;
+                });
+
+                console.log("Staging files after adding ajax now have mappings", JSON.stringify(stagingFiles, null, 2));
+            });
+            console.log('But the return doesnt have it', JSON.stringify(stagingFiles, null, 2)) ;
+            return stagingFiles;
         },
+
+        // detectFileMappings: function (files) {
+        //     var mappings = this.identifyImporterMappings(files);
+
+        //     console.log('Returning mappings',mappings);
+        //     document.write("<pre>")
+        //     document.write(JSON.stringify(mappings, null, 2));
+        //     console.log("<pre>")
+        //     console.log(JSON.stringify(mappings, null, 2));
+
+        //     return mappings;
+
+        // },
 
 
         /**
@@ -370,8 +309,11 @@ define([
         renderFiles: function (files) {
             files = files || [];
             const emptyMsg = 'No files found.';
-            console.log("Welcome and bonvienu");
-            var files_with_mappings = this.detectFileMappings(files,);
+
+            // console.log('Before', JSON.stringify(files, null, 2)[1]);
+            const files_with_mappings = this.identifyImporterMappings(files);
+            // console.log('AFter', JSON.stringify(files_with_mappings, null, 2)[1 ]);
+
             // TODO Search for "selected" fields and add them to the files,
             // so they are reselected upon refresh / finished download, otherwise user will have to reselect them all
             var $fileTable = $(this.ftpFileTableTmpl({
@@ -562,7 +504,7 @@ define([
                         })
                             .then(() => this.updateView())
                             .fail(xhr => {
-                                console.error("FAILED", xhr);
+                                console.error('FAILED', xhr);
                                 alert(xhr.responseText);
                             });
 
@@ -652,18 +594,18 @@ define([
                                 .append($.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('MD5')).append(data.md5 || 'Not provided'))
                                 .append($upa)
                         },
-                            {
-                                tab: 'First 10 lines',
-                                content: $.jqElem('div')
-                                    .addClass('kb-data-staging-metadata-file-lines')
-                                    .append(data.head)
-                            },
-                            {
-                                tab: 'Last 10 lines',
-                                content: $.jqElem('div')
-                                    .addClass('kb-data-staging-metadata-file-lines')
-                                    .append(data.tail)
-                            }]
+                        {
+                            tab: 'First 10 lines',
+                            content: $.jqElem('div')
+                                .addClass('kb-data-staging-metadata-file-lines')
+                                .append(data.head)
+                        },
+                        {
+                            tab: 'Last 10 lines',
+                            content: $.jqElem('div')
+                                .addClass('kb-data-staging-metadata-file-lines')
+                                .append(data.tail)
+                        }]
                     });
 
                     // attempt to load up a jgi metadata file, via the jgi-metadata endpoint. It'll only succeed if a jgi metadata file exists

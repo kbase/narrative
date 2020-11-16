@@ -347,6 +347,7 @@
 
   &.kb-staging-table-import__button__disabled {
     background-color: rgb(142 175 208);
+    cursor: not-allowed;
 
     &:active {
       background-color: rgb(142 175 208);

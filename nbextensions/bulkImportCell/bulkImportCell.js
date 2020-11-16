@@ -204,6 +204,7 @@ define([
             this.cell.metadata = meta;
             this.render();
             this.updateState();
+            this.toggleTab(this.state.tabState.selected);
         }
 
         updateState() {

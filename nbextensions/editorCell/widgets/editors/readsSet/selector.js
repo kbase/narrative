@@ -1,5 +1,4 @@
-/*global define*/
-/*jslint white:true,browser:true*/
+
 
 /*
  Object selector
@@ -70,7 +69,7 @@ define([
             // value = ui.getElement('new-object-type').value;
             channel.emit('create-new-set', {
                 name: name
-                    // type: value
+                // type: value
             });
             return false;
         }
@@ -131,7 +130,7 @@ define([
             var selected = Array.prototype.slice.call(control.selectedOptions);
             selected.forEach(function(option) {
                 option.selected = false;
-            })
+            });
 
             // var selected = control.querySelectorAll('[selected]');
             // //console.log('autoselect', control, selected);
@@ -192,8 +191,8 @@ define([
         function fetchData() {
             var types = ['KBaseSets.ReadsSet'];
             return Data.getObjectsByTypes(types, bus, function(newData) {
-                    doDataUpdated(newData.data);
-                })
+                doDataUpdated(newData.data);
+            })
                 .then(function(result) {
                     availableReadsSetsMap = {};
                     availableReadsSets = result.data;
@@ -246,9 +245,9 @@ define([
                             ]);
                         }
                         return select({
-                                class: 'form-control',
-                                id: events.addEvent({ type: 'change', handler: doItemSelected })
-                            }, [option({ value: '' }, '-- No reads set selected --')]
+                            class: 'form-control',
+                            id: events.addEvent({ type: 'change', handler: doItemSelected })
+                        }, [option({ value: '' }, '-- No reads set selected --')]
                             .concat(availableReadsSets.map(function(objectInfo) {
                                 var selected = false;
                                 if (selectedItem === objectInfo.ref) {

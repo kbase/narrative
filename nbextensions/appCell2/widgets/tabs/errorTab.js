@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true,nomen:true*/
-
 define([
     'bluebird',
     'uuid',

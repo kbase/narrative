@@ -46,11 +46,7 @@ define([
                         title: span([
                             'File Paths',
                             span({
-                                dataElement: 'advanced-hidden-message',
-                                style: {
-                                    marginLeft: '6px',
-                                    fontStyle: 'italic'
-                                }
+                                dataElement: 'advanced-hidden-message'
                             })]),
                         name: 'file-paths-area',
                         body: div({ dataElement: 'file-path-fields' }),
@@ -60,11 +56,7 @@ define([
                         title: span([
                             'Parameters',
                             span({
-                                dataElement: 'advanced-hidden-message',
-                                style: {
-                                    marginLeft: '6px',
-                                    fontStyle: 'italic'
-                                }
+                                dataElement: 'advanced-hidden-message'
                             })]),
                         name: 'parameters-area',
                         body: div({ dataElement: 'parameter-fields' }),

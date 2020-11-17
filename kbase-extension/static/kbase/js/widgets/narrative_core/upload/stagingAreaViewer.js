@@ -129,17 +129,15 @@ define([
                     this.renderFiles(files);
 
                     setTimeout(() => {
-                        this.$elem.parent().scrollTop(scrollTop)
+                        this.$elem.parent().scrollTop(scrollTop);
                     }, 0);
                 })
                 .catch(xhr => {
-                    console.log(xhr);
                     this.$elem.empty();
                     this.renderFileHeader();
                     this.renderError(xhr.responseText ? xhr.responseText : 'Unknown error - directory was not found, or may have been deleted');
                 })
                 .finally(() => {
-                    console.log("Render that import button bro");
                     this.renderPath();
                     this.renderImportButton();
                 });
@@ -192,7 +190,7 @@ define([
                             window.open($globusLink.attr('href'), 'globus');
                             return true;
                         }
-                    )
+                    );
             });
 
             // Bind the help button to start the tour.
@@ -233,7 +231,7 @@ define([
             });
         },
 
-        downloadFile: function(url) {
+        downloadFile: function (url) {
             const hiddenIFrameID = 'hiddenDownloader';
             let iframe = document.getElementById(hiddenIFrameID);
             if (iframe === null) {
@@ -256,9 +254,7 @@ define([
         },
 
 
-
-
-        identifyImporterMappings:  function (stagingFiles) {
+        identifyImporterMappings: function (stagingFiles) {
             /*
                 Add a list of top matches for each file, sorted by weight
                  */
@@ -268,32 +264,25 @@ define([
             return Promise.resolve(this.stagingServiceClient.importer_mappings({
                 file_list: fileList
             }).then(function (data) {
-                console.log('Successfuly get them');
                 //Extract mappings, sort by weight, assign mappings to staging files
                 mappings = JSON.parse(data)['mappings'];
-
-                console.log('Successfuly parse them');
                 mappings.forEach(function (mapping) {
                     try {
                         if (mapping) {
                             mapping.sort((a, b) => (a.app_weight < b.app_weight));
                         }
-                    } catch (err) {π
-                        console.log('Mapping is malformed', err);
+                    } catch (err) {
+                        console.error('Mapping is malformed', err);
                     }
                 });
 
                 stagingFiles.map(function (element, index) {
                     element['mappings'] = mappings[index] || null;
                 });
-                console.log('Staging files after adding ajax now have mappings', JSON.stringify(stagingFiles, null, 2));
                 return stagingFiles;
             }).fail(function (err) {
-                console.log('Error', err);
+                console.error('Error', err);
             }));
-
-            // console.log('But the return doesnt have it', JSON.stringify(stagingFiles, null, 2)) ;
-            // return stagingFiles;
         },
 
         /**
@@ -308,8 +297,8 @@ define([
             const emptyMsg = 'No files found.';
 
             stagingAreaViewer.identifyImporterMappings(files).then(function (filesWithMappings) {
-                
-            
+
+
 
                 const $fileTable = $(stagingAreaViewer.ftpFileTableTmpl({
                     files: filesWithMappings,
@@ -317,7 +306,7 @@ define([
                 }));
 
                 stagingAreaViewer.$elem.append($fileTable);
-            
+
                 const fullDataTable = stagingAreaViewer.$elem.find('table').dataTable({
                     language: {
                         emptyTable: emptyMsg
@@ -432,7 +421,7 @@ define([
                                 }
                             }
                         }
-  
+
                         $('td:eq(0)', row).find('input.kb-staging-table-body__checkbox-input')
                             .off('click')
                             .on('click keyPress', (e) => {
@@ -461,7 +450,7 @@ define([
                             setTimeout(() => {
                                 $caret.parent().parent().after(
                                     stagingAreaViewer.renderMoreFileInfo(rowFileData)
-                                )
+                                );
                             }, 0);
                         }
 
@@ -540,7 +529,7 @@ define([
                                 .prop('disabled', false)
                                 .attr('aria-label', 'Select to import file checkbox')
                                 .attr('data-type', dataType);
-  
+
                             //make sure select all checkbox is enabled
                             $('#staging_table_select_all')
                                 .prop('disabled', false)
@@ -630,8 +619,8 @@ define([
                 so that we can get entire table data 
                 not just what is drawn in the current dom
                 aka dealing with pagination
-            */ 
-            function selectAllOrNone (event) {
+            */
+            function selectAllOrNone(event) {
                 const selectAllChecked = event.target.checked;
 
                 //get all of the rows in the data table
@@ -640,7 +629,7 @@ define([
                 $('input.kb-staging-table-body__checkbox-input:enabled', nodes)
                     .prop('checked', selectAllChecked)
                     .attr('aria-checked', selectAllChecked);
-                
+
                 //enable or disable import appropriately
                 if (selectAllChecked) {
                     stagingAreaViewer.enableImportButton();
@@ -714,7 +703,7 @@ define([
 
                     var lineCount = parseInt(data.lineCount, 10);
                     if (!Number.isNaN(lineCount)) {
-                        lineCount = lineCount.toLocaleString()
+                        lineCount = lineCount.toLocaleString();
                     } else {
                         lineCount = 'Not provided';
                     }
@@ -755,7 +744,7 @@ define([
                             // XXX - while doing this, I ran into a NaN issue in the file, specifically on the key illumina_read_insert_size_avg_insert.
                             //       So we nuke any NaN fields to make it valid again.
                             var metadataJSON = JSON.parse(dataString.replace(/NaN/g, '\"\"'));
-                            var metadataContents = JSON.stringify(metadataJSON, null, 2)
+                            var metadataContents = JSON.stringify(metadataJSON, null, 2);
 
                             $tabs.addTab({
                                 tab: 'JGI Metadata',
@@ -791,7 +780,7 @@ define([
                 );
         },
 
-        renderImportButton: function() {
+        renderImportButton: function () {
 
             let importButton = $('<button></button>')
                 .addClass('kb-staging-table-import__button btn btn-xs btn-primary')
@@ -805,7 +794,7 @@ define([
             this.disableImportButton();
         },
 
-        disableImportButton: function() {
+        disableImportButton: function () {
 
             this.$elem.find('button.kb-staging-table-import__button')
                 .addClass('kb-staging-table-import__button__disabled')
@@ -820,14 +809,14 @@ define([
                 .off('click');
         },
 
-        enableImportButton: function() {
+        enableImportButton: function () {
             let stagingAreaViewer = this;
 
             this.$elem.find('button.kb-staging-table-import__button')
                 .removeClass('kb-staging-table-import__button__disabled')
                 .tooltip('disable')
                 .off('click')
-                .on('click keyPress', function() {
+                .on('click keyPress', function () {
                     stagingAreaViewer.initBulkImport();
                 });
         },
@@ -843,7 +832,7 @@ define([
          *
          * If no files are selected by their checkbox, then no new cells will be created.
          */
-        initBulkImport: function() {
+        initBulkImport: function () {
             const stagingAreaViewer = this;
 
             // keys = types, values = list of files to be uploaded as that type
@@ -910,7 +899,7 @@ define([
         },
 
         startTour: function () {
-            var tourStartFn = function () {}
+            var tourStartFn = function () { };
 
             if (!this.tour) {
                 this.tour = new UploadTour.Tour(

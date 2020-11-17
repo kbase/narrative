@@ -5,7 +5,8 @@ define([
 ) => {
     'use strict';
 
-    const div = html.tag('div');
+    const div = html.tag('div'),
+        cssCellType = 'kb-bulk-import';
 
     class CellActionButton {
         /**
@@ -36,27 +37,16 @@ define([
 
         buildLayout(events) {
             return div({
-                style: {
-                    height: '50px',
-                    overflow: 'hidden',
-                    textAlign: 'left',
-                    lineHeight: '50px',
-                    verticalAlign: 'middle',
-                    display: 'flex',
-                    flexDirection: 'row'
-                }
+                class: `${cssCellType}-action-button__container`,
             }, [
                 this.buildActionButtons(events)
             ]);
         }
 
         buildActionButtons(events) {
-            const style = {
-                padding: '6px'
-            };
             const buttonList = Object.keys(this.actionButtons.availableButtons).map((key) => {
                 const button = this.actionButtons.availableButtons[key],
-                    classes = [].concat(button.classes);
+                    classes = [`${cssCellType}-action-button__button`].concat(button.classes);
                 let icon;
                 if (button.icon) {
                     icon = {
@@ -70,11 +60,6 @@ define([
                     events: events,
                     type: button.type || 'default',
                     classes: classes,
-                    // hidden: true,
-                    // Overriding button class styles for this context.
-                    style: {
-                        width: '80px'
-                    },
                     event: {
                         type: 'actionButton',
                         data: {
@@ -90,11 +75,9 @@ define([
                 this.runAction(action);
             });
 
-            var buttonDiv = div({
-                class: 'btn-group',
-                style: style
+            return div({
+                class: `${cssCellType}-action-button__list btn-group`
             }, buttonList);
-            return buttonDiv;
         }
 
         /**

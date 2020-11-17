@@ -7,7 +7,8 @@ define([
 
     const div = html.tag('div'),
         span = html.tag('span'),
-        a = html.tag('a');
+        a = html.tag('a'),
+        cssCellType = 'kb-bulk-import';
 
     class CellTabs {
         /**
@@ -49,21 +50,10 @@ define([
 
         buildLayout(ui, events) {
             return div({
-                style: {
-                    display: 'inline-block',
-                    right: '0',
-                    height: '50px',
-                    lineHeight: '50px',
-                    paddingRight: '15px',
-                    verticalAlign: 'bottom'
-                }
+                class: `${cssCellType}-tabs__container`,
             }, [
                 div({
-                    class: 'btn-toolbar',
-                    style: {
-                        display: 'inline-block',
-                        verticalAlign: 'bottom'
-                    }
+                    class: `${cssCellType}-tabs__toolbar btn-toolbar`,
                 }, [
                     this.buildTabButtons(ui, events)
                 ])
@@ -85,7 +75,7 @@ define([
                             size: 2
                         };
                     } else {
-                        icon.size = 2;
+                        icon = {size: 2};
                     }
                 }
                 return this.ui.buildButton({
@@ -95,7 +85,7 @@ define([
                     type: tab.type || 'primary',
                     hidden: true,
                     features: tab.features,
-                    classes: ['kb-app-cell-btn'],
+                    classes: [`${cssCellType}-tabs__button kb-app-cell-btn`],
                     event: {
                         type: 'control-panel-tab',
                         data: {
@@ -115,7 +105,7 @@ define([
             var outdatedBtn = a({
                 tabindex: '0',
                 type: 'button',
-                class: 'btn hidden',
+                class: `${cssCellType}-tabs__button--outdated btn hidden`,
                 dataContainer: 'body',
                 container: 'body',
                 dataToggle: 'popover',
@@ -124,10 +114,6 @@ define([
                 dataElement: 'outdated',
                 role: 'button',
                 title: 'New version available',
-                style: {
-                    color: '#f79b22',
-                    padding: '6px 0 0 0'
-                }
             }, span({
                 class: 'fa fa-exclamation-triangle fa-2x'
             }));

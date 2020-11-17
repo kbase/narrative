@@ -287,7 +287,7 @@ define([
         }
 
         updateState() {
-            // this.controlPanel.setTabState(this.state.tab);
+            this.cellTabs.setState(this.state.tab);
             this.controlPanel.setActionState(this.state.action);
         }
 
@@ -299,7 +299,6 @@ define([
          */
         toggleTab(tab) {
             this.state.tab.selected = tab;
-            // this.controlPanel.setTabState(this.state.tab);
             if (this.tabWidget !== null) {
                 this.tabWidget.stop();
             }
@@ -374,10 +373,6 @@ define([
             this.controlPanel = CellControlPanel.make({
                 bus: this.cellBus,
                 ui: this.ui,
-                // tabs: {
-                //     toggleAction: this.toggleTab.bind(this),
-                //     tabs: this.tabSet
-                // },
                 action: {
                     runAction: this.runAction.bind(this),
                     actions: this.actionButtons
@@ -386,13 +381,14 @@ define([
             return this.controlPanel.buildLayout(events);
         }
 
-        buildTabs() {
-
-            this.cellTabs = new CellTabs({
-                ui: this.ui,
-                bus: this.bus,
-                toggleAction: options.tabs.toggleAction,
-                tabs: options.tabs.tabs
+        buildTabs(node) {
+            this.cellTabs = CellTabs.make({
+                bus: this.cellBus,
+                toggleAction: this.toggleTab.bind(this),
+                tabs: this.tabSet
+            });
+            this.cellTabs.start({
+                node: node
             });
         }
 

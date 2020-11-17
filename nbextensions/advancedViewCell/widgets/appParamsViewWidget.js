@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -164,10 +161,10 @@ define([
                      */
                     fieldWidget.bus.on('get-parameter-value', function(message) {
                         parentBus.request({
-                                parameter: message.parameter
-                            }, {
-                                key: 'get-parameter-value'
-                            })
+                            parameter: message.parameter
+                        }, {
+                            key: 'get-parameter-value'
+                        })
                             .then(function(message) {
                                 bus.emit('parameter-value', {
                                     parameter: message.parameter
@@ -446,29 +443,29 @@ define([
                         params.layout.filter(function(id) {
                             return (params.specs[id].ui.class === 'input');
                         })
-                        .map(function(id) {
-                            return params.specs[id];
-                        })),
+                            .map(function(id) {
+                                return params.specs[id];
+                            })),
                     outputParams = makeParamsLayout(
                         params.layout.filter(function(id) {
                             return (params.specs[id].ui.class === 'output');
                         })
-                        .map(function(id) {
-                            return params.specs[id];
-                        })),
+                            .map(function(id) {
+                                return params.specs[id];
+                            })),
                     parameterParams = makeParamsLayout(
                         params.layout.filter(function(id) {
                             return (params.specs[id].ui.class === 'parameter');
                         })
-                        .map(function(id) {
-                            return params.specs[id];
-                        }));
+                            .map(function(id) {
+                                return params.specs[id];
+                            }));
 
                 // new params format is a map with an accompanying ordering layout
 
                 // here is what we do:
 
-                // based on the param ordering (layout), render the html layout, 
+                // based on the param ordering (layout), render the html layout,
                 // with an id mapped per parameter in this set
 
 

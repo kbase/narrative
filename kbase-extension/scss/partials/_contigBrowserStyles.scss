@@ -7,11 +7,11 @@
 .kbcb-tooltip {
   position: absolute;
   z-index: 9999999;
-  visibility: hidden;
-  opacity: 0.8;
+  padding: 0.5em;
   background-color: rgb(34 34 34);
   color: rgb(255 255 255);
-  padding: 0.5em;
+  opacity: 0.8;
+  visibility: hidden;
 }
 
 /**
@@ -19,10 +19,11 @@
  */
 
 .kbcb-widget .kbcb-axis {
-  line, path {
+  line,
+  path {
     fill: none;
-    stroke: rgb(0 0 0);
     shape-rendering: crispEdges;
+    stroke: rgb(0 0 0);
   }
 
   text {
@@ -41,8 +42,8 @@
  */
 
 .kbcb-feature {
-  stroke: rgb(0 0 0);
   fill: rgb(255 0 0);
+  stroke: rgb(0 0 0);
 }
 
 .kbcb-operon {
@@ -62,7 +63,7 @@
  */
 
 .kbcb-buttons {
-  margin-left: auto;
-  margin-right: auto;
   width: 70%;
+  margin-right: auto;
+  margin-left: auto;
 }

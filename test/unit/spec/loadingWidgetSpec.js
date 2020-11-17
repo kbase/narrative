@@ -47,7 +47,7 @@ define ([
         });
 
         it('Should not show the loading warning when first starting', function () {
-            expect($($(dummyNode).find('.loading-warning')[0]).is(':visible')).toBeFalsy();
+            expect($($(dummyNode).find('.kb-loading-blocker__text--warning')[0]).is(':visible')).toBeFalsy();
         });
 
         it('Should show the loading warning after a timeout', function (done) {

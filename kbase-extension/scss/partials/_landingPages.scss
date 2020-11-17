@@ -1,15 +1,13 @@
 .app-icon:hover {
+  opacity: 0.9;
   text-decoration: none;
 }
 
 .nav > li > a {
-  &:focus, &:hover {
+  &:focus,
+  &:hover {
     text-decoration: none;
   }
-}
-
-.app-icon:hover {
-  opacity: 0.9;
 }
 
 #kbase-search-box {
@@ -21,15 +19,12 @@
   padding: 0 15px 0 0;
 }
 
-/* bootstrap overrides */
-
+/* override bootstrap .wrapper */
 .wrapper {
   width: 95%;
-  margin-left: auto;
   margin-right: auto;
+  margin-left: auto;
 }
-
-/* end bootstrap overrides */
 
 #core-model {
   overflow-x: auto;
@@ -66,18 +61,18 @@ table {
   display: inline-block;
   width: 0;
   height: 0;
-  margin-left: 2px;
-  vertical-align: middle;
-  border-color: currentColor transparent rgb(255 255 255);
-  border-style: dotted solid solid;
   border-width: 0 4px 4px;
-  content: "";
+  border-style: dotted solid solid;
+  border-color: currentColor transparent rgb(255 255 255);
+  margin-left: 2px;
+  content: '';
+  vertical-align: middle;
 }
 
 .scroll-pane {
   height: 200px;
-  overflow-y: scroll;
   overflow-x: hi;
+  overflow-y: scroll;
 }
 
 #select-box tr td {
@@ -107,11 +102,10 @@ table {
 }
 
 .selected-obj-alert {
-  margin-bottom: 5px;
-
   /* override */
   padding-top: 10px;
   padding-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .heatmap-view {
@@ -144,8 +138,8 @@ table {
 }
 
 .modal-alert {
-  margin: 10px 15px 0;
   padding: 8px 15px;
+  margin: 10px 15px 0;
 }
 
 .modal-cover {
@@ -154,16 +148,16 @@ table {
 }
 
 .modal-cover-table {
-  display: table;
   position: static;
+  display: table;
   width: 100%;
   height: 100%;
 }
 
 .modal-cover-cell {
+  position: static;
   display: table-cell;
   vertical-align: middle;
-  position: static;
 }
 
 .modal-cover-box {
@@ -175,8 +169,8 @@ table {
 
 .modal-cover-content {
   padding: 5px;
-  background: rgb(255 255 255);
   border: 1px solid rgb(102 102 102);
+  background: rgb(255 255 255);
   border-radius: 3px;
 }
 
@@ -194,19 +188,19 @@ table {
 }
 
 .ellipsis {
-  max-width: 170px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   display: inline-block;
   overflow: hidden;
+  max-width: 170px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ws-descript {
-  white-space: nowrap;
-  text-overflow: ellipsis;
   display: inline-block;
   overflow: hidden;
   max-width: 400px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* custom checkboxes (prototyped) */
@@ -215,8 +209,8 @@ table {
   width: 15px;
   height: 15px;
   border: 1px solid rgb(204 204 204);
-  margin-left: auto;
   margin-right: auto;
+  margin-left: auto;
 
   &:hover {
     border: 1px solid rgb(68 68 68);
@@ -271,7 +265,9 @@ table {
   margin: 70px 0 0;
 }
 
-#narrative-nav, .recent-narratives, .recent-projects {
+#narrative-nav,
+.recent-narratives,
+.recent-projects {
   padding: 0;
   margin: 0;
 }
@@ -307,9 +303,9 @@ table {
 }
 
 .FixedHeader_Header {
-  background: rgb(255 255 255);
-  margin: -6px 0 0;
   height: 44px;
+  margin: -6px 0 0;
+  background: rgb(255 255 255);
 }
 
 .narrative-sidebar li {
@@ -323,7 +319,8 @@ table {
   }
 }
 
-.sidebar-header, .view-header {
+.sidebar-header,
+.view-header {
   color: rgb(137 137 137);
   font-family: $typeface-display;
   font-weight: 400;
@@ -340,31 +337,31 @@ table {
 }
 
 .active .btn-narr {
-  background-color: rgb(187 232 249);
-  border: 1px solid rgb(66 139 202);
-  text-align: left;
-  padding-left: 20px;
   padding-right: 20px;
+  padding-left: 20px;
+  border: 1px solid rgb(66 139 202);
+  background-color: rgb(187 232 249);
+  text-align: left;
 }
 
 .btn-narr {
-  text-align: left;
-  padding-left: 20px;
   padding-right: 20px;
-  background-color: rgb(242 242 242);
+  padding-left: 20px;
   border: 1px solid rgb(219 219 219);
+  background-color: rgb(242 242 242);
   color: rgb(109 168 207);
   font: 14px $typeface-display;
+  text-align: left;
 }
 
 .nav-sidebar {
   top: 70px;
 
   li {
-    list-style: none;
     margin-bottom: 10px;
-    text-align: left;
     font-family: $typeface-display;
+    list-style: none;
+    text-align: left;
   }
 
   > li > a {
@@ -383,11 +380,12 @@ table {
       }
 
       &.active {
-        &:hover, > a {
-          color: rgb(42 100 150) !important;
-          box-sizing: border-box;
+        &:hover,
+        > a {
           height: 50px;
+          box-sizing: border-box;
           border-bottom: 4px solid rgb(66 139 202);
+          color: rgb(42 100 150) !important;
         }
       }
     }
@@ -399,14 +397,14 @@ table {
 }
 
 #wrap {
-  min-height: 100%;
   height: auto;
-
-  /* Negative indent footer by its height */
-  margin: 0 auto -58px;
+  min-height: 100%;
 
   /* Pad bottom by footer height */
   padding: 0 0 80px;
+
+  /* Negative indent footer by its height */
+  margin: 0 auto -58px;
 }
 
 /* for the footer */
@@ -422,14 +420,15 @@ table {
       padding: 7px 5px 5px 1px;
 
       &::after {
-        content: "\2022";
         padding-left: 10px;
         color: rgb(187 187 187);
+        content: '\2022';
         font-size: 10px;
       }
 
-      &:last-child::after, &:nth-last-child(2)::after {
-        content: "";
+      &:last-child::after,
+      &:nth-last-child(2)::after {
+        content: '';
       }
     }
   }
@@ -440,14 +439,14 @@ table {
   }
 
   .disclaimer {
-    background-color: rgb(169 68 66);
-    color: rgb(255 255 255);
-    display: block;
-    text-align: center;
-    font-weight: 700;
     position: fixed;
     bottom: 0;
+    display: block;
     width: 100%;
+    background-color: rgb(169 68 66);
+    color: rgb(255 255 255);
+    font-weight: 700;
+    text-align: center;
   }
 }
 

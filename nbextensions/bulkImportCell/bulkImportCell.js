@@ -26,7 +26,8 @@ define([
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
 
-    const div = html.tag('div');
+    const div = html.tag('div'),
+        cssCellType = 'kb-bulk-import';
 
     function DefaultWidget() {
         function make() {
@@ -174,6 +175,7 @@ define([
          */
         setupDomNode() {
             this.kbaseNode = document.createElement('div');
+            this.kbaseNode.classList.add(`${cssCellType}__base-node`);
             // inserting after, with raw dom, means telling the parent node
             // to insert a node before the node following the one we are
             // referencing. If there is no next sibling, the null value
@@ -378,31 +380,38 @@ define([
         renderLayout() {
             const events = Events.make(),
                 content = div({
-                    class: 'kbase-extension kb-app-cell',
-                    style: { display: 'flex', alignItems: 'stretch' }
+                    class: `${cssCellType}__layout_container kbase-extension kb-app-cell`,
                 }, [
                     div({
-                        class: 'prompt',
+                        class: `${cssCellType}__prompt prompt`,
                         dataElement: 'prompt',
-                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' }
-                    }, [
-                        div({ dataElement: 'status' })
-                    ]),
-                    div({
-                        class: 'body',
-                        dataElement: 'body',
-                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1', width: '100%' }
                     }, [
                         div({
+                            class: `${cssCellType}__prompt_status`,
+                            dataElement: 'status'
+                        })
+                    ]),
+                    div({
+                        class: `${cssCellType}__body body`,
+                        dataElement: 'body',
+                    }, [
+                        div({
+                            class: `${cssCellType}__widget_container`,
                             dataElement: 'widget',
-                            style: { display: 'block', width: '100%' }
                         }, [
-                            div({ class: 'container-fluid', dataElement: 'cell-container' }, [
+                            div({
+                                class: `${cssCellType}__cell_container container-fluid`,
+                                dataElement: 'cell-container'
+                            }, [
                                 this.buildControlPanel(events),
                                 div({
-                                    dataElement: 'tab-pane'
+                                    class: `${cssCellType}__tab_pane`,
+                                    dataElement: 'tab-pane',
                                 }, [
-                                    div({ dataElement: 'widget' })
+                                    div({
+                                        class: `${cssCellType}__tab_pane_widget`,
+                                        dataElement: 'widget'
+                                    })
                                 ])
                             ])
                         ])

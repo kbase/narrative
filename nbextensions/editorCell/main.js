@@ -73,41 +73,41 @@ define([
      */
     function upgradeToEditorCell(cell, appSpec, appTag) {
         return Promise.try(function() {
-                var meta = cell.metadata;
-                meta.kbase = {
-                    type: 'editor',
-                    attributes: {
-                        id: new Uuid(4).format(),
-                        status: 'new',
-                        created: (new Date()).toUTCString(),
-                        icon: 'bar-chart'
+            var meta = cell.metadata;
+            meta.kbase = {
+                type: 'editor',
+                attributes: {
+                    id: new Uuid(4).format(),
+                    status: 'new',
+                    created: (new Date()).toUTCString(),
+                    icon: 'bar-chart'
+                },
+                cellState: {
+                    icon: 'bar-chart'
+                },
+                editorCell: {
+                    app: {
+                        id: appSpec.info.id,
+                        gitCommitHash: appSpec.info.git_commit_hash,
+                        version: appSpec.info.ver,
+                        tag: appTag,
+                        spec: appSpec
                     },
-                    cellState: {
-                        icon: 'bar-chart'
+                    editor: {
+                        type: appSpec.widgets.input
                     },
-                    editorCell: {
-                        app: {
-                            id: appSpec.info.id,
-                            gitCommitHash: appSpec.info.git_commit_hash,
-                            version: appSpec.info.ver,
-                            tag: appTag,
-                            spec: appSpec
-                        },
-                        editor: {
-                            type: appSpec.widgets.input
-                        },
-                        state: {
-                            edit: 'editing',
-                            params: null,
-                            code: null,
-                            request: null,
-                            result: null
-                        },
-                        params: null
-                    }
-                };
-                cell.metadata = meta;
-            })
+                    state: {
+                        edit: 'editing',
+                        params: null,
+                        code: null,
+                        request: null,
+                        result: null
+                    },
+                    params: null
+                }
+            };
+            cell.metadata = meta;
+        })
             .then(function() {
                 // Complete the cell setup.
                 return setupCell(cell);
@@ -285,11 +285,11 @@ define([
                     jupyter.disableKeyListenersForCell(cell);
 
                     return editor.start({
-                            node: kbaseNode,
-                            appId: appId,
-                            appTag: appTag,
-                            authToken: runtime.authToken()
-                        })
+                        node: kbaseNode,
+                        appId: appId,
+                        appTag: appTag,
+                        authToken: runtime.authToken()
+                    })
                         .then(function() {
                             // AppCellController.start();
                             cell.renderMinMax();
@@ -432,8 +432,9 @@ define([
     return {
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load
-            // These are kbase api calls
+        // These are kbase api calls
     };
 }, function(err) {
+    'use strict';
     console.log('ERROR loading editorCell main', err);
 });

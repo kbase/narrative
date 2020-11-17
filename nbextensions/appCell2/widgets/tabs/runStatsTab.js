@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true,nomen:true*/
-
 define([
     'bluebird',
     'common/runtime',
@@ -19,28 +16,28 @@ define([
         }
 
         var viewModel = {
-            lastUpdated: {
-                elapsed: null,
-                time: null
+                lastUpdated: {
+                    elapsed: null,
+                    time: null
+                },
+                queue: {
+                    active: null,
+                    label: null,
+                    elapsed: null,
+                    position: null
+                },
+                run: {
+                    active: null,
+                    label: null,
+                    elapsed: null
+                },
+                finish: {
+                    active: null,
+                    state: null,
+                    when: null
+                }
             },
-            queue: {
-                active: null,
-                label: null,
-                elapsed: null,
-                position: null
-            },
-            run: {
-                active: null,
-                label: null,
-                elapsed: null
-            },
-            finish: {
-                active: null,
-                state: null,
-                when: null
-            }
-        },
-        now = new Date().getTime();
+            now = new Date().getTime();
 
         if (lastUpdated) {
             viewModel.lastUpdated.time = format.niceElapsedTime(lastUpdated);
@@ -83,18 +80,18 @@ define([
 
     function renderRunStats() {
         var labelStyle = {
-            textAlign: 'right',
-            border: '1px transparent solid',
-            padding: '4px'
-        },
-        dataStyle = {
-            border: '1px silver solid',
-            padding: '4px',
-            display: 'inline-block',
-            minWidth: '20px',
-            backgroundColor: 'gray',
-            color: '#FFF'
-        };
+                textAlign: 'right',
+                border: '1px transparent solid',
+                padding: '4px'
+            },
+            dataStyle = {
+                border: '1px silver solid',
+                padding: '4px',
+                display: 'inline-block',
+                minWidth: '20px',
+                backgroundColor: 'gray',
+                color: '#FFF'
+            };
         return div({dataElement: 'run-stats', style: {paddingTop: '6px'}}, [
             div({class: 'row', dataElement: 'lastUpdated'}, [
                 div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Last updated')),

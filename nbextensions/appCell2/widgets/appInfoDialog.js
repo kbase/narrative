@@ -1,5 +1,4 @@
-/*global define*/
-/*jslint white:true,browser:true*/
+
 /**
  * Creates an informational panel for Apps, based on some general app info.
  * Needs the following keys in its config:
@@ -54,7 +53,7 @@ define([
                 ]),
                 //div([
                 //    'ID: ', span({class: 'value'}, data.id)
-                //]),                
+                //]),
                 div([
                     'Tag: ', span({ class: 'value' }, data.tag)
                 ]),
@@ -76,10 +75,10 @@ define([
             nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url')),
             catalog = new Catalog(runtime.config('services.catalog.url'));
         return Promise.all([
-                nms.get_method_full_info({ ids: [arg.id], tag: arg.tag, ver: arg.version }),
-                catalog.get_exec_aggr_stats({ full_app_ids: [arg.id] }),
-                catalog.get_module_info({ module_name: arg.module })
-            ])
+            nms.get_method_full_info({ ids: [arg.id], tag: arg.tag, ver: arg.version }),
+            catalog.get_exec_aggr_stats({ full_app_ids: [arg.id] }),
+            catalog.get_module_info({ module_name: arg.module })
+        ])
             .spread(function(methodInfo, aggregateStats, moduleInfo) {
                 // if any of these results are unexpected, we just show an error message.
                 var title = [

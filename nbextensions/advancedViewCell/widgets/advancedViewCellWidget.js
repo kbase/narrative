@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'jquery',
     'bluebird',
@@ -162,7 +159,7 @@ define([
         // for a beta or release tag ...
         function fixApp(app) {
             switch (app.tag) {
-            case 'release':
+                case 'release':
                 {
                     return {
                         id: app.id,
@@ -170,14 +167,14 @@ define([
                         version: app.version
                     };
                 }
-            case 'beta':
-            case 'dev':
-                return {
-                    id: app.id,
-                    tag: app.tag
-                }
-            default:
-                throw new Error('Invalid tag for app ' + app.id);
+                case 'beta':
+                case 'dev':
+                    return {
+                        id: app.id,
+                        tag: app.tag
+                    };
+                default:
+                    throw new Error('Invalid tag for app ' + app.id);
             }
         }
 
@@ -627,11 +624,11 @@ define([
                         evaluateAppState();
                     });
                     widget.start({
-                            node: ui.getElement(['parameters-group', 'widget']),
-                            appSpec: model.getItem('app.spec'),
-                            parameters: spec.getSpec().parameters,
-                            params: model.getItem('params')
-                        })
+                        node: ui.getElement(['parameters-group', 'widget']),
+                        appSpec: model.getItem('app.spec'),
+                        parameters: spec.getSpec().parameters,
+                        params: model.getItem('params')
+                    })
                         .then(function () {
                             resolve();
                         });
@@ -711,7 +708,7 @@ define([
                 })
                 .catch(function (err) {
                     alert('internal error'),
-                        console.error('INTERNAL ERROR', err);
+                    console.error('INTERNAL ERROR', err);
                 });
         }
 
@@ -785,5 +782,6 @@ define([
         }
     };
 }, function (err) {
+    'use strict';
     console.error('ERROR loading viewCell viewCellWidget', err);
 });

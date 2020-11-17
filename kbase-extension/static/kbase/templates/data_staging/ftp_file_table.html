@@ -25,9 +25,28 @@
                 <div>
                     <select>
                         <option></option>
-                        {{#each ../uploaders}}
+                        {{#if mappings}}
+                        <optgroup label="Suggested Types">
+                        {{# unless mappings.[1]}} 
+                        <!-- If there is only one match --> 
+             
+                        <option value="{{mappings.[0].id}}" selected>{{mappings.[0].title}} (detected)</option>
+                        {{ else }}
+                            {{#each mappings as |mapping|}}
+                                <option value="{{id}}">{{title}} (detected)</option>
+                            {{/each}}
+                        </optgroup>
+                        {{/unless}}
+                        <optgroup label="Other Types">
+                            {{#each ../uploaders}}
                             <option value="{{id}}">{{name}}</option>
-                        {{/each}}
+                            {{/each}}
+                        {{ else }}
+                            {{#each ../uploaders}}
+                                <option value="{{id}}">{{name}}</option>
+                            {{/each}}
+                        {{/if}}
+                    </optgroup>
                     </select>
                     <button data-download="{{name}}" class="kb-staging-table-body__download btn btn-xs btn-primary" role="button" aria-label="Download Data">
                         <span><i class="fa fa-download"></i></span>

@@ -28,18 +28,24 @@ define([
 
     const div = html.tag('div');
 
-    class DefaultWidget {
-        constructor() {
+    function DefaultWidget() {
+        function make() {
+            function start() {
+                alert('starting default widget');
+            }
 
+            function stop() {
+
+            }
+
+            return {
+                start: start,
+                stop: stop
+            };
         }
-
-        start(options) {
-            alert('starting default widget');
-        }
-
-        stop() {
-
-        }
+        return {
+            make: make
+        };
     }
 
     /**
@@ -204,6 +210,7 @@ define([
             this.cell.metadata = meta;
             this.render();
             this.updateState();
+            this.toggleTab(this.state.tabState.selected);
         }
 
         updateState() {
@@ -223,7 +230,7 @@ define([
             if (this.tabWidget !== null) {
                 this.tabWidget.stop();
             }
-            this.tabWidget = new this.tabSet.tabs[tab].widget();
+            this.tabWidget = this.tabSet.tabs[tab].widget.make({bus: this.bus});
             let node = document.createElement('div');
             this.ui.getElement('cell-container.tab-pane.widget').appendChild(node);
             this.tabWidget.start({
@@ -294,24 +301,24 @@ define([
                     },
                     viewConfigure: {
                         label: 'View Configure',
-                        widget: DefaultWidget
+                        widget: DefaultWidget()
                     },
                     info: {
                         label: 'Info',
-                        widget: DefaultWidget,
+                        widget: DefaultWidget(),
                     },
                     logs: {
                         label: 'Job Status',
-                        widget: DefaultWidget
+                        widget: DefaultWidget()
                     },
                     results: {
                         label: 'Result',
-                        widget: DefaultWidget
+                        widget: DefaultWidget()
                     },
                     error: {
                         label: 'Error',
                         type: 'danger',
-                        widget: DefaultWidget
+                        widget: DefaultWidget()
                     }
                 }
             };

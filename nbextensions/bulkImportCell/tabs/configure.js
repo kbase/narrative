@@ -68,7 +68,6 @@ define([
                 content: content,
                 events: events
             };
-
         }
 
         function stop() {

@@ -30,7 +30,7 @@ define([
 
     function DefaultWidget() {
         function make() {
-            function start(options) {
+            function start() {
                 alert('starting default widget');
             }
 

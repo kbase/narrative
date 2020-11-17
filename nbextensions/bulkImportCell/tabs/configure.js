@@ -2,12 +2,16 @@ define([
     'bluebird',
     'common/ui',
     'common/html',
-    'common/events'
+    'common/events',
+    'common/runtime',
+    '../paramsWidget'
 ], (
     Promise,
     UI,
     html,
-    Events
+    Events,
+    runtime,
+    ParamsWidget
 ) => {
     'use strict';
 
@@ -33,10 +37,77 @@ define([
                     node: container,
                     bus: bus
                 });
+
+                loadParamsWidget(args);
                 const layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
             });
+        }
+
+        function loadParamsWidget(arg) {
+            console.log('we have loaded the params widgeth: ', ParamsWidget, ' args are: ', arg);
+
+            const bus = runtime.bus().makeChannelBus({ 
+                    description: 'Parent comm bus for input widget' 
+                }),
+            widget = ParamsWidget.make({
+                    bus: bus,
+                    workspaceInfo: arg.workspaceInfo
+                });
+
+            bus.emit('run', {
+                node: arg.node,
+                appSpec: arg.appSpec,
+                parameters: arg.parameters
+            });
+
+            bus.on('sync-params', function(message) {
+                message.parameters.forEach(function(paramId) {
+                    bus.send({
+                        parameter: paramId,
+                        value: arg.model.getItem(['params', message.parameter])
+                    }, {
+                        key: {
+                            type: 'update',
+                            parameter: message.parameter
+                        }
+                    });
+                });
+            });
+
+            bus.on('parameter-sync', function(message) {
+                var value = arg.model.getItem(['params', message.parameter]);
+                bus.send({
+                    //                            parameter: message.parameter,
+                    value: value
+                }, {
+                    // This points the update back to a listener on this key
+                    key: {
+                        type: 'update',
+                        parameter: message.parameter
+                    }
+                });
+            });
+
+            bus.respond({
+                key: {
+                    type: 'get-parameter'
+                },
+                handle: function(message) {
+                    return {
+                        value: arg.model.getItem(['params', message.parameterName])
+                    };
+                }
+            });
+
+            bus.on('parameter-changed', function(message) {
+                arg.model.setItem(['params', message.parameter], message.newValue);
+                // evaluateAppState();
+            });
+
+            //start the widget
+            //return the bus and widget instance (?)
         }
 
         function renderLayout() {

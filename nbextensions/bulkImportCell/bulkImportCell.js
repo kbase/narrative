@@ -34,18 +34,24 @@ define([
 
     const div = html.tag('div');
 
-    class DefaultWidget {
-        constructor() {
+    function DefaultWidget() {
+        function make() {
+            function start(options) {
+                alert('starting default widget');
+            }
 
+            function stop() {
+
+            }
+
+            return {
+                start: start,
+                stop: stop
+            };
         }
-
-        start() {
-            alert('starting default widget');
-        }
-
-        stop() {
-
-        }
+        return {
+            make: make
+        };
     }
 
     /**
@@ -246,18 +252,7 @@ define([
             if (this.tabWidget !== null) {
                 this.tabWidget.stop();
             }
-            let toggleTab = this.tabSet.tabs[tab];
-
-            if (toggleTab.class) {
-                this.tabWidget = new toggleTab.widget();
-            } else {
-                // TODO: update jobId with actual value
-                this.tabWidget = toggleTab.widget.make({
-                    model: this.model,
-                    jobId: undefined
-                });
-            }
-
+            this.tabWidget = this.tabSet.tabs[tab].widget.make({bus: this.bus});
             let node = document.createElement('div');
             this.ui.getElement('cell-container.tab-pane.widget').appendChild(node);
             this.tabWidget.start({
@@ -329,29 +324,24 @@ define([
                     },
                     viewConfigure: {
                         label: 'View Configure',
-                        widget: DefaultWidget,
-                        class: true
+                        widget: DefaultWidget()
                     },
                     info: {
                         label: 'Info',
-                        widget: InfoTabWidget,
-                        class: false
+                        widget: DefaultWidget(),
                     },
                     logs: {
                         label: 'Job Status',
-                        widget: DefaultWidget,
-                        class: true
+                        widget: DefaultWidget()
                     },
                     results: {
                         label: 'Result',
-                        widget: DefaultWidget,
-                        class: true
+                        widget: DefaultWidget()
                     },
                     error: {
                         label: 'Error',
                         type: 'danger',
-                        widget: DefaultWidget,
-                        class: true
+                        widget: DefaultWidget()
                     }
                 }
             };

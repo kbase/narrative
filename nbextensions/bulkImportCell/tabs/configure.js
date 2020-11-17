@@ -15,11 +15,10 @@ define([
         span = html.tag('span'),
         form = html.tag('form');
 
-    class ConfigureWidget {
-        constructor(bus) {
-            this.bus = bus;
-            this.container = null;
-        }
+    function ConfigureWidget(options) {
+        const bus = options.bus;
+        let container = null,
+            ui = null;
 
         /**
          * args includes:
@@ -27,23 +26,23 @@ define([
          *  - something something inputs and parameters
          * @param {object} args
          */
-        start(args) {
+        function start(args) {
             return Promise.try(() => {
-                this.container = args.node;
-                this.ui = UI.make({
-                    node: this.container,
-                    bus: this.bus
+                container = args.node;
+                ui = UI.make({
+                    node: container,
+                    bus: bus
                 });
-                const layout = this.renderLayout();
-                this.container.innerHTML = layout.content;
-                layout.events.attachEvents(this.container);
+                const layout = renderLayout();
+                container.innerHTML = layout.content;
+                layout.events.attachEvents(container);
             });
         }
 
-        renderLayout() {
+        function renderLayout() {
             let events = Events.make(),
                 formContent = [
-                    this.ui.buildPanel({
+                    ui.buildPanel({
                         title: span([
                             'File Paths',
                             span({
@@ -57,7 +56,7 @@ define([
                         body: div({ dataElement: 'file-path-fields' }),
                         classes: ['kb-panel-light']
                     }),
-                    this.ui.buildPanel({
+                    ui.buildPanel({
                         title: span([
                             'Parameters',
                             span({
@@ -80,10 +79,17 @@ define([
 
         }
 
-        stop() {
-            this.container.innerHTML = '';
+        function stop() {
+            container.innerHTML = '';
         }
+
+        return {
+            start: start,
+            stop: stop
+        };
     }
 
-    return ConfigureWidget;
+    return {
+        make: ConfigureWidget
+    };
 });

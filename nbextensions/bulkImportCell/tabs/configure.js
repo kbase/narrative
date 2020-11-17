@@ -151,7 +151,9 @@ define([
         }
 
         function stop() {
-            container.innerHTML = '';
+            return Promise.try(() => {
+                container.innerHTML = '';
+            });
         }
 
         return {

@@ -8,8 +8,10 @@ define([
     'common/events',
     'base/js/namespace',
     'kb_common/html',
+    './cellTabs',
     './cellControlPanel',
-    './tabs/configure'
+    './tabs/configure',
+    './categoryPanel'
 ], (
     Uuid,
     AppUtils,
@@ -20,8 +22,10 @@ define([
     Events,
     Jupyter,
     html,
+    CellTabs,
     CellControlPanel,
-    ConfigureWidget
+    ConfigureWidget,
+    CategoryPanel
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
@@ -91,6 +95,75 @@ define([
             if (initialize) {
                 this.initialize(typesToFiles);
             }
+            this.tabSet = {
+                selectedTab: 'configure',
+                tabs: {
+                    configure: {
+                        label: 'Configure',
+                        widget: ConfigureWidget
+                    },
+                    viewConfigure: {
+                        label: 'View Configure',
+                        widget: DefaultWidget()
+                    },
+                    info: {
+                        label: 'Info',
+                        widget: DefaultWidget(),
+                    },
+                    logs: {
+                        label: 'Job Status',
+                        widget: DefaultWidget()
+                    },
+                    results: {
+                        label: 'Result',
+                        widget: DefaultWidget()
+                    },
+                    error: {
+                        label: 'Error',
+                        type: 'danger',
+                        widget: DefaultWidget()
+                    }
+                }
+            };
+            this.actionButtons = {
+                current: {
+                    name: null,
+                    disabled: null
+                },
+                availableButtons: {
+                    runApp: {
+                        help: 'Run the app',
+                        type: 'success',
+                        classes: ['-run'],
+                        label: 'Run'
+                    },
+                    cancel: {
+                        help: 'Cancel the running app',
+                        type: 'danger',
+                        classes: ['-cancel'],
+                        label: 'Cancel'
+                    },
+                    reRunApp: {
+                        help: 'Edit and re-run the app',
+                        type: 'default',
+                        classes: ['-rerun'],
+                        label: 'Reset'
+                    },
+                    resetApp: {
+                        help: 'Reset the app and return to Edit mode',
+                        type: 'default',
+                        classes: ['-reset'],
+                        label: 'Reset'
+                    },
+                    offline: {
+                        help: 'Currently disconnected from the server.',
+                        type: 'danger',
+                        classes: ['-cancel'],
+                        label: 'Offline'
+                    }
+                }
+            };
+
             this.setupCell();
         }
 
@@ -210,12 +283,12 @@ define([
             this.cell.metadata = meta;
             this.render();
             this.updateState();
-            this.toggleTab(this.state.tabState.selected);
+            this.toggleTab(this.state.tab.selected);
         }
 
         updateState() {
-            this.controlPanel.setTabState(this.state.tabState);
-            this.controlPanel.setActionState(this.state.actionState);
+            // this.controlPanel.setTabState(this.state.tab);
+            this.controlPanel.setActionState(this.state.action);
         }
 
         /**
@@ -225,17 +298,21 @@ define([
          * @param {string} tab id of the tab to display
          */
         toggleTab(tab) {
-            this.state.tabState.selected = tab;
-            this.controlPanel.setTabState(this.state.tabState);
+            this.state.tab.selected = tab;
+            // this.controlPanel.setTabState(this.state.tab);
             if (this.tabWidget !== null) {
                 this.tabWidget.stop();
             }
             this.tabWidget = this.tabSet.tabs[tab].widget.make({bus: this.bus});
             let node = document.createElement('div');
-            this.ui.getElement('cell-container.tab-pane.widget').appendChild(node);
+            this.ui.getElement('cell-container.tab-pane.widget-container.widget').appendChild(node);
             this.tabWidget.start({
                 node: node
             });
+        }
+
+        toggleCategory(category) {
+            this.state.category.selected = category;
         }
 
         runAction(action) {
@@ -254,7 +331,10 @@ define([
 
         getInitialState() {
             return {
-                tabState: {
+                category: {
+                    selected: 'fastq'
+                },
+                tab: {
                     selected: 'configure',
                     tabs: {
                         configure: {
@@ -283,96 +363,58 @@ define([
                         }
                     }
                 },
-                actionState: {
+                action: {
                     name: 'runApp',
                     enabled: false
                 }
             };
         }
 
-        buildControlPanel(events) {
-            this.tabState = this.getInitialState();
-            this.tabSet = {
-                selectedTab: 'configure',
-                tabs: {
-                    configure: {
-                        label: 'Configure',
-                        widget: ConfigureWidget
-                    },
-                    viewConfigure: {
-                        label: 'View Configure',
-                        widget: DefaultWidget()
-                    },
-                    info: {
-                        label: 'Info',
-                        widget: DefaultWidget(),
-                    },
-                    logs: {
-                        label: 'Job Status',
-                        widget: DefaultWidget()
-                    },
-                    results: {
-                        label: 'Result',
-                        widget: DefaultWidget()
-                    },
-                    error: {
-                        label: 'Error',
-                        type: 'danger',
-                        widget: DefaultWidget()
-                    }
-                }
-            };
-            this.actionButtons = {
-                current: {
-                    name: null,
-                    disabled: null
-                },
-                availableButtons: {
-                    runApp: {
-                        help: 'Run the app',
-                        type: 'success',
-                        classes: ['-run'],
-                        label: 'Run'
-                    },
-                    cancel: {
-                        help: 'Cancel the running app',
-                        type: 'danger',
-                        classes: ['-cancel'],
-                        label: 'Cancel'
-                    },
-                    reRunApp: {
-                        help: 'Edit and re-run the app',
-                        type: 'default',
-                        classes: ['-rerun'],
-                        label: 'Reset'
-                    },
-                    resetApp: {
-                        help: 'Reset the app and return to Edit mode',
-                        type: 'default',
-                        classes: ['-reset'],
-                        label: 'Reset'
-                    },
-                    offline: {
-                        help: 'Currently disconnected from the server.',
-                        type: 'danger',
-                        classes: ['-cancel'],
-                        label: 'Offline'
-                    }
-                }
-            };
-            this.controlPanel = new CellControlPanel({
+        buildActionButton(events) {
+            this.controlPanel = CellControlPanel.make({
                 bus: this.cellBus,
                 ui: this.ui,
-                tabs: {
-                    toggleAction: this.toggleTab.bind(this),
-                    tabs: this.tabSet
-                },
+                // tabs: {
+                //     toggleAction: this.toggleTab.bind(this),
+                //     tabs: this.tabSet
+                // },
                 action: {
                     runAction: this.runAction.bind(this),
                     actions: this.actionButtons
                 }
             });
             return this.controlPanel.buildLayout(events);
+        }
+
+        buildTabs() {
+
+            this.cellTabs = new CellTabs({
+                ui: this.ui,
+                bus: this.bus,
+                toggleAction: options.tabs.toggleAction,
+                tabs: options.tabs.tabs
+            });
+        }
+
+        buildCategoryPanel(node) {
+            this.categoryPanel = CategoryPanel.make({
+                bus: this.bus,
+                header: {
+                    label: 'Data type',
+                    icon: 'fas fa-dna'
+                },
+                categories: {
+                    fastq: {
+                        label: 'FASTQ Reads'
+                    },
+                    sra: {
+                        label: 'SRA Reads'
+                    }
+                }
+            });
+            this.categoryPanel.start({
+                node: node
+            });
         }
 
         renderLayout() {
@@ -398,11 +440,27 @@ define([
                             style: { display: 'block', width: '100%' }
                         }, [
                             div({ class: 'container-fluid', dataElement: 'cell-container' }, [
-                                this.buildControlPanel(events),
+                                this.buildActionButton(events),
                                 div({
-                                    dataElement: 'tab-pane'
+                                    dataElement: 'tab-pane',
+                                    style: {
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        width: '100%',
+                                        alignItems: 'stretch',
+                                        alignContent: 'stretch'
+                                    }
                                 }, [
-                                    div({ dataElement: 'widget' })
+                                    div({ dataElement: 'category-panel'}),
+                                    div({
+                                        style: {
+                                            flex: '1'
+                                        },
+                                        dataElement: 'widget-container'
+                                    }, [
+                                        div({ dataElement: 'tab-container'}),
+                                        div({ dataElement: 'widget'})
+                                    ])
                                 ])
                             ])
                         ])
@@ -421,6 +479,8 @@ define([
         render() {
             const layout = this.renderLayout();
             this.kbaseNode.innerHTML = layout.content;
+            this.buildCategoryPanel(this.ui.getElement('cell-container.tab-pane.category-panel'));
+            this.buildTabs(this.ui.getElement('cell-container.tab-pane.widget-container.tab-container'));
             layout.events.attachEvents(this.kbaseNode);
         }
     }

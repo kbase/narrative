@@ -8,7 +8,7 @@ define([
         var container,
             wrappedWidget = config.widget,
             wrappedId = html.genId();
-        
+
         function layout() {
             return div({id: wrappedId});
         }

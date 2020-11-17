@@ -9,6 +9,7 @@ define([
     html,
     format
 ) {
+    'use strict';
     var t = html.tag,
         span = t('span');
 

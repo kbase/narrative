@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true,nomen:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -94,21 +91,21 @@ define([
                     tag: model.getItem('app.tag')
                 });
             })
-            .then(function(appInfo) {
+                .then(function(appInfo) {
                 // If there are suggested next apps (er, methods), they'll be listed
                 // by app id. Look them up!
-                var suggestions = appInfo[0].suggestions || {};
-                var tag = model.getItem('app.tag');
-                if (suggestions.next_methods) {
-                    return nms.get_method_spec({
-                        ids: suggestions.next_methods,
-                        tag: tag
-                    });
-                }
-            })
-            .then(function(nextApps) {
-                renderNextApps(nextApps);
-            });
+                    var suggestions = appInfo[0].suggestions || {};
+                    var tag = model.getItem('app.tag');
+                    if (suggestions.next_methods) {
+                        return nms.get_method_spec({
+                            ids: suggestions.next_methods,
+                            tag: tag
+                        });
+                    }
+                })
+                .then(function(nextApps) {
+                    renderNextApps(nextApps);
+                });
         }
 
         function lazyRenderReport() {
@@ -162,7 +159,7 @@ define([
                                     $(document).trigger('methodClicked.Narrative', [app, 'dev']);
                                 }
                             })},
-                            app.info.name
+                        app.info.name
                         ),
                         span(' - ' + app.info.module_name)
                     ]);

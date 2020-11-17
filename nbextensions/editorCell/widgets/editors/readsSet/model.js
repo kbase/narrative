@@ -1,5 +1,4 @@
-/*global define*/
-/*jslint white:true,browser:true*/
+
 
 /*
  * Okay, I give in.
@@ -8,7 +7,7 @@
  * Our models are aware of the app spec, though, that is how they
  * configure their properties, validation, and relationships.
  * Data operations are custom coded here, though.
- * 
+ *
  */
 
 define([
@@ -43,12 +42,12 @@ define([
                     if (!data[0]) {
                         throw new Error('App not found');
                     }
-                    // Just keep a copy around for debugging.                    
+                    // Just keep a copy around for debugging.
                     // appSpec = data[0];
 
                     return data[0];
 
-                    // Now 
+                    // Now
 
                     // Get an input field widget per parameter
 
@@ -62,9 +61,9 @@ define([
                     //                        });
                     //                    env.parameters = parameters;
                     //                    env.parameterMap = parameterMap;
-                    //                    
-                    //                    
-                    //                   
+                    //
+                    //
+                    //
                     //                    return parameters;
                 });
         }
@@ -73,62 +72,62 @@ define([
 
             var appSpec = {
                 parameters: [{
-                        id: 'name',
-                        description: 'Name of the reads set',
-                        short_hint: 'The name of the set of sequence reads',
-                        default_values: [''],
-                        optional: 0,
-                        disabled: 0,
-                        advanced: 0,
-                        allow_multiple: 0,
-                        field_type: 'text',
-                        text_options: {
-                            is_output_name: 1,
-                            placeholder: 'Reads Set Name',
-                            valid_ws_types: ['KBaseSets.ReadsSet']
-                        },
-                        ui_class: 'output',
-                        ui_name: 'Reads Set Name'
+                    id: 'name',
+                    description: 'Name of the reads set',
+                    short_hint: 'The name of the set of sequence reads',
+                    default_values: [''],
+                    optional: 0,
+                    disabled: 0,
+                    advanced: 0,
+                    allow_multiple: 0,
+                    field_type: 'text',
+                    text_options: {
+                        is_output_name: 1,
+                        placeholder: 'Reads Set Name',
+                        valid_ws_types: ['KBaseSets.ReadsSet']
                     },
-                    {
-                        id: 'description',
-                        description: 'Description of the reads set',
-                        short_hint: 'The description of the set of sequence reads',
-                        default_values: [''],
-                        optional: 1,
-                        disabled: 0,
-                        advanced: 0,
-                        allow_multiple: 0,
-                        field_type: 'textarea',
-                        textarea_options: {
-                            is_output_name: 0,
-                            placeholder: 'Description',
-                            regex_constraint: [],
-                            validate_as: 'string',
-                            n_rows: 5
-                        },
-                        ui_class: 'parameter',
-                        ui_name: 'Description'
+                    ui_class: 'output',
+                    ui_name: 'Reads Set Name'
+                },
+                {
+                    id: 'description',
+                    description: 'Description of the reads set',
+                    short_hint: 'The description of the set of sequence reads',
+                    default_values: [''],
+                    optional: 1,
+                    disabled: 0,
+                    advanced: 0,
+                    allow_multiple: 0,
+                    field_type: 'textarea',
+                    textarea_options: {
+                        is_output_name: 0,
+                        placeholder: 'Description',
+                        regex_constraint: [],
+                        validate_as: 'string',
+                        n_rows: 5
                     },
-                    {
-                        id: 'items',
-                        field_type: 'text',
-                        description: 'A set of reads objects',
-                        short_hint: 'A set of reads objects',
-                        default_values: [''],
-                        optional: 1,
-                        disabled: 0,
-                        advanced: 0,
-                        allow_multiple: 1,
-                        text_options: {
-                            is_output_name: 0,
-                            placeholder: 'Items',
-                            regex_constraint: [],
-                            valid_ws_types: ['KBaseFile.SingleEndLibrary', 'KBaseFile.PairedEndLibrary']
-                        },
-                        ui_class: 'input',
-                        ui_name: 'Set of Reads Objects'
-                    }
+                    ui_class: 'parameter',
+                    ui_name: 'Description'
+                },
+                {
+                    id: 'items',
+                    field_type: 'text',
+                    description: 'A set of reads objects',
+                    short_hint: 'A set of reads objects',
+                    default_values: [''],
+                    optional: 1,
+                    disabled: 0,
+                    advanced: 0,
+                    allow_multiple: 1,
+                    text_options: {
+                        is_output_name: 0,
+                        placeholder: 'Items',
+                        regex_constraint: [],
+                        valid_ws_types: ['KBaseFile.SingleEndLibrary', 'KBaseFile.PairedEndLibrary']
+                    },
+                    ui_class: 'input',
+                    ui_name: 'Set of Reads Objects'
+                }
                 ]
             };
         }
@@ -195,7 +194,7 @@ define([
             start: start,
             stop: stop
         };
-    };
+    }
 
 
     return {

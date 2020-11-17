@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -252,5 +249,6 @@ define([
         load_ipython_extension: load
     };
 }, function (err) {
+    'use strict';
     console.error('ERROR loading codeCell main', err);
 });

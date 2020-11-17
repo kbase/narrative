@@ -34,5 +34,5 @@ define([
         make: function(config) {
             return factory(config);
         }
-    }
+    };
 });

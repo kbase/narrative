@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true,nomen:true*/
-
 define([
     'bluebird',
     'common/runtime'
@@ -94,9 +91,10 @@ define([
                 appSpec: arg.appSpec,
                 parameters: arg.parameters
 
-            }).then(function(result) {
-                widget = result;
-            });
+            })
+                .then(function(result) {
+                    widget = result;
+                });
 
         }
 

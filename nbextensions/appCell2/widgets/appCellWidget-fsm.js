@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([], function() {
     'use strict';
 
@@ -50,12 +47,12 @@ define([], function() {
                 message: ''
             },
             next: [{
-                    mode: 'internal-error'
-                },
-                {
-                    mode: 'editing',
-                    params: 'incomplete'
-                }
+                mode: 'internal-error'
+            },
+            {
+                mode: 'editing',
+                params: 'incomplete'
+            }
             ]
         },
         {
@@ -367,21 +364,21 @@ define([], function() {
                 message: 'You may edit the parameters for this App. You must fill in all required parameters (indicated by red arrows) before you can run the App.'
             },
             next: [{
-                    mode: 'editing-batch',
-                    params: 'complete',
-                    code: 'built'
-                },
-                {
-                    mode: 'editing-batch',
-                    params: 'incomplete'
-                },
-                {
-                    mode: 'editing',
-                    params: 'incomplete'
-                },
-                {
-                    mode: 'internal-error'
-                }
+                mode: 'editing-batch',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'editing-batch',
+                params: 'incomplete'
+            },
+            {
+                mode: 'editing',
+                params: 'incomplete'
+            },
+            {
+                mode: 'internal-error'
+            }
             ]
         },
         {
@@ -600,24 +597,24 @@ define([], function() {
                 }
             },
             next: [{
-                    mode: 'processing',
-                    stage: 'launched'
-                },
-                {
-                    mode: 'error'
-                },
-                {
-                    mode: 'error',
-                    stage: 'launching'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                {
-                    mode: 'internal-error'
-                }
+                mode: 'processing',
+                stage: 'launched'
+            },
+            {
+                mode: 'error'
+            },
+            {
+                mode: 'error',
+                stage: 'launching'
+            },
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'internal-error'
+            }
             ]
         },
         {
@@ -683,45 +680,45 @@ define([], function() {
                 }
             },
             next: [{
-                    mode: 'processing',
-                    stage: 'launched'
-                },
-                {
-                    mode: 'processing',
-                    stage: 'queued'
-                },
-                {
-                    mode: 'processing',
-                    stage: 'running'
-                },
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete'
-                },
-                {
-                    mode: 'canceled'
-                },
-                {
-                    mode: 'canceling'
-                },
-                {
-                    mode: 'success'
-                },
-                {
-                    mode: 'error'
-                },
-                {
-                    mode: 'error',
-                    stage: 'launching'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                {
-                    mode: 'internal-error'
-                }
+                mode: 'processing',
+                stage: 'launched'
+            },
+            {
+                mode: 'processing',
+                stage: 'queued'
+            },
+            {
+                mode: 'processing',
+                stage: 'running'
+            },
+            {
+                mode: 'processing',
+                stage: 'partial-complete'
+            },
+            {
+                mode: 'canceled'
+            },
+            {
+                mode: 'canceling'
+            },
+            {
+                mode: 'success'
+            },
+            {
+                mode: 'error'
+            },
+            {
+                mode: 'error',
+                stage: 'launching'
+            },
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'internal-error'
+            }
             ]
         },
         {
@@ -786,51 +783,51 @@ define([], function() {
                 }
             },
             next: [{
-                    mode: 'processing',
-                    stage: 'running'
-                },
-                {
-                    mode: 'processing',
-                    stage: 'partial-complete'
-                },
-                {
-                    mode: 'processing',
-                    stage: 'queued'
-                },
+                mode: 'processing',
+                stage: 'running'
+            },
+            {
+                mode: 'processing',
+                stage: 'partial-complete'
+            },
+            {
+                mode: 'processing',
+                stage: 'queued'
+            },
 
-                {
-                    mode: 'canceled'
-                },
-                {
-                    mode: 'canceling'
-                },
-                {
-                    mode: 'success'
-                },
-                {
-                    mode: 'error'
-                },
-                {
-                    mode: 'error',
-                    stage: 'queued'
-                },
-                // This can happen if there is no in-progress message received
-                // before an error occurs.
-                {
-                    mode: 'error',
-                    stage: 'running'
-                },
-                // This can happen if the job disappeared while the app thinks
-                // it is queued, yet the user still wants to cancel (which can't really
-                // cancel, it just has to return to editing mode.
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                {
-                    mode: 'internal-error'
-                }
+            {
+                mode: 'canceled'
+            },
+            {
+                mode: 'canceling'
+            },
+            {
+                mode: 'success'
+            },
+            {
+                mode: 'error'
+            },
+            {
+                mode: 'error',
+                stage: 'queued'
+            },
+            // This can happen if there is no in-progress message received
+            // before an error occurs.
+            {
+                mode: 'error',
+                stage: 'running'
+            },
+            // This can happen if the job disappeared while the app thinks
+            // it is queued, yet the user still wants to cancel (which can't really
+            // cancel, it just has to return to editing mode.
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'internal-error'
+            }
             ]
         },
 
@@ -1086,29 +1083,29 @@ define([], function() {
                 }
             },
             next: [{
-                    mode: 'canceled'
-                },
-                // In case the cancellation request was denied
-                {
-                    mode: 'processing',
-                    stage: 'running'
-                },
-                // In case the cancelling request did not succeed and the job meanwhile finished.
-                {
-                    mode: 'success'
-                },
-                {
-                    mode: 'error',
-                    stage: 'running'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                {
-                    mode: 'internal-error'
-                }
+                mode: 'canceled'
+            },
+            // In case the cancellation request was denied
+            {
+                mode: 'processing',
+                stage: 'running'
+            },
+            // In case the cancelling request did not succeed and the job meanwhile finished.
+            {
+                mode: 'success'
+            },
+            {
+                mode: 'error',
+                stage: 'running'
+            },
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'internal-error'
+            }
             ]
 
         },
@@ -1174,13 +1171,13 @@ define([], function() {
                 }
             },
             next: [{
-                    mode: 'canceled'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
+                mode: 'canceled'
+            },
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            }
             ]
         },
         {
@@ -1245,16 +1242,16 @@ define([], function() {
                 }
             },
             next: [{
-                    mode: 'success'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                {
-                    mode: 'internal-error'
-                }
+                mode: 'success'
+            },
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'internal-error'
+            }
             ]
         },
 
@@ -1304,17 +1301,17 @@ define([], function() {
                 message: 'There was an error launching the App.'
             },
             next: [{
-                    mode: 'error',
-                    stage: 'launching'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                {
-                    mode: 'internal-error'
-                }
+                mode: 'error',
+                stage: 'launching'
+            },
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'internal-error'
+            }
             ]
 
         },
@@ -1381,17 +1378,17 @@ define([], function() {
                 }
             },
             next: [{
-                    mode: 'error',
-                    stage: 'queued'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                {
-                    mode: 'internal-error'
-                }
+                mode: 'error',
+                stage: 'queued'
+            },
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'internal-error'
+            }
             ]
 
         },
@@ -1518,16 +1515,16 @@ define([], function() {
                 message: 'An error was encountered.'
             },
             next: [{
-                    mode: 'error'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                {
-                    mode: 'internal-error'
-                }
+                mode: 'error'
+            },
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'internal-error'
+            }
             ]
         },
         // A fatal error represents an app cell which cannot operate.
@@ -1576,12 +1573,12 @@ define([], function() {
                 message: 'An internal error was encountered.'
             },
             next: [{
-                    mode: 'internal-error'
-                },
-                // We will let a user attempt to reset the app.
-                {
-                    mode: 'new'
-                }
+                mode: 'internal-error'
+            },
+            // We will let a user attempt to reset the app.
+            {
+                mode: 'new'
+            }
             ]
         }
     ];

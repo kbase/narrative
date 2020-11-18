@@ -57,7 +57,7 @@ define([
      * This class creates and manages the bulk import cell. This works with, and wraps around,
      * the Jupyter Cell object.
      */
-    class BulkImportCell {
+    function BulkImportCell(options) {
         /**
          * The constructor does the work of initializing the bulk import cell module. It
          * modifies the cell metadata, if the initialize parameter is truthy, and extends the
@@ -78,25 +78,24 @@ define([
          *     'fastq_reads': ['file1.fq', 'file2.fq']
          * }
          */
-        constructor(cell, initialize, typesToFiles) {
-            if (cell.cell_type !== 'code') {
-                throw new Error('Can only create Bulk Import Cells out of code cells!');
-            }
-            this.cell = cell;
-            // this is the DOM element used as the container for everything controlled by this cell.
-            this.kbaseNode = null;
-            this.runtime = Runtime.make();
-            this.cellBus = null;
-            this.busEventManager = BusEventManager.make({
-                bus: this.runtime.bus()
-            });
-            this.ui = null;
-            this.tabWidget = null;  // the widget currently in view
-            this.state = this.getInitialState();
-            if (initialize) {
-                this.initialize(typesToFiles);
-            }
-            this.tabSet = {
+        // constructor(options) { //cell, initialize, typesToFiles) {
+        if (options.cell.cell_type !== 'code') {
+            throw new Error('Can only create Bulk Import Cells out of code cells!');
+        }
+        const cell = options.cell,
+            runtime = Runtime.make(),
+            busEventManager = BusEventManager.make({
+                bus: runtime.bus()
+            }),
+            typesToFiles = options.importData;
+
+        // this is the DOM element used as the container for everything controlled by this cell.
+        let kbaseNode = null,
+            cellBus = null,
+            ui = null,
+            tabWidget = null,  // the widget currently in view
+            state = getInitialState(),
+            tabSet = {
                 selectedTab: 'configure',
                 tabs: {
                     configure: {
@@ -125,8 +124,8 @@ define([
                         widget: DefaultWidget()
                     }
                 }
-            };
-            this.actionButtons = {
+            },
+            actionButtons = {
                 current: {
                     name: null,
                     disabled: null
@@ -163,21 +162,17 @@ define([
                         label: 'Offline'
                     }
                 }
-            };
+            },
+            // widgets this cell owns
+            cellTabs,
+            controlPanel,
+            categoryPanel;
 
-            this.setupCell();
-        }
 
-        /**
-         * Returns true if the given cell should be treated as a bulk import cell
-         * @param {Cell} cell - a Jupyter Notebook cell
-         */
-        static isBulkImportCell(cell) {
-            if (cell.cell_type !== 'code' || !cell.metadata.kbase) {
-                return false;
-            }
-            return cell.metadata.kbase.type === CELL_TYPE;
+        if (options.initialize) {
+            initialize(typesToFiles);
         }
+        setupCell();
 
         /**
          * Does the initial pass on newly created cells to initialize its metadata and get it
@@ -189,7 +184,7 @@ define([
          *     'fastq_reads': ['file1.fq', 'file2.fq']
          * }
          */
-        initialize(typesToFiles) {
+        function initialize(typesToFiles) {
             const meta = {
                 kbase: {
                     attributes: {
@@ -208,21 +203,21 @@ define([
                     }
                 }
             };
-            this.cell.metadata = meta;
+            cell.metadata = meta;
         }
 
         /**
          * This specializes this BulkImportCell's existing Jupyter Cell object to have several
          * extra functions that the Narrative can call.
          */
-        specializeCell() {
+        function specializeCell() {
             // returns a DOM node with an icon to be rendered elsewhere
-            this.cell.getIcon = function() {
+            cell.getIcon = function() {
                 return AppUtils.makeGenericIcon('upload', '#bf6c97');
             };
 
             // this renders the cell's icon in its toolbar
-            this.cell.renderIcon = function() {
+            cell.renderIcon = function() {
                 const iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
                 if (iconNode) {
                     iconNode.innerHTML = this.getIcon();
@@ -233,31 +228,31 @@ define([
         /**
          * Initializes the base BulkImportCell's message bus and binds responses to external messages.
          */
-        setupMessageBus() {
-            this.cellBus = this.runtime.bus().makeChannelBus({
+        function setupMessageBus() {
+            cellBus = runtime.bus().makeChannelBus({
                 name: {
-                    cell: Utils.getMeta(this.cell, 'attributes', 'id')
+                    cell: Utils.getMeta(cell, 'attributes', 'id')
                 },
                 description: 'parent bus for BulkImportCell'
             });
-            this.busEventManager.add(this.cellBus.on('delete-cell', () => this.deleteCell()));
+            busEventManager.add(cellBus.on('delete-cell', () => deleteCell()));
         }
 
         /**
          * Initializes the DOM node (kbaseNode) for rendering.
          */
-        setupDomNode() {
-            this.kbaseNode = document.createElement('div');
-            this.kbaseNode.classList.add(`${cssCellType}__base-node`);
+        function setupDomNode() {
+            kbaseNode = document.createElement('div');
+            kbaseNode.classList.add(`${cssCellType}__base-node`);
             // inserting after, with raw dom, means telling the parent node
             // to insert a node before the node following the one we are
             // referencing. If there is no next sibling, the null value
             // causes insertBefore to actually ... insert at the end!
-            this.cell.input[0].parentNode.insertBefore(this.kbaseNode, this.cell.input[0].nextSibling);
+            cell.input[0].parentNode.insertBefore(kbaseNode, cell.input[0].nextSibling);
 
-            this.ui = UI.make({
-                node: this.kbaseNode,
-                bus: this.cellBus
+            ui = UI.make({
+                node: kbaseNode,
+                bus: cellBus
             });
         }
 
@@ -266,33 +261,33 @@ define([
          * This should only be called after a Bulk Import cell is initialized structurally -
          * i.e. if a new one is created, or if a page is loaded that already has one.
          */
-        setupCell() {
-            if (!BulkImportCell.isBulkImportCell(this.cell)) {
+        function setupCell() {
+            if (!isBulkImportCell(cell)) {
                 throw new Error('Can only set up real bulk import cells');
             }
 
             // set up various cell function extensions
-            this.specializeCell();
+            specializeCell();
 
             // set up the message bus and bind various commands
-            this.setupMessageBus();
+            setupMessageBus();
 
-            this.setupDomNode();
+            setupDomNode();
 
             // finalize by updating the lastLoaded attribute, which triggers a toolbar re-render
-            let meta = this.cell.metadata;
+            let meta = cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
-            this.cell.metadata = meta;
-            this.render()
+            cell.metadata = meta;
+            render()
                 .then(() => {
-                    this.updateState();
-                    this.toggleTab(this.state.tab.selected);
+                    updateState();
+                    toggleTab(state.tab.selected);
                 });
         }
 
-        updateState() {
-            this.cellTabs.setState(this.state.tab);
-            this.controlPanel.setActionState(this.state.action);
+        function updateState() {
+            cellTabs.setState(state.tab);
+            controlPanel.setActionState(state.action);
         }
 
         /**
@@ -301,38 +296,38 @@ define([
          * 2. update the tabs state to be selected
          * @param {string} tab id of the tab to display
          */
-        toggleTab(tab) {
-            this.state.tab.selected = tab;
-            if (this.tabWidget !== null) {
-                this.tabWidget.stop();
+        function toggleTab(tab) {
+            state.tab.selected = tab;
+            if (tabWidget !== null) {
+                tabWidget.stop();
             }
-            this.tabWidget = this.tabSet.tabs[tab].widget.make({bus: this.bus});
+            tabWidget = tabSet.tabs[tab].widget.make({bus: cellBus});
             let node = document.createElement('div');
-            this.ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
-            return this.tabWidget.start({
+            ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
+            return tabWidget.start({
                 node: node
             });
         }
 
-        toggleCategory(category) {
-            this.state.category.selected = category;
+        function toggleCategory(category) {
+            state.category.selected = category;
         }
 
-        runAction(action) {
+        function runAction(action) {
             alert(action);
         }
 
         /**
          * Deletes the cell from the notebook after doing internal cleanup.
          */
-        deleteCell() {
-            this.busEventManager.removeAll();
-            this.controlPanel.stop();
-            const cellIndex = Jupyter.notebook.find_cell_index(this.cell);
+        function deleteCell() {
+            busEventManager.removeAll();
+            controlPanel.stop();
+            const cellIndex = Jupyter.notebook.find_cell_index(cell);
             Jupyter.notebook.delete_cell(cellIndex);
         }
 
-        getInitialState() {
+        function getInitialState() {
             return {
                 category: {
                     selected: 'fastq'
@@ -373,32 +368,32 @@ define([
             };
         }
 
-        buildActionButton(events) {
-            this.controlPanel = CellControlPanel.make({
-                bus: this.cellBus,
-                ui: this.ui,
+        function buildActionButton(events) {
+            controlPanel = CellControlPanel.make({
+                bus: cellBus,
+                ui: ui,
                 action: {
-                    runAction: this.runAction.bind(this),
-                    actions: this.actionButtons
+                    runAction: runAction.bind(this),
+                    actions: actionButtons
                 }
             });
-            return this.controlPanel.buildLayout(events);
+            return controlPanel.buildLayout(events);
         }
 
-        buildTabs(node) {
-            this.cellTabs = CellTabs.make({
-                bus: this.cellBus,
-                toggleAction: this.toggleTab.bind(this),
-                tabs: this.tabSet
+        function buildTabs(node) {
+            cellTabs = CellTabs.make({
+                bus: cellBus,
+                toggleAction: toggleTab,
+                tabs: tabSet
             });
-            return this.cellTabs.start({
+            return cellTabs.start({
                 node: node
             });
         }
 
-        buildCategoryPanel(node) {
-            this.categoryPanel = CategoryPanel.make({
-                bus: this.bus,
+        function buildCategoryPanel(node) {
+            categoryPanel = CategoryPanel.make({
+                bus: cellBus,
                 header: {
                     label: 'Data type',
                     icon: 'fas fa-dna'
@@ -410,14 +405,15 @@ define([
                     sra: {
                         label: 'SRA Reads'
                     }
-                }
+                },
+                toggleAction: toggleCategory
             });
-            return this.categoryPanel.start({
+            return categoryPanel.start({
                 node: node
             });
         }
 
-        renderLayout() {
+        function renderLayout() {
             const events = Events.make(),
                 content = div({
                     class: `${cssCellType}__layout_container kbase-extension kb-app-cell`,
@@ -435,7 +431,7 @@ define([
                         class: `${cssCellType}__body container-fluid`,
                         dataElement: 'body',
                     }, [
-                        this.buildActionButton(events),
+                        buildActionButton(events),
                         div({
                             class: `${cssCellType}__tab_pane`,
                             dataElement: 'tab-pane',
@@ -470,19 +466,38 @@ define([
         /**
          * Renders the view.
          */
-        render() {
-            const layout = this.renderLayout();
-            this.kbaseNode.innerHTML = layout.content;
+        function render() {
+            const layout = renderLayout();
+            kbaseNode.innerHTML = layout.content;
             const proms = [
-                this.buildCategoryPanel(this.ui.getElement('body.tab-pane.category-panel')),
-                this.buildTabs(this.ui.getElement('body.tab-pane.widget-container.tab-container'))
+                buildCategoryPanel(ui.getElement('body.tab-pane.category-panel')),
+                buildTabs(ui.getElement('body.tab-pane.widget-container.tab-container'))
             ];
             return Promise.all(proms)
                 .then(() => {
-                    layout.events.attachEvents(this.kbaseNode);
+                    layout.events.attachEvents(kbaseNode);
                 });
         }
+
+        return {
+            cell,
+            deleteCell
+        };
     }
 
-    return BulkImportCell;
+    /**
+     * Returns true if the given cell should be treated as a bulk import cell
+     * @param {Cell} cell - a Jupyter Notebook cell
+     */
+    function isBulkImportCell(cell) {
+        if (cell.cell_type !== 'code' || !cell.metadata.kbase) {
+            return false;
+        }
+        return cell.metadata.kbase.type === CELL_TYPE;
+    }
+
+    return {
+        make: BulkImportCell,
+        isBulkImportCell
+    };
 });

@@ -16,24 +16,23 @@ define([
         a = html.tag('a'),
         cssCellType = 'kb-bulk-import';
 
+    /**
+     * This is the factory function for the CellTabs component.
+     * @param {object} options
+     * - bus - the message bus
+     * - toggleAction - a function that should be run when toggling tabs, takes
+     *     the tab name as a single parameter
+     * - tabs: also an object:
+     *   - selectedTab - string, one of the keys under "tabs"
+     *   - tabs - an object where each key is a tab key, and has a display label:
+     *     {
+     *        configure: {
+     *            label: "Configure"
+     *        }
+     *        , etc.
+     *     }
+     */
     function CellTabs(options) {
-        /**
-         *
-         * @param {object} options
-         * - bus - the message bus
-         * - ui - the ui controller
-         *   - toggleAction - a function that should be run when toggling tabs, takes
-         *      the tab name as a single parameter
-         *   - tabs: also an object:
-         *     - selectedTab - string, one of the keys under "tabs"
-         *     - tabs - an object where each key is a tab key, and has a display label:
-         *       {
-         *          configure: {
-         *              label: "Configure"
-         *          }
-         *          , etc.
-         *       }
-         */
         let bus = options.bus,
             ui,
             tabToggleAction = options.toggleAction,

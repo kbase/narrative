@@ -37,7 +37,7 @@ define([
         return Promise.all(Jupyter.notebook.get_cells().map((cell) => {
             if (BulkImportCell.isBulkImportCell(cell)) {
                 try {
-                    new BulkImportCell(cell);
+                    BulkImportCell.make({cell});
                 }
                 catch(error) {
                     // If we have an error here, there is a serious problem setting up the cell and it is not usable.
@@ -75,7 +75,11 @@ define([
                     const importData = setupData.typesToFiles || {};
 
                     try {
-                        new BulkImportCell(cell, true, importData);
+                        BulkImportCell.make({
+                            cell,
+                            importData,
+                            initialize: true
+                        });
                     }
                     catch(error) {
                         Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));

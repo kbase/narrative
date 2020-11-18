@@ -56,29 +56,40 @@ define([
     /**
      * This class creates and manages the bulk import cell. This works with, and wraps around,
      * the Jupyter Cell object.
+     *
+     * This follows a factory pattern. The factory does the work of initializing the bulk import
+     * cell module. It modifies the cell metadata, if the initialize parameter is truthy, and
+     * extends the cell object to do things we need it to, like respond to minimization requests
+     * and render its icon. This modification also includes the contents of importData if
+     * present.
+     *
+     * The common usage of this module, when imported, should be:
+     * BulkImportCell.make({
+     *   cell: myJupyterCell,
+     *   initialize: true (if creating a new one from scratch),
+     *   importData: {
+     *     'file_type': ['array', 'of', 'files'],
+     *     'file_type_2': ['array', 'of', 'files']
+     *   }
+     * })
+     * @param {object} options - these are the options passed to the factory, with the following
+     * expected properties:
+     *  - cell - a Jupyter notebook cell. This should be a code cell, and will throw
+     *    an Error if it is not.
+     *  - initialize - boolean - if true, this will initialize the bulk import cell
+     *    structure that gets serialized in the cell metadata. This should ONLY be set true when
+     *    creating a new bulk import cell, not loading a narrative that already contains one.
+     *
+     *    If initialize is falsy, no changes are made to the structure, even if importData is
+     *    present and contains new data.
+     *  - importData - object - keys = data type strings, values = arrays of file paths
+     *    to import
+     *    e.g.:
+     *    {
+     *      'fastq_reads': ['file1.fq', 'file2.fq']
+     *    }
      */
     function BulkImportCell(options) {
-        /**
-         * The constructor does the work of initializing the bulk import cell module. It
-         * modifies the cell metadata, if the initialize parameter is truthy, and extends the
-         * cell object to do things we need it to, like respond to minimization requests and
-         * render its icon. This modification also includes the contents of typesToFiles if
-         * present.
-         *
-         * If initialize is falsy, no changes are made to the structure, even if typesToFiles is
-         * present and contains new data.
-         * @param {Cell} cell a Jupyter notebook cell. This should be a code cell, and will throw
-         * an Error if it is not.
-         * @param {boolean} initialize if true, this will initialize the bulk import cell
-         * structure that gets serialized in the cell metadata. This should ONLY be set true when
-         * creating a new bulk import cell, not loading a narrative that already contains one
-         * @param {object} typesToFiles keys = data type strings, values = arrays of file paths
-         * to import
-         * e.g.: {
-         *     'fastq_reads': ['file1.fq', 'file2.fq']
-         * }
-         */
-        // constructor(options) { //cell, initialize, typesToFiles) {
         if (options.cell.cell_type !== 'code') {
             throw new Error('Can only create Bulk Import Cells out of code cells!');
         }
@@ -89,8 +100,7 @@ define([
             }),
             typesToFiles = options.importData;
 
-        // this is the DOM element used as the container for everything controlled by this cell.
-        let kbaseNode = null,
+        let kbaseNode = null, // the DOM element used as the container for everything in this cell
             cellBus = null,
             ui = null,
             tabWidget = null,  // the widget currently in view
@@ -167,7 +177,6 @@ define([
             cellTabs,
             controlPanel,
             categoryPanel;
-
 
         if (options.initialize) {
             initialize(typesToFiles);
@@ -285,6 +294,10 @@ define([
                 });
         }
 
+        /**
+         * Passes the updated state to various widgets
+         * // TODO: include the category widget here
+         */
         function updateState() {
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
@@ -309,6 +322,11 @@ define([
             });
         }
 
+        /**
+         * This toggles which category (file type) should be shown
+         * // TODO: rename this and other widgets & elements to fileType
+         * @param {string} category - the category that should be shown
+         */
         function toggleCategory(category) {
             state.category.selected = category;
         }
@@ -327,6 +345,9 @@ define([
             Jupyter.notebook.delete_cell(cellIndex);
         }
 
+        /**
+         * Returns a structured initial state of the cell.
+         */
         function getInitialState() {
             return {
                 category: {
@@ -368,6 +389,13 @@ define([
             };
         }
 
+        /**
+         * This builds the action button control panel.
+         * It gets stored in the internal controlPanel variable.
+         * This returns the DOM layout that the controlPanel creates.
+         * @param {Events} events - the events manager that should be used for laying out
+         * the button
+         */
         function buildActionButton(events) {
             controlPanel = CellControlPanel.make({
                 bus: cellBus,
@@ -380,6 +408,11 @@ define([
             return controlPanel.buildLayout(events);
         }
 
+        /**
+         * Builds the tab component and starts it up attached to the node.
+         * This passes along the cellBus and set of tabs known by this cell.
+         * @param {DOMElement} node - the node that should be used for the tabs
+         */
         function buildTabs(node) {
             cellTabs = CellTabs.make({
                 bus: cellBus,
@@ -391,6 +424,12 @@ define([
             });
         }
 
+        /**
+         * This builds the category panel (the left column) of the cell and starts
+         * it up attached to the given DOM node.
+         * //TODO rename to fileType panel
+         * @param {DOMElement} node - the node that should be used for the left column
+         */
         function buildCategoryPanel(node) {
             categoryPanel = CategoryPanel.make({
                 bus: cellBus,
@@ -413,6 +452,10 @@ define([
             });
         }
 
+        /**
+         * Renders the initial layout structure for the cell.
+         * This returns an object with the created events and DOM content
+         */
         function renderLayout() {
             const events = Events.make(),
                 content = div({
@@ -464,7 +507,8 @@ define([
         }
 
         /**
-         * Renders the view.
+         * Renders the view. This does the work of building the left column, tabs, and
+         * action button components and activating them all.
          */
         function render() {
             const layout = renderLayout();
@@ -479,6 +523,10 @@ define([
                 });
         }
 
+        /**
+         * The factory returns an accessor to the underlying Jupyter cell, and the
+         * deleteCell function. Everything else should just run internally.
+         */
         return {
             cell,
             deleteCell

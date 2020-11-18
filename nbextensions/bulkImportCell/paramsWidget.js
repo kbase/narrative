@@ -7,7 +7,6 @@ define([
     'common/ui',
     'common/events',
     'common/props',
-    // Wrapper for inputs - TODO can these be moved to common?
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
     'common/runtime'

@@ -22,12 +22,13 @@ define([
     /*
         Options:
             bus: message bus
-            workspaceInfo: 
+            workspaceInfo: workspace information
+            model: cell metadata
+            spec: app spec 
     */
     function ConfigureWidget(options) {
         const bus = options.bus,
             workspaceInfo = options.workspaceInfo,
-            cell = options.cell,
             model = options.model,
             spec = options.spec;
 
@@ -38,7 +39,7 @@ define([
         /**
          * args includes:
          *  - node - the DOM node to act as this widget's container
-         *  - something something inputs and parameters
+         *  - workspaceInfo - workspace information used to intialize the parameter widget
          * @param {object} args
          */
         function start(args) {
@@ -51,7 +52,7 @@ define([
 
                 const layout = renderLayout(args);
                 container.innerHTML = layout.content;
-                
+
                 let paramNode = document.createElement('div');
                 container.appendChild(paramNode);
 
@@ -69,17 +70,14 @@ define([
 
 
         /*
-            to initalize a params widget pass in: 
-                * bus
-                * workspaceInfo
-                * initialParams
+            Options: {
+                workspaceInfo: workspace information
+                node: container node to build the widget into
+            }
 
-            assuming we have a single instance of a tab per app run
-
-            in the app cell the configure widget is loaded with the returned parameter widget 
+            This is more or less copied over from the way that the appCell handles building the widget. This model assumes one instance of the params widget per cell, so may need some adjustment as we make the bulk import work with multiple data types
         */
         function buildParamsWidget(options) {
-            //TODO: is this the right way to set the message bus? or should it use the bus we can receive from the parent container? 
             const bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
 
             const workspaceInfo = options.workspaceInfo,
@@ -184,17 +182,7 @@ define([
                         name: 'file-paths-area',
                         body: div({ dataElement: 'file-path-fields' }),
                         classes: ['kb-panel-light']
-                    }),
-                    ui.buildPanel({
-                        title: span([
-                            'Parameters',
-                            span({
-                                dataElement: 'advanced-hidden-message'
-                            })]),
-                        name: 'parameters-area',
-                        body: div({ dataElement: 'parameter-fields' }),
-                        classes: ['kb-panel-light']
-                    }),
+                    })
                 ];
 
             const content = form({ dataElement: 'input-widget-form' }, formContent);

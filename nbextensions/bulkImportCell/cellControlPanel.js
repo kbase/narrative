@@ -1,10 +1,8 @@
 define([
     'common/html',
-    './cellTabs',
     './actionButton'
 ], (
     html,
-    CellTabs,
     ActionButton
 ) => {
     'use strict';
@@ -47,13 +45,6 @@ define([
         let bus = options.bus;
         let ui = options.ui;
 
-        // this.cellTabs = new CellTabs({
-        //     ui: this.ui,
-        //     bus: this.bus,
-        //     toggleAction: options.tabs.toggleAction,
-        //     tabs: options.tabs.tabs
-        // });
-
         let actionButton = new ActionButton({
             ui: ui,
             bus: bus,
@@ -66,12 +57,7 @@ define([
         }
 
         function stop() {
-            // this.cellTabs.stop();
             actionButton.stop();
-        }
-
-        function setTabState(newState) {
-            // this.cellTabs.setState(newState);
         }
 
         function setActionState(newState) {

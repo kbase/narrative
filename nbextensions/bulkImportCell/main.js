@@ -109,7 +109,7 @@ define([
 
                     if (jupyterCellType !== 'code' ||
                         !setupData ||
-                        !(setupData.type === CELL_TYPE)) {
+                        setupData.type !== CELL_TYPE) {
                         return;
                     }
                     const importData = setupData.typesToFiles || {};

@@ -4,9 +4,6 @@ define([
     'common/html',
     'common/events',
     'common/runtime',
-    'common/props',
-    'common/utils',
-    'common/spec',
     '../paramsWidget'
 ], (
     Promise,
@@ -14,9 +11,6 @@ define([
     html,
     Events,
     Runtime,
-    Props,
-    utils,
-    Spec,
     ParamsWidget
 ) => {
     'use strict';
@@ -33,7 +27,9 @@ define([
     function ConfigureWidget(options) {
         const bus = options.bus,
             workspaceInfo = options.workspaceInfo,
-            cell = options.cell;
+            cell = options.cell,
+            model = options.model,
+            spec = options.spec;
 
         let container = null,
             ui = null,
@@ -53,27 +49,18 @@ define([
                     bus: bus
                 });
 
-                //TODO: not sure about using this Props factory
-                this.model = Props.make({
-                    data: utils.getMeta(cell, 'appCell'),
-                    onUpdate: function(props) {
-                        utils.setMeta(cell, 'appCell', props.getRawObject());
-                    }
-                });
-
-                this.spec = Spec.make({
-                    appSpec: this.model.getItem('app.spec')
-                });
-
-                //TODO: this should return a widget and bus we can attach to the container 
-                loadParamsWidget({
-                    bus: bus,
-                    workspaceInfo: workspaceInfo
-                });
-
                 const layout = renderLayout(args);
                 container.innerHTML = layout.content;
-                layout.events.attachEvents(container);
+
+                //TODO: what node are we passing to the params widget? 
+                buildParamsWidget({
+                    bus: bus,
+                    workspaceInfo: workspaceInfo,
+                    node: {}
+                }).then(() => {
+                    layout.events.attachEvents(container);
+                });
+
             });          
         
         }
@@ -89,25 +76,26 @@ define([
 
             in the app cell the configure widget is loaded with the returned parameter widget 
         */
-        function loadParamsWidget(options) {
+        function buildParamsWidget(options) {
             console.log('we have loaded the params widget, options: ', options);
 
             //TODO: is this the right way to set the message bus? or should it use the bus we can receive from the parent container? 
             const bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
 
-            const workspaceInfo = options.workspaceInfo;
+            const workspaceInfo = options.workspaceInfo,
+                node = options.node;
 
             const widget = ParamsWidget.make({
                 bus: bus,
                 workspaceInfo: workspaceInfo,
-                initialParams: this.model.getItem('params')
+                initialParams: model.getItem('params')
             });
 
             bus.on('sync-params', function(message) {
                 message.parameters.forEach(function(paramId) {
                     bus.send({
                         parameter: paramId,
-                        value: this.model.getItem(['params', message.parameter])
+                        value: model.getItem(['params', message.parameter])
                     }, {
                         key: {
                             type: 'update',
@@ -118,7 +106,7 @@ define([
             });
 
             bus.on('parameter-sync', function(message) {
-                var value = this.model.getItem(['params', message.parameter]);
+                var value = model.getItem(['params', message.parameter]);
                 bus.send({
                     value: value
                 }, {
@@ -131,7 +119,7 @@ define([
             });
 
             bus.on('set-param-state', function(message) {
-                this.model.setItem('paramState', message.id, message.state);
+                model.setItem('paramState', message.id, message.state);
             });
 
             bus.respond({
@@ -140,7 +128,7 @@ define([
                 },
                 handle: function(message) {
                     return {
-                        state: this.model.getItem('paramState', message.id)
+                        state: model.getItem('paramState', message.id)
                     };
                 }
             });
@@ -151,7 +139,7 @@ define([
                 },
                 handle: function(message) {
                     return {
-                        value: this.model.getItem(['params', message.parameterName])
+                        value: model.getItem(['params', message.parameterName])
                     };
                 }
             });
@@ -163,18 +151,17 @@ define([
             //     let state = fsm.getCurrentState().state;
             //     let isError = Boolean(message.isError);
             //     if (state.mode === 'editing') {
-            //         this.model.setItem(['params', message.parameter], message.newValue);
+            //         model.setItem(['params', message.parameter], message.newValue);
             //         evaluateAppState(isError);
             //     } else {
             //         console.warn('parameter-changed event detected when not in editing mode - ignored');
             //     }
             // });
 
-            //TODO: how to handle the app spec and param retreival?
             return widget.start({
-                node: options.node,
-                appSpec: this.model.getItem('app.spec'),
-                parameters: this.spec.getSpec().parameters
+                node: node,
+                appSpec: model.getItem('app.spec'),
+                parameters: spec.getSpec().parameters
             })
                 .then(function() {
                     return {

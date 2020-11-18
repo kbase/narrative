@@ -7,6 +7,7 @@ define([
     'common/ui',
     'common/events',
     'common/props',
+    'common/spec',
     'base/js/namespace',
     'kb_common/html',
     './cellControlPanel',
@@ -22,6 +23,7 @@ define([
     UI,
     Events,
     Props,
+    Spec,
     Jupyter,
     html,
     CellControlPanel,
@@ -116,6 +118,10 @@ define([
                 onUpdate: function(props) {
                     Utils.setMeta(this.cell, 'appCell', props.getRawObject());
                 }
+            });
+
+            this.spec = Spec.make({
+                appSpec: this.model.getItem('app.spec')
             });
 
             this.setupCell();
@@ -266,7 +272,9 @@ define([
             this.tabWidget = this.tabSet.tabs[tab].widget.make({
                 bus: this.cellBus,
                 workspaceInfo: this.workspaceInfo,
-                cell: this.cell
+                cell: this.cell,
+                model: this.model,
+                spec: this.spec
             });
 
             let node = document.createElement('div');

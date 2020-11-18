@@ -1,0 +1,180 @@
+/*
+    bulk import cell
+*/
+
+.kb-bulk-import {
+  &__base-node {
+    // everything lives under this
+  }
+
+  &__layout_container {
+    display: flex;
+    align-items: stretch;
+  }
+
+  /* kb-bulk-import__prompt */
+  &__prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* kb-bulk-import__prompt_status */
+  &__prompt_status {
+  }
+
+  /* kb-bulk-import__body */
+  &__body {
+    display: flex;
+    width: 100%;
+    flex: 1;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* kb-bulk-import__widget_container */
+  &__widget_container {
+    display: block;
+    width: 100%;
+  }
+
+  /* kb-bulk-import__cell_container */
+  &__cell_container {
+  }
+
+  /* kb-bulk-import__tab_pane */
+  &__tab_pane {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    align-content: stretch;
+  }
+
+  /* kb-bulk-import__tab_pane_widget_container */
+  &__tab_pane_widget_container {
+    flex: 1;
+    /* kb-bulk-import__tab_pane_widget_container_tabs */
+    &_tabs {
+
+    }
+
+    /* kb-bulk-import__tab_pane_widget_container_widget */
+    &_widget{
+
+    }
+  }
+
+  /* kb-bulk-import__category_panel */
+  &__category_panel {
+  }
+
+  /* kb-bulk-import__tab_pane_widget */
+  &__tab_pane_widget {
+  }
+
+  /* kb-bulk-import-configure */
+  &-configure {
+    &__advanced_hidden_message {
+      margin-left: 6px;
+      font-style: italic;
+    }
+  }
+
+  /* kb-bulk-import-action-button */
+  &-action-button {
+    /* kb-bulk-import-action-button__container */
+    &__container {
+      display: flex;
+      overflow: hidden;
+      height: 50px;
+      flex-direction: row;
+      line-height: 50px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    /* kb-bulk-import-action-button__list */
+    &__list {
+      padding: 6px;
+    }
+
+    /* kb-bulk-import-action-button__button */
+    &__button {
+      width: 80px;
+    }
+  }
+
+  &-tabs {
+    /* kb-bulk-import-tabs__container */
+    &__container {
+      right: 0;
+      display: inline-block;
+      height: 50px;
+      padding-right: 15px;
+      line-height: 50px;
+      vertical-align: bottom;
+    }
+
+    /* kb-bulk-import-tabs__toolbar */
+    &__toolbar {
+      display: inline-block;
+      vertical-align: bottom;
+    }
+
+    /* kb-bulk-import-tabs__button */
+    &__button {
+      /* kb-bulk-import-tabs__button--outdated */
+      &--outdated {
+        padding: 6px 0 0;
+        color: rgb(247 155 34);
+      }
+    }
+  }
+
+  /* cell control panel stuff */
+  &-control-panel {
+    /* kb-bulk-import-control-panel__container */
+    &__container {
+    }
+
+    /* kb-bulk-import-control-panel__border */
+    &__border {
+      position: relative;
+      display: flex;
+      height: 50px;
+      flex-direction: row;
+      border: 1px solid rgb(192 192 192);
+    }
+
+    /* kb-bulk-import-control-panel__status_container */
+    &__status_container {
+      overflow: hidden;
+      width: 450px;
+      height: 50px;
+    }
+
+    /* kb-bulk-import-control-panel__message_box */
+    &__message_box {
+      /* kb-bulk-import-control-panel__message_box_holder */
+      &_holder {
+        height: 50px;
+        margin-top: 0;
+        line-height: 50px;
+        text-align: left;
+        vertical-align: middle;
+      }
+    }
+
+    /* kb-bulk-import-control-panel__exec_message */
+    &__exec_message {
+    }
+
+    /* kb-bulk-import-control-panel__tab_bar */
+    &__tab_bar {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 50px;
+    }
+  }
+}

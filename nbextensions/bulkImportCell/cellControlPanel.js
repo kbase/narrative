@@ -10,7 +10,8 @@ define([
     'use strict';
 
     const div = html.tag('div'),
-        span = html.tag('span');
+        span = html.tag('span'),
+        cssCellType = 'kb-bulk-import';
 
     /**
      * options -
@@ -78,44 +79,31 @@ define([
         }
 
         function buildLayout(events) {
-            return div({ dataElement: 'run-control-panel' }, [
+            return div({
+                class: `${cssCellType}-control-panel__container`,
+                dataElement: 'run-control-panel'
+            }, [
                 div({
-                    style: { border: '1px silver solid', height: '50px', position: 'relative', display: 'flex', flexDirection: 'row' }
+                    class: `${cssCellType}-control-panel__border`,
                 }, [
                     actionButton.buildLayout(events),
                     div({
+                        class: `${cssCellType}-control-panel__status_container`,
                         dataElement: 'status',
-                        style: {
-                            width: '450px',
-                            height: '50px',
-                            overflow: 'hidden'
-                        }
                     }, [
                         div({
-                            style: {
-                                height: '50px',
-                                marginTop: '0px',
-                                textAlign: 'left',
-                                lineHeight: '50px',
-                                verticalAlign: 'middle'
-                            }
+                            class: `${cssCellType}-control-panel__message_box_holder`,
                         }, [
-                            div([
-                                span({ dataElement: 'execMessage' })
+                            div({
+                                class: `${cssCellType}-control-panel__message_box`,
+                            }, [
+                                span({
+                                    class: `${cssCellType}-control-panel__exec_message`,
+                                    dataElement: 'execMessage'
+                                })
                             ])
                         ])
                     ]),
-                    // div({
-                    //     dataElement: 'toolbar',
-                    //     style: {
-                    //         position: 'absolute',
-                    //         right: '0',
-                    //         top: '0',
-                    //         height: '50px'
-                    //     }
-                    // }, [
-                    //     this.cellTabs.buildLayout(events)
-                    // ])
                 ])
             ]);
         }

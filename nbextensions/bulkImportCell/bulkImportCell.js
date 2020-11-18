@@ -30,7 +30,8 @@ define([
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
 
-    const div = html.tag('div');
+    const div = html.tag('div'),
+        cssCellType = 'kb-bulk-import';
 
     function DefaultWidget() {
         function make() {
@@ -247,6 +248,7 @@ define([
          */
         setupDomNode() {
             this.kbaseNode = document.createElement('div');
+            this.kbaseNode.classList.add(`${cssCellType}__base-node`);
             // inserting after, with raw dom, means telling the parent node
             // to insert a node before the node following the one we are
             // referencing. If there is no next sibling, the null value
@@ -281,9 +283,11 @@ define([
             let meta = this.cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             this.cell.metadata = meta;
-            this.render();
-            this.updateState();
-            this.toggleTab(this.state.tab.selected);
+            this.render()
+                .then(() => {
+                    this.updateState();
+                    this.toggleTab(this.state.tab.selected);
+                });
         }
 
         updateState() {
@@ -305,7 +309,7 @@ define([
             this.tabWidget = this.tabSet.tabs[tab].widget.make({bus: this.bus});
             let node = document.createElement('div');
             this.ui.getElement('cell-container.tab-pane.widget-container.widget').appendChild(node);
-            this.tabWidget.start({
+            return this.tabWidget.start({
                 node: node
             });
         }
@@ -387,7 +391,7 @@ define([
                 toggleAction: this.toggleTab.bind(this),
                 tabs: this.tabSet
             });
-            this.cellTabs.start({
+            return this.cellTabs.start({
                 node: node
             });
         }
@@ -408,7 +412,7 @@ define([
                     }
                 }
             });
-            this.categoryPanel.start({
+            return this.categoryPanel.start({
                 node: node
             });
         }
@@ -416,46 +420,50 @@ define([
         renderLayout() {
             const events = Events.make(),
                 content = div({
-                    class: 'kbase-extension kb-app-cell',
-                    style: { display: 'flex', alignItems: 'stretch' }
+                    class: `${cssCellType}__layout_container kbase-extension kb-app-cell`,
                 }, [
                     div({
-                        class: 'prompt',
+                        class: `${cssCellType}__prompt prompt`,
                         dataElement: 'prompt',
-                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' }
-                    }, [
-                        div({ dataElement: 'status' })
-                    ]),
-                    div({
-                        class: 'body',
-                        dataElement: 'body',
-                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1', width: '100%' }
                     }, [
                         div({
+                            class: `${cssCellType}__prompt_status`,
+                            dataElement: 'status'
+                        })
+                    ]),
+                    div({
+                        class: `${cssCellType}__body body`,
+                        dataElement: 'body',
+                    }, [
+                        div({
+                            class: `${cssCellType}__widget_container`,
                             dataElement: 'widget',
-                            style: { display: 'block', width: '100%' }
                         }, [
-                            div({ class: 'container-fluid', dataElement: 'cell-container' }, [
+                            div({
+                                class: `${cssCellType}__cell_container container-fluid`,
+                                dataElement: 'cell-container'
+                            }, [
                                 this.buildActionButton(events),
                                 div({
+                                    class: `${cssCellType}__tab_pane`,
                                     dataElement: 'tab-pane',
-                                    style: {
-                                        display: 'flex',
-                                        flexDirection: 'row',
-                                        width: '100%',
-                                        alignItems: 'stretch',
-                                        alignContent: 'stretch'
-                                    }
                                 }, [
-                                    div({ dataElement: 'category-panel'}),
                                     div({
-                                        style: {
-                                            flex: '1'
-                                        },
+                                        class: `${cssCellType}__category_panel`,
+                                        dataElement: 'category-panel'
+                                    }),
+                                    div({
+                                        class: `${cssCellType}__tab_pane_widget_container`,
                                         dataElement: 'widget-container'
                                     }, [
-                                        div({ dataElement: 'tab-container'}),
-                                        div({ dataElement: 'widget'})
+                                        div({
+                                            class: `${cssCellType}__tab_pane_widget_container_tabs`,
+                                            dataElement: 'tab-container'
+                                        }),
+                                        div({
+                                            class: `${cssCellType}__tab_pane_widget_container_widget`,
+                                            dataElement: 'widget'
+                                        })
                                     ])
                                 ])
                             ])
@@ -475,9 +483,14 @@ define([
         render() {
             const layout = this.renderLayout();
             this.kbaseNode.innerHTML = layout.content;
-            this.buildCategoryPanel(this.ui.getElement('cell-container.tab-pane.category-panel'));
-            this.buildTabs(this.ui.getElement('cell-container.tab-pane.widget-container.tab-container'));
-            layout.events.attachEvents(this.kbaseNode);
+            const proms = [
+                this.buildCategoryPanel(this.ui.getElement('cell-container.tab-pane.category-panel')),
+                this.buildTabs(this.ui.getElement('cell-container.tab-pane.widget-container.tab-container'))
+            ];
+            return Promise.all(proms)
+                .then(() => {
+                    layout.events.attachEvents(this.kbaseNode);
+                });
         }
     }
 

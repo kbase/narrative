@@ -42,9 +42,7 @@ define([
     'kb_service/utils',
     'widgets/loadingWidget',
     'kb_service/client/workspace',
-    // for effect
     'bootstrap',
-
 ], function (
     $,
     Promise,
@@ -85,19 +83,19 @@ define([
     KBaseNarrativePrestart.loadJupyterEvents();
 
     /**
-     * @constructor
-     * The base, namespaced Narrative object. This is mainly used at start-up time, and
-     * gets injected into the Jupyter namespace.
-     *
-     * Most of its methods below - init, registerEvents, initAboutDialog, initUpgradeDialog,
-     * checkVersion, updateVersion - are set up at startup time.
-     * This is all done by an injection into static/notebook/js/main.js where the
-     * Narrative object is set up, and Narrative.init is run.
-     *
-     * But, this also has a noteable 'Save' method, that implements another Narrative-
-     * specific piece of functionality. See Narrative.prototype.saveNarrative below.
-     */
-    var Narrative = function () {
+    * @constructor
+    * The base, namespaced Narrative object. This is mainly used at start-up time, and
+    * gets injected into the Jupyter namespace.
+    *
+    * Most of its methods below - init, registerEvents, initAboutDialog, initUpgradeDialog,
+    * checkVersion, updateVersion - are set up at startup time.
+    * This is all done by an injection into static/notebook/js/main.js where the
+    * Narrative object is set up, and Narrative.init is run.
+    *
+    * But, this also has a noteable 'Save' method, that implements another Narrative-
+    * specific piece of functionality. See Narrative.prototype.saveNarrative below.
+    */
+    const Narrative = function () {
         // Maximum narrative size that can be stored in the workspace.
         // This is set by nginx on the backend - this variable is just for
         // communication on error.
@@ -149,14 +147,14 @@ define([
 
         this.loadingWidget = new LoadingWidget({
             node: document.querySelector('#kb-loading-blocker'),
-            timeout: 20000
+            timeout: 20000,
         });
 
         //Jupyter.keyboard_manager.disable();
         return this;
     };
 
-    Narrative.prototype.isLoaded = function () {
+    Narrative.prototype.isLoaded = () => {
         return Jupyter.notebook._fully_loaded;
     };
 
@@ -174,49 +172,67 @@ define([
             if (this.workspaceRef) {
                 return this.workspaceRef;
             }
-            else {
-                return new Workspace(Config.url('workspace'), {token: this.getAuthToken()})
-                    .get_workspace_info({id: this.workspaceId})
-                    .then((wsInfo) => {
-                        let narrId = wsInfo[8]['narrative'];
-                        this.workspaceRef = this.workspaceId + '/' + narrId;
-                        return this.workspaceRef;
-                    });
-            }
+            return new Workspace(Config.url('workspace'), {
+                token: this.getAuthToken(),
+            })
+                .get_workspace_info({ id: this.workspaceId })
+                .then((wsInfo) => {
+                    let narrId = wsInfo[8]['narrative'];
+                    this.workspaceRef = this.workspaceId + '/' + narrId;
+                    return this.workspaceRef;
+                });
         });
     };
 
     Narrative.prototype.getUserPermissions = function () {
-        return new Workspace(Config.url('workspace'), {token: this.getAuthToken()})
-            .get_workspace_info({id: this.workspaceId})
+        const ws = new Workspace(Config.url('workspace'), {
+            token: this.getAuthToken(),
+        });
+        return ws.get_workspace_info({ id: this.workspaceId })
             .then((wsInfo) => {
                 return wsInfo[5];
             });
-    }
-
-    /**
-     * A wrapper around the Jupyter.notebook.kernel.execute() function.
-     * If any KBase widget needs to make a kernel call, it should go through here.
-     * ...when it's done.
-     */
-    Narrative.prototype.executeKernelCall = function () {
-        console.info('no-op for now');
     };
 
     // Wrappers for the Jupyter/Jupyter function so we only maintain it in one place.
     Narrative.prototype.patchKeyboardMapping = function () {
-        var commonShortcuts = [
-                'a', 'm', 'f', 'y', 'r',
-                '1', '2', '3', '4', '5', '6',
-                'k', 'j', 'b', 'x', 'c', 'v',
-                'z', 'd,d', 's', 'l', 'o', 'h',
-                'i,i', '0,0', 'q', 'shift-j', 'shift-k',
-                'shift-m', 'shift-o', 'shift-v'
+        const commonShortcuts = [
+                'a',
+                'm',
+                'f',
+                'y',
+                'r',
+                '1',
+                '2',
+                '3',
+                '4',
+                '5',
+                '6',
+                'k',
+                'j',
+                'b',
+                'x',
+                'c',
+                'v',
+                'z',
+                'd,d',
+                's',
+                'l',
+                'o',
+                'h',
+                'i,i',
+                '0,0',
+                'q',
+                'shift-j',
+                'shift-k',
+                'shift-m',
+                'shift-o',
+                'shift-v',
             ],
             commandShortcuts = [],
             editShortcuts = [
                 // remove the command palette
-                // since it exposes commands we have "disabled"
+                // since it exposes commands we have 'disabled'
                 // by removing keyboard mappings
                 'cmdtrl-shift-p',
             ];
@@ -224,13 +240,15 @@ define([
         commonShortcuts.forEach(function (shortcut) {
             try {
                 Jupyter.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
-            } catch (ex) {
-                console.warn('Error removing shortcut "' + shortcut + '"', ex);
+            } catch (e) {
+                console.warn('Error removing shortcut "' + shortcut + '"', e);
             }
             try {
-                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
-            } catch (ex) {
-                // console.warn('Error removing shortcut "'  + shortcut +'"', ex);
+                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(
+                    shortcut
+                );
+            } catch (e) {
+                // console.warn('Error removing shortcut "' + shortcut + '"', e);
             }
         });
 
@@ -244,7 +262,9 @@ define([
 
         editShortcuts.forEach(function (shortcut) {
             try {
-                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
+                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(
+                    shortcut
+                );
             } catch (ex) {
                 console.warn('Error removing shortcut "' + shortcut + '"', ex);
             }
@@ -282,29 +302,29 @@ define([
             $('#kb-kernel-icon').removeClass().addClass('fa fa-circle');
         });
         [
-            'kernel_connected.Kernel', 'kernel_starting.Kernel', 'kernel_ready.Kernel',
-            'kernel_disconnected.Kernel', 'kernel_killed.Kernel', 'kernel_dead.Kernel'
-        ].forEach(function(e) {
+            'kernel_connected.Kernel',
+            'kernel_starting.Kernel',
+            'kernel_ready.Kernel',
+            'kernel_disconnected.Kernel',
+            'kernel_killed.Kernel',
+            'kernel_dead.Kernel',
+        ].forEach(function (e) {
             $([Jupyter.events]).on(e, function () {
-                self.runtime.bus().emit(
-                    'kernel-state-changed',
-                    {
-                        isReady: Jupyter.notebook.kernel && Jupyter.notebook.kernel.is_connected()
-                    }
-                );
-                console.log('emitted kernel-state-changed event, probably not ready!');
+                self.runtime.bus().emit('kernel-state-changed', {
+                    isReady:
+                    Jupyter.notebook.kernel && Jupyter.notebook.kernel.is_connected(),
+                });
             });
         });
-        $([Jupyter.events]).on('delete.Cell', function () {
-            // this.enableKeyboardManager();
-        }.bind(this));
 
-        $([Jupyter.events]).on('notebook_save_failed.Notebook', function (event, data) {
-            $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
-            this.saveFailed(event, data);
-        }.bind(this));
+        $([Jupyter.events]).on(
+            'notebook_save_failed.Notebook',
+            function (event, data) {
+                $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
+                this.saveFailed(event, data);
+            }.bind(this)
+        );
     };
-
 
     /**
      * Initializes the sharing panel and sets up the events
@@ -322,35 +342,47 @@ define([
      * after there's a visible DOM element for it to render in.
      */
     Narrative.prototype.initSharePanel = function () {
-        var sharePanel = $('<div style="text-align:center"><br><br><img src="' +
+        var sharePanel = $(
+                '<div style="text-align:center"><br><br><img src="' +
                 Config.get('loading_gif') +
-                '"></div>'),
+                '"></div>'
+            ),
             shareWidget = null,
             shareDialog = new BootstrapDialog({
                 title: 'Change Share Settings',
                 body: sharePanel,
-                closeButton: true
+                closeButton: true,
             });
-        shareDialog.getElement().one('shown.bs.modal', function () {
-            shareWidget = new KBaseNarrativeSharePanel(sharePanel.empty(), {
-                ws_name_or_id: this.getWorkspaceName()
-            });
-        }.bind(this));
-        $('#kb-share-btn').click(function () {
-            var narrName = Jupyter.notebook.notebook_name;
-            if (narrName.trim().toLowerCase() === 'untitled' || narrName.trim().length === 0) {
-                Jupyter.save_widget.rename_notebook({
-                    notebook: Jupyter.notebook,
-                    message: 'Please name your Narrative before sharing.',
-                    callback: function () { shareDialog.show(); }
+        shareDialog.getElement().one(
+            'shown.bs.modal',
+            function () {
+                shareWidget = new KBaseNarrativeSharePanel(sharePanel.empty(), {
+                    ws_name_or_id: this.getWorkspaceName(),
                 });
-                return;
-            }
-            if (shareWidget) {
-                shareWidget.refresh();
-            }
-            shareDialog.show();
-        }.bind(this));
+            }.bind(this)
+        );
+        $('#kb-share-btn').click(
+            function () {
+                var narrName = Jupyter.notebook.notebook_name;
+                if (
+                    narrName.trim().toLowerCase() === 'untitled' ||
+                    narrName.trim().length === 0
+                ) {
+                    Jupyter.save_widget.rename_notebook({
+                        notebook: Jupyter.notebook,
+                        message: 'Please name your Narrative before sharing.',
+                        callback: function () {
+                            shareDialog.show();
+                        },
+                    });
+                    return;
+                }
+                if (shareWidget) {
+                    shareWidget.refresh();
+                }
+                shareDialog.show();
+            }.bind(this)
+        );
     };
 
     Narrative.prototype.initStaticNarrativesPanel = function () {
@@ -362,7 +394,7 @@ define([
             staticDialog = new BootstrapDialog({
                 title: 'Static Narratives',
                 body: staticPanel,
-                closeButton: true
+                closeButton: true,
             }),
             staticWidget = new StaticNarrativesPanel(staticPanel);
         $('#kb-static-btn').click(() => {
@@ -383,9 +415,12 @@ define([
             // now we make the dialog and all that.
             $('#kb-narr-version-btn')
                 .off('click')
-                .on('click', function() {
-                    this.showDocumentVersionDialog(docInfo);
-                }.bind(this));
+                .on(
+                    'click',
+                    function () {
+                        this.showDocumentVersionDialog(docInfo);
+                    }.bind(this)
+                );
             this.toggleDocumentVersionBtn(true);
         }
     };
@@ -399,21 +434,25 @@ define([
         return Promise.try(function () {
             if (docInfo) {
                 self.documentVersionInfo = docInfo;
-            }
-            else {
-                var workspace = new Workspace(Config.url('workspace'), {token: self.getAuthToken()});
-                self.getNarrativeRef()
-                .then((narrativeRef) => {
-                    return workspace.get_object_info_new({
-                        objects: [{'ref': narrativeRef}],
-                        includeMetadata: 1
-                    });
-                }).then(function (info) {
-                    self.documentVersionInfo = info[0];
-                }).catch(function (error) {
-                    // no op for now.
-                    console.error(error);
+            } else {
+                var workspace = new Workspace(Config.url('workspace'), {
+                    token: self.getAuthToken(),
                 });
+                self
+                    .getNarrativeRef()
+                    .then((narrativeRef) => {
+                        return workspace.get_object_info_new({
+                            objects: [{ ref: narrativeRef }],
+                            includeMetadata: 1,
+                        });
+                    })
+                    .then(function (info) {
+                        self.documentVersionInfo = info[0];
+                    })
+                    .catch(function (error) {
+                        // no op for now.
+                        console.error(error);
+                    });
             }
         });
     };
@@ -429,9 +468,9 @@ define([
                 newVer: newVerInfo,
                 newDate: TimeFormat.readableTimestamp(newVerInfo[3]),
                 sameUser: this.documentVersionInfo[5] === newVerInfo[5],
-                readOnly: this.readonly
+                readOnly: this.readonly,
             }),
-            alertOnly: true
+            alertOnly: true,
         });
 
         versionDialog.show();
@@ -440,15 +479,14 @@ define([
     /**
      * @method
      * @public
-     * This shows or hides the "narrative has been saved in a different window" button.
+     * This shows or hides the 'narrative has been saved in a different window' button.
      * If show is truthy, show it. Otherwise, hide it.
      */
     Narrative.prototype.toggleDocumentVersionBtn = function (show) {
         var $btn = $('#kb-narr-version-btn');
         if (show && !$btn.is(':visible')) {
             $btn.fadeIn('fast');
-        }
-        else if (!show && $btn.is(':visible')){
+        } else if (!show && $btn.is(':visible')) {
             $btn.fadeOut('fast');
         }
     };
@@ -467,28 +505,33 @@ define([
         var $upgradeBtn = $('<button type="button" data-dismiss="modal">')
             .addClass('btn btn-success')
             .append('Update and Reload')
-            .click(function () {
-                this.updateVersion();
-            }.bind(this));
+            .click(
+                function () {
+                    this.updateVersion();
+                }.bind(this)
+            );
 
         var upgradeDialog = new BootstrapDialog({
             title: 'New Narrative version available!',
-            buttons: [$cancelBtn, $upgradeBtn]
+            buttons: [$cancelBtn, $upgradeBtn],
         });
         $('#kb-update-btn').click(function () {
             upgradeDialog.show();
         });
-        this.checkVersion()
-            .then(function (ver) {
-                upgradeDialog.setBody(bodyTemplate({
-                    currentVersion: this.currentVersion,
-                    newVersion: ver ? ver.version : "No new version",
-                    releaseNotesUrl: Config.get('release_notes')
-                }));
+        this.checkVersion().then(
+            function (ver) {
+                upgradeDialog.setBody(
+                    bodyTemplate({
+                        currentVersion: this.currentVersion,
+                        newVersion: ver ? ver.version : 'No new version',
+                        releaseNotesUrl: Config.get('release_notes'),
+                    })
+                );
                 if (ver && ver.version && this.currentVersion !== ver.version) {
                     $('#kb-update-btn').fadeIn('fast');
                 }
-            }.bind(this));
+            }.bind(this)
+        );
     };
 
     /**
@@ -497,21 +540,30 @@ define([
      */
     Narrative.prototype.checkVersion = function () {
         // look up new version here.
-        return Promise.resolve($.ajax({
-            url: Config.url('version_check'),
-            async: true,
-            dataType: 'text',
-            crossDomain: true,
-            cache: false
-        })).then(function (ver) {
-            return Promise.try(function () {
-                ver = $.parseJSON(ver);
-                return ver;
+        return Promise.resolve(
+            $.ajax({
+                url: Config.url('version_check'),
+                async: true,
+                dataType: 'text',
+                crossDomain: true,
+                cache: false,
+            })
+        )
+            .then(function (ver) {
+                return Promise.try(function () {
+                    ver = $.parseJSON(ver);
+                    return ver;
+                });
+            })
+            .catch(function (error) {
+                console.error(
+                    'Error while checking for a version update: ' + error.statusText
+                );
+                KBError(
+                    'Narrative.checkVersion',
+                    'Unable to check for a version update!'
+                );
             });
-        }).catch(function (error) {
-            console.error('Error while checking for a version update: ' + error.statusText);
-            KBError('Narrative.checkVersion', 'Unable to check for a version update!');
-        });
     };
 
     Narrative.prototype.createShutdownDialogButtons = function () {
@@ -519,12 +571,16 @@ define([
             .attr({ type: 'button', 'data-dismiss': 'modal' })
             .addClass('btn btn-danger')
             .append('Okay. Shut it all down!')
-            .click(function () {
-                this.updateVersion();
-            }.bind(this));
+            .click(
+                function () {
+                    this.updateVersion();
+                }.bind(this)
+            );
 
         var $reallyShutdownPanel = $('<div style="margin-top:10px">')
-            .append('This will shutdown your Narrative session and close this window.<br><b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b><br>')
+            .append(
+                'This will shutdown your Narrative session and close this window.<br><b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b><br>'
+            )
             .append($shutdownButton)
             .hide();
 
@@ -547,46 +603,59 @@ define([
             cancelButton: $cancelButton,
             firstShutdownButton: $firstShutdownBtn,
             finalShutdownButton: $shutdownButton,
-            shutdownPanel: $reallyShutdownPanel
+            shutdownPanel: $reallyShutdownPanel,
         };
     };
 
     Narrative.prototype.initAboutDialog = function () {
-        var $versionDiv = $('<div>')
-            .append('<b>Version:</b> ' + Config.get('version'));
-        $versionDiv.append('<br><b>Git Commit:</b> ' + Config.get('git_commit_hash') + ' -- ' + Config.get('git_commit_time'));
-        $versionDiv.append('<br>View release notes on <a href="' + Config.get('release_notes') + '" target="_blank">Github</a>');
+        var $versionDiv = $('<div>').append(
+            '<b>Version:</b> ' + Config.get('version')
+        );
+        $versionDiv.append(
+            '<br><b>Git Commit:</b> ' +
+            Config.get('git_commit_hash') +
+            ' -- ' +
+            Config.get('git_commit_time')
+        );
+        $versionDiv.append(
+            '<br>View release notes on <a href="' +
+            Config.get('release_notes') +
+            '" target="_blank">Github</a>'
+        );
 
         var urlList = Object.keys(Config.get('urls')).sort();
-        var $versionTable = $('<table>')
-            .addClass('table table-striped table-bordered');
-        $.each(urlList,
-            function (idx, val) {
-                var url = Config.url(val);
-                // if url looks like a url (starts with http), include it.
-                // ignore job proxy and submit ticket
-                if (val === 'narrative_job_proxy' ||
-                    val === 'submit_jira_ticket' ||
-                    val === 'narrative_method_store_types' ||
-                    url === null) {
-                    return;
-                }
-                url = url.toString();
-                if (url && url.toLowerCase().indexOf('http') === 0) {
-                    $versionTable.append($('<tr>')
-                        .append($('<td>').append(val))
-                        .append($('<td>').append(url)));
-                }
-            }
+        var $versionTable = $('<table>').addClass(
+            'table table-striped table-bordered'
         );
+        $.each(urlList, function (idx, val) {
+            var url = Config.url(val);
+            // if url looks like a url (starts with http), include it.
+            // ignore job proxy and submit ticket
+            if (
+                val === 'narrative_job_proxy' ||
+                val === 'submit_jira_ticket' ||
+                val === 'narrative_method_store_types' ||
+                url === null
+            ) {
+                return;
+            }
+            url = url.toString();
+            if (url && url.toLowerCase().indexOf('http') === 0) {
+                $versionTable.append(
+                    $('<tr>').append($('<td>').append(val)).append($('<td>').append(url))
+                );
+            }
+        });
         var $verAccordionDiv = $('<div style="margin-top:15px">');
         $versionDiv.append($verAccordionDiv);
 
         new KBaseAccordion($verAccordionDiv, {
-            elements: [{
-                title: 'KBase Service URLs',
-                body: $versionTable
-            }]
+            elements: [
+                {
+                    title: 'KBase Service URLs',
+                    body: $versionTable,
+                },
+            ],
         });
 
         var shutdownButtons = this.createShutdownDialogButtons();
@@ -596,8 +665,8 @@ define([
             buttons: [
                 shutdownButtons.cancelButton,
                 shutdownButtons.firstShutdownButton,
-                shutdownButtons.shutdownPanel
-            ]
+                shutdownButtons.shutdownPanel,
+            ],
         });
 
         $('#kb-about-btn').click(function () {
@@ -610,11 +679,13 @@ define([
 
         var shutdownDialog = new BootstrapDialog({
             title: 'Shutdown and restart narrative?',
-            body: $('<div>').append('Shutdown and restart your Narrative session? Any unsaved changes in any open Narrative in any window WILL BE LOST!'),
+            body: $('<div>').append(
+                'Shutdown and restart your Narrative session? Any unsaved changes in any open Narrative in any window WILL BE LOST!'
+            ),
             buttons: [
                 shutdownButtons.cancelButton,
-                shutdownButtons.finalShutdownButton
-            ]
+                shutdownButtons.finalShutdownButton,
+            ],
         });
 
         $('#kb-shutdown-btn').click(function () {
@@ -631,8 +702,10 @@ define([
         // currently - 4/6/2015 - there's a hard limit of 4MB per KBase Narrative.
         // Any larger object will throw a 413 error, and we need to show some text.
         if (data.xhr.status === 413) {
-            errorText = 'Due to current system constraints, a Narrative may not exceed ' +
-                this.maxNarrativeSize + ' of text.<br><br>' +
+            errorText =
+                'Due to current system constraints, a Narrative may not exceed ' +
+                this.maxNarrativeSize +
+                ' of text.<br><br>' +
                 'Errors of this sort are usually due to excessive size ' +
                 'of outputs from Code Cells, or from large objects ' +
                 'embedded in Markdown Cells.<br><br>' +
@@ -643,15 +716,22 @@ define([
 
             if (errorText) {
                 /* gonna throw in a special case for workspace permissions issues for now.
-                 * if it has this pattern:
-                 *
-                 * User \w+ may not write to workspace \d+
-                 * change the text to something more sensible.
-                 */
+                * if it has this pattern:
+                *
+                * User \w+ may not write to workspace \d+
+                * change the text to something more sensible.
+                */
 
-                var res = /User\s+(\w+)\s+may\s+not\s+write\s+to\s+workspace\s+(\d+)/.exec(errorText);
+                var res = /User\s+(\w+)\s+may\s+not\s+write\s+to\s+workspace\s+(\d+)/.exec(
+                    errorText
+                );
                 if (res) {
-                    errorText = 'User ' + res[1] + ' does not have permission to save to workspace ' + res[2] + '.';
+                    errorText =
+                        'User ' +
+                        res[1] +
+                        ' does not have permission to save to workspace ' +
+                        res[2] +
+                        '.';
                 }
             }
         } else {
@@ -666,8 +746,8 @@ define([
                     class: 'btn-primary',
                     click: function () {
                         return;
-                    }
-                }
+                    },
+                },
             },
             open: function () {
                 var that = $(this);
@@ -678,16 +758,18 @@ define([
                     }
                 });
                 that.find('input[type="text"]').focus();
-            }
+            },
         });
     };
 
     Narrative.prototype.initTour = function () {
         try {
-            $('#kb-tour').click(function (e) {
-                var tour = new Tour.Tour(this);
-                tour.start();
-            }.bind(this));
+            $('#kb-tour').click(
+                function () {
+                    var tour = new Tour.Tour(this);
+                    tour.start();
+                }.bind(this)
+            );
         } catch (e) {
             console.error(e);
         }
@@ -701,19 +783,31 @@ define([
      * 1. Registers event listeners on Jupyter events such as cell selection, insertion,
      *    deletion, etc.
      * 2. Initializes the Core UI dialogs that depend on configuration information (About,
-     *    Upgrade, and Shutdown)
-     * 3. Initializes the
+     *    Upgrade, and Shutdown).
+     * 3. Initializes the help tour.
+     *
+     * The rest depends on a few Jupyter events being fired. Once the notebook is registered
+     * as "loaded" (notebook_loaded.Notebook), we can proceed to load the data, apps, and
+     * side panel components.
+     *
+     * When the kernel is connected (the channel between front and back ends, with the
+     * kernel_connected.Kernel event), we can set up the job communication channel.
+     *
+     * Since these are handled by jquery events, we need an optional callback. The
+     * jobsReadyCallback function is invoked after setting up (or failing to set up) the
+     * job communication channel with the kernel. It takes an (optional) error object as
+     * input, which will have structure { error: xxx }, where xxx is the structure of the error
+     * that might get thrown by the Jupyter stack.
+     *
      */
-    // This should not be run until AFTER the notebook has been loaded!
-    // It depends on elements of the Notebook metadata.
-    Narrative.prototype.init = function () {
+    Narrative.prototype.init = function (jobsReadyCallback) {
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0, 0);
 
         this.authToken = NarrativeLogin.getAuthToken();
         this.userId = NarrativeLogin.sessionInfo.user;
 
-        Jupyter.narrative.patchKeyboardMapping();
+        this.patchKeyboardMapping();
         this.registerEvents();
         this.initAboutDialog();
         this.initUpgradeDialog();
@@ -721,39 +815,44 @@ define([
         this.initTour();
 
         /* Clever extension to $.event from StackOverflow
-         * Lets us watch DOM nodes and catch when a widget's node gets nuked.
-         * http://stackoverflow.com/questions/2200494/jquery-trigger-event-when-an-element-is-removed-from-the-dom
-         *
-         * We bind a jQuery event to a node. Call it 'destroyed'.
-         * When that event is no longer bound (i.e. when the node is removed, OR when .unbind is called)
-         * it triggers the 'remove' function. Lets us keep track of when widgets get removed
-         * in the registerWidget function below.
-         */
+        * Lets us watch DOM nodes and catch when a widget's node gets nuked.
+        * http://stackoverflow.com/questions/2200494/jquery-trigger-event-when-an-element-is-removed-from-the-dom
+        *
+        * We bind a jQuery event to a node. Call it 'destroyed'.
+        * When that event is no longer bound (i.e. when the node is removed, OR when .unbind is called)
+        * it triggers the 'remove' function. Lets us keep track of when widgets get removed
+        * in the registerWidget function below.
+        */
         $.event.special.destroyed = {
             remove: function (o) {
                 if (o.handler) {
                     o.handler();
                 }
-            }
+            },
         };
 
-        $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
+        $([Jupyter.events]).on('notebook_loaded.Notebook', () => {
             this.loadingWidget.updateProgress('narrative', true);
             $('#notification_area').find('div#notification_trusted').hide();
 
-            $(document).one('dataUpdated.Narrative', function () {
-                this.loadingWidget.updateProgress('data', true);
-            }.bind(this));
+            $(document).one(
+                'dataUpdated.Narrative',
+                () => this.loadingWidget.updateProgress('data', true)
+            );
 
-            $(document).one('appListUpdated.Narrative', function () {
-                this.loadingWidget.updateProgress('apps', true);
-            }.bind(this));
+            $(document).one(
+                'appListUpdated.Narrative',
+                () => this.loadingWidget.updateProgress('apps', true)
+            );
 
             // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
-            this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
-            this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
-                ws_id: this.getWorkspaceName()
+            this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), {
+                autorender: false,
             });
+            this.narrController = new KBaseNarrativeWorkspace(
+                $('#notebook_panel'),
+                { ws_id: this.getWorkspaceName() }
+            );
 
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
@@ -762,44 +861,50 @@ define([
             Jupyter.CellToolbar.global_show();
 
             if (Jupyter.notebook && Jupyter.notebook.metadata) {
-                var creatorId = Jupyter.notebook.metadata.creator || 'KBase User';
+                const creatorId = Jupyter.notebook.metadata.creator || 'KBase User';
                 DisplayUtil.displayRealName(creatorId, $('#kb-narr-creator'));
 
                 // This puts the cell menu in the right place.
-                $([Jupyter.events]).trigger('select.Cell', { cell: Jupyter.notebook.get_selected_cell() });
+                $([Jupyter.events]).trigger('select.Cell', {
+                    cell: Jupyter.notebook.get_selected_cell(),
+                });
             }
             if (this.getWorkspaceName() === null) {
-                KBFatal('Narrative.init', 'Unable to locate workspace name from the Narrative object!');
+                KBFatal(
+                    'Narrative.init',
+                    'Unable to locate workspace name from the Narrative object!'
+                );
                 this.loadingWidget.remove();
                 return;
             }
             this.initSharePanel();
             this.initStaticNarrativesPanel();
             this.updateDocumentVersion()
-                .then(function() {
-                    // init the controller
-                    return this.narrController.render();
-                }.bind(this))
-                .finally(function () {
-                    this.sidePanel.render();
-                }.bind(this));
-
-            $([Jupyter.events]).on('kernel_ready.Kernel',
-                (e) => {
-                    this.loadingWidget.updateProgress('kernel', true);
-                    this.jobCommChannel = new JobCommChannel();
-                    // TODO: This should be an event "kernel-ready", perhaps broadcast
-                    // on the default bus channel.
-                    this.jobCommChannel.initCommChannel()
-                        .then(() => this.loadingWidget.updateProgress('jobs', true))
-                        .catch((err) => {
-                            // TODO: put the narrative into a terminal state
-                            console.error('ERROR initializing kbase comm channel', err);
-                            KBFatal('Narrative.ini', 'KBase communication channel could not be initiated with the back end. TODO');
-                        });
-                }
-            );
-        }.bind(this));
+                .then(() => this.narrController.render())
+                .finally(() => this.sidePanel.render());
+        });
+        $([Jupyter.events]).on('kernel_connected.Kernel', () => {
+            this.loadingWidget.updateProgress('kernel', true);
+            this.jobCommChannel = new JobCommChannel();
+            this.jobCommChannel
+                .initCommChannel()
+                .then(() => {
+                    this.loadingWidget.updateProgress('jobs', true);
+                    if (jobsReadyCallback) {
+                        jobsReadyCallback();
+                    }
+                })
+                .catch((err) => {
+                    console.error('An error occurred while initializing kbase comm channel', err);
+                    KBFatal(
+                        'Narrative.init',
+                        'KBase communication channel could not be initiated with the kernel.'
+                    );
+                    if (jobsReadyCallback) {
+                        jobsReadyCallback({error: err});
+                    }
+                });
+        });
     };
 
     /**
@@ -815,15 +920,23 @@ define([
                 contentType: 'application/json',
                 url: '/narrative_shutdown/' + user,
                 type: 'DELETE',
-                crossDomain: true
-            }))
+                crossDomain: true,
+            })
+        )
             .then(() => {
                 setTimeout(() => {
-                    location.replace(`/load-narrative.html?n=${this.workspaceId}&check=true`);
+                    location.replace(
+                        `/load-narrative.html?n=${this.workspaceId}&check=true`
+                    );
                 }, 200);
             })
             .catch((error) => {
-                window.alert('Unable to update your Narrative session\nError: ' + error.status + ': ' + error.statusText);
+                window.alert(
+                    'Unable to update your Narrative session\nError: ' +
+                    error.status +
+                    ': ' +
+                    error.statusText
+                );
                 console.error(error);
             });
     };
@@ -851,7 +964,7 @@ define([
      * with. Keys are param ids (should match the spec), and values are the values of those
      * parameters.
      */
-    Narrative.prototype.addAndPopulateApp = function(appId, tag, parameters) {
+    Narrative.prototype.addAndPopulateApp = function (appId, tag, parameters) {
         this.sidePanel.$methodsWidget.triggerApp(appId, tag, parameters);
     };
 
@@ -864,13 +977,14 @@ define([
      * expected to be a set of Key-value-pairs describing the object. If an array, expected to be
      * the usual workspace info array for an object.
      */
-    Narrative.prototype.addViewerCell = function(obj) {
+    Narrative.prototype.addViewerCell = function (obj) {
         if (Jupyter.narrative.readonly) {
             new BootstrapDialog({
                 type: 'warning',
                 title: 'Warning',
-                body: 'Read-only Narrative -- may not add a data viewer to this Narrative',
-                alertOnly: true
+                body:
+                'Read-only Narrative -- may not add a data viewer to this Narrative',
+                alertOnly: true,
             }).show();
             return;
         }
@@ -893,9 +1007,9 @@ define([
             objInfo = obj;
         }
         this.narrController.trigger('createViewerCell.Narrative', {
-            'nearCellIdx': nearIdx,
-            'widget': 'kbaseNarrativeDataCell',
-            'info': objInfo
+            nearCellIdx: nearIdx,
+            widget: 'kbaseNarrativeDataCell',
+            info: objInfo,
         });
     };
 
@@ -913,7 +1027,8 @@ define([
         //getFunctionSpecs.Narrative is implemented in kbaseNarrativeAppPanel
         var request = { methods: [method_id] };
         var self = this;
-        self.narrController.trigger('getFunctionSpecs.Narrative', [request,
+        self.narrController.trigger('getFunctionSpecs.Narrative', [
+            request,
             function (specs) {
                 // do nothing if the method could not be found
                 var errorMsg = 'Method ' + method_id + ' not found and cannot run.';
@@ -930,17 +1045,22 @@ define([
                     return;
                 }
                 // put the method in the narrative by simulating a method clicked in kbaseNarrativeAppPanel
-                self.narrController.trigger('methodClicked.Narrative', specs.methods[method_id]);
+                self.narrController.trigger(
+                    'methodClicked.Narrative',
+                    specs.methods[method_id]
+                );
 
                 // the method initializes an internal method input widget, but rendering and initializing is
                 // async, so we have to wait and check back before we can load the parameter state.
                 // TODO: update kbaseNarrativeMethodCell to return a promise to mark when rendering is complete
                 var newCell = Jupyter.notebook.get_selected_cell();
                 var newCellIdx = Jupyter.notebook.get_selected_index();
-                var newWidget = new KBaseNarrativeMethodCell($('#' + $(newCell.get_text())[0].id));
+                var newWidget = new KBaseNarrativeMethodCell(
+                    $('#' + $(newCell.get_text())[0].id)
+                );
                 var updateStateAndRun = function () {
                     if (newWidget.$inputWidget) {
-                        // if the $inputWidget is not null, we are good to go, so set the parameters
+                    // if the $inputWidget is not null, we are good to go, so set the parameters
                         newWidget.loadState(parameters);
                         // make sure the new cell is still selected, then run the method
                         Jupyter.notebook.select(newCellIdx);
@@ -952,7 +1072,7 @@ define([
                 };
                 // call the update and run after a short deplay
                 window.setTimeout(updateStateAndRun, 50);
-            }
+            },
         ]);
     };
 
@@ -965,7 +1085,7 @@ define([
     };
 
     /**
-     * A little bit of a riff on the Jupyter "find_cell_index".
+     * A little bit of a riff on the Jupyter 'find_cell_index'.
      * Every KBase-ified cell (App, Method, Output) has a unique identifier.
      * This can be used to find the closest cell element - its index is the
      * Jupyter cell index (inferred somewhat from find_cell_index which calls
@@ -978,10 +1098,12 @@ define([
         var cells = Jupyter.notebook.get_cells();
         for (var i = 0; i < cells.length; i++) {
             var c = cells[i];
-            if (c.metadata.kbase &&
+            if (
+                c.metadata.kbase &&
                 c.metadata.kbase.attributes &&
                 c.metadata.kbase.attributes.id &&
-                c.metadata.kbase.attributes.id === id) {
+                c.metadata.kbase.attributes.id === id
+            ) {
                 return i;
             }
         }
@@ -1001,15 +1123,28 @@ define([
      * is a helper that does so. It then returns the cell object
      * that gets created.
      */
-    Narrative.prototype.insertAndSelectCellBelow = function (cellType, index, data) {
+    Narrative.prototype.insertAndSelectCellBelow = function (
+        cellType,
+        index,
+        data
+    ) {
         return this.insertAndSelectCell(cellType, 'below', index, data);
     };
 
-    Narrative.prototype.insertAndSelectCellAbove = function (cellType, index, data) {
+    Narrative.prototype.insertAndSelectCellAbove = function (
+        cellType,
+        index,
+        data
+    ) {
         return this.insertAndSelectCell(cellType, 'above', index, data);
     };
 
-    Narrative.prototype.insertAndSelectCell = function (cellType, direction, index, data) {
+    Narrative.prototype.insertAndSelectCell = function (
+        cellType,
+        direction,
+        index,
+        data
+    ) {
         var newCell;
         if (direction === 'below') {
             newCell = Jupyter.notebook.insert_cell_below(cellType, index, data);
@@ -1025,7 +1160,13 @@ define([
 
     Narrative.prototype.scrollToCell = function (cell, select) {
         var $elem = $('#notebook-container');
-        $elem.animate({ scrollTop: cell.element.offset().top + $elem.scrollTop() - $elem.offset().top }, 400);
+        $elem.animate(
+            {
+                scrollTop:
+                cell.element.offset().top + $elem.scrollTop() - $elem.offset().top,
+            },
+            400
+        );
         if (select) {
             Jupyter.notebook.focus_cell(cell);
             Jupyter.notebook.select(Jupyter.notebook.find_cell_index(cell));
@@ -1045,31 +1186,48 @@ define([
         }
         if (hidePanel) {
             $('#left-column').trigger('hideSidePanelOverlay.Narrative');
-            $('#left-column').hide('slide', {
-                direction: 'left',
-                easing: 'swing',
-                complete: function () {
-                    $('#kb-side-toggle-in').show(0);
-                }
-            }, delay);
+            $('#left-column').hide(
+                'slide',
+                {
+                    direction: 'left',
+                    easing: 'swing',
+                    complete: function () {
+                        $('#kb-side-toggle-in').show(0);
+                    },
+                },
+                delay
+            );
             // Move content flush left-ish
-            $('#notebook-container').animate({ left: 0 }, {
-                easing: 'swing',
-                duration: delay
-            });
+            $('#notebook-container').animate(
+                { left: 0 },
+                {
+                    easing: 'swing',
+                    duration: delay,
+                }
+            );
         } else {
             $('#kb-side-toggle-in').hide(0, function () {
-                $('#left-column').show('slide', {
-                    direction: 'left',
-                    easing: 'swing'
-                }, delay);
-                $('#notebook-container').animate({ left: 380 }, { easing: 'swing', duration: delay });
+                $('#left-column').show(
+                    'slide',
+                    {
+                        direction: 'left',
+                        easing: 'swing',
+                    },
+                    delay
+                );
+                $('#notebook-container').animate(
+                    { left: 380 },
+                    { easing: 'swing', duration: delay }
+                );
             });
         }
     };
 
     Narrative.prototype.showDataOverlay = function () {
-        $(document).trigger('showSidePanelOverlay.Narrative', this.sidePanel.$dataWidget.$overlayPanel);
+        $(document).trigger(
+            'showSidePanelOverlay.Narrative',
+            this.sidePanel.$dataWidget.$overlayPanel
+        );
     };
 
     Narrative.prototype.hideOverlay = function () {
@@ -1083,9 +1241,12 @@ define([
      */
     Narrative.prototype.registerWidget = function (widget, cellId) {
         this.kbaseWidgets[cellId] = widget;
-        $('#' + cellId).bind('destroyed', function () {
-            this.removeWidget(cellId);
-        }.bind(this));
+        $('#' + cellId).bind(
+            'destroyed',
+            function () {
+                this.removeWidget(cellId);
+            }.bind(this)
+        );
     };
 
     Narrative.prototype.removeWidget = function (cellId) {

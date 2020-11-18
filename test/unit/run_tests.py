@@ -26,6 +26,12 @@ argparser.add_argument(
 argparser.add_argument(
     "-d", "--debug", action="store_true", help="Whether to enter debug mode in Karma"
 )
+argparser.add_argument(
+    "-u", "--unit", action="store_true", help="Whether to run unit tests"
+)
+argparser.add_argument(
+    "-i", "--integration", action="store_true", help="Whether to run integration tests"
+)
 options = argparser.parse_args(sys.argv[1:])
 
 nb_command = [
@@ -72,18 +78,46 @@ def readlines():
 thread = threading.Thread(target=readlines)
 thread.setDaemon(True)
 thread.start()
-# time.sleep(15)
 
-test_command = ["grunt", "test"]
+print("Jupyter server started!")
 
-resp = 1
+resp_unit = 0
+resp_integration = 0
 try:
-    print("Jupyter server started, starting test script.")
-    resp = subprocess.check_call(test_command, stderr=subprocess.STDOUT)
-except subprocess.CalledProcessError:
-    pass
+    if options.unit:
+        print("starting unit tests")
+        try:
+            resp_unit = subprocess.check_call(
+                ["grunt", "test"], stderr=subprocess.STDOUT, shell=False
+            )
+        except subprocess.CalledProcessError as e:
+            resp_unit = e.returncode
+    if options.integration:
+        base_url = f"http://localhost:{JUPYTER_PORT}"
+        env = os.environ.copy()
+        env["BASE_URL"] = base_url
+        print("starting integration tests")
+        try:
+            resp_integration = subprocess.check_call(
+                [
+                    "npx",
+                    "wdio",
+                    "test/integration/wdio.conf.js",
+                ],
+                stderr=subprocess.STDOUT,
+                env=env,
+                shell=False,
+            )
+        except subprocess.CalledProcessError as e:
+            resp_integration = e.returncode
 finally:
     print("Done running tests, killing server.")
     os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
-    # nb_server.terminate()
-sys.exit(resp)
+    if resp_unit != 0:
+        print(f"Unit tests completed with code {resp_unit}")
+    if resp_integration != 0:
+        print(f"Integration tests completed with code {resp_integration}")
+    exit_code = 0
+    if resp_unit != 0 or resp_integration != 0:
+        exit_code = 1
+    sys.exit(exit_code)

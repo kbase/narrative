@@ -103,7 +103,7 @@
         "google_ad_conversion": "kR9OCLas4JgBEOy2pucC"
     },
     "comm_wait_timeout": 600000,
-    "config": "narrative-refactor",
+    "config": "dev",
     "data_panel": {
         "initial_sort_limit": 10000,
         "max_name_length": 33,
@@ -383,5 +383,5 @@
         "globus_upload_url": "https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a"
     },
     "use_local_widgets": true,
-    "version": "4.3.0"
+    "version": "4.3.1"
 }

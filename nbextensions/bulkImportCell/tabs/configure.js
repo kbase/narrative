@@ -17,7 +17,8 @@ define([
 
     const div = html.tag('div'),
         span = html.tag('span'),
-        form = html.tag('form');
+        form = html.tag('form'),
+        cssCellType = 'kb-bulk-import-configure';
 
     /*
         Options:
@@ -177,6 +178,7 @@ define([
                         title: span([
                             'File Paths',
                             span({
+                                class: `${cssCellType}__advanced_hidden_message`,
                                 dataElement: 'advanced-hidden-message'
                             })]),
                         name: 'file-paths-area',

@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -10,7 +7,7 @@ define([
     'common/ui',
     'common/events',
     'common/props',
-    // Wrapper for inputs
+    // Wrapper for inputs - TODO can these be moved to common?
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
     'common/runtime'
@@ -27,11 +24,10 @@ define([
 ) {
     'use strict';
 
-    var t = html.tag,
-        form = t('form'),
-        span = t('span'),
-        div = t('div'),
-        b = t('b');
+    var tag = html.tag,
+        form = tag('form'),
+        span = tag('span'),
+        div = tag('div');
 
     function factory(config) {
         var runtime = Runtime.make(),
@@ -161,7 +157,7 @@ define([
                         key: {
                             type: 'get-param-state'
                         },
-                        handle: function (message) {
+                        handle: function () {
                             return paramsBus.request({ id: parameterSpec.id }, {
                                 key: {
                                     type: 'get-param-state'

@@ -52,12 +52,12 @@ define([
                 const layout = renderLayout(args);
                 container.innerHTML = layout.content;
 
-                //TODO: what node are we passing to the params widget? 
                 buildParamsWidget({
                     bus: bus,
                     workspaceInfo: workspaceInfo,
-                    node: {}
+                    node: container
                 }).then(() => {
+                    console.log('what is our layout now? ', container);
                     layout.events.attachEvents(container);
                 });
 
@@ -77,8 +77,6 @@ define([
             in the app cell the configure widget is loaded with the returned parameter widget 
         */
         function buildParamsWidget(options) {
-            console.log('we have loaded the params widget, options: ', options);
-
             //TODO: is this the right way to set the message bus? or should it use the bus we can receive from the parent container? 
             const bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
 
@@ -163,7 +161,8 @@ define([
                 appSpec: model.getItem('app.spec'),
                 parameters: spec.getSpec().parameters
             })
-                .then(function() {
+                .then(function(data) {
+                    console.log('started params widget and returned with: ', data);
                     return {
                         bus: bus,
                         instance: widget

@@ -44,7 +44,6 @@ define([
         return Promise.all(Jupyter.notebook.get_cells().map((cell) => {
             if (BulkImportCell.isBulkImportCell(cell)) {
                 try {
-                    //TODO: do we need to send WS info here? if it's already a cell in existence we don't need to re-intalize
                     new BulkImportCell({
                         cell: cell,
                         workspaceInfo: workspaceInfo

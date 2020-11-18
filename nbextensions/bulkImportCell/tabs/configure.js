@@ -51,13 +51,15 @@ define([
 
                 const layout = renderLayout(args);
                 container.innerHTML = layout.content;
+                
+                let paramNode = document.createElement('div');
+                container.appendChild(paramNode);
 
                 buildParamsWidget({
                     bus: bus,
                     workspaceInfo: workspaceInfo,
-                    node: container
-                }).then(() => {
-                    console.log('what is our layout now? ', container);
+                    node: paramNode
+                }).then(() => {                    
                     layout.events.attachEvents(container);
                 });
 
@@ -161,8 +163,7 @@ define([
                 appSpec: model.getItem('app.spec'),
                 parameters: spec.getSpec().parameters
             })
-                .then(function(data) {
-                    console.log('started params widget and returned with: ', data);
+                .then(function() {
                     return {
                         bus: bus,
                         instance: widget

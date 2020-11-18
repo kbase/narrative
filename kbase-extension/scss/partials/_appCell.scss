@@ -150,6 +150,11 @@
     display: none;
   }
 
+  [data-element=advanced-hidden-message] {
+    margin-left: 6px;
+    font-style: italic;
+  }
+
   [data-element=run-control-panel] {
     width: 100%;
   }
@@ -461,3 +466,4 @@ Buttons
   font-size: 75%;
   font-style: italic;
 }
+

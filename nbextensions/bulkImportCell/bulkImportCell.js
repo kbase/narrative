@@ -308,7 +308,7 @@ define([
             }
             this.tabWidget = this.tabSet.tabs[tab].widget.make({bus: this.bus});
             let node = document.createElement('div');
-            this.ui.getElement('cell-container.tab-pane.widget-container.widget').appendChild(node);
+            this.ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
             return this.tabWidget.start({
                 node: node
             });
@@ -432,40 +432,30 @@ define([
                         })
                     ]),
                     div({
-                        class: `${cssCellType}__body body`,
+                        class: `${cssCellType}__body container-fluid`,
                         dataElement: 'body',
                     }, [
+                        this.buildActionButton(events),
                         div({
-                            class: `${cssCellType}__widget_container`,
-                            dataElement: 'widget',
+                            class: `${cssCellType}__tab_pane`,
+                            dataElement: 'tab-pane',
                         }, [
                             div({
-                                class: `${cssCellType}__cell_container container-fluid`,
-                                dataElement: 'cell-container'
+                                class: `${cssCellType}__category_panel`,
+                                dataElement: 'category-panel'
+                            }),
+                            div({
+                                class: `${cssCellType}__tab_pane_widget_container`,
+                                dataElement: 'widget-container'
                             }, [
-                                this.buildActionButton(events),
                                 div({
-                                    class: `${cssCellType}__tab_pane`,
-                                    dataElement: 'tab-pane',
-                                }, [
-                                    div({
-                                        class: `${cssCellType}__category_panel`,
-                                        dataElement: 'category-panel'
-                                    }),
-                                    div({
-                                        class: `${cssCellType}__tab_pane_widget_container`,
-                                        dataElement: 'widget-container'
-                                    }, [
-                                        div({
-                                            class: `${cssCellType}__tab_pane_widget_container_tabs`,
-                                            dataElement: 'tab-container'
-                                        }),
-                                        div({
-                                            class: `${cssCellType}__tab_pane_widget_container_widget`,
-                                            dataElement: 'widget'
-                                        })
-                                    ])
-                                ])
+                                    class: `${cssCellType}__tab_pane_widget_container_tabs`,
+                                    dataElement: 'tab-container'
+                                }),
+                                div({
+                                    class: `${cssCellType}__tab_pane_widget_container_widget`,
+                                    dataElement: 'widget'
+                                })
                             ])
                         ])
                     ])
@@ -484,8 +474,8 @@ define([
             const layout = this.renderLayout();
             this.kbaseNode.innerHTML = layout.content;
             const proms = [
-                this.buildCategoryPanel(this.ui.getElement('cell-container.tab-pane.category-panel')),
-                this.buildTabs(this.ui.getElement('cell-container.tab-pane.widget-container.tab-container'))
+                this.buildCategoryPanel(this.ui.getElement('body.tab-pane.category-panel')),
+                this.buildTabs(this.ui.getElement('body.tab-pane.widget-container.tab-container'))
             ];
             return Promise.all(proms)
                 .then(() => {

@@ -11,13 +11,9 @@ define([
     'common/events',
     'common/props',
     // Wrapper for inputs
-    './inputWrapperWidget',
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
-    'common/runtime',
-    'narrativeConfig'
-    // All the input widgets
-
+    'common/runtime'
 ], function (
     Promise,
     $,
@@ -25,14 +21,9 @@ define([
     UI,
     Events,
     Props,
-    //Wrappers
-    RowWidget,
     FieldWidget,
     ParamResolver,
-    Runtime,
-    Config
-
-    // Input widgets
+    Runtime
 ) {
     'use strict';
 

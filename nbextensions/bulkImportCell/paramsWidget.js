@@ -240,7 +240,7 @@ define([
                                         results.forEach((res) => {
                                             Object.keys(res).forEach((key) => {
                                                 combined[key] = res[key];
-                                            })
+                                            });
                                         });
                                         return combined;
                                     });

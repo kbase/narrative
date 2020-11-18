@@ -36,7 +36,7 @@ define([
 
     function DefaultWidget() {
         function make() {
-            function start(options) {
+            function start() {
                 alert('starting default widget');
             }
 
@@ -79,10 +79,16 @@ define([
          *     'fastq_reads': ['file1.fq', 'file2.fq']
          * }
          */
-        constructor(cell, initialize, typesToFiles) {
+        constructor(options) {
+            const cell = options.cell,
+                initialize = options.initialize,
+                typesToFiles = options.typesToFiles,
+                workspaceInfo = options.workspaceInfo;
+
             if (cell.cell_type !== 'code') {
                 throw new Error('Can only create Bulk Import Cells out of code cells!');
             }
+
             this.cell = cell;
             // this is the DOM element used as the container for everything controlled by this cell.
             this.kbaseNode = null;
@@ -92,8 +98,10 @@ define([
                 bus: this.runtime.bus()
             });
             this.ui = null;
+            this.workspaceInfo = workspaceInfo;
             this.tabWidget = null;  // the widget currently in view
             this.state = this.getInitialState();
+            
             if (initialize) {
                 this.initialize(typesToFiles);
             }
@@ -252,7 +260,13 @@ define([
             if (this.tabWidget !== null) {
                 this.tabWidget.stop();
             }
-            this.tabWidget = this.tabSet.tabs[tab].widget.make({bus: this.bus});
+
+            this.tabWidget = this.tabSet.tabs[tab].widget.make({
+                bus: this.cellBus,
+                workspaceInfo: this.workspaceInfo,
+                cell: this.cell
+            });
+
             let node = document.createElement('div');
             this.ui.getElement('cell-container.tab-pane.widget').appendChild(node);
             this.tabWidget.start({
@@ -319,8 +333,7 @@ define([
                 tabs: {
                     configure: {
                         label: 'Configure',
-                        widget: ConfigureWidget,
-                        class: true
+                        widget: ConfigureWidget
                     },
                     viewConfigure: {
                         label: 'View Configure',
@@ -384,6 +397,7 @@ define([
                     }
                 }
             };
+
             this.controlPanel = new CellControlPanel({
                 bus: this.cellBus,
                 ui: this.ui,

@@ -23,13 +23,13 @@ define([
 ) {
     'use strict';
 
-    var tag = html.tag,
+    let tag = html.tag,
         form = tag('form'),
         span = tag('span'),
         div = tag('div');
 
     function factory(config) {
-        var runtime = Runtime.make(),
+        let runtime = Runtime.make(),
             paramsBus = config.bus,
             workspaceInfo = config.workspaceInfo,
             initialParams = config.initialParams,
@@ -91,7 +91,7 @@ define([
         function makeFieldWidget(appSpec, parameterSpec, value, closeParameters) {
             return paramResolver.loadInputControl(parameterSpec)
                 .then(function (inputWidget) {
-                    var fieldWidget = FieldWidget.make({
+                    let fieldWidget = FieldWidget.make({
                         inputControlFactory: inputWidget,
                         showHint: true,
                         useRowHighight: true,
@@ -251,42 +251,43 @@ define([
                 });
         }
 
-        function renderAdvanced(area) {
-            // area is either "input" or "parameter"
-
-            var areaElement = area + '-area',
+        function renderAdvanced() {
+            const areaElement = 'parameters-area',
                 areaSelector = '[data-element="' + areaElement + '"]',
                 advancedInputs = container.querySelectorAll(areaSelector + ' [data-advanced-parameter]');
 
-            if (advancedInputs.length === 0) {
+            if (!advancedInputs.length) {
                 ui.setContent([areaElement, 'advanced-hidden-message'], '');
                 return;
             }
 
-            var removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
-                addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
-            for (var i = 0; i < advancedInputs.length; i += 1) {
-                var input = advancedInputs[i];
-                input.classList.remove(removeClass);
-                input.classList.add(addClass);
+            const removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing');
+            const addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
 
-                var actualInput = input.querySelector('[data-element="input"]');
-                if (actualInput) {
-                    $(actualInput).trigger('advanced-shown.kbase');
+            for (const [key, entry] of Object.entries(advancedInputs)) {
+                entry.classList.remove(removeClass);
+                entry.classList.add(addClass);
+
+                const inputElement = entry.querySelector('[data-element="input"]')
+                if (inputElement) {
+                    $(inputElement).trigger('advanced-shown.kbase');
                 }
+
             }
 
             // Also update the count in the paramters.
-            var events = Events.make({ node: container });
+            const events = Events.make({ node: container });
 
-            var message;
-            var showAdvancedButton;
+            let message,
+                showAdvancedButton;
+
             if (settings.showAdvanced) {
                 if (advancedInputs.length > 1) {
                     message = String(advancedInputs.length) + ' advanced parameters showing';
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter showing';
                 }
+
                 showAdvancedButton = ui.buildButton({
                     label: 'hide advanced',
                     type: 'link',
@@ -321,8 +322,8 @@ define([
         }
 
         function renderLayout() {
-            var events = Events.make(),
-                formContent = [];
+            const events = Events.make();
+            let formContent = [];
 
             formContent = formContent.concat([
                 ui.buildPanel({
@@ -333,7 +334,7 @@ define([
                 })
             ]);
         
-            var content = form({ dataElement: 'input-widget-form' }, formContent);
+            const content = form({ dataElement: 'input-widget-form' }, formContent);
             return {
                 content: content,
                 events: events
@@ -347,7 +348,7 @@ define([
                 node: container,
                 bus: bus
             });
-            var layout = renderLayout();
+            let layout = renderLayout();
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
 
@@ -367,7 +368,7 @@ define([
 
             bus.on('toggle-advanced', function () {
                 settings.showAdvanced = !settings.showAdvanced;
-                renderAdvanced('parameters');
+                renderAdvanced();
             });
 
             runtime.bus().on('workspace-changed', function () {
@@ -379,14 +380,16 @@ define([
         }
 
         function makeParamsLayout(params) {
-            var view = {};
-            var paramMap = {};
-            var orderedParams = params.map(function (param) {
+            let view = {},
+                paramMap = {};
+
+            const orderedParams = params.map(function (param) {
                 paramMap[param.id] = param;
                 return param.id;
             });
-            var layout = orderedParams.map(function (parameterId) {
-                var id = html.genId();
+
+            const layout = orderedParams.map(function (parameterId) {
+                let id = html.genId();
                 view[parameterId] = {
                     id: id
                 };
@@ -424,14 +427,14 @@ define([
 
                 return Promise.resolve()
                     .then(function () {
-                        if (parameterParams.layout.length === 0) {
+                        if (!parameterParams.layout.length) {
                             // TODO: should be own node
                             ui.getElement('parameters-area').classList.add('hidden');
                         } else {
                             places.parameterFields.innerHTML = parameterParams.content;
 
                             return Promise.all(parameterParams.layout.map(function (parameterId) {
-                                var spec = parameterParams.paramMap[parameterId];
+                                const spec = parameterParams.paramMap[parameterId];
                                 try {
                                     return makeFieldWidget(appSpec, spec, initialParams[spec.id])
                                         .then(function (widget) {
@@ -452,7 +455,7 @@ define([
                         }
                     })
                     .then(function () {
-                        renderAdvanced('parameters');
+                        renderAdvanced();
                     });
             });
         }

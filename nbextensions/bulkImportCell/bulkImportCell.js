@@ -287,7 +287,7 @@ define([
                 },
                 actionState: {
                     name: 'runApp',
-                    enabled: false
+                    disable: true
                 }
             };
         }
@@ -325,10 +325,7 @@ define([
                 }
             };
             this.actionButtons = {
-                current: {
-                    name: null,
-                    disabled: null
-                },
+                current: this.tabState.actionState,
                 availableButtons: {
                     runApp: {
                         help: 'Run the app',

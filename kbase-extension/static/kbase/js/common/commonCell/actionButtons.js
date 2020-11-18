@@ -4,58 +4,50 @@ define([
     html
 ){
     'use strict';
-    function factory() {
+    function factory(config) {
+        /**
+         *
+         * @param {object} options has the following keys:
+         *  - bus - the message bus
+         *  - ui - the ui manager
+         *  - runAction - invoked when the user clicks an active button, takes in the button name
+         *      as a single parameter
+         *  - actionButtons object that defines the action buttons:
+         *   - current: which is the current button, and its state:
+         *     - name - string, one of the action keys
+         *     - disabled - if truthy, then should not be clickable
+         *   - availableButtons - the set of available buttons, each key
+         *      is the button name, values have the following properties:
+         *      - help - tooltip string
+         *      - type - Bootstrap class types
+         *      - classes - array of classes to add to the button component
+         *      - label - button text
+
+         */
 
         var t = html.tag,
-            div = t('div');
+            div = t('div'),
+            cssCellType = 'kb-bulk-import';
 
-        const actionButtons = {
-            current: {
-                name: null,
-                disabled: null
-            },
-            availableButtons: {
-                runApp: {
-                    help: 'Run the app',
-                    type: 'success',
-                    classes: ['-run'],
-                    label: 'Run'
-                },
-                cancel: {
-                    help: 'Cancel the running app',
-                    type: 'danger',
-                    classes: ['-cancel'],
-                    label: 'Cancel'
-                },
-                reRunApp: {
-                    help: 'Edit and re-run the app',
-                    type: 'default',
-                    classes: ['-rerun'],
-                    label: 'Reset'
-                },
-                resetApp: {
-                    help: 'Reset the app and return to Edit mode',
-                    type: 'default',
-                    classes: ['-reset'],
-                    label: 'Reset'
-                },
-                offline: {
-                    help: 'Currently disconnected from the server.',
-                    type: 'danger',
-                    classes: ['-cancel'],
-                    label: 'Offline'
-                }
-            }
-        };
+        const actionButtons = config.actionButtons,
+            ui = config.ui,
+            bus = config.bus,
+            runAction = config.runAction;
+            // cssCellType = config.cssCellType;
 
-        function buildActionButtons(ui, events) {
-            var style = {
-                padding: '6px'
-            };
-            var buttonList = Object.keys(actionButtons.availableButtons).map(function(key) {
+        function buildLayout(events) {
+            return div({
+                class: `${cssCellType}-action-button__container`,
+            }, [
+                buildActionButtons(events)
+            ]);
+        }
+
+        function buildActionButtons(events) {
+            const buttonList = Object.keys(actionButtons.availableButtons).map((key) => {
                 var button = actionButtons.availableButtons[key],
-                    classes = [].concat(button.classes),
-                    icon;
+                    classes = [`${cssCellType}-action-button__button`].concat(button.classes);
+                let icon;
                 if (button.icon) {
                     icon = {
                         name: button.icon.name,
@@ -68,11 +60,6 @@ define([
                     events: events,
                     type: button.type || 'default',
                     classes: classes,
-                    hidden: true,
-                    // Overriding button class styles for this context.
-                    style: {
-                        width: '80px'
-                    },
                     event: {
                         type: 'actionButton',
                         data: {
@@ -83,43 +70,34 @@ define([
                     label: button.label
                 });
             });
+            bus.on('actionButton', (message) => {
+                const action = message.data;
+                runAction(action);
+            });
 
-            var buttonDiv = div({
-                class: 'btn-group',
-                style: style
+            return div({
+                class: `${cssCellType}-action-button__list btn-group`
             }, buttonList);
-            return buttonDiv;
         }
 
-        function renderActionButton(ui, state, viewOnly){
-            if (state.ui.actionButton && !viewOnly) {
-                if (actionButtons.current.name) {
-                    ui.hideButton(actionButtons.current.name);
-                }
-                var name = state.ui.actionButton.name;
-                ui.showButton(name);
-                actionButtons.current.name = name;
-                if (state.ui.actionButton.disabled) {
-                    ui.disableButton(name);
-                } else {
-                    ui.enableButton(name);
-                }
-            } else {
-                if (actionButtons.current.name) {
-                    ui.hideButton(actionButtons.current.name);
-                }
+        function setState(newState) {
+            let state = newState;
+            for (const btnName of Object.keys(actionButtons.availableButtons)) {
+                ui.hideButton(btnName);
             }
+            ui.showButton(state.name);
+            state.disable ? ui.disableButton(state.name): ui.enableButton(state.name);
         }
 
         return {
-            buildActionButtons: buildActionButtons,
-            renderActionButton: renderActionButton
+            setState: setState,
+            buildLayout: buildLayout
         };
     }
 
     return {
-        make: function() {
-            return factory();
+        make: function(config) {
+            return factory(config);
         }
     };
 });

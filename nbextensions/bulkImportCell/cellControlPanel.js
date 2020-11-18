@@ -1,11 +1,11 @@
 define([
     'common/html',
-    './cellTabs',
-    './actionButton'
+    'common/commonCell/actionButtons',
+    './cellTabs'
 ], (
     html,
-    CellTabs,
-    ActionButton
+    ActionButton,
+    CellTabs
 ) => {
     'use strict';
 
@@ -55,11 +55,11 @@ define([
                 tabs: options.tabs.tabs
             });
 
-            this.actionButton = new ActionButton({
+            this.actionButton = ActionButton.make({
                 ui: this.ui,
                 bus: this.bus,
                 runAction: options.action.runAction,
-                actions: options.action.actions
+                actionButtons: options.action.actions
             });
         }
 

@@ -111,6 +111,7 @@ define([
             spec,
             // HMM. Sync with metadata, or just keep everything there?
             widgets = {},
+            actionButtonWidget,
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000,
             controlBarTabs = {},
@@ -118,7 +119,44 @@ define([
             readOnly = false,
             viewOnly = false,
             kernelReady = null,
-            actionButtonWidget = ActionButtons.make();
+            actionButtons = {
+                current: {
+                    name: null,
+                    disabled: null
+                },
+                availableButtons: {
+                    runApp: {
+                        help: 'Run the app',
+                        type: 'success',
+                        classes: ['-run'],
+                        label: 'Run'
+                    },
+                    cancel: {
+                        help: 'Cancel the running app',
+                        type: 'danger',
+                        classes: ['-cancel'],
+                        label: 'Cancel'
+                    },
+                    reRunApp: {
+                        help: 'Edit and re-run the app',
+                        type: 'default',
+                        classes: ['-rerun'],
+                        label: 'Reset'
+                    },
+                    resetApp: {
+                        help: 'Reset the app and return to Edit mode',
+                        type: 'default',
+                        classes: ['-reset'],
+                        label: 'Reset'
+                    },
+                    offline: {
+                        help: 'Currently disconnected from the server.',
+                        type: 'danger',
+                        classes: ['-cancel'],
+                        label: 'Offline'
+                    }
+                }
+            };
 
         // NEW - TABS
 
@@ -902,7 +940,7 @@ define([
                             flexDirection: 'row'
                         }
                     }, [
-                        actionButtonWidget.buildActionButtons(ui, events)
+                        actionButtonWidget.buildLayout(events)
                     ]),
                     div({
                         dataElement: 'status',
@@ -1256,7 +1294,7 @@ define([
                 unselectTab();
             }
 
-            actionButtonWidget.renderActionButton(ui, state, viewOnly);
+            actionButtonWidget.setState(state.ui.actionButton);
         }
 
         /*
@@ -1525,11 +1563,21 @@ define([
                     bus: bus
                 });
 
+                actionButtonWidget = ActionButtons.make({
+                    ui: ui,
+                    actionButtons: actionButtons,
+                    bus: bus,
+                    runAction: doActionButton,
+                    cssCellType: null
+                });
+
                 var layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
                 $(container).find('[data-toggle="popover"]').popover();
                 return null;
+            }).catch((error) => {
+                throw new Error('Unable to attach app cell: ' + error);
             });
         }
 
@@ -2102,9 +2150,8 @@ define([
                         doEditNotebookMetadata();
                     }));
 
-                    busEventManager.add(bus.on('actionButton', function(message) {
-                        doActionButton(message.data);
-                    }));
+                    // TODO: once we evaluate how to handle state in bulk import cell, see if these functions
+                    // and events can be abstracted or should be
                     busEventManager.add(bus.on('run-app', function() {
                         doRun();
                     }));

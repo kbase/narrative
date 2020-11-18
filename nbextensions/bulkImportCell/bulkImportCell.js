@@ -329,6 +329,8 @@ define([
          */
         function toggleCategory(category) {
             state.category.selected = category;
+            alert('toggling to show ' + category);
+            categoryPanel.updateState(state.category);
         }
 
         function runAction(action) {
@@ -351,7 +353,11 @@ define([
         function getInitialState() {
             return {
                 category: {
-                    selected: 'fastq'
+                    selected: 'fastq',
+                    completed: {
+                        fastq: false,
+                        sra: true
+                    }
                 },
                 tab: {
                     selected: 'configure',
@@ -439,7 +445,7 @@ define([
                 },
                 categories: {
                     fastq: {
-                        label: 'FASTQ Reads'
+                        label: 'FASTQ Reads (Non-Interleaved)'
                     },
                     sra: {
                         label: 'SRA Reads'
@@ -448,7 +454,8 @@ define([
                 toggleAction: toggleCategory
             });
             return categoryPanel.start({
-                node: node
+                node: node,
+                state: state.category
             });
         }
 

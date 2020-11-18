@@ -2,6 +2,10 @@
     bulk import cell
 */
 
+$component-border: #c4c4c4;
+$category-icon-color: #03517d;
+$category-highlight-color: #cce5f3;
+
 .kb-bulk-import {
   &__base-node {
     // everything lives under this
@@ -56,6 +60,36 @@
 
   /* kb-bulk-import__category_panel */
   &__category_panel {
+    border-right: 1px solid $component-border;
+    width: 232px;
+    &__header {
+      font-weight: bold;
+      padding: 8px;
+      border-bottom: 1px solid $component-border;
+      &__icon {
+        padding: 8px;
+        color: #000;
+      }
+    }
+
+    &__category{
+      border-bottom: 1px solid $component-border;
+      padding: 8px;
+
+      &__icon {
+        padding: 8px;
+        color: $category-icon-color;
+      }
+
+      &:hover:not(&__selected) {
+        background-color: $category-highlight-color;
+        cursor: pointer;
+      }
+
+      &__selected {
+        background-color: $category-highlight-color;
+      }
+    }
   }
 
   /* kb-bulk-import__tab_pane_widget */

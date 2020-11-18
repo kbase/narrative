@@ -12,7 +12,10 @@ define([
     'use strict';
 
     const div = html.tag('div'),
-        span = html.tag('span');
+        span = html.tag('span'),
+        baseCss = 'kb-bulk-import__category_panel',
+        completeIcon = 'fa-check-circle',
+        incompleteIcon = 'fa-circle-thin';
 
     function CategoryPanel(options) {
         /**
@@ -30,16 +33,23 @@ define([
          */
         const bus = options.bus,
             categories = options.categories,
-            header = options.header;
+            header = options.header,
+            toggleCategory = options.toggleAction;
         let container = null,
-            ui = null;
+            ui = null,
+            /*
+             * {
+             *   selected: some_category,
+             *   completed: {
+             *      category1: boolean,        // if true, then this category is completed
+             *      category2: boolean
+             *   }
+             */
+            state;
 
         function renderLayout() {
             const events = Events.make(),
-                content = div({}, [
-                    renderHeader(),
-                    renderCategories()
-                ]);
+                content = [renderHeader()].concat(renderCategories(events)).join('');
             return {
                 content: content,
                 events: events
@@ -47,21 +57,54 @@ define([
         }
 
         function renderHeader() {
-            return div({}, [
-                span({class: header.icon}),
-                span({}, header.label)
+            return div({
+                class: `${baseCss}__header`
+            }, [
+                span({class: `${baseCss}__header__icon header.icon`}),
+                span({class: `${baseCss}__header__label`}, header.label)
             ]);
         }
 
-        function renderCategories() {
-            return div({},
-                Object.keys(categories).sort().map(key => {
-                    return div({}, [
-                        span({class: 'fa fa-check-circle'}),
-                        span(categories[key].label)
-                    ]);
-                })
-            );
+        function renderCategories(events) {
+            const layout = Object.keys(categories).sort().map(key => {
+                return div({
+                    class: `${baseCss}__category`,
+                    dataElement: key,
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: () => {
+                            toggleCategory(key);
+                        }
+                    })
+                }, [
+                    span({
+                        class: `${baseCss}__category__icon fa ${incompleteIcon}`,
+                        dataElement: 'icon'
+                    }),
+                    span({
+                        class: `${baseCss}__category__label`
+                    }, categories[key].label)
+                ]);
+            });
+            return layout;
+        }
+
+        /**
+         * State here just maintains what element is selected.
+         * @param {object} newState
+         *  - selected - string, the selected category key
+         *  - completed - kvp of categories with their boolean completion state
+         */
+        function updateState(newState) {
+            state = newState;
+            const selected = `${baseCss}__category__selected`;
+            Object.keys(categories).forEach(key => {
+                ui.getElement(key).classList.remove(selected);
+                ui.getElement(`${key}.icon`).classList.remove(completeIcon, incompleteIcon);
+                let icon = state.completed[key] ? completeIcon : incompleteIcon;
+                ui.getElement(`${key}.icon`).classList.add(icon);
+            });
+            ui.getElement(state.selected).classList.add(selected);
         }
 
         function start(args) {
@@ -74,6 +117,7 @@ define([
                 const layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
+                updateState(args.state);
             });
         }
 
@@ -85,7 +129,8 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
+            updateState: updateState
         };
     }
 

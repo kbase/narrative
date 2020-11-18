@@ -1,7 +1,6 @@
 /**
  * @public
  */
-
 define ([
     'kbwidget',
     'jquery',
@@ -75,18 +74,16 @@ define ([
                 url: Config.url('workspace'), 
                 token: this.token
             });
-            // this.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), {token: this.token});
-            this.loading(false);
             this.$mainPanel.hide();
             this.$mainPanel.empty();
             this.loadFeatureSet();
         },
 
-
-        features: null, // genomeId : [{fid: x, data: x}]
+        features: null, 
 
         loadFeatureSet: function() {
             this.features = {};
+            this.loading(true);
             this.workspace.callFunc('get_objects', [[{
                 ref: this.options.workspaceName+'/'+this.options.featureset_name
             }]])
@@ -110,10 +107,11 @@ define ([
                             }
                         }
                     }
-                    this.getGenomeData();
                     this.$mainPanel.show();
+                    return this.getGenomeData();
                 })
                 .catch((error) => {
+                    console.log('error!', error);
                     this.loading(false);
                     this.renderError(error);
                 });
@@ -137,40 +135,57 @@ define ([
         featureTableData: null, // list for datatables
 
         getGenomeData: function() {
+            if (Object.keys(this.features).length === 0) {
+                this.loading(false);
+                this.showMessage('This feature set is empty.');
+                return Promise.resolve();
+            }
+
             this.genomeLookupTable = {};
             this.genomeObjectInfo = {};
             this.featureTableData = [];
-            for (const gid in this.features) {
-                const query = {'feature_id': this.features[gid]};
-                this.search(gid, query, this.features[gid].length)
-                    .then((results) => {
-                        for (const f in results.features) {
-                            const feature = results.features[f];
-                            this.featureTableData.push(
-                                {
-                                    fid: '<a href="/#dataview/'+gid+
-                                                '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
-                                                feature.feature_id+'</a>',
-                                    gid: '<a href="/#dataview/'+gid+
-                                            '" target="_blank">'+gid+'</a>',
-                                    ali: Object.keys(feature.aliases).join(', '),
-                                    type: feature.feature_type,
-                                    func: feature.function
-                                }
-                            );
-
-                        }
-                        this.renderFeatureTable(); // just rerender each time
-                        this.loading(true);
-                    })
-                    .catch((e) => {
-                        console.error(e);
-                    });
-            }
-            if (Object.keys(this.features).length === 0) {
-                this.loading(true);
-                this.showMessage('This feature set is empty.');
-            }
+            return Promise.all(
+                Array.from(Object.entries(this.features)).map(([gid, features]) => {
+                    const query = {'feature_id': features}
+                    return Promise.all([
+                        // the features 
+                        this.search(gid, query, features.length),
+                        // the genome object id
+                        gid,
+                        // The genome object info
+                        this.workspace.callFunc('get_object_info3', [{
+                            objects: [{
+                                ref: gid
+                            }]
+                        }])
+                            .then(([result]) => {
+                                // unpack from the results array.
+                                return result;
+                            })
+                    ]);
+                })
+            )
+            .then((results) => {
+                for (const [result, gid, genomeObjectInfo] of results) {
+                    const objectName = genomeObjectInfo.infos[0][1];
+                    for (const feature of result.features) {
+                        this.featureTableData.push(
+                            {
+                                fid: '<a href="/#dataview/'+gid+
+                                            '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
+                                            feature.feature_id+'</a>',
+                                gid: '<a href="/#dataview/'+gid+
+                                        '" target="_blank">'+objectName+'</a>',
+                                ali: Object.keys(feature.aliases).join(', '),
+                                type: feature.feature_type,
+                                func: feature.function
+                            }
+                        );
+                    }
+                }
+                this.loading(false);
+                this.renderFeatureTable(); // just rerender each time
+            });
         },
 
         $featureTableDiv : null,
@@ -211,11 +226,14 @@ define ([
         },
 
         renderError: function(error) {
-            let errString = 'Sorry, an unknown error occurred';
-            if (typeof error === 'string')
+            let errString;
+            if (typeof error === 'string') {
                 errString = error;
-            else if (error.error && error.error.message)
+            } else if (error.error && error.error.message) {
                 errString = error.error.message;
+            } else {
+                errString = error.message;
+            }
 
             const $errorDiv = $('<div>')
                 .addClass('alert alert-danger')
@@ -247,11 +265,11 @@ define ([
             return obj;
         },
 
-        loading: function(doneLoading) {
-            if (doneLoading) {
-                this.hideMessage();
-            } else {
+        loading: function(loading) {
+            if (loading) {
                 this.showMessage('<img src=\'' + this.options.loadingImage + '\'/>');
+            } else {
+                this.hideMessage();
             }
         },
 

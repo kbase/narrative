@@ -326,33 +326,11 @@ define([
 
             formContent = formContent.concat([
                 ui.buildPanel({
-                    title: span([
-                        'Input Objects',
-                        span({
-                            dataElement: 'advanced-hidden-message',
-                            style: {
-                                marginLeft: '6px',
-                                fontStyle: 'italic'
-                            }
-                        })]),
-                    name: 'input-objects-area',
-                    body: div({ dataElement: 'input-fields' }),
-                    classes: ['kb-panel-light']
-                }),
-                // ui.makePanel('Input Objects', 'input-fields'),
-                ui.buildPanel({
                     title: span(['Parameters', span({ dataElement: 'advanced-hidden-message', style: { marginLeft: '6px', fontStyle: 'italic' } })]),
                     name: 'parameters-area',
                     body: div({ dataElement: 'parameter-fields' }),
                     classes: ['kb-panel-light']
-                }),
-                ui.buildPanel({
-                    title: 'Output Objects',
-                    name: 'output-objects-area',
-                    body: div({ dataElement: 'output-fields' }),
-                    classes: ['kb-panel-light']
                 })
-                // ui.makePanel('Output Report', 'output-report')
             ]);
         
             var content = form({ dataElement: 'input-widget-form' }, formContent);
@@ -374,8 +352,6 @@ define([
             layout.events.attachEvents(container);
 
             places = {
-                inputFields: ui.getElement('input-fields'),
-                outputFields: ui.getElement('output-fields'),
                 parameterFields: ui.getElement('parameter-fields'),
                 advancedParameterFields: ui.getElement('advanced-parameter-fields')
             };
@@ -390,15 +366,7 @@ define([
             });
 
             bus.on('toggle-advanced', function () {
-                // we can just do that here? Or defer to the inputs?
-                // I don't know ...
-                //inputBusses.forEach(function (bus) {
-                //    bus.send({
-                //        type: 'toggle-advanced'
-                //    });
-                //});
                 settings.showAdvanced = !settings.showAdvanced;
-                renderAdvanced('input-objects');
                 renderAdvanced('parameters');
             });
 
@@ -443,100 +411,22 @@ define([
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             // Separate out the params into the primary groups.
-            var appSpec = model.getItem('appSpec');
+            const appSpec = model.getItem('appSpec');
 
             return Promise.try(function () {
-                var params = model.getItem('parameters'),
-                    inputParams = makeParamsLayout(
-                        params.layout.filter(function (id) {
-                            return (params.specs[id].ui.class === 'input');
-                        })
-                            .map(function (id) {
-                                return params.specs[id];
-                            })),
-                    outputParams = makeParamsLayout(
-                        params.layout.filter(function (id) {
-                            return (params.specs[id].ui.class === 'output');
-                        })
-                            .map(function (id) {
-                                return params.specs[id];
-                            })),
-                    parameterParams = makeParamsLayout(
-                        params.layout.filter(function (id) {
-                            return (params.specs[id].ui.class === 'parameter');
-                        })
-                            .map(function (id) {
-                                return params.specs[id];
-                            }));
+                const params = model.getItem('parameters');
+                let parameterParams = makeParamsLayout(
+                    params.layout.filter(function (id) {
+                        return (params.specs[id].ui.class === 'parameter');
+                    }).map(function (id) {
+                        return params.specs[id];
+                    }));
 
                 return Promise.resolve()
-                    .then(function () {
-                        if (inputParams.layout.length === 0) {
-                            ui.getElement('input-objects-area').classList.add('hidden');
-                            // places.inputFields.innerHTML = span({
-                            //     style: {
-                            //         fontStyle: 'italic'
-                            //     }
-                            // }, 'This app does not have input objects');
-                        } else {
-                            places.inputFields.innerHTML = inputParams.content;
-                            return Promise.all(inputParams.layout.map(function (parameterId) {
-                                var spec = inputParams.paramMap[parameterId];
-                                try {
-                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id])
-                                        .then(function (widget) {
-                                            widgets.push(widget);
-
-                                            return widget.start({
-                                                node: document.getElementById(inputParams.view[parameterId].id)
-                                            });
-                                        });
-                                } catch (ex) {
-                                    console.error('Error making input field widget', ex);
-                                    var errorDisplay = div({
-                                        style: {
-                                            border: '1px red solid'
-                                        }
-                                    }, [
-                                        ex.message
-                                    ]);
-                                    document.getElementById(inputParams.view[parameterId].id).innerHTML = errorDisplay;
-                                }
-                            }));
-                        }
-                    })
-                    .then(function () {
-                        if (outputParams.layout.length === 0) {
-                            ui.getElement('output-objects-area').classList.add('hidden');
-                            // places.outputFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'This app does not create any named output objects');
-                        } else {
-                            places.outputFields.innerHTML = outputParams.content;
-                            return Promise.all(outputParams.layout.map(function (parameterId) {
-                                var spec = outputParams.paramMap[parameterId];
-                                try {
-                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id], outputParams.layout)
-                                        .then(function (widget) {
-                                            widgets.push(widget);
-
-                                            return widget.start({
-                                                node: document.getElementById(outputParams.view[parameterId].id)
-                                            });
-                                        });
-                                } catch (ex) {
-                                    console.error('Error making input field widget', ex);
-                                    var errorDisplay = div({ style: { border: '1px red solid' } }, [
-                                        ex.message
-                                    ]);
-                                    document.getElementById(outputParams.view[parameterId].id).innerHTML = errorDisplay;
-                                }
-                            }));
-                        }
-                    })
                     .then(function () {
                         if (parameterParams.layout.length === 0) {
                             // TODO: should be own node
                             ui.getElement('parameters-area').classList.add('hidden');
-                            // places.parameterFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No parameters for this app');
                         } else {
                             places.parameterFields.innerHTML = parameterParams.content;
 
@@ -562,7 +452,6 @@ define([
                         }
                     })
                     .then(function () {
-                        renderAdvanced('input-objects');
                         renderAdvanced('parameters');
                     });
             });

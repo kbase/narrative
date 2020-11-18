@@ -181,7 +181,7 @@
             "id": "import_type",
             "optional": 0,
             "short_hint": "Import file type ['FASTQ/FASTA' or 'SRA']",
-            "ui_class": "parameter",
+            "ui_class": "input",
             "ui_name": "Import File Type"
           },
           {
@@ -203,7 +203,7 @@
             "id": "fastq_fwd_staging_file_name",
             "optional": 1,
             "short_hint": "Short read file containing a paired end library in FASTA/FASTQ format",
-            "ui_class": "parameter",
+            "ui_class": "input",
             "ui_name": "Forward/Left FASTA/FASTQ File Path"
           },
           {
@@ -225,7 +225,7 @@
             "id": "fastq_rev_staging_file_name",
             "optional": 1,
             "short_hint": "Second short read file containing a paired end library in FASTA/FASTQ format.",
-            "ui_class": "parameter",
+            "ui_class": "input",
             "ui_name": "Reverse/Right FASTA/FASTQ File Path"
           },
           {
@@ -247,7 +247,7 @@
             "id": "sra_staging_file_name",
             "optional": 1,
             "short_hint": "SRA staing file path",
-            "ui_class": "parameter",
+            "ui_class": "input",
             "ui_name": "SRA File Path"
           },
           {

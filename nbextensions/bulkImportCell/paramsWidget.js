@@ -268,7 +268,8 @@ define([
                 entry.classList.remove(removeClass);
                 entry.classList.add(addClass);
 
-                const inputElement = entry.querySelector('[data-element="input"]')
+                const inputElement = entry.querySelector('[data-element="input"]');
+                
                 if (inputElement) {
                     $(inputElement).trigger('advanced-shown.kbase');
                 }

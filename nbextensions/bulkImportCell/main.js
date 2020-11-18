@@ -44,9 +44,9 @@ define([
         return Promise.all(Jupyter.notebook.get_cells().map((cell) => {
             if (BulkImportCell.isBulkImportCell(cell)) {
                 try {
-                    new BulkImportCell({
-                        cell: cell,
-                        workspaceInfo: workspaceInfo
+                    BulkImportCell.make({
+                        cell,
+                        workspaceInfo
                     });
                 }
                 catch(error) {
@@ -115,11 +115,11 @@ define([
                     const importData = setupData.typesToFiles || {};
 
                     try {
-                        new BulkImportCell({
-                            cell: cell, 
-                            initialize: true, 
-                            typesToFiles: importData,
-                            workspaceInfo: workspaceInfo
+                        BulkImportCell.make({
+                            cell,
+                            importData,
+                            initialize: true,
+                            workspaceInfo
                         });
                     }
                     catch(error) {

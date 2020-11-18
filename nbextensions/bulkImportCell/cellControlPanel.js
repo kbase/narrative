@@ -15,19 +15,7 @@ define([
      * options -
      * - bus - the message bus
      * - ui - the UI controller
-     * - tabs: an object with the following properties:
-     *   - toggleAction - a function that should be run when toggling tabs, takes
-     *      the tab name as a single parameter
-     *   - tabs: also an object:
-     *     - selectedTab - string, one of the keys under "tabs"
-     *     - tabs - an object where each key is a tab key, and has a display label:
-     *       {
-     *          configure: {
-     *              label: "Configure"
-     *          }
-     *          , etc.
-     *       }
-     * - actions: object that defines the action buttons:
+     * - action: object that defines the action buttons:
      *   - current: which is the current button, and its state:
      *     - name - string, one of the action keys
      *     - disabled - if truthy, then should not be clickable
@@ -44,7 +32,6 @@ define([
     function CellControlPanel(options) {
         let bus = options.bus;
         let ui = options.ui;
-
         let actionButton = new ActionButton({
             ui: ui,
             bus: bus,

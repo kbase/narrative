@@ -1,10 +1,8 @@
 define([
     'common/html',
-    './cellTabs',
     './actionButton'
 ], (
     html,
-    CellTabs,
     ActionButton
 ) => {
     'use strict';

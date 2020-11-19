@@ -74,11 +74,14 @@ $category-highlight-color: #cce5f3;
       }
     }
 
-    &__category{
-      border-bottom: 1px solid $component-border;
+    &__category {
+      border: 0 0 1px 0 solid $component-border;
       padding: 8px;
       display: flex;
       flex-direction: row;
+      width: 100%;
+      text-align: left;
+      background-color: inherit;
 
       &__icon {
         padding: 2px 8px 8px;

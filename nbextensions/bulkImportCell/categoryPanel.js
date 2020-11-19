@@ -13,6 +13,7 @@ define([
 
     const div = html.tag('div'),
         span = html.tag('span'),
+        button = html.tag('button'),
         baseCss = 'kb-bulk-import__category_panel',
         completeIcon = 'fa-check-circle',
         incompleteIcon = 'fa-circle-thin';
@@ -98,7 +99,7 @@ define([
          */
         function renderCategories(events) {
             const layout = Object.keys(categories).sort().map(key => {
-                return div({
+                return button({
                     class: `${baseCss}__category`,
                     dataElement: key,
                     id: events.addEvent({
@@ -108,7 +109,9 @@ define([
                                 toggleCategory(key);
                             }
                         }
-                    })
+                    }),
+                    role: 'button',
+                    'aria-label': `toggle ${categories[key].label}`
                 }, [
                     div({
                         class: `${baseCss}__category__icon fa ${incompleteIcon}`,

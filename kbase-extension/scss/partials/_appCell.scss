@@ -153,6 +153,18 @@
   [data-element=run-control-panel] {
     width: 100%;
   }
+
+  [data-element=tab-pane] {
+    border-top: 2px solid rgb(33 150 243);
+
+    > div {
+      padding: 4px;
+
+      &:empty {
+        padding: 0;
+      }
+    }
+  }
 }
 
 .kb-app-row-clip-btn-addon,

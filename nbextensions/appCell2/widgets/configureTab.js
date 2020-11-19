@@ -80,12 +80,10 @@ define([
 
     function factory(config) {
         var container,
-            widget,
-            workspaceInfo;
+            widget;
 
         function start(arg) {
             container = arg.node;
-            workspaceInfo = arg.workspaceInfo;
 
             return loadParamsWidget({
                 node: container,
@@ -93,10 +91,9 @@ define([
                 appSpec: arg.appSpec,
                 parameters: arg.parameters
 
-            })
-                .then(function(result) {
-                    widget = result;
-                });
+            }).then(function(result) {
+                widget = result;
+            });
 
         }
 

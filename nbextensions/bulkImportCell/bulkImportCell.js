@@ -6,11 +6,14 @@ define([
     'common/busEventManager',
     'common/ui',
     'common/events',
+    'common/props',
     'base/js/namespace',
     'kb_common/html',
     './cellTabs',
     './cellControlPanel',
+    'common/cellComponents/tabs/infoTab',
     './tabs/configure',
+    'json!./testAppObj.json',
     './categoryPanel'
 ], (
     Uuid,
@@ -20,11 +23,14 @@ define([
     BusEventManager,
     UI,
     Events,
+    Props,
     Jupyter,
     html,
     CellTabs,
     CellControlPanel,
+    InfoTabWidget,
     ConfigureWidget,
+    TestAppObj,
     CategoryPanel
 ) => {
     'use strict';
@@ -118,7 +124,7 @@ define([
                     },
                     info: {
                         label: 'Info',
-                        widget: DefaultWidget(),
+                        widget: InfoTabWidget,
                     },
                     logs: {
                         label: 'Job Status',
@@ -176,8 +182,13 @@ define([
             // widgets this cell owns
             cellTabs,
             controlPanel,
-            categoryPanel;
-
+            categoryPanel,
+            model = Props.make({
+                data: TestAppObj,
+                onUpdate: function(props) {
+                    Utils.setMeta(this.cell, 'appCell', props.getRawObject());
+                }
+            });
         if (options.initialize) {
             initialize(typesToFiles);
         }
@@ -313,8 +324,15 @@ define([
             state.tab.selected = tab;
             if (tabWidget !== null) {
                 tabWidget.stop();
+                var widgetNode = ui.getElement('widget');
+                if (widgetNode.firstChild) {
+                    widgetNode.removeChild(widgetNode.firstChild);
+                }
             }
-            tabWidget = tabSet.tabs[tab].widget.make({bus: cellBus});
+            tabWidget = tabSet.tabs[tab].widget.make({
+                bus: cellBus,
+                model: model
+            });
             let node = document.createElement('div');
             ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
             return tabWidget.start({

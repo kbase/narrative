@@ -296,11 +296,11 @@ define([
 
         /**
          * Passes the updated state to various widgets
-         * // TODO: include the category widget here
          */
         function updateState() {
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
+            categoryPanel.updateState(state.category);
         }
 
         /**
@@ -329,8 +329,7 @@ define([
          */
         function toggleCategory(category) {
             state.category.selected = category;
-            alert('toggling to show ' + category);
-            categoryPanel.updateState(state.category);
+            updateState();
         }
 
         function runAction(action) {

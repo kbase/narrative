@@ -73,15 +73,17 @@ define([
                     id: events.addEvent({
                         type: 'click',
                         handler: () => {
-                            toggleCategory(key);
+                            if (key !== state.selected) {
+                                toggleCategory(key);
+                            }
                         }
                     })
                 }, [
-                    span({
+                    div({
                         class: `${baseCss}__category__icon fa ${incompleteIcon}`,
                         dataElement: 'icon'
                     }),
-                    span({
+                    div({
                         class: `${baseCss}__category__label`
                     }, categories[key].label)
                 ]);

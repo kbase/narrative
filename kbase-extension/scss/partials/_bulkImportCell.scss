@@ -62,6 +62,8 @@ $category-highlight-color: #cce5f3;
   &__category_panel {
     border-right: 1px solid $component-border;
     width: 232px;
+    font-size: 16px;
+
     &__header {
       font-weight: bold;
       padding: 8px;

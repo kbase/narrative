@@ -25,7 +25,7 @@ define([
     CellTabs,
     CellControlPanel,
     ConfigureWidget,
-    CategoryPanel
+    FileTypePanel
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
@@ -176,7 +176,7 @@ define([
             // widgets this cell owns
             cellTabs,
             controlPanel,
-            categoryPanel;
+            fileTypePanel;
 
         if (options.initialize) {
             initialize(typesToFiles);
@@ -300,7 +300,7 @@ define([
         function updateState() {
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
-            categoryPanel.updateState(state.category);
+            fileTypePanel.updateState(state.category);
         }
 
         /**
@@ -435,8 +435,8 @@ define([
          * //TODO rename to fileType panel
          * @param {DOMElement} node - the node that should be used for the left column
          */
-        function buildCategoryPanel(node) {
-            categoryPanel = CategoryPanel.make({
+        function buildFileTypePanel(node) {
+            fileTypePanel = FileTypePanel.make({
                 bus: cellBus,
                 header: {
                     label: 'Data type',
@@ -452,7 +452,7 @@ define([
                 },
                 toggleAction: toggleCategory
             });
-            return categoryPanel.start({
+            return fileTypePanel.start({
                 node: node,
                 state: state.category
             });
@@ -520,7 +520,7 @@ define([
             const layout = renderLayout();
             kbaseNode.innerHTML = layout.content;
             const proms = [
-                buildCategoryPanel(ui.getElement('body.tab-pane.category-panel')),
+                buildFileTypePanel(ui.getElement('body.tab-pane.category-panel')),
                 buildTabs(ui.getElement('body.tab-pane.widget-container.tab-container'))
             ];
             return Promise.all(proms)

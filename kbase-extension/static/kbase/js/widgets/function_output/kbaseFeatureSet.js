@@ -90,7 +90,7 @@ define ([
                 .then(([data]) => {
                     const fs = data[0].data;
                     if(fs.description) {
-                        this.$mainPanel.append($('<div>')
+                        this.$mainPanel.append($('<div test-id="description">')
                             .append('<i>Description</i> - ')
                             .append(fs.description));
                     }
@@ -111,7 +111,7 @@ define ([
                     return this.getGenomeData();
                 })
                 .catch((error) => {
-                    console.log('error!', error);
+                    console.error('error!', error);
                     this.loading(false);
                     this.renderError(error);
                 });
@@ -146,7 +146,7 @@ define ([
             this.featureTableData = [];
             return Promise.all(
                 Array.from(Object.entries(this.features)).map(([gid, features]) => {
-                    const query = {'feature_id': features}
+                    const query = {'feature_id': features};
                     return Promise.all([
                         // the features 
                         this.search(gid, query, features.length),
@@ -165,27 +165,27 @@ define ([
                     ]);
                 })
             )
-            .then((results) => {
-                for (const [result, gid, genomeObjectInfo] of results) {
-                    const objectName = genomeObjectInfo.infos[0][1];
-                    for (const feature of result.features) {
-                        this.featureTableData.push(
-                            {
-                                fid: '<a href="/#dataview/'+gid+
+                .then((results) => {
+                    for (const [result, gid, genomeObjectInfo] of results) {
+                        const objectName = genomeObjectInfo.infos[0][1];
+                        for (const feature of result.features) {
+                            this.featureTableData.push(
+                                {
+                                    fid: '<a href="/#dataview/'+gid+
                                             '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
                                             feature.feature_id+'</a>',
-                                gid: '<a href="/#dataview/'+gid+
+                                    gid: '<a href="/#dataview/'+gid+
                                         '" target="_blank">'+objectName+'</a>',
-                                ali: Object.keys(feature.aliases).join(', '),
-                                type: feature.feature_type,
-                                func: feature.function
-                            }
-                        );
+                                    ali: Object.keys(feature.aliases).join(', '),
+                                    type: feature.feature_type,
+                                    func: feature.function
+                                }
+                            );
+                        }
                     }
-                }
-                this.loading(false);
-                this.renderFeatureTable(); // just rerender each time
-            });
+                    this.loading(false);
+                    this.renderFeatureTable(); // just rerender each time
+                });
         },
 
         $featureTableDiv : null,

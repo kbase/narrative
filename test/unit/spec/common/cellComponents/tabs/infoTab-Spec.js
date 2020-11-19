@@ -4,7 +4,7 @@
 /*jslint white: true*/
 
 define([
-    'common/commonCell/tabs/infoTab'
+    'common/cellComponents/tabs/infoTab'
 ], function(
     infoTabWidget
 ) {

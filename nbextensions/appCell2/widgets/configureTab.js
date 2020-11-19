@@ -91,10 +91,9 @@ define([
                 appSpec: arg.appSpec,
                 parameters: arg.parameters
 
-            })
-                .then(function(result) {
-                    widget = result;
-                });
+            }).then(function(result) {
+                widget = result;
+            });
 
         }
 

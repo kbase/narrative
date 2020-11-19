@@ -129,7 +129,7 @@ define([
                     },
                     info: {
                         label: 'Info',
-                        widget: DefaultWidget(),
+                        widget: InfoTabWidget,
                     },
                     logs: {
                         label: 'Job Status',
@@ -187,23 +187,16 @@ define([
             // widgets this cell owns
             cellTabs,
             controlPanel,
-            categoryPanel;
-
+            categoryPanel,
+            model = Props.make({
+                data: TestAppObj,
+                onUpdate: function(props) {
+                    Utils.setMeta(this.cell, 'appCell', props.getRawObject());
+                }
+            });
         if (options.initialize) {
             initialize(typesToFiles);
         }
-
-        /**
-         * TODO: Detemine what the cell metadata is and how to work with it.
-         * The appCell data is currently mocked (snagged it from ci)
-         * Data will need to be updataed as a part of DATAUP-309
-         */
-        let model = Props.make({
-            data: TestAppObj,
-            onUpdate: function(props) {
-                Utils.setMeta(cell, 'appCell', props.getRawObject());
-            }
-        });
 
         let spec = Spec.make({
             appSpec: model.getItem('app.spec')
@@ -341,6 +334,10 @@ define([
             state.tab.selected = tab;
             if (tabWidget !== null) {
                 tabWidget.stop();
+                var widgetNode = ui.getElement('widget');
+                if (widgetNode.firstChild) {
+                    widgetNode.removeChild(widgetNode.firstChild);
+                }
             }
 
             tabWidget = tabSet.tabs[tab].widget.make({

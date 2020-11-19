@@ -125,5 +125,4 @@ define([
             return factory();
         }
     };
-
 });

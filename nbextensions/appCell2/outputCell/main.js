@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -11,7 +8,7 @@ define([
     $,
     Jupyter,
     utils
-    ) {
+) {
     'use strict';
 
     function specializeCell(cell) {
@@ -80,7 +77,7 @@ define([
             var setupData = payload.data;
             var jupyterCellType = payload.type;
             if (jupyterCellType === 'code' &&
-                setupData && 
+                setupData &&
                 setupData.type === 'output') {
                 upgradeCell(cell)
                     .then(function () {
@@ -94,7 +91,7 @@ define([
                     });
             }
         });
-        
+
         Jupyter.notebook.get_cells().forEach(function (cell) {
             try {
                 setupCell(cell);

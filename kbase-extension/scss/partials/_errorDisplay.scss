@@ -1,17 +1,20 @@
 /* Note that this does not get compiled to produce static/css/errorPage.css -- that file is a single standalone declaration */
 
-.access-error__container, .generic-error__container {
-  text-align: center;
+.access-error__container,
+.generic-error__container {
   margin: 2rem;
+  text-align: center;
 }
 
-.access-error__heading, .generic-error__heading {
-  font-weight: 700;
+.access-error__heading,
+.generic-error__heading {
   font-size: 200%;
+  font-weight: 700;
   line-height: 1.5;
 }
 
-.access-error__text, .generic-error__text {
+.access-error__text,
+.generic-error__text {
   font-size: 150%;
   line-height: 2;
 }
@@ -26,8 +29,8 @@
 }
 
 .access-request-result {
-  font-size: 125%;
   margin-top: 2rem;
+  font-size: 125%;
 }
 
 .error-dialog__body {

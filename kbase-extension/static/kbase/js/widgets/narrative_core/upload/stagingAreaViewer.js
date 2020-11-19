@@ -270,41 +270,18 @@ define([
             }));
 
             stagingAreaViewer.$elem.append($fileTable);
-            stagingAreaViewer.$elem.find('table').dataTable({
+            
+            const fullDataTable = stagingAreaViewer.$elem.find('table').dataTable({
                 language: {
                     emptyTable: emptyMsg
                 },
                 dom: '<"file-path pull-left">frtip',
                 autoWidth: false,
                 order: [[4, 'desc']],
-                headerCallback: function (thead) {     
-                    function selectAllOrNone (event) {
-                        let selectAllChecked = event.target.checked;
-
-                        $('input.kb-staging-table-body__checkbox-input:enabled')
-                            .prop('checked', selectAllChecked)
-                            .attr('aria-checked', selectAllChecked);
-
-                        //enable or disable import appropriately
-                        if (selectAllChecked) {
-                            stagingAreaViewer.enableImportButton();
-                        } else {
-                            stagingAreaViewer.disableImportButton();
-                        }
-                    }
-
+                headerCallback: function (thead) {
                     $(thead).find('th').eq(0)
                         .on('click keyPress', (e) => {
                             selectAllOrNone(e);
-                        }).tooltip({
-                            title: 'Select a type to import.',
-                            container: '.kb-staging-table-header__checkbox-disabled',
-                            placement: 'right',
-                            delay: {
-                                show: Config.get('tooltip').showDelay,
-                                hide: Config.get('tooltip').hideDelay
-                            },
-                            template: '<div class="kb-staging-table-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
                         }); 
                 },
                 columnDefs: [{
@@ -314,15 +291,12 @@ define([
                     render: function (data) {
                         const fileId = new UUID(4).format();
                         //render checkboxes disabled until the user selects a type
-                        return ('<div class="kb-staging-table-body__checkbox-disabled" ' + 
-                            'aria-haspopup="true" tabindex="0">' +
-                            '<input class="kb-staging-table-body__checkbox-input"' + 
+                        return ('<input class="kb-staging-table-body__checkbox-input"' + 
                             'type="checkbox" role="checkbox" disabled=true ' + 
-                            'aria-checked="false" ' +
+                            'aria-checked="false" tabindex="0"' +
                             'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
                             'data-file-name="' + data + '"' + 
-                            'id="' + fileId + '">' +
-                        '</div>');
+                            'id="' + fileId + '">');
                     }
                 }, {
                     targets: 1,
@@ -411,17 +385,6 @@ define([
                             }
                         }
                     }
-
-                    $('td:eq(0)', row).find('div.kb-staging-table-body__checkbox-disabled')
-                        .tooltip({
-                            title: 'Select a type to import.',
-                            placement: 'right',
-                            delay: {
-                                show: Config.get('tooltip').showDelay,
-                                hide: Config.get('tooltip').hideDelay
-                            },
-                            template: '<div class="kb-staging-table-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
-                        });
   
                     $('td:eq(0)', row).find('input.kb-staging-table-body__checkbox-input')
                         .off('click')
@@ -530,24 +493,11 @@ define([
                             .prop('disabled',false)
                             .attr('aria-label', 'Select to import file checkbox')
                             .attr('data-type', dataType);
-
-                        //get rid of the disabled class and disable the tooltip
-                        $('td:eq(0)', row)
-                            .find('div.kb-staging-table-body__checkbox-disabled')
-                            .removeAttr('aria-haspopup')
-                            .removeClass('kb-staging-table-body__checkbox-disabled')
-                            .tooltip('disable');
   
                         //make sure select all checkbox is enabled
                         $('#staging_table_select_all')
                             .prop('disabled',false)
                             .attr('aria-label', 'Select to import all files checkbox');
-
-                        //disable the tooltip for the select all div
-                        $('div.kb-staging-table-header__checkbox-disabled')
-                            .removeAttr('aria-haspopup')
-                            .removeClass('kb-staging-table-header__checkbox-disabled')
-                            .tooltip('disable');
 
                     }
 
@@ -626,6 +576,31 @@ define([
 
                 }.bind(stagingAreaViewer)
             });
+
+            /* 
+                Used to manage the select all checkbox in the header
+                has to be outside of the main DataTable call 
+                so that we can get entire table data 
+                not just what is drawn in the current dom
+                aka dealing with pagination
+            */ 
+            function selectAllOrNone (event) {
+                const selectAllChecked = event.target.checked;
+
+                //get all of the rows in the data table
+                const nodes = fullDataTable.fnGetNodes();
+
+                $('input.kb-staging-table-body__checkbox-input:enabled', nodes)
+                    .prop('checked', selectAllChecked)
+                    .attr('aria-checked', selectAllChecked);
+                
+                //enable or disable import appropriately
+                if (selectAllChecked) {
+                    stagingAreaViewer.enableImportButton();
+                } else {
+                    stagingAreaViewer.disableImportButton();
+                }
+            }
 
         },
 

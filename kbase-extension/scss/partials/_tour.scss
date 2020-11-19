@@ -23,10 +23,11 @@
     h3.popover-title {
       background-color: rgb(33 150 243);
       color: rgb(255 255 255);
-      font: 12pt $typeface-page-text;
+      font: 16px $typeface-page-text;
     }
 
-    .popover-content, .popover-navigation {
+    .popover-content,
+    .popover-navigation {
       background-color: rgb(238 238 238);
     }
 

@@ -76,7 +76,7 @@ define([
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
                 })
                 .on('addedfile', (file) => {
-                    $dropzoneElem.find('#global-info').css({'display': 'inline'});
+                    $dropzoneElem.find('#global-info').removeClass('hide');
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
 
                     // If there is a button already in the area, it has to be removed,
@@ -101,7 +101,7 @@ define([
                     });
                 })
                 .on('sending', (file, xhr, data) => {
-                    $dropzoneElem.find('#global-info').css({'display': 'inline'});
+                    $dropzoneElem.find('#global-info').removeClass('hide');
                     //okay, if we've been given a full path, then we pull out the pieces (ignoring the filename at the end) and then
                     //tack it onto our set path, then set that as the destPath form param.
                     if (file.fullPath) {
@@ -118,7 +118,7 @@ define([
                 .on('reset', function() {
                     $('#clear-all-btn-container').remove();
                     $('#clear-all-btn').remove();
-                    $dropzoneElem.find('#global-info').css({'display': 'none'});
+                    $dropzoneElem.find('#global-info').addClass('hide');
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
                 })
                 .on('canceled', (file) => {
@@ -184,7 +184,7 @@ define([
         makeClearAllButton: function() {
             var $clearAllBtn = $('<button>')
                 .text('Clear All')
-                .addClass('btn__text clear-all-dropzone')
+                .addClass('btn__text dz-clear-all__button')
                 .attr('aria-label', 'clear all errored files from the dropzone')
                 .attr('id', 'clear-all-btn')
                 .click(function(){

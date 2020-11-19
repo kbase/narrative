@@ -16,40 +16,40 @@ define([
     function niceState(jobState) {
         var label, icon, color;
         switch (jobState) {
-        case 'completed':
-            label = 'success';
-            icon = 'fa fa-check';
-            color = 'green';
-            break;
-        case 'queued':
-            label = jobState;
-            icon = 'fa fa-angle-double-right';
-            color = 'green';
-            break;
-        case 'running':
-            label = jobState;
-            icon = 'fa fa-spinner';
-            color = 'green';
-            break;
-        case 'error':
-            label = jobState;
-            icon = 'fa fa-times';
-            color = 'red';
-            break;
-        case 'terminated':
-            label = jobState;
-            icon = 'fa fa-times';
-            color = 'orange';
-            break;
-        case 'does_not_exist':
-            label = 'does not exist';
-            icon = 'fa fa-question';
-            color = 'orange';
-            break;
-        default:
-            label = jobState;
-            icon = 'fa fa-question';
-            color = 'black';
+            case 'completed':
+                label = 'success';
+                icon = 'fa fa-check';
+                color = 'green';
+                break;
+            case 'queued':
+                label = jobState;
+                icon = 'fa fa-angle-double-right';
+                color = 'green';
+                break;
+            case 'running':
+                label = jobState;
+                icon = 'fa fa-spinner';
+                color = 'green';
+                break;
+            case 'error':
+                label = jobState;
+                icon = 'fa fa-times';
+                color = 'red';
+                break;
+            case 'terminated':
+                label = jobState;
+                icon = 'fa fa-times';
+                color = 'orange';
+                break;
+            case 'does_not_exist':
+                label = 'does not exist';
+                icon = 'fa fa-question';
+                color = 'orange';
+                break;
+            default:
+                label = jobState;
+                icon = 'fa fa-question';
+                color = 'black';
         }
 
         return td({

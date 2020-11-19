@@ -24,13 +24,13 @@
   }
 
   .btn-primary {
-    background-color: rgb(51 122 183) !important;
     border-color: rgb(46 109 164) !important;
+    background-color: rgb(51 122 183) !important;
   }
 
   .btn-danger {
-    background-color: rgb(217 83 79) !important;
     border-color: rgb(212 63 58) !important;
+    background-color: rgb(217 83 79) !important;
   }
 
   .btn i {
@@ -69,8 +69,8 @@
       /* checkboxes are expected on editable tables */
 
       .fa-square-o {
-        font-size: 1.4em;
         color: rgb(102 102 102);
+        font-size: 1.4em;
       }
 
       &:hover {
@@ -83,20 +83,20 @@
     }
 
     &.row-select .fa-square-o::before {
-      content: "\f046";
       color: rgb(68 68 68);
+      content: '\f046';
     }
 
     > td.editable {
       position: relative;
 
       &:hover::after {
-        content: "\f044";
-        font-family: $typeface-font-awesome;
         position: absolute;
-        bottom: 0;
         right: 2px;
+        bottom: 0;
         color: rgb(136 136 136);
+        content: '\f044';
+        font-family: $typeface-font-awesome;
       }
     }
   }

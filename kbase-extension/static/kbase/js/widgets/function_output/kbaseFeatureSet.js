@@ -144,6 +144,16 @@ define ([
             this.genomeLookupTable = {};
             this.genomeObjectInfo = {};
             this.featureTableData = [];
+            // We fetch the data with nested promises, to preserve order and parallelize the requests.
+            // Then the results are dissected and used to update structures in this object, and finally
+            // invoking a render.
+            //
+            // "this.features" is an object whose keys are genome object references (gid), and
+            // whose values are lists of feature ids (fid).
+            // For each pair of gid and fid we need to fetch the genome object information from the workspace
+            // and the feature info from the genome search api.
+            // To keep this all sorted out, and in the original order, we do this as an array of promises for
+            // each pair, and each pair itself is an array of the actual api calls which are themselves promises.
             return Promise.all(
                 Array.from(Object.entries(this.features)).map(([gid, features]) => {
                     const query = {'feature_id': features};

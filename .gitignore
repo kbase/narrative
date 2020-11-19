@@ -90,3 +90,6 @@ target/
 # IDE / Editor
 .vscode
 /tags
+
+# For yarn users
+yarn.lock

@@ -1,26 +1,28 @@
 /**
  * @public
  */
-'use strict';
+define ([
+    'kbwidget',
+    'jquery',
+    'narrativeConfig',
+    'kbaseAuthenticatedWidget',
+    'kb_common/jsonRpc/genericClient',
+    'kb_common/jsonRpc/dynamicServiceClient',
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseAuthenticatedWidget',
-		'jquery-dataTables',
-		'knhx',
-		'widgetMaxWidthCorrection',
-        'GenomeSearchUtil-client-api'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbaseAuthenticatedWidget
-	) {
+    // for effect
+    'jquery-dataTables',
+    'knhx',
+    'widgetMaxWidthCorrection',
+    'bootstrap',
+], function (
+    KBWidget,
+    $,
+    Config,
+    kbaseAuthenticatedWidget,
+    GenericClient,
+    DynamicServiceClient
+) {
+    'use strict';
     return KBWidget({
         name: 'kbaseFeatureSet',
         parent : kbaseAuthenticatedWidget,
@@ -35,24 +37,24 @@ define (
         init: function(options) {
             this._super(options);
 
-            this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
+            this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
             this.$elem.append(this.$messagePane);
 
             if (options.workspaceids && options.workspaceids.length > 0) {
-                var id = options.workspaceids[0].split('/');
+                const id = options.workspaceids[0].split('/');
                 this.options.treeID = id[1];
                 this.options.workspaceID = id[0];
             }
 
-            this.$mainPanel = $("<div>").addClass("").hide();
+            this.$mainPanel = $('<div>').addClass('').hide();
             this.$elem.append(this.$mainPanel);
 
             if (!this.options.featureset_name) {
-                this.renderError("No FeatureSet to render!");
+                this.renderError('No FeatureSet to render!');
             } else if (!this.options.workspaceName) {
-                this.renderError("No workspace given!");
+                this.renderError('No workspace given!');
             } else if (!this.options.kbCache && !this.authToken()) {
-                this.renderError("No cache given, and not logged in!");
+                this.renderError('No cache given, and not logged in!');
             } else {
                 this.token = this.authToken();
                 this.render();
@@ -62,162 +64,197 @@ define (
         },
 
         render: function() {
-            this.ws = new Workspace(this.options.wsURL, {token: this.token});
-            this.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), {token: this.token});
-            this.loading(false);
+            this.genomeSearchAPI = new DynamicServiceClient({
+                module: 'GenomeSearchUtil',
+                url: Config.url('service_wizard'), 
+                token: this.token
+            });
+            this.workspace = new GenericClient({
+                module: 'Workspace',
+                url: Config.url('workspace'), 
+                token: this.token
+            });
             this.$mainPanel.hide();
             this.$mainPanel.empty();
             this.loadFeatureSet();
         },
 
-
-        features: null, // genomeId : [{fid: x, data: x}]
+        features: null, 
 
         loadFeatureSet: function() {
-            var self = this;
-            self.features = {};
-            self.ws.get_objects([{ref:self.options.workspaceName+"/"+self.options.featureset_name}],
-                function(data) {
-                    var fs = data[0].data;
+            this.features = {};
+            this.loading(true);
+            this.workspace.callFunc('get_objects', [[{
+                ref: this.options.workspaceName+'/'+this.options.featureset_name
+            }]])
+                .then(([data]) => {
+                    const fs = data[0].data;
                     if(fs.description) {
-                        self.$mainPanel.append($('<div>')
-                            .append("<i>Description</i> - ")
+                        this.$mainPanel.append($('<div test-id="description">')
+                            .append('<i>Description</i> - ')
                             .append(fs.description));
                     }
 
-                    for (var fid in fs.elements) {
-                        if (fs.elements.hasOwnProperty(fid)) {
-
-                            for (var k=0; k<fs.elements[fid].length; k++) {
-                                var gid = fs.elements[fid][k];
-                                if(self.features.hasOwnProperty(gid)) {
-                                    self.features[gid].push(fid);
+                    for (const fid in fs.elements) {
+                        if (fid in fs.elements) {
+                            for (let k=0; k<fs.elements[fid].length; k++) {
+                                const gid = fs.elements[fid][k];
+                                if (gid in this.features) {
+                                    this.features[gid].push(fid);
                                 } else {
-                                    self.features[gid] = [fid];
+                                    this.features[gid] = [fid];
                                 }
                             }
                         }
                     }
-                    self.getGenomeData();
-                    self.$mainPanel.show();
-                },
-                function(error) {
-                    self.loading(true);
-                    self.renderError(error);
-
+                    this.$mainPanel.show();
+                    return this.getGenomeData();
+                })
+                .catch((error) => {
+                    console.error('error!', error);
+                    this.loading(false);
+                    this.renderError(error);
                 });
         },
 
         search: function(genome_ref, query, limit) {
-            return this.genomeSearchAPI.search({
-                    ref: genome_ref,
-                    structured_query: query,
-                    sort_by: [['contig_id',1]],
-                    start: 0,
-                    limit: limit
-                })
+            return this.genomeSearchAPI.callFunc('search', [{
+                ref: genome_ref,
+                structured_query: query,
+                sort_by: [['contig_id',1]],
+                start: 0,
+                limit: limit
+            }])
+                .then(([result]) => {
+                    return result;
+                });
         },
-
 
         genomeLookupTable: null, // genomeId: { featureId: indexInFeatureList }
         genomeObjectInfo: null, //{},
         featureTableData: null, // list for datatables
 
         getGenomeData: function() {
-            var self = this;
-            self.genomeLookupTable = {};
-            self.genomeObjectInfo = {};
-            self.featureTableData = [];
-            for(var gid in self.features) {
-                var query = {"feature_id": self.features[gid]}
-                self.search(gid, {"feature_id": self.features[gid]}, self.features[gid].length)
-                    .then(function(results) {
-                        for (var f in results.features) {
-                            var feature = results.features[f];
-                            self.featureTableData.push(
+            if (Object.keys(this.features).length === 0) {
+                this.loading(false);
+                this.showMessage('This feature set is empty.');
+                return Promise.resolve();
+            }
+
+            this.genomeLookupTable = {};
+            this.genomeObjectInfo = {};
+            this.featureTableData = [];
+            // We fetch the data with nested promises, to preserve order and parallelize the requests.
+            // Then the results are dissected and used to update structures in this object, and finally
+            // invoking a render.
+            //
+            // "this.features" is an object whose keys are genome object references (gid), and
+            // whose values are lists of feature ids (fid).
+            // For each pair of gid and fid we need to fetch the genome object information from the workspace
+            // and the feature info from the genome search api.
+            // To keep this all sorted out, and in the original order, we do this as an array of promises for
+            // each pair, and each pair itself is an array of the actual api calls which are themselves promises.
+            return Promise.all(
+                Array.from(Object.entries(this.features)).map(([gid, features]) => {
+                    const query = {'feature_id': features};
+                    return Promise.all([
+                        // the features 
+                        this.search(gid, query, features.length),
+                        // the genome object id
+                        gid,
+                        // The genome object info
+                        this.workspace.callFunc('get_object_info3', [{
+                            objects: [{
+                                ref: gid
+                            }]
+                        }])
+                            .then(([result]) => {
+                                // unpack from the results array.
+                                return result;
+                            })
+                    ]);
+                })
+            )
+                .then((results) => {
+                    for (const [result, gid, genomeObjectInfo] of results) {
+                        const objectName = genomeObjectInfo.infos[0][1];
+                        for (const feature of result.features) {
+                            this.featureTableData.push(
                                 {
                                     fid: '<a href="/#dataview/'+gid+
-                                                '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
-                                                feature.feature_id+'</a>',
+                                            '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
+                                            feature.feature_id+'</a>',
                                     gid: '<a href="/#dataview/'+gid+
-                                            '" target="_blank">'+gid+"</a>",
-                                    ali: Object.keys(feature.aliases).join(", "),
+                                        '" target="_blank">'+objectName+'</a>',
+                                    ali: Object.keys(feature.aliases).join(', '),
                                     type: feature.feature_type,
                                     func: feature.function
                                 }
                             );
-
                         }
-                        self.renderFeatureTable(); // just rerender each time
-                        self.loading(true);
-                    })
-                    .fail(function(e) {
-                        console.error(e);
-                    });
-            }
-            if (Object.keys(self.features).length === 0){
-                self.loading(true);
-                self.showMessage("This feature set is empty.")
-            }
+                    }
+                    this.loading(false);
+                    this.renderFeatureTable(); // just rerender each time
+                });
         },
 
         $featureTableDiv : null,
         renderFeatureTable: function() {
-            var self = this;
-
-            if(!self.$featureTableDiv) {
-                self.$featureTableDiv = $('<div>').css({'margin':'5px'});
-                self.$mainPanel.append(self.$featureTableDiv);
+            if (!this.$featureTableDiv) {
+                this.$featureTableDiv = $('<div>').css({'margin':'5px'});
+                this.$mainPanel.append(this.$featureTableDiv);
             }
 
-            self.$featureTableDiv.empty();
+            this.$featureTableDiv.empty();
 
-            var $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
-                            .addClass("table table-bordered table-striped");
-            self.$featureTableDiv.append($tbl);
+            const $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
+                .addClass('table table-bordered table-striped');
+            this.$featureTableDiv.append($tbl);
 
-            var sDom = "ft<ip>";
-            if(self.featureTableData.length<=10) sDom = "ft<i>";
+            const sDom = `ft<${this.featureTableData.length <= 10 ? 'i' : 'ip'}>`;
 
-            var tblSettings = {
-                "sPaginationType": "full_numbers",
-                "iDisplayLength": 10,
-                "sDom": sDom,
-                "aaSorting": [[ 2, "asc" ], [0, "asc"]],
-                "aoColumns": [
-                                      {sTitle: "Feature ID", mData: "fid"},
-                                      {sTitle: "Aliases", mData: "ali"},
-                                      {sTitle: "Genome", mData: "gid"},
-                                      {sTitle: "Type", mData: "type"},
-                                      {sTitle: "Function", mData: "func"},
-                                      ],
-                                      "aaData": [],
-                                      "oLanguage": {
-                                          "sSearch": "Search features:",
-                                          "sEmptyTable": "This FeatureSet is empty"
-                                      }
-                };
-            var featuresTable = $tbl.dataTable(tblSettings);
-            featuresTable.fnAddData(self.featureTableData);
+            const tblSettings = {
+                sPaginationType: 'full_numbers',
+                iDisplayLength: 10,
+                sDom: sDom,
+                aaSorting: [[ 2, 'asc' ], [0, 'asc']],
+                aoColumns: [
+                    {sTitle: 'Feature ID', mData: 'fid'},
+                    {sTitle: 'Aliases', mData: 'ali'},
+                    {sTitle: 'Genome', mData: 'gid'},
+                    {sTitle: 'Type', mData: 'type'},
+                    {sTitle: 'Function', mData: 'func'},
+                ],
+                aaData: [],
+                oLanguage: {
+                    sSearch: 'Search features:',
+                    sEmptyTable: 'This FeatureSet is empty'
+                }
+            };
+            const featuresTable = $tbl.dataTable(tblSettings);
+            featuresTable.fnAddData(this.featureTableData);
         },
 
         renderError: function(error) {
-            var errString = "Sorry, an unknown error occurred";
-            if (typeof error === "string")
+            let errString;
+            if (typeof error === 'string') {
                 errString = error;
-            else if (error.error && error.error.message)
+            } else if (error.error && error.error.message) {
                 errString = error.error.message;
+            } else {
+                errString = error.message;
+            }
 
-            var $errorDiv = $("<div>")
-                            .addClass("alert alert-danger")
-                            .append("<b>Error:</b>")
-                            .append("<br>" + errString);
+            const $errorDiv = $('<div>')
+                .addClass('alert alert-danger')
+                .append('<b>Error:</b>')
+                .append('<br>' + errString);
             this.$elem.empty();
             this.$elem.append($errorDiv);
         },
 
         buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+            const obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;
             } else {
@@ -238,16 +275,16 @@ define (
             return obj;
         },
 
-        loading: function(doneLoading) {
-            if (doneLoading)
+        loading: function(loading) {
+            if (loading) {
+                this.showMessage('<img src=\'' + this.options.loadingImage + '\'/>');
+            } else {
                 this.hideMessage();
-            else
-                this.showMessage("<img src='" + this.options.loadingImage + "'/>");
+            }
         },
 
         showMessage: function(message) {
-            var span = $("<span/>").append(message);
-
+            const span = $('<span/>').append(message);
             this.$messagePane.append(span);
             this.$messagePane.show();
         },
@@ -265,10 +302,9 @@ define (
             return this;
         },
 
-        loggedOutCallback: function(event, auth) {
+        loggedOutCallback: function() {
             this.render();
             return this;
         }
-
     });
 });

@@ -11,7 +11,7 @@ define([
     './cellTabs',
     './cellControlPanel',
     './tabs/configure',
-    './categoryPanel'
+    './fileTypePanel'
 ], (
     Uuid,
     AppUtils,

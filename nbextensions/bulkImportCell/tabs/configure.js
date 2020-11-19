@@ -51,17 +51,13 @@ define([
                     bus: bus
                 });
 
-                const layout = renderLayout(args);
+                const layout = renderLayout();
                 container.innerHTML = layout.content;
 
                 let paramNode = document.createElement('div');
                 container.appendChild(paramNode);
 
-                buildParamsWidget({
-                    bus: bus,
-                    workspaceInfo: workspaceInfo,
-                    node: paramNode
-                }).then(() => {                    
+                buildParamsWidget(paramNode).then(() => {                    
                     layout.events.attachEvents(container);
                 });
 
@@ -71,28 +67,22 @@ define([
 
 
         /*
-            Options: {
-                workspaceInfo: workspace information
-                node: container node to build the widget into
-            }
+            node: container node to build the widget into
 
             This is more or less copied over from the way that the appCell handles building the widget. This model assumes one instance of the params widget per cell, so may need some adjustment as we make the bulk import work with multiple data types
         */
-        function buildParamsWidget(options) {
-            const bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
-
-            const workspaceInfo = options.workspaceInfo,
-                node = options.node;
+        function buildParamsWidget(node) {
+            const paramBus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
 
             const widget = ParamsWidget.make({
-                bus: bus,
+                bus: paramBus,
                 workspaceInfo: workspaceInfo,
                 initialParams: model.getItem('params')
             });
 
-            bus.on('sync-params', function(message) {
+            paramBus.on('sync-params', function(message) {
                 message.parameters.forEach(function(paramId) {
-                    bus.send({
+                    paramBus.send({
                         parameter: paramId,
                         value: model.getItem(['params', message.parameter])
                     }, {
@@ -104,9 +94,9 @@ define([
                 });
             });
 
-            bus.on('parameter-sync', function(message) {
+            paramBus.on('parameter-sync', function(message) {
                 var value = model.getItem(['params', message.parameter]);
-                bus.send({
+                paramBus.send({
                     value: value
                 }, {
                     // This points the update back to a listener on this key
@@ -117,11 +107,11 @@ define([
                 });
             });
 
-            bus.on('set-param-state', function(message) {
+            paramBus.on('set-param-state', function(message) {
                 model.setItem('paramState', message.id, message.state);
             });
 
-            bus.respond({
+            paramBus.respond({
                 key: {
                     type: 'get-param-state'
                 },
@@ -132,7 +122,7 @@ define([
                 }
             });
 
-            bus.respond({
+            paramBus.respond({
                 key: {
                     type: 'get-parameter'
                 },
@@ -144,7 +134,7 @@ define([
             });
 
             //TODO: disabling for now until we figure out what to do about state
-            // bus.on('parameter-changed', function(message) {
+            // paramBus.on('parameter-changed', function(message) {
             //     // TODO: should never get these in the following states....
 
             //     let state = fsm.getCurrentState().state;
@@ -164,7 +154,7 @@ define([
             })
                 .then(function() {
                     return {
-                        bus: bus,
+                        bus: paramBus,
                         instance: widget
                     };
                 });

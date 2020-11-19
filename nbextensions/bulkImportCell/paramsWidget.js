@@ -175,9 +175,9 @@ define([
                         }, {
                             key: 'get-parameter-value'
                         })
-                            .then(function (message) {
+                            .then(function (response) {
                                 bus.emit('parameter-value', {
-                                    parameter: message.parameter
+                                    parameter: response.parameter
                                 });
                             });
                     });
@@ -214,9 +214,9 @@ define([
                                                 type: 'get-parameter'
                                             }
                                         })
-                                            .then((value) => {
+                                            .then((result) => {
                                                 let returnVal = {};
-                                                returnVal[paramName] = value.value;
+                                                returnVal[paramName] = result.value;
                                                 return returnVal;
                                             });
                                     })
@@ -423,27 +423,27 @@ define([
                     params.layout.filter(function (id) {                    
                         const original = params.specs[id].original;
 
+                        let isParameter = false;
+
                         if (original) {
 
                             //looking for file inputs via the dynamic_dropdown data source
                             if (original.dynamic_dropdown_options) {
-                                return (original.dynamic_dropdown_options.data_source !== 'ftp_staging');
+                                isParameter = original.dynamic_dropdown_options.data_source !== 'ftp_staging';
                             }
 
                             //looking for output fields - these should go in file paths
-                            if (original.text_options && original.text_options.is_output_name) {
-                                return false;
+                            else if (original.text_options && original.text_options.is_output_name) {
+                                isParameter = false;
                             } 
 
+                            //all other cases should be a param element
                             else {
-                                return true;
+                                isParameter = true;
                             }
                         } 
                         
-                        //this shouldn't happen but just in case filtering out these elements
-                        else {
-                            return false;
-                        }
+                        return isParameter;
 
                     }).map(function (id) {
                         return params.specs[id];

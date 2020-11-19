@@ -300,7 +300,7 @@ define([
         function updateState() {
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
-            fileTypePanel.updateState(state.category);
+            fileTypePanel.updateState(state.fileType);
         }
 
         /**
@@ -323,12 +323,13 @@ define([
         }
 
         /**
-         * This toggles which category (file type) should be shown
-         * // TODO: rename this and other widgets & elements to fileType
-         * @param {string} category - the category that should be shown
+         * This toggles which file type should be shown. This sets the
+         * fileType state, then updates the rest of the cell state to modify
+         * which set of tabs should be active.
+         * @param {string} fileType - the file type that should be shown
          */
-        function toggleCategory(category) {
-            state.category.selected = category;
+        function toggleFileType(fileType) {
+            state.fileType.selected = fileType;
             updateState();
         }
 
@@ -342,6 +343,7 @@ define([
         function deleteCell() {
             busEventManager.removeAll();
             controlPanel.stop();
+            fileTypePanel.stop();
             const cellIndex = Jupyter.notebook.find_cell_index(cell);
             Jupyter.notebook.delete_cell(cellIndex);
         }
@@ -351,7 +353,7 @@ define([
          */
         function getInitialState() {
             return {
-                category: {
+                fileType: {
                     selected: 'fastq',
                     completed: {
                         fastq: false,
@@ -430,9 +432,8 @@ define([
         }
 
         /**
-         * This builds the category panel (the left column) of the cell and starts
+         * This builds the file type panel (the left column) of the cell and starts
          * it up attached to the given DOM node.
-         * //TODO rename to fileType panel
          * @param {DOMElement} node - the node that should be used for the left column
          */
         function buildFileTypePanel(node) {
@@ -450,11 +451,11 @@ define([
                         label: 'SRA Reads'
                     }
                 },
-                toggleAction: toggleCategory
+                toggleAction: toggleFileType
             });
             return fileTypePanel.start({
                 node: node,
-                state: state.category
+                state: state.fileType
             });
         }
 

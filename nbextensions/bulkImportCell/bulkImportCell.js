@@ -466,7 +466,7 @@ define([
         function renderLayout() {
             const events = Events.make(),
                 content = div({
-                    class: `${cssCellType}__layout_container kbase-extension kb-app-cell`,
+                    class: `${cssCellType}__layout_container kbase-extension`,
                 }, [
                     div({
                         class: `${cssCellType}__prompt prompt`,

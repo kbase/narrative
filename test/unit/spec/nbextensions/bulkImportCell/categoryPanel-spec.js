@@ -1,10 +1,12 @@
 /* global define describe it expect jasmine */
 define([
     '../../../../../../narrative/nbextensions/bulkImportCell/categoryPanel',
-    'common/runtime'
+    'common/runtime',
+    'bluebird'
 ], (
     CategoryPanel,
-    Runtime
+    Runtime,
+    Promise
 ) => {
     'use strict';
 
@@ -120,6 +122,30 @@ define([
                     expect(clickSpy).not.toHaveBeenCalled();
                     node.querySelector('[data-element="cat2"]').click();
                     expect(clickSpy).toHaveBeenCalled();
+                });
+        });
+
+        it('should return a promise from a stop command', () => {
+            let panel = CategoryPanel.make({
+                bus: Runtime.make().bus(),
+                categories: categories,
+                header: header,
+                toggleAction: () => {}
+            });
+            let node = document.createElement('div');
+            return panel.start({
+                node: node,
+                state: {}
+            })
+                .then(() => {
+                    const stopProm = panel.stop();
+                    expect(stopProm instanceof Promise).toBeTrue();
+                    return stopProm;
+                })
+                .then(() => {
+                    // if we got here, then pass.
+                    // This is just here to consume the rest of the promise
+                    // so it doesn't dangle.
                 });
         });
     });

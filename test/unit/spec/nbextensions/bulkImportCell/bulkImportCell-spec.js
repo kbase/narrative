@@ -82,5 +82,23 @@ define([
                 }
             });
         });
+
+        it('should toggle the active file type', () => {
+            const cell = Mocks.buildMockCell('code');
+            const importData = {
+                fastq: ['file1', 'file2', 'file3'],
+                sra: ['file4', 'file5']
+            };
+            BulkImportCell.make({
+                cell: cell,
+                initialize: true,
+                importData: importData
+            });
+            let elem = cell.element.find('[data-element="category-panel"] [data-element="sra"]');
+            const before = elem[0].outerHTML;
+            elem.click();
+            expect(elem[0].outerHTML).not.toEqual(before);
+
+        });
     });
 });

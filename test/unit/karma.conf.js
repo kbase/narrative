@@ -44,6 +44,7 @@ module.exports = function (config) {
             {pattern: 'kbase-extension/static/**/*.gif', included: false, served: true},
             {pattern: 'nbextensions/appCell2/**/*.js', included: false, served: true},
             {pattern: 'nbextensions/bulkImportCell/**/*.js', included: false},
+            {pattern: 'nbextensions/bulkImportCell/**/*.json', included: false},
             {pattern: 'test/testConfig.json', included: false, served: true, nocache: true},
             {pattern: 'test/*.tok', included: false, served: true, nocache: true},
             {pattern: 'test/data/**/*', included: false, served: true},

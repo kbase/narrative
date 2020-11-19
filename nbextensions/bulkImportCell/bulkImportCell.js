@@ -13,12 +13,8 @@ define([
     './cellControlPanel',
     'common/cellComponents/tabs/infoTab',
     './tabs/configure',
-<<<<<<< HEAD
-    './fileTypePanel'
-=======
-    'json!./testAppObj.json',
-    './categoryPanel'
->>>>>>> truss
+    './fileTypePanel',
+    'json!./testAppObj.json'
 ], (
     Uuid,
     AppUtils,
@@ -34,12 +30,8 @@ define([
     CellControlPanel,
     InfoTabWidget,
     ConfigureWidget,
-<<<<<<< HEAD
-    FileTypePanel
-=======
-    TestAppObj,
-    CategoryPanel
->>>>>>> truss
+    FileTypePanel,
+    TestAppObj
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
@@ -190,18 +182,13 @@ define([
             // widgets this cell owns
             cellTabs,
             controlPanel,
-<<<<<<< HEAD
-            fileTypePanel;
-
-=======
-            categoryPanel,
+            fileTypePanel,
             model = Props.make({
                 data: TestAppObj,
                 onUpdate: function(props) {
                     Utils.setMeta(this.cell, 'appCell', props.getRawObject());
                 }
             });
->>>>>>> truss
         if (options.initialize) {
             initialize(typesToFiles);
         }

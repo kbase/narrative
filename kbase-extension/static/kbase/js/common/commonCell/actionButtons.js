@@ -33,11 +33,11 @@ define([
             ui = config.ui,
             bus = config.bus,
             runAction = config.runAction;
-            // cssCellType = config.cssCellType;
+        // cssCellType = config.cssCellType;
 
         function buildLayout(events) {
             return div({
-                class: `${cssCellType}-action-button__container`,
+                class: 'kb-bulk-import-action-button__container',
             }, [
                 buildActionButtons(events)
             ]);
@@ -46,7 +46,7 @@ define([
         function buildActionButtons(events) {
             const buttonList = Object.keys(actionButtons.availableButtons).map((key) => {
                 var button = actionButtons.availableButtons[key],
-                    classes = [`${cssCellType}-action-button__button`].concat(button.classes);
+                    classes = ['kb-bulk-import-action-button__button'].concat(button.classes);
                 let icon;
                 if (button.icon) {
                     icon = {
@@ -76,7 +76,7 @@ define([
             });
 
             return div({
-                class: `${cssCellType}-action-button__list btn-group`
+                class: 'kb-bulk-import-action-button__list btn-group'
             }, buttonList);
         }
 

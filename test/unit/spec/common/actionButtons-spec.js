@@ -17,6 +17,7 @@ define([
 ) {
     'use strict';
     let mockActionButton,
+        ui,
         runAction = () => {},
         events = Events.make(),
         actionButtons = {
@@ -46,7 +47,7 @@ define([
         beforeEach( () => {
             var bus = Runtime.make().bus();
             const container = document.createElement('div');
-            var ui = UI.make({
+            ui = UI.make({
                 node: container,
                 bus: bus
             });
@@ -63,6 +64,7 @@ define([
         afterEach(() => {
             mockActionButton = null;
             window.kbaseRuntime = null;
+            ui = null;
         });
 
         it('Should load', () => {
@@ -98,13 +100,13 @@ define([
         });
 
         it('has a method setState which changes the button state', () => {
-            let mockButtons = mockActionButton.buildLayout(events);
+            let layout = mockActionButton.buildLayout(events);
+            console.log(layout);
             mockActionButton.setState({
                 name: 'cancel',
                 disable: true
             });
 
-            console.log(mockButtons);
             expect(true).toBeFalse();
         });
 

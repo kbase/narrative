@@ -420,8 +420,31 @@ define([
             return Promise.try(function () {
                 const params = model.getItem('parameters');
                 let parameterParams = makeParamsLayout(
-                    params.layout.filter(function (id) {
-                        return (params.specs[id].ui.class === 'parameter');
+                    params.layout.filter(function (id) {                    
+                        const original = params.specs[id].original;
+
+                        if (original) {
+
+                            //looking for file inputs via the dynamic_dropdown data source
+                            if (original.dynamic_dropdown_options) {
+                                return (original.dynamic_dropdown_options.data_source !== 'ftp_staging');
+                            }
+
+                            //looking for output fields - these should go in file paths
+                            if (original.text_options && original.text_options.is_output_name) {
+                                return false;
+                            } 
+
+                            else {
+                                return true;
+                            }
+                        } 
+                        
+                        //this shouldn't happen but just in case filtering out these elements
+                        else {
+                            return false;
+                        }
+
                     }).map(function (id) {
                         return params.specs[id];
                     }));

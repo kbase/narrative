@@ -96,9 +96,9 @@ define([
      *    {
      *      'fastq_reads': ['file1.fq', 'file2.fq']
      *    }
+     *  - workspaceInfo - Object with all workspace details we need to initialize widgets
      */
     function BulkImportCell(options) {
-        console.log('initalizing bulk impor with options: ', options);
         if (options.cell.cell_type !== 'code') {
             throw new Error('Can only create Bulk Import Cells out of code cells!');
         }

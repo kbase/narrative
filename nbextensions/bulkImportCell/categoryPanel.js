@@ -85,7 +85,7 @@ define([
             return div({
                 class: `${baseCss}__header`
             }, [
-                span({class: `${baseCss}__header__icon header.icon`}),
+                span({class: `${baseCss}__header__icon ${header.icon}`}),
                 span({class: `${baseCss}__header__label`}, header.label)
             ]);
         }

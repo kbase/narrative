@@ -22,8 +22,8 @@ define([
         events = Events.make(),
         actionButtons = {
             current: {
-                name: null,
-                disabled: null
+                name: 'runApp',
+                disabled: false
             },
             availableButtons: {
                 runApp: {
@@ -39,14 +39,15 @@ define([
                     label: 'Cancel'
                 }
             }
-        };
+        },
+        container;
 
 
     describe('The action button widget', () => {
 
         beforeEach( () => {
             var bus = Runtime.make().bus();
-            const container = document.createElement('div');
+            container = document.createElement('div');
             ui = UI.make({
                 node: container,
                 bus: bus
@@ -96,18 +97,21 @@ define([
             let $cancelButton = $buttonList.find('.-cancel');
             expect($cancelButton).toBeDefined();
             expect($cancelButton.html()).toContain('Cancel');
-            expect($cancelButton.hasClass('hidden'));
         });
 
         it('has a method setState which changes the button state', () => {
             let layout = mockActionButton.buildLayout(events);
-            console.log(layout);
+            container.innerHTML = layout;
             mockActionButton.setState({
                 name: 'cancel',
                 disable: true
             });
 
-            expect(true).toBeFalse();
+            let $cancelButton = $(container).find('.-cancel');
+            expect($cancelButton).toBeDefined();
+            expect($cancelButton.html()).toContain('Cancel');
+            expect($cancelButton.hasClass('hidden')).toBeFalse();
+            expect($cancelButton.hasClass('disabled')).toBeTrue();
         });
 
     });

@@ -1,10 +1,12 @@
 /*
-    bulk import cell
+  bulk import cell
 */
 
-$component-border: #c4c4c4;
-$category-icon-color: #03517d;
-$category-highlight-color: #cce5f3;
+$component-border: rgb(196, 196, 196);
+$category-icon-color: rgb(3, 81, 125);
+$category-highlight-color: rgb(204, 229, 243);
+$panel-separator-color: rgb(33, 150, 243);
+$button-outdated: rgb(247, 155, 34);
 
 .kb-bulk-import {
   &__base-node {
@@ -40,48 +42,52 @@ $category-highlight-color: #cce5f3;
   &__tab_pane {
     display: flex;
     flex-direction: row;
-    align-items: stretch;
     align-content: stretch;
+    align-items: stretch;
   }
 
   /* kb-bulk-import__tab_pane_widget_container */
   &__tab_pane_widget_container {
     flex: 1;
+
     /* kb-bulk-import__tab_pane_widget_container_tabs */
     &_tabs {
-
+      border-bottom: 2px solid $panel-separator-color;
+      text-align: right;
     }
 
     /* kb-bulk-import__tab_pane_widget_container_widget */
-    &_widget{
-
+    &_widget {
+      padding: 4px;
     }
   }
 
   /* kb-bulk-import__category_panel */
   &__category_panel {
-    border-right: 1px solid $component-border;
     width: 232px;
-    font-size: 16px;
+    border-right: 1px solid $component-border;
 
     &__header {
-      font-weight: bold;
       padding: 8px;
       border-bottom: 1px solid $component-border;
+      font: normal 700 16px/30px $typeface-page-text;
+      line-height: 30px;
+
       &__icon {
         padding: 8px 6px 8px 8px;
-        color: #000;
+        color: rgb(0 0 0);
       }
     }
 
     &__category {
-      border: 0 0 1px 0 solid $component-border;
-      padding: 8px;
       display: flex;
-      flex-direction: row;
       width: 100%;
-      text-align: left;
+      flex-direction: row;
+      padding: 8px;
+      border: 0 0 1px 0 solid $component-border;
       background-color: inherit;
+      font: normal 400 14px/1.6 $typeface-page-text;
+      text-align: left;
 
       &__icon {
         padding: 2px 8px 8px;
@@ -137,7 +143,7 @@ $category-highlight-color: #cce5f3;
       /* kb-bulk-import-tabs__button--outdated */
       &--outdated {
         padding: 6px 0 0;
-        color: rgb(247 155 34);
+        color: $button-outdated;
       }
     }
   }
@@ -146,6 +152,7 @@ $category-highlight-color: #cce5f3;
   &-control-panel {
     /* kb-bulk-import-control-panel__container */
     &__container {
+      border-bottom: 1px solid $component-border;
     }
 
     /* kb-bulk-import-control-panel__border */
@@ -154,7 +161,6 @@ $category-highlight-color: #cce5f3;
       display: flex;
       height: 50px;
       flex-direction: row;
-      border: 1px solid rgb(192 192 192);
     }
 
     /* kb-bulk-import-control-panel__status_container */

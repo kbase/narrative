@@ -571,7 +571,7 @@ define([
                                 containerCssClass: 'kb-staging-table-body__import-dropdown'
                             })
                             .val(storedFileData.dataType)
-                            .trigger('change')
+                            .trigger('change');
                         //enable the checkboxes
                         enableCheckboxes(storedFileData.dataType);
                     }

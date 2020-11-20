@@ -4,7 +4,7 @@
 /*jslint white: true*/
 
 define([
-    '../../../../../narrative/nbextensions/appCell2/widgets/tabs/infoTab',
+    'common/cellComponents/tabs/infoTab'
 ], function(
     infoTabWidget
 ) {

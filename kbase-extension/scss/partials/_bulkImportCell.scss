@@ -32,22 +32,42 @@
     align-items: stretch;
   }
 
-  /* kb-bulk-import__widget_container */
-  &__widget_container {
-    display: block;
-    width: 100%;
-  }
-
-  /* kb-bulk-import__cell_container */
-  &__cell_container {
-  }
-
   /* kb-bulk-import__tab_pane */
   &__tab_pane {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    align-content: stretch;
+  }
+
+  /* kb-bulk-import__tab_pane_widget_container */
+  &__tab_pane_widget_container {
+    flex: 1;
+    /* kb-bulk-import__tab_pane_widget_container_tabs */
+    &_tabs {
+
+    }
+
+    /* kb-bulk-import__tab_pane_widget_container_widget */
+    &_widget{
+
+    }
+  }
+
+  /* kb-bulk-import__category_panel */
+  &__category_panel {
   }
 
   /* kb-bulk-import__tab_pane_widget */
   &__tab_pane_widget {
+  }
+
+  /* kb-bulk-import-configure */
+  &-configure {
+    &__advanced_hidden_message {
+      margin-left: 6px;
+      font-style: italic;
+    }
   }
 
   &-tabs {

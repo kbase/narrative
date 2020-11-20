@@ -1,7 +1,13 @@
 define([
-    'common/html'
+    'bluebird',
+    'common/html',
+    'common/ui',
+    'common/events'
 ], (
-    html
+    Promise,
+    html,
+    UI,
+    Events
 ) => {
     'use strict';
 
@@ -10,59 +16,63 @@ define([
         a = html.tag('a'),
         cssCellType = 'kb-bulk-import';
 
-    class CellTabs {
-        /**
-         *
-         * @param {object} options
-         * - bus - the message bus
-         * - ui - the ui controller
-         *   - toggleAction - a function that should be run when toggling tabs, takes
-         *      the tab name as a single parameter
-         *   - tabs: also an object:
-         *     - selectedTab - string, one of the keys under "tabs"
-         *     - tabs - an object where each key is a tab key, and has a display label:
-         *       {
-         *          configure: {
-         *              label: "Configure"
-         *          }
-         *          , etc.
-         *       }
-         */
-        constructor(options) {
-            this.bus = options.bus;
-            this.ui = options.ui;
-            this.tabToggleAction = options.toggleAction;
-            this.controlBarTabs = options.tabs;
-        }
+    /**
+     * This is the factory function for the CellTabs component.
+     * @param {object} options
+     * - bus - the message bus
+     * - toggleAction - a function that should be run when toggling tabs, takes
+     *     the tab name as a single parameter
+     * - tabs: also an object:
+     *   - selectedTab - string, one of the keys under "tabs"
+     *   - tabs - an object where each key is a tab key, and has a display label:
+     *     {
+     *        configure: {
+     *            label: "Configure"
+     *        }
+     *        , etc.
+     *     }
+     */
+    function CellTabs(options) {
+        let bus = options.bus,
+            ui,
+            tabToggleAction = options.toggleAction,
+            controlBarTabs = options.tabs,
+            state,
+            container;
 
-        setState(newState) {
-            this.state = newState;
-            for (const tabId of Object.keys(this.state.tabs)) {
-                const tabState = this.state.tabs[tabId];
+        function setState(newState) {
+            state = newState;
+            for (const tabId of Object.keys(state.tabs)) {
+                const tabState = state.tabs[tabId];
                 if (tabState) {
-                    tabState.enabled ? this.ui.enableButton(tabId) : this.ui.disableButton(tabId);
-                    tabState.visible ? this.ui.showButton(tabId) : this.ui.hideButton(tabId);
+                    tabState.enabled ? ui.enableButton(tabId) : ui.disableButton(tabId);
+                    tabState.visible ? ui.showButton(tabId) : ui.hideButton(tabId);
                 }
-                this.ui.deactivateButton(tabId);
+                ui.deactivateButton(tabId);
             }
-            this.ui.activateButton(this.state.selected);
+            ui.activateButton(state.selected);
         }
 
-        buildLayout(ui, events) {
-            return div({
-                class: `${cssCellType}-tabs__container`,
-            }, [
-                div({
-                    class: `${cssCellType}-tabs__toolbar btn-toolbar`,
+        function renderLayout() {
+            const events = Events.make(),
+                content = div({
+                    class: `${cssCellType}-tabs__container`,
                 }, [
-                    this.buildTabButtons(ui, events)
-                ])
-            ]);
+                    div({
+                        class: `${cssCellType}-tabs__toolbar btn-toolbar`,
+                    }, [
+                        buildTabButtons(events)
+                    ])
+                ]);
+            return {
+                content: content,
+                events: events
+            };
         }
 
-        buildTabButtons(events) {
-            const buttons = Object.keys(this.controlBarTabs.tabs).map((key) => {
-                const tab = this.controlBarTabs.tabs[key];
+        function buildTabButtons(events) {
+            const buttons = Object.keys(controlBarTabs.tabs).map((key) => {
+                const tab = controlBarTabs.tabs[key];
                 let icon;
                 if (!tab) {
                     console.warn('Tab not defined: ' + key);
@@ -78,7 +88,7 @@ define([
                         icon = {size: 2};
                     }
                 }
-                return this.ui.buildButton({
+                return ui.buildButton({
                     label: tab.label,
                     name: key,
                     events: events,
@@ -97,9 +107,9 @@ define([
             }).filter(function(x) {
                 return x ? true : false;
             });
-            this.bus.on('control-panel-tab', (message) => {
+            bus.on('control-panel-tab', (message) => {
                 var tab = message.data.tab;
-                this.tabToggleAction(tab);
+                tabToggleAction(tab);
             });
 
             var outdatedBtn = a({
@@ -122,15 +132,34 @@ define([
             return buttons;
         }
 
-        start() {
-
+        function start(args) {
+            return Promise.try(() => {
+                container = args.node;
+                ui = UI.make({
+                    node: container,
+                    bus: bus
+                });
+                const layout = renderLayout();
+                container.innerHTML = layout.content;
+                layout.events.attachEvents(container);
+            });
         }
 
-        stop() {
+        function stop() {
+            return Promise.try(() => {
 
+            });
         }
+
+        return {
+            start: start,
+            stop: stop,
+            setState: setState
+        };
 
     }
 
-    return CellTabs;
+    return {
+        make: CellTabs
+    };
 });

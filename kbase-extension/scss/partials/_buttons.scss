@@ -22,3 +22,24 @@
   /* don't add shadows here */
   box-shadow: none;
 }
+
+
+.btn-action {
+  &__container {
+    display: flex;
+    overflow: hidden;
+    height: 50px;
+    flex-direction: row;
+    line-height: 50px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  &__list {
+    padding: 6px;
+  }
+
+  &__button {
+    width: 80px;
+  }
+}

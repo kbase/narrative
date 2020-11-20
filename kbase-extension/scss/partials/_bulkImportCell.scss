@@ -50,30 +50,6 @@
   &__tab_pane_widget {
   }
 
-  /* kb-bulk-import-action-button */
-  &-action-button {
-    /* kb-bulk-import-action-button__container */
-    &__container {
-      display: flex;
-      overflow: hidden;
-      height: 50px;
-      flex-direction: row;
-      line-height: 50px;
-      text-align: left;
-      vertical-align: middle;
-    }
-
-    /* kb-bulk-import-action-button__list */
-    &__list {
-      padding: 6px;
-    }
-
-    /* kb-bulk-import-action-button__button */
-    &__button {
-      width: 80px;
-    }
-  }
-
   &-tabs {
     /* kb-bulk-import-tabs__container */
     &__container {

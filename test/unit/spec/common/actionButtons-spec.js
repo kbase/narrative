@@ -2,7 +2,7 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
-    'common/commonCell/actionButtons',
+    'common/cellComponents/actionButtons',
     'jquery',
     'common/runtime',
     'common/ui',
@@ -28,7 +28,7 @@ define([
             availableButtons: {
                 runApp: {
                     help: 'Run the app',
-                    type: 'success',
+                    type: 'primary',
                     classes: ['-run'],
                     label: 'Run'
                 },
@@ -94,7 +94,7 @@ define([
             expect($runButton).toBeDefined();
             expect($runButton.html()).toContain('Run');
 
-            let $cancelButton = $buttonList.find('.-cancel');
+            let $cancelButton = $(mockButtons).find('.-cancel');
             expect($cancelButton).toBeDefined();
             expect($cancelButton.html()).toContain('Cancel');
         });

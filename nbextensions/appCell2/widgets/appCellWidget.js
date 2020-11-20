@@ -25,7 +25,7 @@ define([
     'common/semaphore',
     'common/lang',
     'common/jobs',
-    'common/commonCell/actionButtons',
+    'common/cellComponents/actionButtons',
     'narrativeConfig',
     'google-code-prettify/prettify',
     './appCellWidget-fsm',
@@ -127,7 +127,7 @@ define([
                 availableButtons: {
                     runApp: {
                         help: 'Run the app',
-                        type: 'success',
+                        type: 'primary',
                         classes: ['-run'],
                         label: 'Run'
                     },

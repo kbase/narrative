@@ -329,7 +329,7 @@ define([
                 availableButtons: {
                     runApp: {
                         help: 'Run the app',
-                        type: 'success',
+                        type: 'primary',
                         classes: ['-run'],
                         label: 'Run'
                     },

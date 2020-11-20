@@ -1,6 +1,6 @@
 define([
     'common/html',
-    'common/commonCell/actionButtons',
+    'common/cellComponents/actionButtons',
     './cellTabs'
 ], (
     html,

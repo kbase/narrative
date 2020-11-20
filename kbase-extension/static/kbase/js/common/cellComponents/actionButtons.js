@@ -26,18 +26,16 @@ define([
          */
 
         var t = html.tag,
-            div = t('div'),
-            cssCellType = 'kb-bulk-import';
+            div = t('div');
 
         const actionButtons = config.actionButtons,
             ui = config.ui,
             bus = config.bus,
             runAction = config.runAction;
-        // cssCellType = config.cssCellType;
 
         function buildLayout(events) {
             return div({
-                class: 'kb-bulk-import-action-button__container',
+                class: 'btn-action__container',
             }, [
                 buildActionButtons(events)
             ]);
@@ -46,7 +44,7 @@ define([
         function buildActionButtons(events) {
             const buttonList = Object.keys(actionButtons.availableButtons).map((key) => {
                 var button = actionButtons.availableButtons[key],
-                    classes = ['kb-bulk-import-action-button__button'].concat(button.classes);
+                    classes = ['btn-action__button'].concat(button.classes);
                 let icon;
                 if (button.icon) {
                     icon = {
@@ -76,7 +74,7 @@ define([
             });
 
             return div({
-                class: 'kb-bulk-import-action-button__list btn-group'
+                class: 'btn-action__list btn-group'
             }, buttonList);
         }
 

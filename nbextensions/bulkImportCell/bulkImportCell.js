@@ -7,6 +7,7 @@ define([
     'common/ui',
     'common/events',
     'common/props',
+    'common/spec',
     'base/js/namespace',
     'kb_common/html',
     './cellTabs',
@@ -24,6 +25,7 @@ define([
     UI,
     Events,
     Props,
+    Spec,
     Jupyter,
     html,
     CellTabs,
@@ -94,17 +96,20 @@ define([
      *    {
      *      'fastq_reads': ['file1.fq', 'file2.fq']
      *    }
+     *  - workspaceInfo - Object with all workspace details we need to initialize widgets
      */
     function BulkImportCell(options) {
         if (options.cell.cell_type !== 'code') {
             throw new Error('Can only create Bulk Import Cells out of code cells!');
         }
+
         const cell = options.cell,
             runtime = Runtime.make(),
             busEventManager = BusEventManager.make({
                 bus: runtime.bus()
             }),
-            typesToFiles = options.importData;
+            typesToFiles = options.importData,
+            workspaceInfo = options.workspaceInfo;
 
         let kbaseNode = null, // the DOM element used as the container for everything in this cell
             cellBus = null,
@@ -192,6 +197,11 @@ define([
         if (options.initialize) {
             initialize(typesToFiles);
         }
+
+        let spec = Spec.make({
+            appSpec: model.getItem('app.spec')
+        });
+
         setupCell();
 
         /**
@@ -329,10 +339,15 @@ define([
                     widgetNode.removeChild(widgetNode.firstChild);
                 }
             }
+
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: cellBus,
-                model: model
+                workspaceInfo: workspaceInfo,
+                cell: cell,
+                model: model,
+                spec: spec
             });
+
             let node = document.createElement('div');
             ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
             return tabWidget.start({

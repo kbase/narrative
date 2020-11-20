@@ -1,4 +1,4 @@
-/* global define describe it expect jasmine */
+/* global describe it expect jasmine */
 define([
     '../../../../../../narrative/nbextensions/bulkImportCell/fileTypePanel',
     'common/runtime',

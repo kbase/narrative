@@ -19,8 +19,9 @@ define([
             expect(cell.renderIcon).not.toBeDefined();
             const cellWidget = BulkImportCell.make({cell, initialize: true});
             expect(cellWidget).toBeDefined();
-            expect(cell.getIcon).toBeDefined();
-            expect(cell.renderIcon).toBeDefined();
+            ['getIcon', 'renderIcon', 'maximize', 'minimize'].forEach( (method) => {
+                expect(cell[method]).toBeDefined();
+            });
             expect(cell.metadata.kbase).toBeDefined();
             for(const prop of ['id', 'status', 'created', 'title', 'subtitle']) {
                 expect(cell.metadata.kbase.attributes[prop]).toBeDefined();

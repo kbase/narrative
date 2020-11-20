@@ -459,7 +459,7 @@ define([
                 bus: cellBus,
                 header: {
                     label: 'Data type',
-                    icon: 'fas fa-dna'
+                    icon: 'icon icon-genome'
                 },
                 categories: {
                     fastq: {

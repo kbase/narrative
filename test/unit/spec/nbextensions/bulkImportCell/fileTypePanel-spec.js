@@ -1,36 +1,36 @@
 /* global define describe it expect jasmine */
 define([
-    '../../../../../../narrative/nbextensions/bulkImportCell/categoryPanel',
+    '../../../../../../narrative/nbextensions/bulkImportCell/fileTypePanel',
     'common/runtime',
     'bluebird'
 ], (
-    CategoryPanel,
+    FileTypePanel,
     Runtime,
     Promise
 ) => {
     'use strict';
 
-    const categories = {
-        cat1: {
-            label: 'A Category'
+    const fileTypes = {
+        file1: {
+            label: 'A File'
         },
-        cat2: {
-            label: 'Another Category'
+        file2: {
+            label: 'Another File'
         },
-        cat3: {
-            label: 'A Third Category'
+        file3: {
+            label: 'A Third File'
         }
     };
     const header = {
         icon: 'fa fa-times',
-        label: 'Category Header'
+        label: 'File Header'
     };
-    describe('test the category panel', () => {
+    describe('test the file type panel', () => {
 
         it('should load and start properly with the right available functions', () => {
-            let panel = CategoryPanel.make({
+            let panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
-                categories: categories,
+                categories: fileTypes,
                 header: header,
                 toggleAction: () => {}
             });
@@ -44,16 +44,16 @@ define([
             })
                 .then(() => {
                     expect(node.innerHTML).toContain(header.label);
-                    for (const cat of Object.keys(categories)) {
-                        expect(node.innerHTML).toContain(categories[cat].label);
+                    for (const cat of Object.keys(fileTypes)) {
+                        expect(node.innerHTML).toContain(fileTypes[cat].label);
                     }
                 });
         });
 
         it('should respond to an update state signal modifying elements', () => {
-            let panel = CategoryPanel.make({
+            let panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
-                categories: categories,
+                categories: fileTypes,
                 header: header,
                 toggleAction: () => {}
             });
@@ -65,17 +65,17 @@ define([
                 .then(() => {
                     let beforeNode = {},
                         beforeIcon = {};
-                    for (const cat of Object.keys(categories)) {
+                    for (const cat of Object.keys(fileTypes)) {
                         const elem = node.querySelector(`[data-element="${cat}"]`);
                         beforeNode[cat] = elem.outerHTML;
                         beforeIcon[cat] = elem.querySelector('[data-element="icon"]').outerHTML;
                     }
                     panel.updateState({
-                        selected: 'cat1'
+                        selected: 'file1'
                     });
-                    for (const cat of Object.keys(categories)) {
+                    for (const cat of Object.keys(fileTypes)) {
                         const elem = node.querySelector(`[data-element="${cat}"]`);
-                        if (cat === 'cat1') {
+                        if (cat === 'file1') {
                             // try to black-box test, so we can just know that it should be
                             // different. (really I shouldn't even use the selector, but
                             // I gotta test something)
@@ -87,12 +87,12 @@ define([
                     }
                     panel.updateState({
                         completed: {
-                            'cat2': true,
+                            'file2': true,
                         }
                     });
-                    for (const cat of Object.keys(categories)) {
+                    for (const cat of Object.keys(fileTypes)) {
                         const iconElem = node.querySelector(`[data-element="${cat}"] [data-element="icon"]`);
-                        if (cat === 'cat2') {
+                        if (cat === 'file2') {
                             expect(iconElem.outerHTML).not.toEqual(beforeIcon[cat]);
                         }
                         else {
@@ -104,9 +104,9 @@ define([
 
         it('should respond to clicking on an unselected category', () => {
             const clickSpy = jasmine.createSpy('clickSpy');
-            let panel = CategoryPanel.make({
+            let panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
-                categories: categories,
+                categories: fileTypes,
                 header: header,
                 toggleAction: clickSpy
             });
@@ -114,21 +114,21 @@ define([
             return panel.start({
                 node: node,
                 state: {
-                    selected: 'cat1'
+                    selected: 'file1'
                 }
             })
                 .then(() => {
-                    node.querySelector('[data-element="cat1"]').click();
+                    node.querySelector('[data-element="file1"]').click();
                     expect(clickSpy).not.toHaveBeenCalled();
-                    node.querySelector('[data-element="cat2"]').click();
+                    node.querySelector('[data-element="file2"]').click();
                     expect(clickSpy).toHaveBeenCalled();
                 });
         });
 
         it('should return a promise from a stop command', () => {
-            let panel = CategoryPanel.make({
+            let panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
-                categories: categories,
+                categories: fileTypes,
                 header: header,
                 toggleAction: () => {}
             });

@@ -35,7 +35,7 @@ define([
 
         function buildLayout(events) {
             return div({
-                class: 'btn-action__container',
+                class: 'kb-btn-action__container',
             }, [
                 buildActionButtons(events)
             ]);
@@ -43,8 +43,8 @@ define([
 
         function buildActionButtons(events) {
             const buttonList = Object.keys(actionButtons.availableButtons).map((key) => {
-                var button = actionButtons.availableButtons[key],
-                    classes = ['btn-action__button'].concat(button.classes);
+                const button = actionButtons.availableButtons[key],
+                    classes = ['kb-btn-action__button'].concat(button.classes);
                 let icon;
                 if (button.icon) {
                     icon = {
@@ -74,7 +74,7 @@ define([
             });
 
             return div({
-                class: 'btn-action__list btn-group'
+                class: 'kb-btn-action__list btn-group'
             }, buttonList);
         }
 

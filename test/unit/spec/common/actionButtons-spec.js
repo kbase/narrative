@@ -104,7 +104,7 @@ define([
             container.innerHTML = layout;
             mockActionButton.setState({
                 name: 'cancel',
-                disable: true
+                disabled: true
             });
 
             let $cancelButton = $(container).find('.-cancel');

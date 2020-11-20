@@ -25,6 +25,7 @@ define([
     'common/semaphore',
     'common/lang',
     'common/jobs',
+    'common/cellComponents/actionButtons',
     'narrativeConfig',
     'google-code-prettify/prettify',
     './appCellWidget-fsm',
@@ -62,6 +63,7 @@ define([
     Semaphore,
     lang,
     Jobs,
+    ActionButtons,
     Config,
     PR,
     AppStates,
@@ -109,6 +111,7 @@ define([
             spec,
             // HMM. Sync with metadata, or just keep everything there?
             widgets = {},
+            actionButtonWidget,
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000,
             controlBarTabs = {},
@@ -124,7 +127,7 @@ define([
                 availableButtons: {
                     runApp: {
                         help: 'Run the app',
-                        type: 'success',
+                        type: 'primary',
                         classes: ['-run'],
                         label: 'Run'
                     },
@@ -209,7 +212,7 @@ define([
                         model.setItem('paramState', message.id, message.state);
                     });
 
-                    bus.on('toggle-batch-mode', function(message) {
+                    bus.on('toggle-batch-mode', function() {
                         toggleBatchMode();
                     });
 
@@ -855,49 +858,6 @@ define([
             }
         }
 
-        function buildRunControlPanelRunButtons(events) {
-            var style = {
-                padding: '6px'
-            };
-            var buttonList = Object.keys(actionButtons.availableButtons).map(function(key) {
-                var button = actionButtons.availableButtons[key],
-                    classes = [].concat(button.classes),
-                    icon;
-                if (button.icon) {
-                    icon = {
-                        name: button.icon.name,
-                        size: 2
-                    };
-                }
-                return ui.buildButton({
-                    tip: button.help,
-                    name: key,
-                    events: events,
-                    type: button.type || 'default',
-                    classes: classes,
-                    hidden: true,
-                    // Overriding button class styles for this context.
-                    style: {
-                        width: '80px'
-                    },
-                    event: {
-                        type: 'actionButton',
-                        data: {
-                            action: key
-                        }
-                    },
-                    icon: icon,
-                    label: button.label
-                });
-            });
-
-            var buttonDiv = div({
-                class: 'btn-group',
-                style: style
-            }, buttonList);
-            return buttonDiv;
-        }
-
         function buildRunControlPanelDisplayButtons(events) {
             var buttons = Object.keys(controlBarTabs.tabs).map(function(key) {
                 var tab = controlBarTabs.tabs[key],
@@ -980,7 +940,7 @@ define([
                             flexDirection: 'row'
                         }
                     }, [
-                        buildRunControlPanelRunButtons(events)
+                        actionButtonWidget.buildLayout(events)
                     ]),
                     div({
                         dataElement: 'status',
@@ -1334,24 +1294,7 @@ define([
                 unselectTab();
             }
 
-            // Note: viewOnly mode disables any otherwise active actionButton
-            if (state.ui.actionButton && !viewOnly) {
-                if (actionButtons.current.name) {
-                    ui.hideButton(actionButtons.current.name);
-                }
-                var name = state.ui.actionButton.name;
-                ui.showButton(name);
-                actionButtons.current.name = name;
-                if (state.ui.actionButton.disabled) {
-                    ui.disableButton(name);
-                } else {
-                    ui.enableButton(name);
-                }
-            } else {
-                if (actionButtons.current.name) {
-                    ui.hideButton(actionButtons.current.name);
-                }
-            }
+            actionButtonWidget.setState(state.ui.actionButton);
         }
 
         /*
@@ -1620,11 +1563,21 @@ define([
                     bus: bus
                 });
 
+                actionButtonWidget = ActionButtons.make({
+                    ui: ui,
+                    actionButtons: actionButtons,
+                    bus: bus,
+                    runAction: doActionButton,
+                    cssCellType: null
+                });
+
                 var layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
                 $(container).find('[data-toggle="popover"]').popover();
                 return null;
+            }).catch((error) => {
+                throw new Error('Unable to attach app cell: ' + error);
             });
         }
 
@@ -2197,9 +2150,8 @@ define([
                         doEditNotebookMetadata();
                     }));
 
-                    busEventManager.add(bus.on('actionButton', function(message) {
-                        doActionButton(message.data);
-                    }));
+                    // TODO: once we evaluate how to handle state in bulk import cell, see if these functions
+                    // and events can be abstracted or should be
                     busEventManager.add(bus.on('run-app', function() {
                         doRun();
                     }));

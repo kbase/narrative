@@ -1,6 +1,6 @@
 define([
     'common/html',
-    './actionButton'
+    'common/cellComponents/actionButtons'
 ], (
     html,
     ActionButton
@@ -32,11 +32,11 @@ define([
     function CellControlPanel(options) {
         let bus = options.bus;
         let ui = options.ui;
-        let actionButton = new ActionButton({
+        let actionButton = ActionButton.make({
             ui: ui,
             bus: bus,
             runAction: options.action.runAction,
-            actions: options.action.actions
+            actionButtons: options.action.actions
         });
 
         function start() {
@@ -44,7 +44,7 @@ define([
         }
 
         function stop() {
-            actionButton.stop();
+
         }
 
         function setActionState(newState) {

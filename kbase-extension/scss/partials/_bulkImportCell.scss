@@ -2,6 +2,10 @@
     bulk import cell
 */
 
+$component-border: #c4c4c4;
+$category-icon-color: #03517d;
+$category-highlight-color: #cce5f3;
+
 .kb-bulk-import {
   &__base-node {
     // everything lives under this
@@ -56,6 +60,47 @@
 
   /* kb-bulk-import__category_panel */
   &__category_panel {
+    border-right: 1px solid $component-border;
+    width: 232px;
+    font-size: 16px;
+
+    &__header {
+      font-weight: bold;
+      padding: 8px;
+      border-bottom: 1px solid $component-border;
+      &__icon {
+        padding: 8px 6px 8px 8px;
+        color: #000;
+      }
+    }
+
+    &__category {
+      border: 0 0 1px 0 solid $component-border;
+      padding: 8px;
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      text-align: left;
+      background-color: inherit;
+
+      &__icon {
+        padding: 2px 8px 8px;
+        color: $category-icon-color;
+      }
+
+      &__label {
+        flex: 1;
+      }
+
+      &:hover:not(&__selected) {
+        background-color: $category-highlight-color;
+        cursor: pointer;
+      }
+
+      &__selected {
+        background-color: $category-highlight-color;
+      }
+    }
   }
 
   /* kb-bulk-import__tab_pane_widget */
@@ -67,30 +112,6 @@
     &__advanced_hidden_message {
       margin-left: 6px;
       font-style: italic;
-    }
-  }
-
-  /* kb-bulk-import-action-button */
-  &-action-button {
-    /* kb-bulk-import-action-button__container */
-    &__container {
-      display: flex;
-      overflow: hidden;
-      height: 50px;
-      flex-direction: row;
-      line-height: 50px;
-      text-align: left;
-      vertical-align: middle;
-    }
-
-    /* kb-bulk-import-action-button__list */
-    &__list {
-      padding: 6px;
-    }
-
-    /* kb-bulk-import-action-button__button */
-    &__button {
-      width: 80px;
     }
   }
 

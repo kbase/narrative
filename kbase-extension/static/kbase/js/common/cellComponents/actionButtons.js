@@ -1,14 +1,10 @@
 define([
-    'common/html'
-], (
+    'kb_common/html',
+], function(
     html
-) => {
+){
     'use strict';
-
-    const div = html.tag('div'),
-        cssCellType = 'kb-bulk-import';
-
-    class CellActionButton {
+    function factory(config) {
         /**
          *
          * @param {object} options has the following keys:
@@ -28,25 +24,27 @@ define([
          *      - label - button text
 
          */
-        constructor(options) {
-            this.bus = options.bus;
-            this.ui = options.ui;
-            this.runAction = options.runAction;
-            this.actionButtons = options.actions;
-        }
 
-        buildLayout(events) {
+        var t = html.tag,
+            div = t('div');
+
+        const actionButtons = config.actionButtons,
+            ui = config.ui,
+            bus = config.bus,
+            runAction = config.runAction;
+
+        function buildLayout(events) {
             return div({
-                class: `${cssCellType}-action-button__container`,
+                class: 'kb-btn-action__container',
             }, [
-                this.buildActionButtons(events)
+                buildActionButtons(events)
             ]);
         }
 
-        buildActionButtons(events) {
-            const buttonList = Object.keys(this.actionButtons.availableButtons).map((key) => {
-                const button = this.actionButtons.availableButtons[key],
-                    classes = [`${cssCellType}-action-button__button`].concat(button.classes);
+        function buildActionButtons(events) {
+            const buttonList = Object.keys(actionButtons.availableButtons).map((key) => {
+                const button = actionButtons.availableButtons[key],
+                    classes = ['kb-btn-action__button'].concat(button.classes);
                 let icon;
                 if (button.icon) {
                     icon = {
@@ -54,7 +52,7 @@ define([
                         size: 2
                     };
                 }
-                return this.ui.buildButton({
+                return ui.buildButton({
                     tip: button.help,
                     name: key,
                     events: events,
@@ -70,40 +68,34 @@ define([
                     label: button.label
                 });
             });
-            this.bus.on('actionButton', (message) => {
-                const action = message.data.action;
-                this.runAction(action);
+            bus.on('actionButton', (message) => {
+                const action = message.data;
+                runAction(action);
             });
 
             return div({
-                class: `${cssCellType}-action-button__list btn-group`
+                class: 'kb-btn-action__list btn-group'
             }, buttonList);
         }
 
-        /**
-         *
-         * @param {object} newState
-         *  - name: action button to show
-         *  - enabled: truthy if should be enabled
-         */
-        setState(newState) {
-            this.state = newState;
-            for (const btnName of Object.keys(this.actionButtons.availableButtons)) {
-                this.ui.hideButton(btnName);
+        function setState(newState) {
+            let state = newState;
+            for (const btnName of Object.keys(actionButtons.availableButtons)) {
+                ui.hideButton(btnName);
             }
-            this.ui.showButton(this.state.name);
-            this.state.enabled ? this.ui.enableButton(this.state.name) : this.ui.disableButton(this.state.name);
+            ui.showButton(state.name);
+            state.disabled ? ui.disableButton(state.name): ui.enableButton(state.name);
         }
 
-        start() {
-
-        }
-
-        stop() {
-
-        }
-
+        return {
+            setState: setState,
+            buildLayout: buildLayout
+        };
     }
 
-    return CellActionButton;
+    return {
+        make: function(config) {
+            return factory(config);
+        }
+    };
 });

@@ -30,7 +30,7 @@ define([
 
     function factory(config) {
         let runtime = Runtime.make(),
-            paramsBus = config.bus,
+            bus = config.bus,
             workspaceInfo = config.workspaceInfo,
             initialParams = config.initialParams,
             container,
@@ -41,8 +41,7 @@ define([
             settings = {
                 showAdvanced: null
             },
-            widgets = [],
-            bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
+            widgets = [];
 
 
         // DATA
@@ -100,13 +99,13 @@ define([
                         parameterSpec: parameterSpec,
                         workspaceId: workspaceInfo.id,
                         referenceType: 'name',
-                        paramsChannelName: paramsBus.channelName,
+                        paramsChannelName: bus.channelName,
                         closeParameters: closeParameters
                     });
 
                     // Forward all changed parameters to the controller. That is our main job!
                     fieldWidget.bus.on('changed', function (message) {
-                        paramsBus.send({
+                        bus.send({
                             parameter: parameterSpec.id,
                             newValue: message.newValue,
                             isError: message.isError
@@ -117,7 +116,7 @@ define([
                             }
                         });
 
-                        paramsBus.emit('parameter-changed', {
+                        bus.emit('parameter-changed', {
                             parameter: parameterSpec.id,
                             newValue: message.newValue,
                             isError: message.isError
@@ -125,7 +124,7 @@ define([
                     });
 
                     fieldWidget.bus.on('touched', function () {
-                        paramsBus.emit('parameter-touched', {
+                        bus.emit('parameter-touched', {
                             parameter: parameterSpec.id
                         });
                     });
@@ -133,20 +132,20 @@ define([
 
                     // An input widget may ask for the current model value at any time.
                     fieldWidget.bus.on('sync', function () {
-                        paramsBus.emit('parameter-sync', {
+                        bus.emit('parameter-sync', {
                             parameter: parameterSpec.id
                         });
                     });
 
                     fieldWidget.bus.on('sync-params', function (message) {
-                        paramsBus.emit('sync-params', {
+                        bus.emit('sync-params', {
                             parameters: message.parameters,
                             replyToChannel: fieldWidget.bus.channelName
                         });
                     });
 
                     fieldWidget.bus.on('set-param-state', function (message) {
-                        paramsBus.emit('set-param-state', {
+                        bus.emit('set-param-state', {
                             id: parameterSpec.id,
                             state: message.state
                         });
@@ -157,7 +156,7 @@ define([
                             type: 'get-param-state'
                         },
                         handle: function () {
-                            return paramsBus.request({ id: parameterSpec.id }, {
+                            return bus.request({ id: parameterSpec.id }, {
                                 key: {
                                     type: 'get-param-state'
                                 }
@@ -170,7 +169,7 @@ define([
                    * Or in fact any parameter value at any time...
                    */
                     fieldWidget.bus.on('get-parameter-value', function (message) {
-                        paramsBus.request({
+                        bus.request({
                             parameter: message.parameter
                         }, {
                             key: 'get-parameter-value'
@@ -188,7 +187,7 @@ define([
                         },
                         handle: function (message) {
                             if (message.parameterName) {
-                                return paramsBus.request(message, {
+                                return bus.request(message, {
                                     key: {
                                         type: 'get-parameter'
                                     }
@@ -207,7 +206,7 @@ define([
                             if (message.parameterNames) {
                                 return Promise.all(
                                     message.parameterNames.map((paramName) => {
-                                        return paramsBus.request({
+                                        return bus.request({
                                             parameterName: paramName
                                         }, {
                                             key: {
@@ -235,7 +234,7 @@ define([
                     });
 
                     // Just pass the update along to the input widget.
-                    paramsBus.listen({
+                    bus.listen({
                         key: {
                             type: 'update',
                             parameter: parameterSpec.id
@@ -497,7 +496,7 @@ define([
                 model.setItem('appSpec', arg.appSpec);
                 model.setItem('parameters', arg.parameters);
 
-                paramsBus.on('parameter-changed', function (message) {
+                bus.on('parameter-changed', function (message) {
                     // Also, tell each of our inputs that a param has changed.
                     widgets.forEach(function (widget) {
                         widget.bus.send(message, {
@@ -534,7 +533,7 @@ define([
             start: start,
             stop: stop,
             bus: function () {
-                return bus;
+                return paramsBus;
             }
         };
     }

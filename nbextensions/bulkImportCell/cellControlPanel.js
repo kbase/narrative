@@ -44,7 +44,7 @@ define([
         }
 
         function stop() {
-            actionButton.stop();
+
         }
 
         function setActionState(newState) {

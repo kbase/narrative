@@ -2,7 +2,7 @@ define([
     'bluebird',
     'jquery',
     // CDN
-    'kb_common/html',
+    'common/html',
     // LOCAL
     'common/ui',
     'common/events',

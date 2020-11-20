@@ -4,7 +4,7 @@ define([
     'common/html',
     'common/events',
     'common/runtime',
-    '../paramsWidget'
+    'common/cellComponents/paramsWidget'
 ], (
     Promise,
     UI,

@@ -99,7 +99,7 @@ define([
                 $spinner.appendTo($container);
 
                 // Await data
-                const { objLink, objName, savedBy, numSamples, desc } = await this.loadSummary();
+                const { objRef, objName, savedBy, numSamples, desc } = await this.loadSummary();
 
                 // Build table
                 const $overviewTable = $('<table>')
@@ -111,7 +111,7 @@ define([
 
                 // Build rows
                 const rows = [
-                    ['KBase Object Name', `<a href="/#dataview/${objLink}" target="_blank">${objName}</a>`],
+                    ['KBase Object Name', `<a href="/#dataview/${objRef}" target="_blank">${objName}</a>`],
                     ['Saved by', savedBy],
                     ['Number of Samples', numSamples],
                     ['Description', desc]
@@ -147,7 +147,7 @@ define([
                     headers: headers,
                     searchPlaceholder: 'Search samples',
                     updateFunction: this.loadSampleRows.bind(this, headers),
-                    style: { 'margin-top': '5px' }
+                    style: { 'margin-top': '10px' }
                 });
                 $container.append($samplesTable);
 
@@ -165,7 +165,7 @@ define([
             const ss_obj_info = obj['data'][0]['info'];
 
             return {
-                objLink: ss_obj_info[6] + '/' + ss_obj_info[0] + '/' + ss_obj_info[4],
+                objRef: ss_obj_info[6] + '/' + ss_obj_info[0] + '/' + ss_obj_info[4],
                 objName: ss_obj_info[1],
                 savedBy: String(ss_obj_info[5]),
                 numSamples: ss_obj_data['samples'].length,
@@ -228,6 +228,11 @@ define([
                 sort_by: sorting
             }]);
 
+            const colFormat = {
+                '__default': text=>text,
+                'kbase_sample_id': text=>`<a href="/#samples/view/${text}">${text}</a>`
+            };
+
             // Build table rows
             const rows = [];
             obj['samples'].forEach(sample => {
@@ -243,7 +248,11 @@ define([
                         const value_varies = Array.isArray(sample[key]);
                         replicate_data[key] = value_varies ? sample[key][i] : sample[key];
                     });
-                    rows.push(headers.map(({ id }) => replicate_data[id]));
+                    const row = headers.map(({ id:headerId }) => {
+                        const format = colFormat[headerId] || colFormat['__default'];
+                        return format(replicate_data[headerId]);
+                    });
+                    rows.push(row);
                 }
             });
 

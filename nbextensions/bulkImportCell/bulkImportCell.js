@@ -13,8 +13,8 @@ define([
     './cellControlPanel',
     'common/cellComponents/tabs/infoTab',
     './tabs/configure',
-    'json!./testAppObj.json',
-    './categoryPanel'
+    './fileTypePanel',
+    'json!./testAppObj.json'
 ], (
     Uuid,
     AppUtils,
@@ -30,8 +30,8 @@ define([
     CellControlPanel,
     InfoTabWidget,
     ConfigureWidget,
-    TestAppObj,
-    CategoryPanel
+    FileTypePanel,
+    TestAppObj
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
@@ -182,7 +182,7 @@ define([
             // widgets this cell owns
             cellTabs,
             controlPanel,
-            categoryPanel,
+            fileTypePanel,
             model = Props.make({
                 data: TestAppObj,
                 onUpdate: function(props) {
@@ -307,11 +307,11 @@ define([
 
         /**
          * Passes the updated state to various widgets
-         * // TODO: include the category widget here
          */
         function updateState() {
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
+            fileTypePanel.updateState(state.fileType);
         }
 
         /**
@@ -341,12 +341,14 @@ define([
         }
 
         /**
-         * This toggles which category (file type) should be shown
-         * // TODO: rename this and other widgets & elements to fileType
-         * @param {string} category - the category that should be shown
+         * This toggles which file type should be shown. This sets the
+         * fileType state, then updates the rest of the cell state to modify
+         * which set of tabs should be active.
+         * @param {string} fileType - the file type that should be shown
          */
-        function toggleCategory(category) {
-            state.category.selected = category;
+        function toggleFileType(fileType) {
+            state.fileType.selected = fileType;
+            updateState();
         }
 
         function runAction(action) {
@@ -359,6 +361,7 @@ define([
         function deleteCell() {
             busEventManager.removeAll();
             controlPanel.stop();
+            fileTypePanel.stop();
             const cellIndex = Jupyter.notebook.find_cell_index(cell);
             Jupyter.notebook.delete_cell(cellIndex);
         }
@@ -368,8 +371,12 @@ define([
          */
         function getInitialState() {
             return {
-                category: {
-                    selected: 'fastq'
+                fileType: {
+                    selected: 'fastq',
+                    completed: {
+                        fastq: false,
+                        sra: true
+                    }
                 },
                 tab: {
                     selected: 'configure',
@@ -443,30 +450,30 @@ define([
         }
 
         /**
-         * This builds the category panel (the left column) of the cell and starts
+         * This builds the file type panel (the left column) of the cell and starts
          * it up attached to the given DOM node.
-         * //TODO rename to fileType panel
          * @param {DOMElement} node - the node that should be used for the left column
          */
-        function buildCategoryPanel(node) {
-            categoryPanel = CategoryPanel.make({
+        function buildFileTypePanel(node) {
+            fileTypePanel = FileTypePanel.make({
                 bus: cellBus,
                 header: {
                     label: 'Data type',
-                    icon: 'fas fa-dna'
+                    icon: 'icon icon-genome'
                 },
                 categories: {
                     fastq: {
-                        label: 'FASTQ Reads'
+                        label: 'FASTQ Reads (Non-Interleaved)'
                     },
                     sra: {
                         label: 'SRA Reads'
                     }
                 },
-                toggleAction: toggleCategory
+                toggleAction: toggleFileType
             });
-            return categoryPanel.start({
-                node: node
+            return fileTypePanel.start({
+                node: node,
+                state: state.fileType
             });
         }
 
@@ -477,7 +484,7 @@ define([
         function renderLayout() {
             const events = Events.make(),
                 content = div({
-                    class: `${cssCellType}__layout_container kbase-extension kb-app-cell`,
+                    class: `${cssCellType}__layout_container kbase-extension`,
                 }, [
                     div({
                         class: `${cssCellType}__prompt prompt`,
@@ -532,7 +539,7 @@ define([
             const layout = renderLayout();
             kbaseNode.innerHTML = layout.content;
             const proms = [
-                buildCategoryPanel(ui.getElement('body.tab-pane.category-panel')),
+                buildFileTypePanel(ui.getElement('body.tab-pane.category-panel')),
                 buildTabs(ui.getElement('body.tab-pane.widget-container.tab-container'))
             ];
             return Promise.all(proms)

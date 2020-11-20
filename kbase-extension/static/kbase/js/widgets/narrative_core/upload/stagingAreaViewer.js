@@ -572,10 +572,6 @@ define([
                             })
                             .val(storedFileData.dataType)
                             .trigger('change')
-                            .trigger({
-                                type: 'select2:select',
-                            });
-
                         //enable the checkboxes
                         enableCheckboxes(storedFileData.dataType);
                     }

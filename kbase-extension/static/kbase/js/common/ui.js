@@ -329,7 +329,7 @@ define([
         /*
          * Generic version of getElement
          * Returns a node which is accessible by the path.
-         * Each path element is an object with 
+         * Each path element is an object with
          * type = data-TYPE
          * name = value of the data-TYPE attribute
          */
@@ -347,7 +347,7 @@ define([
         /*
          * a node spec is a list of path segment specs, which are each a simple
          * object where the keys are the suffix to a data- attribute and the v
-         * values are the values. Each segment is an array of these, which are 
+         * values are the values. Each segment is an array of these, which are
          * concatenated
          */
         function findNode(nodePath) {
@@ -656,10 +656,10 @@ define([
             if (args.icon) {
                 icon = [' ', buildIcon(args.icon)];
             }
-            return div({ 
+            return div({
                 id: panelId,
-                class: classes.join(' '), 
-                dataElement: args.name 
+                class: classes.join(' '),
+                dataElement: args.name
             }, [
                 div({ class: 'panel-heading' }, [
                     div({ class: 'panel-title' }, span({
@@ -858,7 +858,7 @@ define([
                 name: tabName
             }]);
 
-            // Update tab label 
+            // Update tab label
             if (updates.label) {
                 var labelNode = tabTab.querySelector('[data-element="label"]');
                 if (labelNode) {

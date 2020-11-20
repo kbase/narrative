@@ -30,10 +30,10 @@
                         {{# unless mappings.[1]}} 
                         <!-- If there is only one match --> 
              
-                        <option value="{{mappings.[0].id}}" selected>{{mappings.[0].title}} (detected)</option>
+                        <option value="{{mappings.[0].id}}" selected>{{mappings.[0].title}}</option>
                         {{ else }}
                             {{#each mappings as |mapping|}}
-                                <option value="{{id}}">{{title}} (detected)</option>
+                                <option value="{{id}}">{{title}}</option>
                             {{/each}}
                         </optgroup>
                         {{/unless}}

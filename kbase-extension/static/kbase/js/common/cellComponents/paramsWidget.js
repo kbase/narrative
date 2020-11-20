@@ -35,14 +35,14 @@ define([
             initialParams = config.initialParams,
             container,
             ui,
-            bus,
             places = {},
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
                 showAdvanced: null
             },
-            widgets = [];
+            widgets = [],
+            bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
 
 
         // DATA
@@ -261,19 +261,9 @@ define([
                 return;
             }
 
-            const removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing');
-            const addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
-
-            for (const [key, entry] of Object.entries(advancedInputs)) {
-                entry.classList.remove(removeClass);
-                entry.classList.add(addClass);
-
-                const inputElement = entry.querySelector('[data-element="input"]');
-                
-                if (inputElement) {
-                    $(inputElement).trigger('advanced-shown.kbase');
-                }
-
+            //remove or add the hidden field class 
+            for (const [, entry] of Object.entries(advancedInputs)) {
+                entry.classList.toggle('kb-app-params__fields--parameters__hidden_field');
             }
 
             // Also update the count in the paramters.
@@ -328,9 +318,18 @@ define([
 
             formContent = formContent.concat([
                 ui.buildPanel({
-                    title: span(['Parameters', span({ dataElement: 'advanced-hidden-message', style: { marginLeft: '6px', fontStyle: 'italic' } })]),
+                    title: span([
+                        'Parameters',
+                        span({
+                            class: 'kb-app-params__advanced-message--parameters',
+                            dataElement: 'advanced-hidden-message'
+                        })
+                    ]),
                     name: 'parameters-area',
-                    body: div({ dataElement: 'parameter-fields' }),
+                    body: div({
+                        class: 'kb-app-params__fields--parameters',
+                        dataElement: 'parameter-fields'
+                    }),
                     classes: ['kb-panel-light']
                 })
             ]);
@@ -470,7 +469,12 @@ define([
                                         });
                                 } catch (ex) {
                                     console.error('Error making input field widget', ex);
-                                    var errorDisplay = div({ style: { border: '1px red solid' } }, [
+                                    const errorDisplay = div({
+                                        class: 'kb-field-widget__error_message--parameters',
+                                        style: {
+                                            border: '1px red solid'
+                                        }
+                                    }, [
                                         ex.message
                                     ]);
                                     document.getElementById(parameterParams.view[spec.id].id).innerHTML = errorDisplay;
@@ -495,8 +499,6 @@ define([
 
                 paramsBus.on('parameter-changed', function (message) {
                     // Also, tell each of our inputs that a param has changed.
-                    // TODO: use the new key address and subscription
-                    // mechanism to make this more efficient.
                     widgets.forEach(function (widget) {
                         widget.bus.send(message, {
                             key: {
@@ -504,7 +506,6 @@ define([
                                 parameter: message.parameter
                             }
                         });
-                        // bus.emit('parameter-changed', message);
                     });
                 });
 
@@ -528,11 +529,6 @@ define([
                 // really unhook things here.
             });
         }
-
-        // CONSTRUCTION
-
-        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
-
 
         return {
             start: start,

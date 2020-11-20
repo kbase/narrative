@@ -84,7 +84,7 @@ define([
                 ui.hideButton(btnName);
             }
             ui.showButton(state.name);
-            state.disable ? ui.disableButton(state.name): ui.enableButton(state.name);
+            state.disabled ? ui.disableButton(state.name): ui.enableButton(state.name);
         }
 
         return {

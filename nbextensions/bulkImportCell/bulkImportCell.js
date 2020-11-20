@@ -402,7 +402,7 @@ define([
                 },
                 action: {
                     name: 'runApp',
-                    disable: true
+                    disabled: true
                 }
             };
         }

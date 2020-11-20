@@ -79,6 +79,7 @@ define([
                 initialParams: model.getItem('params')
             });
 
+            //TODO: how do these differ from the bus commands on the paramsWidget itself? do we need all of them?
             paramBus.on('sync-params', function(message) {
                 message.parameters.forEach(function(paramId) {
                     paramBus.send({

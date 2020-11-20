@@ -37,19 +37,22 @@ define ([
                         path: fakeUser + '/test_folder',
                         mtime: 1532738637499,
                         size: 34,
-                        isFolder: true
+                        isFolder: true,
+                        mappings: null,
                     }, {
                         name: 'file_list.txt',
                         path: fakeUser + '/test_folder/file_list.txt',
                         mtime: 1532738637555,
                         size: 49233,
-                        source: 'KBase upload'
+                        source: 'KBase upload',
+                        mappings: [],
                     }, {
                         name: 'fake_sra_reads.sra',
                         path: fakeUser + '/fake_sra_reads.sra',
                         mtime: 1532738637555,
                         size: 49233,
-                        source: 'KBase upload'
+                        source: 'KBase upload',
+                        mappings: [{'id': 'sra_reads',  'title': 'SRA Reads'}],
                     }
                 ])
             });

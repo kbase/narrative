@@ -49,6 +49,7 @@ $button-outdated: rgb(247, 155, 34);
   /* kb-bulk-import__tab_pane_widget_container */
   &__tab_pane_widget_container {
     flex: 1;
+    margin: 20px;
 
     /* kb-bulk-import__tab_pane_widget_container_tabs */
     &_tabs {
@@ -59,6 +60,7 @@ $button-outdated: rgb(247, 155, 34);
     /* kb-bulk-import__tab_pane_widget_container_widget */
     &_widget {
       padding: 4px;
+      margin: 15px;
     }
   }
 

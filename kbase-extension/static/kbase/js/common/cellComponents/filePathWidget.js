@@ -216,25 +216,43 @@ define([
                 ui.buildPanel({
                     title: span(['File Paths']),
                     name: 'parameters-area',
-                    body: table({ dataElement: 'parameter-fields' }, [
-                        tr({dataElement: 'parameter-fields-row'})
-                    ]),
+                    body: [
+                        table({
+                            dataElement: 'parameter-fields',
+                            class: 'container'
+                        }, [
+                            tr({
+                                dataElement: 'parameter-fields-row',
+                                class: 'row',
+                                style: {
+                                    fontFamily: 'Oxygen',
+                                    fontStyle: 'normal',
+                                    fontWeight: 'normal',
+                                    fontSize: '14px',
+                                    lineHeight: '18px'
+                                }
+                            })
+                        ]),
+                        button({
+                            class: 'btn btn__text',
+                            type: 'button',
+                            id: events.addEvent({ type: 'click'})
+                        }, [
+                            span({
+                                class: 'fa fa-plus',
+                                style: {
+                                    margin: '5px'
+                                }
+                            }),
+                            'Add Row'
+                        ])
+                    ],
                     classes: ['kb-panel-light']
                 })
             ]);
 
             const content = form({ dataElement: 'input-widget-form' }, [
-                formContent,
-                button({
-                    class: 'btn btn__text',
-                    type: 'button',
-                    id: events.addEvent({ type: 'click'})
-                }, [
-                    span({
-                        class: 'fa fa-plus'
-                    }),
-                    'Add Row'
-                ])
+                formContent
             ]);
             return {
                 content: content,
@@ -291,7 +309,10 @@ define([
 
                 return td({
                     id: id,
-                    dataParameter: parameterId
+                    dataParameter: parameterId,
+                    style: {
+                        margin: '5px'
+                    }
                 });
             }).join('\n');
 
@@ -366,7 +387,22 @@ define([
                             }));
                         }
                     }).then(function (){
-                        $(places.parameterFields).append($('<span>').addClass('fa fa-trash-o fa-lg'));
+                        $(places.parameterFields).prepend($('<div>')
+                            .text('1')
+                            .css({
+                                'font-weight': 'bold',
+                                'margin-top': '35px',
+                                'margin-right': '5px'
+                            })
+                        );
+                        $(places.parameterFields).append($('<span>')
+                            .addClass('fa fa-trash-o fa-lg')
+                            .css({
+                                'color': '#4379B1',
+                                'margin-top': '35px',
+                                'margin-left': '5px'
+                            })
+                        );
                     });
             });
         }

@@ -19,7 +19,7 @@ define([
     'use strict';
 
     var t = html.tag,
-        span = t('span'),
+        div = t('div'),
         label = t('label'),
         td = t('td'),
         classSets = {
@@ -75,14 +75,10 @@ define([
 
             var content = td({
                 id: ids.fieldPanel,
-                class: '',
-                dataElement: 'field-panel',
-                style: {
-                    marginBottom: '0'
-                }
+                class: 'col-md-3',
+                dataElement: 'field-panel'
             }, [
                 label({
-                    class: '',
                     title: spec.ui.label || spec.ui.id,
                     id: events.addEvent({
                         type: 'click',
@@ -93,7 +89,7 @@ define([
                 }, [
                     spec.ui.label || spec.ui.id
                 ]),
-                span({
+                div({
                     id: ids.inputControl,
                     dataElement: 'input-control'
                 })
@@ -110,7 +106,10 @@ define([
         function attach(node) {
             return Promise.try(function() {
                 parent = node;
-                container = parent.appendChild(document.createElement('div'));
+                let containerDiv = document.createElement('div');
+                containerDiv.style.margin = '3px';
+
+                container = parent.appendChild(containerDiv);
                 var events = Events.make({
                     node: container
                 });

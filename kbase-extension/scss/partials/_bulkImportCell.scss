@@ -196,3 +196,18 @@ $button-outdated: rgb(247, 155, 34);
     }
   }
 }
+
+.kb-app-params__advanced-message--parameters {
+  margin-left: 6px;
+}
+
+.kb-app-params__fields--parameters {
+  /* kb-app-params__fields--parameters__hidden_field */
+  &__hidden_field {
+    display: none
+  }
+}
+
+.kb-field-widget__error_message--parameters {
+  border: 1px red solid;
+}

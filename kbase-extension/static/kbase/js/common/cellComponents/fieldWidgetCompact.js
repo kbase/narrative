@@ -19,7 +19,6 @@ define([
     'use strict';
 
     var t = html.tag,
-        div = t('div'),
         span = t('span'),
         label = t('label'),
         td = t('td'),
@@ -76,14 +75,14 @@ define([
 
             var content = td({
                 id: ids.fieldPanel,
-                class: 'form-group kb-app-parameter-input field-panel',
+                class: '',
                 dataElement: 'field-panel',
                 style: {
                     marginBottom: '0'
                 }
             }, [
                 label({
-                    class: 'xcontrol-label kb-app-parameter-name control-label',
+                    class: '',
                     title: spec.ui.label || spec.ui.id,
                     id: events.addEvent({
                         type: 'click',
@@ -94,7 +93,7 @@ define([
                 }, [
                     spec.ui.label || spec.ui.id
                 ]),
-                div({
+                span({
                     id: ids.inputControl,
                     dataElement: 'input-control'
                 })

@@ -28,7 +28,8 @@ define([
         span = tag('span'),
         div = tag('div'),
         table = tag('table'),
-        tr = tag('tr');
+        tr = tag('tr'),
+        td = tag('td');
 
     function factory(config) {
         let runtime = Runtime.make(),
@@ -275,7 +276,7 @@ define([
                     id: id
                 };
 
-                return span({
+                return td({
                     id: id,
                     dataParameter: parameterId
                 });

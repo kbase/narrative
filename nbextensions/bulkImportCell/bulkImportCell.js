@@ -306,12 +306,14 @@ define([
         }
 
         /**
-         * Passes the updated state to various widgets
+         * Passes the updated state to various widgets, and serialize it in
+         * the cell metadata, where appropriate.
          */
         function updateState() {
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
             fileTypePanel.updateState(state.fileType);
+            console.log(state);
         }
 
         /**

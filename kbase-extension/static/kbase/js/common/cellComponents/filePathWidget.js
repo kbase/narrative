@@ -7,7 +7,7 @@ define([
     'common/ui',
     'common/events',
     'common/props',
-    'common/cellComponents/fieldWidgetCompact',
+    'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime'
 ], function (
@@ -26,6 +26,7 @@ define([
     let tag = html.tag,
         form = tag('form'),
         span = tag('span'),
+        button = tag('button'),
         div = tag('div'),
         table = tag('table'),
         tr = tag('tr'),
@@ -222,7 +223,19 @@ define([
                 })
             ]);
 
-            const content = form({ dataElement: 'input-widget-form' }, formContent);
+            const content = form({ dataElement: 'input-widget-form' }, [
+                formContent,
+                button({
+                    class: 'btn btn__text',
+                    type: 'button',
+                    id: events.addEvent({ type: 'click'})
+                }, [
+                    span({
+                        class: 'fa fa-plus'
+                    }),
+                    'Add Row'
+                ])
+            ]);
             return {
                 content: content,
                 events: events
@@ -352,6 +365,8 @@ define([
                                 }
                             }));
                         }
+                    }).then(function (){
+                        $(places.parameterFields).append($('<span>').addClass('fa fa-trash-o fa-lg'));
                     });
             });
         }

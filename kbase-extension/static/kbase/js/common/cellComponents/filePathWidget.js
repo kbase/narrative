@@ -7,7 +7,7 @@ define([
     'common/ui',
     'common/events',
     'common/props',
-    'widgets/appWidgets2/fieldWidgetCompact',
+    'common/cellComponents/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
     'common/runtime'
 ], function (

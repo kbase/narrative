@@ -15,7 +15,7 @@ define([
     'common/ui',
     'common/props',
     'common/runtime',
-    './errorControl',
+    'widgets/appWidgets2/errorControl',
     'css!google-code-prettify/prettify.css'
 ], function(
     Promise,
@@ -304,14 +304,14 @@ define([
                 infoTipText = spec.ui.hint || spec.ui.description;
             }
 
-            var content = div({
+            var content = span({
                 class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '),
                 dataAdvancedParameter: spec.ui.advanced,
                 id: fieldId,
                 style: { position: 'relative' }
             }, [
                 // disabled mask
-                div({
+                span({
                     dataElement: 'field-mask',
                     class: 'hidden',
                     style: {
@@ -332,7 +332,7 @@ define([
                         marginBottom: '0'
                     }
                 }, [
-                    div({ class: 'col-md-3' }, [
+                    div({ class: '' }, [
                         label({
                             class: 'xcontrol-label kb-app-parameter-name control-label',
                             title: infoTipText,
@@ -347,7 +347,7 @@ define([
                             spec.ui.label || spec.ui.id
                         ])
                     ]),
-                    div({ class: 'input-group col-md-9' }, [
+                    div({ class: '' }, [
                         div({
                             id: ids.inputControl,
                             dataElement: 'input-control'

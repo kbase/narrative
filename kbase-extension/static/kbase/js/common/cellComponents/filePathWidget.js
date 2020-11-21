@@ -271,7 +271,7 @@ define([
                     id: id
                 };
 
-                return div({
+                return span({
                     id: id,
                     dataParameter: parameterId
                 });
@@ -295,31 +295,26 @@ define([
 
             return Promise.try(function () {
                 const params = model.getItem('parameters');
-                let parameterParams = makeParamsLayout(
+                let filePathParams = makeParamsLayout(
                     params.layout.filter(function (id) {
                         const original = params.specs[id].original;
 
-                        let isFilePath = false;
+                        let isFilePathParam = false;
 
                         if (original) {
 
                             //looking for file inputs via the dynamic_dropdown data source
                             if (original.dynamic_dropdown_options) {
-                                isFilePath = original.dynamic_dropdown_options.data_source === 'ftp_staging';
+                                isFilePathParam = original.dynamic_dropdown_options.data_source === 'ftp_staging';
                             }
 
                             //looking for output fields - these should go in file paths
                             else if (original.text_options && original.text_options.is_output_name) {
-                                isFilePath = false;
-                            }
-
-                            //all other cases should be a param element
-                            else {
-                                isFilePath = false;
+                                isFilePathParam = true;
                             }
                         }
 
-                        return isFilePath;
+                        return isFilePathParam;
 
                     }).map(function (id) {
                         return params.specs[id];
@@ -327,21 +322,20 @@ define([
 
                 return Promise.resolve()
                     .then(function () {
-                        if (!parameterParams.layout.length) {
+                        if (!filePathParams.layout.length) {
                             // TODO: should be own node
                             ui.getElement('parameters-area').classList.add('hidden');
                         } else {
-                            places.parameterFields.innerHTML = parameterParams.content;
+                            places.parameterFields.innerHTML = filePathParams.content;
 
-                            return Promise.all(parameterParams.layout.map(function (parameterId) {
-                                const spec = parameterParams.paramMap[parameterId];
+                            return Promise.all(filePathParams.layout.map(function (parameterId) {
+                                const spec = filePathParams.paramMap[parameterId];
                                 try {
-                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id])
+                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id], filePathParams.layout)
                                         .then(function (widget) {
                                             widgets.push(widget);
-                                            console.log(spec.id);
                                             return widget.start({
-                                                node: document.getElementById(parameterParams.view[spec.id].id)
+                                                node: document.getElementById(filePathParams.view[spec.id].id)
                                             });
                                         });
                                 } catch (ex) {
@@ -349,7 +343,7 @@ define([
                                     var errorDisplay = div({ style: { border: '1px red solid' } }, [
                                         ex.message
                                     ]);
-                                    document.getElementById(parameterParams.view[spec.id].id).innerHTML = errorDisplay;
+                                    document.getElementById(filePathParams.view[spec.id].id).innerHTML = errorDisplay;
                                 }
                             }));
                         }

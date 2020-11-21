@@ -337,7 +337,7 @@ define([
                         zIndex: '100'
                     }
                 }),
-                div({
+                span({
                     id: ids.fieldPanel,
                     class: 'form-group kb-app-parameter-input field-panel',
                     dataElement: 'field-panel',
@@ -521,8 +521,8 @@ define([
 
                     if (inputControl.start) {
                         return inputControl.start({
-                                node: places.inputControl
-                            })
+                            node: places.inputControl
+                        })
                             .then(function() {
                                 // TODO: get rid of this pattern
                                 bus.emit('run', {

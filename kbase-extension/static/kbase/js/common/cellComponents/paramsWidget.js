@@ -461,7 +461,6 @@ define([
                                     return makeFieldWidget(appSpec, spec, initialParams[spec.id])
                                         .then(function (widget) {
                                             widgets.push(widget);
-
                                             return widget.start({
                                                 node: document.getElementById(parameterParams.view[spec.id].id)
                                             });
@@ -469,10 +468,7 @@ define([
                                 } catch (ex) {
                                     console.error('Error making input field widget', ex);
                                     const errorDisplay = div({
-                                        class: 'kb-field-widget__error_message--parameters',
-                                        style: {
-                                            border: '1px red solid'
-                                        }
+                                        class: 'kb-field-widget__error_message--parameters'
                                     }, [
                                         ex.message
                                     ]);
@@ -533,7 +529,7 @@ define([
             start: start,
             stop: stop,
             bus: function () {
-                return paramsBus;
+                return bus;
             }
         };
     }

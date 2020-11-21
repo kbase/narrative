@@ -30,7 +30,6 @@ define([
             spec: app spec
     */
     function ConfigureWidget(options) {
-        // const bus = options.bus,
         const workspaceInfo = options.workspaceInfo,
             model = options.model,
             spec = options.spec;

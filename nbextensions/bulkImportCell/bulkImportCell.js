@@ -214,7 +214,7 @@ define([
          *     'fastq_reads': ['file1.fq', 'file2.fq']
          * }
          */
-        function initialize(typesToFiles) {
+        function initialize(_typesToFiles) {
             const meta = {
                 kbase: {
                     attributes: {
@@ -229,7 +229,7 @@ define([
                         'user-settings': {
                             showCodeInputArea: false
                         },
-                        inputs: typesToFiles
+                        inputs: _typesToFiles
                     }
                 }
             };
@@ -241,6 +241,38 @@ define([
          * extra functions that the Narrative can call.
          */
         function specializeCell() {
+
+            // minimizes the cell
+            cell.minimize = function() {
+                const inputArea = this.input.find('.input_area').get(0),
+                    outputArea = this.element.find('.output_wrapper'),
+                    viewInputArea = this.element.find('[data-subarea-type="bulk-import-cell-input"]'),
+                    showCode = Utils.getCellMeta(cell, 'kbase.bulkImportCell.user-settings.showCodeInputArea');
+
+                if (showCode) {
+                    inputArea.classList.remove('-show');
+                }
+                outputArea.addClass('hidden');
+                viewInputArea.addClass('hidden');
+            };
+
+            // maximizes the cell
+            cell.maximize = function() {
+                const inputArea = this.input.find('.input_area').get(0),
+                    outputArea = this.element.find('.output_wrapper'),
+                    viewInputArea = this.element.find('[data-subarea-type="bulk-import-cell-input"]'),
+                    showCode = Utils.getCellMeta(cell, 'kbase.bulkImportCell.user-settings.showCodeInputArea');
+
+                if (showCode) {
+                    if (!inputArea.classList.contains('-show')) {
+                        inputArea.classList.add('-show');
+                        cell.code_mirror.refresh();
+                    }
+                }
+                outputArea.removeClass('hidden');
+                viewInputArea.removeClass('hidden');
+            };
+
             // returns a DOM node with an icon to be rendered elsewhere
             cell.getIcon = function() {
                 return AppUtils.makeGenericIcon('upload', '#bf6c97');
@@ -274,6 +306,7 @@ define([
         function setupDomNode() {
             kbaseNode = document.createElement('div');
             kbaseNode.classList.add(`${cssCellType}__base-node`);
+            kbaseNode.setAttribute('data-subarea-type', 'bulk-import-cell-input');
             // inserting after, with raw dom, means telling the parent node
             // to insert a node before the node following the one we are
             // referencing. If there is no next sibling, the null value

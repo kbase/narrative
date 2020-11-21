@@ -21,14 +21,7 @@ define([
     var t = html.tag,
         div = t('div'),
         label = t('label'),
-        td = t('td'),
-        classSets = {
-            standard: {
-                nameColClass: 'col-md-2',
-                inputColClass: 'col-md-5',
-                hintColClass: 'col-md-5'
-            }
-        };
+        td = t('td');
 
     function factory(config) {
         var runtime = Runtime.make(),
@@ -39,7 +32,6 @@ define([
             parent, container,
             inputControlFactory = config.inputControlFactory,
             inputControl,
-            options = {},
             fieldId = html.genId(),
             spec = config.parameterSpec,
             closeParameters = config.closeParameters;
@@ -65,8 +57,6 @@ define([
             }).make();
         }
 
-        options.classes = classSets.standard;
-
         function render(events) {
             var ids = {
                 fieldPanel: html.genId(),
@@ -75,7 +65,6 @@ define([
 
             var content = td({
                 id: ids.fieldPanel,
-                class: 'col-md-3',
                 dataElement: 'field-panel'
             }, [
                 label({

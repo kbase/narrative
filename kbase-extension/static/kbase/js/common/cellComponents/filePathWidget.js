@@ -218,12 +218,10 @@ define([
                     name: 'parameters-area',
                     body: [
                         table({
-                            dataElement: 'parameter-fields',
-                            class: 'container'
+                            dataElement: 'parameter-fields'
                         }, [
                             tr({
                                 dataElement: 'parameter-fields-row',
-                                class: 'row',
                                 style: {
                                     fontFamily: 'Oxygen',
                                     fontStyle: 'normal',

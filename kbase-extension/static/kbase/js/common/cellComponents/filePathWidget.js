@@ -26,7 +26,9 @@ define([
     let tag = html.tag,
         form = tag('form'),
         span = tag('span'),
-        div = tag('div');
+        div = tag('div'),
+        table = tag('table'),
+        tr = tag('tr');
 
     function factory(config) {
         let runtime = Runtime.make(),
@@ -212,7 +214,9 @@ define([
                 ui.buildPanel({
                     title: span(['File Paths']),
                     name: 'parameters-area',
-                    body: div({ dataElement: 'parameter-fields' }),
+                    body: table({ dataElement: 'parameter-fields' }, [
+                        tr({dataElement: 'parameter-fields-row'})
+                    ]),
                     classes: ['kb-panel-light']
                 })
             ]);
@@ -236,7 +240,7 @@ define([
             layout.events.attachEvents(container);
 
             places = {
-                parameterFields: ui.getElement('parameter-fields')
+                parameterFields: ui.getElement('parameter-fields-row')
             };
         }
 

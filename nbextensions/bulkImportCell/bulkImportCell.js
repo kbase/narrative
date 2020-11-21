@@ -335,6 +335,7 @@ define([
             });
             let node = document.createElement('div');
             ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
+            cellTabs.setState(state.tab);
             return tabWidget.start({
                 node: node
             });

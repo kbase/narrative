@@ -1,10 +1,8 @@
-
 define([
     'bluebird',
     'google-code-prettify/prettify',
     'kb_common/html',
     'common/events',
-    'common/ui',
     'common/runtime',
     'widgets/appWidgets2/errorControl',
     'css!google-code-prettify/prettify.css'
@@ -13,15 +11,16 @@ define([
     PR,
     html,
     Events,
-    UI,
     Runtime,
-    ErrorControlFactory) {
+    ErrorControlFactory
+) {
+
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         label = t('label'),
-        td = t('td');
+        cssBaseClass = 'kb-field-cell';
 
     function factory(config) {
         var runtime = Runtime.make(),
@@ -29,12 +28,12 @@ define([
                 description: 'Field bus'
             }),
             places,
-            parent, container,
+            parent,
+            container,
             inputControlFactory = config.inputControlFactory,
             inputControl,
             fieldId = html.genId(),
-            spec = config.parameterSpec,
-            closeParameters = config.closeParameters;
+            spec = config.parameterSpec;
 
         try {
             inputControl = inputControlFactory.make({
@@ -48,7 +47,7 @@ define([
                 workspaceId: config.workspaceId,
                 fieldSpec: config.fieldSpec,
                 referenceType: config.referenceType,
-                closeParameters: closeParameters
+                closeParameters: config.closeParameters,
             });
         } catch (ex) {
             console.error('Error creating input control', ex);
@@ -60,15 +59,18 @@ define([
         function render(events) {
             var ids = {
                 fieldPanel: html.genId(),
-                inputControl: html.genId()
+                inputControl: html.genId(),
             };
 
-            var content = td({
+            var content = div({
+                class: `${cssBaseClass}__tableCell`,
                 id: ids.fieldPanel,
                 dataElement: 'field-panel'
             }, [
                 label({
+                    class: `${cssBaseClass}__cell_label`,
                     title: spec.ui.label || spec.ui.id,
+                    for: ids.inputControl,
                     id: events.addEvent({
                         type: 'click',
                         handler: function() {
@@ -79,6 +81,7 @@ define([
                     spec.ui.label || spec.ui.id
                 ]),
                 div({
+                    class: `${cssBaseClass}__input_control`,
                     id: ids.inputControl,
                     dataElement: 'input-control'
                 })
@@ -96,7 +99,7 @@ define([
             return Promise.try(function() {
                 parent = node;
                 let containerDiv = document.createElement('div');
-                containerDiv.style.margin = '3px';
+                containerDiv.classList.add(`${cssBaseClass}__param_container`);
 
                 container = parent.appendChild(containerDiv);
                 var events = Events.make({

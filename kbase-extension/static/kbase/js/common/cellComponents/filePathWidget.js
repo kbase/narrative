@@ -23,14 +23,13 @@ define([
 ) {
     'use strict';
 
-    let tag = html.tag,
+    const tag = html.tag,
         form = tag('form'),
         span = tag('span'),
         button = tag('button'),
         div = tag('div'),
-        table = tag('table'),
-        tr = tag('tr'),
-        td = tag('td');
+        cssBaseClass = 'kb-file-path',
+        cssClassType = 'parameter';
 
     function factory(config) {
         let runtime = Runtime.make(),
@@ -150,9 +149,8 @@ define([
                                         type: 'get-parameter'
                                     }
                                 });
-                            } else {
-                                return null;
                             }
+                            return null;
                         }
                     });
 
@@ -215,32 +213,24 @@ define([
             formContent = formContent.concat([
                 ui.buildPanel({
                     title: span(['File Paths']),
-                    name: 'parameters-area',
+                    name: `${cssClassType}s-area`,
                     body: [
-                        table({
-                            dataElement: 'parameter-fields'
+                        tag('div')({
+                            class: `${cssBaseClass}__table`,
+                            dataElement: `${cssClassType}-fields`
                         }, [
-                            tr({
-                                dataElement: 'parameter-fields-row',
-                                style: {
-                                    fontFamily: 'Oxygen',
-                                    fontStyle: 'normal',
-                                    fontWeight: 'normal',
-                                    fontSize: '14px',
-                                    lineHeight: '18px'
-                                }
+                            tag('div')({
+                                class: `${cssBaseClass}__table_row`,
+                                dataElement: `${cssClassType}-fields-row`,
                             })
                         ]),
                         button({
-                            class: 'btn btn__text',
+                            class: `${cssBaseClass}__button--add_row btn btn__text`,
                             type: 'button',
                             id: events.addEvent({ type: 'click'})
                         }, [
                             span({
-                                class: 'fa fa-plus',
-                                style: {
-                                    margin: '5px'
-                                }
+                                class: `${cssBaseClass}__button_icon--add_row fa fa-plus`,
                             }),
                             'Add Row'
                         ])
@@ -249,7 +239,9 @@ define([
                 })
             ]);
 
-            const content = form({ dataElement: 'input-widget-form' }, [
+            const content = form({
+                dataElement: `${cssClassType}-widget-form`
+            }, [
                 formContent
             ]);
             return {
@@ -270,7 +262,7 @@ define([
             layout.events.attachEvents(container);
 
             places = {
-                parameterFields: ui.getElement('parameter-fields-row')
+                parameterFields: ui.getElement(`${cssClassType}-fields-row`)
             };
         }
 
@@ -294,23 +286,21 @@ define([
             let view = {},
                 paramMap = {};
 
-            const orderedParams = params.map(function (param) {
+            const orderedParams = params.map((param) => {
                 paramMap[param.id] = param;
                 return param.id;
             });
 
-            const layout = orderedParams.map(function (parameterId) {
+            const layout = orderedParams.map((parameterId) => {
                 let id = html.genId();
                 view[parameterId] = {
                     id: id
                 };
 
-                return td({
+                return tag('div')({
+                    class: `${cssBaseClass}__table_cell--file-path_id`,
                     id: id,
                     dataParameter: parameterId,
-                    style: {
-                        margin: '5px'
-                    }
                 });
             }).join('\n');
 
@@ -361,15 +351,19 @@ define([
                     .then(function () {
                         if (!filePathParams.layout.length) {
                             // TODO: should be own node
-                            ui.getElement('parameters-area').classList.add('hidden');
+                            ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
                         } else {
-                            places.parameterFields.innerHTML = filePathParams.content;
+                            places.parameterFields.innerHTML = div({
+                                class: `${cssBaseClass}__param_container row`,
+                            }, [
+                                filePathParams.content
+                            ]);
 
                             return Promise.all(filePathParams.layout.map(function (parameterId) {
                                 const spec = filePathParams.paramMap[parameterId];
                                 try {
                                     return makeFieldWidget(appSpec, spec, initialParams[spec.id], filePathParams.layout)
-                                        .then(function (widget) {
+                                        .then((widget) => {
                                             widgets.push(widget);
                                             return widget.start({
                                                 node: document.getElementById(filePathParams.view[spec.id].id)
@@ -377,29 +371,31 @@ define([
                                         });
                                 } catch (ex) {
                                     console.error('Error making input field widget', ex);
-                                    var errorDisplay = div({ style: { border: '1px red solid' } }, [
+                                    const errorDisplay = div({
+                                        class: 'kb-field-widget__error_message--file-paths'
+                                    }, [
                                         ex.message
                                     ]);
                                     document.getElementById(filePathParams.view[spec.id].id).innerHTML = errorDisplay;
                                 }
                             }));
                         }
-                    }).then(function (){
-                        $(places.parameterFields).prepend($('<div>')
-                            .text('1')
-                            .css({
-                                'font-weight': 'bold',
-                                'margin-top': '35px',
-                                'margin-right': '5px'
-                            })
+                    }).then(function() {
+                        $(places.parameterFields).prepend(
+                            span({
+                                class: `${cssBaseClass}__file_number`,
+                            }, [
+                                '1'
+                            ])
                         );
-                        $(places.parameterFields).append($('<span>')
-                            .addClass('fa fa-trash-o fa-lg')
-                            .css({
-                                'color': '#4379B1',
-                                'margin-top': '35px',
-                                'margin-left': '5px'
-                            })
+                        $(places.parameterFields).append(
+                            span({
+                                class: `${cssBaseClass}__icon_cell--trash`,
+                            }, [
+                                span({
+                                    class: `${cssBaseClass}__icon--trash fa fa-trash-o fa-lg`,
+                                })
+                            ])
                         );
                     });
             });
@@ -436,7 +432,7 @@ define([
                         attachEvents();
                     })
                     .catch(function (err) {
-                        // do somethig with the error.
+                        // do something with the error.
                         console.error('ERROR in start', err);
                     });
             });
@@ -452,7 +448,9 @@ define([
 
         // CONSTRUCTION
 
-        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
+        bus = runtime.bus().makeChannelBus({
+            description: 'An app params widget'
+        });
 
 
         return {

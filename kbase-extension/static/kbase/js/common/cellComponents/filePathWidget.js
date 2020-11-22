@@ -381,22 +381,23 @@ define([
                             }));
                         }
                     }).then(function() {
-                        $(places.parameterFields).prepend(
-                            span({
-                                class: `${cssBaseClass}__file_number`,
-                            }, [
-                                '1'
-                            ])
-                        );
-                        $(places.parameterFields).append(
-                            span({
-                                class: `${cssBaseClass}__icon_cell--trash`,
-                            }, [
-                                span({
-                                    class: `${cssBaseClass}__icon--trash fa fa-trash-o fa-lg`,
-                                })
-                            ])
-                        );
+                    //     TODO: commenting out for now as we need to figure out styling for the row number and trash icon. Should have a convo with design about how they want to handle given the current designs only show how to handle one or two file inputs, and in our current example we have 3 file inputs + 1 output
+                    //     $(places.parameterFields).prepend(
+                    //         span({
+                    //             class: `${cssBaseClass}__file_number`,
+                    //         }, [
+                    //             '1'
+                    //         ])
+                    //     );
+                    //     $(places.parameterFields).append(
+                    //         span({
+                    //             class: `${cssBaseClass}__icon_cell--trash`,
+                    //         }, [
+                    //             span({
+                    //                 class: `${cssBaseClass}__icon--trash fa fa-trash-o fa-lg`,
+                    //             })
+                    //         ])
+                    //     );
                     });
             });
         }

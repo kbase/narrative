@@ -25,13 +25,14 @@ define([
     'common/semaphore',
     'common/lang',
     'common/jobs',
+    'common/cellComponents/actionButtons',
     'narrativeConfig',
     'google-code-prettify/prettify',
     './appCellWidget-fsm',
     './tabs/resultsTab',
     './tabs/status/logTab',
     './tabs/errorTab',
-    './tabs/infoTab',
+    'common/cellComponents/tabs/infoTab',
     './runClock',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
@@ -62,6 +63,7 @@ define([
     Semaphore,
     lang,
     Jobs,
+    ActionButtons,
     Config,
     PR,
     AppStates,
@@ -109,6 +111,7 @@ define([
             spec,
             // HMM. Sync with metadata, or just keep everything there?
             widgets = {},
+            actionButtonWidget,
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000,
             controlBarTabs = {},
@@ -124,7 +127,7 @@ define([
                 availableButtons: {
                     runApp: {
                         help: 'Run the app',
-                        type: 'success',
+                        type: 'primary',
                         classes: ['-run'],
                         label: 'Run'
                     },
@@ -209,7 +212,7 @@ define([
                         model.setItem('paramState', message.id, message.state);
                     });
 
-                    bus.on('toggle-batch-mode', function(message) {
+                    bus.on('toggle-batch-mode', function() {
                         toggleBatchMode();
                     });
 
@@ -391,7 +394,7 @@ define([
                         if (widget) {
                             return widget.instance.stop();
                         }
-                    })
+                    });
                 }
 
                 return {
@@ -420,7 +423,7 @@ define([
                         if (widget) {
                             return widget.instance.stop();
                         }
-                    })
+                    });
                 }
 
                 return {
@@ -737,30 +740,30 @@ define([
             }
 
             switch (app.tag) {
-            case 'release':
-                return {
-                    ids: [app.spec.info.id],
-                    tag: 'release',
-                    version: app.spec.info.ver
-                };
-            case 'dev':
-            case 'beta':
-                return {
-                    ids: [app.spec.info.id],
-                    tag: app.tag
-                };
-            default:
-                console.error('Invalid tag', app);
-                throw new ToErr.KBError({
-                    type: 'internal-app-cell-error',
-                    message: 'This app cell is corrrupt -- the app tag ' + String(app.tag) + ' is not recognized',
-                    advice: [
-                        'This condition should never occur outside of a development environment',
-                        'The tag of the app associated with the app cell must be one of "release", "beta", or "dev"',
-                        'Chances are that this app cell was inserted in a development environment in which the app cell structure was in flux',
-                        'You should remove this app cell from the narrative an insert an new one'
-                    ]
-                });
+                case 'release':
+                    return {
+                        ids: [app.spec.info.id],
+                        tag: 'release',
+                        version: app.spec.info.ver
+                    };
+                case 'dev':
+                case 'beta':
+                    return {
+                        ids: [app.spec.info.id],
+                        tag: app.tag
+                    };
+                default:
+                    console.error('Invalid tag', app);
+                    throw new ToErr.KBError({
+                        type: 'internal-app-cell-error',
+                        message: 'This app cell is corrrupt -- the app tag ' + String(app.tag) + ' is not recognized',
+                        advice: [
+                            'This condition should never occur outside of a development environment',
+                            'The tag of the app associated with the app cell must be one of "release", "beta", or "dev"',
+                            'Chances are that this app cell was inserted in a development environment in which the app cell structure was in flux',
+                            'You should remove this app cell from the narrative an insert an new one'
+                        ]
+                    });
             }
 
         }
@@ -838,64 +841,21 @@ define([
 
         function doActionButton(data) {
             switch (data.action) {
-            case 'runApp':
-                doRun();
-                break;
-            case 'reRunApp':
-                doRerun();
-                break;
-            case 'resetApp':
-                doResetApp();
-                break;
-            case 'cancel':
-                doCancel();
-                break;
-            default:
-                alert('Undefined action:' + data.action);
+                case 'runApp':
+                    doRun();
+                    break;
+                case 'reRunApp':
+                    doRerun();
+                    break;
+                case 'resetApp':
+                    doResetApp();
+                    break;
+                case 'cancel':
+                    doCancel();
+                    break;
+                default:
+                    alert('Undefined action:' + data.action);
             }
-        }
-
-        function buildRunControlPanelRunButtons(events) {
-            var style = {
-                padding: '6px'
-            };
-            var buttonList = Object.keys(actionButtons.availableButtons).map(function(key) {
-                var button = actionButtons.availableButtons[key],
-                    classes = [].concat(button.classes),
-                    icon;
-                if (button.icon) {
-                    icon = {
-                        name: button.icon.name,
-                        size: 2
-                    };
-                }
-                return ui.buildButton({
-                    tip: button.help,
-                    name: key,
-                    events: events,
-                    type: button.type || 'default',
-                    classes: classes,
-                    hidden: true,
-                    // Overriding button class styles for this context.
-                    style: {
-                        width: '80px'
-                    },
-                    event: {
-                        type: 'actionButton',
-                        data: {
-                            action: key
-                        }
-                    },
-                    icon: icon,
-                    label: button.label
-                });
-            });
-
-            var buttonDiv = div({
-                class: 'btn-group',
-                style: style
-            }, buttonList);
-            return buttonDiv;
         }
 
         function buildRunControlPanelDisplayButtons(events) {
@@ -961,7 +921,7 @@ define([
             }));
             buttons.unshift(outdatedBtn);
 
-                return buttons;
+            return buttons;
         }
 
         function buildRunControlPanel(events) {
@@ -980,7 +940,7 @@ define([
                             flexDirection: 'row'
                         }
                     }, [
-                        buildRunControlPanelRunButtons(events)
+                        actionButtonWidget.buildLayout(events)
                     ]),
                     div({
                         dataElement: 'status',
@@ -1078,21 +1038,21 @@ define([
         // for a beta or release tag ...
         function fixApp(app) {
             switch (app.tag) {
-            case 'release':
-                return {
-                    id: app.id,
-                    tag: app.tag,
-                    version: app.version
-                };
-            case 'beta':
-            case 'dev':
-                return {
-                    id: app.id,
-                    tag: app.tag,
-                    version: app.gitCommitHash
-                };
-            default:
-                throw new Error('Invalid tag for app ' + app.id);
+                case 'release':
+                    return {
+                        id: app.id,
+                        tag: app.tag,
+                        version: app.version
+                    };
+                case 'beta':
+                case 'dev':
+                    return {
+                        id: app.id,
+                        tag: app.tag,
+                        version: app.gitCommitHash
+                    };
+                default:
+                    throw new Error('Invalid tag for app ' + app.id);
             }
         }
 
@@ -1334,24 +1294,7 @@ define([
                 unselectTab();
             }
 
-            // Note: viewOnly mode disables any otherwise active actionButton
-            if (state.ui.actionButton && !viewOnly) {
-                if (actionButtons.current.name) {
-                    ui.hideButton(actionButtons.current.name);
-                }
-                var name = state.ui.actionButton.name;
-                ui.showButton(name);
-                actionButtons.current.name = name;
-                if (state.ui.actionButton.disabled) {
-                    ui.disableButton(name);
-                } else {
-                    ui.enableButton(name);
-                }
-            } else {
-                if (actionButtons.current.name) {
-                    ui.hideButton(actionButtons.current.name);
-                }
-            }
+            actionButtonWidget.setState(state.ui.actionButton);
         }
 
         /*
@@ -1507,14 +1450,14 @@ define([
             // Update FSM
             var newFsmState = (function() {
                 switch (message.event) {
-                case 'launched_job':
+                    case 'launched_job':
                     // NEW: start listening for jobs.
-                    startListeningForJobMessages(message.job_id);
-                    return { mode: 'processing', stage: 'launched' };
-                case 'error':
-                    return { mode: 'error', stage: 'launching' };
-                default:
-                    throw new Error('Invalid launch state ' + message.event);
+                        startListeningForJobMessages(message.job_id);
+                        return { mode: 'processing', stage: 'launched' };
+                    case 'error':
+                        return { mode: 'error', stage: 'launching' };
+                    default:
+                        throw new Error('Invalid launch state ' + message.event);
                 }
             }());
             fsm.newState(newFsmState);
@@ -1524,51 +1467,51 @@ define([
         function updateFromJobState(jobState, forceRender) {
             var newFsmState = (function() {
                 switch (jobState.status) {
-                case 'created':
-                    return { mode: 'processing', stage: 'queued' };
-                case 'queued':
-                    return { mode: 'processing', stage: 'queued' };
-                case 'running':
+                    case 'created':
+                        return { mode: 'processing', stage: 'queued' };
+                    case 'queued':
+                        return { mode: 'processing', stage: 'queued' };
+                    case 'running':
                     // see if any subjobs are done, if so, set the stage to 'partial-complete'
-                    if (jobState.child_jobs && jobState.child_jobs.length) {
-                        let childDone = jobState.child_jobs.some((childState) => {
-                            return ['completed', 'terminated', 'error'].indexOf(childState.status) !== -1;
-                        });
-                        if (childDone) {
-                            return { mode: 'processing', stage: 'partial-complete' };
+                        if (jobState.child_jobs && jobState.child_jobs.length) {
+                            let childDone = jobState.child_jobs.some((childState) => {
+                                return ['completed', 'terminated', 'error'].indexOf(childState.status) !== -1;
+                            });
+                            if (childDone) {
+                                return { mode: 'processing', stage: 'partial-complete' };
+                            }
                         }
-                    }
-                    return { mode: 'processing', stage: 'running' };
-                case 'completed':
-                    stopListeningForJobMessages();
-                    return { mode: 'success' };
-                case 'terminated':
-                    stopListeningForJobMessages();
-                    return { mode: 'canceled' };
-                case 'error':
-                    stopListeningForJobMessages();
+                        return { mode: 'processing', stage: 'running' };
+                    case 'completed':
+                        stopListeningForJobMessages();
+                        return { mode: 'success' };
+                    case 'terminated':
+                        stopListeningForJobMessages();
+                        return { mode: 'canceled' };
+                    case 'error':
+                        stopListeningForJobMessages();
 
-                    // Due to the course granularity of job status
-                    // messages, we don't can't rely on the prior state
-                    // to inform us about what processing stage the
-                    // error occurred in -- we need to inspect the job state.
-                    var errorStage;
-                    if (jobState.running) {
-                        errorStage = 'running';
-                    } else if (jobState.updated) {
-                        errorStage = 'queued';
-                    }
-                    if (errorStage) {
+                        // Due to the course granularity of job status
+                        // messages, we don't can't rely on the prior state
+                        // to inform us about what processing stage the
+                        // error occurred in -- we need to inspect the job state.
+                        var errorStage;
+                        if (jobState.running) {
+                            errorStage = 'running';
+                        } else if (jobState.updated) {
+                            errorStage = 'queued';
+                        }
+                        if (errorStage) {
+                            return {
+                                mode: 'error',
+                                stage: errorStage
+                            };
+                        }
                         return {
-                            mode: 'error',
-                            stage: errorStage
+                            mode: 'error'
                         };
-                    }
-                    return {
-                        mode: 'error'
-                    };
-                default:
-                    throw new Error('Invalid job state ' + jobState.status);
+                    default:
+                        throw new Error('Invalid job state ' + jobState.status);
                 }
             }());
             fsm.newState(newFsmState);
@@ -1620,11 +1563,21 @@ define([
                     bus: bus
                 });
 
+                actionButtonWidget = ActionButtons.make({
+                    ui: ui,
+                    actionButtons: actionButtons,
+                    bus: bus,
+                    runAction: doActionButton,
+                    cssCellType: null
+                });
+
                 var layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
                 $(container).find('[data-toggle="popover"]').popover();
                 return null;
+            }).catch((error) => {
+                throw new Error('Unable to attach app cell: ' + error);
             });
         }
 
@@ -1844,21 +1797,21 @@ define([
             var label;
             var color;
             switch (jobState) {
-            case 'completed':
-                label = 'success';
-                color = 'green';
-                break;
-            case 'error':
-                label = 'error';
-                color = 'red';
-                break;
-            case 'terminated':
-                label = 'cancellation';
-                color = 'orange';
-                break;
-            default:
-                label = jobState;
-                color = 'black';
+                case 'completed':
+                    label = 'success';
+                    color = 'green';
+                    break;
+                case 'error':
+                    label = 'error';
+                    color = 'red';
+                    break;
+                case 'terminated':
+                    label = 'cancellation';
+                    color = 'orange';
+                    break;
+                default:
+                    label = jobState;
+                    color = 'black';
             }
 
             return span({
@@ -2197,9 +2150,8 @@ define([
                         doEditNotebookMetadata();
                     }));
 
-                    busEventManager.add(bus.on('actionButton', function(message) {
-                        doActionButton(message.data);
-                    }));
+                    // TODO: once we evaluate how to handle state in bulk import cell, see if these functions
+                    // and events can be abstracted or should be
                     busEventManager.add(bus.on('run-app', function() {
                         doRun();
                     }));
@@ -2534,5 +2486,6 @@ define([
         }
     };
 }, function(err) {
+    'use strict';
     console.error('ERROR loading appCell appCellWidget', err);
 });

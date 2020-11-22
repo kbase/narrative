@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     // CDN
@@ -109,10 +106,10 @@ define([
                      */
                     fieldWidget.bus.on('get-parameter-value', function(message) {
                         parentBus.request({
-                                parameter: message.parameter
-                            }, {
-                                key: 'get-parameter-value'
-                            })
+                            parameter: message.parameter
+                        }, {
+                            key: 'get-parameter-value'
+                        })
                             .then(function(message) {
                                 channel.emit('parameter-value', {
                                     parameter: message.parameter
@@ -326,18 +323,18 @@ define([
 
         function stop() {
             return Promise.try(function() {
-                    // stop our comm bus
-                    busConnection.stop();
+                // stop our comm bus
+                busConnection.stop();
 
-                    // Stop all of the param field widgets.
-                    return Promise.all(fieldWidgets.map(function(fieldWidget) {
-                            return fieldWidget.stop();
-                        }))
-                        .then(function() {
-                            fieldWidgets = [];
-                        });
+                // Stop all of the param field widgets.
+                return Promise.all(fieldWidgets.map(function(fieldWidget) {
+                    return fieldWidget.stop();
+                }))
+                    .then(function() {
+                        fieldWidgets = [];
+                    });
 
-                })
+            })
                 .then(function() {
                     if (hostNode && container) {
                         try {

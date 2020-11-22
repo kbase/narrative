@@ -16,28 +16,38 @@ define([
     'jquery',
     'base/js/namespace',
     'bluebird',
+    'common/runtime',
     'common/error',
     './bulkImportCell',
+    'kb_service/client/workspace',
+    'kb_service/utils',
     'custom/custom'
 ], function(
     $,
     Jupyter,
     Promise,
+    Runtime,
     Error,
-    BulkImportCell
+    BulkImportCell, 
+    Workspace,
+    serviceUtils,
 ) {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
+    const runtime = Runtime.make();
 
     /**
      * This gets called on extension initialization. This iterates over all existing cells,
      * and if it's a bulk import cell, then we init the wrapping BulkImportCell class.
      */
-    function setupNotebook() {
+    function setupNotebook(workspaceInfo) {
         return Promise.all(Jupyter.notebook.get_cells().map((cell) => {
             if (BulkImportCell.isBulkImportCell(cell)) {
                 try {
-                    new BulkImportCell(cell);
+                    BulkImportCell.make({
+                        cell,
+                        workspaceInfo
+                    });
                 }
                 catch(error) {
                     // If we have an error here, there is a serious problem setting up the cell and it is not usable.
@@ -53,6 +63,18 @@ define([
         }));
     }
 
+
+    function setupWorkspace(workspaceUrl) {
+        // TODO where to get config from generally?
+        var workspaceRef = { id: runtime.workspaceId() },
+            workspace = new Workspace(workspaceUrl, {
+                token: runtime.authToken()
+            });
+
+        return workspace.get_workspace_info(workspaceRef);
+
+    }
+
     /*
      * Called directly by Jupyter during the notebook startup process.
      * Called after the notebook is loaded and the dom structure is created.
@@ -60,7 +82,25 @@ define([
      * the bulk import cells.
      */
     function load_ipython_extension() {
-        return setupNotebook()
+        let workspaceInfo;
+
+        // Listen for interesting narrative jquery events...
+        // dataUpdated.Narrative is emitted by the data sidebar list
+        // after it has fetched and updated its data. Not the best of
+        // triggers that the ws has changed, not the worst.
+        $(document).on('dataUpdated.Narrative', function() {
+            // Tell each cell that the workspace has been updated.
+            // This is what is interesting, no?
+            runtime.bus().emit('workspace-changed');
+        });
+
+        setupWorkspace(runtime.config('services.workspace.url'))
+            .then(function(wsInfo) {
+                workspaceInfo = serviceUtils.workspaceInfoToObject(wsInfo);
+            })
+            .then(function() {
+                return setupNotebook(workspaceInfo);
+            })
             .then(() => {
                 $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
                     const cell = payload.cell,
@@ -69,13 +109,18 @@ define([
 
                     if (jupyterCellType !== 'code' ||
                         !setupData ||
-                        !(setupData.type === CELL_TYPE)) {
+                        setupData.type !== CELL_TYPE) {
                         return;
                     }
                     const importData = setupData.typesToFiles || {};
 
                     try {
-                        new BulkImportCell(cell, true, importData);
+                        BulkImportCell.make({
+                            cell,
+                            importData,
+                            initialize: true,
+                            workspaceInfo
+                        });
                     }
                     catch(error) {
                         Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
@@ -85,7 +130,6 @@ define([
                     }
                 });
             });
-
     }
 
     /**

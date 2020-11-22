@@ -180,17 +180,17 @@
     width: 15px;
     padding-right: 5px;
   }
-  
+
   .kb-staging-table-header__file {
     width: 41px;
     padding-right: 0;
   }
-  
+
   .kb-staging-table-header__name {
     width: 238px;
   }
 
-  .kb-staging-table-header__age, 
+  .kb-staging-table-header__age,
   .kb-staging-table-header__size {
     width: 56px;
   }
@@ -462,7 +462,7 @@
   .dz-message {
     margin: 2em 4.5em;
     color: rgb(0 0 0);
-    font: normal 400 24px/28px $typeface-alt-page-text;
+    font: normal 400 24px/28px $typeface-page-text;
     mix-blend-mode: normal;
     text-align: center;
   }
@@ -857,7 +857,7 @@ p#site-title { /* FIXME */
   padding: 11px;
   margin: 0 5px;
   color: rgb(104 104 104);
-  font: normal 400 18px $typeface-alt-page-text;
+  font: normal 400 18px $typeface-page-text;
 
   input {
     padding: 11px;
@@ -1945,17 +1945,18 @@ div#notebook_panel { /* FIXME Jupyter css */
     padding: 0;
     margin-right: 4px;
     vertical-align: top;
+    font-size: 14px;
   }
 
   .title {
     color: rgb(46 97 141);
-    font: normal 700 120% $typeface-page-text;
+    font: normal 700 18px $typeface-page-text;
   }
 
   .info-link,
   .subtitle {
     color: rgb(102 102 102);
-    font: 90% $typeface-alt-page-text;
+    font: normal 400 14px $typeface-page-text;
   }
 }
 
@@ -1991,7 +1992,7 @@ div#notebook_panel { /* FIXME Jupyter css */
     display: inline;
     margin: 3px 13px 3px 3px;
     color: rgb(46 97 141);
-    font: normal 400 16px/1 $typeface-alt-page-text;
+    font: normal 400 16px/1 $typeface-page-text;
     opacity: inherit;
   }
 
@@ -2003,7 +2004,7 @@ div#notebook_panel { /* FIXME Jupyter css */
   h2 {
     margin: 3px;
     color: rgb(102 102 102);
-    font: normal 400 15px/1.5 $typeface-alt-page-text;
+    font: normal 400 15px/1.5 $typeface-page-text;
     opacity: inherit;
   }
 
@@ -2098,7 +2099,7 @@ td {
 .kb-out-desc {
   display: inline;
   margin: 3px;
-  font: normal 400 16px/1 $typeface-alt-page-text;
+  font: normal 400 16px/1 $typeface-page-text;
   opacity: inherit;
 }
 
@@ -2119,7 +2120,7 @@ td {
   padding-right: 1em;
   margin-top: -3px;
   color: rgb(85 85 85);
-  font: 13px $typeface-alt-page-text;
+  font: 13px $typeface-page-text;
 }
 
 .unselected .kb-func-timestamp {
@@ -2406,7 +2407,7 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-app-panel-description {
   color: rgb(46 97 141);
-  font: normal 400 16px/1 $typeface-alt-page-text;
+  font: normal 400 16px/1 $typeface-page-text;
 }
 
 .kb-app-step-error-mssg {
@@ -2453,7 +2454,7 @@ control with padding, and then scooting the icon back into its column.
     margin: 0;
     color: rgb(136 136 136);
     float: left;
-    font: italic 400 0.9em $typeface-alt-page-text;
+    font: italic 400 0.9em $typeface-page-text;
   }
 }
 
@@ -2466,7 +2467,7 @@ control with padding, and then scooting the icon back into its column.
 .kb-app-next-unhide {
   margin-top: 0.25em;
   color: rgb(33 150 243);
-  font: 0.9em $typeface-alt-page-text;
+  font: 0.9em $typeface-page-text;
 }
 
 .kb-app-next div {
@@ -2751,7 +2752,7 @@ button.kb-data-obj {
   border-radius: 1px;
   box-shadow: 1px 1px 3px rgb(170 170 170);
   color: rgb(255 255 255);
-  font: normal 400 14px $typeface-alt-page-text;
+  font: normal 400 14px $typeface-page-text;
 
   &:hover {
     background-color: rgb(30 136 229);
@@ -2774,7 +2775,7 @@ button.kb-data-obj {
   border-radius: 1px;
   box-shadow: 1px 1px 3px rgb(170 170 170);
   color: rgb(85 85 85);
-  font: normal 400 14px $typeface-alt-page-text;
+  font: normal 400 14px $typeface-page-text;
 
   &:hover {
     background-color: rgb(206 206 206);
@@ -2959,7 +2960,7 @@ button.kb-data-obj {
   border-radius: 1px;
   box-shadow: 1px 1px 3px rgb(170 170 170);
   color: rgb(255 255 255);
-  font: normal 400 14px $typeface-alt-page-text;
+  font: normal 400 14px $typeface-page-text;
 
   &:hover {
     background-color: rgb(54 97 142);

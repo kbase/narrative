@@ -452,32 +452,32 @@ define([
                     return detach();
                 }
             })
-            .then(() => {
-                return Promise.try(() => {
-                    container = arg.node;
-                    ui = UI.make({ node: container });
+                .then(() => {
+                    return Promise.try(() => {
+                        container = arg.node;
+                        ui = UI.make({ node: container });
 
-                    container.innerHTML = renderRunStats();
+                        container.innerHTML = renderRunStats();
 
-                    jobId = arg.jobId;
-                    parentJobId = arg.parentJobId ? arg.parentJobId : null;
+                        jobId = arg.jobId;
+                        parentJobId = arg.parentJobId ? arg.parentJobId : null;
 
-                    listeners.push(runtime.bus().on('clock-tick', () => {
-                        updateRunStats(ui, viewModel, jobState);
-                    }));
+                        listeners.push(runtime.bus().on('clock-tick', () => {
+                            updateRunStats(ui, viewModel, jobState);
+                        }));
 
-                    listenForJobStatus();
+                        listenForJobStatus();
 
-                    // request a new job status update from the kernel on start
-                    runtime.bus().emit('request-job-status', {
-                        jobId: jobId,
-                        parentJobId: parentJobId
+                        // request a new job status update from the kernel on start
+                        runtime.bus().emit('request-job-status', {
+                            jobId: jobId,
+                            parentJobId: parentJobId
+                        });
+                        listeningForJob = true;
+
+                        ui.updateFromViewModel(viewModel);
                     });
-                    listeningForJob = true;
-
-                    ui.updateFromViewModel(viewModel);
                 });
-            });
         }
 
         /**

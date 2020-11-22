@@ -175,12 +175,6 @@ define([
             places.messagePanel.classList.add('hidden');
         }
 
-        function hideError() {
-            places.field.classList.remove('-error');
-            places.messagePanel.classList.add('hidden');
-            places.feedbackIndicator.className = '';
-        }
-
         function feedbackNone() {
             places.feedbackIndicator.className = '';
             places.feedbackIndicator.classList.add('hidden');
@@ -243,13 +237,6 @@ define([
             ].concat(parameterInfoTypeRules(spec)));
         }
 
-        function parameterInfoLittleTip(spec) {
-            return spec.data.type;
-            //var mult = (spec.multipleItems() ? '[]' : ''),
-            //    type = spec.dataType();
-            //return mult + type;
-        }
-
 
         function renderInfoTip() {
             var infoTipText;
@@ -264,25 +251,25 @@ define([
                 div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
                     alignRight: true,
                     tabs: [{
-                            label: 'Description',
-                            name: 'description',
-                            content: div({ style: { padding: '0px' } }, infoTipText)
-                        },
-                        {
-                            label: 'About',
-                            name: 'about',
-                            content: parameterInfoContent(spec)
-                        },
-                        {
-                            label: 'Rules',
-                            name: 'rules',
-                            content: parameterInfoRules(spec)
-                        },
-                        {
-                            label: 'Spec',
-                            name: 'spec',
-                            content: rawSpec(spec)
-                        }
+                        label: 'Description',
+                        name: 'description',
+                        content: div({ style: { padding: '0px' } }, infoTipText)
+                    },
+                    {
+                        label: 'About',
+                        name: 'about',
+                        content: parameterInfoContent(spec)
+                    },
+                    {
+                        label: 'Rules',
+                        name: 'rules',
+                        content: parameterInfoRules(spec)
+                    },
+                    {
+                        label: 'Spec',
+                        name: 'spec',
+                        content: rawSpec(spec)
+                    }
                     ]
                 }))
             ]);
@@ -337,7 +324,7 @@ define([
                         zIndex: '100'
                     }
                 }),
-                div({
+                span({
                     id: ids.fieldPanel,
                     class: 'form-group kb-app-parameter-input field-panel',
                     dataElement: 'field-panel',
@@ -512,17 +499,17 @@ define([
                     // bus.on('changed', function () {
                     //     places.feedback.style.backgroundColor = '';
                     // });
-                    bus.on('enable', function(message) {
+                    bus.on('enable', function() {
                         doEnable();
                     });
-                    bus.on('disable', function(message) {
+                    bus.on('disable', function() {
                         doDisable();
                     });
 
                     if (inputControl.start) {
                         return inputControl.start({
-                                node: places.inputControl
-                            })
+                            node: places.inputControl
+                        })
                             .then(function() {
                                 // TODO: get rid of this pattern
                                 bus.emit('run', {

@@ -1,31 +1,33 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
+    'jquery',
     'kb_common/html',
     'common/events',
     'common/ui',
     'common/runtime',
     '../validators/text',
     '../inputUtils',
-
+    'select2',
     'bootstrap',
     'css!font-awesome'
 ], function(
     Promise,
+    $,
     html,
     Events,
     UI,
     Runtime,
     Validation,
-    inputUtils) {
+    inputUtils
+) {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         select = t('select'),
-        option = t('option');
+        option = t('option'),
+        cssBaseClass = 'kb-input-select';
 
     function factory(config) {
         var spec = config.parameterSpec,
@@ -145,9 +147,9 @@ define([
 
             // CONTROL
             return select({
+                class: `${cssBaseClass}__select form-control`,
                 id: events.addEvents({ events: [handleChanged()] }),
-                class: 'form-control',
-                dataElement: 'input'
+                dataElement: 'input',
             }, [option({ value: '' }, '')].concat(selectOptions));
         }
 
@@ -189,7 +191,6 @@ define([
             setModelValue(spec.data.defaultValue);
         }
 
-
         // LIFECYCLE API
 
         function start(arg) {
@@ -203,6 +204,7 @@ define([
 
                 container.innerHTML = theLayout.content;
                 events.attachEvents();
+                $(ui.getElement('input-container.input')).select2();
 
                 channel.on('reset-to-defaults', function() {
                     resetModelValue();

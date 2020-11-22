@@ -7,7 +7,7 @@ define([
     'common/ui',
     'common/events',
     'common/props',
-    'widgets/appWidgets2/fieldWidgetCompact',
+    'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime'
 ], function (
@@ -388,14 +388,17 @@ define([
             });
 
             const layout = orderedParams.map(function (parameterId) {
-                let id = html.genId();
+                const elementId = html.genId();
+                const advanced = paramMap[parameterId].ui.advanced ? parameterId : false;       
+
                 view[parameterId] = {
-                    id: id
+                    id: elementId
                 };
 
                 return div({
-                    id: id,
-                    dataParameter: parameterId
+                    id: elementId,
+                    dataParameter: parameterId,
+                    dataAdvancedParameter: advanced 
                 });
             }).join('\n');
 

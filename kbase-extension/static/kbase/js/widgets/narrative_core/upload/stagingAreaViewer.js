@@ -261,7 +261,7 @@ define([
         identifyImporterMappings: function (stagingFiles) {
             /*
                 Add a list of top matches for each file, sorted by weight
-                 */
+            */
             const fileNames = stagingFiles.map(f => f['path']);
             const fileList = $.param({ 'file_list': fileNames }, true);
             var mappings = [];

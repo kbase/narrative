@@ -275,15 +275,10 @@ define([
                 //Extract mappings, sort by weight, assign mappings to staging files
                 mappings = JSON.parse(data)['mappings'];
                 mappings.forEach(function (mapping) {
-                    try {
-                        if (mapping) {
-                            mapping.sort((a, b) => (a.app_weight < b.app_weight));
-                        }
-                    } catch (err) {
-                        console.error('Mapping is malformed', err);
+                    if (mapping) {
+                        mapping.sort((a, b) => (a.app_weight < b.app_weight));
                     }
                 });
-
                 stagingFiles.map(function (element, index) {
                     element['mappings'] = mappings[index] || null;
                 });

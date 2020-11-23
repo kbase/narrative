@@ -154,48 +154,120 @@ define ([
             // and the feature info from the genome search api.
             // To keep this all sorted out, and in the original order, we do this as an array of promises for
             // each pair, and each pair itself is an array of the actual api calls which are themselves promises.
-            return Promise.all(
-                Array.from(Object.entries(this.features)).map(([gid, features]) => {
-                    const query = {'feature_id': features};
-                    return Promise.all([
-                        // the features 
-                        this.search(gid, query, features.length),
-                        // the genome object id
-                        gid,
-                        // The genome object info
-                        this.workspace.callFunc('get_object_info3', [{
-                            objects: [{
-                                ref: gid
-                            }]
-                        }])
-                            .then(([result]) => {
-                                // unpack from the results array.
-                                return result;
-                            })
-                    ]);
+
+            // get the object info for all feature-containing objects.
+            const objectRefs = Object.keys(this.features);
+            return this.workspace.callFunc('get_object_info3', [{
+                objects: objectRefs.map((ref) => {
+                    return {
+                        ref
+                    };
                 })
-            )
-                .then((results) => {
-                    for (const [result, gid, genomeObjectInfo] of results) {
-                        const objectName = genomeObjectInfo.infos[0][1];
-                        for (const feature of result.features) {
+            }])
+                .then(([result]) => {
+                    return Promise.all(result.infos.map((info) => {
+                      
+                        const [/* typeModule */, typeName, /*typeVersionMajor*/, /*typeVersionMinor*/] = info[2].split(/[.-]/);
+                        // console.log('object', info[1], typeModule, typeName, typeVersionMajor, typeVersionMinor);
+
+                        const objectRef = [info[6], info[0], info[4]].join('/');
+                        const features = this.features[objectRef];
+
+                        return Promise.all([
+                            (() => {
+                                switch (typeName) {
+                                    case 'Genome':
+                                        return this.search(objectRef, {'feature_id': features}, features.length)
+                                            .then((result) => {
+                                                return result.features;
+                                            }); 
+                                    case 'AnnotatedMetagenomeAssembly':
+                                        return Promise.resolve(features.map((feature_id) => {
+                                            return {
+                                                feature_id,
+                                                aliases: {na: 'na'},
+                                                feature_type: 'na',
+                                                function: 'na'
+                                            };
+                                        }));
+                                }
+                            })(),
+                            objectRef,
+                            typeName,
+                            info
+                        ]);
+                    }));
+                })
+                .then((result) => {
+                    for (const [features, objectRef, objectType, objectInfo] of result) {
+                        const objectName = objectInfo[1];
+                        for (const feature of features) {
                             this.featureTableData.push(
                                 {
-                                    fid: '<a href="/#dataview/'+gid+
-                                            '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
-                                            feature.feature_id+'</a>',
-                                    gid: '<a href="/#dataview/'+gid+
-                                        '" target="_blank">'+objectName+'</a>',
-                                    ali: Object.keys(feature.aliases).join(', '),
+                                    fid: '<a href="/#dataview/'+objectRef+
+                                                            '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
+                                                            feature.feature_id+'</a>',
+                                    objectType,
+                                    gid: '<a href="/#dataview/'+objectRef+
+                                                        '" target="_blank">'+objectName+'</a>',
+                                    aliases: Object.keys(feature.aliases).join(', '),
                                     type: feature.feature_type,
                                     func: feature.function
                                 }
                             );
                         }
                     }
+                })
+                .then(() => {
                     this.loading(false);
                     this.renderFeatureTable(); // just rerender each time
                 });
+
+            // return Promise.all(
+            //     Array.from(Object.entries(this.features)).map(([gid, features]) => {
+            //         const query = {'feature_id': features};
+            //         return Promise.all([
+            //             // the features 
+            //             this.search(gid, query, features.length),
+            //             // the genome object id
+            //             gid,
+            //             // The genome object info
+            //             this.workspace.callFunc('get_object_info3', [{
+            //                 objects: [{
+            //                     ref: gid
+            //                 }]
+            //             }])
+            //                 .then(([result]) => {
+            //                     // unpack from the results array.
+            //                     return result;
+            //                 })
+            //         ]);
+            //     })
+            // )
+            //     .then((results) => {
+                   
+
+            //         console.log('results', this.features, results);
+            //         for (const [result, gid, genomeObjectInfo] of results) {
+            //             const objectName = genomeObjectInfo.infos[0][1];
+            //             for (const feature of result.features) {
+            //                 this.featureTableData.push(
+            //                     {
+            //                         fid: '<a href="/#dataview/'+gid+
+            //                                 '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
+            //                                 feature.feature_id+'</a>',
+            //                         gid: '<a href="/#dataview/'+gid+
+            //                             '" target="_blank">'+objectName+'</a>',
+            //                         ali: Object.keys(feature.aliases).join(', '),
+            //                         type: feature.feature_type,
+            //                         func: feature.function
+            //                     }
+            //                 );
+            //             }
+            //         }
+            //         this.loading(false);
+            //         this.renderFeatureTable(); // just rerender each time
+            //     });
         },
 
         $featureTableDiv : null,
@@ -220,10 +292,11 @@ define ([
                 aaSorting: [[ 2, 'asc' ], [0, 'asc']],
                 aoColumns: [
                     {sTitle: 'Feature ID', mData: 'fid'},
-                    {sTitle: 'Aliases', mData: 'ali'},
-                    {sTitle: 'Genome', mData: 'gid'},
                     {sTitle: 'Type', mData: 'type'},
+                    {sTitle: 'Aliases', mData: 'aliases'},
                     {sTitle: 'Function', mData: 'func'},
+                    {sTitle: 'Container', mData: 'gid'},
+                    {sTitle: 'Type', mData: 'objectType'},
                 ],
                 aaData: [],
                 oLanguage: {

@@ -122,12 +122,8 @@ define([
                             f.imported = {};
                         }
                     });
-
                     return this.identifyImporterMappings(files);
-
-
                 }).then(files => {
-                        
                     var scrollTop = this.$elem.parent().scrollTop();
                     $('.staging-area-file-metadata').detach();
                     this.$elem.empty();
@@ -140,7 +136,7 @@ define([
                 }
                 )
                 .catch(xhr => {
-                    console.log('failure', xhr);
+                    console.error('Staging area failure:', xhr);
                     this.$elem.empty();
                     this.renderFileHeader();
                     this.renderError(xhr.responseText ? xhr.responseText : 'Unknown error - directory was not found, or may have been deleted');
@@ -308,10 +304,6 @@ define([
             files = files || [];
             const emptyMsg = 'No files found.';
 
-            // stagingAreaViewer.identifyImporterMappings(files).then(function (filesWithMappings) {
-
-
-
             const $fileTable = $(stagingAreaViewer.ftpFileTableTmpl({
                 files: files,
                 uploaders: stagingAreaViewer.uploaders.dropdown_order
@@ -415,29 +407,25 @@ define([
                     const rowFileName = data[2];
                     //use the name to look up all the data we have
                     let rowFileData = getFileFromName(rowFileName);
-
+                    
                     //find the initial singly mapped datatype from the staging service
                     let suggestedTypes = $(data[5]).find('optgroup[label="Suggested Types"]');
                     let suggestedType = null;
-                    if (suggestedTypes.length == 1) {
+                    if (suggestedTypes.children().length == 1) {
                         var option = suggestedTypes.find('option');
                         suggestedType = { 'id': option.val(), 'title': option.html() };
                     }
-               
-
 
                     //Get selected?
-
                     function changeImportButton(event) {
                         const checked = event.currentTarget.checked;
-
                         if (checked) {
                             stagingAreaViewer.enableImportButton();
                         } else {
                             /*
-                                    check state of all checkboxes
-                                    if any are checked we leave import button enabled
-                                */
+                            check state of all checkboxes
+                            if any are checked we leave import button enabled
+                            */
                             let anyCheckedBoxes = $('input.kb-staging-table-body__checkbox-input:checked');
 
                             if (!anyCheckedBoxes.length) {
@@ -562,7 +550,6 @@ define([
                     }
 
                     const storedFileData = stagingAreaViewer.selectedFileTypes[rowFileName];
-
                     //where we have data type set, render those dropdowns correctly
                     if (storedFileData) {
                         //tell select2 which option to set
@@ -582,7 +569,8 @@ define([
                         if (suggestedType) {
                             importDropdown
                                 .select2({
-                                    containerCssClass: 'kb-staging-table-body__import-dropdown kb-staging-table-body__import-type-selected'
+                                    containerCssClass: 'kb-staging-table-body__import-dropdown kb-staging-table-body__import-type-selected',
+                                    placeholder: 'make the empty option disappear',
                                 })
                                 .val(suggestedType.id)
                                 .trigger('change')

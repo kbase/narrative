@@ -24,7 +24,9 @@
                 {{#if imported }}
                 <div>
                     <select>
+                        <option></option>
                         {{#if mappings}}
+                        
                         <optgroup label="Suggested Types">
                             {{#each mappings as |mapping|}} -->
                                 <option value="{{id}}">{{title}}</option>
@@ -35,7 +37,6 @@
                             <option value="{{id}}">{{name}}</option>
                             {{/each}}
                         {{ else }}
-                            <option></option>
                             {{#each ../uploaders}}
                                 <option value="{{id}}">{{name}}</option>
                             {{/each}}

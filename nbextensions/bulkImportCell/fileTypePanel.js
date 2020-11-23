@@ -85,8 +85,8 @@ define([
             return div({
                 class: `${baseCss}__header`
             }, [
-                span({class: `${baseCss}__header__icon ${header.icon}`}),
-                span({class: `${baseCss}__header__label`}, header.label)
+                span({class: `${baseCss}__header_icon ${header.icon}`}),
+                span({class: `${baseCss}__header_label`}, header.label)
             ]);
         }
 
@@ -100,7 +100,7 @@ define([
         function renderCategories(events) {
             const layout = Object.keys(categories).sort().map(key => {
                 return button({
-                    class: `${baseCss}__category`,
+                    class: `${baseCss}__category_button`,
                     dataElement: key,
                     id: events.addEvent({
                         type: 'click',
@@ -114,11 +114,11 @@ define([
                     'aria-label': `toggle ${categories[key].label}`
                 }, [
                     div({
-                        class: `${baseCss}__category__icon fa ${incompleteIcon}`,
+                        class: `${baseCss}__category_icon fa ${incompleteIcon}`,
                         dataElement: 'icon'
                     }),
                     div({
-                        class: `${baseCss}__category__label`
+                        class: `${baseCss}__category_label`
                     }, categories[key].label)
                 ]);
             });
@@ -141,7 +141,7 @@ define([
          */
         function updateState(newState) {
             state = newState;
-            const selected = `${baseCss}__category__selected`;
+            const selected = `${baseCss}__category_button--selected`;
             state.completed = state.completed || {};  // double-check we have the completed set
             /**
              * Tweaking the visual state -

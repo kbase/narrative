@@ -23,70 +23,27 @@ define([
 ) {
     'use strict';
 
-    let tag = html.tag,
+    const tag = html.tag,
         form = tag('form'),
         span = tag('span'),
-        div = tag('div');
+        button = tag('button'),
+        div = tag('div'),
+        cssBaseClass = 'kb-file-path',
+        cssClassType = 'parameter';
 
     function factory(config) {
         let runtime = Runtime.make(),
-            bus = config.bus,
+            paramsBus = config.bus,
             workspaceInfo = config.workspaceInfo,
             initialParams = config.initialParams,
             container,
             ui,
+            bus,
             places = {},
             model = Props.make(),
             paramResolver = ParamResolver.make(),
-            settings = {
-                showAdvanced: null
-            },
             widgets = [];
 
-
-        // DATA
-        /*
-       *
-       * Evaluates the parameter spec to determine which input widget needs to be
-       * invoked, but doesn't know what the widget does.
-       * Provides the communication bus for each input to route info to the widget
-       * and out of it.
-       *
-       *  In terms of widgets it looks like this:
-       *
-       *  InputCellWidget
-       *    inputWidgets
-       *      FieldWidget
-       *        textInputWidget
-       *      FieldWidget
-       *        objectInputWidget
-       *      FieldWidget
-       *        newObjectInputWidget
-       *      FieldWidget
-       *        integerInputWidget
-       *      FieldWidget
-       *        floatInputWidget
-       */
-
-        /*
-       * The input control widget is selected based on these parameters:
-       * - data type - (text, int, float, workspaceObject (ref, name)
-       * - input app - input, select
-       */
-
-
-        // RENDERING
-
-        /*
-      The field widget is a generic wrapper around the input. It serves the following purposes:
-      - intercepts messages in order to display status.
-      appSpec - specifies the whole app
-      parameterSpec - just the segment of the appSpec that specifies this individual parameter
-      value - the initial value of this field
-      closeParameters - a list of "close" parameters, which might be context-dependent. E.g. for an output
-          field, this would be the list of all parameters meant to be output objects, so their names can
-          be cross-validated for uniqueness (optional)
-      */
         function makeFieldWidget(appSpec, parameterSpec, value, closeParameters) {
             return paramResolver.loadInputControl(parameterSpec)
                 .then(function (inputWidget) {
@@ -99,13 +56,13 @@ define([
                         parameterSpec: parameterSpec,
                         workspaceId: workspaceInfo.id,
                         referenceType: 'name',
-                        paramsChannelName: bus.channelName,
+                        paramsChannelName: paramsBus.channelName,
                         closeParameters: closeParameters
                     });
 
                     // Forward all changed parameters to the controller. That is our main job!
                     fieldWidget.bus.on('changed', function (message) {
-                        bus.send({
+                        paramsBus.send({
                             parameter: parameterSpec.id,
                             newValue: message.newValue,
                             isError: message.isError
@@ -116,7 +73,7 @@ define([
                             }
                         });
 
-                        bus.emit('parameter-changed', {
+                        paramsBus.emit('parameter-changed', {
                             parameter: parameterSpec.id,
                             newValue: message.newValue,
                             isError: message.isError
@@ -124,7 +81,7 @@ define([
                     });
 
                     fieldWidget.bus.on('touched', function () {
-                        bus.emit('parameter-touched', {
+                        paramsBus.emit('parameter-touched', {
                             parameter: parameterSpec.id
                         });
                     });
@@ -132,20 +89,20 @@ define([
 
                     // An input widget may ask for the current model value at any time.
                     fieldWidget.bus.on('sync', function () {
-                        bus.emit('parameter-sync', {
+                        paramsBus.emit('parameter-sync', {
                             parameter: parameterSpec.id
                         });
                     });
 
                     fieldWidget.bus.on('sync-params', function (message) {
-                        bus.emit('sync-params', {
+                        paramsBus.emit('sync-params', {
                             parameters: message.parameters,
                             replyToChannel: fieldWidget.bus.channelName
                         });
                     });
 
                     fieldWidget.bus.on('set-param-state', function (message) {
-                        bus.emit('set-param-state', {
+                        paramsBus.emit('set-param-state', {
                             id: parameterSpec.id,
                             state: message.state
                         });
@@ -156,7 +113,7 @@ define([
                             type: 'get-param-state'
                         },
                         handle: function () {
-                            return bus.request({ id: parameterSpec.id }, {
+                            return paramsBus.request({ id: parameterSpec.id }, {
                                 key: {
                                     type: 'get-param-state'
                                 }
@@ -169,7 +126,7 @@ define([
                    * Or in fact any parameter value at any time...
                    */
                     fieldWidget.bus.on('get-parameter-value', function (message) {
-                        bus.request({
+                        paramsBus.request({
                             parameter: message.parameter
                         }, {
                             key: 'get-parameter-value'
@@ -187,14 +144,13 @@ define([
                         },
                         handle: function (message) {
                             if (message.parameterName) {
-                                return bus.request(message, {
+                                return paramsBus.request(message, {
                                     key: {
                                         type: 'get-parameter'
                                     }
                                 });
-                            } else {
-                                return null;
                             }
+                            return null;
                         }
                     });
 
@@ -206,7 +162,7 @@ define([
                             if (message.parameterNames) {
                                 return Promise.all(
                                     message.parameterNames.map((paramName) => {
-                                        return bus.request({
+                                        return paramsBus.request({
                                             parameterName: paramName
                                         }, {
                                             key: {
@@ -234,7 +190,7 @@ define([
                     });
 
                     // Just pass the update along to the input widget.
-                    bus.listen({
+                    paramsBus.listen({
                         key: {
                             type: 'update',
                             parameter: parameterSpec.id
@@ -250,90 +206,44 @@ define([
                 });
         }
 
-        function renderAdvanced() {
-            const areaElement = 'parameters-area',
-                areaSelector = '[data-element="' + areaElement + '"]',
-                advancedInputs = container.querySelectorAll(areaSelector + ' [data-advanced-parameter]');
-
-            if (!advancedInputs.length) {
-                ui.setContent([areaElement, 'advanced-hidden-message'], '');
-                return;
-            }
-
-            //remove or add the hidden field class
-            for (const [, entry] of Object.entries(advancedInputs)) {
-                entry.classList.toggle('kb-app-params__fields--parameters__hidden_field');
-            }
-
-            // Also update the count in the paramters.
-            const events = Events.make({ node: container });
-
-            let message,
-                showAdvancedButton;
-
-            if (settings.showAdvanced) {
-                if (advancedInputs.length > 1) {
-                    message = String(advancedInputs.length) + ' advanced parameters showing';
-                } else {
-                    message = String(advancedInputs.length) + ' advanced parameter showing';
-                }
-
-                showAdvancedButton = ui.buildButton({
-                    label: 'hide advanced',
-                    type: 'link',
-                    name: 'advanced-parameters-toggler',
-                    event: {
-                        type: 'toggle-advanced'
-                    },
-                    events: events
-                });
-
-                ui.setContent([areaElement, 'advanced-hidden-message'], '(' + message + ') ' + showAdvancedButton);
-            } else {
-                if (advancedInputs.length > 1) {
-                    message = String(advancedInputs.length) + ' advanced parameters hidden';
-                } else {
-                    message = String(advancedInputs.length) + ' advanced parameter hidden';
-                }
-                showAdvancedButton = ui.buildButton({
-                    label: 'show advanced',
-                    type: 'link',
-                    name: 'advanced-parameters-toggler',
-                    event: {
-                        type: 'toggle-advanced'
-                    },
-                    events: events
-                });
-
-                ui.setContent([areaElement, 'advanced-hidden-message'], '(' + message + ') ' + showAdvancedButton);
-            }
-
-            events.attachEvents();
-        }
-
         function renderLayout() {
             const events = Events.make();
             let formContent = [];
 
             formContent = formContent.concat([
                 ui.buildPanel({
-                    title: span([
-                        'Parameters',
-                        span({
-                            class: 'kb-app-params__advanced-message--parameters',
-                            dataElement: 'advanced-hidden-message'
-                        })
-                    ]),
-                    name: 'parameters-area',
-                    body: div({
-                        class: 'kb-app-params__fields--parameters',
-                        dataElement: 'parameter-fields'
-                    }),
+                    title: span(['File Paths']),
+                    name: `${cssClassType}s-area`,
+                    body: [
+                        tag('div')({
+                            class: `${cssBaseClass}__table`,
+                            dataElement: `${cssClassType}-fields`
+                        }, [
+                            tag('div')({
+                                class: `${cssBaseClass}__table_row`,
+                                dataElement: `${cssClassType}-fields-row`,
+                            })
+                        ]),
+                        button({
+                            class: `${cssBaseClass}__button--add_row btn btn__text`,
+                            type: 'button',
+                            id: events.addEvent({ type: 'click'})
+                        }, [
+                            span({
+                                class: `${cssBaseClass}__button_icon--add_row fa fa-plus`,
+                            }),
+                            'Add Row'
+                        ])
+                    ],
                     classes: ['kb-panel-light']
                 })
             ]);
 
-            const content = form({ dataElement: 'input-widget-form' }, formContent);
+            const content = form({
+                dataElement: `${cssClassType}-widget-form`
+            }, [
+                formContent
+            ]);
             return {
                 content: content,
                 events: events
@@ -352,8 +262,7 @@ define([
             layout.events.attachEvents(container);
 
             places = {
-                parameterFields: ui.getElement('parameter-fields'),
-                advancedParameterFields: ui.getElement('advanced-parameter-fields')
+                parameterFields: ui.getElement(`${cssClassType}-fields-row`)
             };
         }
 
@@ -363,11 +272,6 @@ define([
                 widgets.forEach(function (widget) {
                     widget.bus.emit('reset-to-defaults');
                 });
-            });
-
-            bus.on('toggle-advanced', function () {
-                settings.showAdvanced = !settings.showAdvanced;
-                renderAdvanced();
             });
 
             runtime.bus().on('workspace-changed', function () {
@@ -382,23 +286,21 @@ define([
             let view = {},
                 paramMap = {};
 
-            const orderedParams = params.map(function (param) {
+            const orderedParams = params.map((param) => {
                 paramMap[param.id] = param;
                 return param.id;
             });
 
-            const layout = orderedParams.map(function (parameterId) {
-                const elementId = html.genId();
-                const advanced = paramMap[parameterId].ui.advanced ? parameterId : false;       
-
+            const layout = orderedParams.map((parameterId) => {
+                let id = html.genId();
                 view[parameterId] = {
-                    id: elementId
+                    id: id
                 };
 
-                return div({
-                    id: elementId,
+                return tag('div')({
+                    class: `${cssBaseClass}__table_cell--file-path_id`,
+                    id: id,
                     dataParameter: parameterId,
-                    dataAdvancedParameter: advanced 
                 });
             }).join('\n');
 
@@ -420,31 +322,26 @@ define([
 
             return Promise.try(function () {
                 const params = model.getItem('parameters');
-                let parameterParams = makeParamsLayout(
+                let filePathParams = makeParamsLayout(
                     params.layout.filter(function (id) {
                         const original = params.specs[id].original;
 
-                        let isParameter = false;
+                        let isFilePathParam = false;
 
                         if (original) {
 
                             //looking for file inputs via the dynamic_dropdown data source
                             if (original.dynamic_dropdown_options) {
-                                isParameter = original.dynamic_dropdown_options.data_source !== 'ftp_staging';
+                                isFilePathParam = original.dynamic_dropdown_options.data_source === 'ftp_staging';
                             }
 
                             //looking for output fields - these should go in file paths
                             else if (original.text_options && original.text_options.is_output_name) {
-                                isParameter = false;
-                            }
-
-                            //all other cases should be a param element
-                            else {
-                                isParameter = true;
+                                isFilePathParam = true;
                             }
                         }
 
-                        return isParameter;
+                        return isFilePathParam;
 
                     }).map(function (id) {
                         return params.specs[id];
@@ -452,36 +349,55 @@ define([
 
                 return Promise.resolve()
                     .then(function () {
-                        if (!parameterParams.layout.length) {
+                        if (!filePathParams.layout.length) {
                             // TODO: should be own node
-                            ui.getElement('parameters-area').classList.add('hidden');
+                            ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
                         } else {
-                            places.parameterFields.innerHTML = parameterParams.content;
+                            places.parameterFields.innerHTML = div({
+                                class: `${cssBaseClass}__param_container row`,
+                            }, [
+                                filePathParams.content
+                            ]);
 
-                            return Promise.all(parameterParams.layout.map(function (parameterId) {
-                                const spec = parameterParams.paramMap[parameterId];
+                            return Promise.all(filePathParams.layout.map(function (parameterId) {
+                                const spec = filePathParams.paramMap[parameterId];
                                 try {
-                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id])
-                                        .then(function (widget) {
+                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id], filePathParams.layout)
+                                        .then((widget) => {
                                             widgets.push(widget);
                                             return widget.start({
-                                                node: document.getElementById(parameterParams.view[spec.id].id)
+                                                node: document.getElementById(filePathParams.view[spec.id].id)
                                             });
                                         });
                                 } catch (ex) {
                                     console.error('Error making input field widget', ex);
                                     const errorDisplay = div({
-                                        class: 'kb-field-widget__error_message--parameters'
+                                        class: 'kb-field-widget__error_message--file-paths'
                                     }, [
                                         ex.message
                                     ]);
-                                    document.getElementById(parameterParams.view[spec.id].id).innerHTML = errorDisplay;
+                                    document.getElementById(filePathParams.view[spec.id].id).innerHTML = errorDisplay;
                                 }
                             }));
                         }
-                    })
-                    .then(function () {
-                        renderAdvanced();
+                    }).then(function() {
+                    //     TODO: commenting out for now as we need to figure out styling for the row number and trash icon. Should have a convo with design about how they want to handle given the current designs only show how to handle one or two file inputs, and in our current example we have 3 file inputs + 1 output
+                    //     $(places.parameterFields).prepend(
+                    //         span({
+                    //             class: `${cssBaseClass}__file_number`,
+                    //         }, [
+                    //             '1'
+                    //         ])
+                    //     );
+                    //     $(places.parameterFields).append(
+                    //         span({
+                    //             class: `${cssBaseClass}__icon_cell--trash`,
+                    //         }, [
+                    //             span({
+                    //                 class: `${cssBaseClass}__icon--trash fa fa-trash-o fa-lg`,
+                    //             })
+                    //         ])
+                    //     );
                     });
             });
         }
@@ -495,8 +411,10 @@ define([
                 model.setItem('appSpec', arg.appSpec);
                 model.setItem('parameters', arg.parameters);
 
-                bus.on('parameter-changed', function (message) {
+                paramsBus.on('parameter-changed', function (message) {
                     // Also, tell each of our inputs that a param has changed.
+                    // TODO: use the new key address and subscription
+                    // mechanism to make this more efficient.
                     widgets.forEach(function (widget) {
                         widget.bus.send(message, {
                             key: {
@@ -504,6 +422,7 @@ define([
                                 parameter: message.parameter
                             }
                         });
+                        // bus.emit('parameter-changed', message);
                     });
                 });
 
@@ -514,7 +433,7 @@ define([
                         attachEvents();
                     })
                     .catch(function (err) {
-                        // do somethig with the error.
+                        // do something with the error.
                         console.error('ERROR in start', err);
                     });
             });
@@ -527,6 +446,13 @@ define([
                 // really unhook things here.
             });
         }
+
+        // CONSTRUCTION
+
+        bus = runtime.bus().makeChannelBus({
+            description: 'An app params widget'
+        });
+
 
         return {
             start: start,

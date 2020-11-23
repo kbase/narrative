@@ -344,7 +344,7 @@ define([
             render()
                 .then(() => {
                     updateState();
-                    toggleTab(state.tab.selected);
+                    runTab(state.tab.selected);
                 });
         }
 
@@ -381,21 +381,31 @@ define([
             }
 
             if (tab !== null) {
-                tabWidget = tabSet.tabs[tab].widget.make({
-                    bus: cellBus,
-                    workspaceInfo: workspaceInfo,
-                    cell: cell,
-                    model: model,
-                    spec: spec
-                });
-
-                let node = document.createElement('div');
-                ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
-                tabWidget.start({
-                    node: node
-                });
+                runTab(tab);
             }
             cellTabs.setState(state.tab);
+        }
+
+        /**
+         * Initializes a tab and runs its associated widget.
+         * This doesn't change any state, just runs what it's told to,
+         * and returns the widget's start() Promise.
+         * @param {string} tab
+         */
+        function runTab(tab) {
+            tabWidget = tabSet.tabs[tab].widget.make({
+                bus: cellBus,
+                workspaceInfo: workspaceInfo,
+                cell: cell,
+                model: model,
+                spec: spec
+            });
+
+            let node = document.createElement('div');
+            ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
+            return tabWidget.start({
+                node: node
+            });
         }
 
         /**

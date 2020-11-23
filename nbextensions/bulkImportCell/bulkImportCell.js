@@ -366,6 +366,11 @@ define([
          * @param {string} tab id of the tab to display
          */
         function toggleTab(tab) {
+            // if we're toggling the currently selected tab off,
+            // then it should be turned off.
+            if (tab === state.tab.selected && tab !== null) {
+                tab = null;
+            }
             state.tab.selected = tab;
             if (tabWidget !== null) {
                 tabWidget.stop();
@@ -375,20 +380,22 @@ define([
                 }
             }
 
-            tabWidget = tabSet.tabs[tab].widget.make({
-                bus: cellBus,
-                workspaceInfo: workspaceInfo,
-                cell: cell,
-                model: model,
-                spec: spec
-            });
+            if (tab !== null) {
+                tabWidget = tabSet.tabs[tab].widget.make({
+                    bus: cellBus,
+                    workspaceInfo: workspaceInfo,
+                    cell: cell,
+                    model: model,
+                    spec: spec
+                });
 
-            let node = document.createElement('div');
-            ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
+                let node = document.createElement('div');
+                ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
+                tabWidget.start({
+                    node: node
+                });
+            }
             cellTabs.setState(state.tab);
-            return tabWidget.start({
-                node: node
-            });
         }
 
         /**

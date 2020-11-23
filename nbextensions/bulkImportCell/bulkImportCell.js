@@ -1,5 +1,6 @@
 define([
     'uuid',
+    'narrativeConfig',
     'common/appUtils',
     'common/utils',
     'common/runtime',
@@ -15,9 +16,11 @@ define([
     'common/cellComponents/tabs/infoTab',
     './tabs/configure',
     './fileTypePanel',
+    './bulkImportCellStates',
     'json!./testAppObj.json'
 ], (
     Uuid,
+    Config,
     AppUtils,
     Utils,
     Runtime,
@@ -33,6 +36,7 @@ define([
     InfoTabWidget,
     ConfigureWidget,
     FileTypePanel,
+    States,
     TestAppObj
 ) => {
     'use strict';
@@ -108,8 +112,26 @@ define([
             busEventManager = BusEventManager.make({
                 bus: runtime.bus()
             }),
-            typesToFiles = options.importData,
+            typesToFiles = setupFileData(options.importData) || cell.metadata.kbase.bulkImportCell.inputs,
             workspaceInfo = options.workspaceInfo;
+
+        /**
+         * If importData exists, and has the right structure, use it.
+         * //TODO decide on right structure, should we test for knowledge about each file type?
+         * If not, and there's input data in the metadata, use that.
+         * If not, and there's nothing? throw an error.
+         * @param {object} importData
+         */
+        function setupFileData(importData) {
+            if (importData && Object.keys(importData).length) {
+                return importData;
+            }
+            const metaInputs = Utils.getCellMeta(cell, 'kbase.bulkImportCell.inputs');
+            if (metaInputs && Object.keys(metaInputs).length) {
+                return metaInputs;
+            }
+            throw new Error('No files were selected to upload!');
+        }
 
         let kbaseNode = null, // the DOM element used as the container for everything in this cell
             cellBus = null,
@@ -195,7 +217,7 @@ define([
                 }
             });
         if (options.initialize) {
-            initialize(typesToFiles);
+            initialize();
         }
 
         let spec = Spec.make({
@@ -207,14 +229,8 @@ define([
         /**
          * Does the initial pass on newly created cells to initialize its metadata and get it
          * set up for a new life as a Bulk Import Cell.
-         *
-         * @param {object} typesToFiles keys = data type strings, values = arrays of file paths
-         * to import
-         * e.g.: {
-         *     'fastq_reads': ['file1.fq', 'file2.fq']
-         * }
          */
-        function initialize(_typesToFiles) {
+        function initialize() {
             const meta = {
                 kbase: {
                     attributes: {
@@ -229,7 +245,7 @@ define([
                         'user-settings': {
                             showCodeInputArea: false
                         },
-                        inputs: _typesToFiles
+                        inputs: typesToFiles
                     }
                 }
             };
@@ -438,48 +454,19 @@ define([
          * Returns a structured initial state of the cell.
          */
         function getInitialState() {
-            return {
-                fileType: {
-                    selected: 'fastq',
-                    completed: {
-                        fastq: false,
-                        sra: true
-                    }
-                },
-                tab: {
-                    selected: 'configure',
-                    tabs: {
-                        configure: {
-                            enabled: true,
-                            visible: true,
-                        },
-                        viewConfigure: {
-                            enabled: false,
-                            visible: false
-                        },
-                        info: {
-                            enabled: true,
-                            visible: true
-                        },
-                        logs: {
-                            enabled: false,
-                            visible: true
-                        },
-                        results: {
-                            enabled: false,
-                            visible: true
-                        },
-                        error: {
-                            enabled: false,
-                            visible: false
-                        }
-                    }
-                },
-                action: {
-                    name: 'runApp',
-                    disabled: true
-                }
+            // load current state from state list
+            // modify to handle file types panel
+            let state = States[0].ui;
+            let fileTypeState = {
+                completed: {}
             };
+            for (const fileType of Object.keys(typesToFiles)) {
+                fileTypeState.completed[fileType] = false;
+            }
+            fileTypeState.selected = Object.keys(typesToFiles)[0];
+
+            state.fileType = fileTypeState;
+            return state;
         }
 
         /**
@@ -523,20 +510,25 @@ define([
          * @param {DOMElement} node - the node that should be used for the left column
          */
         function buildFileTypePanel(node) {
+            let fileTypes = Object.keys(typesToFiles);
+            let categories = {};
+            let fileTypeMapping = {};
+            let uploaders = Config.get('uploaders');
+            for (const uploader of uploaders.dropdown_order) {
+                fileTypeMapping[uploader.id] = uploader.name;
+            }
+            for (const fileType of fileTypes) {
+                categories[fileType] = {
+                    label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`
+                };
+            }
             fileTypePanel = FileTypePanel.make({
                 bus: cellBus,
                 header: {
                     label: 'Data type',
                     icon: 'icon icon-genome'
                 },
-                categories: {
-                    fastq: {
-                        label: 'FASTQ Reads (Non-Interleaved)'
-                    },
-                    sra: {
-                        label: 'SRA Reads'
-                    }
-                },
+                categories: categories,
                 toggleAction: toggleFileType
             });
             return fileTypePanel.start({

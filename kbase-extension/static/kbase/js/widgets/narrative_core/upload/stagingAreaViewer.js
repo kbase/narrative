@@ -50,7 +50,7 @@ define([
 
         init: function (options) {
             this._super(options);
-            this.bulkImportTypes = ['fastq_reads'];
+            this.bulkImportTypes = ['fastq_reads', 'sra_reads'];
             var runtime = Runtime.make();
 
             this.workspaceClient = new Workspace(Config.url('workspace'), {
@@ -270,7 +270,7 @@ define([
             }));
 
             stagingAreaViewer.$elem.append($fileTable);
-            
+
             const fullDataTable = stagingAreaViewer.$elem.find('table').dataTable({
                 language: {
                     emptyTable: emptyMsg
@@ -282,7 +282,7 @@ define([
                     $(thead).find('th').eq(0)
                         .on('click keyPress', (e) => {
                             selectAllOrNone(e);
-                        }); 
+                        });
                 },
                 columnDefs: [{
                     targets: 0,
@@ -291,11 +291,11 @@ define([
                     render: function (data) {
                         const fileId = new UUID(4).format();
                         //render checkboxes disabled until the user selects a type
-                        return ('<input class="kb-staging-table-body__checkbox-input"' + 
-                            'type="checkbox" role="checkbox" disabled=true ' + 
+                        return ('<input class="kb-staging-table-body__checkbox-input"' +
+                            'type="checkbox" role="checkbox" disabled=true ' +
                             'aria-checked="false" tabindex="0"' +
                             'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
-                            'data-file-name="' + data + '"' + 
+                            'data-file-name="' + data + '"' +
                             'id="' + fileId + '">');
                     }
                 }, {
@@ -385,7 +385,7 @@ define([
                             }
                         }
                     }
-  
+
                     $('td:eq(0)', row).find('input.kb-staging-table-body__checkbox-input')
                         .off('click')
                         .on('click keyPress', (e) => {
@@ -493,7 +493,7 @@ define([
                             .prop('disabled',false)
                             .attr('aria-label', 'Select to import file checkbox')
                             .attr('data-type', dataType);
-  
+
                         //make sure select all checkbox is enabled
                         $('#staging_table_select_all')
                             .prop('disabled',false)
@@ -577,13 +577,13 @@ define([
                 }.bind(stagingAreaViewer)
             });
 
-            /* 
+            /*
                 Used to manage the select all checkbox in the header
-                has to be outside of the main DataTable call 
-                so that we can get entire table data 
+                has to be outside of the main DataTable call
+                so that we can get entire table data
                 not just what is drawn in the current dom
                 aka dealing with pagination
-            */ 
+            */
             function selectAllOrNone (event) {
                 const selectAllChecked = event.target.checked;
 
@@ -593,7 +593,7 @@ define([
                 $('input.kb-staging-table-body__checkbox-input:enabled', nodes)
                     .prop('checked', selectAllChecked)
                     .attr('aria-checked', selectAllChecked);
-                
+
                 //enable or disable import appropriately
                 if (selectAllChecked) {
                     stagingAreaViewer.enableImportButton();

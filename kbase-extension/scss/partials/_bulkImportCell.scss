@@ -221,6 +221,15 @@ $button-outdated: rgb(247, 155, 34);
   &__param_container {
     margin: 3px;
   }
+
+  &__input_control select {
+    margin-left: 0;
+  }
+
+  &__cell_label {
+    margin-bottom: 0;
+    padding-top: 8px;
+  }
 }
 
 .kb-file-path {

@@ -60,7 +60,7 @@ define ([
             const fastq_mapping = [{ 'id': 'fastq_reads', 'title': 'FastQ Reads' }];
             const sra_mapping = [{ 'id': 'sra_reads', 'title': 'SRA Reads' }];
             
-            const mappings = { 'mappings': [null,null,nullkbase-extension/static/kbase/js/widgets/narrative_core/upload/stagingAreaViewer.js]};
+            const mappings = { 'mappings': [null,null,null]};
             jasmine.Ajax.stubRequest(/.*\/staging_service\/importer_mappings\/?/).andReturn({
                 status: 200,
                 statusText: 'success',
@@ -353,12 +353,10 @@ define ([
 
             expect(button.hasClass('kb-staging-table-import__button__disabled')).toBeFalse();
         });
-
-        //TODO
-        //Test to see if 
-        // * for one autodetect mapping, the detected filetype is selected
-        // * for multiple mappings, they are available, and two OptGroups are available
-
-
     });
+        
+    //TODO
+    //Test to see if
+    // * for one autodetect mapping, the detected filetype is selected
+    // * for multiple mappings, they are available, and two OptGroups are available
 });

@@ -56,6 +56,19 @@ define ([
                     }
                 ])
             });
+            // Can't figure out a way to map these mappings to the above files
+            const fastq_mapping = [{ 'id': 'fastq_reads', 'title': 'FastQ Reads' }];
+            const sra_mapping = [{ 'id': 'sra_reads', 'title': 'SRA Reads' }];
+            
+            const mappings = { 'mappings': [null,null,nullkbase-extension/static/kbase/js/widgets/narrative_core/upload/stagingAreaViewer.js]};
+            jasmine.Ajax.stubRequest(/.*\/staging_service\/importer_mappings\/?/).andReturn({
+                status: 200,
+                statusText: 'success',
+                contentType: 'text/plain',
+                responseHeaders: '',
+                responseText: JSON.stringify(mappings)
+            });
+
             Jupyter.narrative = {
                 userId: fakeUser,
                 getAuthToken: () => 'fakeToken',
@@ -87,6 +100,8 @@ define ([
             $targetNode.remove();
             stagingViewer = null;
         });
+
+
 
         it('Should initialize properly', () => {
             expect(stagingViewer).not.toBeNull();

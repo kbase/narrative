@@ -407,11 +407,11 @@ define([
                     let suggestedTypes = $(data[5]).find('optgroup[label="Suggested Types"]');
                     let suggestedType = null;
                     if (suggestedTypes.children().length == 1) {
-                        var option = suggestedTypes.find('option');
+                        const option = suggestedTypes.find('option');
                         suggestedType = { 'id': option.val(), 'title': option.html() };
                     }
 
-                    //Get selected?
+                    //Get selected
                     function changeImportButton(event) {
                         const checked = event.currentTarget.checked;
                         if (checked) {
@@ -637,7 +637,7 @@ define([
 
                 }.bind(stagingAreaViewer)
             });
-            // });
+
             /* 
                 Used to manage the select all checkbox in the header
                 has to be outside of the main DataTable call 

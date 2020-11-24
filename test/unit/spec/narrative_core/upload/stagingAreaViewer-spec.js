@@ -353,5 +353,12 @@ define ([
 
             expect(button.hasClass('kb-staging-table-import__button__disabled')).toBeFalse();
         });
+
+        //TODO
+        //Test to see if 
+        // * for one autodetect mapping, the detected filetype is selected
+        // * for multiple mappings, they are available, and two OptGroups are available
+
+
     });
 });

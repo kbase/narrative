@@ -27,51 +27,36 @@
     Sure, you could just set it up through kbasePrompt. But why bother?
 */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'kbasePrompt'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		kbasePrompt
-	) {
-
+define(['kbwidget', 'bootstrap', 'jquery', 'kbasePrompt'], function (
+    KBWidget,
+    bootstrap,
+    $,
+    kbasePrompt
+) {
     return KBWidget({
+        name: 'kbaseDeletePrompt',
+        parent: kbasePrompt,
 
-		  name: "kbaseDeletePrompt",
-		parent : kbasePrompt,
-
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
-            controls : ['cancelButton', 'okayButton']
+            controls: ['cancelButton', 'okayButton'],
         },
 
-        init: function(options) {
-
-            this._super(
-              {
-                title : 'Confirm deletion',
-                body : 'Really delete <strong>' + options.name + '</strong>?',
-                controls : [
+        init: function (options) {
+            this._super({
+                title: 'Confirm deletion',
+                body: 'Really delete <strong>' + options.name + '</strong>?',
+                controls: [
                     'cancelButton',
                     {
-                        name : 'Delete',
-                        type : 'primary',
-                        callback : options.callback
-                    }
+                        name: 'Delete',
+                        type: 'primary',
+                        callback: options.callback,
+                    },
                 ],
-              }
-            );
+            });
 
             return this;
-
         },
-
-
     });
-
 });

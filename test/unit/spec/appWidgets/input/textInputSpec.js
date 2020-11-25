@@ -1,8 +1,4 @@
-define([
-    'testUtil',
-    'common/runtime',
-    'widgets/appWidgets2/input/textInput'
-], (
+define(['testUtil', 'common/runtime', 'widgets/appWidgets2/input/textInput'], (
     TestUtil,
     Runtime,
     TextInput
@@ -24,11 +20,11 @@ define([
                     nullValue: '',
                     constraints: {
                         required: required,
-                        defaultValue: defaultValue
-                    }
-                }
+                        defaultValue: defaultValue,
+                    },
+                },
             },
-            channelName: bus.channelName
+            channelName: bus.channelName,
         };
     }
 
@@ -51,7 +47,8 @@ define([
             expect(widget).toBeDefined();
             expect(widget.start).toBeDefined();
 
-            widget.start({node: node})
+            widget
+                .start({ node: node })
                 .then(() => {
                     // verify it's there.
                     let inputElem = node.querySelector('input[data-element="input"]');
@@ -73,10 +70,9 @@ define([
                 done();
             });
             let widget = TextInput.make(testConfig);
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('update', {value: 'some text'});
-                });
+            widget.start({ node: node }).then(() => {
+                bus.emit('update', { value: 'some text' });
+            });
         });
 
         it('Should reset to default via bus', (done) => {
@@ -85,10 +81,9 @@ define([
                 done();
             });
             let widget = TextInput.make(testConfig);
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('reset-to-defaults');
-                });
+            widget.start({ node: node }).then(() => {
+                bus.emit('reset-to-defaults');
+            });
         });
 
         it('Should respond to input change events with "changed"', (done) => {
@@ -98,12 +93,11 @@ define([
                 expect(message.newValue).toEqual(inputText);
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('input[data-element="input"]');
-                    inputElem.value = inputText;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('input[data-element="input"]');
+                inputElem.value = inputText;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
 
         it('Should respond to input change events with "validation"', (done) => {
@@ -114,12 +108,11 @@ define([
                 expect(message.errorMessage).toBeUndefined();
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('input[data-element="input"]');
-                    inputElem.value = inputText;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('input[data-element="input"]');
+                inputElem.value = inputText;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
 
         xit('Should respond to keyup change events with "validation"', (done) => {
@@ -130,12 +123,11 @@ define([
                 expect(message.errorMessage).toBeUndefined();
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('input[data-element="input"]');
-                    inputElem.value = inputText;
-                    inputElem.dispatchEvent(new Event('keyup'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('input[data-element="input"]');
+                inputElem.value = inputText;
+                inputElem.dispatchEvent(new Event('keyup'));
+            });
         });
 
         it('Should show message when configured', (done) => {
@@ -147,12 +139,11 @@ define([
                 // ...detect something?
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('input[data-element="input"]');
-                    inputElem.value = inputText;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('input[data-element="input"]');
+                inputElem.value = inputText;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
 
         it('Should return a diagnosis of required-missing if so', (done) => {
@@ -165,13 +156,11 @@ define([
                 // ...detect something?
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('input[data-element="input"]');
-                    inputElem.value = inputText;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('input[data-element="input"]');
+                inputElem.value = inputText;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
-
     });
-})
+});

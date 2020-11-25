@@ -20,7 +20,7 @@ define([
     'kbaseNarrativeParameterTextInput',
     'kb_service/client/workspace',
     'base/js/namespace',
-    'bootstrap'
+    'bootstrap',
 ], function (
     KBWidget,
     $,
@@ -31,7 +31,7 @@ define([
     kbaseNarrativeParameterTextInput,
     Workspace,
     Jupyter
-    ) {
+) {
     'use strict';
     return KBWidget({
         name: 'kbaseEditMedia',
@@ -51,15 +51,14 @@ define([
             return this;
         },
         render: function (options) {
-            this.wsClient = new Workspace(Config.url('workspace'), {token: this.authToken()});
+            this.wsClient = new Workspace(Config.url('workspace'), { token: this.authToken() });
 
             this.container = $('<div>');
 
             this.$mediaChooserPanel = $('<div>');
             this.$mediaDisplayPanel = $('<div>');
 
-            this.container.append(this.$mediaChooserPanel)
-                .append(this.$mediaDisplayPanel);
+            this.container.append(this.$mediaChooserPanel).append(this.$mediaDisplayPanel);
 
             this.$elem.append(this.container);
 
@@ -69,25 +68,29 @@ define([
 
             // Creates the media chooser widget, which is just a 'text' input
             // This was originally designed to deal with the parameter spec object.
-            this.mediaChooserWidget = new kbaseNarrativeParameterTextInput(this.$mediaChooserPanel, {                
-                loadingImage: Config.get('loading_gif'),
-                parsedParameterSpec: this.options.appSpec.parameters[0],
-                isInSidePanel: false
-            });
-            
+            this.mediaChooserWidget = new kbaseNarrativeParameterTextInput(
+                this.$mediaChooserPanel,
+                {
+                    loadingImage: Config.get('loading_gif'),
+                    parsedParameterSpec: this.options.appSpec.parameters[0],
+                    isInSidePanel: false,
+                }
+            );
+
             this.parameterIdLookup = {};
             this.parameterIdLookup[this.options.appSpec.parameters[0].id] = this.mediaChooserWidget;
-
 
             // Simple listener that just plops the input value in this panel.
             // Listener gets triggered whenever anything in the chooser widget
             // changes.
 
-            this.mediaChooserWidget.addInputListener(function () {
-                // Jupyter.keyboard_manager.disable();
-                this.mediaName = this.mediaChooserWidget.getParameterValue();
-                this.updateDisplayPanel(this.mediaName);
-            }.bind(this));
+            this.mediaChooserWidget.addInputListener(
+                function () {
+                    // Jupyter.keyboard_manager.disable();
+                    this.mediaName = this.mediaChooserWidget.getParameterValue();
+                    this.updateDisplayPanel(this.mediaName);
+                }.bind(this)
+            );
         },
         /**
          * adds media widget (and a horizontal line above it)
@@ -104,12 +107,12 @@ define([
                     ws: this.options.workspaceName,
                     obj: mediaName,
                     onSave: function () {
-                        self.trigger('updateData.Narrative')
-                    }
+                        self.trigger('updateData.Narrative');
+                    },
                 });
 
                 this.$mediaDisplayPanel.append('<hr>');
-                this.$mediaDisplayPanel.append(mediaWidget)
+                this.$mediaDisplayPanel.append(mediaWidget);
 
                 this.container.append(this.$mediaDisplayPanel);
             }
@@ -129,7 +132,7 @@ define([
          * data objects here.
          */
         getState: function () {
-            return {'media': this.mediaName};
+            return { media: this.mediaName };
         },
         /**
          * Should do something with the state that gets returned.
@@ -141,15 +144,11 @@ define([
         /**
          * Should disable a single parameter editing (used when input is part of an app)
          */
-        disableParameterEditing: function (paramId) {
-
-        },
+        disableParameterEditing: function (paramId) {},
         /**
          * Enables a single parameter editing (used when input is part of an app)
          */
-        enableParameterEditing: function (paramId) {
-
-        },
+        enableParameterEditing: function (paramId) {},
         /**
          * Sets a single parameter value (only one in this widget, right?).
          * paramId is from the method spec.
@@ -171,8 +170,8 @@ define([
             return [
                 {
                     id: this.options.method.parameters[0].id,
-                    value: this.mediaChooserWidget.getParameterValue()
-                }
+                    value: this.mediaChooserWidget.getParameterValue(),
+                },
             ];
         },
         /*
@@ -183,7 +182,7 @@ define([
          * red (see kbaseNarrativeMethodInput for default styles).
          */
         isValid: function () {
-            var isValidRet = {isValid: true, errormssgs: []};
+            var isValidRet = { isValid: true, errormssgs: [] };
             var paramStatus = this.mediaChooserWidget.isValid();
             if (!paramStatus.isValid()) {
                 isValidRet.isValid = false;
@@ -198,8 +197,6 @@ define([
          * and getAllParameterValues/getParameterValue which could be invoked many times before running
          * (e.g. when widget is rendered).
          */
-        prepareDataBeforeRun: function () {
-
-        },
+        prepareDataBeforeRun: function () {},
     });
 });

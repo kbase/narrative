@@ -114,7 +114,7 @@ define([
     'kb_common/html',
 
     'components/requirejs/require',
-    'narrative_paths'
+    'narrative_paths',
 ], function (
     $,
     Handlebars,
@@ -141,7 +141,7 @@ define([
 
     // Handlebars global configuration. Since these changes affect all usage of handlebars
     // in this app, they should be performed just once.
-    Handlebars.registerHelper('numeral', function(value, format, defaultValue, options) {
+    Handlebars.registerHelper('numeral', function (value, format, defaultValue, options) {
         // This bit is required since Handlebars sends 'options' as the final argument.
         if (!options) {
             options = defaultValue;
@@ -169,7 +169,7 @@ define([
         }
     });
 
-    Handlebars.registerHelper('lineage', function(value, startAt, startAfter) {
+    Handlebars.registerHelper('lineage', function (value, startAt, startAfter) {
         if (!value || value.length === 0) {
             return 'n/a';
         }
@@ -179,10 +179,9 @@ define([
         } else {
             delimiter = ',';
         }
-        var lineage = value.split(delimiter)
-            .map(function (item) {
-                return item.trim();
-            });
+        var lineage = value.split(delimiter).map(function (item) {
+            return item.trim();
+        });
         var start;
         if (startAt) {
             start = lineage.indexOf(startAt);
@@ -195,13 +194,14 @@ define([
                 lineage = lineage.slice(start + 1);
             }
         }
-        return new Handlebars.SafeString(lineage
-            .map(function (item) {
-                return Handlebars.Utils.escapeExpression(item.trim());
-            })
-            .join(' <span style="color: #AAA"> &gt; </span>'));
+        return new Handlebars.SafeString(
+            lineage
+                .map(function (item) {
+                    return Handlebars.Utils.escapeExpression(item.trim());
+                })
+                .join(' <span style="color: #AAA"> &gt; </span>')
+        );
     });
-
 
     var t = html.tag,
         span = t('span');
@@ -221,7 +221,6 @@ define([
         $('div#site').height($(window).height() - $('#header').css('height'));
     };
 
-
     // Patch the security mechanisms to allow any JavaScript to run for now.
     // TODO: update this so only the few KBase commands run.
 
@@ -240,7 +239,7 @@ define([
 
     // Make the favicon change a no-op for now. They use lots of hard-coded paths to
     // Jupyter icons, so it's hard to change branding...
-    nbUtils.change_favicon = function() {};
+    nbUtils.change_favicon = function () {};
 
     // TODO: refactor
     function cellType(cell) {
@@ -250,9 +249,7 @@ define([
             return;
         }
 
-        var type = cell.metadata &&
-            cell.metadata['kb-cell'] &&
-            cell.metadata['kb-cell']['type'];
+        var type = cell.metadata && cell.metadata['kb-cell'] && cell.metadata['kb-cell']['type'];
 
         // Markdown cells don't of course have a kb cell type.
         if (type === undefined) {
@@ -260,16 +257,15 @@ define([
         }
 
         switch (type) {
-        case 'function_input':
-            return 'method';
-        case 'kb_app':
-            return 'app';
-        case 'function_output':
-            return 'output';
-        default:
-            return 'unknown';
+            case 'function_input':
+                return 'method';
+            case 'kb_app':
+                return 'app';
+            case 'function_output':
+                return 'output';
+            default:
+                return 'unknown';
         }
-
     }
 
     // CELLTOOLBAR
@@ -294,7 +290,7 @@ define([
                 }
                 return wasSelected;
             };
-        }());
+        })();
 
         // Extend
         (function () {
@@ -304,7 +300,7 @@ define([
                 $(this.element).trigger('unselected.cell');
                 return wasSelected;
             };
-        }());
+        })();
 
         p.renderMinMax = function () {
             var $cellNode = $(this.element),
@@ -327,16 +323,16 @@ define([
             }
 
             switch (toggleMode) {
-            case 'maximized':
-                if (!this.maximize) {
-                    console.log('HELP', this);
-                    return;
-                }
-                this.maximize();
-                break;
-            case 'minimized':
-                this.minimize();
-                break;
+                case 'maximized':
+                    if (!this.maximize) {
+                        console.log('HELP', this);
+                        return;
+                    }
+                    this.maximize();
+                    break;
+                case 'minimized':
+                    this.minimize();
+                    break;
             }
         };
 
@@ -345,12 +341,12 @@ define([
                 toggleMode = $cellNode.data('toggleMinMax') || 'maximized';
 
             switch (toggleMode) {
-            case 'maximized':
-                toggleMode = 'minimized';
-                break;
-            case 'minimized':
-                toggleMode = 'maximized';
-                break;
+                case 'maximized':
+                    toggleMode = 'minimized';
+                    break;
+                case 'minimized':
+                    toggleMode = 'maximized';
+                    break;
             }
 
             // NB namespacing is important with jquery messages because they
@@ -383,9 +379,12 @@ define([
                 //                });
 
                 // Universal invocation of cell min max
-                $el.on('toggleMinMax.cell', function () {
-                    this.toggleMinMax();
-                }.bind(this));
+                $el.on(
+                    'toggleMinMax.cell',
+                    function () {
+                        this.toggleMinMax();
+                    }.bind(this)
+                );
 
                 // This is triggered by the installation of the 'KBase' cell toolbar. Before this event we
                 // cannot safely rely upon the cell toolbar, which provides the min-max ui.
@@ -398,14 +397,17 @@ define([
                 // the notebeook_loaded event and also after setting up
                 // the basic narrController with some info needed by the
                 // cell toolbar (readonly, e.g.)
-                this.events.on('preset_activated.CellToolbar', function (e, data) {
-                    if (data.name === 'KBase') {
-                        this.renderMinMax();
-                    }
-                }.bind(this));
+                this.events.on(
+                    'preset_activated.CellToolbar',
+                    function (e, data) {
+                        if (data.name === 'KBase') {
+                            this.renderMinMax();
+                        }
+                    }.bind(this)
+                );
             };
-        }());
-    }());
+        })();
+    })();
 
     // RAW CELL
 
@@ -510,23 +512,26 @@ define([
             // presets on the celltoobar are loaded via event calls,
             // so are not part of the synchronous process
             // which builds the UI.
-            this.events.on('preset_activated.CellToolbar', function (e, data) {
-                if (data.name === 'KBase') {
-                    // ensure the icon is set?
-                    utils.setCellMeta(this, 'kbase.attributes.icon', 'font');
-                    // Set up the toolbar based on the state.
-                    // TODO: refactor in general -- reconcile cellState and attributes
+            this.events.on(
+                'preset_activated.CellToolbar',
+                function (e, data) {
+                    if (data.name === 'KBase') {
+                        // ensure the icon is set?
+                        utils.setCellMeta(this, 'kbase.attributes.icon', 'font');
+                        // Set up the toolbar based on the state.
+                        // TODO: refactor in general -- reconcile cellState and attributes
 
-                    //$cellNode.trigger('set-title.cell', [cell.getCellState('title', '')]);
-                    //$cellNode.trigger('set-icon.cell', [cell.getCellState('icon', '')]);
+                        //$cellNode.trigger('set-title.cell', [cell.getCellState('title', '')]);
+                        //$cellNode.trigger('set-icon.cell', [cell.getCellState('icon', '')]);
 
-                    // DISABLED: toggling
-                    // TODO: re-enable!
-                    // cell.renderToggleState();
-                }
-            }.bind(this));
+                        // DISABLED: toggling
+                        // TODO: re-enable!
+                        // cell.renderToggleState();
+                    }
+                }.bind(this)
+            );
         };
-    }());
+    })();
 
     // MARKDOWN CELL
 
@@ -570,10 +575,13 @@ define([
             var iconColor = 'silver';
 
             return span({ style: '' }, [
-                span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } }, [
-                    span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }),
-                    span({ class: 'fa fa-inverse fa-stack-1x fa-' + 'paragraph' })
-                ])
+                span(
+                    { class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } },
+                    [
+                        span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }),
+                        span({ class: 'fa fa-inverse fa-stack-1x fa-' + 'paragraph' }),
+                    ]
+                ),
             ]);
         };
 
@@ -596,7 +604,6 @@ define([
                 }
                 var cont = cell.unrender();
                 if (cont) {
-
                     cell.focus_editor();
                 }
             });
@@ -606,7 +613,6 @@ define([
             //  * to disappear, when the user clicks out of the edit area.
             //  */
             this.code_mirror.on('blur', function () {
-
                 cell.render();
             });
 
@@ -652,7 +658,6 @@ define([
                 $menu.trigger('job-state.toolbar', data);
             });
 
-
             /*
              * This is how the cell propagates the select/unselect events to
              * the child "widget" -- the celltoolbar in this case.
@@ -678,66 +683,73 @@ define([
                 $menu.trigger('selected.toolbar');
             });
 
-            this.events.on('rendered.MarkdownCell', function (e, data) {
-                // cell.setCellState('icon', 'paragraph');
-                utils.setCellMeta(cell, 'kbase.attributes.icon', 'paragraph');
+            this.events.on(
+                'rendered.MarkdownCell',
+                function (e, data) {
+                    // cell.setCellState('icon', 'paragraph');
+                    utils.setCellMeta(cell, 'kbase.attributes.icon', 'paragraph');
 
-                // DISABLED toggleing
-                // TODO: re-enable!
-                // cell.renderToggleState();
+                    // DISABLED toggleing
+                    // TODO: re-enable!
+                    // cell.renderToggleState();
 
-                // get the h1 if it exists.
-                var title,
-                    renderedContent = cell.element.find('.rendered_html'),
-                    h1 = renderedContent.find('h1');
-                if (h1.length > 0) {
-                    title = h1[0].innerText;
-                } else {
-                    title = renderedContent[0].textContent;
-                }
-
-                if (title) {
-                    // trim down to max 50 characters
-                    if (title.length > 50) {
-                        title = title.substr(0, 50) + '...';
+                    // get the h1 if it exists.
+                    var title,
+                        renderedContent = cell.element.find('.rendered_html'),
+                        h1 = renderedContent.find('h1');
+                    if (h1.length > 0) {
+                        title = h1[0].innerText;
+                    } else {
+                        title = renderedContent[0].textContent;
                     }
-                    // trim down to the 'paragraph' char - signifies the end of a header element
-                    var paraIdx = title.indexOf('¶');
-                    if (paraIdx !== -1) {
-                        title = title.substr(0, paraIdx);
-                    }
-                    // trim down to the end of the first newline - a linebreak should be a title
-                    var newLineIdx = title.indexOf('\n');
-                    if (newLineIdx !== -1) {
-                        title = title.substr(0, newLineIdx);
-                    }
-                } else {
-                    title = '<i>empty markdown cell - add a title with # </i>';
-                }
 
-                utils.setCellMeta(cell, 'kbase.attributes.title', title, true);
-            }.bind(this));
+                    if (title) {
+                        // trim down to max 50 characters
+                        if (title.length > 50) {
+                            title = title.substr(0, 50) + '...';
+                        }
+                        // trim down to the 'paragraph' char - signifies the end of a header element
+                        var paraIdx = title.indexOf('¶');
+                        if (paraIdx !== -1) {
+                            title = title.substr(0, paraIdx);
+                        }
+                        // trim down to the end of the first newline - a linebreak should be a title
+                        var newLineIdx = title.indexOf('\n');
+                        if (newLineIdx !== -1) {
+                            title = title.substr(0, newLineIdx);
+                        }
+                    } else {
+                        title = '<i>empty markdown cell - add a title with # </i>';
+                    }
+
+                    utils.setCellMeta(cell, 'kbase.attributes.title', title, true);
+                }.bind(this)
+            );
 
             // Note - this event needs to be subscribed to in each cell interested.
             // This is really the kick-off for the narrative, since the
             // presets on the celltoobar are loaded via event calls,
             // so are not part of the synchronous process
             // which builds the UI.
-            this.events.on('preset_activated.CellToolbar', function (e, data) {
-                if (data.name === 'KBase') {
-                    // ensure the icon is set?
-                    utils.setCellMeta(this, 'kbase.attributes.icon', 'paragraph');
-                }
-            }.bind(this));
+            this.events.on(
+                'preset_activated.CellToolbar',
+                function (e, data) {
+                    if (data.name === 'KBase') {
+                        // ensure the icon is set?
+                        utils.setCellMeta(this, 'kbase.attributes.icon', 'paragraph');
+                    }
+                }.bind(this)
+            );
         };
-    }());
+    })();
 
     // Patch the MarkdownCell renderer to run the Javascript we need.
     textCell.MarkdownCell.options_default = {
         cm_config: {
-            mode: 'ipythongfm'
+            mode: 'ipythongfm',
         },
-        placeholder: '_Markdown_/LaTeX cell - double click here to edit, click out of the edit area to preview.'
+        placeholder:
+            '_Markdown_/LaTeX cell - double click here to edit, click out of the edit area to preview.',
     };
 
     // KEYBOARD MANAGER
@@ -761,7 +773,7 @@ define([
             // NOOP
             return;
         };
-    }());
+    })();
 
     // CODE CELL
 
@@ -813,10 +825,10 @@ define([
             icon = span({ class: 'fa fa-inverse fa-stack-1x fa-spinner fa-pulse fa-fw' });
 
             return span({ style: '' }, [
-                span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } }, [
-                    span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }),
-                    icon
-                ])
+                span(
+                    { class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } },
+                    [span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }), icon]
+                ),
             ]);
         };
 
@@ -901,7 +913,7 @@ define([
             }
             return originalExecute.apply(this, arguments);
         };
-    }());
+    })();
 
     // Patch the Notebook to return the right name
     notebook.Notebook.prototype.get_notebook_name = function () {
@@ -916,15 +928,13 @@ define([
         var that = this;
         var parent = nbUtils.url_path_split(this.notebook_path)[0];
         var new_path = nbUtils.url_path_join(parent, new_name);
-        return this.contents.rename(this.notebook_path, new_path).then(
-            function (json) {
-                that.notebook_name = json.name;
-                that.notebook_path = json.path;
-                that.last_modified = new Date(json.last_modified);
-                // that.session.rename_notebook(json.path);
-                that.events.trigger('notebook_renamed.Notebook', json);
-            }
-        );
+        return this.contents.rename(this.notebook_path, new_path).then(function (json) {
+            that.notebook_name = json.name;
+            that.notebook_path = json.path;
+            that.last_modified = new Date(json.last_modified);
+            // that.session.rename_notebook(json.path);
+            that.events.trigger('notebook_renamed.Notebook', json);
+        });
     };
 
     // Extend methods.
@@ -959,11 +969,11 @@ define([
                     type: type || 'code',
                     index: index,
                     cell: cell,
-                    data: dataToSend
+                    data: dataToSend,
                 });
                 return cell;
             };
-        }());
+        })();
 
         // insert_cell_below wrapper
         // Accepts a third argument "data" not supported in the original.
@@ -979,7 +989,7 @@ define([
                 var cell = originalMethod.apply(this, arguments);
                 return cell;
             };
-        }());
+        })();
         (function () {
             var originalMethod = p.insert_cell_above;
             p.insert_cell_above = function (type, index, data) {
@@ -987,8 +997,8 @@ define([
                 var cell = originalMethod.apply(this, arguments);
                 return cell;
             };
-        }());
-    }());
+        })();
+    })();
 
     // Patch the save widget to skip the 'notebooks' part of the URL when updating
     // after a notebook rename.
@@ -996,9 +1006,11 @@ define([
         var base_url = this.notebook.base_url;
         var path = this.notebook.notebook_path;
         var state = { path: path };
-        window.history.replaceState(state, '', nbUtils.url_path_join(
-            base_url,
-            nbUtils.encode_uri_components(path)));
+        window.history.replaceState(
+            state,
+            '',
+            nbUtils.url_path_join(base_url, nbUtils.encode_uri_components(path))
+        );
     };
 
     // Patch the save widget to change the "Jupyter Notebook" part of the title to
@@ -1006,29 +1018,33 @@ define([
     saveWidget.SaveWidget.prototype.update_document_title = function () {
         var nbname = this.notebook.get_notebook_name();
         document.title = nbname + ' - KBase Narrative';
-    }
+    };
 
     // Patch the save widget to take in options at save time
     saveWidget.SaveWidget.prototype.rename_notebook = function (options) {
-        Jupyter.narrative.getUserPermissions()
-        .then((perm) => {
+        Jupyter.narrative.getUserPermissions().then((perm) => {
             let canChangeName = perm === 'a' && !Jupyter.narrative.readonly;
             options = options || {};
             var that = this,
                 dialogBody,
                 buttons;
             if (canChangeName) {
-                dialogBody = $('<div>').append(
-                    $('<p>').addClass('rename-message')
-                        .text(options.message ? options.message : 'Enter a new Narrative name:')
-                ).append(
-                    $('<br>')
-                ).append(
-                    $('<input>').attr('type', 'text').attr('size', '25').addClass('form-control')
-                        .val(options.notebook.get_notebook_name())
-                );
+                dialogBody = $('<div>')
+                    .append(
+                        $('<p>')
+                            .addClass('rename-message')
+                            .text(options.message ? options.message : 'Enter a new Narrative name:')
+                    )
+                    .append($('<br>'))
+                    .append(
+                        $('<input>')
+                            .attr('type', 'text')
+                            .attr('size', '25')
+                            .addClass('form-control')
+                            .val(options.notebook.get_notebook_name())
+                    );
                 buttons = {
-                    'OK': {
+                    OK: {
                         class: 'btn-primary',
                         click: function () {
                             var new_name = d.find('input').val();
@@ -1045,27 +1061,31 @@ define([
                                     }
                                 },
                                 function (error) {
-                                    d.find('.rename-message').text(error.message || 'Unknown error');
-                                    d.find('input[type="text"]').prop('disabled', false).focus().select();
+                                    d.find('.rename-message').text(
+                                        error.message || 'Unknown error'
+                                    );
+                                    d.find('input[type="text"]')
+                                        .prop('disabled', false)
+                                        .focus()
+                                        .select();
                                 }
                             );
                             return false;
-                        }
+                        },
                     },
-                    'Cancel': {}
+                    Cancel: {},
                 };
-            }
-            else {
+            } else {
                 let text;
                 if (Jupyter.narrative.readonly) {
                     text = 'You cannot change the name of a read-only Narrative.';
-                }
-                else {
-                    text = 'Only a user with "edit and share" privileges can change a Narrative name.';
+                } else {
+                    text =
+                        'Only a user with "edit and share" privileges can change a Narrative name.';
                 }
                 dialogBody = $('<div>').append($('<p>').addClass('rename-message').text(text));
                 buttons = {
-                    'OK': {}
+                    OK: {},
                 };
             }
             var d = dialog.modal({
@@ -1087,7 +1107,7 @@ define([
                         });
                         d.find('input[type="text"]').focus().select();
                     }
-                }
+                },
             });
         });
     };

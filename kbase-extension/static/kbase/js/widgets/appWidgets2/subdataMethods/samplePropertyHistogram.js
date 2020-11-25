@@ -1,11 +1,10 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
-define([
-], function () {
+define([], function () {
     'use strict';
     function factory(config) {
-        function extractItems(result, params) {            
+        function extractItems(result, params) {
             if (result.length === 0) {
                 return [];
             }
@@ -18,35 +17,37 @@ define([
                     }
                 });
             });
-            return Object.keys(wells).map(function (wellId) {
-                return {
-                    id: wellId,
-                    text: wellId
-                };
-            }).sort(function (a, b) {
-                return a.text > b.text ? 1 : -1;
-            });            
+            return Object.keys(wells)
+                .map(function (wellId) {
+                    return {
+                        id: wellId,
+                        text: wellId,
+                    };
+                })
+                .sort(function (a, b) {
+                    return a.text > b.text ? 1 : -1;
+                });
         }
 
         function getMethod() {
             return {
                 params: {
                     referenceObject: 'input_sample_property_matrix',
-                    dependencies: ['input_sample_property_matrix']
+                    dependencies: ['input_sample_property_matrix'],
                 },
-                included: ["metadata/row_metadata"],
-                extractItems: extractItems
+                included: ['metadata/row_metadata'],
+                extractItems: extractItems,
             };
         }
 
         return {
-            getMethod: getMethod
+            getMethod: getMethod,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

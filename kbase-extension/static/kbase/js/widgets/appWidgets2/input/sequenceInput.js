@@ -12,8 +12,8 @@ define([
     '../fieldWidgetMicro',
 
     'bootstrap',
-    'css!font-awesome'
-], function(
+    'css!font-awesome',
+], function (
     require,
     Promise,
     html,
@@ -44,20 +44,20 @@ define([
             channel = busConnection.channel(config.channelName),
             ui,
             model = {
-                value: []
+                value: [],
             },
             viewModel = Props.make({
                 data: {
-                    items: []
+                    items: [],
                 },
-                onUpdate: function() {
+                onUpdate: function () {
                     doModelUpdated();
-                }
+                },
             }),
             resolver = Resolver.make();
 
         function normalizeModel() {
-            var newModel = model.value.filter(function(item) {
+            var newModel = model.value.filter(function (item) {
                 return item ? true : false;
             });
             model.value = newModel;
@@ -65,39 +65,37 @@ define([
 
         function doModelUpdated() {
             channel.emit('changed', {
-                newValue: exportModel()
+                newValue: exportModel(),
             });
         }
 
         function setModelValue(value, index) {
-            return Promise.try(function() {
-                    if (index !== undefined) {
-                        if (value) {
-                            model.value[index] = value;
-                        } else {
-                            model.value.splice(index, 1);
-                        }
+            return Promise.try(function () {
+                if (index !== undefined) {
+                    if (value) {
+                        model.value[index] = value;
                     } else {
-                        if (value) {
-                            model.value = value;
-                        } else {
-                            unsetModelValue();
-                        }
+                        model.value.splice(index, 1);
                     }
-                    normalizeModel();
-                })
-                .then(function() {
-                    return render();
-                });
+                } else {
+                    if (value) {
+                        model.value = value;
+                    } else {
+                        unsetModelValue();
+                    }
+                }
+                normalizeModel();
+            }).then(function () {
+                return render();
+            });
         }
 
         function unsetModelValue() {
-            return Promise.try(function() {
-                    model.value = [];
-                })
-                .then(function() {
-                    return render();
-                });
+            return Promise.try(function () {
+                model.value = [];
+            }).then(function () {
+                return render();
+            });
         }
 
         function resetModelValue() {
@@ -105,14 +103,13 @@ define([
         }
 
         function exportModel() {
-            return viewModel.getItem('items').map(function(value) {
+            return viewModel.getItem('items').map(function (value) {
                 return value.value;
             });
         }
 
-
         function validate(rawValue) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 // TODO: validate all items within the list as well!
                 return Validation.validate(rawValue, spec);
             });
@@ -127,139 +124,144 @@ define([
 
             // stop the field widget. This will unook all listeners
             // and also clear the dom node.
-            item.inputControl.instance.stop()
-                .then(function() {
+            item.inputControl.instance.stop().then(function () {
+                // And we also need to remove the wrapper div attachment
+                // point as well.
+                item.node.parentNode.removeChild(item.node);
 
-                    // And we also need to remove the wrapper div attachment
-                    // point as well.
-                    item.node.parentNode.removeChild(item.node);
-
-                    // Now, to renumber. Oh, fun!
-                    items.forEach(function(control, index) {
-                        control.index = index;
-                        UI.make({ node: control.node }).setContent('index-label.index', String(index + 1));
-                    });
-
-                    viewModel.setItem('items', items);
-
-                    autoValidate();
+                // Now, to renumber. Oh, fun!
+                items.forEach(function (control, index) {
+                    control.index = index;
+                    UI.make({ node: control.node }).setContent(
+                        'index-label.index',
+                        String(index + 1)
+                    );
                 });
+
+                viewModel.setItem('items', items);
+
+                autoValidate();
+            });
         }
 
         function doChanged(index, value) {
             viewModel.setItem(['items', index, 'value'], value);
-            return validate(exportModel())
-                .then(function(result) {
-                    channel.emit('validation', result);
-                });
+            return validate(exportModel()).then(function (result) {
+                channel.emit('validation', result);
+            });
         }
 
-        // TODO: wrap this in a new type of field control -- 
+        // TODO: wrap this in a new type of field control --
         //   specialized to be very lightweight for the sequence control.
         function makeSingleInputControl(control, events) {
-            return resolver.loadInputControl(itemSpec)
-                .then(function(widgetFactory) {
-                    // CONTROL
-                    var preButton, postButton,
-                        widgetId = html.genId(),
-                        inputBus = runtime.bus().makeChannelBus({
-                            description: 'Array input control'
-                        }),
-                        fieldWidget = FieldWidget.make({
-                            inputControlFactory: widgetFactory,
-                            showHint: false,
-                            showLabel: false,
-                            showInfo: false,
-                            useRowHighight: true,
-                            initialValue: control.value,
-                            parameterSpec: itemSpec,
-                            referenceType: 'ref',
-                            paramsChannelName: config.paramsChannelName
+            return resolver.loadInputControl(itemSpec).then(function (widgetFactory) {
+                // CONTROL
+                var preButton,
+                    postButton,
+                    widgetId = html.genId(),
+                    inputBus = runtime.bus().makeChannelBus({
+                        description: 'Array input control',
+                    }),
+                    fieldWidget = FieldWidget.make({
+                        inputControlFactory: widgetFactory,
+                        showHint: false,
+                        showLabel: false,
+                        showInfo: false,
+                        useRowHighight: true,
+                        initialValue: control.value,
+                        parameterSpec: itemSpec,
+                        referenceType: 'ref',
+                        paramsChannelName: config.paramsChannelName,
+                    });
+
+                // set up listeners for the input
+                fieldWidget.bus.on('sync', function () {
+                    var value = viewModel.getItem(['items', control.index, 'value']);
+                    if (value) {
+                        inputBus.emit('update', {
+                            value: value,
                         });
+                    }
+                });
+                fieldWidget.bus.on('changed', function (message) {
+                    doChanged(control.index, message.newValue);
+                });
 
-                    // set up listeners for the input
-                    fieldWidget.bus.on('sync', function() {
-                        var value = viewModel.getItem(['items', control.index, 'value']);
-                        if (value) {
-                            inputBus.emit('update', {
-                                value: value
+                fieldWidget.bus.on('touched', function () {
+                    channel.emit('touched');
+                });
+
+                fieldWidget.bus.respond({
+                    key: {
+                        type: 'get-parameter',
+                    },
+                    handle: function (message) {
+                        if (message.parameterName) {
+                            return channel.request(message, {
+                                key: {
+                                    type: 'get-parameter',
+                                },
                             });
+                        } else {
+                            return null;
                         }
-                    });
-                    fieldWidget.bus.on('changed', function(message) {
-                        doChanged(control.index, message.newValue);
-                    });
+                    },
+                });
 
-                    fieldWidget.bus.on('touched', function() {
-                        channel.emit('touched');
-                    });
-
-                    fieldWidget.bus.respond({
-                        key: {
-                            type: 'get-parameter'
-                        },
-                        handle: function(message) {
-                            if (message.parameterName) {
-                                return channel.request(message, {
-                                    key: {
-                                        type: 'get-parameter'
-                                    }
-                                });
-                            } else {
-                                return null;
-                            }
-                        }
-                    });
-
-                    preButton = div({
+                preButton = div(
+                    {
                         class: 'input-group-addon kb-input-group-addon',
                         dataElement: 'index-label',
                         style: {
                             width: '5ex',
-                            padding: '0'
-                        }
-                    }, [
-                        span({ dataElement: 'index' }, String(control.index + 1)), '.'
-                    ]);
-                    postButton = div({
+                            padding: '0',
+                        },
+                    },
+                    [span({ dataElement: 'index' }, String(control.index + 1)), '.']
+                );
+                postButton = div(
+                    {
                         class: 'input-group-addon kb-app-row-close-btn-addon',
                         style: {
                             padding: '0',
-                            height: '100%'
-                        }
-                    }, button({
-                        class: 'btn btn-danger btn-xs kb-app-row-close-btn',
-                        type: 'button',
-                        dataIndex: String(control.index),
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function() {
-                                doRemoveControl(control);
-                            }
+                            height: '100%',
+                        },
+                    },
+                    button(
+                        {
+                            class: 'btn btn-danger btn-xs kb-app-row-close-btn',
+                            type: 'button',
+                            dataIndex: String(control.index),
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doRemoveControl(control);
+                                },
+                            }),
+                        },
+                        ui.buildIcon({
+                            name: 'close',
                         })
-                    }, ui.buildIcon({
-                        name: 'close'
-                    })));
-                    var content = div({
+                    )
+                );
+                var content = div(
+                    {
                         dataElement: 'input-row',
                         dataIndex: String(control.index),
                         style: {
                             width: '100%',
-                            padding: '2px'
-                        }
-                    }, [
-                        div({ class: 'input-group' }, [
-                            div({ id: widgetId }),
-                            postButton
-                        ])
-                    ]);
-                    return {
-                        id: widgetId,
-                        instance: fieldWidget,
-                        bus: inputBus,
-                        content: content
-                    };
-                });
+                            padding: '2px',
+                        },
+                    },
+                    [div({ class: 'input-group' }, [div({ id: widgetId }), postButton])]
+                );
+                return {
+                    id: widgetId,
+                    instance: fieldWidget,
+                    bus: inputBus,
+                    content: content,
+                };
+            });
         }
 
         // DOM EVENTS & HANDLERS
@@ -276,51 +278,59 @@ define([
         function doAddNew() {
             return {
                 type: 'click',
-                handler: function() {
-                    addNewControl()
-                        .then(function() {
-                            return autoValidate();
-                        });
-                }
+                handler: function () {
+                    addNewControl().then(function () {
+                        return autoValidate();
+                    });
+                },
             };
         }
 
         function makeToolbar(events) {
-            return div({
-                class: '',
-                role: '',
-                style: {
-                    padding: '6px'
-                }
-            }, [
-                div({
+            return div(
+                {
+                    class: '',
+                    role: '',
                     style: {
-                        textAlign: 'left'
-                    }
-                }, [
-                    button({
-                        type: 'button',
-                        class: 'btn btn-default',
-                        style: {
-                            color: '#666',
-                            width: '100px',
-                            border: '1',
-                            'text-align': 'center'
+                        padding: '6px',
+                    },
+                },
+                [
+                    div(
+                        {
+                            style: {
+                                textAlign: 'left',
+                            },
                         },
-                        id: events.addEvents({ events: [doAddNew()] })
-                    }, ui.buildIcon({
-                        name: 'plus-circle',
-                        size: 'lg'
-                    }))
-                ])
-            ]);
+                        [
+                            button(
+                                {
+                                    type: 'button',
+                                    class: 'btn btn-default',
+                                    style: {
+                                        color: '#666',
+                                        width: '100px',
+                                        border: '1',
+                                        'text-align': 'center',
+                                    },
+                                    id: events.addEvents({ events: [doAddNew()] }),
+                                },
+                                ui.buildIcon({
+                                    name: 'plus-circle',
+                                    size: 'lg',
+                                })
+                            ),
+                        ]
+                    ),
+                ]
+            );
         }
 
         function addNewControl(initialValue) {
             if (initialValue === undefined) {
                 initialValue = lang.copy(itemSpec.data.defaultValue);
             }
-            return Promise.try(function() {
+            return Promise.try(function () {
                 var events = Events.make({ node: container });
                 var control = {
                     // current native value.
@@ -329,8 +339,8 @@ define([
                     inputControl: null,
                     // the actual dome node (used?) to which the input control is attached
                     node: null,
-                    // the current index - note: used by the inputControl 
-                    index: null
+                    // the current index - note: used by the inputControl
+                    index: null,
                 };
                 var index = viewModel.pushItem(['items'], control);
                 control.index = index;
@@ -338,7 +348,7 @@ define([
                 var controlNode = document.createElement('div');
                 parent.appendChild(controlNode);
                 return makeSingleInputControl(control, events)
-                    .then(function(inputControl) {
+                    .then(function (inputControl) {
                         // This adds the control wrapper html.
                         controlNode.innerHTML = inputControl.content;
                         // Each wrapper has a node inside with id "id" for
@@ -348,14 +358,14 @@ define([
                         control.inputControl = inputControl;
 
                         return inputControl.instance.start({
-                            node: attachmentNode
+                            node: attachmentNode,
                         });
                     })
-                    .then(function() {
+                    .then(function () {
                         events.attachEvents();
                         return index;
                     })
-                    .catch(function(err) {
+                    .catch(function (err) {
                         // TODO insert an Error Control placeholder
                         console.error('Error adding new control', err);
                     });
@@ -363,7 +373,7 @@ define([
         }
 
         function render(initialValue) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 // render now just builds the initial view
                 var events = Events.make({ node: container });
                 container.innerHTML = makeLayout();
@@ -373,79 +383,81 @@ define([
                 if (!initialValue) {
                     return;
                 }
-                return Promise.all(initialValue.map(function(value) {
+                return Promise.all(
+                    initialValue.map(function (value) {
                         return addNewControl(value);
-                    }))
-                    .then(function() {
-                        return autoValidate();
-                    });
+                    })
+                ).then(function () {
+                    return autoValidate();
+                });
             });
         }
 
         function makeLayout() {
-            return div({
-                dataElement: 'main-panel'
-            }, [
-                div({
-                    dataElement: 'control-container'
-                }),
-                div({
-                    dataElement: 'toolbar-container'
-                })
-            ]);
+            return div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [
+                    div({
+                        dataElement: 'control-container',
+                    }),
+                    div({
+                        dataElement: 'toolbar-container',
+                    }),
+                ]
+            );
         }
 
         function autoValidate() {
-            return validate(exportModel())
-                .then(function(result) {
-                    channel.emit('validation', result);
-                });
+            return validate(exportModel()).then(function (result) {
+                channel.emit('validation', result);
+            });
         }
 
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                return render(config.initialValue)
-                    .then(function() {
-                        channel.on('reset-to-defaults', function(message) {
-                            resetModelValue();
-                        });
-                        channel.on('update', function(message) {
-                            setModelValue(message.value);
-                        });
-                        channel.on('refresh', function() {});
-
-                        return autoValidate();
+                return render(config.initialValue).then(function () {
+                    channel.on('reset-to-defaults', function (message) {
+                        resetModelValue();
                     });
+                    channel.on('update', function (message) {
+                        setModelValue(message.value);
+                    });
+                    channel.on('refresh', function () {});
 
+                    return autoValidate();
+                });
             });
         }
 
         function stop() {
-            return Promise.try(function() {
-                return Promise.all(viewModel.getItem('items').map(function(item) {
+            return Promise.try(function () {
+                return Promise.all(
+                    viewModel.getItem('items').map(function (item) {
                         return item.inputControl.instance.stop();
-                    }))
-                    .then(function() {
-                        busConnection.stop();
-                    });
+                    })
+                ).then(function () {
+                    busConnection.stop();
+                });
             });
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

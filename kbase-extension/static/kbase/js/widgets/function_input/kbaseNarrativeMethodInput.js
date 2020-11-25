@@ -4,7 +4,7 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define ([
+define([
     'kbwidget',
     'bootstrap',
     'jquery',
@@ -16,7 +16,7 @@ define ([
     'kbaseNarrativeParameterTextareaInput',
     'kbaseNarrativeParameterFileInput',
     'kbaseNarrativeParameterTextSubdataInput',
-    'kbaseNarrativeParameterAjaxTextSubdataInput'
+    'kbaseNarrativeParameterAjaxTextSubdataInput',
 ], function (
     KBWidget,
     bootstrap,
@@ -33,15 +33,15 @@ define ([
 ) {
     'use strict';
     return KBWidget({
-        name: "kbaseNarrativeMethodInput",
-        parent : KBaseNarrativeInput,
-        version: "1.0.0",
+        name: 'kbaseNarrativeMethodInput',
+        parent: KBaseNarrativeInput,
+        version: '1.0.0',
         options: {
             loadingImage: Config.get('loading_gif'),
-            isInSidePanel: false
+            isInSidePanel: false,
         },
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
 
             this.render();
@@ -53,9 +53,9 @@ define ([
         // parameter ordering
         parameters: null,
         // maps parameter id to widget for fast lookup of widget
-        parameterIdLookup : {},
+        parameterIdLookup: {},
 
-        $advancedOptionsDiv : null,
+        $advancedOptionsDiv: null,
 
         /**
          * Builds the input div for a function cell, based on the given method object.
@@ -63,7 +63,7 @@ define ([
          * @returns {String} an HTML string describing the available parameters for the cell.
          * @private
          */
-        render: function() {
+        render: function () {
             // figure out all types from the method
             var self = this;
             var method = this.options.method;
@@ -73,57 +73,87 @@ define ([
 
             var $inputParameterContainer = $('<div>');
             var $optionsDiv = $('<div>');
-            this.$advancedOptionsDiv = $('<div>')
+            this.$advancedOptionsDiv = $('<div>');
 
             this.parameters = [];
             this.parameterIdLookup = {};
-            for (var i=0; i<params.length; i++) {
+            for (var i = 0; i < params.length; i++) {
                 var paramSpec = params[i];
                 var $stepDiv = $('<div>');
 
                 // check what kind of parameter here.
-                if (paramSpec.field_type === "text") {
-                    var textInputWidget = new KBaseNarrativeParameterTextInput($stepDiv, {loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
-                    this.parameters.push({id:paramSpec.id, widget:textInputWidget});
-                    this.parameterIdLookup[paramSpec.id] = textInputWidget;
-                } else if (paramSpec.field_type === "dropdown") {
-                    var dropdownInputWidget = new KBaseNarrativeParameterDropdownInput($stepDiv, {loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
-                    this.parameters.push({id:paramSpec.id, widget:dropdownInputWidget});
-                    this.parameterIdLookup[paramSpec.id] = dropdownInputWidget;
-                } else if (paramSpec.field_type === "checkbox") {
-                    var checkboxInputWidget = new KBaseNarrativeParameterCheckboxInput($stepDiv, {loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
-                    this.parameters.push({id:paramSpec.id, widget:checkboxInputWidget});
-                    this.parameterIdLookup[paramSpec.id] = checkboxInputWidget;
-                } else if (paramSpec.field_type === "textarea") {
-                    var textareaInputWidget = new KBaseNarrativeParameterTextareaInput($stepDiv, {loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
-                    this.parameters.push({id:paramSpec.id, widget:textareaInputWidget});
-                    this.parameterIdLookup[paramSpec.id] = textareaInputWidget;
-                } else if (paramSpec.field_type === "textsubdata") {
-                    var textInputWidget = new KBaseNarrativeParameterTextSubdataInput($stepDiv, {
-                        loadingImage: this.options.loadingImage, parsedParameterSpec: params[i],
-                        isInSidePanel: this.options.isInSidePanel, kbaseMethodInputWidget: self
-                    });
-                    this.parameters.push({id:paramSpec.id, widget:textInputWidget});
-                    this.parameterIdLookup[paramSpec.id] = textInputWidget;
-                } else if (paramSpec.field_type === "ajax_textsubdata"){
-                    var ajaxTextInputWidget = new KBaseNarrativeParameterAjaxTextSubdataInput($stepDiv, {
+                if (paramSpec.field_type === 'text') {
+                    var textInputWidget = new KBaseNarrativeParameterTextInput($stepDiv, {
                         loadingImage: this.options.loadingImage,
                         parsedParameterSpec: params[i],
                         isInSidePanel: this.options.isInSidePanel,
-                        ajaxConfig: this.ajaxConfig
                     });
-                    this.parameters.push({id: paramSpec.id, widget: ajaxTextInputWidget});
+                    this.parameters.push({ id: paramSpec.id, widget: textInputWidget });
+                    this.parameterIdLookup[paramSpec.id] = textInputWidget;
+                } else if (paramSpec.field_type === 'dropdown') {
+                    var dropdownInputWidget = new KBaseNarrativeParameterDropdownInput($stepDiv, {
+                        loadingImage: this.options.loadingImage,
+                        parsedParameterSpec: params[i],
+                        isInSidePanel: this.options.isInSidePanel,
+                    });
+                    this.parameters.push({ id: paramSpec.id, widget: dropdownInputWidget });
+                    this.parameterIdLookup[paramSpec.id] = dropdownInputWidget;
+                } else if (paramSpec.field_type === 'checkbox') {
+                    var checkboxInputWidget = new KBaseNarrativeParameterCheckboxInput($stepDiv, {
+                        loadingImage: this.options.loadingImage,
+                        parsedParameterSpec: params[i],
+                        isInSidePanel: this.options.isInSidePanel,
+                    });
+                    this.parameters.push({ id: paramSpec.id, widget: checkboxInputWidget });
+                    this.parameterIdLookup[paramSpec.id] = checkboxInputWidget;
+                } else if (paramSpec.field_type === 'textarea') {
+                    var textareaInputWidget = new KBaseNarrativeParameterTextareaInput($stepDiv, {
+                        loadingImage: this.options.loadingImage,
+                        parsedParameterSpec: params[i],
+                        isInSidePanel: this.options.isInSidePanel,
+                    });
+                    this.parameters.push({ id: paramSpec.id, widget: textareaInputWidget });
+                    this.parameterIdLookup[paramSpec.id] = textareaInputWidget;
+                } else if (paramSpec.field_type === 'textsubdata') {
+                    var textInputWidget = new KBaseNarrativeParameterTextSubdataInput($stepDiv, {
+                        loadingImage: this.options.loadingImage,
+                        parsedParameterSpec: params[i],
+                        isInSidePanel: this.options.isInSidePanel,
+                        kbaseMethodInputWidget: self,
+                    });
+                    this.parameters.push({ id: paramSpec.id, widget: textInputWidget });
+                    this.parameterIdLookup[paramSpec.id] = textInputWidget;
+                } else if (paramSpec.field_type === 'ajax_textsubdata') {
+                    var ajaxTextInputWidget = new KBaseNarrativeParameterAjaxTextSubdataInput(
+                        $stepDiv,
+                        {
+                            loadingImage: this.options.loadingImage,
+                            parsedParameterSpec: params[i],
+                            isInSidePanel: this.options.isInSidePanel,
+                            ajaxConfig: this.ajaxConfig,
+                        }
+                    );
+                    this.parameters.push({ id: paramSpec.id, widget: ajaxTextInputWidget });
                     this.parameterIdLookup[paramSpec.id] = ajaxTextInputWidget;
-                } else if (paramSpec.field_type === "file") {
-                    var fileInputWidget = new KBaseNarrativeParameterFileInput($stepDiv, {loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
-                    this.parameters.push({id:paramSpec.id, widget:fileInputWidget});
+                } else if (paramSpec.field_type === 'file') {
+                    var fileInputWidget = new KBaseNarrativeParameterFileInput($stepDiv, {
+                        loadingImage: this.options.loadingImage,
+                        parsedParameterSpec: params[i],
+                        isInSidePanel: this.options.isInSidePanel,
+                    });
+                    this.parameters.push({ id: paramSpec.id, widget: fileInputWidget });
                     this.parameterIdLookup[paramSpec.id] = fileInputWidget;
-                } else if (paramSpec.field_type === "tab") {
-                	continue;
+                } else if (paramSpec.field_type === 'tab') {
+                    continue;
                 } else {
                     // this is what we should do:  this.getErrorDiv()
-                    $stepDiv.append('<span class="label label-danger">Parameter '+paramSpec.id+
-                                    ' not displaying properly, invalid parameter type: "'+paramSpec.field_type+'"</span>');
+                    $stepDiv.append(
+                        '<span class="label label-danger">Parameter ' +
+                            paramSpec.id +
+                            ' not displaying properly, invalid parameter type: "' +
+                            paramSpec.field_type +
+                            '"</span>'
+                    );
                 }
 
                 // If it is an advanced option, then we must place it in the correct div
@@ -133,42 +163,64 @@ define ([
                         isAdvanced = true;
                     }
                 }
-                this.addParameterDiv(i, paramSpec, $stepDiv, $optionsDiv, this.$advancedOptionsDiv, isAdvanced);
+                this.addParameterDiv(
+                    i,
+                    paramSpec,
+                    $stepDiv,
+                    $optionsDiv,
+                    this.$advancedOptionsDiv,
+                    isAdvanced
+                );
             }
             $inputParameterContainer.append($optionsDiv);
             var hasAdvancedOption = this.$advancedOptionsDiv.children().length > 0;
-            var $advancedOptionsControllerRow = $("<div>").addClass("row").css({"margin":"5px"});
+            var $advancedOptionsControllerRow = $('<div>').addClass('row').css({ margin: '5px' });
             if (hasAdvancedOption) {
-                $advancedOptionsControllerRow.append($("<div>").addClass("col-md-12 kb-method-advanced-options-controller")
-                                                     .append("show advanced options")
-                                                     .on('click',function() {
-                                                        if (self.$advancedOptionsDiv.is(":visible")) {
-                                                            self.$advancedOptionsDiv.hide();
-                                                            $(this).closest(".kb-method-advanced-options-controller").text("show advanced options");
-                                                        } else {
-                                                            self.$advancedOptionsDiv.show();
-                                                            $(this).closest(".kb-method-advanced-options-controller").text("hide advanced options");
-                                                        }
-                                                     } ));
+                $advancedOptionsControllerRow.append(
+                    $('<div>')
+                        .addClass('col-md-12 kb-method-advanced-options-controller')
+                        .append('show advanced options')
+                        .on('click', function () {
+                            if (self.$advancedOptionsDiv.is(':visible')) {
+                                self.$advancedOptionsDiv.hide();
+                                $(this)
+                                    .closest('.kb-method-advanced-options-controller')
+                                    .text('show advanced options');
+                            } else {
+                                self.$advancedOptionsDiv.show();
+                                $(this)
+                                    .closest('.kb-method-advanced-options-controller')
+                                    .text('hide advanced options');
+                            }
+                        })
+                );
                 $inputParameterContainer.append($advancedOptionsControllerRow);
                 $inputParameterContainer.append(this.$advancedOptionsDiv.hide());
             } else {
-                $advancedOptionsControllerRow.append($("<div>").addClass("col-md-12 kb-method-advanced-options-controller-inactive")
-                                                     .append("no advanced options"));
+                $advancedOptionsControllerRow.append(
+                    $('<div>')
+                        .addClass('col-md-12 kb-method-advanced-options-controller-inactive')
+                        .append('no advanced options')
+                );
                 $inputParameterContainer.append($advancedOptionsControllerRow);
             }
 
             this.$elem.append($inputParameterContainer);
-            this.$elem.css({"margin-bottom":"5px"});
-
+            this.$elem.css({ 'margin-bottom': '5px' });
         },
 
-        addParameterDiv: function(paramPos, paramSpec, $stepDiv, $optionsDiv, $advancedOptionsDiv, isAdvanced) {
+        addParameterDiv: function (
+            paramPos,
+            paramSpec,
+            $stepDiv,
+            $optionsDiv,
+            $advancedOptionsDiv,
+            isAdvanced
+        ) {
             if (isAdvanced) {
                 $advancedOptionsDiv.append($stepDiv);
             } else {
-                if ($optionsDiv.children().length == 0)
-                    $stepDiv.css({"margin-top":"5px"});
+                if ($optionsDiv.children().length == 0) $stepDiv.css({ 'margin-top': '5px' });
                 $optionsDiv.append($stepDiv);
             }
         },
@@ -180,10 +232,10 @@ define ([
          * @return {Array} an array of strings - one for each parameter
          * @public
          */
-        getParameters: function() {
+        getParameters: function () {
             var paramList = [];
             if (this.parameters) {
-                for(var i=0; i<this.parameters.length; i++) {
+                for (var i = 0; i < this.parameters.length; i++) {
                     paramList.push(this.parameters[i].widget.getParameterValue());
                 }
             }
@@ -199,11 +251,11 @@ define ([
          * }
          * with one key/value for each parameter in the defined method.
          */
-        getState: function() {
+        getState: function () {
             var state = {};
 
             if (this.parameters) {
-                for(var i=0; i<this.parameters.length; i++) {
+                for (var i = 0; i < this.parameters.length; i++) {
                     var id = this.parameters[i].id;
                     state[id] = this.parameters[i].widget.getState();
                 }
@@ -217,12 +269,11 @@ define ([
          * Doesn't really do a whole lot of type checking yet, but it's assumed that
          * a state will be loaded from an object generated by getState.
          */
-        loadState: function(state) {
-            if (!state)
-                return;
+        loadState: function (state) {
+            if (!state) return;
 
             if (this.parameters) {
-                for(var i=0; i<this.parameters.length; i++) {
+                for (var i = 0; i < this.parameters.length; i++) {
                     var id = this.parameters[i].id;
                     if (state.hasOwnProperty(id)) {
                         this.parameters[i].widget.loadState(state[id]);
@@ -235,14 +286,13 @@ define ([
          * Refreshes the input fields for this widget. I.e. if any of them reference workspace
          * information, those fields get refreshed without altering any other inputs.
          */
-        refresh: function() {
+        refresh: function () {
             if (this.parameters) {
-                for(var i=0; i<this.parameters.length; i++) {
+                for (var i = 0; i < this.parameters.length; i++) {
                     this.parameters[i].widget.refresh();
                 }
             }
         },
-
 
         /*
          * This is called when this method is run to allow you to check if the parameters
@@ -251,16 +301,16 @@ define ([
          * called, you should visually indicate which parameters are invalid by marking them
          * red (see kbaseNarrativeMethodInput for default styles).
          */
-        isValid: function() {
-            var isValidRet = { isValid:true, errormssgs: [] };
+        isValid: function () {
+            var isValidRet = { isValid: true, errormssgs: [] };
             if (this.parameters) {
-                for(var i=0; i<this.parameters.length; i++) {
+                for (var i = 0; i < this.parameters.length; i++) {
                     var parameterStatus = this.parameters[i].widget.isValid();
                     //console.log("Status for parameter " + this.parameters[i].id + ":");
                     //console.log(parameterStatus);
                     if (!parameterStatus.isValid) {
                         isValidRet.isValid = false;
-                        for(var e = 0; e<parameterStatus.errormssgs.length; e++) {
+                        for (var e = 0; e < parameterStatus.errormssgs.length; e++) {
                             isValidRet.errormssgs.push(parameterStatus.errormssgs[e]);
                         }
                     }
@@ -269,50 +319,48 @@ define ([
             return isValidRet;
         },
 
-	/*
-	 * Invoke the runImport method on each of the parameters (if the widget
-	 * implements that method.
-	 * The runImport method from the parameters returns a promise; return
-	 * a promise here created by promiseAll.
-	 */
+        /*
+         * Invoke the runImport method on each of the parameters (if the widget
+         * implements that method.
+         * The runImport method from the parameters returns a promise; return
+         * a promise here created by promiseAll.
+         */
 
-	runImport: function() {
-	    var promises = [];
+        runImport: function () {
+            var promises = [];
             if (this.parameters) {
-                for(var i=0; i<this.parameters.length; i++) {
-		    var w = this.parameters[i].widget;
-		    if (typeof w.runImport == "function")
-		    {
-			var promise = w.runImport();
-			promises.push(promise);
-		    }
+                for (var i = 0; i < this.parameters.length; i++) {
+                    var w = this.parameters[i].widget;
+                    if (typeof w.runImport == 'function') {
+                        var promise = w.runImport();
+                        promises.push(promise);
+                    }
                 }
             }
-	    return Promise.all(promises);
-	},
+            return Promise.all(promises);
+        },
 
-	/*
-	 * Invoke the cacnelImport method on each of the parameters (if the widget
-	 * implements that method.
-	 */
+        /*
+         * Invoke the cacnelImport method on each of the parameters (if the widget
+         * implements that method.
+         */
 
-	cancelImport: function() {
+        cancelImport: function () {
             if (this.parameters) {
-                for(var i=0; i<this.parameters.length; i++) {
-		    var w = this.parameters[i].widget;
-		    if (typeof w.cancelImport == "function")
-		    {
-			w.cancelImport();
-		    }
+                for (var i = 0; i < this.parameters.length; i++) {
+                    var w = this.parameters[i].widget;
+                    if (typeof w.cancelImport == 'function') {
+                        w.cancelImport();
+                    }
                 }
             }
-	},
+        },
 
         /*
          * Necessary for Apps to disable editing parameters that are automatically filled
          * from a previous step.  Returns nothing.
          */
-        disableParameterEditing: function(parameterId) {
+        disableParameterEditing: function (parameterId) {
             if (this.parameterIdLookup) {
                 var widget = this.parameterIdLookup[parameterId];
                 if (widget) {
@@ -326,7 +374,7 @@ define ([
         /*
          * Allows those parameters to be renabled, which may be an option for advanced users.
          */
-        enableParameterEditing: function(parameterId) {
+        enableParameterEditing: function (parameterId) {
             if (this.parameterIdLookup) {
                 var widget = this.parameterIdLookup[parameterId];
                 if (widget) {
@@ -341,7 +389,7 @@ define ([
          * An App (or a narrative that needs to auto populate certain fields) needs to set
          * specific parameter values based on the App spec, so we need a way to do this.
          */
-        setParameterValue: function(parameterId, value) {
+        setParameterValue: function (parameterId, value) {
             if (this.parameterIdLookup) {
                 var widget = this.parameterIdLookup[parameterId];
                 if (widget) {
@@ -357,7 +405,7 @@ define ([
          * values may be strings, numbers, objects, or lists, but must match what is declared
          * in the method spec.  If the parameter is not valid.
          */
-        getParameterValue: function(parameterId) {
+        getParameterValue: function (parameterId) {
             var value = null;
             if (this.parameterIdLookup) {
                 var widget = this.parameterIdLookup[parameterId];
@@ -368,13 +416,12 @@ define ([
             return value;
         },
 
-
         /*
          * When we actually run the method, we need all the parameter inputs.  This should return
          * an array of objects, where each object has 'id' and 'value' defined giving the parameter ID
          * and parameter value.
          */
-        getAllParameterValues: function() {
+        getAllParameterValues: function () {
             /*  should be in the form:
              *      [
              *          { id: 'param1', value: 'MyGenome' },
@@ -384,9 +431,9 @@ define ([
              */
             var values = [];
             if (this.parameters) {
-                for(var i=0; i<this.parameters.length; i++) {
+                for (var i = 0; i < this.parameters.length; i++) {
                     var value = this.parameters[i].widget.getParameterValue();
-                    values.push( { id:this.parameters[i].id, value:value } );
+                    values.push({ id: this.parameters[i].id, value: value });
                 }
             }
             return values;
@@ -394,28 +441,26 @@ define ([
 
         /** lock/unlock inputs allows temporary lock and unlock of the inputs only if they are enabled
         this means that unlocking will not enable the input if it was previously disabled by the disableInputEditing method. **/
-        lockInputs: function() {
+        lockInputs: function () {
             if (this.parameters) {
-                for(var i=0; i<this.parameters.length; i++) {
+                for (var i = 0; i < this.parameters.length; i++) {
                     this.parameters[i].widget.lockInputs();
                 }
             }
         },
-        unlockInputs: function() {
+        unlockInputs: function () {
             if (this.parameters) {
-                for(var i=0; i<this.parameters.length; i++) {
+                for (var i = 0; i < this.parameters.length; i++) {
                     this.parameters[i].widget.unlockInputs();
                 }
             }
         },
 
-
-
         /**
          * allows an app or other higher-level function to attach a listener on a a parameter
          * so that when it changes, something else can be updated.
          */
-        addInputListener: function(parameterId, onChangeFunc) {
+        addInputListener: function (parameterId, onChangeFunc) {
             // console.log('adding input listener ...', this.parameterIdLookup);
             if (this.parameterIdLookup) {
                 var widget = this.parameterIdLookup[parameterId];
@@ -430,11 +475,11 @@ define ([
          * and getAllParameterValues/getParameterValue which could be invoked many times before running
          * (e.g. when widget is rendered).
          */
-        prepareDataBeforeRun: function() {
+        prepareDataBeforeRun: function () {
             if (this.parameters) {
                 for (var i = 0; i < this.parameters.length; i++)
                     this.parameters[i].widget.prepareValueBeforeRun(this.options.method);
             }
-        }
+        },
     });
 });

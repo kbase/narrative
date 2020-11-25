@@ -3,8 +3,8 @@
  *
  *  Authors: zzheng@lbl.gov
  *
- *   This the templating function for creating consistent card. Should be called through card 
- *    creating function such as kbaseDataCard.  
+ *   This the templating function for creating consistent card. Should be called through card
+ *    creating function such as kbaseDataCard.
  *
  *   Expected options:
  *     options : {
@@ -15,15 +15,9 @@
  *          subcontent: jquery object containing text to be below title line,
  *          moreContent jquery object shown when expanding card
  *      }
-*/
+ */
 
-define ([
-    'jquery',
-
-    'bootstrap'
-], function(
-    $
-) {
+define(['jquery', 'bootstrap'], function ($) {
     'use strict';
     function KbaseCardLayout(options) {
         //partitions
@@ -31,46 +25,51 @@ define ([
         var $mainContent = $('<div>').addClass('narrative-card-row-main');
         var $moreContent = $('<div>').addClass('narrative-card-row-more').hide();
         var $info = $('<div>').addClass('kb-data-list-info');
-            
-        var $toggleAdvancedViewBtn =$('<div>');
 
-        //if have sub content, add toggle    
+        var $toggleAdvancedViewBtn = $('<div>');
+
+        //if have sub content, add toggle
         if (options.moreContent) {
             $moreContent.append(options.moreContent);
             $toggleAdvancedViewBtn
                 .hide()
-                .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
-                    .append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
+                .html(
+                    $(
+                        '<button class="btn btn-xs btn-default pull-right" aria-hidden="true">'
+                    ).append('<span class="fa fa-ellipsis-h" style="color:#888" />')
+                );
         }
-        var $actionButtonWrapper = $('<div>')
-            .addClass('narrative-card-action-button-wrapper');
+        var $actionButtonWrapper = $('<div>').addClass('narrative-card-action-button-wrapper');
 
         var $actionButton = $('<button>')
             .addClass('kb-primary-btn')
             .addClass('narrative-card-action-button')
             .append($('<span>').addClass('fa fa-chevron-circle-left'))
-            .append($('<div>').append(options.actionButtonText).addClass('narrative-card-action-button-name'));
-                
+            .append(
+                $('<div>')
+                    .append(options.actionButtonText)
+                    .addClass('narrative-card-action-button-name')
+            );
+
         $actionButtonWrapper.append($actionButton);
 
         var $logo = options.logo.addClass('narrative-card-logo');
         var $title = options.title;
         var $subcontent = options.subcontent;
 
-        $info.append($title)
-            .append($subcontent);
-            
-        if (options.actionButtonClick){
+        $info.append($title).append($subcontent);
+
+        if (options.actionButtonClick) {
             $actionButtonWrapper.click(options.actionButtonClick);
         }
         if (options.actionButtonText) {
             $mainContent.append($actionButtonWrapper);
         }
-          
-        $mainContent.append($logo)
+
+        $mainContent
+            .append($logo)
             .append($info)
-            .append($('<div>').addClass('narrative-card-ellipsis')
-                .append($toggleAdvancedViewBtn))
+            .append($('<div>').addClass('narrative-card-ellipsis').append($toggleAdvancedViewBtn))
             .mouseenter(function () {
                 $toggleAdvancedViewBtn.show();
                 $actionButton.show();
@@ -78,7 +77,6 @@ define ([
             .mouseleave(function () {
                 $toggleAdvancedViewBtn.hide();
                 $actionButton.hide();
-
             })
             .click(function () {
                 $moreContent.slideToggle('fast');
@@ -90,13 +88,13 @@ define ([
                     }
                 }
             });
-                
+
         $card.append($mainContent);
         if (options.moreContent) {
             $card.append($moreContent);
-        }    
+        }
 
         return $card;
     }
-    return KbaseCardLayout;  
+    return KbaseCardLayout;
 });

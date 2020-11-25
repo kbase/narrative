@@ -6,14 +6,8 @@ define([
     'common/ui',
     'common/props',
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props) {
+    'css!font-awesome',
+], function (Promise, html, Validation, Events, UI, Props) {
     'use strict';
 
     // Constants
@@ -23,15 +17,16 @@ define([
 
     function factory(config) {
         var spec = config.parameterSpec,
-            parent, container,
+            parent,
+            container,
             bus = config.bus,
             model = {
-                value: undefined
+                value: undefined,
             },
             ui,
             options = {
                 enabled: true,
-                rowCount: spec.ui.nRows || 5
+                rowCount: spec.ui.nRows || 5,
             };
 
         // CONTROL
@@ -46,7 +41,7 @@ define([
         // MODEL
 
         // NB this is a trusted method. The value had better be valid,
-        // since it won't (can't) be validated. Validation is an event 
+        // since it won't (can't) be validated. Validation is an event
         // which sits between the control and the model.
         function setModelValue(value) {
             if (value === undefined) {
@@ -77,26 +72,25 @@ define([
                 class: 'form-control',
                 dataElement: 'input',
                 readonly: true,
-                rows: options.rowCount
+                rows: options.rowCount,
             });
         }
 
         function render() {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' }, [
-                    makeViewControl()
-                ])
-            ]);
+            var content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' }, [makeViewControl()])]
+            );
             return {
-                content: content
+                content: content,
             };
         }
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
@@ -107,10 +101,10 @@ define([
 
                 container.innerHTML = theLayout.content;
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', function () {
                     resetModelValue();
                 });
-                bus.on('update', function(message) {
+                bus.on('update', function (message) {
                     setModelValue(message.value);
                 });
                 syncModelToControl();
@@ -118,7 +112,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (parent && container) {
                     parent.removeChild(container);
                 }
@@ -129,22 +123,22 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: function() {}
+            onUpdate: function () {},
         });
 
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

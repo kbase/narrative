@@ -1,11 +1,7 @@
 /*global define*/
 /*jslint browser:true,white:true,single:true*/
 
-define([
-    'common/props'
-], function (
-    Props
-) {
+define(['common/props'], function (Props) {
     'use strict';
 
     function coerceToBoolean(value) {
@@ -23,18 +19,18 @@ define([
             return false;
         }
         switch (value.toLowerCase(value)) {
-        case 'true':
-        case 't':
-        case 'yes':
-        case 'y':
-            return true;
-        case 'false':
-        case 'f':
-        case 'no':
-        case 'n':
-            return false;
-        default:
-            return false;
+            case 'true':
+            case 't':
+            case 'yes':
+            case 'y':
+                return true;
+            case 'false':
+            case 'f':
+            case 'no':
+            case 'n':
+                return false;
+            default:
+                return false;
         }
     }
 
@@ -48,22 +44,22 @@ define([
         }
         var nullValue = (function () {
             switch (converted.data.type) {
-            case 'string':
-                return '';
-            case 'int':
-                return null;
-            case 'float':
-                return null;
-            case 'workspaceObjectName':
-                return null;
-            case 'struct':
-                return {};
-            case '[]struct':
-                return [];
-            default:
-                return null;
+                case 'string':
+                    return '';
+                case 'int':
+                    return null;
+                case 'float':
+                    return null;
+                case 'workspaceObjectName':
+                    return null;
+                case 'struct':
+                    return {};
+                case '[]struct':
+                    return [];
+                default:
+                    return null;
             }
-        }());
+        })();
         return nullValue;
     }
 
@@ -76,19 +72,19 @@ define([
      */
     function defaultToNative(converted, defaultValue) {
         switch (converted.data.type) {
-        case 'string':
-            return defaultValue;
-        case 'int':
-            return parseInt(defaultValue);
-        case 'float':
-            return parseFloat(defaultValue);
-        case 'workspaceObjectName':
-            return defaultValue;
-        case 'boolean':
-            return coerceToBoolean(defaultValue);
-        default:
-            // Assume it is a string...
-            return defaultValue;
+            case 'string':
+                return defaultValue;
+            case 'int':
+                return parseInt(defaultValue);
+            case 'float':
+                return parseFloat(defaultValue);
+            case 'workspaceObjectName':
+                return defaultValue;
+            case 'boolean':
+                return coerceToBoolean(defaultValue);
+            default:
+                // Assume it is a string...
+                return defaultValue;
         }
     }
 
@@ -98,23 +94,22 @@ define([
 
         // special special cases.
         switch (spec.field_type) {
-        case 'checkbox':
-            /*
-             * handle the special case of a checkbox with no or empty
-             * default value. It will promote to the "unchecked value"
-             * TODO: more cases of bad default value? Or a generic
-             * default value validator?
-             */
-            if (!defaultValues ||
-                defaultValues.length === 0) {
-                return spec.checkbox_options.unchecked_value;
-            }
-            return coerceToIntBoolean(defaultValues[0]);
-        case 'custom_textsubdata':
-            if (!defaultValues) {
-                // ??
-            }
-            break;
+            case 'checkbox':
+                /*
+                 * handle the special case of a checkbox with no or empty
+                 * default value. It will promote to the "unchecked value"
+                 * TODO: more cases of bad default value? Or a generic
+                 * default value validator?
+                 */
+                if (!defaultValues || defaultValues.length === 0) {
+                    return spec.checkbox_options.unchecked_value;
+                }
+                return coerceToIntBoolean(defaultValues[0]);
+            case 'custom_textsubdata':
+                if (!defaultValues) {
+                    // ??
+                }
+                break;
         }
 
         // No default in spec, yet required.
@@ -150,40 +145,40 @@ define([
          * is actually an int, although Mike says it can be any type...
          */
         switch (spec.field_type) {
-        case 'checkbox':
-            return 'int';
-        case 'textarea':
-        case 'dropdown':
-            if (spec.allow_multiple) {
-                return '[]string';
-            } else {
+            case 'checkbox':
+                return 'int';
+            case 'textarea':
+            case 'dropdown':
+                if (spec.allow_multiple) {
+                    return '[]string';
+                } else {
+                    return 'string';
+                }
+            case 'textsubdata':
+                return 'subdata';
+            case 'custom_textsubdata':
+                //if (spec.allow_multiple) {
+                //    return '[]string';
+                //}
                 return 'string';
-            }
-        case 'textsubdata':
-            return 'subdata';
-        case 'custom_textsubdata':
-            //if (spec.allow_multiple) {
-            //    return '[]string';
-            //}
-            return 'string';
             //var custom = customTextSubdata();
             //if (custom) {
             //    return custom;
             //}
-        case 'custom_button':
-            switch (spec.id) {
-            case 'input_check_other_params':
-                return 'boolean';
-            default:
-                return 'unspecified';
-            }
-        case 'custom_widget':
-            if (spec.dropdown_options) {
-                return '[]string';
-            }
-            break;
-        case 'group':
-            return 'struct';
+            case 'custom_button':
+                switch (spec.id) {
+                    case 'input_check_other_params':
+                        return 'boolean';
+                    default:
+                        return 'unspecified';
+                }
+            case 'custom_widget':
+                if (spec.dropdown_options) {
+                    return '[]string';
+                }
+                break;
+            case 'group':
+                return 'struct';
             // case 'reads_group_editor':
             //     return 'reads_group_editor';
         }
@@ -225,11 +220,11 @@ define([
         // the text_options, we assume it is a string.
 
         switch (spec.field_type) {
-        case 'text':
-            //if (spec.allow_multiple) {
-            //    return '[]string';
-            //} else {
-            return 'string';
+            case 'text':
+                //if (spec.allow_multiple) {
+                //    return '[]string';
+                //} else {
+                return 'string';
             //}
         }
 
@@ -251,126 +246,127 @@ define([
         // a dropdown even though the field_type is 'text'.
 
         switch (dataType) {
-        case 'string':
-        case 'text':
-            switch (fieldType) {
+            case 'string':
             case 'text':
+                switch (fieldType) {
+                    case 'text':
+                        constraints = {
+                            min: Props.getDataItem(spec, 'text_options.min_length', null),
+                            max: Props.getDataItem(spec, 'text_options.max_length', null),
+                            validate: Props.getDataItem(spec, 'text_options.validate_as', null),
+                        };
+                        break;
+                    case 'dropdown':
+                        constraints = {
+                            options: spec.dropdown_options.options,
+                        };
+                        break;
+                    case 'textarea':
+                        constraints = {
+                            min: Props.getDataItem(spec, 'text_options.min_length', null),
+                            max: Props.getDataItem(spec, 'text_options.max_length', null),
+                            nRows: Props.getDataItem(spec, 'text_options.n_rows', null),
+                        };
+                        break;
+                    default:
+                        throw new Error('Unknown text param field type');
+                }
+                break;
+            case 'int':
+                switch (fieldType) {
+                    case 'text':
+                        constraints = {
+                            min: spec.text_options.min_int,
+                            max: spec.text_options.max_int,
+                        };
+                        break;
+                    case 'checkbox':
+                        // In theory, the checkbox
+                        constraints = {
+                            min: 0,
+                            max: 0,
+                        };
+                        break;
+                }
+                break;
+            case 'float':
                 constraints = {
-                    min: Props.getDataItem(spec, 'text_options.min_length', null),
-                    max: Props.getDataItem(spec, 'text_options.max_length', null),
-                    validate: Props.getDataItem(spec, 'text_options.validate_as', null)
+                    min: spec.text_options.min_float,
+                    max: spec.text_options.max_float,
                 };
                 break;
-            case 'dropdown':
+            case 'workspaceObjectName':
+                switch (paramClass) {
+                    case 'input':
+                        constraints = {
+                            types: spec.text_options.valid_ws_types,
+                        };
+                        break;
+                    case 'output':
+                        constraints = {
+                            types: spec.text_options.valid_ws_types,
+                        };
+                        break;
+                    case 'parameter':
+                        constraints = {
+                            types: spec.text_options.valid_ws_types,
+                        };
+                        break;
+                    default:
+                        throw new Error('Unknown workspaceObjectName ui class');
+                }
+                break;
+            case '[]workspaceObjectName':
+                switch (paramClass) {
+                    case 'input':
+                        constraints = {
+                            types: spec.text_options.valid_ws_types,
+                        };
+                        break;
+                    case 'parameter':
+                        constraints = {
+                            types: spec.text_options.valid_ws_types,
+                        };
+                        break;
+                    default:
+                        throw new Error('Unknown []workspaceObjectName ui class');
+                }
+                break;
+            case '[]string':
+                switch (fieldType) {
+                    case 'dropdown':
+                        break;
+                    case 'text':
+                        break;
+                    case 'textarea':
+                        break;
+                    default:
+                        throw new Error('Unknown []string field type: ' + fieldType);
+                }
+                break;
+            case 'subdata':
+                console.log('SUBDTA', spec);
                 constraints = {
-                    options: spec.dropdown_options.options
-                };
-                break;
-            case 'textarea':
-                constraints = {
-                    min: Props.getDataItem(spec, 'text_options.min_length', null),
-                    max: Props.getDataItem(spec, 'text_options.max_length', null),
-                    nRows: Props.getDataItem(spec, 'text_options.n_rows', null)
-                };
-                break;
-            default:
-                throw new Error('Unknown text param field type');
-            }
-            break;
-        case 'int':
-            switch (fieldType) {
-            case 'text':
-                constraints = {
-                    min: spec.text_options.min_int,
-                    max: spec.text_options.max_int
-                };
-                break;
-            case 'checkbox':
-                // In theory, the checkbox
-                constraints = {
-                    min: 0,
-                    max: 0
-                };
-                break;
-            }
-            break;
-        case 'float':
-            constraints = {
-                min: spec.text_options.min_float,
-                max: spec.text_options.max_float
-            };
-            break;
-        case 'workspaceObjectName':
-            switch (paramClass) {
-            case 'input':
-                constraints = {
-                    types: spec.text_options.valid_ws_types
-                };
-                break;
-            case 'output':
-                constraints = {
-                    types: spec.text_options.valid_ws_types
-                };
-                break;
-            case 'parameter':
-                constraints = {
-                    types: spec.text_options.valid_ws_types
-                };
-                break;
-            default:
-                throw new Error('Unknown workspaceObjectName ui class');
-            }
-            break;
-        case '[]workspaceObjectName':
-            switch (paramClass) {
-            case 'input':
-                constraints = {
-                    types: spec.text_options.valid_ws_types
-                };
-                break;
-            case 'parameter':
-                constraints = {
-                    types: spec.text_options.valid_ws_types
-                };
-                break;
-            default:
-                throw new Error('Unknown []workspaceObjectName ui class');
-            }
-            break;
-        case '[]string':
-            switch (fieldType) {
-            case 'dropdown':
-                break;
-            case 'text':
-                break;
-            case 'textarea':
-                break;
-            default:
-                throw new Error('Unknown []string field type: ' + fieldType);
-            }
-            break;
-        case 'subdata':
-            console.log('SUBDTA', spec);
-            constraints = {
-                multiple: false,
-                // The parameter containing the object name we derive data from
-                referredParameter: spec.textsubdata_options.subdata_selection.parameter_id,
-                // The "included" parameter to for the workspace call
-                subdataIncluded: spec.textsubdata_options.subdata_selection.subdata_included,
-                // These are for navigating the results.
+                    multiple: false,
+                    // The parameter containing the object name we derive data from
+                    referredParameter: spec.textsubdata_options.subdata_selection.parameter_id,
+                    // The "included" parameter to for the workspace call
+                    subdataIncluded: spec.textsubdata_options.subdata_selection.subdata_included,
+                    // These are for navigating the results.
 
-                // This is the property path to the part of the subdata
-                // we want to deal with.
-                path: spec.textsubdata_options.subdata_selection.path_to_subdata,
-                // This is used to pluck a value off of the leaf array
-                // items, object properties (if object), object values (if 'value'),
-                // or otherwise just use the property key. This becomes the "id"
-                // of the subdata item.
-                selectionId: spec.textsubdata_options.subdata_selection.selection_id,
-                // Used to generate a description for each item. Becomes the "desc".
-                displayTemplate: spec.textsubdata_options.subdata_selection.description_template
-            };
-            break;
+                    // This is the property path to the part of the subdata
+                    // we want to deal with.
+                    path: spec.textsubdata_options.subdata_selection.path_to_subdata,
+                    // This is used to pluck a value off of the leaf array
+                    // items, object properties (if object), object values (if 'value'),
+                    // or otherwise just use the property key. This becomes the "id"
+                    // of the subdata item.
+                    selectionId: spec.textsubdata_options.subdata_selection.selection_id,
+                    // Used to generate a description for each item. Becomes the "desc".
+                    displayTemplate:
+                        spec.textsubdata_options.subdata_selection.description_template,
+                };
+                break;
             //                case 'xxinput_property_x':
             //                    return {
             //                        defaultValue: defaultValue(),
@@ -440,30 +436,30 @@ define([
             //                                    });
             //                        }
             //                    };
-        case 'struct':
-            break;
-        case 'unspecified':
-            // a bunch of field types are untyped, and there are no 
-            // options for them...
-            switch (fieldType) {
-            case 'text':
-            case 'checkbox':
-            case 'textarea':
-            case 'dropdown':
-            case 'custom_button':
-            case 'textsubdata':
-            case 'file':
-            case 'custom_textsubdata':
-            case 'custom_widget':
-            case 'tab':
+            case 'struct':
+                break;
+            case 'unspecified':
+                // a bunch of field types are untyped, and there are no
+                // options for them...
+                switch (fieldType) {
+                    case 'text':
+                    case 'checkbox':
+                    case 'textarea':
+                    case 'dropdown':
+                    case 'custom_button':
+                    case 'textsubdata':
+                    case 'file':
+                    case 'custom_textsubdata':
+                    case 'custom_widget':
+                    case 'tab':
+                        break;
+                    default:
+                        throw new Error('Unknown unspecified field type');
+                }
                 break;
             default:
-                throw new Error('Unknown unspecified field type');
-            }
-            break;
-        default:
-            console.error('Unknown data type', dataType);
-            throw new Error('Unknown data type');
+                console.error('Unknown data type', dataType);
+                throw new Error('Unknown data type');
         }
         if (constraints) {
             Object.keys(constraints).forEach(function (key) {
@@ -472,15 +468,14 @@ define([
         }
     }
 
-
     // Stepwise conversion
 
-    // now with grouped params 
+    // now with grouped params
 
     function convertParameter(spec) {
         var dataType = grokDataType(spec);
-        var multiple = (spec.allow_multiple ? true : false);
-        var required = (spec.optional ? false : true);
+        var multiple = spec.allow_multiple ? true : false;
+        var required = spec.optional ? false : true;
 
         var paramSpec = {
             ui: {
@@ -489,14 +484,14 @@ define([
                 description: spec.description,
                 class: spec.ui_class,
                 type: spec.field_type,
-                control: spec.field_type
+                control: spec.field_type,
             },
             data: {
                 type: dataType,
                 constraints: {
-                    required: required
-                }
-            }
+                    required: required,
+                },
+            },
         };
 
         updateNullValue(paramSpec, spec);
@@ -511,21 +506,21 @@ define([
                         hint: spec.short_hint,
                         description: spec.description,
                         class: spec.ui_class || 'parameter',
-                        border: spec.with_border === 0 ? true : false
+                        border: spec.with_border === 0 ? true : false,
                     },
                     data: {
                         type: 'list',
                         constraints: {},
                         list: {
-                            spec: paramSpec
-                        }
-                    }
-                }
+                            spec: paramSpec,
+                        },
+                    },
+                },
             };
         }
 
         return {
-            spec: paramSpec
+            spec: paramSpec,
         };
     }
 
@@ -541,28 +536,28 @@ define([
                 hint: group.short_hint,
                 class: group.ui_class || 'parameter',
                 control: '',
-                layout: group.parameter_ids
+                layout: group.parameter_ids,
             },
             data: {
                 type: '[]struct',
                 constraints: {
-                    required: (function () {
+                    required: function () {
                         if (group.optional === 1) {
                             return false;
                         }
                         return true;
-                    })
+                    },
                 },
                 defaultValue: defaultValue,
-                nullValue: nullValue
+                nullValue: nullValue,
             },
             // may not need this, but it is consistent with struct.
             parameters: {
                 layout: ['item'],
                 specs: {
-                    item: convertGroupToStruct(group, params)
-                }
-            }
+                    item: convertGroupToStruct(group, params),
+                },
+            },
         };
         params[group.id] = structSpec;
 
@@ -599,27 +594,25 @@ define([
                 hint: group.short_hint,
                 class: group.ui_class || 'parameter',
                 control: '',
-                layout: group.parameter_ids
+                layout: group.parameter_ids,
             },
             data: {
                 type: 'struct',
                 constraints: {
-                    required: required
+                    required: required,
                 },
                 defaultValue: defaultValue,
                 nullValue: nullValue,
                 struct: {
                     layout: group.parameter_ids,
-                    fields: groupParams
-                }
-            }
+                    fields: groupParams,
+                },
+            },
         };
         return structSpec;
     }
 
-    function makeListSpec(spec, params) {
-
-    }
+    function makeListSpec(spec, params) {}
 
     function convertGroup(group, params) {
         var structSpec = convertGroupToStruct(group, params);
@@ -633,22 +626,22 @@ define([
                         hint: group.short_hint,
                         description: group.description,
                         class: group.ui_class || 'parameter',
-                        border: group.with_border === 0 ? true : false
+                        border: group.with_border === 0 ? true : false,
                     },
                     data: {
                         type: 'list',
                         constraints: {},
                         list: {
-                            spec: structSpec
-                        }
-                    }
-                }
+                            spec: structSpec,
+                        },
+                    },
+                },
             };
             params[group.id] = listSpec;
         } else {
             // var structSpec = convertGroupToStruct(group, params);
             params[group.id] = {
-                spec: structSpec
+                spec: structSpec,
             };
         }
     }
@@ -666,7 +659,6 @@ define([
             parameterSpecs[parameter.id] = convertParameter(parameter);
         });
 
-
         // Then for all groups, create a parameter of type struct,
         // and populate it with the specified parameters, removing them from
         // the top level of parameters.
@@ -674,7 +666,7 @@ define([
         var groups = sdkAppSpec.parameter_groups || [];
         groups.forEach(function (group) {
             convertGroup(group, parameterSpecs);
-            // don't know how the group is ordered in the spec ... so just append it later.            
+            // don't know how the group is ordered in the spec ... so just append it later.
         });
 
         // first filter out the paramters which have been moved into groups,
@@ -689,9 +681,11 @@ define([
             .map(function (parameter) {
                 return parameter.id;
             })
-            .concat(groups.map(function (group) {
-                return group.id;
-            }));
+            .concat(
+                groups.map(function (group) {
+                    return group.id;
+                })
+            );
 
         return {
             spec: {
@@ -699,14 +693,13 @@ define([
                     type: 'struct',
                     struct: {
                         layout: parameterLayout,
-                        fields: parameterSpecs
-                    }
-                }
-            }
+                        fields: parameterSpecs,
+                    },
+                },
+            },
         };
 
         // wrap the rest of the app?
-
 
         //        return  {
         //            id: 'name',
@@ -732,6 +725,6 @@ define([
     }
 
     return {
-        convertAppSpec: convertAppSpec
+        convertAppSpec: convertAppSpec,
     };
 });

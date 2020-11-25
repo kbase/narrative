@@ -1,8 +1,7 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
-define([
-], function () {
+define([], function () {
     'use strict';
 
     /*
@@ -16,7 +15,8 @@ define([
             string = String(string);
         }
         var padLen = width - string.length,
-            padding = '', i;
+            padding = '',
+            i;
         if (padLen <= 0) {
             return string;
         }
@@ -40,7 +40,10 @@ define([
             return unitValue;
         });
 
-        return [[pad(units[3], 2), pad(units[2], 2), pad(units[1], 2)].join(':'), pad(units[0], 3)].join('.');
+        return [
+            [pad(units[3], 2), pad(units[2], 2), pad(units[1], 2)].join(':'),
+            pad(units[0], 3),
+        ].join('.');
     }
     function formatTime(time) {
         if (time) {
@@ -110,7 +113,6 @@ define([
     return {
         formatElapsedTime: formatElapsedTime,
         formatTime: formatTime,
-        isEqual: isEqual
+        isEqual: isEqual,
     };
-
 });

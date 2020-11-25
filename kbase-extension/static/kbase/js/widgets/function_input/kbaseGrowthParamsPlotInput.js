@@ -2,16 +2,15 @@
  * @author Pavel Novickov <psnovichkov@lbl.gov>
  * @public
  */
-define(
-    [
-        'kbwidget',
-        'bootstrap',
-        'jquery',
-        'narrativeConfig',
-        'kbaseNarrativeParameterCustomTextSubdataInput',
-        'kbaseNarrativeParameterCustomButtonInput',
-        'kbaseNarrativeParameterCustomDropdownGroupInput'
-    ], function (
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig',
+    'kbaseNarrativeParameterCustomTextSubdataInput',
+    'kbaseNarrativeParameterCustomButtonInput',
+    'kbaseNarrativeParameterCustomDropdownGroupInput',
+], function (
     KBWidget,
     bootstrap,
     $,
@@ -19,16 +18,15 @@ define(
     kbaseNarrativeParameterCustomTextSubdataInput,
     kbaseNarrativeParameterCustomButtonInput,
     kbaseNarrativeParameterCustomDropdownGroupInput
-    ) {
-
+) {
     var workspaceUrl = Config.url('workspace');
     var loadingImage = Config.get('loading_gif');
     return KBWidget({
-        name: "kbaseGrowthParamsPlotInput",
+        name: 'kbaseGrowthParamsPlotInput',
         parent: kbaseNarrativeMethodInput,
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
-            isInSidePanel: false
+            isInSidePanel: false,
         },
         inRefreshState: false,
         columnMetadata: {},
@@ -43,9 +41,9 @@ define(
             console.log('initWsClient.self', self);
 
             if (this.authToken) {
-                this.ws = new Workspace(workspaceUrl, {token: this.authToken()});
+                this.ws = new Workspace(workspaceUrl, { token: this.authToken() });
             } else {
-                error('not properly initialized - no auth token found')
+                error('not properly initialized - no auth token found');
             }
         },
         /**
@@ -68,12 +66,26 @@ define(
             var method = this.options.method;
             var params = method.parameters;
 
-            this.addParameterDiv(params[0], "kbaseNarrativeParameterTextInput", $optionsDiv);
-            this.addParameterDiv(params[1], "kbaseNarrativeParameterDropdownInput", $optionsDiv);
-            this.addParameterDiv(params[2], "kbaseNarrativeParameterCustomTextSubdataInput", $optionsDiv, self);
-            this.addParameterDiv(params[3], "kbaseNarrativeParameterCustomButtonInput", $optionsDiv, self);
-            this.addParameterDiv(params[4], "kbaseNarrativeParameterCustomDropdownGroupInput", $optionsDiv, self);
-
+            this.addParameterDiv(params[0], 'kbaseNarrativeParameterTextInput', $optionsDiv);
+            this.addParameterDiv(params[1], 'kbaseNarrativeParameterDropdownInput', $optionsDiv);
+            this.addParameterDiv(
+                params[2],
+                'kbaseNarrativeParameterCustomTextSubdataInput',
+                $optionsDiv,
+                self
+            );
+            this.addParameterDiv(
+                params[3],
+                'kbaseNarrativeParameterCustomButtonInput',
+                $optionsDiv,
+                self
+            );
+            this.addParameterDiv(
+                params[4],
+                'kbaseNarrativeParameterCustomDropdownGroupInput',
+                $optionsDiv,
+                self
+            );
 
             self.parameterIdLookup['input_growth_parameters'].addInputListener(function () {
                 if (!self.inRefreshState) {
@@ -93,23 +105,21 @@ define(
 
             $inputParameterContainer.append($optionsDiv);
             this.$elem.append($inputParameterContainer);
-            this.$elem.css({"margin-bottom": "5px"});
+            this.$elem.css({ 'margin-bottom': '5px' });
         },
         addParameterDiv: function (paramSpec, widgetName, $optionsDiv, $dataModel) {
             var self = this;
             var $stepDiv = $('<div>');
-            var $widget = $stepDiv[widgetName](
-                {
-                    loadingImage: loadingImage,
-                    parsedParameterSpec: paramSpec,
-                    isInSidePanel: self.options.isInSidePanel,
-                    dataModel: $dataModel
-                });
-            this.parameters.push({id: paramSpec.id, widget: $widget});
+            var $widget = $stepDiv[widgetName]({
+                loadingImage: loadingImage,
+                parsedParameterSpec: paramSpec,
+                isInSidePanel: self.options.isInSidePanel,
+                dataModel: $dataModel,
+            });
+            this.parameters.push({ id: paramSpec.id, widget: $widget });
             this.parameterIdLookup[paramSpec.id] = $widget;
 
-            if ($optionsDiv.children().length == 0)
-                $stepDiv.css({"margin-top": "5px"});
+            if ($optionsDiv.children().length == 0) $stepDiv.css({ 'margin-top': '5px' });
             $optionsDiv.append($stepDiv);
         },
         geMainParams: function () {
@@ -125,18 +135,15 @@ define(
         getAdditionalParams: function () {
             var self = this;
             var params = [];
-            if (!self.columnMetadata)
-                return params;
+            if (!self.columnMetadata) return params;
 
             var mainParams = self.geMainParams();
-            if (mainParams.length == 0)
-                return params;
+            if (mainParams.length == 0) return params;
 
             // Collect params
             var paramValues = {};
             for (var i in self.columnMetadata) {
                 var cMetadata = self.columnMetadata[i];
-
 
                 // Check whether the column is a good (all main parameters are present)
                 var goodColumn = true;
@@ -146,8 +153,7 @@ define(
                     var paramFound = false;
                     for (var j in cMetadata) {
                         var propValue = cMetadata[j];
-                        if (propValue.category != 'Condition')
-                            continue;
+                        if (propValue.category != 'Condition') continue;
                         if (propValue.property_name == mainParam) {
                             paramFound = true;
                             break;
@@ -158,15 +164,12 @@ define(
                         break;
                     }
                 }
-                if (!goodColumn)
-                    continue;
-
+                if (!goodColumn) continue;
 
                 // Collect other params
                 for (var j in cMetadata) {
                     var propValue = cMetadata[j];
-                    if (propValue.category != 'Condition')
-                        continue;
+                    if (propValue.category != 'Condition') continue;
 
                     var isMainParam = false;
                     for (var k in mainParams) {
@@ -196,7 +199,7 @@ define(
                 for (var val in valueSet) {
                     values.push(val);
                 }
-                params.push({name: name, values: values});
+                params.push({ name: name, values: values });
             }
 
             return params;
@@ -209,23 +212,23 @@ define(
             for (var i in params) {
                 var param = params[i];
                 var spec = {
-                    "id": "input_param_filter_" + i,
+                    id: 'input_param_filter_' + i,
                     ui_name: param.name,
                     short_hint: 'Parameter to be constrained',
                     description: 'Parameter to be constrained',
-                    "optional": false,
-                    "advanced": false,
-                    "allow_multiple": false,
-                    "default_values": [],
-                    "field_type": "dropdown",
-                    "dropdown_options": {
-                        "options": []
-                    }
+                    optional: false,
+                    advanced: false,
+                    allow_multiple: false,
+                    default_values: [],
+                    field_type: 'dropdown',
+                    dropdown_options: {
+                        options: [],
+                    },
                 };
                 var options = [];
                 for (var j in param.values) {
                     var value = param.values[j];
-                    options.push({value: value, display: value});
+                    options.push({ value: value, display: value });
                 }
                 spec.dropdown_options.options = options;
                 spec.default_values.push(param.values[0]);
@@ -241,61 +244,62 @@ define(
             var self = this;
             console.log('fetchData.self', self);
             if (self.state == self.STATE_NONE) {
-                $(document).trigger('workspaceQuery.Narrative',
-                    function (ws_name) {
+                $(document).trigger('workspaceQuery.Narrative', function (ws_name) {
+                    var growthParametersID = self.getParameterValue('input_growth_parameters');
+                    var refGrowthParams = { ref: ws_name + '/' + growthParametersID };
+                    self.ws.get_objects(
+                        [refGrowthParams],
+                        function (data) {
+                            self.growthParams = data[0].data;
+                            var matrixRef = self.growthParams.matrix_id;
+                            if (!matrixRef) return;
 
-                        var growthParametersID = self.getParameterValue('input_growth_parameters');
-                        var refGrowthParams = {ref: ws_name + '/' + growthParametersID}
-                        self.ws.get_objects([refGrowthParams],
-                            function (data) {
-                                self.growthParams = data[0].data;
-                                var matrixRef = self.growthParams.matrix_id;
-                                if (!matrixRef)
-                                    return;
+                            var query = [];
+                            query.push({ ref: matrixRef, included: ['metadata/column_metadata'] });
 
-                                var query = [];
-                                query.push({ref: matrixRef, included: ["metadata/column_metadata"]});
+                            self.state = self.STATE_FETCHING;
+                            self.ws.get_object_subset(
+                                query,
+                                function (result) {
+                                    self.columnMetadata = result[0].data.metadata.column_metadata;
+                                    var conditions = self.getConditions(self.columnMetadata);
 
-                                self.state = self.STATE_FETCHING;
-                                self.ws.get_object_subset(query,
-                                    function (result) {
-                                        self.columnMetadata = result[0].data.metadata.column_metadata;
-                                        var conditions = self.getConditions(self.columnMetadata);
-
-                                        self.conditionParams = [];
-                                        for (var conditionParam in conditions) {
-                                            self.conditionParams.push({id: conditionParam, text: conditionParam});
-                                        }
-
-                                        self.state = self.STATE_READY;
-                                        if (doneCallback) {
-                                            doneCallback(self.conditionParams);
-                                        }
-                                    },
-                                    function (error) {
-                                        console.error(error);
+                                    self.conditionParams = [];
+                                    for (var conditionParam in conditions) {
+                                        self.conditionParams.push({
+                                            id: conditionParam,
+                                            text: conditionParam,
+                                        });
                                     }
-                                );
-                            },
-                            function (error) {
-                                console.error(error);
-                            }
-                        );
-                    }
-                );
+
+                                    self.state = self.STATE_READY;
+                                    if (doneCallback) {
+                                        doneCallback(self.conditionParams);
+                                    }
+                                },
+                                function (error) {
+                                    console.error(error);
+                                }
+                            );
+                        },
+                        function (error) {
+                            console.error(error);
+                        }
+                    );
+                });
             } else if (self.state == self.STATE_READY) {
                 if (doneCallback) {
                     doneCallback(self.conditionParams);
                 }
-            }       },
+            }
+        },
         getConditions: function (columnsMetadata) {
             var conditions = {};
             for (var i in columnsMetadata) {
                 var columnMetadata = columnsMetadata[i];
                 for (var j in columnMetadata) {
                     var pv = columnMetadata[j];
-                    if (pv.category != 'Condition')
-                        continue;
+                    if (pv.category != 'Condition') continue;
                     conditions[pv.property_name] = true;
                 }
             }
@@ -309,7 +313,6 @@ define(
                 }
             }
             this.inRefreshState = false;
-        }
-
+        },
     });
 });

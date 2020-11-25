@@ -1,6 +1,4 @@
-define([
-    'widgets/appWidgets2/input/undefinedInput'
-], (UndefinedInput) => {
+define(['widgets/appWidgets2/input/undefinedInput'], (UndefinedInput) => {
     'use strict';
 
     describe('Undefined Input Widget test', () => {
@@ -14,5 +12,5 @@ define([
             widget.attach(node);
             expect(node.innerHTML).toContain('Undefined widget');
         });
-    })
-})
+    });
+});

@@ -1,5 +1,4 @@
-module.exports = function(grunt) {
-
+module.exports = function (grunt) {
     'use strict';
 
     require('load-grunt-tasks')(grunt);
@@ -15,10 +14,7 @@ module.exports = function(grunt) {
                 options: {
                     name: 'narrative_paths',
                     baseUrl: 'kbase-extension/static',
-                    include: [
-                        'narrativeMain',
-                        'buildTools/loadAppWidgets'
-                    ],
+                    include: ['narrativeMain', 'buildTools/loadAppWidgets'],
                     mainConfigFile: 'kbase-extension/static/narrative_paths.js',
                     findNestedDependencies: true,
                     optimize: 'none',
@@ -41,28 +37,30 @@ module.exports = function(grunt) {
                         'base/js/dialog': 'empty:',
                         'notebook/js/notebook': 'empty:',
                         'notebook/js/main': 'empty:',
-                        'custom/custom': 'empty:'
+                        'custom/custom': 'empty:',
                     },
                     inlineText: false,
                     buildCSS: false,
                     optimizeAllPluginResources: false,
-                    done: function(done, output) {
+                    done: function (done, output) {
                         console.log(output);
                         done();
-                    }
-                }
-            }
+                    },
+                },
+            },
         },
 
         uglify: {
             dist: {
                 options: {
-                    sourceMap: true
+                    sourceMap: true,
                 },
                 files: {
-                    'kbase-extension/static/kbase-narrative-min.js': ['kbase-extension/static/kbase-narrative.js']
-                }
-            }
+                    'kbase-extension/static/kbase-narrative-min.js': [
+                        'kbase-extension/static/kbase-narrative.js',
+                    ],
+                },
+            },
         },
 
         // Once we have a revved file, this inserts that reference into page.html at
@@ -76,13 +74,13 @@ module.exports = function(grunt) {
                         // search: 'narrativeMain',
                         search: 'narrativeMain.js',
 
-                        replace: function(match) {
+                        replace: function (match) {
                             return 'kbase-narrative-min.js';
                         },
-                        flags: ''
-                    }
-                ]
-            }
+                        flags: '',
+                    },
+                ],
+            },
         },
 
         // Testing with Karma!
@@ -96,14 +94,12 @@ module.exports = function(grunt) {
                 reporters: ['progress', 'coverage'],
                 coverageReporter: {
                     dir: 'build/test-coverage/',
-                    reporters: [
-                        { type: 'html', subdir: 'html' },
-                    ],
+                    reporters: [{ type: 'html', subdir: 'html' }],
                 },
 
                 autoWatch: true,
                 singleRun: false,
-            }
+            },
         },
 
         jasmine_nodejs: {
@@ -120,29 +116,25 @@ module.exports = function(grunt) {
                 // configure one or more built-in reporters
                 reporters: {
                     console: {
-                        colors: true,        // (0|false)|(1|true)|2
-                        cleanStack: 1,       // (0|false)|(1|true)|2|3
-                        verbosity: 4,        // (0|false)|1|2|3|(4|true)
+                        colors: true, // (0|false)|(1|true)|2
+                        cleanStack: 1, // (0|false)|(1|true)|2|3
+                        verbosity: 4, // (0|false)|1|2|3|(4|true)
                         listStyle: 'indent', // "flat"|"indent"
-                        activity: false
+                        activity: false,
                     },
                 },
                 // add custom Jasmine reporter(s)
-                customReporters: []
+                customReporters: [],
             },
             functional: {
                 options: {
-                    useHelpers: true
+                    useHelpers: true,
                 },
                 // spec files
-                specs: [
-                    'test/functional/spec/**/*Spec.js'
-                ],
+                specs: ['test/functional/spec/**/*Spec.js'],
                 // target-specific helpers
-                helpers: [
-                    'test/functional/helpers/**/*.helper.js'
-                ]
-            }
+                helpers: ['test/functional/helpers/**/*.helper.js'],
+            },
         },
         // Run coveralls and send the info.
         coveralls: {
@@ -151,7 +143,7 @@ module.exports = function(grunt) {
             },
             'ui-common': {
                 src: 'build/test-coverage/lcov/**/*.info',
-            }
+            },
         },
 
         // Run CSS / SCSS-related tasks
@@ -165,21 +157,21 @@ module.exports = function(grunt) {
                         require('autoprefixer')(),
                         // minify
                         require('cssnano')([
-                            "default",
+                            'default',
                             {
-                                "normalizeWhitespace": {
-                                    "exclude": true
+                                normalizeWhitespace: {
+                                    exclude: true,
                                 },
-                            }
+                            },
                         ]),
                     ],
                 },
                 src: [
                     'kbase-extension/static/kbase/css/*_concat.css',
                     'kbase-extension/static/kbase/css/appCell.css',
-                    'kbase-extension/static/kbase/css/editorCell.css'
+                    'kbase-extension/static/kbase/css/editorCell.css',
                 ],
-            }
+            },
         },
 
         // runs the npm command to compile scss -> css and run autoprefixer on it
@@ -193,37 +185,22 @@ module.exports = function(grunt) {
         // when they change, regenerate the compiled css files
         watch: {
             files: 'kbase-extension/scss/**/*.scss',
-            tasks: [
-                'shell:compile_css',
-            ],
+            tasks: ['shell:compile_css'],
         },
     });
 
-    grunt.registerTask('minify', [
-        'requirejs',
-        'uglify',
-        'regex-replace'
-    ]);
+    grunt.registerTask('minify', ['requirejs', 'uglify', 'regex-replace']);
 
-    grunt.registerTask('test', [
-        'karma:unit'
-    ]);
+    grunt.registerTask('test', ['karma:unit']);
 
     // Does a single unit test run, then sends
     // the lcov results to coveralls. Intended for running
     // from travis-ci.
-    grunt.registerTask('test-travis', [
-        'karma:unit',
-        'coveralls'
-    ]);
+    grunt.registerTask('test-travis', ['karma:unit', 'coveralls']);
 
     // node (instead of karma) based jasmine tasks
-    grunt.registerTask('test-browser', [
-        'jasmine_nodejs'
-    ]);
+    grunt.registerTask('test-browser', ['jasmine_nodejs']);
     // Does an ongoing test run in a watching development
     // mode.
-    grunt.registerTask('develop', [
-        'karma:dev'
-    ]);
+    grunt.registerTask('develop', ['karma:dev']);
 };

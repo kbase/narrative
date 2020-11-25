@@ -5,22 +5,35 @@ define([
     'common/runtime',
     'widgets/appWidgets2/input/select2ObjectInput',
     'base/js/namespace',
-    'kbaseNarrative'
-], (
-    $,
-    TestUtil,
-    Runtime,
-    Select2ObjectInput,
-    Jupyter,
-    Narrative
-) => {
+    'kbaseNarrative',
+], ($, TestUtil, Runtime, Select2ObjectInput, Jupyter, Narrative) => {
     'use strict';
 
     const readsItem = [
-        3, 'small.fq_reads', 'KBaseFile.SingleEndLibrary-2.2', '2018-01-18T22:26:25+0000', 1, 'wjriehl', 25022, 'wjriehl:narrative12345', '4161234123', 628, {}
-    ],
+            3,
+            'small.fq_reads',
+            'KBaseFile.SingleEndLibrary-2.2',
+            '2018-01-18T22:26:25+0000',
+            1,
+            'wjriehl',
+            25022,
+            'wjriehl:narrative12345',
+            '4161234123',
+            628,
+            {},
+        ],
         readsItem2 = [
-            4, 'other_small.fq_reads', 'KBaseFile.SingleEndLibrary-2.2', '2018-01-19T22:26:25+0000', 1, 'wjriehl', 25022, 'wjriehl:narrative12345', '5161234123', 628, {}
+            4,
+            'other_small.fq_reads',
+            'KBaseFile.SingleEndLibrary-2.2',
+            '2018-01-19T22:26:25+0000',
+            1,
+            'wjriehl',
+            25022,
+            'wjriehl:narrative12345',
+            '5161234123',
+            628,
+            {},
         ],
         dummyData = [readsItem, readsItem2],
         dummyObjInfo = [objectify(readsItem), objectify(readsItem2)];
@@ -41,8 +54,7 @@ define([
             wsid: infoArr[6],
             saveDate: new Date(infoArr[3]),
             typeModule: moduleAndType[0],
-            typeName: moduleAndType[1]
-
+            typeName: moduleAndType[1],
         };
     }
 
@@ -56,9 +68,9 @@ define([
                     constraints: {
                         required: required,
                         defaultValue: defaultValue,
-                        types: ['KBaseFile.SingleEndLibrary']
-                    }
-                }
+                        types: ['KBaseFile.SingleEndLibrary'],
+                    },
+                },
             },
             channelName: bus.channelName,
         };
@@ -68,17 +80,19 @@ define([
         dataset = dataset || dummyData;
         objectInfo = objectInfo || dummyObjInfo;
 
-        runtime.bus().set({
-            data: dataset,
-            timestamp: new Date().getTime(),
-            objectInfo: objectInfo
-        }, {
-            channel: 'data',
-            key: {
-                type: 'workspace-data-updated'
+        runtime.bus().set(
+            {
+                data: dataset,
+                timestamp: new Date().getTime(),
+                objectInfo: objectInfo,
+            },
+            {
+                channel: 'data',
+                key: {
+                    type: 'workspace-data-updated',
+                },
             }
-        });
-
+        );
     }
 
     describe('Select 2 Object Input tests', () => {
@@ -109,17 +123,17 @@ define([
             const taxonServiceInfo = {
                 version: '1.1',
                 id: '12345',
-                result: [{
-                    git_commit_hash: 'blahblahblah',
-                    hash: 'blahblahblah',
-                    health: 'healthy',
-                    module_name: 'taxonomy_service',
-                    url: fakeServiceUrl
-                }]
-            }
-            jasmine.Ajax.stubRequest(
-                runtime.config('services.service_wizard.url')
-            ).andReturn({
+                result: [
+                    {
+                        git_commit_hash: 'blahblahblah',
+                        hash: 'blahblahblah',
+                        health: 'healthy',
+                        module_name: 'taxonomy_service',
+                        url: fakeServiceUrl,
+                    },
+                ],
+            };
+            jasmine.Ajax.stubRequest(runtime.config('services.service_wizard.url')).andReturn({
                 status: 200,
                 statusText: 'HTTP/1.1 200 OK',
                 contentType: 'application/json',
@@ -130,25 +144,28 @@ define([
             const taxonSearchInfo = {
                 version: '1.1',
                 id: '67890',
-                result: [{
-                    hits: [{
-                        label: 'A Hit',
-                        id: '1',
-                        category: 'generic',
-                        parent: null,
-                        parent_ref: null
-                    }],
-                    num_of_hits: 1
-                }]
+                result: [
+                    {
+                        hits: [
+                            {
+                                label: 'A Hit',
+                                id: '1',
+                                category: 'generic',
+                                parent: null,
+                                parent_ref: null,
+                            },
+                        ],
+                        num_of_hits: 1,
+                    },
+                ],
             };
-            jasmine.Ajax.stubRequest(fakeServiceUrl)
-                .andReturn({
-                    status: 200,
-                    statusText: 'HTTP/1.1 200 OK',
-                    contentType: 'application/json',
-                    responseText: JSON.stringify(taxonSearchInfo),
-                    response: JSON.stringify(taxonSearchInfo)
-                });
+            jasmine.Ajax.stubRequest(fakeServiceUrl).andReturn({
+                status: 200,
+                statusText: 'HTTP/1.1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify(taxonSearchInfo),
+                response: JSON.stringify(taxonSearchInfo),
+            });
 
             updateData();
         });
@@ -170,7 +187,8 @@ define([
 
         it('Should start and stop', (done) => {
             let widget = Select2ObjectInput.make(testConfig);
-            widget.start({node: node})
+            widget
+                .start({ node: node })
                 .then(() => {
                     return widget.stop();
                 })
@@ -187,10 +205,9 @@ define([
                 done();
             });
 
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('update', {value: 'foo'})
-                });
+            widget.start({ node: node }).then(() => {
+                bus.emit('update', { value: 'foo' });
+            });
         });
 
         it('Should reset model value by bus', (done) => {
@@ -201,23 +218,24 @@ define([
                 done();
             });
 
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('reset-to-defaults');
-                });
+            widget.start({ node: node }).then(() => {
+                bus.emit('reset-to-defaults');
+            });
         });
 
         it('Should respond to changed select2 option', (done) => {
             let widget = Select2ObjectInput.make(testConfig);
-            bus.on('validation', (msg) => {
-            })
+            bus.on('validation', (msg) => {});
             bus.on('changed', (msg) => {
                 done();
             });
-            widget.start({node: node})
+            widget
+                .start({ node: node })
                 .then(() => {
                     let $select = $(node).find('select');
-                    let $search = $select.data('select2').dropdown.$search || $select.data('select2').selection.$search;
+                    let $search =
+                        $select.data('select2').dropdown.$search ||
+                        $select.data('select2').selection.$search;
 
                     $search.val('small');
                     $search.trigger('input');
@@ -225,10 +243,9 @@ define([
                     $select.trigger({
                         type: 'select2: select',
                         params: {
-                            data: {
-                            }
-                        }
-                    })
+                            data: {},
+                        },
+                    });
                     return TestUtil.wait(1000);
                 })
                 .then(() => {

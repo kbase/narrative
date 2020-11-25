@@ -16,8 +16,8 @@ define([
 
     'typeahead',
     'bootstrap',
-    'css!font-awesome'
-], function(
+    'css!font-awesome',
+], function (
     $,
     Promise,
     html,
@@ -45,7 +45,7 @@ define([
             container,
             ui,
             model = {
-                value: undefined
+                value: undefined,
             };
 
         function getInputValue() {
@@ -53,11 +53,11 @@ define([
         }
 
         function setModelValue(value) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (model.value !== value) {
                     model.value = value;
                     bus.emit('changed', {
-                        newValue: value
+                        newValue: value,
                     });
                 }
             });
@@ -70,7 +70,7 @@ define([
         // VALIDATION
 
         function validate(rawValue) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (rawValue === undefined) {
                     rawValue = getInputValue();
                 }
@@ -79,46 +79,43 @@ define([
         }
 
         function autoValidate() {
-            return validate()
-                .then(function(result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then(function (result) {
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
-
 
         // DOM EVENTS
 
         function handleChange(newValue) {
-            validate(newValue)
-                .then(function(result) {
-                    if (result.isValid) {
-                        setModelValue(result.parsedValue);
-                    } else if (result.diagnosis === 'required-missing') {
-                        setModelValue(result.parsedValue);
-                        bus.emit('changed', {
-                            newValue: result.parsedValue
-                        });
-                    } else {
-                        if (config.showOwnMessages) {
-                            var message = inputUtils.buildMessageAlert({
-                                title: 'ERROR',
-                                type: 'danger',
-                                id: result.messageId,
-                                message: result.errorMessage
-                            });
-                            ui.setContent('autocomplete-container.message', message.content);
-                            message.events.attachEvents();
-                        }
-                    }
-
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
+            validate(newValue).then(function (result) {
+                if (result.isValid) {
+                    setModelValue(result.parsedValue);
+                } else if (result.diagnosis === 'required-missing') {
+                    setModelValue(result.parsedValue);
+                    bus.emit('changed', {
+                        newValue: result.parsedValue,
                     });
+                } else {
+                    if (config.showOwnMessages) {
+                        var message = inputUtils.buildMessageAlert({
+                            title: 'ERROR',
+                            type: 'danger',
+                            id: result.messageId,
+                            message: result.errorMessage,
+                        });
+                        ui.setContent('autocomplete-container.message', message.content);
+                        message.events.attachEvents();
+                    }
+                }
+
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // RENDERING
@@ -129,91 +126,99 @@ define([
                 class: 'form-control',
                 dataElement: 'input',
                 style: {
-                    width: '100%'
+                    width: '100%',
                 },
-                value: currentValue
+                value: currentValue,
             });
         }
 
         function render() {
             var ic_id;
 
-            Promise.try(function() {
-                    var events = Events.make(),
-                        inputControl = makeInputControl(model.value, events, bus);
-                    ui.setContent('autocomplete-container', inputControl);
-                    ic_id = $(inputControl).attr('id');
-                    events.attachEvents(container);
-                })
-                .then(function() {
-                    setTimeout(function() {
-                        var genericClient = new GenericClient(Config.url('service_wizard'), {
-                            token: Runtime.make().authToken()
-                        });
+            Promise.try(function () {
+                var events = Events.make(),
+                    inputControl = makeInputControl(model.value, events, bus);
+                ui.setContent('autocomplete-container', inputControl);
+                ic_id = $(inputControl).attr('id');
+                events.attachEvents(container);
+            }).then(function () {
+                setTimeout(function () {
+                    var genericClient = new GenericClient(Config.url('service_wizard'), {
+                        token: Runtime.make().authToken(),
+                    });
 
-                        var dog = new Bloodhound({
-                            datumTokenizer: Bloodhound.tokenizers.whitespace,
-                            queryTokenizer: Bloodhound.tokenizers.whitespace,
-                            // `states` is an array of state names defined in "The Basics"
-                            remote: {
-                                url: 'http://kbase.us/some/fake/url', //bloodhound remote requires a URL
-                                filter: function(query, settings) {
-                                    return query.hits;
-                                },
-                                prepare: function(settings) {
-                                    return settings;
-                                },
-                                transport: function(options, onSuccess, onError) {
-                                    genericClient.sync_call("taxonomy_service.search_taxonomy", [{
-                                        private: 0,
-                                        public: 1,
-                                        search: options.url,
-                                        limit: 10,
-                                        start: 0
-                                    }]).then(function(d) {
+                    var dog = new Bloodhound({
+                        datumTokenizer: Bloodhound.tokenizers.whitespace,
+                        queryTokenizer: Bloodhound.tokenizers.whitespace,
+                        // `states` is an array of state names defined in "The Basics"
+                        remote: {
+                            url: 'http://kbase.us/some/fake/url', //bloodhound remote requires a URL
+                            filter: function (query, settings) {
+                                return query.hits;
+                            },
+                            prepare: function (settings) {
+                                return settings;
+                            },
+                            transport: function (options, onSuccess, onError) {
+                                genericClient
+                                    .sync_call('taxonomy_service.search_taxonomy', [
+                                        {
+                                            private: 0,
+                                            public: 1,
+                                            search: options.url,
+                                            limit: 10,
+                                            start: 0,
+                                        },
+                                    ])
+                                    .then(function (d) {
                                         onSuccess(d[0]);
-                                    }).catch(function(e) {
+                                    })
+                                    .catch(function (e) {
                                         onError(e);
                                     });
-                                }
-                            }
-                        });
-                        var $control = $('#' + ic_id);
-                        $control.typeahead({
+                            },
+                        },
+                    });
+                    var $control = $('#' + ic_id);
+                    $control.typeahead(
+                        {
                             hint: true,
                             highlight: true,
                             minLength: 2,
-                            limit: 10
-                        }, {
+                            limit: 10,
+                        },
+                        {
                             name: 'states',
                             source: dog,
-                            display: function(v) {
-                                return v.label
-                            }
-                        });
-                        $control.bind('typeahead:select', function(e, suggestion) {
-                            // NB for 'select' event it is the suggestion object,
-                            // for 'change' it is the display value as defined above.
-                            // e.g. 
-                            // category: "public"
-                            // id: "1779/300381/1"
-                            // label: "Klebsiella sp. ok1_1_9_S34"
-                            // parent: "Klebsiella"
-                            // parent_ref: "1779/139747/1"
-                            // console.log('suggestion', suggestion);
-                            handleChange(suggestion.label);
-                        });
-                    }, 1);
-                    return autoValidate();
-                });
+                            display: function (v) {
+                                return v.label;
+                            },
+                        }
+                    );
+                    $control.bind('typeahead:select', function (e, suggestion) {
+                        // NB for 'select' event it is the suggestion object,
+                        // for 'change' it is the display value as defined above.
+                        // e.g.
+                        // category: "public"
+                        // id: "1779/300381/1"
+                        // label: "Klebsiella sp. ok1_1_9_S34"
+                        // parent: "Klebsiella"
+                        // parent_ref: "1779/139747/1"
+                        // console.log('suggestion', suggestion);
+                        handleChange(suggestion.label);
+                    });
+                }, 1);
+                return autoValidate();
+            });
         }
 
         function layout() {
-            return div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'autocomplete-container' })
-            ]);
+            return div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'autocomplete-container' })]
+            );
         }
 
         function syncModelToControl() {
@@ -233,34 +238,33 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
-                    parent = arg.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    ui = UI.make({ node: arg.node });
+            return Promise.try(function () {
+                parent = arg.node;
+                container = parent.appendChild(document.createElement('div'));
+                ui = UI.make({ node: arg.node });
 
-                    var events = Events.make();
-                    container.innerHTML = layout(events);
-                    events.attachEvents(container);
+                var events = Events.make();
+                container.innerHTML = layout(events);
+                events.attachEvents(container);
 
-                    setModelValue(config.initialValue);
+                setModelValue(config.initialValue);
 
-                    bus.on('reset-to-defaults', function() {
-                        resetModelValue();
-                    });
-                    bus.on('update', function(message) {
-                        setModelValue(message.value);
-                    });
-
-                    // bus.emit('sync');
-                    return render();
-                })
-                .then(function() {
-                    syncModelToControl();
+                bus.on('reset-to-defaults', function () {
+                    resetModelValue();
                 });
+                bus.on('update', function (message) {
+                    setModelValue(message.value);
+                });
+
+                // bus.emit('sync');
+                return render();
+            }).then(function () {
+                syncModelToControl();
+            });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -269,13 +273,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

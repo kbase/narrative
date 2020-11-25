@@ -1,8 +1,4 @@
-define([
-    'bluebird'
-], function(
-    Promise
-) {
+define(['bluebird'], function (Promise) {
     'use strict';
 
     // Ensure semaphore structure is in place when the module is loaded.
@@ -12,7 +8,6 @@ define([
     if (!window.__kbase_semaphores__) {
         window.__kbase_semaphores__ = {};
     }
-
 
     /*
     The sempahores mechanism has a functional interface.
@@ -45,7 +40,15 @@ define([
                 function waiter() {
                     var elapsed = new Date().getTime() - startTime;
                     if (elapsed > timeout) {
-                        reject(new Error('Timed out waiting for semaphore "' + name + '" with value "' + value + '"'));
+                        reject(
+                            new Error(
+                                'Timed out waiting for semaphore "' +
+                                    name +
+                                    '" with value "' +
+                                    value +
+                                    '"'
+                            )
+                        );
                         return;
                     }
                     if (get(name) === value) {
@@ -64,13 +67,13 @@ define([
             add: add,
             set: set,
             remove: remove,
-            when: when
+            when: when,
         });
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -3,7 +3,7 @@
  * @public
  */
 
-define ([
+define([
     'uuid',
     'jquery',
     'kbwidget',
@@ -16,25 +16,18 @@ define ([
     'datatables.net-buttons',
     'datatables.net-buttons-bs',
     'datatables.net-buttons-html5',
-    'datatables.net-buttons-print'
-], function(
-    Uuid,
-    $,
-    KBWidget,
-    kbaseAuthenticatedWidget,
-    kbaseTabs,
-    Config
-) {
+    'datatables.net-buttons-print',
+], function (Uuid, $, KBWidget, kbaseAuthenticatedWidget, kbaseTabs, Config) {
     'use strict';
 
     return KBWidget({
         name: 'kbaseAlignment',
-        parent : kbaseAuthenticatedWidget,
+        parent: kbaseAuthenticatedWidget,
         version: '1.0.2',
         options: {
             output: null,
             workspaceID: null,
-            loadingImage: Config.get('loading_gif')
+            loadingImage: Config.get('loading_gif'),
         },
 
         // Prefix for all div ids
@@ -42,7 +35,7 @@ define ([
         token: null,
         trainingSetData: null,
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             this.pref = new Uuid(4).format();
             // Create a message pane
@@ -51,14 +44,13 @@ define ([
             return this;
         },
 
-        loggedInCallback: function(event, auth) {
-
+        loggedInCallback: function (event, auth) {
             // error if not properly initialized
             if (this.options.upas.output == null) {
-                this.showMessage('[Error] Couldn\'t retrieve the object.');
+                this.showMessage("[Error] Couldn't retrieve the object.");
                 return this;
             }
-            this.wsClient = new Workspace(Config.url('workspace'), {token: auth.token});
+            this.wsClient = new Workspace(Config.url('workspace'), { token: auth.token });
 
             // Let's go...
             this.loadAndRender();
@@ -66,18 +58,16 @@ define ([
             return this;
         },
 
-        loggedOutCallback: function() {
+        loggedOutCallback: function () {
             this.isLoggedIn = false;
             return this;
         },
 
-        loadAndRender: function(){
+        loadAndRender: function () {
             var self = this;
             self.loading(true);
 
-            self.wsClient.get_objects(
-                [{ref: this.options.upas.output}]
-            ).then( function (res) {
+            self.wsClient.get_objects([{ ref: this.options.upas.output }]).then(function (res) {
                 self.objData = res[0]['data'];
                 self.objData.alignment_stats['total_reads'] =
                     self.objData.alignment_stats['mapped_reads'] +
@@ -87,7 +77,7 @@ define ([
             });
         },
 
-        render: function() {
+        render: function () {
             var self = this;
             var pref = this.pref;
             var container = this.$elem;
@@ -95,66 +85,103 @@ define ([
 
             ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
             container.empty();
-            var tabPane = $('<div id="'+pref+'tab-content">');
+            var tabPane = $('<div id="' + pref + 'tab-content">');
             container.append(tabPane);
 
-            var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+            var tabWidget = new kbaseTabs(tabPane, { canDelete: true, tabs: [] });
             ///////////////////////////////////// Overview table ////////////////////////////////////////////
             var tabOverview = $('<div/>');
-            tabWidget.addTab({tab: 'Overview', content: tabOverview, canDelete : false, show: true});
-            var tableOver = $('<table class="table table-striped table-bordered" '+
-                'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="'+pref+'overview-table"/>');
+            tabWidget.addTab({
+                tab: 'Overview',
+                content: tabOverview,
+                canDelete: false,
+                show: true,
+            });
+            var tableOver = $(
+                '<table class="table table-striped table-bordered" ' +
+                    'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="' +
+                    pref +
+                    'overview-table"/>'
+            );
             tabOverview.append(tableOver);
             tableOver
                 .append(self.makeRow('Aligned Using', objData.aligned_using))
                 .append(self.makeRow('Aligner Version', objData.aligner_version))
                 .append(self.makeRow('Library Type', objData.library_type))
-                .append(self.makeRow('Total Reads',
-                    objData.alignment_stats.total_reads.toLocaleString()))
-                .append(self.makeRow('Unmapped Reads', self.formatPercentage(
-                    objData.alignment_stats.unmapped_reads,
-                    objData.alignment_stats.total_reads)))
-                .append(self.makeRow('Mapped Reads', self.formatPercentage(
-                    objData.alignment_stats.mapped_reads,
-                    objData.alignment_stats.total_reads)))
-                .append(self.makeRow('Multiple Alignments', self.formatPercentage(
-                    objData.alignment_stats.multiple_alignments,
-                    objData.alignment_stats.mapped_reads)))
-                .append(self.makeRow('Singletons', self.formatPercentage(
-                    objData.alignment_stats.singletons,
-                    objData.alignment_stats.mapped_reads)));
+                .append(
+                    self.makeRow(
+                        'Total Reads',
+                        objData.alignment_stats.total_reads.toLocaleString()
+                    )
+                )
+                .append(
+                    self.makeRow(
+                        'Unmapped Reads',
+                        self.formatPercentage(
+                            objData.alignment_stats.unmapped_reads,
+                            objData.alignment_stats.total_reads
+                        )
+                    )
+                )
+                .append(
+                    self.makeRow(
+                        'Mapped Reads',
+                        self.formatPercentage(
+                            objData.alignment_stats.mapped_reads,
+                            objData.alignment_stats.total_reads
+                        )
+                    )
+                )
+                .append(
+                    self.makeRow(
+                        'Multiple Alignments',
+                        self.formatPercentage(
+                            objData.alignment_stats.multiple_alignments,
+                            objData.alignment_stats.mapped_reads
+                        )
+                    )
+                )
+                .append(
+                    self.makeRow(
+                        'Singletons',
+                        self.formatPercentage(
+                            objData.alignment_stats.singletons,
+                            objData.alignment_stats.mapped_reads
+                        )
+                    )
+                );
         },
 
-        formatPercentage: function(value, total) {
-            var percent = (value / total * 100).toFixed(2);
-            return value.toLocaleString() + ' (' + percent + '%)'
+        formatPercentage: function (value, total) {
+            var percent = ((value / total) * 100).toFixed(2);
+            return value.toLocaleString() + ' (' + percent + '%)';
         },
 
-        makeRow: function(name, value) {
+        makeRow: function (name, value) {
             var $row = $('<tr/>')
-                .append($('<th />').css('width','20%').append(name))
+                .append($('<th />').css('width', '20%').append(name))
                 .append($('<td />').append(value));
             return $row;
         },
 
-        loading: function(isLoading) {
+        loading: function (isLoading) {
             if (isLoading) {
-                this.showMessage('<img src=\'' + this.options.loadingImage + '\'/>');
+                this.showMessage("<img src='" + this.options.loadingImage + "'/>");
             } else {
                 this.hideMessage();
             }
         },
 
-        showMessage: function(message) {
+        showMessage: function (message) {
             var span = $('<span/>').append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();
         },
 
-        hideMessage: function() {
+        hideMessage: function () {
             this.$messagePane.hide();
             this.$messagePane.empty();
-        }
+        },
     });
 });

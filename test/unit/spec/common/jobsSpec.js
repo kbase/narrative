@@ -1,6 +1,4 @@
-define([
-    'common/jobs'
-], (Jobs) => {
+define(['common/jobs'], (Jobs) => {
     describe('Test Jobs module', () => {
         it('Should be loaded with the right functions', () => {
             expect(Jobs).toBeDefined();
@@ -12,7 +10,7 @@ define([
                 job_id: 'foo',
                 created: 12345,
                 other: 'key',
-                another: 'key'
+                another: 'key',
             };
             expect(Jobs.isValidJobState(goodJs)).toBeTrue();
         });
@@ -24,19 +22,19 @@ define([
                 ['a', 'list'],
                 {
                     job_id: 'somejob',
-                    other: 'key'
+                    other: 'key',
                 },
                 {
                     created: 'at_some_point',
-                    other: 'key'
+                    other: 'key',
                 },
                 {
-                    foobar: 'baz'
+                    foobar: 'baz',
                 },
                 null,
-                undefined
+                undefined,
             ];
-            badJsList.forEach(elem => {
+            badJsList.forEach((elem) => {
                 expect(Jobs.isValidJobState(elem)).toBeFalse();
             });
         });

@@ -2,45 +2,35 @@
 
 */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'd3',
-		'kbaseBarchart',
-		'kbaseAuthenticatedWidget',
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		d3,
-		kbaseBarchart,
-		kbaseAuthenticatedWidget
-	) {
-
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'd3',
+    'kbaseBarchart',
+    'kbaseAuthenticatedWidget',
+], function (KBWidget, bootstrap, $, d3, kbaseBarchart, kbaseAuthenticatedWidget) {
     return KBWidget({
+        name: 'kbaseHistogram',
+        parent: kbaseAuthenticatedWidget,
 
-	    name: "kbaseHistogram",
-	  parent : kbaseAuthenticatedWidget,
-
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
-            numBins : 50,
-            minCutoff : 0.001,
-            tickColor : 'blue',
-            colors : ['#0000FF', '#000099'],
+            numBins: 50,
+            minCutoff: 0.001,
+            tickColor: 'blue',
+            colors: ['#0000FF', '#000099'],
         },
 
-        getState : function() {
+        getState: function () {
             return {
-                numBins : this.options.numBins,
-                minCutoff : this.options.minCutoff,
-                maxCutoff : this.options.maxCutoff
+                numBins: this.options.numBins,
+                minCutoff: this.options.minCutoff,
+                maxCutoff: this.options.maxCutoff,
             };
         },
 
-        loadState : function(state) {
+        loadState: function (state) {
             this.options.numBins = parseInt(state.numBins);
             this.options.minCutoff = parseFloat(state.minCutoff);
             this.options.maxCutoff = parseFloat(state.maxCutoff);
@@ -57,37 +47,33 @@ define (
             this.data('maxCutoff').val(this.options.maxCutoff);
             this.data('numBins').text(this.options.numBins);
             this.data('numBinsRange').val(this.options.numBins);
-
         },
 
-        _accessors : [
-            'dataset',
-        ],
+        _accessors: ['dataset'],
 
-        setDataset : function(newDataset) {
+        setDataset: function (newDataset) {
             this.dataset(newDataset);
-            this.renderHistogram( this.options.numBins);
+            this.renderHistogram(this.options.numBins);
         },
 
-        renderXAxis : function() {
+        renderXAxis: function () {
             this.data('barchart').renderXAxis();
         },
 
-        init : function init(options) {
+        init: function init(options) {
             this._super(options);
 
             this.appendUI(this.$elem);
 
-            this.gradientID = this.data('barchart').linearGradient( { colors : this.options.colors });
+            this.gradientID = this.data('barchart').linearGradient({ colors: this.options.colors });
 
             return this;
         },
 
-        appendUI : function appendUI($elem) {
-
+        appendUI: function appendUI($elem) {
             var $me = this;
 
-            var $barElem = $.jqElem('div').css({width : 800, height : 500});
+            var $barElem = $.jqElem('div').css({ width: 800, height: 500 });
 
             var $barContainer = $.jqElem('div')
                 .append(
@@ -118,10 +104,10 @@ define (
                                         .attr('value', $me.options.numBins)
                                         .attr('step', 1)
                                         .css('width', '800px')
-                                        .on('input', function(e) {
+                                        .on('input', function (e) {
                                             $me.data('numBins').text($(this).val());
                                         })
-                                        .on('change', function(e) {
+                                        .on('change', function (e) {
                                             $me.data('numBins').text($(this).val());
                                             $me.options.numBins = parseInt($(this).val());
                                             $me.renderHistogram();
@@ -146,7 +132,7 @@ define (
                                         .attr('id', 'minCutoff')
                                         .attr('class', 'form-control')
                                         .attr('value', $me.options.minCutoff)
-                                        .on('change', function(e) {
+                                        .on('change', function (e) {
                                             $me.options.minCutoff = parseFloat($(this).val());
                                             $me.renderHistogram();
                                         })
@@ -170,55 +156,43 @@ define (
                                         .attr('class', 'form-control')
                                         .attr('id', 'maxCutoff')
                                         .attr('value', $me.options.maxCutoff)
-                                        .on('change', function(e) {
+                                        .on('change', function (e) {
                                             $me.options.maxCutoff = parseFloat($(this).val());
                                             $me.renderHistogram();
                                         })
                                 )
                         )
                 )
-                .append($barElem)
-            ;
+                .append($barElem);
+            $elem.append($barContainer);
 
-            $elem
-                .append( $barContainer )
-            ;
-
-            var $barchart =
-                $barElem.kbaseBarchart( this.options )
-            ;
-
+            var $barchart = $barElem.kbaseBarchart(this.options);
             $barchart.superRenderXAxis = $barchart.renderXAxis;
-            $barchart.renderXAxis = function() {
+            $barchart.renderXAxis = function () {
                 $barchart.superRenderXAxis();
 
-                $barchart.D3svg()
+                $barchart
+                    .D3svg()
                     .selectAll('.xAxis .tick text')
                     .attr('fill', this.options.tickColor)
-                    .on('mouseover', function(L, i) {
-                        $.each(
-                            $barchart.dataset(),
-                            function (i, d) {
-                                if (d.bar == L) {
-                                    $barchart.showToolTip({ label : d.tooltip })
-                                }
+                    .on('mouseover', function (L, i) {
+                        $.each($barchart.dataset(), function (i, d) {
+                            if (d.bar == L) {
+                                $barchart.showToolTip({ label: d.tooltip });
                             }
-                        );
-
+                        });
                     })
-                    .on('mouseout', function(d) {
+                    .on('mouseout', function (d) {
                         $barchart.hideToolTip();
-                    })
+                    });
             };
 
             this._rewireIds($elem, this);
-            this.data('barElem',   $barElem);
+            this.data('barElem', $barElem);
             this.data('barchart', $barchart);
-
         },
 
-        renderHistogram : function renderHistogram(bins) {
-
+        renderHistogram: function renderHistogram(bins) {
             var $me = this;
 
             if (bins === undefined) {
@@ -227,50 +201,40 @@ define (
 
             var filteredDataset = this.dataset();
 
-            if (! isNaN(this.options.minCutoff) || ! isNaN(this.options.maxCutoff)) {
+            if (!isNaN(this.options.minCutoff) || !isNaN(this.options.maxCutoff)) {
                 filteredDataset = [];
 
-                $.each(this.dataset(),
-                    function(i, v) {
-                        if (
-                            (isNaN($me.options.minCutoff) || v >= $me.options.minCutoff)
-                            &&
-                            (isNaN($me.options.maxCutoff) || v <= $me.options.maxCutoff)
-                            ) {
-                            filteredDataset.push(v);
-                        }
+                $.each(this.dataset(), function (i, v) {
+                    if (
+                        (isNaN($me.options.minCutoff) || v >= $me.options.minCutoff) &&
+                        (isNaN($me.options.maxCutoff) || v <= $me.options.maxCutoff)
+                    ) {
+                        filteredDataset.push(v);
                     }
-                );
-
+                });
             }
 
-            var barData = d3.layout.histogram().bins(bins)( filteredDataset );
+            var barData = d3.layout.histogram().bins(bins)(filteredDataset);
 
             var bars = [];
             var sigDigits = 1000;
-            $.each(
-                barData,
-                function (i,bin) {
-                    var range = Math.round(bin.x * sigDigits) / sigDigits + ' to ' + (Math.round((bin.x + bin.dx) * sigDigits) / sigDigits);
+            $.each(barData, function (i, bin) {
+                var range =
+                    Math.round(bin.x * sigDigits) / sigDigits +
+                    ' to ' +
+                    Math.round((bin.x + bin.dx) * sigDigits) / sigDigits;
 
-                    bars.push(
-                        {
-                            bar : range,
-                            value : bin.y,
-                            color : 'url(#' + $me.gradientID + ')',//'blue',
-                            //color : 'blue',
-                            tooltip : bin.y + ' in range<br>' + range,
-                            id : bin.x,
-                        }
-                    );
-                }
-            );
+                bars.push({
+                    bar: range,
+                    value: bin.y,
+                    color: 'url(#' + $me.gradientID + ')', //'blue',
+                    //color : 'blue',
+                    tooltip: bin.y + ' in range<br>' + range,
+                    id: bin.x,
+                });
+            });
 
             this.data('barchart').setDataset(bars);
-
         },
-
-
     });
-
-} );
+});

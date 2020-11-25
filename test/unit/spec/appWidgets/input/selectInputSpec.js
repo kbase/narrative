@@ -1,8 +1,4 @@
-define([
-    'testUtil',
-    'common/runtime',
-    'widgets/appWidgets2/input/selectInput'
-], (
+define(['testUtil', 'common/runtime', 'widgets/appWidgets2/input/selectInput'], (
     TestUtil,
     Runtime,
     SelectInput
@@ -25,21 +21,25 @@ define([
                     constraints: {
                         required: required,
                         defaultValue: defaultValue,
-                        options: [{
-                            value: 'apple',
-                            display: 'Apple'
-                        }, {
-                            value: 'banana',
-                            display: 'Banana'
-                        }, {
-                            value: 'carrot',
-                            display: 'Carrot'
-                        }]
-                    }
-                }
+                        options: [
+                            {
+                                value: 'apple',
+                                display: 'Apple',
+                            },
+                            {
+                                value: 'banana',
+                                display: 'Banana',
+                            },
+                            {
+                                value: 'carrot',
+                                display: 'Carrot',
+                            },
+                        ],
+                    },
+                },
             },
             channelName: bus.channelName,
-            initialValue: 'apple'
+            initialValue: 'apple',
         };
     }
 
@@ -62,7 +62,8 @@ define([
             expect(widget).toBeDefined();
             expect(widget.start).toBeDefined();
 
-            widget.start({node: node})
+            widget
+                .start({ node: node })
                 .then(() => {
                     // verify it's there.
                     let inputElem = node.querySelector('select[data-element="input"]');
@@ -76,7 +77,8 @@ define([
                 });
         });
 
-        it('Should update value via bus', (done) => { //and reset model properly via bus', (done) => {
+        it('Should update value via bus', (done) => {
+            //and reset model properly via bus', (done) => {
             // start with one value, change it, then reset.
             // check along the way.
             bus.on('validation', (message) => {
@@ -84,10 +86,9 @@ define([
                 done();
             });
             let widget = SelectInput.make(testConfig);
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('update', {value: 'banana'});
-                });
+            widget.start({ node: node }).then(() => {
+                bus.emit('update', { value: 'banana' });
+            });
         });
 
         it('Should reset to default via bus', (done) => {
@@ -96,10 +97,9 @@ define([
                 done();
             });
             let widget = SelectInput.make(testConfig);
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('reset-to-defaults');
-                });
+            widget.start({ node: node }).then(() => {
+                bus.emit('reset-to-defaults');
+            });
         });
 
         it('Should respond to input change events with "changed"', (done) => {
@@ -108,12 +108,11 @@ define([
                 expect(message.newValue).toEqual('banana');
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('select[data-element="input"]');
-                    inputElem.selectedIndex=2;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('select[data-element="input"]');
+                inputElem.selectedIndex = 2;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
 
         it('Should respond to input change events with "validation"', (done) => {
@@ -123,12 +122,11 @@ define([
                 expect(message.errorMessage).toBeUndefined();
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('select[data-element="input"]');
-                    inputElem.selectedIndex = 1
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('select[data-element="input"]');
+                inputElem.selectedIndex = 1;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
 
         it('Should show message when configured', (done) => {
@@ -139,12 +137,11 @@ define([
                 // ...detect something?
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('select[data-element="input"]');
-                    inputElem.value = 'banana';
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('select[data-element="input"]');
+                inputElem.value = 'banana';
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
 
         it('Should return a diagnosis of required-missing if so', (done, fail) => {
@@ -169,12 +166,11 @@ define([
                     done();
                 }
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('select[data-element="input"]');
-                    inputElem.selectedIndex = -1;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('select[data-element="input"]');
+                inputElem.selectedIndex = -1;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
     });
-})
+});

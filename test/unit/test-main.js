@@ -1,7 +1,5 @@
 /*jslint white: true*/
-var tests = [
-    'text', 'json'
-];
+var tests = ['text', 'json'];
 for (var file in window.__karma__.files) {
     if (window.__karma__.files.hasOwnProperty(file)) {
         if (/[sS]pec\.js$/.test(file)) {
@@ -12,15 +10,14 @@ for (var file in window.__karma__.files) {
 
 // hack to make jed (the i18n library that Jupyter uses) happy.
 document.nbjs_translations = {
-    'domain': 'nbjs',
-    'locale_data':
-    {
-        'nbjs': {
+    domain: 'nbjs',
+    locale_data: {
+        nbjs: {
             '': {
-                'domain': 'nbjs'
-            }
-        }
-    }
+                domain: 'nbjs',
+            },
+        },
+    },
 };
 
 // hack to spoof createReactClass, needed by a Jupyter component we aren't testing.
@@ -38,7 +35,7 @@ requirejs.config({
         narrativeMocks: '../../test/unit/mocks',
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
         jed: 'components/jed/jed',
-        custom: 'kbase/custom'
+        custom: 'kbase/custom',
     },
     map: {
         '*': {
@@ -51,23 +48,23 @@ requirejs.config({
     shim: {
         jquery: {
             deps: [],
-            exports: 'jquery'
+            exports: 'jquery',
         },
         bootstraptour: {
             deps: ['bootstrap'],
-            exports: 'Tour'
+            exports: 'Tour',
         },
         bootstrap: {
             deps: ['jquery'],
-            exports: 'Bootstrap'
+            exports: 'Bootstrap',
         },
     },
 
-    callback: function() {
+    callback: function () {
         'use strict';
 
-        require(['testUtil'], function(TestUtil) {
-            TestUtil.make().then(function() {
+        require(['testUtil'], function (TestUtil) {
+            TestUtil.make().then(function () {
                 window.__karma__.start();
             });
         }, function (error) {
@@ -75,5 +72,5 @@ requirejs.config({
             console.error(error);
             throw error;
         });
-    }
+    },
 });

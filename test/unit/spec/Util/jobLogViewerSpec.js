@@ -1,12 +1,6 @@
 /*global define, describe, it, expect, jasmine, beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'util/jobLogViewer',
-    'common/runtime'
-], (
-    JobLogViewer,
-    Runtime
-) => {
+define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
     describe('Test the job log viewer module', () => {
         let hostNode = null,
             runtimeBus = null;
@@ -41,24 +35,28 @@ define([
             let viewer = JobLogViewer.make();
             const jobId = 'fakejob';
             let arg = {
-                jobId: jobId
+                jobId: jobId,
             };
-            expect(() => {viewer.start(arg)}).toThrow(new Error('Requires a node to start'));
+            expect(() => {
+                viewer.start(arg);
+            }).toThrow(new Error('Requires a node to start'));
         });
 
         it('Should fail to start without a jobId', () => {
             let viewer = JobLogViewer.make();
             let arg = {
-                node: hostNode
+                node: hostNode,
             };
-            expect(() => {viewer.start(arg)}).toThrow(new Error('Requires a job id to start'));
+            expect(() => {
+                viewer.start(arg);
+            }).toThrow(new Error('Requires a job id to start'));
         });
 
         it('Should start as expected with inputs, and be stoppable and detachable', () => {
             let viewer = JobLogViewer.make();
             let arg = {
                 node: hostNode,
-                jobId: 'someFakeJob'
+                jobId: 'someFakeJob',
             };
             viewer.start(arg);
             expect(hostNode.querySelector('div[data-element="kb-log"]')).toBeDefined();
@@ -71,10 +69,10 @@ define([
             const jobId = 'testJob1';
             const arg = {
                 node: hostNode,
-                jobId: jobId
+                jobId: jobId,
             };
             runtimeBus.on('request-job-status', (msg) => {
-                expect(msg).toEqual({jobId: jobId});
+                expect(msg).toEqual({ jobId: jobId });
                 viewer.detach();
                 done();
             });
@@ -86,24 +84,24 @@ define([
             const jobId = 'testJobStatusMsg';
             const arg = {
                 node: hostNode,
-                jobId: jobId
+                jobId: jobId,
             };
             runtimeBus.on('request-job-status', (msg) => {
-                expect(msg).toEqual({jobId: jobId});
+                expect(msg).toEqual({ jobId: jobId });
                 runtimeBus.send(
                     {
                         jobId: jobId,
                         jobState: {
-                            status: 'running'
-                        }
+                            status: 'running',
+                        },
                     },
                     {
                         channel: {
-                            jobId: jobId
+                            jobId: jobId,
                         },
                         key: {
-                            type: 'job-status'
-                        }
+                            type: 'job-status',
+                        },
                     }
                 );
                 viewer.detach();
@@ -117,11 +115,11 @@ define([
             const jobId = 'testBtnState';
             const arg = {
                 node: hostNode,
-                jobId: jobId
+                jobId: jobId,
             };
             viewer.start(arg);
             let btns = hostNode.querySelectorAll('div[data-element="header"] button');
-            btns.forEach(btn => {
+            btns.forEach((btn) => {
                 expect(btn.classList.contains('disabled')).toBeTruthy();
             });
             viewer.detach();
@@ -132,30 +130,30 @@ define([
             const jobId = 'testJobLogMsgResp';
             const arg = {
                 node: hostNode,
-                jobId: jobId
+                jobId: jobId,
             };
             runtimeBus.on('request-job-status', (msg) => {
-                expect(msg).toEqual({jobId: jobId});
+                expect(msg).toEqual({ jobId: jobId });
                 runtimeBus.send(
                     {
                         jobId: jobId,
                         jobState: {
-                            status: 'running'
-                        }
+                            status: 'running',
+                        },
                     },
                     {
                         channel: {
-                            jobId: jobId
+                            jobId: jobId,
                         },
                         key: {
-                            type: 'job-status'
-                        }
+                            type: 'job-status',
+                        },
                     }
                 );
             });
 
             runtimeBus.on('request-latest-job-log', (msg) => {
-                expect(msg).toEqual({jobId: jobId, options: {}});
+                expect(msg).toEqual({ jobId: jobId, options: {} });
                 runtimeBus.send(
                     {
                         jobId: jobId,
@@ -165,26 +163,29 @@ define([
                             job_id: jobId,
                             latest: true,
                             max_lines: 2,
-                            lines: [{
-                                is_error: 0,
-                                line: 'line 1 - log',
-                                linepos: 1,
-                                ts: 123456789
-                            }, {
-                                is_error: 1,
-                                line: 'line 2 - error',
-                                linepos: 1,
-                                ts: 123456790
-                            }]
-                        }
+                            lines: [
+                                {
+                                    is_error: 0,
+                                    line: 'line 1 - log',
+                                    linepos: 1,
+                                    ts: 123456789,
+                                },
+                                {
+                                    is_error: 1,
+                                    line: 'line 2 - error',
+                                    linepos: 1,
+                                    ts: 123456790,
+                                },
+                            ],
+                        },
                     },
                     {
                         channel: {
-                            jobId: jobId
+                            jobId: jobId,
                         },
                         key: {
-                            type: 'job-logs'
-                        }
+                            type: 'job-logs',
+                        },
                     }
                 );
                 setTimeout(() => {
@@ -208,43 +209,43 @@ define([
             const jobId = 'testJobQueued';
             const arg = {
                 node: hostNode,
-                jobId: jobId
+                jobId: jobId,
             };
             runtimeBus.on('request-job-status', (msg) => {
-                expect(msg).toEqual({jobId: jobId});
+                expect(msg).toEqual({ jobId: jobId });
                 runtimeBus.send(
                     {
                         jobId: jobId,
                         jobState: {
-                            status: 'queued'
-                        }
+                            status: 'queued',
+                        },
                     },
                     {
                         channel: {
-                            jobId: jobId
+                            jobId: jobId,
                         },
                         key: {
-                            type: 'job-status'
-                        }
+                            type: 'job-status',
+                        },
                     }
                 );
             });
             runtimeBus.on('request-job-update', (msg) => {
-                expect(msg).toEqual({jobId: jobId});
+                expect(msg).toEqual({ jobId: jobId });
                 runtimeBus.send(
                     {
                         jobId: jobId,
                         jobState: {
-                            status: 'queued'
-                        }
+                            status: 'queued',
+                        },
                     },
                     {
                         channel: {
-                            jobId: jobId
+                            jobId: jobId,
                         },
                         key: {
-                            type: 'job-status'
-                        }
+                            type: 'job-status',
+                        },
                     }
                 );
                 setTimeout(() => {
@@ -258,23 +259,14 @@ define([
             viewer.start(arg);
         });
 
-        xit('Should render a canceled message for canceled jobs', (done) => {
-        });
+        xit('Should render a canceled message for canceled jobs', (done) => {});
 
-        xit('Should render an error message for errored jobs', (done) => {
+        xit('Should render an error message for errored jobs', (done) => {});
 
-        });
+        xit('Should have the top button go to the top', (done) => {});
 
-        xit('Should have the top button go to the top', (done) => {
+        xit('Should have the bottom button go to the end', (done) => {});
 
-        });
-
-        xit('Should have the bottom button go to the end', (done) => {
-
-        });
-
-        xit('Should have the stop button make sure it stops', (done) => {
-
-        });
+        xit('Should have the stop button make sure it stops', (done) => {});
     });
-})
+});

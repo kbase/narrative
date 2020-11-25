@@ -1,10 +1,7 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
-define([
-    'common/runtime',
-    'kb_common/html'
-], function (Runtime, html) {
+define(['common/runtime', 'kb_common/html'], function (Runtime, html) {
     'use strict';
 
     var t = html.tag,
@@ -14,17 +11,22 @@ define([
         var runtime = Runtime.make();
 
         function propertyValueToString(pv) {
-            return pv.property_name
-                + ": " + pv.property_value
-                + (pv.property_unit ? " " + pv.property_unit : "");
+            return (
+                pv.property_name +
+                ': ' +
+                pv.property_value +
+                (pv.property_unit ? ' ' + pv.property_unit : '')
+            );
         }
 
         function propertiesToString(properties) {
-            return properties.map(function (pv) {
-                return propertyValueToString(pv);
-            }).join(';');
+            return properties
+                .map(function (pv) {
+                    return propertyValueToString(pv);
+                })
+                .join(';');
         }
-        
+
         function buildSamples(columnsMetadata) {
             return Object.keys(columnsMetadata).map(function (columnId) {
                 var columnMetadata = columnsMetadata[columnId],
@@ -39,14 +41,18 @@ define([
                     }
                 });
                 conditions.sort(function (a, b) {
-                    return a.property_name > b.property_name ? 1 : (a.property_name < b.property_name ? -1 : 0);
+                    return a.property_name > b.property_name
+                        ? 1
+                        : a.property_name < b.property_name
+                        ? -1
+                        : 0;
                 });
                 var sampleLabel = propertiesToString(conditions);
 
                 return {
                     sampleId: columnId,
                     seriesId: seriesId,
-                    label: sampleLabel
+                    label: sampleLabel,
                 };
             });
         }
@@ -56,14 +62,14 @@ define([
             samples.forEach(function (sample) {
                 seriesHash[sample.seriesId] = {
                     seriesId: sample.seriesId,
-                    label: sample.label
+                    label: sample.label,
                 };
             });
             return Object.keys(seriesHash).map(function (seriesId) {
                 return seriesHash[seriesId];
             });
         }
-        
+
         function extractItems(result, params) {
             var sampleSeriesIds,
                 valueType = params.input_value_type;
@@ -74,7 +80,7 @@ define([
                     sampleSeriesIds = samples.map(function (sample) {
                         return {
                             id: sample.sampleId,
-                            text: sample.sampleId + ' - ' + sample.label
+                            text: sample.sampleId + ' - ' + sample.label,
                         };
                     });
                     break;
@@ -82,16 +88,16 @@ define([
                     sampleSeriesIds = samples.map(function (series) {
                         return {
                             id: series.seriesId,
-                            text: series.seriesId + ' - ' + series.label
+                            text: series.seriesId + ' - ' + series.label,
                         };
                     });
                     break;
                 default:
-                    // WHAT to do?
+                // WHAT to do?
             }
 
             return sampleSeriesIds.sort(function (a, b) {
-                return a.text > b.text ? 1 : (a.text < b.text ? -1 : 0);
+                return a.text > b.text ? 1 : a.text < b.text ? -1 : 0;
             });
         }
 
@@ -99,22 +105,21 @@ define([
             return {
                 params: {
                     referenceObject: 'input_growth_matrix',
-                    dependencies: ['input_growth_matrix', 'input_value_type']
+                    dependencies: ['input_growth_matrix', 'input_value_type'],
                 },
-                included: ["metadata/column_metadata"],
-                extractItems: extractItems
+                included: ['metadata/column_metadata'],
+                extractItems: extractItems,
             };
         }
 
         return {
-            getMethod: getMethod
+            getMethod: getMethod,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
-
 });

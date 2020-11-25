@@ -1,8 +1,6 @@
 /*global define */
 /*jslint white:true,browser:true,jsnomen:true*/
-define([
-    '../../jsonRpc-native'
-], function (jsonRpc) {
+define(['../../jsonRpc-native'], function (jsonRpc) {
     'use strict';
 
     function AssemblyAPI(arg) {
@@ -14,7 +12,7 @@ define([
         } else {
             auth = arg.auth || {};
         }
-        
+
         if (!arg.url) {
             console.error('ERROR', arg);
             throw new Error('The service discovery url was not provided');
@@ -27,16 +25,18 @@ define([
             return {
                 timeout: arg.timeout,
                 authorization: auth.token,
-                rpcContext: arg.rpcContext
+                rpcContext: arg.rpcContext,
             };
         }
 
         this.lookupModule = function () {
             var func = 'get_service_status',
-                params = [{
+                params = [
+                    {
                         module_name: module,
-                        version: arg.version
-                    }];
+                        version: arg.version,
+                    },
+                ];
             return jsonRpc.request(arg.url, 'ServiceWizard', func, params, 1, options());
         };
 
@@ -47,12 +47,10 @@ define([
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_assembly_id';
 
-            return this.lookupModule()
-                .then(function (serviceStatus) {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then(function (serviceStatus) {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
-
 
         /*
          * ref
@@ -61,12 +59,10 @@ define([
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_genome_annotations';
 
-            return this.lookupModule()
-                .then(function (serviceStatus) {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then(function (serviceStatus) {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
-
 
         /*
          * ref
@@ -75,12 +71,10 @@ define([
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_external_source_info';
 
-            return this.lookupModule()
-                .then(function (serviceStatus) {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then(function (serviceStatus) {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
-
 
         /*
          * ref
@@ -89,12 +83,10 @@ define([
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_stats';
 
-            return this.lookupModule()
-                .then(function (serviceStatus) {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then(function (serviceStatus) {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
-
 
         /*
          * ref
@@ -103,12 +95,10 @@ define([
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_number_contigs';
 
-            return this.lookupModule()
-                .then(function (serviceStatus) {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then(function (serviceStatus) {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
-
 
         /*
          * ref
@@ -117,12 +107,10 @@ define([
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_gc_content';
 
-            return this.lookupModule()
-                .then(function (serviceStatus) {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then(function (serviceStatus) {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
-
 
         /*
          * ref
@@ -131,12 +119,10 @@ define([
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_dna_size';
 
-            return this.lookupModule()
-                .then(function (serviceStatus) {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then(function (serviceStatus) {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
-
 
         /*
          * ref
@@ -145,12 +131,10 @@ define([
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_contig_ids';
 
-            return this.lookupModule()
-                .then(function (serviceStatus) {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then(function (serviceStatus) {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
-
 
         /*
          * ref, contig_id_list
@@ -159,12 +143,10 @@ define([
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_contig_lengths';
 
-            return this.lookupModule()
-                .then(function (serviceStatus) {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });            
+            return this.lookupModule().then(function (serviceStatus) {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
-
 
         /*
          * ref, contig_id_list
@@ -173,12 +155,10 @@ define([
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_contig_gc_content';
 
-            return this.lookupModule()
-                .then(function (serviceStatus) {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                }); 
+            return this.lookupModule().then(function (serviceStatus) {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
-
 
         /*
          * ref, contig_id_list
@@ -187,25 +167,21 @@ define([
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_contigs';
 
-            return this.lookupModule()
-                .then(function (serviceStatus) {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                }); 
-
+            return this.lookupModule().then(function (serviceStatus) {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
 
-
         /*
-         * 
+         *
          */
         this.status = function () {
             var params = Array.prototype.slice.call(arguments),
                 func = 'status';
 
-            return this.lookupModule()
-                .then(function (serviceStatus) {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then(function (serviceStatus) {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
     }
 

@@ -8,8 +8,8 @@ define([
     'common/runtime',
     'common/dom',
     'bootstrap',
-    'css!font-awesome'
-], function(Promise, html, Validation, Events, Runtime, Dom) {
+    'css!font-awesome',
+], function (Promise, html, Validation, Events, Runtime, Dom) {
     'use strict';
 
     // Constants
@@ -25,7 +25,7 @@ define([
             container,
             bus = config.bus,
             model = {
-                value: undefined
+                value: undefined,
             },
             dom,
             runtime = Runtime.make(),
@@ -56,25 +56,23 @@ define([
         }
 
         function setModelValue(value) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (model.value !== value) {
                     model.value = value;
                     return true;
                 }
                 return false;
-            })
-                .then(function(changed) {
-                    render();
-                });
+            }).then(function (changed) {
+                render();
+            });
         }
 
         function unsetModelValue() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 model.value = undefined;
-            })
-                .then(function(changed) {
-                    render();
-                });
+            }).then(function (changed) {
+                render();
+            });
         }
 
         function resetModelValue() {
@@ -98,11 +96,10 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: 'disabled',
                     };
                 });
-            }
-            else {
+            } else {
                 var rawValue = getInputValue();
                 return validateUniqueOutput(rawValue)
                     .then((isUnique) => {
@@ -110,22 +107,25 @@ define([
                             return {
                                 isValid: false,
                                 diagnosis: 'invalid',
-                                errorMessage: 'Every output object from a single app run must have a unique name.'
+                                errorMessage:
+                                    'Every output object from a single app run must have a unique name.',
                             };
-                        }
-                        else {
+                        } else {
                             let validationOptions = {
                                 required: spec.data.constraints.required,
                                 shouldNotExist: true,
                                 workspaceId: workspaceId,
                                 types: spec.data.constraints.types,
                                 authToken: runtime.authToken(),
-                                workspaceServiceUrl: runtime.config('services.workspace.url')
+                                workspaceServiceUrl: runtime.config('services.workspace.url'),
                             };
-                            return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                            return Validation.validateWorkspaceObjectName(
+                                rawValue,
+                                validationOptions
+                            );
                         }
                     })
-                    .then(function(validationResult) {
+                    .then(function (validationResult) {
                         return validationResult;
                     });
             }
@@ -133,16 +133,23 @@ define([
 
         /* Validate that this is a unique value among all output parameters */
         function validateUniqueOutput(rawValue) {
-            return bus.request({
-                parameterNames: otherOutputParams
-            }, {
-                key: {
-                    type: 'get-parameters'
-                }
-            }).then((paramValues) => {
-                let duplicates = Object.values(paramValues).filter(value => rawValue === value && !!value);
-                return !Boolean(duplicates.length);
-            });
+            return bus
+                .request(
+                    {
+                        parameterNames: otherOutputParams,
+                    },
+                    {
+                        key: {
+                            type: 'get-parameters',
+                        },
+                    }
+                )
+                .then((paramValues) => {
+                    let duplicates = Object.values(paramValues).filter(
+                        (value) => rawValue === value && !!value
+                    );
+                    return !Boolean(duplicates.length);
+                });
         }
 
         var autoChangeTimer;
@@ -158,42 +165,42 @@ define([
             var editPauseInterval = interval || 500;
             return {
                 type: 'keyup',
-                handler: function(e) {
+                handler: function (e) {
                     bus.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function() {
+                    autoChangeTimer = window.setTimeout(function () {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
-                }
+                },
             };
         }
 
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     validate()
-                        .then(function(result) {
+                        .then(function (result) {
                             if (result.isValid || result.diagnosis === 'required-missing') {
                                 bus.emit('changed', {
-                                    newValue: result.parsedValue
+                                    newValue: result.parsedValue,
                                 });
                             } else if (result.diagnosis === 'invalid') {
                                 bus.emit('changed', {
                                     newValue: result.parsedValue,
-                                    isError: true
+                                    isError: true,
                                 });
                             }
                             bus.emit('validation', result);
                         })
-                        .catch(function(err) {
+                        .catch(function (err) {
                             bus.emit('validation', {
                                 errorMessage: err.message,
-                                diagnosis: 'error'
+                                diagnosis: 'error',
                             });
                         });
-                }
+                },
             };
         }
 
@@ -206,50 +213,48 @@ define([
             // CONTROL
             return input({
                 id: events.addEvents({
-                    events: [
-                        handleChanged(), handleTouched()
-                    ]
+                    events: [handleChanged(), handleTouched()],
                 }),
                 class: 'form-control',
                 dataElement: 'input',
-                value: currentValue
+                value: currentValue,
             });
         }
 
         function render() {
-            Promise.try(function() {
+            Promise.try(function () {
                 var events = Events.make(),
                     inputControl = makeInputControl(model.value, events, bus);
 
                 dom.setContent('input-container', inputControl);
                 events.attachEvents(container);
-            })
-                .then(function() {
-                    return autoValidate();
-                });
+            }).then(function () {
+                return autoValidate();
+            });
         }
 
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            var content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
             return validate()
-                .then(function(result) {
+                .then(function (result) {
                     bus.emit('validation', result);
                 })
-                .catch(function(err) {
+                .catch(function (err) {
                     bus.emit('validation', {
                         errorMessage: err.message,
-                        diagnosis: 'error'
+                        diagnosis: 'error',
                     });
                 });
         }
@@ -257,8 +262,8 @@ define([
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function() {
-                bus.on('run', function(message) {
+            return Promise.try(function () {
+                bus.on('run', function (message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     dom = Dom.make({ node: container });
@@ -269,29 +274,26 @@ define([
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
 
-
-                    bus.on('reset-to-defaults', function(message) {
+                    bus.on('reset-to-defaults', function (message) {
                         resetModelValue();
                     });
-                    bus.on('update', function(message) {
+                    bus.on('update', function (message) {
                         setModelValue(message.value);
                     });
-                    bus.on('refresh', function() {
-
-                    });
+                    bus.on('refresh', function () {});
                     bus.emit('sync');
                 });
             });
         }
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

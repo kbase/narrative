@@ -1,8 +1,7 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
-define([
-], function () {
+define([], function () {
     function factory(config) {
         var listeners = [],
             bus = config.bus;
@@ -26,13 +25,13 @@ define([
         return {
             add: add,
             remove: remove,
-            removeAll: removeAll
+            removeAll: removeAll,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

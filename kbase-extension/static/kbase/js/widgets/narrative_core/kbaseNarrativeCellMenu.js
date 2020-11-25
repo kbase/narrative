@@ -6,12 +6,12 @@ define([
     'util/timeFormat',
     'base/js/namespace',
     'kbwidget',
-    'bootstrap'
+    'bootstrap',
 ], function ($, Config, TimeFormat, Jupyter, KBWidget) {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeCellMenu',
-        options: {cell: null, kbWidget: null, kbWidgetType: null},
+        options: { cell: null, kbWidget: null, kbWidgetType: null },
         genId: function () {
             if (!this.lastId) {
                 this.lastId = 1;
@@ -30,25 +30,35 @@ define([
 
             var devMode = true;
 
-            var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
+            var $deleteBtn = $(
+                '<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">'
+            )
                 .append($('<span class="fa fa-trash-o" style="font-size:14pt;">'))
-                .click(function () {
-                    this.trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(this.options.cell));
-                }.bind(this));
+                .click(
+                    function () {
+                        this.trigger(
+                            'deleteCell.Narrative',
+                            Jupyter.notebook.find_cell_index(this.options.cell)
+                        );
+                    }.bind(this)
+                );
 
-            var $menuBtn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
-                .append($('<span class="fa fa-cog" style="font-size:14pt">'));
+            var $menuBtn = $(
+                '<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">'
+            ).append($('<span class="fa fa-cog" style="font-size:14pt">'));
 
-            this.$collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle" style="width:20px"><span class="fa fa-chevron-down" style="color: silver;"></button>')
-                .on('click', function (e) {
+            this.$collapseBtn = $(
+                '<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle" style="width:20px"><span class="fa fa-chevron-down" style="color: silver;"></button>'
+            ).on(
+                'click',
+                function (e) {
                     this.$elem.trigger('toggle.toolbar');
                     e.preventDefault();
                     e.stopPropagation();
-                }
-                .bind(this));
+                }.bind(this)
+            );
 
-            this.$menu = $('<ul>')
-                .addClass('dropdown-menu dropdown-menu-right');
+            this.$menu = $('<ul>').addClass('dropdown-menu dropdown-menu-right');
 
             if (Config.get('dev_mode')) {
                 this.addMenuItem({
@@ -57,18 +67,24 @@ define([
                     action: function () {
                         var metadata = this.options.cell.metadata,
                             stackTrace = [],
-                            newCell = Jupyter.narrative.insertAndSelectCell('code', 'below', Jupyter.notebook.find_cell_index(this.options.cell));
+                            newCell = Jupyter.narrative.insertAndSelectCell(
+                                'code',
+                                'below',
+                                Jupyter.notebook.find_cell_index(this.options.cell)
+                            );
                         if (metadata['kb-cell'] && metadata['kb-cell'].stackTrace) {
                             stackTrace = metadata['kb-cell'].stackTrace;
                         }
                         console.log(stackTrace);
                         if (stackTrace instanceof Array) {
-                            newCell.set_text('job_info=' + stackTrace[stackTrace.length - 1] + '\njob_info');
+                            newCell.set_text(
+                                'job_info=' + stackTrace[stackTrace.length - 1] + '\njob_info'
+                            );
                             newCell.execute();
                         } else {
                             newCell.set_text('job_info=' + stackTrace);
                         }
-                    }.bind(this)
+                    }.bind(this),
                 });
             }
 
@@ -77,7 +93,7 @@ define([
                 text: 'Move Cell Up',
                 action: function () {
                     Jupyter.notebook.move_cell_up();
-                }
+                },
             });
 
             this.addMenuItem({
@@ -85,7 +101,7 @@ define([
                 text: 'Move Cell Down',
                 action: function () {
                     Jupyter.notebook.move_cell_down();
-                }
+                },
             });
 
             this.addMenuItem({
@@ -93,7 +109,7 @@ define([
                 text: 'Insert Cell Above',
                 action: function () {
                     Jupyter.narrative.insertAndSelectCellAbove('markdown');
-                }
+                },
             });
 
             this.addMenuItem({
@@ -101,7 +117,7 @@ define([
                 text: 'Insert Cell Below',
                 action: function () {
                     Jupyter.narrative.insertAndSelectCellBelow('markdown');
-                }
+                },
             });
 
             // only add this if it was controlled by a KBase Widget
@@ -120,7 +136,9 @@ define([
                             // the method initializes an internal method input widget, but in an async way
                             // so we have to wait and check when that is done.  When it is, we can update state
                             var newCell = Jupyter.notebook.get_selected_cell();
-                            var newWidget = new kbaseNarrativeMethodCell($('#' + $(newCell.get_text())[0].id));
+                            var newWidget = new kbaseNarrativeMethodCell(
+                                $('#' + $(newCell.get_text())[0].id)
+                            );
                             var updateState = function (state) {
                                 if (newWidget.$inputWidget) {
                                     // if the $inputWidget is not null, we are good to go, so set the state
@@ -132,7 +150,7 @@ define([
                             };
                             window.setTimeout(updateState, 50);
                         }
-                    }, this)
+                    }, this),
                 });
             }
 
@@ -141,12 +159,12 @@ define([
                     icon: 'fa fa-terminal',
                     text: 'Toggle Cell Type',
                     action: function () {
-                        if (this.options.cell.cell_type === "markdown") {
+                        if (this.options.cell.cell_type === 'markdown') {
                             Jupyter.notebook.to_code();
                         } else {
                             Jupyter.notebook.to_markdown();
                         }
-                    }.bind(this)
+                    }.bind(this),
                 });
             }
 
@@ -156,9 +174,9 @@ define([
             this.$jobStateIcon = $('<span>');
 
             // this shows whether the app is running
-            this.$runningIcon = $("<span>")
-                .addClass("fa fa-circle-o-notch fa-spin")
-                .css({color: "rgb(42,121,191)"})
+            this.$runningIcon = $('<span>')
+                .addClass('fa fa-circle-o-notch fa-spin')
+                .css({ color: 'rgb(42,121,191)' })
                 .hide();
             this.$elem.data('runningIcon', this.$runningIcon);
 
@@ -171,72 +189,100 @@ define([
             });
 
             this.$elem.on('runningIndicator.toolbar', function (e, data) {
-//                if (data.enabled) {
-//                    self.$runningIcon.show();
-//                } else {
-//                    self.$runningIcon.hide();
-//                }
-//                if (data.enabled) {
-//                    self.$jobStateIcon.html(makeIcon({
-//                        class: 'wifi', 
-//                        color: 'orange', 
-//                        spin: true,
-//                        label: 'Sending'
-//                    }));
-//                }
+                //                if (data.enabled) {
+                //                    self.$runningIcon.show();
+                //                } else {
+                //                    self.$runningIcon.hide();
+                //                }
+                //                if (data.enabled) {
+                //                    self.$jobStateIcon.html(makeIcon({
+                //                        class: 'wifi',
+                //                        color: 'orange',
+                //                        spin: true,
+                //                        label: 'Sending'
+                //                    }));
+                //                }
             });
 
-            this.$elem.on('show-title.toolbar', function () {
-                this.$elem.find('div.title').css('display', 'inline-block');
-            }.bind(this));
+            this.$elem.on(
+                'show-title.toolbar',
+                function () {
+                    this.$elem.find('div.title').css('display', 'inline-block');
+                }.bind(this)
+            );
 
-            this.$elem.on('hide-title.toolbar', function () {
-                this.$elem.find('div.title').css('display', 'none');
-            }.bind(this));
+            this.$elem.on(
+                'hide-title.toolbar',
+                function () {
+                    this.$elem.find('div.title').css('display', 'none');
+                }.bind(this)
+            );
 
-            this.$elem.on('mousedown', function () {
-                Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
-            }.bind(this));
+            this.$elem.on(
+                'mousedown',
+                function () {
+                    Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
+                }.bind(this)
+            );
 
             this.$elem.dblclick(function (e) {
                 e.stopPropagation();
                 $(this).trigger('toggle.toolbar');
             });
 
-            /* 
+            /*
              * Each cell type unfortunately has a different top level layout.
-             * Not that it matters, but I don't see why there isn't a uniform layout 
+             * Not that it matters, but I don't see why there isn't a uniform layout
              * for the primary layout areas - prompt, toolbar, body, as they exist
              * now, and another nice one would be a message/notification area.
              */
             this.$elem.on('toggle.toolbar', function () {
                 var $cellNode = self.$elem.closest('.cell');
-                $cellNode
-                    .trigger('toggle.cell');
+                $cellNode.trigger('toggle.cell');
             });
 
             function makeIcon(icon) {
                 var spinClass = icon.spin ? 'fa-spin' : '',
                     label = icon.label ? icon.label + ' ' : '',
-                    iconHtml = '<span>' + label + '<i class="fa fa-' + icon.class + " " + spinClass + '" style="color: ' + (icon.color || '#000') + '"></i></span>';
+                    iconHtml =
+                        '<span>' +
+                        label +
+                        '<i class="fa fa-' +
+                        icon.class +
+                        ' ' +
+                        spinClass +
+                        '" style="color: ' +
+                        (icon.color || '#000') +
+                        '"></i></span>';
                 return iconHtml;
             }
 
             this.$elem.on('run-state.toolbar', function (e, data) {
                 switch (data.status) {
                     case 'submitted':
-                        self.$jobStateIcon.html(makeIcon({
-                            class: 'asterisk',
-                            color: 'orange',
-                            spin: true,
-                            label: 'Queued'
-                        }));
+                        self.$jobStateIcon.html(
+                            makeIcon({
+                                class: 'asterisk',
+                                color: 'orange',
+                                spin: true,
+                                label: 'Queued',
+                            })
+                        );
                         break;
                     case 'running':
-                        self.$jobStateIcon.html(makeIcon({class: 'circle-o-notch', color: 'blue', spin: true, label: 'Running'}));
+                        self.$jobStateIcon.html(
+                            makeIcon({
+                                class: 'circle-o-notch',
+                                color: 'blue',
+                                spin: true,
+                                label: 'Running',
+                            })
+                        );
                         break;
                     case 'complete':
-                        self.$jobStateIcon.html(makeIcon({class: 'check', color: 'green', label: 'Finished'}));
+                        self.$jobStateIcon.html(
+                            makeIcon({ class: 'check', color: 'green', label: 'Finished' })
+                        );
                         break;
                     case 'error':
                         self.$jobStateIcon.html('ERROR');
@@ -249,23 +295,34 @@ define([
             this.$elem.on('job-state.toolbar', function (e, data) {
                 switch (data.status) {
                     case 'queued':
-                        self.$jobStateIcon.html(makeIcon({
-                            class: 'asterisk',
-                            color: 'orange',
-                            spin: true,
-                            label: 'Queued'
-                        }));
+                        self.$jobStateIcon.html(
+                            makeIcon({
+                                class: 'asterisk',
+                                color: 'orange',
+                                spin: true,
+                                label: 'Queued',
+                            })
+                        );
                         break;
                     case 'in-progress':
                     case 'running':
-                        self.$jobStateIcon.html(makeIcon({class: 'circle-o-notch', color: 'blue', spin: true, label: 'Running'}));
+                        self.$jobStateIcon.html(
+                            makeIcon({
+                                class: 'circle-o-notch',
+                                color: 'blue',
+                                spin: true,
+                                label: 'Running',
+                            })
+                        );
                         break;
                     case 'error':
                         self.$jobStateIcon.html('ERROR');
                         break;
                     case 'complete':
                     case 'completed':
-                        self.$jobStateIcon.html(makeIcon({class: 'check', color: 'green', label: 'Finished'}));
+                        self.$jobStateIcon.html(
+                            makeIcon({ class: 'check', color: 'green', label: 'Finished' })
+                        );
                         break;
                     default:
                         self.$jobStateIcon.html('?: ' + data.status);
@@ -288,14 +345,17 @@ define([
                 $dropdownMenu.find('.btn').addClass('disabled');
             });
 
-            this.$elem.on('set-timestamp.toolbar', function (e, time) {
-                this.$timestamp.text(TimeFormat.readableTimestamp(time));
-            }.bind(this));
+            this.$elem.on(
+                'set-timestamp.toolbar',
+                function (e, time) {
+                    this.$timestamp.text(TimeFormat.readableTimestamp(time));
+                }.bind(this)
+            );
 
             // this shows on error
-            this.$errorIcon = $("<span>")
-                .addClass("fa fa-exclamation-triangle")
-                .css({color: "red", 'font-size': '14pt'})
+            this.$errorIcon = $('<span>')
+                .addClass('fa fa-exclamation-triangle')
+                .css({ color: 'red', 'font-size': '14pt' })
                 .hide();
             this.$elem.data('errorIcon', this.$errorIcon);
             this.$elem.on('show-error', function () {
@@ -312,34 +372,35 @@ define([
                 }
             });
 
-            var $dropdownMenu = $('<span class="btn-group">')
-                .append($menuBtn)
-                .append(this.$menu);
+            var $dropdownMenu = $('<span class="btn-group">').append($menuBtn).append(this.$menu);
 
             this.$elem.append(
-                $('<div class="kb-cell-toolbar container-fluid">')
-                .append($('<div class="row">')
-                    .append($('<div class="col-sm-8">')
-                        .append($('<div class="buttons pull-left">')
-                            .append(this.$collapseBtn)
-                            )
-                        .append($('<div class="title" style="display:inline-block">')
-                            .append('<div data-element="title" class="title"></div>') // title here
-                            .append(this.$subtitle)
+                $('<div class="kb-cell-toolbar container-fluid">').append(
+                    $('<div class="row">')
+                        .append(
+                            $('<div class="col-sm-8">')
+                                .append(
+                                    $('<div class="buttons pull-left">').append(this.$collapseBtn)
+                                )
+                                .append(
+                                    $('<div class="title" style="display:inline-block">')
+                                        .append('<div data-element="title" class="title"></div>') // title here
+                                        .append(this.$subtitle)
+                                )
+                        )
+                        .append(
+                            $('<div class="col-sm-4">').append(
+                                $('<div class="buttons pull-right">')
+                                    .append(this.$timestamp)
+                                    .append(this.$runningIcon)
+                                    .append(this.$errorIcon)
+                                    .append(this.$jobStateIcon)
+                                    .append($deleteBtn)
+                                    .append($dropdownMenu)
                             )
                         )
-                    .append($('<div class="col-sm-4">')
-                        .append($('<div class="buttons pull-right">')
-                            .append(this.$timestamp)
-                            .append(this.$runningIcon)
-                            .append(this.$errorIcon)
-                            .append(this.$jobStateIcon)
-                            .append($deleteBtn)
-                            .append($dropdownMenu)
-                            )
-                        )
-                    )
-                );
+                )
+            );
             $deleteBtn.tooltip();
 
             /*
@@ -357,13 +418,13 @@ define([
             var $titleNode = this.$elem.find('[data-element="title"]');
             this.$elem.on('set-title.toolbar', function (e, title) {
                 e.stopPropagation();
-//                if (typeof title === 'object') {
-//                    if (title.suffix) {
-//                        $titleNode.html($titleNode.html() + '(' + title.suffix + ')');
-//                    }
-//                } else {
-//                    $titleNode.html(title);
-//                }
+                //                if (typeof title === 'object') {
+                //                    if (title.suffix) {
+                //                        $titleNode.html($titleNode.html() + '(' + title.suffix + ')');
+                //                    }
+                //                } else {
+                //                    $titleNode.html(title);
+                //                }
                 $titleNode.html(title);
             });
 
@@ -382,7 +443,9 @@ define([
                 $iconNode.html(wrapped);
             });
 
-            var $cell = (options && options.cell && $(options.cell.element)) || self.$elem.closest('.cell'),
+            var $cell =
+                    (options && options.cell && $(options.cell.element)) ||
+                    self.$elem.closest('.cell'),
                 icon = $cell.data('icon');
 
             if (icon) {
@@ -400,7 +463,6 @@ define([
 
             // Events done, not call actions.
             // this.options.cell.celltoobar.renderToggleState();
-
 
             return this;
         },
@@ -421,7 +483,9 @@ define([
                         if ($kbCell) {
                             switch (type) {
                                 case 'kb_app':
-                                    this.$subtitle.html($kbCell.kbaseNarrativeAppCell('getSubtitle'));
+                                    this.$subtitle.html(
+                                        $kbCell.kbaseNarrativeAppCell('getSubtitle')
+                                    );
                                     break;
                                 case 'kb_error':
                                     this.$subtitle.html('An error has occurred in this cell!');
@@ -432,9 +496,12 @@ define([
                                 case 'function_input':
                                     // doing this more declarative causes some funky rendering issues.
                                     // we need some better message passing, I think.
-                                    $kbCell.trigger('get_cell_subtitle.Narrative', function (text) {
-                                        this.$subtitle.html(text);
-                                    }.bind(this));
+                                    $kbCell.trigger(
+                                        'get_cell_subtitle.Narrative',
+                                        function (text) {
+                                            this.$subtitle.html(text);
+                                        }.bind(this)
+                                    );
                                     break;
                                 default:
                                     break;
@@ -452,8 +519,7 @@ define([
             }
         },
         setSubtitle: function (value) {
-            if (this.$subtitle)
-                this.$subtitle.html(value);
+            if (this.$subtitle) this.$subtitle.html(value);
         },
         addMenuItem: function (item) {
             var label = '';
@@ -465,20 +531,21 @@ define([
             }
             var $item = $('<a>')
                 .append(label)
-                .click($.proxy(function (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    if (!item.disable) {
-                        if (item.action)
-                            item.action();
-                        this.$menu.dropdown('toggle');
-                    }
-                }, this));
+                .click(
+                    $.proxy(function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (!item.disable) {
+                            if (item.action) item.action();
+                            this.$menu.dropdown('toggle');
+                        }
+                    }, this)
+                );
             var $itemElem = $('<li>').append($item);
             if (item.disable) {
                 $itemElem.addClass('disabled');
             }
             this.$menu.append($itemElem);
-        }
+        },
     });
 });

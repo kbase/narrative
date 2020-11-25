@@ -4,30 +4,20 @@
  * @public
  */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery'
-	], function(
-		KBWidget,
-		bootstrap,
-		$
-	) {
+define(['kbwidget', 'bootstrap', 'jquery'], function (KBWidget, bootstrap, $) {
     return KBWidget({
-        /* 
+        /*
          * (required) Your widget should be named in CamelCase.
          */
         name: 'kbaseNarrativeCell',
-        
+
         version: '0.0.1',
-        options: {
-        },
+        options: {},
 
         /**
          * Init cell.
          */
-        init: function(options) {
+        init: function (options) {
             //console.debug("kbaseNarrativeCell.init");
             this._super(options);
         },

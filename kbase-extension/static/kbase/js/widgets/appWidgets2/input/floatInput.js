@@ -11,17 +11,8 @@ define([
     '../validators/float',
 
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    html,
-    Events,
-    UI,
-    Props,
-    Runtime,
-    inputUtils,
-    Validation
-) {
+    'css!font-awesome',
+], function (Promise, html, Events, UI, Props, Runtime, inputUtils, Validation) {
     'use strict';
 
     // Constants
@@ -79,17 +70,16 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-
         // VALIDATION
 
         function validate(value) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 return Validation.validate(value, spec);
             });
         }
 
         function importControlValue() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 return Validation.importString(getControlValue());
             });
         }
@@ -113,31 +103,31 @@ define([
             var editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
-                handler: function(e) {
+                handler: function (e) {
                     channel.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function() {
+                    autoChangeTimer = window.setTimeout(function () {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
-                }
+                },
             };
         }
 
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     cancelTouched();
                     importControlValue()
-                        .then(function(value) {
+                        .then(function (value) {
                             model.setItem('value', value);
                             channel.emit('changed', {
-                                newValue: value
+                                newValue: value,
                             });
                             return validate(value);
                         })
-                        .then(function(result) {
+                        .then(function (result) {
                             if (result.isValid) {
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
@@ -151,7 +141,7 @@ define([
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
-                                        message: result.errorMessage
+                                        message: result.errorMessage,
                                     });
                                     ui.setContent('input-container.message', message.content);
                                     message.events.attachEvents();
@@ -159,14 +149,14 @@ define([
                             }
                             channel.emit('validation', result);
                         })
-                        .catch(function(err) {
+                        .catch(function (err) {
                             channel.emit('validation', {
                                 isValid: false,
                                 diagnosis: 'invalid',
-                                errorMessage: err.message
+                                errorMessage: err.message,
                             });
                         });
-                }
+                },
             };
         }
 
@@ -182,27 +172,43 @@ define([
 
             return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
                 div({ class: 'input-group', style: { width: '100%' } }, [
-                    (typeof min === 'number' ? div({ class: 'input-group-addon kb-input-group-addon', fontFamily: 'monospace' }, String(min) + ' &#8804; ') : ''),
+                    typeof min === 'number'
+                        ? div(
+                              {
+                                  class: 'input-group-addon kb-input-group-addon',
+                                  fontFamily: 'monospace',
+                              },
+                              String(min) + ' &#8804; '
+                          )
+                        : '',
                     input({
                         id: events.addEvents({
-                            events: [handleChanged(), handleTouched()]
+                            events: [handleChanged(), handleTouched()],
                         }),
                         class: 'form-control',
                         dataElement: 'input',
                         dataType: 'float',
                         style: {
-                            textAlign: 'right'
+                            textAlign: 'right',
                         },
-                        value: initialControlValue
+                        value: initialControlValue,
                     }),
-                    (typeof max === 'number' ? div({ class: 'input-group-addon kb-input-group-addon', fontFamily: 'monospace' }, ' &#8804; ' + String(max)) : '')
+                    typeof max === 'number'
+                        ? div(
+                              {
+                                  class: 'input-group-addon kb-input-group-addon',
+                                  fontFamily: 'monospace',
+                              },
+                              ' &#8804; ' + String(max)
+                          )
+                        : '',
                 ]),
-                div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } })
+                div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } }),
             ]);
         }
 
         function render() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 var events = Events.make(),
                     inputControl = makeInputControl(model.getItem('value'), events);
 
@@ -212,28 +218,28 @@ define([
         }
 
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            var content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function(result) {
-                    channel.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then(function (result) {
+                channel.emit('validation', result);
+            });
         }
 
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
@@ -245,23 +251,22 @@ define([
                 events.attachEvents(container);
                 // model.setItem('value', arg.value);
 
-                channel.on('reset-to-defaults', function() {
+                channel.on('reset-to-defaults', function () {
                     resetModelValue();
                 });
-                channel.on('update', function(message) {
+                channel.on('update', function (message) {
                     model.setItem('value', message.value);
                 });
                 // bus.emit('sync');
 
-                return render()
-                    .then(function() {
-                        return autoValidate();
-                    })
+                return render().then(function () {
+                    return autoValidate();
+                });
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -273,21 +278,21 @@ define([
 
         model = Props.make({
             data: {
-                value: spec.data.nullValue
+                value: spec.data.nullValue,
             },
-            onUpdate: function() {}
+            onUpdate: function () {},
         });
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

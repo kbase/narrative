@@ -8,14 +8,14 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-(function( $, undefined ) {
+(function ($, undefined) {
     return KBWidget({
         name: 'kbaseNarrativeDataTable',
 
         version: '1.0.0',
         options: {
-            noDataText: "No data found",
-            data: null
+            noDataText: 'No data found',
+            data: null,
         },
 
         /**
@@ -27,20 +27,19 @@
          * @returns {Object} this shiny new widget.
          * @private
          */
-        init: function(options) {
+        init: function (options) {
             this._super(options);
 
-            this.$dataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table kb-data-table">');
-            this.$dataSelect = $('<select>')
-                               .addClass('form-control')
-                               .css({'width' : '95%'});
-            this.$dataSearch = $('<input>')
-                               .attr({
-                                  'type' : 'text',
-                                  'class' : 'form-control',
-                                  'style' : 'width: 95%',
-                                  'placeholder' : 'Search',
-                               });
+            this.$dataTable = $(
+                '<table cellpadding="0" cellspacing="0" border="0" class="table kb-data-table">'
+            );
+            this.$dataSelect = $('<select>').addClass('form-control').css({ width: '95%' });
+            this.$dataSearch = $('<input>').attr({
+                type: 'text',
+                class: 'form-control',
+                style: 'width: 95%',
+                placeholder: 'Search',
+            });
 
             /* Really, we have just 3 elements.
              * 1. the <select> filter
@@ -48,25 +47,31 @@
              * 3. the table itself.
              * and they stack on each other like that.
              */
-            this.$elem.append($('<div>').append(this.$dataSelect))
-                      .append($('<div>').append(this.$dataSearch))
-                      .append(this.$dataTable);
+            this.$elem
+                .append($('<div>').append(this.$dataSelect))
+                .append($('<div>').append(this.$dataSearch))
+                .append(this.$dataTable);
 
-            this.$dataSelect.change($.proxy(function(event) {
-                var filterValue = '';
-                this.$dataSelect.find('option:selected').each(function(){ filterValue = $( this ).val(); });
-                if (filterValue.length > 0)
-                    this.$dataTable.fnFilter("^" + filterValue + "$", 2, true);
-                else
-                    this.$dataTable.fnFilter("", 2, true);
-            }, this));
+            this.$dataSelect.change(
+                $.proxy(function (event) {
+                    var filterValue = '';
+                    this.$dataSelect.find('option:selected').each(function () {
+                        filterValue = $(this).val();
+                    });
+                    if (filterValue.length > 0)
+                        this.$dataTable.fnFilter('^' + filterValue + '$', 2, true);
+                    else this.$dataTable.fnFilter('', 2, true);
+                }, this)
+            );
 
             // just filter the search bar on keyup events.
             // maybe add keydown? i don't know? i don't think we need to, though.
-            this.$dataSearch.keyup($.proxy(function(event) {
-                var value = this.$dataSearch.val();
-                this.$dataTable.fnFilter(value, 1);
-            }, this));
+            this.$dataSearch.keyup(
+                $.proxy(function (event) {
+                    var value = this.$dataSearch.val();
+                    this.$dataTable.fnFilter(value, 1);
+                }, this)
+            );
 
             /*
              * Make the datatable! It includes a 'no data found' text box if it's empty.
@@ -76,17 +81,18 @@
                 iDisplayLength: -1,
                 bPaginate: false,
                 oLanguage: {
-                    sZeroRecords: '<div style="text-align: center">' + this.options.noDataText + '</div>',
+                    sZeroRecords:
+                        '<div style="text-align: center">' + this.options.noDataText + '</div>',
                 },
                 aoColumns: [
-                    { "sTitle": "Workspace", bVisible: false},
-                    { "sTitle": "ID" },
-                    { "sTitle": "Type", bVisible: false },
+                    { sTitle: 'Workspace', bVisible: false },
+                    { sTitle: 'ID' },
+                    { sTitle: 'Type', bVisible: false },
                 ],
                 aoColumnDefs: [
-                    { 'bSortable': false, 'aTargets': [ 0 ] },
+                    { bSortable: false, aTargets: [0] },
                     {
-                        mRender: function(data, type, row) {
+                        mRender: function (data, type, row) {
                             // if the 'data' (name) is too long,
                             // truncate it and give it a tooltip with the full name.
                             var type = row[2];
@@ -94,19 +100,28 @@
                             if (typeName && typeName[1]) {
                                 type = typeName[1];
                             }
-                            return "<div data-toggle='tooltip' title='" + type + "\n" + data + "'>" +
-                                   "<span class='kb-data-obj-name' >" +
-                                            data +
-                                   "</span>" +
-                                   "<span class='fa fa-question-circle kb-function-help' " +
-                                          "data-ws='" + row[0] + "' " +
-                                          "data-id='" + row[1] + "' " +
-                                          "style='display: inline-block;'>" +
-                                   "</span>" +
-                                   "</div>";
-
+                            return (
+                                "<div data-toggle='tooltip' title='" +
+                                type +
+                                '\n' +
+                                data +
+                                "'>" +
+                                "<span class='kb-data-obj-name' >" +
+                                data +
+                                '</span>' +
+                                "<span class='fa fa-question-circle kb-function-help' " +
+                                "data-ws='" +
+                                row[0] +
+                                "' " +
+                                "data-id='" +
+                                row[1] +
+                                "' " +
+                                "style='display: inline-block;'>" +
+                                '</span>' +
+                                '</div>'
+                            );
                         },
-                        aTargets: [1]
+                        aTargets: [1],
                     },
                 ],
                 bInfo: false,
@@ -116,8 +131,7 @@
                 sScrollY: '225px',
             });
 
-            if (this.options.data)
-                this.setData(this.options.data);
+            if (this.options.data) this.setData(this.options.data);
 
             return this;
         },
@@ -142,10 +156,9 @@
          * table's row for filtering (though it's currently invisible).
          * @private
          */
-        setData: function(data) {
+        setData: function (data) {
             this.$dataSelect.empty();
-            if (!data || data.length === 0)
-                return;
+            if (!data || data.length === 0) return;
 
             // Add an 'all types' filter option that just shows everything.
             this.$dataSelect.append('<option value="">All Types</option>');
@@ -154,34 +167,39 @@
             var dataKeys = Object.keys(data);
             // The types to be filtered should be alphabetically sorted
             dataKeys.sort();
-            $.each(dataKeys, $.proxy(function(idx, key) {
-                this.$dataSelect.append($('<option>')
-                                          .attr('value', key)
-                                          .append(key + ' (' + data[key].length + ')'));
-                // Just grab everything from each type and throw it into the dataList array
-                dataList = dataList.concat(data[key]);
-            }, this));
+            $.each(
+                dataKeys,
+                $.proxy(function (idx, key) {
+                    this.$dataSelect.append(
+                        $('<option>')
+                            .attr('value', key)
+                            .append(key + ' (' + data[key].length + ')')
+                    );
+                    // Just grab everything from each type and throw it into the dataList array
+                    dataList = dataList.concat(data[key]);
+                }, this)
+            );
 
             this.$dataTable.fnClearTable();
             this.$dataTable.fnAddData(dataList);
             // Once the table's rendered, we can bind the click events.
             // This would be trickier if we were paginating the table. But we're not!
             this.$dataTable.find('.kb-function-help').click(
-                $.proxy(function(event) {
+                $.proxy(function (event) {
                     var ws = $(event.target).attr('data-ws');
                     var id = $(event.target).attr('data-id');
                     this.trigger('dataInfoClicked.Narrative', [ws, id]);
-                },
-                this)
+                }, this)
             );
-            this.$dataTable.find('[data-toggle="tooltip"]').tooltip({'placement':'right', container: 'body'});
+            this.$dataTable
+                .find('[data-toggle="tooltip"]')
+                .tooltip({ placement: 'right', container: 'body' });
         },
 
         // quick fix to adjust column header width on refresh.
         // should be called after it's rendered in the browser.
-        poke: function() {
+        poke: function () {
             this.$dataTable.fnAdjustColumnSizing();
-        }
-    })
-
+        },
+    });
 })(jQuery);

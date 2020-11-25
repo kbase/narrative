@@ -9,7 +9,7 @@ define([
     'base/js/namespace',
     'kb_common/html',
     // 'kbaseNarrativeCellMenu',
-    'kbaseCellToolbarMenu'
+    'kbaseCellToolbarMenu',
 ], function (
     $,
     celltoolbar,

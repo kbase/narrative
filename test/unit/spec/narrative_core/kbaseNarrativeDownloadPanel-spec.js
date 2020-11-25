@@ -9,22 +9,17 @@ define([
     'testUtil',
     'common/runtime',
     'base/js/namespace',
-    'kbaseNarrative'
-], (
-    $,
-    kbaseNarrativeDownloadPanel,
-    TestUtil,
-    Runtime,
-    Jupyter,
-    Narrative
-) => {
+    'kbaseNarrative',
+], ($, kbaseNarrativeDownloadPanel, TestUtil, Runtime, Jupyter, Narrative) => {
     describe('Test the kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();
             $div = $('<div>');
             Jupyter.narrative = new Narrative();
-            Jupyter.narrative.getAuthToken = () => { return 'NotARealToken!' };
+            Jupyter.narrative.getAuthToken = () => {
+                return 'NotARealToken!';
+            };
         });
 
         afterEach(() => {
@@ -53,37 +48,44 @@ define([
                 responseHeaders: '',
                 responseText: JSON.stringify({
                     version: '1.1',
-                    result: [{
-                        infos: [[
-                            oid,
-                            name,
-                            objType,
-                            saveDate,
-                            ver,
-                            userId,
-                            ws,
-                            wsName,
-                            checksum,
-                            size,
-                            meta
-                        ]],
-                        paths: [[upa]]
-                    }]
-                })
+                    result: [
+                        {
+                            infos: [
+                                [
+                                    oid,
+                                    name,
+                                    objType,
+                                    saveDate,
+                                    ver,
+                                    userId,
+                                    ws,
+                                    wsName,
+                                    checksum,
+                                    size,
+                                    meta,
+                                ],
+                            ],
+                            paths: [[upa]],
+                        },
+                    ],
+                }),
             });
 
             let w = new kbaseNarrativeDownloadPanel($div, {
-                    token: null,
-                    type: objType,
-                    objId: oid,
-                    ref: upa,
-                    objName: name,
-                    downloadSpecCache: {'lastUpdateTime': 100, 'types': {
-                        [objType]: {'export_functions': {"FAKE": "fake_method"}}}
-                    }
+                token: null,
+                type: objType,
+                objId: oid,
+                ref: upa,
+                objName: name,
+                downloadSpecCache: {
+                    lastUpdateTime: 100,
+                    types: {
+                        [objType]: { export_functions: { FAKE: 'fake_method' } },
+                    },
+                },
             });
-            expect($div.html()).toContain("JSON");
-            expect($div.html()).toContain("FAKE");
+            expect($div.html()).toContain('JSON');
+            expect($div.html()).toContain('FAKE');
         });
 
         it('Should load and register a Staging app button', () => {
@@ -107,16 +109,16 @@ define([
                 objId: oid,
                 ref: upa,
                 downloadSpecCache: {
-                    'lastUpdateTime': 100,
-                    'types': {
+                    lastUpdateTime: 100,
+                    types: {
                         [objType]: {
-                            'export_functions': {
-                                "FAKE": "fake_method",
-                                "STAGING": "staging_method"
-                            }
-                        }
-                    }
-                }
+                            export_functions: {
+                                FAKE: 'fake_method',
+                                STAGING: 'staging_method',
+                            },
+                        },
+                    },
+                },
             });
 
             expect($div.html()).toContain('STAGING');

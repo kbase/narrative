@@ -4,17 +4,13 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define ([
+define([
     'jquery',
     'kbase/js/widgets/narrative_core/upload/stagingAreaViewer',
     'base/js/namespace',
     'kbaseNarrative',
-    'testUtil'
-], (
-    $,
-    StagingAreaViewer,
-    Jupyter
-) => {
+    'testUtil',
+], ($, StagingAreaViewer, Jupyter) => {
     'use strict';
 
     describe('Test the staging area viewer widget', () => {
@@ -37,32 +33,34 @@ define ([
                         path: fakeUser + '/test_folder',
                         mtime: 1532738637499,
                         size: 34,
-                        isFolder: true
-                    }, {
+                        isFolder: true,
+                    },
+                    {
                         name: 'file_list.txt',
                         path: fakeUser + '/test_folder/file_list.txt',
                         mtime: 1532738637555,
                         size: 49233,
-                        source: 'KBase upload'
-                    }, {
+                        source: 'KBase upload',
+                    },
+                    {
                         name: 'fake_sra_reads.sra',
                         path: fakeUser + '/fake_sra_reads.sra',
                         mtime: 1532738637555,
                         size: 49233,
-                        source: 'KBase upload'
-                    }
-                ])
+                        source: 'KBase upload',
+                    },
+                ]),
             });
             Jupyter.narrative = {
                 userId: fakeUser,
                 getAuthToken: () => 'fakeToken',
                 sidePanel: {
-                    '$dataWidget': {
-                        '$overlayPanel': {}
+                    $dataWidget: {
+                        $overlayPanel: {},
                     },
-                    '$methodsWidget': {
-                        currentTag: 'release'
-                    }
+                    $methodsWidget: {
+                        currentTag: 'release',
+                    },
                 },
                 showDataOverlay: () => {},
                 addAndPopulateApp: () => {},
@@ -74,8 +72,8 @@ define ([
                 updatePathFn: updatePathFn,
                 userInfo: {
                     user: fakeUser,
-                    globusLinked: false
-                }
+                    globusLinked: false,
+                },
             });
         });
 
@@ -101,17 +99,19 @@ define ([
                     updatePathFn: updatePathFn,
                     userInfo: {
                         user: fakeUser,
-                        globusLinked: true
-                    }
+                        globusLinked: true,
+                    },
                 });
-            await linkedStagingViewer.render()
-                .then(() => {
-                    var $globusButton = $node.find('#globusLinked');
-                    expect($globusButton).toBeDefined();
-                    expect($globusButton.html()).toContain('Upload with Globus');
-                    expect($globusButton.attr('href')).toEqual('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' + fakeUser);
-                    done();
-                });
+            await linkedStagingViewer.render().then(() => {
+                var $globusButton = $node.find('#globusLinked');
+                expect($globusButton).toBeDefined();
+                expect($globusButton.html()).toContain('Upload with Globus');
+                expect($globusButton.attr('href')).toEqual(
+                    'https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' +
+                        fakeUser
+                );
+                done();
+            });
         });
 
         it('Should render properly without a Globus linked account', async () => {
@@ -129,8 +129,7 @@ define ([
             expect($urlButton.html()).toContain('Upload with URL');
         });
 
-
-        it('Should start a help tour', function() {
+        it('Should start a help tour', function () {
             stagingViewer.render();
             stagingViewer.startTour();
             expect(stagingViewer.tour).not.toBeNull();
@@ -147,7 +146,7 @@ define ([
                 statusText: 'success',
                 contentType: 'text/plain',
                 responseHeaders: '',
-                responseText: errorText
+                responseText: errorText,
             });
 
             await stagingViewer.setPath('//foo');
@@ -160,11 +159,13 @@ define ([
                 statusText: 'success',
                 contentType: 'text/plain',
                 responseHeaders: '',
-                responseText: JSON.stringify([])
+                responseText: JSON.stringify([]),
             });
 
             await stagingViewer.setPath('//empty');
-            expect($targetNode.find('tbody.kb-staging-table-body').html()).toContain('No files found.');
+            expect($targetNode.find('tbody.kb-staging-table-body').html()).toContain(
+                'No files found.'
+            );
         });
 
         it('Should respond to activate and deactivate commands', () => {
@@ -211,7 +212,7 @@ define ([
                 inputs = {
                     fastq_fwd_staging_file_name: fileName,
                     name: fileName + '_reads',
-                    import_type: 'FASTQ/FASTA'
+                    import_type: 'FASTQ/FASTA',
                 };
             spyOn(Jupyter.narrative, 'addAndPopulateApp');
             spyOn(Jupyter.narrative, 'hideOverlay');
@@ -235,32 +236,43 @@ define ([
             expect(dlNode.getAttribute('src')).toEqual('some_url');
         });
 
-        it('should properly render the import as dropdown', async () => {            
+        it('should properly render the import as dropdown', async () => {
             await stagingViewer.render();
             let placeholder = $targetNode.find('span.select2-selection__placeholder').html();
             expect(placeholder).toContain('Select a type');
 
             //The options that should be in the import as dropdown
-            const menuOptions = ['FASTQ Reads', 'SRA Reads', 'GenBank Genome', 'GFF Genome', 'GFF Metagenome', 'Expression Matrix', 'Media', 'FBA Model', 'Assembly', 'Phenotype Set', 'Sample Set'];
+            const menuOptions = [
+                'FASTQ Reads',
+                'SRA Reads',
+                'GenBank Genome',
+                'GFF Genome',
+                'GFF Metagenome',
+                'Expression Matrix',
+                'Media',
+                'FBA Model',
+                'Assembly',
+                'Phenotype Set',
+                'Sample Set',
+            ];
             const foundOptions = $targetNode.find('.select2-hidden-accessible').html();
 
-            menuOptions.forEach(option => {
+            menuOptions.forEach((option) => {
                 expect(foundOptions).toContain(option);
             });
-
         });
 
         it('renders the dropdown correctly when a type is selected', async () => {
             await stagingViewer.render();
 
             //find the fake sra reads row specifically (via the download button, then chaining back up to the select dropdown above - since we don't have a unique ID for these select drodpowns it's the best mehtod for now)
-            let selectDropdown = $targetNode.find('[data-download="fake_sra_reads.sra"]').siblings('select');
+            let selectDropdown = $targetNode
+                .find('[data-download="fake_sra_reads.sra"]')
+                .siblings('select');
 
             //set the value of the dropdown
-            selectDropdown.val('sra_reads')
-                .trigger('change')
-                .trigger('select2:select');
-           
+            selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
+
             //check that the dropdown renders correctly
             let select2 = $targetNode.find('[title="SRA Reads"]');
             expect(select2).toBeDefined();
@@ -272,64 +284,72 @@ define ([
             await stagingViewer.render();
 
             //initially the checkboxes are rendered disabled until a user selects a type
-            const tableCheckboxes = $targetNode.find('input.kb-staging-table-body__checkbox-input:disabled');
+            const tableCheckboxes = $targetNode.find(
+                'input.kb-staging-table-body__checkbox-input:disabled'
+            );
 
             expect(tableCheckboxes.length).toBeGreaterThan(0);
-            expect(tableCheckboxes.attr('aria-label')).toContain('Select to import file checkbox: disabled until at least one data type is selected');
+            expect(tableCheckboxes.attr('aria-label')).toContain(
+                'Select to import file checkbox: disabled until at least one data type is selected'
+            );
 
             const headerCheckbox = $targetNode.find('#staging_table_select_all');
-            
+
             expect(headerCheckbox.length).toEqual(1);
-            expect(headerCheckbox.attr('aria-label')).toContain('Select to import all files checkbox: disabled until at least one data type is selected');
+            expect(headerCheckbox.attr('aria-label')).toContain(
+                'Select to import all files checkbox: disabled until at least one data type is selected'
+            );
         });
 
         it('checkboxes will be enabled when a type is selected', async () => {
-
             await stagingViewer.render();
 
             //find the fake sra reads one specifically
-            let selectDropdown = $targetNode.find('[data-download="fake_sra_reads.sra"]').siblings('select');
+            let selectDropdown = $targetNode
+                .find('[data-download="fake_sra_reads.sra"]')
+                .siblings('select');
 
-            selectDropdown.val('sra_reads')
-                .trigger('change')
-                .trigger('select2:select');
+            selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
 
             //check that the table checkbox is enabled
-            const tableCheckbox = $targetNode.find('input.kb-staging-table-body__checkbox-input:enabled');
+            const tableCheckbox = $targetNode.find(
+                'input.kb-staging-table-body__checkbox-input:enabled'
+            );
 
             expect(tableCheckbox.length).toEqual(1);
             expect(tableCheckbox.attr('aria-label')).toContain('Select to import file checkbox');
 
             const headerCheckbox = $targetNode.find('#staging_table_select_all');
-            
+
             //TODO: for some weird reason the header checkbox isn't showing as enabled, even though the click event fires. not sure what is going on here
             expect(headerCheckbox.length).toEqual(1);
-            expect(headerCheckbox.attr('aria-label')).toContain('Select to import all files checkbox');
+            expect(headerCheckbox.attr('aria-label')).toContain(
+                'Select to import all files checkbox'
+            );
         });
 
         it('should render the import selected button', async () => {
             await stagingViewer.render();
 
             const button = $targetNode.find('button.kb-staging-table-import__button');
-            
+
             //initial state should be disabled until the user selects a data type for at least one file
             expect(button.html()).toContain('Import Selected');
             expect(button.hasClass('kb-staging-table-import__button__disabled')).toBeTrue();
         });
 
-        it('should enable the import button when a type is selected', async() => {
+        it('should enable the import button when a type is selected', async () => {
             await stagingViewer.render();
 
             //find the fake sra reads one specifically
-            let selectDropdown = $targetNode.find('[data-download="fake_sra_reads.sra"]').siblings('select');
+            let selectDropdown = $targetNode
+                .find('[data-download="fake_sra_reads.sra"]')
+                .siblings('select');
 
-            selectDropdown.val('sra_reads')
-                .trigger('change')
-                .trigger('select2:select');
+            selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
 
             //check the checkbox
-            $targetNode.find('input.kb-staging-table-body__checkbox-input:enabled')
-                .click();
+            $targetNode.find('input.kb-staging-table-body__checkbox-input:enabled').click();
 
             const button = $targetNode.find('button.kb-staging-table-import__button');
 

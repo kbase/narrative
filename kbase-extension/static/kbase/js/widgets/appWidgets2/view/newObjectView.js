@@ -8,8 +8,8 @@ define([
     'common/runtime',
     'common/dom',
     'bootstrap',
-    'css!font-awesome'
-], function(Promise, html, Validation, Events, Runtime, Dom) {
+    'css!font-awesome',
+], function (Promise, html, Validation, Events, Runtime, Dom) {
     'use strict';
 
     var t = html.tag,
@@ -23,32 +23,30 @@ define([
             container,
             bus = config.bus,
             model = {
-                value: undefined
+                value: undefined,
             },
             dom;
 
         options.enabled = true;
 
         function setModelValue(value) {
-            return Promise.try(function() {
-                    if (model.value !== value) {
-                        model.value = value;
-                        return true;
-                    }
-                    return false;
-                })
-                .then(function(changed) {
-                    render();
-                });
+            return Promise.try(function () {
+                if (model.value !== value) {
+                    model.value = value;
+                    return true;
+                }
+                return false;
+            }).then(function (changed) {
+                render();
+            });
         }
 
         function unsetModelValue() {
-            return Promise.try(function() {
-                    model.value = undefined;
-                })
-                .then(function(changed) {
-                    render();
-                });
+            return Promise.try(function () {
+                model.value = undefined;
+            }).then(function (changed) {
+                render();
+            });
         }
 
         function resetModelValue() {
@@ -70,12 +68,12 @@ define([
                 dataElement: 'input',
                 value: currentValue,
                 readonly: true,
-                disabled: true
+                disabled: true,
             });
         }
 
         function render() {
-            Promise.try(function() {
+            Promise.try(function () {
                 var events = Events.make(),
                     inputControl = makeInputControl(model.value, events, bus);
 
@@ -85,22 +83,23 @@ define([
         }
 
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            var content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function() {
-                bus.on('run', function(message) {
+            return Promise.try(function () {
+                bus.on('run', function (message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     dom = Dom.make({ node: container });
@@ -111,16 +110,13 @@ define([
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
 
-
-                    bus.on('reset-to-defaults', function(message) {
+                    bus.on('reset-to-defaults', function (message) {
                         resetModelValue();
                     });
-                    bus.on('update', function(message) {
+                    bus.on('update', function (message) {
                         setModelValue(message.value);
                     });
-                    bus.on('refresh', function() {
-
-                    });
+                    bus.on('refresh', function () {});
 
                     bus.emit('sync');
                 });
@@ -128,13 +124,13 @@ define([
         }
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

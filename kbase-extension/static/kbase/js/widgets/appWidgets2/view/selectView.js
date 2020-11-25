@@ -8,13 +8,8 @@ define([
     'common/ui',
 
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI) {
+    'css!font-awesome',
+], function (Promise, html, Validation, Events, UI) {
     'use strict';
 
     // Constants
@@ -32,7 +27,7 @@ define([
             container,
             model = {
                 availableValues: null,
-                value: null
+                value: null,
             };
 
         options.enabled = true;
@@ -40,32 +35,38 @@ define([
         model.availableValues = spec.data.constraints.options;
 
         model.availableValuesMap = {};
-        model.availableValues.forEach(function(item, index) {
+        model.availableValues.forEach(function (item, index) {
             item.index = index;
             model.availableValuesMap[item.value] = item;
         });
 
         function makeViewControl(events) {
             var selected,
-                selectOptions = model.availableValues.map(function(item) {
+                selectOptions = model.availableValues.map(function (item) {
                     selected = false;
                     if (item.value === model.value) {
                         selected = true;
                     }
 
-                    return option({
-                        value: item.value,
-                        selected: selected,
-                        disabled: true
-                    }, item.display);
+                    return option(
+                        {
+                            value: item.value,
+                            selected: selected,
+                            disabled: true,
+                        },
+                        item.display
+                    );
                 });
 
             // CONTROL
-            return select({
-                class: 'form-control',
-                dataElement: 'input',
-                readonly: true
-            }, [option({ value: '' }, '')].concat(selectOptions));
+            return select(
+                {
+                    class: 'form-control',
+                    dataElement: 'input',
+                    readonly: true,
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
         }
 
         function syncModelToControl() {
@@ -83,16 +84,15 @@ define([
         }
 
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' },
-                    makeViewControl(events)
-                )
-            ]);
+            var content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' }, makeViewControl(events))]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -106,11 +106,10 @@ define([
             setModelValue(spec.data.defaultValue);
         }
 
-
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
@@ -121,10 +120,10 @@ define([
                 container.innerHTML = theLayout.content;
                 events.attachEvents();
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', function () {
                     resetModelValue();
                 });
-                bus.on('update', function(message) {
+                bus.on('update', function (message) {
                     setModelValue(message.value);
                 });
                 // bus.emit('sync');
@@ -135,7 +134,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -144,13 +143,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -14,12 +14,15 @@ let authToken = 'fakeToken';
 if (process.env.KBASE_TEST_TOKEN) {
     authToken = process.env.KBASE_TEST_TOKEN;
     console.log('loaded auth token from environment variable KBASE_TEST_TOKEN');
-}
-else if (testConfig && testConfig.token && testConfig.token.file && fs.existsSync(testConfig.token.file)) {
+} else if (
+    testConfig &&
+    testConfig.token &&
+    testConfig.token.file &&
+    fs.existsSync(testConfig.token.file)
+) {
     authToken = fs.readFileSync(testConfig.token.file, 'utf-8').trim();
     console.log('loaded auth token from file ' + testConfig.token.file);
-}
-else {
+} else {
     console.log('continuing without valid test token');
 }
 
@@ -42,9 +45,7 @@ const wdioConfig = {
     // NPM script (see https://docs.npmjs.com/cli/run-script) then the current working
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
-    specs: [
-        './test/integration/specs/**/*.js'
-    ],
+    specs: ['./test/integration/specs/**/*.js'],
     // Patterns to exclude.
     exclude: [
         // 'path/to/excluded/files'
@@ -71,22 +72,24 @@ const wdioConfig = {
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
     // https://docs.saucelabs.com/reference/platforms-configurator
     //
-    capabilities: [{
-        // maxInstances can get overwritten per capability. So if you have an in-house Selenium
-        // grid with only 5 firefox instances available you can make sure that not more than
-        // 5 instances get started at a time.
-        maxInstances: 1,
-        'goog:chromeOptions': {
-            args: ['--disable-gpu', '--no-sandbox', 'headless']
+    capabilities: [
+        {
+            // maxInstances can get overwritten per capability. So if you have an in-house Selenium
+            // grid with only 5 firefox instances available you can make sure that not more than
+            // 5 instances get started at a time.
+            maxInstances: 1,
+            'goog:chromeOptions': {
+                args: ['--disable-gpu', '--no-sandbox', 'headless'],
+            },
+            //
+            browserName: 'chrome',
+            acceptInsecureCerts: true,
+            // If outputDir is provided WebdriverIO can capture driver session logs
+            // it is possible to configure which logTypes to include/exclude.
+            // excludeDriverLogs: ['*'], // pass '*' to exclude all driver session logs
+            // excludeDriverLogs: ['bugreport', 'server'],
         },
-        //
-        browserName: 'chrome',
-        acceptInsecureCerts: true
-        // If outputDir is provided WebdriverIO can capture driver session logs
-        // it is possible to configure which logTypes to include/exclude.
-        // excludeDriverLogs: ['*'], // pass '*' to exclude all driver session logs
-        // excludeDriverLogs: ['bugreport', 'server'],
-    }],
+    ],
     //
     // ===================
     // Test Configurations
@@ -158,14 +161,12 @@ const wdioConfig = {
     // see also: https://webdriver.io/docs/dot-reporter.html
     reporters: ['spec'],
 
-
-
     //
     // Options to be passed to Mocha.
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 60000
+        timeout: 60000,
     },
     //
     // =====
@@ -246,7 +247,6 @@ const wdioConfig = {
     // afterTest: function(test, context, { error, result, duration, passed, retries }) {
     // },
 
-
     /**
      * Hook that gets executed after the suite has ended
      * @param {Object} suite suite details
@@ -290,10 +290,10 @@ const wdioConfig = {
     // onComplete: function(exitCode, config, capabilities, results) {
     // },
     /**
-    * Gets executed when a refresh happens.
-    * @param {String} oldSessionId session ID of the old session
-    * @param {String} newSessionId session ID of the new session
-    */
+     * Gets executed when a refresh happens.
+     * @param {String} oldSessionId session ID of the old session
+     * @param {String} newSessionId session ID of the new session
+     */
     //onReload: function(oldSessionId, newSessionId) {
     //}
 };

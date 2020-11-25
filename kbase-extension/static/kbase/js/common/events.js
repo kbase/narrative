@@ -1,9 +1,6 @@
 /*global define,console*/
 /*jslint white:true,browser:true*/
-define([
-    'jquery',
-    'kb_common/html'
-], function ($, html) {
+define(['jquery', 'kb_common/html'], function ($, html) {
     'use strict';
 
     function factory(config) {
@@ -28,7 +25,7 @@ define([
                 jquery: event.jquery,
                 handler: function (e) {
                     event.handler(e);
-                }
+                },
             });
             return id;
         }
@@ -50,13 +47,13 @@ define([
                     selector: selector,
                     handler: function (e) {
                         event.handler(e);
-                    }
+                    },
                 });
             });
             return id;
         }
         function attachEvents(eventsRoot) {
-            var root = globalRoot || eventsRoot;            
+            var root = globalRoot || eventsRoot;
             events.forEach(function (event) {
                 var node = root.querySelector(event.selector);
                 if (!node) {
@@ -74,13 +71,13 @@ define([
         return {
             addEvent: addEvent,
             addEvents: addEvents,
-            attachEvents: attachEvents
+            attachEvents: attachEvents,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

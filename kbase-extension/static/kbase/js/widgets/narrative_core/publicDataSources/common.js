@@ -1,8 +1,4 @@
-define([
-    'handlebars'
-], function (
-    Handlebars
-) {
+define(['handlebars'], function (Handlebars) {
     'use strict';
 
     function compileTemplates(templates) {
@@ -10,17 +6,17 @@ define([
             if (typeof template.template === 'string') {
                 return {
                     label: template.label,
-                    template: Handlebars.compile(template.template)
+                    template: Handlebars.compile(template.template),
                 };
             } else if (template.template instanceof Array) {
                 return {
                     label: template.label,
-                    template: compileTemplates(template.template)
+                    template: compileTemplates(template.template),
                 };
             } else {
                 return {
                     label: template.label,
-                    template: Handlebars.compile('')
+                    template: Handlebars.compile(''),
                 };
             }
         });
@@ -36,7 +32,7 @@ define([
             }
             return {
                 label: template.label,
-                value: value
+                value: value,
             };
         });
     }
@@ -46,7 +42,9 @@ define([
         for (var i = 0; i < argPath.length; i += 1) {
             var key = argPath[i];
             if (!(key in arg)) {
-                throw new Error('Required argument "' + key + '" in "' + name +  '" is required but missing');
+                throw new Error(
+                    'Required argument "' + key + '" in "' + name + '" is required but missing'
+                );
             }
             arg = arg[key];
         }
@@ -55,6 +53,6 @@ define([
     return Object.freeze({
         compileTemplates: compileTemplates,
         applyMetadataTemplates: applyMetadataTemplates,
-        requireArg: requireArg
+        requireArg: requireArg,
     });
 });

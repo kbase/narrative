@@ -4,12 +4,7 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define([
-    'api/auth',
-    'narrativeConfig',
-    'testUtil',
-    'uuid'
-], function (
+define(['api/auth', 'narrativeConfig', 'testUtil', 'uuid'], function (
     Auth,
     Config,
     TestUtil,
@@ -17,8 +12,7 @@ define([
 ) {
     'use strict';
 
-    let authClient,
-        token;
+    let authClient, token;
 
     // The following functions ensure that the token for the "user" configured
     // in test/unit/testConfig.json is set in the standard session cookie field
@@ -55,7 +49,7 @@ define([
             authClient = Auth.make({
                 url: Config.url('auth'),
                 // Can't use secure cookies for testing.
-                secureCookies: false
+                secureCookies: false,
             });
         });
 
@@ -64,14 +58,15 @@ define([
         });
 
         it('Should make a new Auth client on request', () => {
-            var auth = Auth.make({url: Config.url('auth')});
+            var auth = Auth.make({ url: Config.url('auth') });
             expect(auth).not.toBeNull();
         });
 
         it('Should get auth token info', (done) => {
             TestUtil.pendingIfNoToken();
 
-            authClient.getTokenInfo(token)
+            authClient
+                .getTokenInfo(token)
                 .then((response) => {
                     expect(Object.keys(response)).toContain('expires');
                     done();
@@ -85,7 +80,8 @@ define([
         it('Should fail to get auth token info from a fake token', (done) => {
             TestUtil.pendingIfNoToken();
 
-            authClient.getTokenInfo('faketoken')
+            authClient
+                .getTokenInfo('faketoken')
                 .then((response) => {
                     expect(response).toBeNull();
                     done();
@@ -100,7 +96,8 @@ define([
         it('Should return my profile', (done) => {
             TestUtil.pendingIfNoToken();
 
-            authClient.getUserProfile()
+            authClient
+                .getUserProfile()
                 .then((response) => {
                     expect(response).not.toBeNull();
                     expect(Object.keys(response)).toContain('display');
@@ -114,7 +111,8 @@ define([
 
         it('Should fail to get profile with a missing token', (done) => {
             clearToken();
-            authClient.getCurrentProfile()
+            authClient
+                .getCurrentProfile()
                 .then(() => {
                     done.fail('Should have failed!');
                 })
@@ -126,7 +124,8 @@ define([
         it('Should fail to get profile with a bad token', (done) => {
             clearToken();
             setToken('someBadToken');
-            authClient.getCurrentProfile()
+            authClient
+                .getCurrentProfile()
                 .then(() => {
                     done.fail('Should have failed!');
                 })
@@ -139,7 +138,8 @@ define([
             TestUtil.pendingIfNoToken();
 
             var badName = 'not_a_user_name';
-            authClient.getUserNames(token, ['wjriehl', badName])
+            authClient
+                .getUserNames(token, ['wjriehl', badName])
                 .then((names) => {
                     expect(names.wjriehl).toEqual('William Riehl');
                     expect(Object.keys(names)).not.toContain(badName);
@@ -155,7 +155,8 @@ define([
             const token = 'someBadToken';
             clearToken();
             setToken(token);
-            authClient.getUserNames(token, ['wjriehl'])
+            authClient
+                .getUserNames(token, ['wjriehl'])
                 .then(() => {
                     done.fail('Should have failed!');
                 })
@@ -166,7 +167,8 @@ define([
 
         it('Should fail to get users with a missing token', (done) => {
             clearToken();
-            authClient.getUserNames(null, ['wjriehl'])
+            authClient
+                .getUserNames(null, ['wjriehl'])
                 .then(() => {
                     done.fail('Should have failed!');
                 })
@@ -179,7 +181,8 @@ define([
             TestUtil.pendingIfNoToken();
 
             var query = 'ie';
-            authClient.searchUserNames(token, query)
+            authClient
+                .searchUserNames(token, query)
                 .then((results) => {
                     expect(results).not.toBeNull();
                     done();
@@ -195,7 +198,8 @@ define([
 
             var query = 'ie';
             var options = [''];
-            authClient.searchUserNames(token, query, options)
+            authClient
+                .searchUserNames(token, query, options)
                 .then((results) => {
                     expect(results).not.toBeNull();
                     done();
@@ -207,7 +211,8 @@ define([
         });
 
         it('Should fail to search for users with a bad token', (done) => {
-            authClient.searchUserNames('someBadToken', 'ie', [''])
+            authClient
+                .searchUserNames('someBadToken', 'ie', [''])
                 .then(() => {
                     done.fail('Should have failed!');
                 })
@@ -218,7 +223,8 @@ define([
 
         it('Should fail to search for users with a missing token', (done) => {
             clearToken();
-            authClient.searchUserNames(null, 'ie', [''])
+            authClient
+                .searchUserNames(null, 'ie', [''])
                 .then(() => {
                     done.fail('Should have failed!');
                 })
@@ -236,15 +242,19 @@ define([
 
         it('Should validate an auth token on request', (done) => {
             let doneCount = 0;
-            const trials = [{
-                token: null,
-                isValid: true  // should get it from cookie
-            }, {
-                token: 'someRandomToken',
-                isValid: false
-            }];
+            const trials = [
+                {
+                    token: null,
+                    isValid: true, // should get it from cookie
+                },
+                {
+                    token: 'someRandomToken',
+                    isValid: false,
+                },
+            ];
             trials.forEach((trial) => {
-                authClient.validateToken(trial.token)
+                authClient
+                    .validateToken(trial.token)
                     .then((isValid) => {
                         expect(isValid).toBe(trial.isValid);
                         doneCount++;
@@ -304,7 +314,7 @@ define([
             authClient.setCookie({
                 name: backupCookieName,
                 value: backupCookieValue,
-                domain: 'localhost'
+                domain: 'localhost',
             });
 
             // The backup cookie should be set.
@@ -351,7 +361,7 @@ define([
             authClient.setCookie({
                 name: 'narrative_session',
                 value: cookieValue,
-                expires: 14
+                expires: 14,
             });
 
             // Okay, it should be set.

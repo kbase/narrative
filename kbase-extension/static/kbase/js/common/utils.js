@@ -1,46 +1,42 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
-define([
-    'kb_common/html',
-    'kb_common/format',
-    './props',
-    'bootstrap'
-], function (html, format, Props) {
+define(['kb_common/html', 'kb_common/format', './props', 'bootstrap'], function (
+    html,
+    format,
+    Props
+) {
     'use strict';
     var t = html.tag,
         div = t('div');
 
     function makePanel(title, elementName) {
-        return  div({class: 'panel panel-primary'}, [
-            div({class: 'panel-heading'}, [
-                div({class: 'panel-title'}, title)
+        return div({ class: 'panel panel-primary' }, [
+            div({ class: 'panel-heading' }, [div({ class: 'panel-title' }, title)]),
+            div({ class: 'panel-body' }, [
+                div({ dataElement: elementName, class: 'container-fluid' }),
             ]),
-            div({class: 'panel-body'}, [
-                div({dataElement: elementName, class: 'container-fluid'})
-            ])
         ]);
     }
 
     function buildPanel(args) {
-        var style = {}, type = args.type || 'primary';
+        var style = {},
+            type = args.type || 'primary';
         if (args.hidden) {
             style.display = 'none';
         }
-        return  div({class: 'panel panel-' + type, dataElement: args.name, style: style}, [
-            div({class: 'panel-heading'}, [
-                div({class: 'panel-title'}, args.title)
-            ]),
-            div({class: 'panel-body'}, [
-                args.body
-            ])
+        return div({ class: 'panel panel-' + type, dataElement: args.name, style: style }, [
+            div({ class: 'panel-heading' }, [div({ class: 'panel-title' }, args.title)]),
+            div({ class: 'panel-body' }, [args.body]),
         ]);
     }
 
     function getElement(container, names) {
-        var selector = names.map(function (name) {
-            return '[data-element="' + name + '"]';
-        }).join(' ');
+        var selector = names
+            .map(function (name) {
+                return '[data-element="' + name + '"]';
+            })
+            .join(' ');
 
         return container.querySelector(selector);
     }
@@ -111,7 +107,7 @@ define([
             prompt.css('visibility', 'hidden');
             return;
         }
-            
+
         if (tries > 0) {
             tries -= 1;
             window.setTimeout(function () {
@@ -121,7 +117,7 @@ define([
             console.warn('Could not hide the prompt, sorry');
         }
     }
-    
+
     function toBoolean(value) {
         if (value && value !== null) {
             return true;
@@ -143,5 +139,4 @@ define([
         horribleHackToHideElement: horribleHackToHideElement,
         toBoolean: toBoolean,
     };
-
 });

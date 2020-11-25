@@ -3,13 +3,7 @@
 /*global jasmine*/
 /*jslint white: true*/
 
-define ([
-    'jquery',
-    'narrativeConfig',
-    'kbaseNarrative',
-    'base/js/namespace',
-    'narrativeLogin'
-], (
+define(['jquery', 'narrativeConfig', 'kbaseNarrative', 'base/js/namespace', 'narrativeLogin'], (
     $,
     Config,
     Narrative,
@@ -29,7 +23,7 @@ define ([
         beforeEach(async () => {
             // we need to be "logged in" for various tests to work, especially initing the Narrative object.
             // this means mocking up some auth responses, and the NarrativeLogin object.
-            document.cookie='kbase_session=' + FAKE_TOKEN;
+            document.cookie = 'kbase_session=' + FAKE_TOKEN;
             jasmine.Ajax.install();
             jasmine.Ajax.stubRequest(/\/token$/).andReturn({
                 status: 200,
@@ -40,7 +34,7 @@ define ([
                     id: 'some-token-id',
                     name: null,
                     user: 'some_user',
-                })
+                }),
             });
             jasmine.Ajax.stubRequest(/\/me$/).andReturn({
                 status: 200,
@@ -49,7 +43,7 @@ define ([
                 responseText: JSON.stringify({
                     display: 'Some User',
                     user: 'some_user',
-                })
+                }),
             });
 
             // mock a jupyter notebook.
@@ -59,33 +53,35 @@ define ([
                 writable: DEFAULT_WRITABLE,
                 keyboard_manager: {
                     edit_shortcuts: {
-                        remove_shortcut: () => {}
+                        remove_shortcut: () => {},
                     },
                     command_shortcuts: {
-                        remove_shortcut: () => {}
-                    }
+                        remove_shortcut: () => {},
+                    },
                 },
                 kernel: {
                     is_connected: () => false,
                     comm_info: (comm_name, callback) => {
-                        callback({content: {
-                            comms: {
-                                'some_comm_id': {
-                                    target_name: 'KBaseJobs'
-                                }
-                            }
-                        }});
+                        callback({
+                            content: {
+                                comms: {
+                                    some_comm_id: {
+                                        target_name: 'KBaseJobs',
+                                    },
+                                },
+                            },
+                        });
                     },
                     comm_manager: {
-                        register_comm: () => {}
+                        register_comm: () => {},
                     },
                     execute: (code, callbacks) => {
                         callbacks.shell.reply({
-                            content: {}
+                            content: {},
                         });
-                    }
+                    },
                 },
-                notebook_name: DEFAULT_NOTEBOOK_NAME
+                notebook_name: DEFAULT_NOTEBOOK_NAME,
             };
             Jupyter.keyboard_manager = Jupyter.notebook.keyboard_manager;
 
@@ -110,8 +106,7 @@ define ([
                 const jobsReadyCallback = (err) => {
                     if (err) {
                         reject('This should not have failed', err);
-                    }
-                    else {
+                    } else {
                         resolve();
                     }
                 };
@@ -129,8 +124,7 @@ define ([
                 const jobsReadyCallback = (err) => {
                     if (err) {
                         resolve();
-                    }
-                    else {
+                    } else {
                         reject('expected an error');
                     }
                 };

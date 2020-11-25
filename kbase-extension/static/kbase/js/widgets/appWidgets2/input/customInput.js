@@ -11,17 +11,8 @@ define([
     'common/runtime',
 
     'bootstrap',
-    'css!font-awesome'
-], function (
-    Promise,
-    require,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props,
-    Runtime
-) {
+    'css!font-awesome',
+], function (Promise, require, html, Validation, Events, UI, Props, Runtime) {
     'use strict';
 
     function factory(config) {
@@ -71,8 +62,6 @@ define([
             // setControlValue(model.getItem('value', null));
         }
 
-
-
         // VALIDATION
 
         function importControlValue() {
@@ -88,10 +77,9 @@ define([
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function (result) {
-                    channel.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then(function (result) {
+                channel.emit('validation', result);
+            });
         }
 
         // DOM & RENDERING
@@ -107,25 +95,23 @@ define([
         }
 
         function makeCustomWidget(arg) {
-
-            // For now all custom inputs live in the 
+            // For now all custom inputs live in the
             // customInputs directory of the input collection directory
             // and are named like <type>Input.js
-            return prequire('./customInputs/' + subtype + 'Input')
-                .then(function (Module) {
-                    var inputWidget = Module.make({
-                        runtime: runtime
-                    });
-
-                    inputWidget.channel.on('changed', function (message) {
-                        model.setItem('value', message.newValue);
-                        channel.emit('changed', {
-                            newValue: message.newValue
-                        });
-                    });
-
-                    return inputWidget;
+            return prequire('./customInputs/' + subtype + 'Input').then(function (Module) {
+                var inputWidget = Module.make({
+                    runtime: runtime,
                 });
+
+                inputWidget.channel.on('changed', function (message) {
+                    model.setItem('value', message.newValue);
+                    channel.emit('changed', {
+                        newValue: message.newValue,
+                    });
+                });
+
+                return inputWidget;
+            });
         }
 
         // EVENT HANDLERS
@@ -140,7 +126,6 @@ define([
             }
         }
 
-
         // LIFECYCLE API
 
         function start(arg) {
@@ -154,11 +139,10 @@ define([
                         inputWidget = customWidget;
                         return customWidget.start({
                             node: container,
-                            initialValue: model.getItem('value', null)
+                            initialValue: model.getItem('value', null),
                         });
                     })
                     .then(function () {
-
                         channel.on('reset-to-defaults', function () {
                             resetModelValue();
                         });
@@ -179,8 +163,8 @@ define([
                                 name: 'Error',
                                 message: err.message,
                                 detail: 'detail here',
-                                resolution: 'how to resolve here.'
-                            }
+                                resolution: 'how to resolve here.',
+                            },
                         });
                         console.error('ERROR', err);
                     });
@@ -188,8 +172,7 @@ define([
         }
 
         function stop() {
-            return inputWidget.stop()
-            .then(function () {
+            return inputWidget.stop().then(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -201,22 +184,22 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: function () {}
+            onUpdate: function () {},
         });
 
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

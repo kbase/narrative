@@ -1,12 +1,4 @@
-define([
-    'jquery',
-    'underscore',
-    'narrativeConfig'
-], function (
-    $,
-    _,
-    Config
-) {
+define(['jquery', 'underscore', 'narrativeConfig'], function ($, _, Config) {
     'use strict';
 
     var icons = Config.get('icons'),
@@ -47,7 +39,7 @@ define([
         var icon = _.has(icons, type) ? icons[type] : icons.DEFAULT;
         // background circle
         $logo.addClass('fa-stack fa-2x').css({
-            'cursor': 'pointer'
+            cursor: 'pointer',
         });
 
         // For 'stacked' (set) icons, add a shifted-over
@@ -56,7 +48,9 @@ define([
         var baseIcon = 'circle';
         var circle_classes = 'fa fa-' + baseIcon + ' fa-stack-2x';
         var circle_color = logoColorLookup(type);
-        var cmax = function(x) { return x > 255 ? 255 : x; };
+        var cmax = function (x) {
+            return x > 255 ? 255 : x;
+        };
         if (stacked) {
             var parsed_color, r, g, b;
             var cstep = 20; // color-step for overlapped circles
@@ -77,40 +71,50 @@ define([
                 b = parsed_color[3];
             }
             // Add circles with lighter colors
-            for (var i=num_stacked_circles; i > 0; i--) {
-                var stacked_color = 'rgb(' + cmax(r + i * cstep)  + ',' +
-                    cmax(g + i * cstep) + ',' + cmax(b + i * cstep) + ')';
-                $logo.append($('<i>')
-                    .addClass(circle_classes + ' kb-data-list-logo-shiftedx' + i)
-                    .css({'color': stacked_color}));
-                $logo.append($('<i>')
-                    .addClass(circle_classes + ' kb-data-list-logo-shifted' + i)
-                    .css({'color': 'white'}));
+            for (var i = num_stacked_circles; i > 0; i--) {
+                var stacked_color =
+                    'rgb(' +
+                    cmax(r + i * cstep) +
+                    ',' +
+                    cmax(g + i * cstep) +
+                    ',' +
+                    cmax(b + i * cstep) +
+                    ')';
+                $logo.append(
+                    $('<i>')
+                        .addClass(circle_classes + ' kb-data-list-logo-shiftedx' + i)
+                        .css({ color: stacked_color })
+                );
+                $logo.append(
+                    $('<i>')
+                        .addClass(circle_classes + ' kb-data-list-logo-shifted' + i)
+                        .css({ color: 'white' })
+                );
             }
         }
         // Assume there are CSS rules for levels of indent we care about..
         if (indent > 0) {
             $logo.addClass('kb-data-list-level1');
-        }
-        else if ($logo.hasClass('kb-data-list-level1')) {
+        } else if ($logo.hasClass('kb-data-list-level1')) {
             $logo.removeClass('kb-data-list-level1');
         }
 
-        $logo.append($('<i>')
-            .addClass(circle_classes)
-            .css({'color': circle_color}));
+        $logo.append($('<i>').addClass(circle_classes).css({ color: circle_color }));
         // to avoid repetition, define the func. here that will
         // add one set of icons
-        var addLogoFunc = function(fa_icon, $logo, cls) {
-            $logo.append($('<i>')
-                .addClass(fa_icon + ' fa-inverse fa-stack-1x ' + cls));
+        var addLogoFunc = function (fa_icon, $logo, cls) {
+            $logo.append($('<i>').addClass(fa_icon + ' fa-inverse fa-stack-1x ' + cls));
         };
         if (isCustomIcon(icon)) {
             // add custom icons (more than 1 will look weird, though)
-            _.each(icon, function(cls) { addLogoFunc('icon', $logo, cls); });
+            _.each(icon, function (cls) {
+                addLogoFunc('icon', $logo, cls);
+            });
         } else {
             // add stack of font-awesome icons
-            _.each(icon, function(cls) { addLogoFunc('fa', $logo, cls); });
+            _.each(icon, function (cls) {
+                addLogoFunc('fa', $logo, cls);
+            });
         }
         return $logo;
     }
@@ -123,8 +127,9 @@ define([
      * @returns {boolean}
      */
     function isCustomIcon(iconList) {
-        return (iconList.length > 0 && iconList[0].length > 4 &&
-            iconList[0].substring(0, 4) == 'icon');
+        return (
+            iconList.length > 0 && iconList[0].length > 4 && iconList[0].substring(0, 4) == 'icon'
+        );
     }
 
     /**
@@ -132,9 +137,9 @@ define([
      * @param {string} type String that gets "hashed" into a color.
      * @returns {string} Color code
      */
-    function logoColorLookup (type) {
+    function logoColorLookup(type) {
         var color = iconColorMapping[type];
-        if ( color === undefined) {
+        if (color === undefined) {
             // fall back to primitive hack that just guesses
             var code = 0;
             for (var i = 0; i < type.length; code += type.charCodeAt(i++));
@@ -145,6 +150,6 @@ define([
 
     return {
         overwriteDataIcon: overwriteDataIcon,
-        buildDataIcon: buildDataIcon
+        buildDataIcon: buildDataIcon,
     };
 });

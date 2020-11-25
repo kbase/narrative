@@ -1,21 +1,17 @@
 /*eslint-env jasmine*/
-define([
-    'widgets/appWidgets2/input/floatInput',
-    'common/runtime',
-    'testUtil'
-], function(
+define(['widgets/appWidgets2/input/floatInput', 'common/runtime', 'testUtil'], function (
     FloatInput,
     Runtime,
     TestUtil
 ) {
     'use strict';
 
-    describe('Test float data input widget', function() {
+    describe('Test float data input widget', function () {
         let testConfig = {},
             runtime,
             bus;
 
-        beforeEach(function() {
+        beforeEach(function () {
             runtime = Runtime.make();
             bus = runtime.bus().makeChannelBus({
                 description: 'float testing',
@@ -30,13 +26,12 @@ define([
                         constraints: {
                             required: false,
                             min: -1000,
-                            max: 1000
-                        }
-
+                            max: 1000,
+                        },
                     },
                     original: {
-                        text_subdata_options: {}
-                    }
+                        text_subdata_options: {},
+                    },
                 },
                 channelName: bus.channelName,
             };
@@ -44,13 +39,13 @@ define([
 
         afterEach(() => {
             bus.stop();
-        })
+        });
 
-        it('should be real!', function() {
+        it('should be real!', function () {
             expect(FloatInput).not.toBeNull();
         });
 
-        it('should instantiate with a test config', function() {
+        it('should instantiate with a test config', function () {
             TestUtil.pendingIfNoToken();
             var widget = FloatInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
@@ -59,7 +54,8 @@ define([
         it('should start and stop properly without initial value', (done) => {
             let widget = FloatInput.make(testConfig);
             let node = document.createElement('div');
-            widget.start({node: node})
+            widget
+                .start({ node: node })
                 .then(() => {
                     expect(node.childElementCount).toBeGreaterThan(0);
                     const input = node.querySelector('input[data-type="float"]');
@@ -77,7 +73,8 @@ define([
             testConfig.initialValue = 10.0;
             let widget = FloatInput.make(testConfig);
             let node = document.createElement('div');
-            widget.start({node: node})
+            widget
+                .start({ node: node })
                 .then(() => {
                     expect(node.childElementCount).toBeGreaterThan(0);
                     const input = node.querySelector('input[data-type="float"]');
@@ -93,17 +90,16 @@ define([
 
         it('should update model properly with change event', (done) => {
             bus.on('changed', (value) => {
-                expect(value).toEqual({newValue: 1.2});
+                expect(value).toEqual({ newValue: 1.2 });
                 done();
             });
             let widget = FloatInput.make(testConfig);
             let node = document.createElement('div');
-            widget.start({node: node})
-                .then(() => {
-                    const input = node.querySelector('input[data-type="float"]');
-                    input.setAttribute('value', 1.2);
-                    input.dispatchEvent(new Event('change'));
-                })
+            widget.start({ node: node }).then(() => {
+                const input = node.querySelector('input[data-type="float"]');
+                input.setAttribute('value', 1.2);
+                input.dispatchEvent(new Event('change'));
+            });
         });
 
         xit('should update model properly with keyup/touch event', (done) => {
@@ -113,12 +109,11 @@ define([
                 expect(message.isValid).toBeTruthy();
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    const input = node.querySelector('input[data-type="float"]');
-                    input.setAttribute('value', 1.23);
-                    input.dispatchEvent(new Event('keyup'));
-                });
+            widget.start({ node: node }).then(() => {
+                const input = node.querySelector('input[data-type="float"]');
+                input.setAttribute('value', 1.23);
+                input.dispatchEvent(new Event('keyup'));
+            });
         });
 
         it('should show message when configured', (done) => {
@@ -126,22 +121,20 @@ define([
             let widget = FloatInput.make(testConfig);
             let node = document.createElement('div');
             bus.on('validation', done);
-            widget.start({node: node})
-                .then(() => {
-                    const input = node.querySelector('input[data-type="float"]');
-                    input.setAttribute('value', 5);
-                    input.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                const input = node.querySelector('input[data-type="float"]');
+                input.setAttribute('value', 5);
+                input.dispatchEvent(new Event('change'));
+            });
         });
 
         it('should respond to bus commands', (done) => {
             bus.on('validation', done);
             let widget = FloatInput.make(testConfig);
             let node = document.createElement('div');
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('update', {value: '12345.6'});
-                });
+            widget.start({ node: node }).then(() => {
+                bus.emit('update', { value: '12345.6' });
+            });
         });
     });
 });

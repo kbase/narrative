@@ -15,7 +15,7 @@ define([
     'common/cellComponents/tabs/infoTab',
     './tabs/configure',
     './fileTypePanel',
-    'json!./testAppObj.json'
+    'json!./testAppObj.json',
 ], (
     Uuid,
     AppUtils,
@@ -47,17 +47,15 @@ define([
                 alert('starting default widget');
             }
 
-            function stop() {
-
-            }
+            function stop() {}
 
             return {
                 start: start,
-                stop: stop
+                stop: stop,
             };
         }
         return {
-            make: make
+            make: make,
         };
     }
 
@@ -106,7 +104,7 @@ define([
         const cell = options.cell,
             runtime = Runtime.make(),
             busEventManager = BusEventManager.make({
-                bus: runtime.bus()
+                bus: runtime.bus(),
             }),
             typesToFiles = options.importData,
             workspaceInfo = options.workspaceInfo;
@@ -114,18 +112,18 @@ define([
         let kbaseNode = null, // the DOM element used as the container for everything in this cell
             cellBus = null,
             ui = null,
-            tabWidget = null,  // the widget currently in view
+            tabWidget = null, // the widget currently in view
             state = getInitialState(),
             tabSet = {
                 selectedTab: 'configure',
                 tabs: {
                     configure: {
                         label: 'Configure',
-                        widget: ConfigureWidget
+                        widget: ConfigureWidget,
                     },
                     viewConfigure: {
                         label: 'View Configure',
-                        widget: DefaultWidget()
+                        widget: DefaultWidget(),
                     },
                     info: {
                         label: 'Info',
@@ -133,56 +131,56 @@ define([
                     },
                     logs: {
                         label: 'Job Status',
-                        widget: DefaultWidget()
+                        widget: DefaultWidget(),
                     },
                     results: {
                         label: 'Result',
-                        widget: DefaultWidget()
+                        widget: DefaultWidget(),
                     },
                     error: {
                         label: 'Error',
                         type: 'danger',
-                        widget: DefaultWidget()
-                    }
-                }
+                        widget: DefaultWidget(),
+                    },
+                },
             },
             actionButtons = {
                 current: {
                     name: null,
-                    disabled: null
+                    disabled: null,
                 },
                 availableButtons: {
                     runApp: {
                         help: 'Run the app',
                         type: 'primary',
                         classes: ['-run'],
-                        label: 'Run'
+                        label: 'Run',
                     },
                     cancel: {
                         help: 'Cancel the running app',
                         type: 'danger',
                         classes: ['-cancel'],
-                        label: 'Cancel'
+                        label: 'Cancel',
                     },
                     reRunApp: {
                         help: 'Edit and re-run the app',
                         type: 'default',
                         classes: ['-rerun'],
-                        label: 'Reset'
+                        label: 'Reset',
                     },
                     resetApp: {
                         help: 'Reset the app and return to Edit mode',
                         type: 'default',
                         classes: ['-reset'],
-                        label: 'Reset'
+                        label: 'Reset',
                     },
                     offline: {
                         help: 'Currently disconnected from the server.',
                         type: 'danger',
                         classes: ['-cancel'],
-                        label: 'Offline'
-                    }
-                }
+                        label: 'Offline',
+                    },
+                },
             },
             // widgets this cell owns
             cellTabs,
@@ -190,16 +188,16 @@ define([
             fileTypePanel,
             model = Props.make({
                 data: TestAppObj,
-                onUpdate: function(props) {
+                onUpdate: function (props) {
                     Utils.setMeta(this.cell, 'appCell', props.getRawObject());
-                }
+                },
             });
         if (options.initialize) {
             initialize(typesToFiles);
         }
 
         let spec = Spec.make({
-            appSpec: model.getItem('app.spec')
+            appSpec: model.getItem('app.spec'),
         });
 
         setupCell();
@@ -220,18 +218,18 @@ define([
                     attributes: {
                         id: new Uuid(4).format(),
                         status: 'new',
-                        created: (new Date()).toUTCString(),
+                        created: new Date().toUTCString(),
                         title: 'Import from Staging Area',
-                        subtitle: 'Import files into your Narrative as data objects'
+                        subtitle: 'Import files into your Narrative as data objects',
                     },
                     type: CELL_TYPE,
                     bulkImportCell: {
                         'user-settings': {
-                            showCodeInputArea: false
+                            showCodeInputArea: false,
                         },
-                        inputs: _typesToFiles
-                    }
-                }
+                        inputs: _typesToFiles,
+                    },
+                },
             };
             cell.metadata = meta;
         }
@@ -241,13 +239,17 @@ define([
          * extra functions that the Narrative can call.
          */
         function specializeCell() {
-
             // minimizes the cell
-            cell.minimize = function() {
+            cell.minimize = function () {
                 const inputArea = this.input.find('.input_area').get(0),
                     outputArea = this.element.find('.output_wrapper'),
-                    viewInputArea = this.element.find('[data-subarea-type="bulk-import-cell-input"]'),
-                    showCode = Utils.getCellMeta(cell, 'kbase.bulkImportCell.user-settings.showCodeInputArea');
+                    viewInputArea = this.element.find(
+                        '[data-subarea-type="bulk-import-cell-input"]'
+                    ),
+                    showCode = Utils.getCellMeta(
+                        cell,
+                        'kbase.bulkImportCell.user-settings.showCodeInputArea'
+                    );
 
                 if (showCode) {
                     inputArea.classList.remove('-show');
@@ -257,11 +259,16 @@ define([
             };
 
             // maximizes the cell
-            cell.maximize = function() {
+            cell.maximize = function () {
                 const inputArea = this.input.find('.input_area').get(0),
                     outputArea = this.element.find('.output_wrapper'),
-                    viewInputArea = this.element.find('[data-subarea-type="bulk-import-cell-input"]'),
-                    showCode = Utils.getCellMeta(cell, 'kbase.bulkImportCell.user-settings.showCodeInputArea');
+                    viewInputArea = this.element.find(
+                        '[data-subarea-type="bulk-import-cell-input"]'
+                    ),
+                    showCode = Utils.getCellMeta(
+                        cell,
+                        'kbase.bulkImportCell.user-settings.showCodeInputArea'
+                    );
 
                 if (showCode) {
                     if (!inputArea.classList.contains('-show')) {
@@ -274,13 +281,15 @@ define([
             };
 
             // returns a DOM node with an icon to be rendered elsewhere
-            cell.getIcon = function() {
+            cell.getIcon = function () {
                 return AppUtils.makeGenericIcon('upload', '#bf6c97');
             };
 
             // this renders the cell's icon in its toolbar
-            cell.renderIcon = function() {
-                const iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
+            cell.renderIcon = function () {
+                const iconNode = this.element[0].querySelector(
+                    '.celltoolbar [data-element="icon"]'
+                );
                 if (iconNode) {
                     iconNode.innerHTML = this.getIcon();
                 }
@@ -293,9 +302,9 @@ define([
         function setupMessageBus() {
             cellBus = runtime.bus().makeChannelBus({
                 name: {
-                    cell: Utils.getMeta(cell, 'attributes', 'id')
+                    cell: Utils.getMeta(cell, 'attributes', 'id'),
                 },
-                description: 'parent bus for BulkImportCell'
+                description: 'parent bus for BulkImportCell',
             });
             busEventManager.add(cellBus.on('delete-cell', () => deleteCell()));
         }
@@ -315,7 +324,7 @@ define([
 
             ui = UI.make({
                 node: kbaseNode,
-                bus: cellBus
+                bus: cellBus,
             });
         }
 
@@ -341,11 +350,10 @@ define([
             let meta = cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             cell.metadata = meta;
-            render()
-                .then(() => {
-                    updateState();
-                    toggleTab(state.tab.selected);
-                });
+            render().then(() => {
+                updateState();
+                toggleTab(state.tab.selected);
+            });
         }
 
         /**
@@ -378,13 +386,13 @@ define([
                 workspaceInfo: workspaceInfo,
                 cell: cell,
                 model: model,
-                spec: spec
+                spec: spec,
             });
 
             let node = document.createElement('div');
             ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
             return tabWidget.start({
-                node: node
+                node: node,
             });
         }
 
@@ -423,8 +431,8 @@ define([
                     selected: 'fastq',
                     completed: {
                         fastq: false,
-                        sra: true
-                    }
+                        sra: true,
+                    },
                 },
                 tab: {
                     selected: 'configure',
@@ -435,30 +443,30 @@ define([
                         },
                         viewConfigure: {
                             enabled: false,
-                            visible: false
+                            visible: false,
                         },
                         info: {
                             enabled: true,
-                            visible: true
+                            visible: true,
                         },
                         logs: {
                             enabled: false,
-                            visible: true
+                            visible: true,
                         },
                         results: {
                             enabled: false,
-                            visible: true
+                            visible: true,
                         },
                         error: {
                             enabled: false,
-                            visible: false
-                        }
-                    }
+                            visible: false,
+                        },
+                    },
                 },
                 action: {
                     name: 'runApp',
-                    disabled: true
-                }
+                    disabled: true,
+                },
             };
         }
 
@@ -475,8 +483,8 @@ define([
                 ui: ui,
                 action: {
                     runAction: runAction.bind(this),
-                    actions: actionButtons
-                }
+                    actions: actionButtons,
+                },
             });
             return controlPanel.buildLayout(events);
         }
@@ -490,10 +498,10 @@ define([
             cellTabs = CellTabs.make({
                 bus: cellBus,
                 toggleAction: toggleTab,
-                tabs: tabSet
+                tabs: tabSet,
             });
             return cellTabs.start({
-                node: node
+                node: node,
             });
         }
 
@@ -507,21 +515,21 @@ define([
                 bus: cellBus,
                 header: {
                     label: 'Data type',
-                    icon: 'icon icon-genome'
+                    icon: 'icon icon-genome',
                 },
                 categories: {
                     fastq: {
-                        label: 'FASTQ Reads (Non-Interleaved)'
+                        label: 'FASTQ Reads (Non-Interleaved)',
                     },
                     sra: {
-                        label: 'SRA Reads'
-                    }
+                        label: 'SRA Reads',
+                    },
                 },
-                toggleAction: toggleFileType
+                toggleAction: toggleFileType,
             });
             return fileTypePanel.start({
                 node: node,
-                state: state.fileType
+                state: state.fileType,
             });
         }
 
@@ -531,52 +539,66 @@ define([
          */
         function renderLayout() {
             const events = Events.make(),
-                content = div({
-                    class: `${cssCellType}__layout_container kbase-extension`,
-                }, [
-                    div({
-                        class: `${cssCellType}__prompt prompt`,
-                        dataElement: 'prompt',
-                    }, [
-                        div({
-                            class: `${cssCellType}__prompt_status`,
-                            dataElement: 'status'
-                        })
-                    ]),
-                    div({
-                        class: `${cssCellType}__body container-fluid`,
-                        dataElement: 'body',
-                    }, [
-                        buildActionButton(events),
-                        div({
-                            class: `${cssCellType}__tab_pane`,
-                            dataElement: 'tab-pane',
-                        }, [
-                            div({
-                                class: `${cssCellType}__category_panel`,
-                                dataElement: 'category-panel'
-                            }),
-                            div({
-                                class: `${cssCellType}__tab_pane_widget_container`,
-                                dataElement: 'widget-container'
-                            }, [
+                content = div(
+                    {
+                        class: `${cssCellType}__layout_container kbase-extension`,
+                    },
+                    [
+                        div(
+                            {
+                                class: `${cssCellType}__prompt prompt`,
+                                dataElement: 'prompt',
+                            },
+                            [
                                 div({
-                                    class: `${cssCellType}__tab_pane_widget_container_tabs`,
-                                    dataElement: 'tab-container'
+                                    class: `${cssCellType}__prompt_status`,
+                                    dataElement: 'status',
                                 }),
-                                div({
-                                    class: `${cssCellType}__tab_pane_widget_container_widget`,
-                                    dataElement: 'widget'
-                                })
-                            ])
-                        ])
-                    ])
-                ]);
+                            ]
+                        ),
+                        div(
+                            {
+                                class: `${cssCellType}__body container-fluid`,
+                                dataElement: 'body',
+                            },
+                            [
+                                buildActionButton(events),
+                                div(
+                                    {
+                                        class: `${cssCellType}__tab_pane`,
+                                        dataElement: 'tab-pane',
+                                    },
+                                    [
+                                        div({
+                                            class: `${cssCellType}__category_panel`,
+                                            dataElement: 'category-panel',
+                                        }),
+                                        div(
+                                            {
+                                                class: `${cssCellType}__tab_pane_widget_container`,
+                                                dataElement: 'widget-container',
+                                            },
+                                            [
+                                                div({
+                                                    class: `${cssCellType}__tab_pane_widget_container_tabs`,
+                                                    dataElement: 'tab-container',
+                                                }),
+                                                div({
+                                                    class: `${cssCellType}__tab_pane_widget_container_widget`,
+                                                    dataElement: 'widget',
+                                                }),
+                                            ]
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ]
+                );
             return {
                 content: content,
-                events: events
+                events: events,
             };
-
         }
 
         /**
@@ -588,12 +610,11 @@ define([
             kbaseNode.innerHTML = layout.content;
             const proms = [
                 buildFileTypePanel(ui.getElement('body.tab-pane.category-panel')),
-                buildTabs(ui.getElement('body.tab-pane.widget-container.tab-container'))
+                buildTabs(ui.getElement('body.tab-pane.widget-container.tab-container')),
             ];
-            return Promise.all(proms)
-                .then(() => {
-                    layout.events.attachEvents(kbaseNode);
-                });
+            return Promise.all(proms).then(() => {
+                layout.events.attachEvents(kbaseNode);
+            });
         }
 
         /**
@@ -602,7 +623,7 @@ define([
          */
         return {
             cell,
-            deleteCell
+            deleteCell,
         };
     }
 
@@ -619,6 +640,6 @@ define([
 
     return {
         make: BulkImportCell,
-        isBulkImportCell
+        isBulkImportCell,
     };
 });

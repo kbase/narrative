@@ -5,16 +5,8 @@ define([
     'common/events',
     'common/runtime',
     'common/cellComponents/paramsWidget',
-    'common/cellComponents/filePathWidget'
-], (
-    Promise,
-    UI,
-    html,
-    Events,
-    Runtime,
-    ParamsWidget,
-    FilePathWidget
-) => {
+    'common/cellComponents/filePathWidget',
+], (Promise, UI, html, Events, Runtime, ParamsWidget, FilePathWidget) => {
     'use strict';
 
     // const div = html.tag('div'),
@@ -64,9 +56,7 @@ define([
                     events.attachEvents(container);
                 });
             });
-
         }
-
 
         /*
             node: container node to build the widget into
@@ -74,65 +64,73 @@ define([
             This is more or less copied over from the way that the appCell handles building the widget. This model assumes one instance of the params widget per cell, so may need some adjustment as we make the bulk import work with multiple data types
         */
         function buildParamsWidget(node) {
-            const paramBus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
+            const paramBus = runtime
+                .bus()
+                .makeChannelBus({ description: 'Parent comm bus for input widget' });
 
             const widget = ParamsWidget.make({
                 bus: paramBus,
                 workspaceInfo: workspaceInfo,
-                initialParams: model.getItem('params')
+                initialParams: model.getItem('params'),
             });
 
-            paramBus.on('sync-params', function(message) {
-                message.parameters.forEach(function(paramId) {
-                    paramBus.send({
-                        parameter: paramId,
-                        value: model.getItem(['params', message.parameter])
-                    }, {
+            paramBus.on('sync-params', function (message) {
+                message.parameters.forEach(function (paramId) {
+                    paramBus.send(
+                        {
+                            parameter: paramId,
+                            value: model.getItem(['params', message.parameter]),
+                        },
+                        {
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter,
+                            },
+                        }
+                    );
+                });
+            });
+
+            paramBus.on('parameter-sync', function (message) {
+                var value = model.getItem(['params', message.parameter]);
+                paramBus.send(
+                    {
+                        value: value,
+                    },
+                    {
+                        // This points the update back to a listener on this key
                         key: {
                             type: 'update',
-                            parameter: message.parameter
-                        }
-                    });
-                });
-            });
-
-            paramBus.on('parameter-sync', function(message) {
-                var value = model.getItem(['params', message.parameter]);
-                paramBus.send({
-                    value: value
-                }, {
-                    // This points the update back to a listener on this key
-                    key: {
-                        type: 'update',
-                        parameter: message.parameter
+                            parameter: message.parameter,
+                        },
                     }
-                });
+                );
             });
 
-            paramBus.on('set-param-state', function(message) {
+            paramBus.on('set-param-state', function (message) {
                 model.setItem('paramState', message.id, message.state);
             });
 
             paramBus.respond({
                 key: {
-                    type: 'get-param-state'
+                    type: 'get-param-state',
                 },
-                handle: function(message) {
+                handle: function (message) {
                     return {
-                        state: model.getItem('paramState', message.id)
+                        state: model.getItem('paramState', message.id),
                     };
-                }
+                },
             });
 
             paramBus.respond({
                 key: {
-                    type: 'get-parameter'
+                    type: 'get-parameter',
                 },
-                handle: function(message) {
+                handle: function (message) {
                     return {
-                        value: model.getItem(['params', message.parameterName])
+                        value: model.getItem(['params', message.parameterName]),
                     };
-                }
+                },
             });
 
             //TODO: disabling for now until we figure out what to do about state
@@ -149,79 +147,88 @@ define([
             //     }
             // });
 
-            return widget.start({
-                node: node,
-                appSpec: model.getItem('app.spec'),
-                parameters: spec.getSpec().parameters
-            })
-                .then(function() {
+            return widget
+                .start({
+                    node: node,
+                    appSpec: model.getItem('app.spec'),
+                    parameters: spec.getSpec().parameters,
+                })
+                .then(function () {
                     return {
                         bus: paramBus,
-                        instance: widget
+                        instance: widget,
                     };
                 });
         }
 
         function buildFilePathWidget(node) {
-            const paramBus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
+            const paramBus = runtime
+                .bus()
+                .makeChannelBus({ description: 'Parent comm bus for input widget' });
 
             const widget = FilePathWidget.make({
                 bus: paramBus,
                 workspaceInfo: workspaceInfo,
-                initialParams: model.getItem('params')
+                initialParams: model.getItem('params'),
             });
 
-            paramBus.on('sync-params', function(message) {
-                message.parameters.forEach(function(paramId) {
-                    paramBus.send({
-                        parameter: paramId,
-                        value: model.getItem(['params', message.parameter])
-                    }, {
+            paramBus.on('sync-params', function (message) {
+                message.parameters.forEach(function (paramId) {
+                    paramBus.send(
+                        {
+                            parameter: paramId,
+                            value: model.getItem(['params', message.parameter]),
+                        },
+                        {
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter,
+                            },
+                        }
+                    );
+                });
+            });
+
+            paramBus.on('parameter-sync', function (message) {
+                var value = model.getItem(['params', message.parameter]);
+                paramBus.send(
+                    {
+                        value: value,
+                    },
+                    {
+                        // This points the update back to a listener on this key
                         key: {
                             type: 'update',
-                            parameter: message.parameter
-                        }
-                    });
-                });
-            });
-
-            paramBus.on('parameter-sync', function(message) {
-                var value = model.getItem(['params', message.parameter]);
-                paramBus.send({
-                    value: value
-                }, {
-                    // This points the update back to a listener on this key
-                    key: {
-                        type: 'update',
-                        parameter: message.parameter
+                            parameter: message.parameter,
+                        },
                     }
-                });
+                );
             });
 
-            paramBus.on('set-param-state', function(message) {
+            paramBus.on('set-param-state', function (message) {
                 model.setItem('paramState', message.id, message.state);
             });
 
             paramBus.respond({
                 key: {
-                    type: 'get-param-state'
+                    type: 'get-param-state',
                 },
-                handle: function(message) {
+                handle: function (message) {
                     return {
-                        state: model.getItem('paramState', message.id)
+                        state: model.getItem('paramState', message.id),
                     };
-                }
+                },
             });
 
             paramBus.respond({
                 key: {
-                    type: 'get-parameter'
+                    type: 'get-parameter',
                 },
-                handle: function(message) {
+                handle: function (message) {
                     return {
-                        value: model.getItem(['params', message.parameterName])
+                        value: model.getItem(['params', message.parameterName]),
                     };
-                }
+                },
             });
 
             //TODO: disabling for now until we figure out what to do about state
@@ -238,15 +245,16 @@ define([
             //     }
             // });
 
-            return widget.start({
-                node: node,
-                appSpec: model.getItem('app.spec'),
-                parameters: spec.getSpec().parameters
-            })
-                .then(function() {
+            return widget
+                .start({
+                    node: node,
+                    appSpec: model.getItem('app.spec'),
+                    parameters: spec.getSpec().parameters,
+                })
+                .then(function () {
                     return {
                         bus: paramBus,
-                        instance: widget
+                        instance: widget,
                     };
                 });
         }
@@ -259,11 +267,11 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: ConfigureWidget
+        make: ConfigureWidget,
     };
 });

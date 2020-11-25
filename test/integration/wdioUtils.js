@@ -7,14 +7,16 @@ const URL_BASE = browser.config.baseUrl;
 
 const makeURL = (path) => `${URL_BASE}/${path}`;
 
-async function setSessionCookie () {
-    return await browser.setCookies([{
-        name: 'kbase_session',
-        path: '/',
-        secure: false,
-        value: TOKEN,
-        samesite: 'Lax'
-    }]);
+async function setSessionCookie() {
+    return await browser.setCookies([
+        {
+            name: 'kbase_session',
+            path: '/',
+            secure: false,
+            value: TOKEN,
+            samesite: 'Lax',
+        },
+    ]);
 }
 
 async function login() {
@@ -26,5 +28,5 @@ async function login() {
 module.exports = {
     setSessionCookie: setSessionCookie,
     login: login,
-    makeURL: makeURL
+    makeURL: makeURL,
 };

@@ -41,79 +41,100 @@
 
 */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'd3',
-		'kbaseVisWidget',
-		'RGBColor',
-		'geometry_rectangle',
-		'geometry_point',
-		'geometry_size'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		d3,
-		kbaseVisWidget,
-		RGBColor,
-		geometry_rectangle,
-		geometry_point,
-		geometry_size
-	) {
-
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'd3',
+    'kbaseVisWidget',
+    'RGBColor',
+    'geometry_rectangle',
+    'geometry_point',
+    'geometry_size',
+], function (
+    KBWidget,
+    bootstrap,
+    $,
+    d3,
+    kbaseVisWidget,
+    RGBColor,
+    geometry_rectangle,
+    geometry_point,
+    geometry_size
+) {
     'use strict';
 
     return KBWidget({
+        name: 'kbaseScatterplot',
+        parent: kbaseVisWidget,
 
-	    name: "kbaseScatterplot",
-	  parent : kbaseVisWidget,
-
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
-            overColor : 'yellow',
-            weight : 20,
-            color : 'black',
-            shape : 'circle',
+            overColor: 'yellow',
+            weight: 20,
+            color: 'black',
+            shape: 'circle',
         },
 
-        _accessors : [
+        _accessors: [],
 
-        ],
-
-        defaultXDomain : function() {
-
-
+        defaultXDomain: function () {
             if (this.dataset() == undefined) {
-                return [0,0];
+                return [0, 0];
             }
 
-            var min = 0.9 * d3.min(this.dataset().map( function(d) {return d.x} ).filter(function(d) { return this.xScaleType() != 'log' || d != 0 }, this) );
+            var min =
+                0.9 *
+                d3.min(
+                    this.dataset()
+                        .map(function (d) {
+                            return d.x;
+                        })
+                        .filter(function (d) {
+                            return this.xScaleType() != 'log' || d != 0;
+                        }, this)
+                );
 
             return [
                 min,
-                1.1 * d3.max(this.dataset().map( function(d) {return d.x}))
+                1.1 *
+                    d3.max(
+                        this.dataset().map(function (d) {
+                            return d.x;
+                        })
+                    ),
             ];
         },
 
-        defaultYDomain : function() {
-
+        defaultYDomain: function () {
             if (this.dataset() == undefined) {
-                return [0,0];
+                return [0, 0];
             }
 
-            var min = 0.9 * d3.min(this.dataset().map( function(d) {return d.y}).filter(function(d) { return this.yScaleType() != 'log' || d != 0 }, this) );
+            var min =
+                0.9 *
+                d3.min(
+                    this.dataset()
+                        .map(function (d) {
+                            return d.y;
+                        })
+                        .filter(function (d) {
+                            return this.yScaleType() != 'log' || d != 0;
+                        }, this)
+                );
 
             return [
                 min,
-                1.1 * d3.max(this.dataset().map( function(d) {return d.y}))
-            ]
+                1.1 *
+                    d3.max(
+                        this.dataset().map(function (d) {
+                            return d.y;
+                        })
+                    ),
+            ];
         },
 
-        renderChart : function() {
-
+        renderChart: function () {
             if (this.dataset() == undefined) {
                 return;
             }
@@ -121,39 +142,28 @@ define (
             var bounds = this.chartBounds();
             var $scatter = this;
 
-            var funkyTown = function() {
-                this
-                    .attr('cx',
-                        function (d) {
-                            var cx = $scatter.xScale()(d.x);
+            var funkyTown = function () {
+                this.attr('cx', function (d) {
+                    var cx = $scatter.xScale()(d.x);
 
-                            return isNaN(cx) ? -500000 : cx;
-                        }
-                    )
-                    .attr('cy',
-                        function (d) {
-                            var cy = $scatter.yScale()(d.y);
+                    return isNaN(cx) ? -500000 : cx;
+                })
+                    .attr('cy', function (d) {
+                        var cy = $scatter.yScale()(d.y);
 
-                            return isNaN(cy) ? -500000 : cy;
-                        }
-                    )
-                    .attr('r',
-                        function (d) {
-                            return d.weight || $scatter.options.weight
-                        }
-                    )
+                        return isNaN(cy) ? -500000 : cy;
+                    })
+                    .attr('r', function (d) {
+                        return d.weight || $scatter.options.weight;
+                    })
                     //.attr('y', function (d) { return $scatter.yScale()(d.y) })
-                    .attr('fill',
-                        function(d) {
-                            return d.color || $scatter.options.color
-                        }
-                    )
+                    .attr('fill', function (d) {
+                        return d.color || $scatter.options.color;
+                    });
             };
 
-            var mouseAction = function() {
-
-                this.on('mouseover', function(d) {
-
+            var mouseAction = function () {
+                this.on('mouseover', function (d) {
                     if ($scatter.options.overColor) {
                         d3.select(this)
                             .attr('stroke', $scatter.options.overColor)
@@ -165,73 +175,63 @@ define (
                         : ($scatter.options.weight || d.weight) + ' at (' + d.x + ',' + d.y + ')';
 
                     if (label != undefined) {
-                        $scatter.showToolTip(
-                            {
-                                label : label,
-                            }
-                        );
+                        $scatter.showToolTip({
+                            label: label,
+                        });
                     }
-                })
-                .on('mouseout', function(d) {
+                }).on('mouseout', function (d) {
                     if ($scatter.options.overColor) {
-                        d3.select(this)
-                            .transition()
-                            .attr('stroke', 'none');
+                        d3.select(this).transition().attr('stroke', 'none');
                     }
 
-                    $scatter.D3svg().select($scatter.region('yPadding')).selectAll('g g text')
-                        .attr("fill",
-                            function(r,ri){
-                               return 'black';
-                            }
-                    );
+                    $scatter
+                        .D3svg()
+                        .select($scatter.region('yPadding'))
+                        .selectAll('g g text')
+                        .attr('fill', function (r, ri) {
+                            return 'black';
+                        });
                     $scatter.hideToolTip();
-
                 });
                 return this;
             };
 
-            var transitionTime = this.rendered
-                ? this.options.transitionTime
-                : 0;
+            var transitionTime = this.rendered ? this.options.transitionTime : 0;
 
-            var chart = this.D3svg().select(this.region('chart')).selectAll('.point').data(this.dataset());
-            chart
-                .enter()
-                    .append('path')
-                    .attr('class', 'point')
-            ;
+            var chart = this.D3svg()
+                .select(this.region('chart'))
+                .selectAll('.point')
+                .data(this.dataset());
+            chart.enter().append('path').attr('class', 'point');
 
-            chart
-                .exit().remove();
+            chart.exit().remove();
 
             chart
                 .call(mouseAction)
                 .transition()
                 .duration(transitionTime)
-                    .attr("transform", function(d) {
-                        var x = $scatter.xScale()(d.x);
-                        var y = $scatter.yScale()(d.y);
+                .attr('transform', function (d) {
+                    var x = $scatter.xScale()(d.x);
+                    var y = $scatter.yScale()(d.y);
 
-                         x = isNaN(x) ? -500000 : x; y = isNaN(y) ? -500000 : y;
+                    x = isNaN(x) ? -500000 : x;
+                    y = isNaN(y) ? -500000 : y;
 
-                        return "translate(" + x + "," + y + ")";
-                    })
-                    .attr('d', function (d) { return d3.svg.symbol().type(d.shape || $scatter.options.shape).size(d.weight || $scatter.options.weight)() } )
-                    .call(funkyTown)
-            ;
+                    return 'translate(' + x + ',' + y + ')';
+                })
+                .attr('d', function (d) {
+                    return d3.svg
+                        .symbol()
+                        .type(d.shape || $scatter.options.shape)
+                        .size(d.weight || $scatter.options.weight)();
+                })
+                .call(funkyTown);
 
             this.rendered = true;
-
-
-
         },
 
-        setYScaleRange : function(range, yScale) {
+        setYScaleRange: function (range, yScale) {
             return this._super(range.reverse(), yScale);
         },
-
-
     });
-
-} );
+});

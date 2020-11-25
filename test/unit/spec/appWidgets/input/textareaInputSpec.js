@@ -1,10 +1,4 @@
-define([
-    'common/runtime',
-    'widgets/appWidgets2/input/textareaInput'
-], (
-    Runtime,
-    TextareaInput
-) => {
+define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, TextareaInput) => {
     'use strict';
     let bus,
         testConfig,
@@ -23,14 +17,14 @@ define([
                     nullValue: null,
                     constraints: {
                         required: required,
-                        defaultValue: defaultValue
-                    }
+                        defaultValue: defaultValue,
+                    },
                 },
                 ui: {
-                    nRows: numRows
-                }
+                    nRows: numRows,
+                },
             },
-            channelName: bus.channelName
+            channelName: bus.channelName,
         };
     }
 
@@ -53,7 +47,8 @@ define([
             expect(widget).toBeDefined();
             expect(widget.start).toBeDefined();
 
-            widget.start({node: node})
+            widget
+                .start({ node: node })
                 .then(() => {
                     // verify it's there.
                     let textarea = node.querySelector('textarea');
@@ -76,10 +71,9 @@ define([
                 done();
             });
             let widget = TextareaInput.make(testConfig);
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('update', {value: 'some text'});
-                });
+            widget.start({ node: node }).then(() => {
+                bus.emit('update', { value: 'some text' });
+            });
         });
 
         it('Should reset to default via bus', (done) => {
@@ -88,12 +82,10 @@ define([
                 done();
             });
             let widget = TextareaInput.make(testConfig);
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('reset-to-defaults');
-                });
+            widget.start({ node: node }).then(() => {
+                bus.emit('reset-to-defaults');
+            });
         });
-
 
         it('Should respond to input change events with "changed"', (done) => {
             let widget = TextareaInput.make(testConfig);
@@ -102,12 +94,11 @@ define([
                 expect(message.newValue).toEqual(inputText);
                 widget.stop().then(done);
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('textarea');
-                    inputElem.value = inputText;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('textarea');
+                inputElem.value = inputText;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
 
         it('Should respond to input change events with "validation"', (done) => {
@@ -118,12 +109,11 @@ define([
                 expect(message.errorMessage).toBeUndefined();
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('textarea');
-                    inputElem.value = inputText;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('textarea');
+                inputElem.value = inputText;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
 
         xit('Should respond to keyup change events with "changed"', (done) => {
@@ -136,13 +126,12 @@ define([
                 console.log('Caught a change message!');
                 // done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('textarea');
-                    console.log('here is the elem', inputElem);
-                    inputElem.value = inputText;
-                    inputElem.dispatchEvent(new Event('keyup'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('textarea');
+                console.log('here is the elem', inputElem);
+                inputElem.value = inputText;
+                inputElem.dispatchEvent(new Event('keyup'));
+            });
         });
 
         it('Should show message when configured', (done) => {
@@ -154,12 +143,11 @@ define([
                 // ...detect something?
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('textarea');
-                    inputElem.value = inputText;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('textarea');
+                inputElem.value = inputText;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
 
         it('Should return a diagnosis of required-missing if so', (done) => {
@@ -172,12 +160,11 @@ define([
                 // ...detect something?
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('textarea');
-                    inputElem.value = inputText;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                let inputElem = node.querySelector('textarea');
+                inputElem.value = inputText;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
     });
-})
+});

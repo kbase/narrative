@@ -12,19 +12,8 @@ define([
     'base/js/namespace',
     '../subdataMethods/manager',
     'bootstrap',
-    'css!font-awesome'
-], function(
-    $,
-    Promise,
-    html,
-    Validation,
-    Events,
-    Runtime,
-    UI,
-    Props,
-    Jupyter,
-    SubdataMethods
-) {
+    'css!font-awesome',
+], function ($, Promise, html, Validation, Events, Runtime, UI, Props, Jupyter, SubdataMethods) {
     'use strict';
 
     /*
@@ -63,7 +52,7 @@ define([
             model,
             subdataMethods,
             options = {
-                objectSelectionPageSize: 20
+                objectSelectionPageSize: 20,
             },
             ui;
 
@@ -76,19 +65,24 @@ define([
             if (!availableValues) {
                 return selectOptions;
             }
-            return selectOptions.concat(availableValues.map(function(availableValue) {
-                var selected = false,
-                    optionLabel = availableValue.id,
-                    optionValue = availableValue.id;
-                // TODO: pull the value out of the object
-                if (value.indexOf(availableValue.id) >= 0) {
-                    selected = true;
-                }
-                return option({
-                    value: optionValue,
-                    selected: selected
-                }, optionLabel);
-            }));
+            return selectOptions.concat(
+                availableValues.map(function (availableValue) {
+                    var selected = false,
+                        optionLabel = availableValue.id,
+                        optionValue = availableValue.id;
+                    // TODO: pull the value out of the object
+                    if (value.indexOf(availableValue.id) >= 0) {
+                        selected = true;
+                    }
+                    return option(
+                        {
+                            value: optionValue,
+                            selected: selected,
+                        },
+                        optionLabel
+                    );
+                })
+            );
         }
 
         function buildCount() {
@@ -103,7 +97,7 @@ define([
                 return items;
             }
             var re = new RegExp(filter);
-            return items.filter(function(item) {
+            return items.filter(function (item) {
                 if (item.text && item.text.match(re, 'i')) {
                     return true;
                 }
@@ -115,7 +109,6 @@ define([
             var items = model.getItem('availableValues', []),
                 filteredItems = filterItems(items, model.getItem('filter'));
 
-
             // for now we just reset the from/to range to the beginning.
             model.setItem('filteredAvailableItems', filteredItems);
 
@@ -123,26 +116,25 @@ define([
         }
 
         function didChange() {
-            validate()
-                .then(function(result) {
-                    if (result.isValid) {
-                        model.setItem('value', result.value);
-                        updateInputControl('value');
-                        channel.emit('changed', {
-                            newValue: result.value
-                        });
-                    } else if (result.diagnosis === 'required-missing') {
-                        model.setItem('value', result.value);
-                        updateInputControl('value');
-                        channel.emit('changed', {
-                            newValue: result.value
-                        });
-                    }
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
+            validate().then(function (result) {
+                if (result.isValid) {
+                    model.setItem('value', result.value);
+                    updateInputControl('value');
+                    channel.emit('changed', {
+                        newValue: result.value,
                     });
+                } else if (result.diagnosis === 'required-missing') {
+                    model.setItem('value', result.value);
+                    updateInputControl('value');
+                    channel.emit('changed', {
+                        newValue: result.value,
+                    });
+                }
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         function doAddItem(itemId) {
@@ -160,7 +152,9 @@ define([
             var newAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
             if (newAllowSelection && !prevAllowSelection) {
                 // update text areas to have md-col-7 (from md-col-10)
-                $(ui.getElement('input-container')).find('.row > .col-md-10').switchClass('col-md-10', 'col-md-7');
+                $(ui.getElement('input-container'))
+                    .find('.row > .col-md-10')
+                    .switchClass('col-md-10', 'col-md-7');
                 $(ui.getElement('input-container')).find('.col-md-3.hidden').removeClass('hidden');
 
                 // update button areas to remove hidden class
@@ -172,18 +166,21 @@ define([
         function doRemoveSelectedAvailableItem(idToRemove) {
             var selectedItems = model.getItem('selectedItems', []);
 
-            model.setItem('selectedItems', selectedItems.filter(function(id) {
-                if (idToRemove === id) {
-                    return false;
-                }
-                return true;
-            }));
+            model.setItem(
+                'selectedItems',
+                selectedItems.filter(function (id) {
+                    if (idToRemove === id) {
+                        return false;
+                    }
+                    return true;
+                })
+            );
             didChange();
         }
 
         function renderAvailableItems() {
             var selected = model.getItem('selectedItems', []),
-                allowSelection = (spec.ui.multiSelection || selected.length === 0),
+                allowSelection = spec.ui.multiSelection || selected.length === 0,
                 items = model.getItem('filteredAvailableItems', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
@@ -194,93 +191,116 @@ define([
             if (itemsToShow.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no available values');
             } else {
-                content = itemsToShow.map(function(item, index) {
-                        var isSelected = selected.some(function(id) {
-                                return (item.id === id);
+                content = itemsToShow
+                    .map(function (item, index) {
+                        var isSelected = selected.some(function (id) {
+                                return item.id === id;
                             }),
                             disabled = isSelected;
                         return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
-                            div({
-                                class: 'col-md-2',
-                                style: {
-                                    verticalAlign: 'middle',
-                                    borderRadius: '3px',
-                                    padding: '2px',
-                                    backgroundColor: '#EEE',
-                                    color: '#444',
-                                    textAlign: 'right',
-                                    paddingRight: '6px',
-                                    fontFamily: 'monospace'
-                                }
-                            }, String(from + index + 1)),
-                            div({
-                                class: 'col-md-8',
-                                style: {
-                                    padding: '2px'
-                                }
-                            }, item.text),
-                            div({
-                                class: 'col-md-2',
-                                style: {
-                                    padding: '2px',
-                                    textAlign: 'right',
-                                    verticalAlign: 'top'
-                                }
-                            }, [
-                                (function() {
-                                    if (disabled) {
-                                        return span({
-                                            class: 'kb-btn-icon',
-                                            type: 'button',
-                                            dataToggle: 'tooltip',
-                                            title: 'Remove from selected',
-                                            id: events.addEvent({
-                                                type: 'click',
-                                                handler: function() {
-                                                    doRemoveSelectedAvailableItem(item.id);
-                                                }
-                                            })
-                                        }, [
+                            div(
+                                {
+                                    class: 'col-md-2',
+                                    style: {
+                                        verticalAlign: 'middle',
+                                        borderRadius: '3px',
+                                        padding: '2px',
+                                        backgroundColor: '#EEE',
+                                        color: '#444',
+                                        textAlign: 'right',
+                                        paddingRight: '6px',
+                                        fontFamily: 'monospace',
+                                    },
+                                },
+                                String(from + index + 1)
+                            ),
+                            div(
+                                {
+                                    class: 'col-md-8',
+                                    style: {
+                                        padding: '2px',
+                                    },
+                                },
+                                item.text
+                            ),
+                            div(
+                                {
+                                    class: 'col-md-2',
+                                    style: {
+                                        padding: '2px',
+                                        textAlign: 'right',
+                                        verticalAlign: 'top',
+                                    },
+                                },
+                                [
+                                    (function () {
+                                        if (disabled) {
+                                            return span(
+                                                {
+                                                    class: 'kb-btn-icon',
+                                                    type: 'button',
+                                                    dataToggle: 'tooltip',
+                                                    title: 'Remove from selected',
+                                                    id: events.addEvent({
+                                                        type: 'click',
+                                                        handler: function () {
+                                                            doRemoveSelectedAvailableItem(item.id);
+                                                        },
+                                                    }),
+                                                },
+                                                [
+                                                    span({
+                                                        class: 'fa fa-minus-circle',
+                                                        style: {
+                                                            color: 'red',
+                                                            fontSize: '200%',
+                                                        },
+                                                    }),
+                                                ]
+                                            );
+                                        }
+                                        if (allowSelection) {
+                                            return span(
+                                                {
+                                                    class: 'kb-btn-icon',
+                                                    type: 'button',
+                                                    dataToggle: 'tooltip',
+                                                    title: 'Add to selected',
+                                                    dataItemId: item.id,
+                                                    id: events.addEvent({
+                                                        type: 'click',
+                                                        handler: function () {
+                                                            doAddItem(item.id);
+                                                        },
+                                                    }),
+                                                },
+                                                [
+                                                    span({
+                                                        class: 'fa fa-plus-circle',
+                                                        style: {
+                                                            color: 'green',
+                                                            fontSize: '200%',
+                                                        },
+                                                    }),
+                                                ]
+                                            );
+                                        }
+                                        return span(
+                                            {
+                                                class: 'kb-btn-icon',
+                                                type: 'button',
+                                                dataToggle: 'tooltip',
+                                                title: "Can't add - remove one first",
+                                                dataItemId: item.id,
+                                            },
                                             span({
-                                                class: 'fa fa-minus-circle',
-                                                style: {
-                                                    color: 'red',
-                                                    fontSize: '200%'
-                                                }
+                                                class: 'fa fa-ban',
+                                                style: { color: 'silver', fontSize: '200%' },
                                             })
-                                        ]);
-                                    }
-                                    if (allowSelection) {
-                                        return span({
-                                            class: 'kb-btn-icon',
-                                            type: 'button',
-                                            dataToggle: 'tooltip',
-                                            title: 'Add to selected',
-                                            dataItemId: item.id,
-                                            id: events.addEvent({
-                                                type: 'click',
-                                                handler: function() {
-                                                    doAddItem(item.id);
-                                                }
-                                            })
-                                        }, [span({
-                                            class: 'fa fa-plus-circle',
-                                            style: {
-                                                color: 'green',
-                                                fontSize: '200%'
-                                            }
-                                        })]);
-                                    }
-                                    return span({
-                                        class: 'kb-btn-icon',
-                                        type: 'button',
-                                        dataToggle: 'tooltip',
-                                        title: 'Can\'t add - remove one first',
-                                        dataItemId: item.id
-                                    }, span({ class: 'fa fa-ban', style: { color: 'silver', fontSize: '200%' } }));
-                                }())
-
-                            ])
+                                        );
+                                    })(),
+                                ]
+                            ),
                         ]);
                     })
                     .join('\n');
@@ -300,65 +320,92 @@ define([
             if (selectedItems.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no selected values');
             } else {
-                content = selectedItems.map(function(itemId, index) {
-                    var item = valuesMap[itemId];
-                    if (item === undefined || item === null) {
-                        item = {
-                            text: itemId
-                        };
-                    }
+                content = selectedItems
+                    .map(function (itemId, index) {
+                        var item = valuesMap[itemId];
+                        if (item === undefined || item === null) {
+                            item = {
+                                text: itemId,
+                            };
+                        }
 
-                    return div({ class: 'row', style: { border: '1px #CCC solid', borderCollapse: 'collapse', boxSizing: 'border-box' } }, [
-                        div({
-                            class: 'col-md-2',
-                            style: {
-                                xdisplay: 'inline-block',
-                                xwidth: '20%',
-                                verticalAlign: 'middle',
-                                borderRadius: '3px',
-                                padding: '2px',
-                                backgroundColor: '#EEE',
-                                color: '#444',
-                                textAlign: 'right',
-                                paddingRight: '6px',
-                                fontFamily: 'monospace'
-                            }
-                        }, String(index + 1)),
-                        div({
-                            class: 'col-md-8',
-                            style: {
-                                xdisplay: 'inline-block',
-                                xwidth: '90%',
-                                padding: '2px'
-                            }
-                        }, item.text),
-                        div({
-                            class: 'col-md-2',
-                            style: {
-                                xdisplay: 'inline-block',
-                                xwidth: '10%',
-                                //minWidth: '6em',
-                                //maxWidth: '6em',
-                                padding: '2px',
-                                textAlign: 'right',
-                                verticalAlign: 'top'
-                            }
-                        }, [
-                            span({
-                                class: 'kb-btn-icon',
-                                type: 'button',
-                                dataToggle: 'tooltip',
-                                title: 'Remove from selected',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function() {
-                                        doRemoveSelectedItem(index);
-                                    }
-                                })
-                            }, span({ class: 'fa fa-minus-circle', style: { color: 'red', fontSize: '200%' } }))
-                        ])
-                    ]);
-                }).join('\n');
+                        return div(
+                            {
+                                class: 'row',
+                                style: {
+                                    border: '1px #CCC solid',
+                                    borderCollapse: 'collapse',
+                                    boxSizing: 'border-box',
+                                },
+                            },
+                            [
+                                div(
+                                    {
+                                        class: 'col-md-2',
+                                        style: {
+                                            xdisplay: 'inline-block',
+                                            xwidth: '20%',
+                                            verticalAlign: 'middle',
+                                            borderRadius: '3px',
+                                            padding: '2px',
+                                            backgroundColor: '#EEE',
+                                            color: '#444',
+                                            textAlign: 'right',
+                                            paddingRight: '6px',
+                                            fontFamily: 'monospace',
+                                        },
+                                    },
+                                    String(index + 1)
+                                ),
+                                div(
+                                    {
+                                        class: 'col-md-8',
+                                        style: {
+                                            xdisplay: 'inline-block',
+                                            xwidth: '90%',
+                                            padding: '2px',
+                                        },
+                                    },
+                                    item.text
+                                ),
+                                div(
+                                    {
+                                        class: 'col-md-2',
+                                        style: {
+                                            xdisplay: 'inline-block',
+                                            xwidth: '10%',
+                                            //minWidth: '6em',
+                                            //maxWidth: '6em',
+                                            padding: '2px',
+                                            textAlign: 'right',
+                                            verticalAlign: 'top',
+                                        },
+                                    },
+                                    [
+                                        span(
+                                            {
+                                                class: 'kb-btn-icon',
+                                                type: 'button',
+                                                dataToggle: 'tooltip',
+                                                title: 'Remove from selected',
+                                                id: events.addEvent({
+                                                    type: 'click',
+                                                    handler: function () {
+                                                        doRemoveSelectedItem(index);
+                                                    },
+                                                }),
+                                            },
+                                            span({
+                                                class: 'fa fa-minus-circle',
+                                                style: { color: 'red', fontSize: '200%' },
+                                            })
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        );
+                    })
+                    .join('\n');
             }
             ui.setContent('selected-items', content);
             events.attachEvents();
@@ -379,33 +426,34 @@ define([
                 placeholder: 'search',
                 value: model.getItem('filter') || '',
                 id: events.addEvents({
-                    events: [{
+                    events: [
+                        {
                             type: 'keyup',
-                            handler: function(e) {
+                            handler: function (e) {
                                 doSearchKeyUp(e);
-                            }
+                            },
                         },
                         {
                             type: 'focus',
-                            handler: function() {
+                            handler: function () {
                                 Jupyter.narrative.disableKeyboardManager();
-                            }
+                            },
                         },
                         {
                             type: 'blur',
-                            handler: function() {
+                            handler: function () {
                                 console.log('SingleSubData Search BLUR');
                                 // Jupyter.narrative.enableKeyboardManager();
-                            }
+                            },
                         },
                         {
                             type: 'click',
-                            handler: function() {
+                            handler: function () {
                                 Jupyter.narrative.disableKeyboardManager();
-                            }
-                        }
-                    ]
-                })
+                            },
+                        },
+                    ],
+                }),
             });
             //}
 
@@ -419,17 +467,11 @@ define([
                 content;
 
             if (availableItems.length === 0) {
-                content = span({ style: { fontStyle: 'italic' } }, [
-                    ' - no available items'
-                ]);
+                content = span({ style: { fontStyle: 'italic' } }, [' - no available items']);
             } else {
                 content = span({ style: { fontStyle: 'italic' } }, [
                     ' - filtering ',
-                    span([
-                        String(filteredItems.length),
-                        ' of ',
-                        String(availableItems.length)
-                    ])
+                    span([String(filteredItems.length), ' of ', String(availableItems.length)]),
                 ]);
             }
 
@@ -445,50 +487,62 @@ define([
                 content = '';
             } else {
                 content = div([
-                    button({
-                        type: 'button',
-                        class: 'btn btn-default',
-                        style: { xwidth: '100%' },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function() {
-                                doFirstPage();
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'step-forward', rotate: 270 })),
-                    button({
-                        class: 'btn btn-default',
-                        type: 'button',
-                        style: { xwidth: '50%' },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function() {
-                                doPreviousPage();
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'caret-up' })),
-                    button({
-                        class: 'btn btn-default',
-                        type: 'button',
-                        style: { xwidth: '100%' },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function() {
-                                doNextPage();
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'caret-down' })),
-                    button({
-                        type: 'button',
-                        class: 'btn btn-default',
-                        style: { xwidth: '100%' },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function() {
-                                doLastPage();
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'step-forward', rotate: 90 }))
+                    button(
+                        {
+                            type: 'button',
+                            class: 'btn btn-default',
+                            style: { xwidth: '100%' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doFirstPage();
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'step-forward', rotate: 270 })
+                    ),
+                    button(
+                        {
+                            class: 'btn btn-default',
+                            type: 'button',
+                            style: { xwidth: '50%' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doPreviousPage();
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'caret-up' })
+                    ),
+                    button(
+                        {
+                            class: 'btn btn-default',
+                            type: 'button',
+                            style: { xwidth: '100%' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doNextPage();
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'caret-down' })
+                    ),
+                    button(
+                        {
+                            type: 'button',
+                            class: 'btn btn-default',
+                            style: { xwidth: '100%' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doLastPage();
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'step-forward', rotate: 90 })
+                    ),
                 ]);
             }
 
@@ -563,55 +617,65 @@ define([
             var availableValues = model.getItem('availableValues');
 
             if (!availableValues) {
-                return p({
-                    class: 'form-control-static',
-                    style: {
-                        fontStyle: 'italic',
-                        whiteSpace: 'normal',
-                        padding: '3px',
-                        border: '1px silver solid'
-                    }
-                }, 'Items will be available after selecting a value for ' + spec.data.constraints.subdataSelection.parameter_id);
+                return p(
+                    {
+                        class: 'form-control-static',
+                        style: {
+                            fontStyle: 'italic',
+                            whiteSpace: 'normal',
+                            padding: '3px',
+                            border: '1px silver solid',
+                        },
+                    },
+                    'Items will be available after selecting a value for ' +
+                        spec.data.constraints.subdataSelection.parameter_id
+                );
             }
 
             return div([
                 ui.buildCollapsiblePanel({
                     title: span(['Available Items', span({ dataElement: 'stats' })]),
                     classes: ['kb-panel-light'],
-                    body: div({ dataElement: 'available-items-area', style: { marginTop: '10px' } }, [
-                        div({ class: 'row' }, [
-                            div({
-                                class: 'col-md-6'
-                            }, [
-                                span({ dataElement: 'search-box' })
-                            ]),
-                            div({
-                                class: 'col-md-6',
-                                style: { textAlign: 'right' },
-                                dataElement: 'toolbar'
-                            })
-                        ]),
-                        div({ class: 'row', style: { marginTop: '4px' } }, [
-                            div({ class: 'col-md-12' },
-                                div({
-                                    style: {
-                                        border: '1px silver solid'
+                    body: div(
+                        { dataElement: 'available-items-area', style: { marginTop: '10px' } },
+                        [
+                            div({ class: 'row' }, [
+                                div(
+                                    {
+                                        class: 'col-md-6',
                                     },
-                                    dataElement: 'available-items'
-                                }))
-                        ])
-                    ])
+                                    [span({ dataElement: 'search-box' })]
+                                ),
+                                div({
+                                    class: 'col-md-6',
+                                    style: { textAlign: 'right' },
+                                    dataElement: 'toolbar',
+                                }),
+                            ]),
+                            div({ class: 'row', style: { marginTop: '4px' } }, [
+                                div(
+                                    { class: 'col-md-12' },
+                                    div({
+                                        style: {
+                                            border: '1px silver solid',
+                                        },
+                                        dataElement: 'available-items',
+                                    })
+                                ),
+                            ]),
+                        ]
+                    ),
                 }),
                 ui.buildPanel({
                     title: 'Selected Items',
                     classes: ['kb-panel-light'],
                     body: div({
                         style: {
-                            border: '1px silver solid'
+                            border: '1px silver solid',
                         },
-                        dataElement: 'selected-items'
-                    })
-                })
+                        dataElement: 'selected-items',
+                    }),
+                }),
             ]);
         }
 
@@ -643,12 +707,10 @@ define([
 
                     break;
                 case 'referenceObjectName':
-                    // refetch the available values
-                    // set available values
-                    // update input control for available values
-                    // set value to null
-
-
+                // refetch the available values
+                // set available values
+                // update input control for available values
+                // set value to null
             }
         }
 
@@ -681,14 +743,14 @@ define([
         }
 
         function validate() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 var rawValue = getInputValue(),
                     validationOptions = {
-                        required: spec.data.constraints.required
+                        required: spec.data.constraints.required,
                     };
 
                 return Validation.validateStringSet(rawValue, validationOptions);
-            })
+            });
         }
 
         var subdataInfo = subdataMethods.getSubdataInfo(appSpec, spec);
@@ -707,7 +769,7 @@ define([
                 params: params,
                 getRef: subdataInfo.getRef,
                 included: subdataInfo.included,
-                extractItems: subdataInfo.extractItems
+                extractItems: subdataInfo.extractItems,
             });
         }
 
@@ -724,71 +786,68 @@ define([
 
             return subdataMethods.fetchData({
                 referenceObjectRef: referenceObjectRef,
-                spec: spec
+                spec: spec,
             });
         }
 
         function syncAvailableValues() {
-            return Promise.try(function() {
-                    return fetchData();
-                })
-                .then(function(data) {
-                    if (!data) {
-                        return " no data? ";
-                    }
+            return Promise.try(function () {
+                return fetchData();
+            }).then(function (data) {
+                if (!data) {
+                    return ' no data? ';
+                }
 
-                    // If default values have been provided, prepend them to the data.
+                // If default values have been provided, prepend them to the data.
 
-                    // We use the raw default values here since we are not really using
-                    // it as the default value, but as a set of additional items
-                    // to select.
-                    var defaultValues = spec.defaultValue;
-                    if (defaultValues && (defaultValues instanceof Array) && (defaultValues.length > 0)) {
-                        defaultValues.forEach(function(itemId) {
-                            if (itemId && itemId.trim().length > 0) {
-                                data.unshift({
-                                    id: itemId,
-                                    text: itemId
-                                });
-                            }
-                        });
-                    }
-
-                    // The data represents the total available subdata, with all
-                    // necessary fields for display. We build from that three
-                    // additional structures
-                    // - a map of id to object
-                    // - a set of available ids
-                    // - a set of selected ids
-                    // - a set of filtered ids
-                    model.setItem('availableValues', data);
-
-                    // TODO: generate all of this in the fetchData -- it will be a bit faster.
-                    var map = {};
-                    data.forEach(function(datum) {
-                        map[datum.id] = datum;
+                // We use the raw default values here since we are not really using
+                // it as the default value, but as a set of additional items
+                // to select.
+                var defaultValues = spec.defaultValue;
+                if (defaultValues && defaultValues instanceof Array && defaultValues.length > 0) {
+                    defaultValues.forEach(function (itemId) {
+                        if (itemId && itemId.trim().length > 0) {
+                            data.unshift({
+                                id: itemId,
+                                text: itemId,
+                            });
+                        }
                     });
+                }
 
-                    //var availableIds = data.map(function (datum) {
-                    //    return datum.id;
-                    //});
+                // The data represents the total available subdata, with all
+                // necessary fields for display. We build from that three
+                // additional structures
+                // - a map of id to object
+                // - a set of available ids
+                // - a set of selected ids
+                // - a set of filtered ids
+                model.setItem('availableValues', data);
 
-                    model.setItem('availableValuesMap', map);
-
-                    doFilterItems();
+                // TODO: generate all of this in the fetchData -- it will be a bit faster.
+                var map = {};
+                data.forEach(function (datum) {
+                    map[datum.id] = datum;
                 });
+
+                //var availableIds = data.map(function (datum) {
+                //    return datum.id;
+                //});
+
+                model.setItem('availableValuesMap', map);
+
+                doFilterItems();
+            });
         }
 
         function autoValidate() {
-            return validate()
-                .then(function(result) {
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then(function (result) {
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
-
 
         /*
          * Creates the markup
@@ -796,30 +855,33 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function() {
-                    // check to see if we have to render inputControl.
-                    var events = Events.make({ node: container }),
-                        inputControl = makeInputControl(events),
-                        content = div({
+            return Promise.try(function () {
+                // check to see if we have to render inputControl.
+                var events = Events.make({ node: container }),
+                    inputControl = makeInputControl(events),
+                    content = div(
+                        {
                             class: 'input-group',
                             style: {
-                                width: '100%'
-                            }
-                        }, inputControl);
+                                width: '100%',
+                            },
+                        },
+                        inputControl
+                    );
 
-                    ui.setContent('input-container', content);
-                    renderSearchBox();
-                    renderStats();
-                    renderToolbar();
-                    renderAvailableItems();
-                    renderSelectedItems();
+                ui.setContent('input-container', content);
+                renderSearchBox();
+                renderStats();
+                renderToolbar();
+                renderAvailableItems();
+                renderSelectedItems();
 
-                    events.attachEvents();
-                })
-                .then(function() {
+                events.attachEvents();
+            })
+                .then(function () {
                     return autoValidate();
                 })
-                .catch(function(err) {
+                .catch(function (err) {
                     console.error('ERROR in render', err);
                 });
         }
@@ -830,16 +892,19 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({
-                    dataElement: 'input-container'
-                })
-            ]);
+            var content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [
+                    div({
+                        dataElement: 'input-container',
+                    }),
+                ]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -861,17 +926,19 @@ define([
             // If any of the required parameters are missing, we need to reset the
             // primary value.
             // TODO: we need to get this via the message bus!!!
-            if (subdataInfo.params.dependencies.some(function(paramId) {
-                    return (model.getItem(['required-params', paramId], null) === null);
-                })) {
+            if (
+                subdataInfo.params.dependencies.some(function (paramId) {
+                    return model.getItem(['required-params', paramId], null) === null;
+                })
+            ) {
                 resetModelValue();
             }
 
-            // If we have a change in the primary reference object, we need to 
-            // resync the values derived from it (available values).            
+            // If we have a change in the primary reference object, we need to
+            // resync the values derived from it (available values).
             if (paramId === subdataInfo.params.referenceObject) {
                 model.setItem('referenceObjectName', newValue);
-                return syncAvailableValues()
+                return syncAvailableValues();
             }
         }
 
@@ -880,7 +947,7 @@ define([
              * Issued when thre is a need to have all params reset to their
              * default value.
              */
-            channel.on('reset-to-defaults', function(message) {
+            channel.on('reset-to-defaults', function (message) {
                 resetModelValue();
                 // model.reset();
                 // TODO: this should really be set when the linked field is reset...
@@ -901,7 +968,7 @@ define([
             /*
              * Issued when there is an update for this param.
              */
-            channel.on('update', function(message) {
+            channel.on('update', function (message) {
                 model.setItem('value', message.value);
                 updateInputControl('value');
             });
@@ -936,37 +1003,41 @@ define([
             // });
 
             if (subdataInfo.params.dependencies) {
-                subdataInfo.params.dependencies.forEach(function(paramId) {
+                subdataInfo.params.dependencies.forEach(function (paramId) {
                     channel.listen({
                         key: {
                             type: 'parameter-changed',
-                            parameter: paramId
+                            parameter: paramId,
                         },
-                        handle: function(message) {
+                        handle: function (message) {
                             updateParam(paramId, message.newValue);
-                        }
+                        },
                     });
 
                     channel.listen({
                         key: {
                             type: 'parameter-value',
-                            parameter: paramId
+                            parameter: paramId,
                         },
-                        handle: function(message) {
+                        handle: function (message) {
                             updateParam(paramId, message.newValue);
-                        }
+                        },
                     });
-                    channel.request({
-                            parameterName: paramId
-                        }, {
-                            key: {
-                                type: 'get-parameter'
+                    channel
+                        .request(
+                            {
+                                parameterName: paramId,
+                            },
+                            {
+                                key: {
+                                    type: 'get-parameter',
+                                },
                             }
-                        })
-                        .then(function(message) {
+                        )
+                        .then(function (message) {
                             updateParam(paramId, message.value);
                         })
-                        .catch(function(err) {
+                        .catch(function (err) {
                             console.log('ERROR getting parameter', err);
                         });
                 });
@@ -1029,20 +1100,20 @@ define([
             //            });
             // channel.emit('sync');
 
-            channel.request({
-                    parameterName: spec.id
-                }, {
-                    key: {
-                        type: 'get-parameter'
+            channel
+                .request(
+                    {
+                        parameterName: spec.id,
+                    },
+                    {
+                        key: {
+                            type: 'get-parameter',
+                        },
                     }
-                })
-                .then(function(message) {
+                )
+                .then(function (message) {
                     // console.log('Now i got it again', message);
                 });
-
-
-
-
         }
 
         // MODIFICATION EVENTS
@@ -1062,17 +1133,14 @@ define([
          *
          */
 
-
-
-
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({
-                    node: container
+                    node: container,
                 });
 
                 var events = Events.make(),
@@ -1091,13 +1159,13 @@ define([
                 registerEvents();
 
                 channel.emit('sync-params', {
-                    parameters: subdataInfo.params.dependencies
+                    parameters: subdataInfo.params.dependencies,
                 });
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (parent && container) {
                     parent.removeChild(container);
                 }
@@ -1114,25 +1182,25 @@ define([
                 selectedItems: [],
                 value: null,
                 showFrom: 0,
-                showTo: 5
+                showTo: 5,
             },
-            onUpdate: function(props) {
+            onUpdate: function (props) {
                 renderStats();
                 renderToolbar();
                 renderAvailableItems();
                 renderSelectedItems();
-            }
+            },
         });
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

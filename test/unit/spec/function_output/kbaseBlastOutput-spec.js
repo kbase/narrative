@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseBlastOutput'
-], function(Widget) {
-    describe('Test the kbaseBlastOutput widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseBlastOutput'], function (Widget) {
+    describe('Test the kbaseBlastOutput widget', function () {
+        it('Should do things', function () {});
     });
 });

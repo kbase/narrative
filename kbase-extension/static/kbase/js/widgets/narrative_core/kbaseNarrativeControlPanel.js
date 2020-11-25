@@ -16,12 +16,7 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define ([
-    'kbwidget',
-    'bootstrap',
-    'jquery',
-    'kbaseAuthenticatedWidget'
-], function(
+define(['kbwidget', 'bootstrap', 'jquery', 'kbaseAuthenticatedWidget'], function (
     KBWidget,
     bootstrap,
     $,
@@ -30,15 +25,15 @@ define ([
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeControlPanel',
-        parent : kbaseAuthenticatedWidget,
+        parent: kbaseAuthenticatedWidget,
         version: '0.0.1',
         options: {
             title: 'Control',
             showTitle: true,
             collapsible: true,
             maxHeight: '400px',
-            collapseCallback: null,  // called when this panel is minimized/maximized
-            slideTime: 400           // set minimize/maximize animation time
+            collapseCallback: null, // called when this panel is minimized/maximized
+            slideTime: 400, // set minimize/maximize animation time
         },
 
         /**
@@ -52,7 +47,7 @@ define ([
          * @returns {object} the initialized widget
          * @private
          */
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             this.slideTime = this.options.slideTime;
             this.render();
@@ -66,41 +61,38 @@ define ([
             var collapse;
             if (override) {
                 switch (override) {
-                case 'collapse':
-                    collapse = true;
-                    break;
-                case 'expand':
-                    collapse = false;
-                    break;
-                case 'restore':
-                    collapse = this.userCollapse;
-                    break;
-                case 'user':
-                    collapse = !this.isMinimized();
-                    this.userCollapse = collapse;
+                    case 'collapse':
+                        collapse = true;
+                        break;
+                    case 'expand':
+                        collapse = false;
+                        break;
+                    case 'restore':
+                        collapse = this.userCollapse;
+                        break;
+                    case 'user':
+                        collapse = !this.isMinimized();
+                        this.userCollapse = collapse;
                 }
             } else {
-                collapse = this.Min ? false: true;
+                collapse = this.Min ? false : true;
             }
 
             // nothing to do if the new collapse state is the same as the old.
-            if ( (collapse && this.isMinimized()) ||
-                 (!collapse && !this.isMinimized()) ) {
+            if ((collapse && this.isMinimized()) || (!collapse && !this.isMinimized())) {
                 return;
             }
 
             if (collapse) {
-                $toggleIcon.removeClass('fa-chevron-down')
-                    .addClass('fa-chevron-right');
+                $toggleIcon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
                 this.$bodyDiv.parent().slideUp(this.slideTime);
                 this.isMin = true;
             } else {
-                $toggleIcon.removeClass('fa-chevron-right')
-                    .addClass('fa-chevron-down');
+                $toggleIcon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
                 this.$bodyDiv.parent().slideDown(this.slideTime);
                 this.isMin = false;
             }
-            if(this.options.collapseCallback) {
+            if (this.options.collapseCallback) {
                 this.options.collapseCallback(this.isMin);
             }
         },
@@ -110,7 +102,7 @@ define ([
          * Renders the new containing panel widget
          * @private
          */
-        render: function() {
+        render: function () {
             // DOM structure setup here.
             // After this, just need to update the function list
 
@@ -133,35 +125,33 @@ define ([
             this.$buttonPanel = $('<span>')
                 .addClass('btn-toolbar pull-right')
                 .attr('role', 'toolbar')
-                .css({'margin-top' : '-2px'});
+                .css({ 'margin-top': '-2px' });
 
             var $titleSpan = $('<span>');
-            if(this.options.showTitle) {
-                $titleSpan
-                    .append($('<span>')
-                        .css({'cursor' : 'pointer'})
+            if (this.options.showTitle) {
+                $titleSpan.append(
+                    $('<span>')
+                        .css({ cursor: 'pointer' })
                         .click(
-                            $.proxy(function(event) {
+                            $.proxy(function (event) {
                                 event.preventDefault();
                                 this.toggleCollapse('user');
                             }, this)
                         )
-                        .append($('<span>')
-                            .addClass('fa fa-chevron-down kb-narr-panel-toggle'))
-                        .append(this.options.title));
+                        .append($('<span>').addClass('fa fa-chevron-down kb-narr-panel-toggle'))
+                        .append(this.options.title)
+                );
             }
             $titleSpan.append(this.$buttonPanel);
 
             this.isMin = false;
-            this.$elem.append($('<div>')
-                .css({'height':'100%'})
-                .addClass('kb-narr-side-panel')
-                .append($('<div>')
-                    .addClass('kb-title')
-                    .append($titleSpan))
-                .append($('<div>')
-                    .addClass('kb-narr-panel-body-wrapper')
-                    .append(this.$bodyDiv)));
+            this.$elem.append(
+                $('<div>')
+                    .css({ height: '100%' })
+                    .addClass('kb-narr-side-panel')
+                    .append($('<div>').addClass('kb-title').append($titleSpan))
+                    .append($('<div>').addClass('kb-narr-panel-body-wrapper').append(this.$bodyDiv))
+            );
         },
 
         // remember the minimization state
@@ -171,13 +161,13 @@ define ([
          * Returns minimization state of the Panel, true if minimized, false otherwise
          * @public
          */
-        isMinimized: function() {
+        isMinimized: function () {
             return this.isMin;
         },
 
         // allows the height of the entire panel to be dynamically set
-        setHeight: function(height) {
-            this.$elem.css({height : height});
+        setHeight: function (height) {
+            this.$elem.css({ height: height });
         },
 
         /**
@@ -185,7 +175,7 @@ define ([
          * @param {object} btn - the button element to add. Expected to be a jquery node.
          * @public
          */
-        addButton: function(btn) {
+        addButton: function (btn) {
             this.$buttonPanel.append(btn);
         },
 
@@ -196,9 +186,9 @@ define ([
          * be a jquery node representing a button
          * @public
          */
-        addButtonList: function(btnList) {
+        addButtonList: function (btnList) {
             this.$buttonPanel.empty();
-            for (var i=0; i<btnList.length; i++) {
+            for (var i = 0; i < btnList.length; i++) {
                 this.addButton(btnList[i]);
             }
         },
@@ -209,7 +199,7 @@ define ([
          * @returns {object} a jquery node for the main widget panel
          * @public
          */
-        body: function() {
+        body: function () {
             return this.$bodyDiv;
         },
 
@@ -219,8 +209,8 @@ define ([
          * When a user clicks on the Narratives tab, each widget there (just the one, really) has
          * this function called.
          */
-        activate: function() {
+        activate: function () {
             // no op - meant to be extended by some functional widget.
-        }
+        },
     });
 });

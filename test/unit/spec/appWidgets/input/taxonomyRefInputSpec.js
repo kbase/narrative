@@ -5,15 +5,8 @@ define([
     'common/runtime',
     'widgets/appWidgets2/input/taxonomyRefInput',
     'base/js/namespace',
-    'kbaseNarrative'
-], (
-    $,
-    TestUtil,
-    Runtime,
-    TaxonomyRefInput,
-    Jupyter,
-    Narrative
-) => {
+    'kbaseNarrative',
+], ($, TestUtil, Runtime, TaxonomyRefInput, Jupyter, Narrative) => {
     'use strict';
 
     function buildTestConfig(required, defaultValue, bus) {
@@ -26,9 +19,9 @@ define([
                     constraints: {
                         required: required,
                         defaultValue: defaultValue,
-                        types: ['SomeModule.SomeType']
-                    }
-                }
+                        types: ['SomeModule.SomeType'],
+                    },
+                },
             },
             channelName: bus.channelName,
         };
@@ -42,7 +35,6 @@ define([
             node,
             defaultValue = 'apple',
             fakeServiceUrl = 'https://ci.kbase.us/services/fake_taxonomy_service';
-
 
         beforeEach(() => {
             runtime = Runtime.make();
@@ -64,17 +56,17 @@ define([
             const taxonServiceInfo = {
                 version: '1.1',
                 id: '12345',
-                result: [{
-                    git_commit_hash: 'blahblahblah',
-                    hash: 'blahblahblah',
-                    health: 'healthy',
-                    module_name: 'taxonomy_service',
-                    url: fakeServiceUrl
-                }]
-            }
-            jasmine.Ajax.stubRequest(
-                runtime.config('services.service_wizard.url')
-            ).andReturn({
+                result: [
+                    {
+                        git_commit_hash: 'blahblahblah',
+                        hash: 'blahblahblah',
+                        health: 'healthy',
+                        module_name: 'taxonomy_service',
+                        url: fakeServiceUrl,
+                    },
+                ],
+            };
+            jasmine.Ajax.stubRequest(runtime.config('services.service_wizard.url')).andReturn({
                 status: 200,
                 statusText: 'HTTP/1.1 200 OK',
                 contentType: 'application/json',
@@ -85,25 +77,28 @@ define([
             const taxonSearchInfo = {
                 version: '1.1',
                 id: '67890',
-                result: [{
-                    hits: [{
-                        label: 'A Hit',
-                        id: '1',
-                        category: 'generic',
-                        parent: null,
-                        parent_ref: null
-                    }],
-                    num_of_hits: 1
-                }]
+                result: [
+                    {
+                        hits: [
+                            {
+                                label: 'A Hit',
+                                id: '1',
+                                category: 'generic',
+                                parent: null,
+                                parent_ref: null,
+                            },
+                        ],
+                        num_of_hits: 1,
+                    },
+                ],
             };
-            jasmine.Ajax.stubRequest(fakeServiceUrl)
-                .andReturn({
-                    status: 200,
-                    statusText: 'HTTP/1.1 200 OK',
-                    contentType: 'application/json',
-                    responseText: JSON.stringify(taxonSearchInfo),
-                    response: JSON.stringify(taxonSearchInfo)
-                });
+            jasmine.Ajax.stubRequest(fakeServiceUrl).andReturn({
+                status: 200,
+                statusText: 'HTTP/1.1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify(taxonSearchInfo),
+                response: JSON.stringify(taxonSearchInfo),
+            });
         });
 
         afterEach(() => {
@@ -123,12 +118,13 @@ define([
 
         it('Should start and stop', (done) => {
             let widget = TaxonomyRefInput.make(testConfig);
-            widget.start({node: node})
+            widget
+                .start({ node: node })
                 .then(() => {
                     return widget.stop();
                 })
                 .then(() => {
-                    done()
+                    done();
                 });
         });
 
@@ -140,10 +136,9 @@ define([
                 done();
             });
 
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('update', {value: 'foo'})
-                });
+            widget.start({ node: node }).then(() => {
+                bus.emit('update', { value: 'foo' });
+            });
         });
 
         it('Should reset model value by bus', (done) => {
@@ -154,10 +149,9 @@ define([
                 done();
             });
 
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('reset-to-defaults');
-                });
+            widget.start({ node: node }).then(() => {
+                bus.emit('reset-to-defaults');
+            });
         });
 
         it('Should respond to changed select2 option', (done) => {
@@ -165,10 +159,13 @@ define([
             bus.on('changed', (msg) => {
                 done();
             });
-            widget.start({node: node})
+            widget
+                .start({ node: node })
                 .then(() => {
                     let $select = $(node).find('select');
-                    let $search = $select.data('select2').dropdown.$search || $select.data('select2').selection.$search;
+                    let $search =
+                        $select.data('select2').dropdown.$search ||
+                        $select.data('select2').selection.$search;
 
                     $search.val('stuff');
                     $search.trigger('input');
@@ -176,10 +173,9 @@ define([
                     $select.trigger({
                         type: 'select2: select',
                         params: {
-                            data: {
-                            }
-                        }
-                    })
+                            data: {},
+                        },
+                    });
                     return TestUtil.wait(1000);
                     // $select.val('something').trigger({
                     //     type: 'select2:select',

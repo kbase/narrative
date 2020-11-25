@@ -1,9 +1,4 @@
-define([
-    'bluebird',
-    'jquery',
-    'base/js/namespace',
-    'common/utils'
-], function (
+define(['bluebird', 'jquery', 'base/js/namespace', 'common/utils'], function (
     Promise,
     $,
     Jupyter,
@@ -15,7 +10,10 @@ define([
         cell.minimize = function () {
             var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(
+                    cell,
+                    'kbase.outputCell.user-settings.showCodeInputArea'
+                );
 
             if (showCode) {
                 inputArea.addClass('hidden');
@@ -26,7 +24,10 @@ define([
         cell.maximize = function () {
             var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(
+                    cell,
+                    'kbase.outputCell.user-settings.showCodeInputArea'
+                );
 
             if (showCode) {
                 inputArea.removeClass('hidden');
@@ -50,12 +51,10 @@ define([
 
         // The kbase property is only used for managing runtime state of the cell
         // for kbase. Anything to be persistent should be on the metadata.
-        cell.kbase = {
-        };
+        cell.kbase = {};
 
         // Update metadata.
-        utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
-
+        utils.setMeta(cell, 'attributes', 'lastLoaded', new Date().toUTCString());
 
         // The output cell just needs to inhibit the input area.
         // The input code and associated output (a widget) is already
@@ -76,9 +75,7 @@ define([
             var cell = payload.cell;
             var setupData = payload.data;
             var jupyterCellType = payload.type;
-            if (jupyterCellType === 'code' &&
-                setupData &&
-                setupData.type === 'output') {
+            if (jupyterCellType === 'code' && setupData && setupData.type === 'output') {
                 upgradeCell(cell)
                     .then(function () {
                         console.log('OUTPUT: Cell created?');
@@ -86,7 +83,10 @@ define([
                     .catch(function (err) {
                         console.error('ERROR creating cell', err);
                         // delete cell.
-                        $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
+                        $(document).trigger(
+                            'deleteCell.Narrative',
+                            Jupyter.notebook.find_cell_index(cell)
+                        );
                         alert('Could not insert cell due to errors.\n' + err.message);
                     });
             }
@@ -103,7 +103,7 @@ define([
 
     return {
         // This is the sole ipython/jupyter api call
-        load_ipython_extension: load
+        load_ipython_extension: load,
     };
 }, function (err) {
     'use strict';

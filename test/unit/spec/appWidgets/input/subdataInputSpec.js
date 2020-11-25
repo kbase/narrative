@@ -3,34 +3,28 @@ define([
     'widgets/appWidgets2/input/subdataInput',
     'base/js/namespace',
     'kbaseNarrative',
-    'testUtil'
-], function(
-    SubdataInput,
-    Jupyter,
-    Narrative,
-    TestUtil
-) {
+    'testUtil',
+], function (SubdataInput, Jupyter, Narrative, TestUtil) {
     'use strict';
 
-    describe('Test subobject data input widget', function() {
+    describe('Test subobject data input widget', function () {
         var testConfig = {
             parameterSpec: {
                 data: {
                     defaultValue: '',
                     nullValue: '',
                     constraints: {
-                        required: false
-                    }
-
+                        required: false,
+                    },
                 },
                 original: {
-                    text_subdata_options: {}
-                }
+                    text_subdata_options: {},
+                },
             },
-            channelName: 'foo'
+            channelName: 'foo',
         };
 
-        beforeEach(function() {
+        beforeEach(function () {
             Jupyter.narrative = new Narrative();
             if (TestUtil.getAuthToken()) {
                 document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
@@ -39,11 +33,11 @@ define([
             }
         });
 
-        it('should be real!', function() {
+        it('should be real!', function () {
             expect(SubdataInput).not.toBeNull();
         });
 
-        it('should instantiate with a test config', function() {
+        it('should instantiate with a test config', function () {
             TestUtil.pendingIfNoToken();
             var widget = SubdataInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));

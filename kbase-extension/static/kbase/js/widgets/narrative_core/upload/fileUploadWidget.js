@@ -8,8 +8,8 @@ define([
     'StagingServiceClient',
     'bluebird',
     'text!kbase/templates/data_staging/dropzone_area.html',
-    'text!kbase/templates/data_staging/dropped_file.html'
-], function(
+    'text!kbase/templates/data_staging/dropped_file.html',
+], function (
     $,
     KBWidget,
     Config,
@@ -25,7 +25,7 @@ define([
     return new KBWidget({
         name: 'fileUploadWidget',
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             this.dropzoneTmpl = Handlebars.compile(DropzoneAreaHtml);
             this.dropFileTmpl = Handlebars.compile(DropFileHtml);
@@ -36,44 +36,49 @@ define([
             var runtime = Runtime.make();
             this.stagingServiceClient = new StagingServiceClient({
                 root: Config.url('staging_api_url'),
-                token: runtime.authToken()
+                token: runtime.authToken(),
             });
 
             this.render();
             return this;
         },
 
-        render: function() {
+        render: function () {
             const uploadConfig = Config.get('upload');
-            const globusUrlLinked = uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user;
-            const $dropzoneElem = $(this.dropzoneTmpl({
-                userInfo: this.userInfo,
-                globusUrl: globusUrlLinked
-            }));
+            const globusUrlLinked =
+                uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user;
+            const $dropzoneElem = $(
+                this.dropzoneTmpl({
+                    userInfo: this.userInfo,
+                    globusUrl: globusUrlLinked,
+                })
+            );
 
             // there are two anchor elements with same class name .globus_linked.
             // One link takes the user to globus site,
             // and the other link takes user to how to link globus account.
-            $dropzoneElem.find('globus_linked').click(function(e) {
+            $dropzoneElem.find('globus_linked').click(function (e) {
                 this.uploadGlobusClickEvent(e, globusUrlLinked);
             });
             this.$elem.append($dropzoneElem);
             this.dropzone = new Dropzone($dropzoneElem.get(0), {
                 url: this.stagingUrl + '/upload',
-                accept: function(file, done) {
+                accept: function (file, done) {
                     done();
                 },
-                headers: {'Authorization': Runtime.make().authToken()},
+                headers: { Authorization: Runtime.make().authToken() },
                 paramName: 'uploads',
                 previewTemplate: this.dropFileTmpl(),
                 autoProcessQueue: true,
                 parallelUploads: uploadConfig.parallel_uploads,
                 maxFilesize: uploadConfig.max_file_size,
                 timeout: uploadConfig.timeout,
-                userInfo: this.userInfo
+                userInfo: this.userInfo,
             })
                 .on('totaluploadprogress', (progress) => {
-                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({
+                        width: progress + '%',
+                    });
                 })
                 .on('addedfile', (file) => {
                     $dropzoneElem.find('#global-info').removeClass('hide');
@@ -81,22 +86,23 @@ define([
 
                     // If there is a button already in the area, it has to be removed,
                     // and appened to the new document when additional errored files are added.
-                    if ($dropzoneElem.find('#clear-all-btn').length){
+                    if ($dropzoneElem.find('#clear-all-btn').length) {
                         this.deleteClearAllButton();
                         $dropzoneElem.append(this.makeClearAllButton());
                     }
-
                 })
                 .on('success', (file) => {
                     var $successElem = $(file.previewElement);
                     $successElem.find('#upload_progress_and_cancel').hide();
-                    $successElem.find('#dz_file_row_1').css({'display': 'flex', 'align-items': 'center'});
+                    $successElem
+                        .find('#dz_file_row_1')
+                        .css({ display: 'flex', 'align-items': 'center' });
                     $successElem.find('#success_icon').css('display', 'flex');
                     $successElem.find('#success_message').css('display', 'inline');
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
 
                     this.removeProgressBar($dropzoneElem);
-                    $(file.previewElement).fadeOut(1000, function() {
+                    $(file.previewElement).fadeOut(1000, function () {
                         $(file.previewElement.querySelector('.btn')).trigger('click');
                     });
                 })
@@ -115,19 +121,25 @@ define([
                     $($dropzoneElem.find('#total-progress')).show();
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                 })
-                .on('reset', function() {
+                .on('reset', function () {
                     $('#clear-all-btn-container').remove();
                     $('#clear-all-btn').remove();
                     $dropzoneElem.find('#global-info').addClass('hide');
-                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({ width: '0' });
                 })
                 .on('canceled', (file) => {
                     let path = file.fullPath ? file.fullPath : file.name;
-                    if (path){
-                        Promise.resolve(this.stagingServiceClient.delete({
-                            path: path
-                        })).catch(xhr => {
-                            throw new Error(xhr.responseText ? xhr.responseText : 'Unknown error - unable to delete file from staging area');
+                    if (path) {
+                        Promise.resolve(
+                            this.stagingServiceClient.delete({
+                                path: path,
+                            })
+                        ).catch((xhr) => {
+                            throw new Error(
+                                xhr.responseText
+                                    ? xhr.responseText
+                                    : 'Unknown error - unable to delete file from staging area'
+                            );
                         });
                     } else {
                         throw new Error('Unable to locate path for file to delete');
@@ -136,7 +148,9 @@ define([
                 .on('error', (erroredFile) => {
                     var $errorElem = $(erroredFile.previewElement);
                     $errorElem.find('#upload_progress_and_cancel').hide();
-                    $errorElem.find('#dz_file_row_1').css({'display': 'flex', 'align-items': 'center'});
+                    $errorElem
+                        .find('#dz_file_row_1')
+                        .css({ display: 'flex', 'align-items': 'center' });
                     $errorElem.css('color', '#DF0002');
                     $errorElem.find('#error_icon').css('display', 'flex');
                     this.removeProgressBar($dropzoneElem);
@@ -146,8 +160,8 @@ define([
                     var $errorMessage = $errorElem.find('#error_message');
 
                     // I don't know how to determine if the file was too big other than looking at the preview message
-                    if ($errorMessage.html().search('File is too big') !== -1){
-                        errorText  = 'File size exceeds maximum of 20GB. Please ';
+                    if ($errorMessage.html().search('File is too big') !== -1) {
+                        errorText = 'File size exceeds maximum of 20GB. Please ';
                         $errorMessage.text('Error: ' + errorText);
                         $errorMessage.append(this.makeGlobusErrorLink(globusUrlLinked));
                     } else if (erroredFile && erroredFile.xhr && erroredFile.xhr.responseText) {
@@ -158,39 +172,42 @@ define([
                     }
 
                     // Check to see if there already a button in the dropzone area
-                    if (!$dropzoneElem.find('#clear-all-btn').length){
+                    if (!$dropzoneElem.find('#clear-all-btn').length) {
                         $dropzoneElem.append(this.makeClearAllButton());
                     }
                 });
         },
 
-        uploadGlobusClickEvent: function(e, globusUrlLinked) {
+        uploadGlobusClickEvent: function (e, globusUrlLinked) {
             e.stopPropagation();
             e.preventDefault();
 
-            if(e.target.href === globusUrlLinked) {
+            if (e.target.href === globusUrlLinked) {
                 var globusWindow = window.open('', 'dz-globus');
-                globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
-                this.stagingServiceClient.addAcl()
-                    .done(() => {
-                        window.open($(e.target).attr('href'), 'dz-globus');
-                        return true;
-                    });
+                globusWindow.document.write(
+                    '<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>'
+                );
+                this.stagingServiceClient.addAcl().done(() => {
+                    window.open($(e.target).attr('href'), 'dz-globus');
+                    return true;
+                });
             } else {
                 window.open(e.target.href, '_blank');
             }
         },
 
-        makeClearAllButton: function() {
+        makeClearAllButton: function () {
             var $clearAllBtn = $('<button>')
                 .text('Clear All')
                 .addClass('btn__text dz-clear-all__button')
                 .attr('aria-label', 'clear all errored files from the dropzone')
                 .attr('id', 'clear-all-btn')
-                .click(function(){
-                    this.dropzone.removeAllFiles();
-                    this.deleteClearAllButton();
-                }.bind(this));
+                .click(
+                    function () {
+                        this.dropzone.removeAllFiles();
+                        this.deleteClearAllButton();
+                    }.bind(this)
+                );
 
             var $buttonContainer = $('<div>')
                 .attr('id', 'clear-all-btn-container')
@@ -200,45 +217,49 @@ define([
             return $buttonContainer;
         },
 
-        deleteClearAllButton: function() {
+        deleteClearAllButton: function () {
             $('#clear-all-btn-container').remove();
             $('#clear-all-btn').remove();
         },
 
-        makeGlobusErrorLink: function(globusUrlLinked) {
+        makeGlobusErrorLink: function (globusUrlLinked) {
             const url = 'https://docs.kbase.us/data/globus';
 
             const $globusErrorLink = $('<a>')
                 .attr({
-                    'id': 'globus_error_link',
-                    'href': url,
-                    'aria-label': 'opens new window to kbase globus upload docs'
-                }).text('upload with Globus.')
-                .click(function(e) {
-                    this.uploadGlobusClickEvent(e, globusUrlLinked);
-                }.bind(this));
+                    id: 'globus_error_link',
+                    href: url,
+                    'aria-label': 'opens new window to kbase globus upload docs',
+                })
+                .text('upload with Globus.')
+                .click(
+                    function (e) {
+                        this.uploadGlobusClickEvent(e, globusUrlLinked);
+                    }.bind(this)
+                );
 
-            if (this.userInfo.globusLinked){
-                $globusErrorLink
-                    .attr({
-                        'href': globusUrlLinked,
-                        'aria-label': 'opens new window to upload via globus'
-                    });
+            if (this.userInfo.globusLinked) {
+                $globusErrorLink.attr({
+                    href: globusUrlLinked,
+                    'aria-label': 'opens new window to upload via globus',
+                });
             }
 
             return $globusErrorLink;
         },
 
-        removeProgressBar: function($dropzoneElem) {
-            if (!this.dropzone.getQueuedFiles().length &&
-            !this.dropzone.getUploadingFiles().length) {
-                $($dropzoneElem.find('#total-progress')).fadeOut(1000, function() {
-                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
+        removeProgressBar: function ($dropzoneElem) {
+            if (
+                !this.dropzone.getQueuedFiles().length &&
+                !this.dropzone.getUploadingFiles().length
+            ) {
+                $($dropzoneElem.find('#total-progress')).fadeOut(1000, function () {
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({ width: '0' });
                 });
             }
         },
 
-        makeUploadMessage: function() {
+        makeUploadMessage: function () {
             if (!this.dropzone) {
                 return 'No files uploading.';
             }
@@ -247,7 +268,7 @@ define([
             if (numUploading === 0 && numQueued === 0) {
                 return 'No files uploading.';
             }
-            var queuedText = numQueued ? ('(' + numQueued + ' queued)') : '';
+            var queuedText = numQueued ? '(' + numQueued + ' queued)' : '';
             var pluralFiles = numUploading > 1 ? 's' : '';
             return [
                 'Uploading ',
@@ -257,17 +278,16 @@ define([
                 ' ',
                 queuedText,
                 ' to ',
-                this.getPath()
+                this.getPath(),
             ].join('');
         },
 
-        setPath: function(path) {
+        setPath: function (path) {
             this.path = path;
         },
 
-        getPath: function() {
+        getPath: function () {
             return this.path;
         },
-
     });
 });

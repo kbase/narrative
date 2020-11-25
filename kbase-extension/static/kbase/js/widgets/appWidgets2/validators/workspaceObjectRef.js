@@ -1,8 +1,8 @@
-define([
-    'bluebird',
-    'kb_service/utils',
-    'kb_service/client/workspace'
-], function(Promise, serviceUtils, Workspace) {
+define(['bluebird', 'kb_service/utils', 'kb_service/client/workspace'], function (
+    Promise,
+    serviceUtils,
+    Workspace
+) {
     'use strict';
 
     // function getObjectInfo(workspaceId, objectName, authToken, serviceUrl) {
@@ -29,38 +29,37 @@ define([
         return stringValue.trim();
     }
 
-
-
     function validateWorkspaceObjectRef(value, constraints, options) {
-        var messageId, shortMessage, errorMessage, diagnosis = 'valid';
+        var messageId,
+            shortMessage,
+            errorMessage,
+            diagnosis = 'valid';
 
-        return Promise.try(function() {
-                if (value === null) {
-                    if (constraints.required) {
-                        messageId = 'required-missing';
-                        diagnosis = 'required-missing';
-                        errorMessage = 'value is required';
-                    } else {
-                        diagnosis = 'optional-empty';
-                    }
+        return Promise.try(function () {
+            if (value === null) {
+                if (constraints.required) {
+                    messageId = 'required-missing';
+                    diagnosis = 'required-missing';
+                    errorMessage = 'value is required';
                 } else {
-                    // for now assume it is valid...
-
+                    diagnosis = 'optional-empty';
                 }
-                // else if (!/^\d+\/\d+\/\d+/.test(value)) {
-                //     diagnosis = 'invalid';
-                //     errorMessage = 'Invalid object reference format (#/#/#)';
-                // }
-            })
-            .then(function() {
-                return {
-                    isValid: errorMessage ? false : true,
-                    messageId: messageId,
-                    errorMessage: errorMessage,
-                    shortMessage: shortMessage,
-                    diagnosis: diagnosis
-                };
-            });
+            } else {
+                // for now assume it is valid...
+            }
+            // else if (!/^\d+\/\d+\/\d+/.test(value)) {
+            //     diagnosis = 'invalid';
+            //     errorMessage = 'Invalid object reference format (#/#/#)';
+            // }
+        }).then(function () {
+            return {
+                isValid: errorMessage ? false : true,
+                messageId: messageId,
+                errorMessage: errorMessage,
+                shortMessage: shortMessage,
+                diagnosis: diagnosis,
+            };
+        });
     }
 
     // function validateWorkspaceObjectName(value, constraints, options) {
@@ -127,11 +126,11 @@ define([
     // }
 
     function validate(value, spec, options) {
-        return validateWorkspaceObjectRef(value, spec.data.constraints, options)
+        return validateWorkspaceObjectRef(value, spec.data.constraints, options);
     }
 
     return {
         importString: importString,
-        validate: validate
+        validate: validate,
     };
 });

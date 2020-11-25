@@ -21,29 +21,22 @@
  * @module narrativeInit
  * @static
  */
-require([
-    'narrative_paths',
-    'require'
-], function (paths, require) {
+require(['narrative_paths', 'require'], function (paths, require) {
     require([
         'jquery',
         'bluebird',
         'narrativeConfig',
         'narrativeLogin',
-        'css!font-awesome'
-    ], function ($,
-        Promise,
-        Config,
-        Login) {
+        'css!font-awesome',
+    ], function ($, Promise, Config, Login) {
         'use strict';
         console.log('Initializing KBase Tree page.');
-        Config.updateConfig()
-            .then(function (config) {
-                require(['kbapi', 'narrativeLogin'], function (API, Login) {
-                    Login.init($('#signin-button'));
-                    console.log('Starting Jupyter tree');
-                    require(['tree/js/main']);
-                });
+        Config.updateConfig().then(function (config) {
+            require(['kbapi', 'narrativeLogin'], function (API, Login) {
+                Login.init($('#signin-button'));
+                console.log('Starting Jupyter tree');
+                require(['tree/js/main']);
             });
+        });
     });
 });

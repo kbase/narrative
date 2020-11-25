@@ -9,13 +9,7 @@
  * })
  */
 
-define('narrativeMocks', [
-    'jquery',
-    'uuid'
-], (
-    $,
-    UUID
-) => {
+define('narrativeMocks', ['jquery', 'uuid'], ($, UUID) => {
     'use strict';
     /**
      * Creates a mock Jupyter notebook cell of some type.
@@ -30,17 +24,14 @@ define('narrativeMocks', [
         $toolbar.append($icon);
         const metadata = kbaseCellType ? buildMockExtensionCellMetadata(kbaseCellType) : {};
         const mockCell = {
-            metadata: {kbase: metadata},
+            metadata: { kbase: metadata },
             cell_type: cellType,
             renderMinMax: () => {},
             element: $cellContainer,
             input: $('<div>').addClass('input'),
-            output: $('<div>').addClass('output')
+            output: $('<div>').addClass('output'),
         };
-        $cellContainer
-            .append($toolbar)
-            .append(mockCell.input)
-            .append(mockCell.output);
+        $cellContainer.append($toolbar).append(mockCell.input).append(mockCell.output);
         return mockCell;
     }
 
@@ -64,25 +55,24 @@ define('narrativeMocks', [
             attributes: {
                 id: new UUID(4).format(),
                 status: 'new',
-                created: (new Date()).toUTCString(),
+                created: new Date().toUTCString(),
                 title: '',
-                subtitle: ''
-            }
+                subtitle: '',
+            },
         };
-        switch(kbaseCellType) {
+        switch (kbaseCellType) {
             case 'app-bulk-import':
                 meta.bulkImportCell = {
                     'user-settings': {
-                        showCodeInputArea: false
+                        showCodeInputArea: false,
                     },
-                    inputs: {}
+                    inputs: {},
                 };
-                meta.attributes.title = 'Import from Staging Area',
-                meta.attributes.subtitle = 'Import files into your Narrative as data objects';
+                (meta.attributes.title = 'Import from Staging Area'),
+                    (meta.attributes.subtitle = 'Import files into your Narrative as data objects');
                 break;
             case 'app':
-                meta.appCell = {
-                };
+                meta.appCell = {};
                 break;
             default:
                 // if we don't know the cell type, return a blank metadata
@@ -104,17 +94,16 @@ define('narrativeMocks', [
         options = options || {};
         const cells = options.cells || [];
         return {
-            delete_cell: () => options.deleteCallback ? options.deleteCallback() : null,
+            delete_cell: () => (options.deleteCallback ? options.deleteCallback() : null),
             find_cell_index: () => 1,
             get_cells: () => cells,
             _fully_loaded: options.fullyLoaded,
-            cells: cells
+            cells: cells,
         };
     }
 
     return {
         buildMockCell: buildMockCell,
-        buildMockNotebook: buildMockNotebook
+        buildMockNotebook: buildMockNotebook,
     };
-
 });

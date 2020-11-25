@@ -1,46 +1,37 @@
- define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',        
-		'kbaseAuthenticatedWidget',
-        'kbase-generic-client-api'        
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-        Config,
-		kbaseAuthenticatedWidget,
-        GenericClient
-	) {
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig',
+    'kbaseAuthenticatedWidget',
+    'kbase-generic-client-api',
+], function (KBWidget, bootstrap, $, Config, kbaseAuthenticatedWidget, GenericClient) {
     var loadingImage = Config.get('loading_gif');
-        
+
     return KBWidget({
         name: 'kbaseRESKESearchResultDemo',
-        parent : kbaseAuthenticatedWidget,
+        parent: kbaseAuthenticatedWidget,
         version: '1.0.0',
 
         options: {
-            query: null
+            query: null,
         },
 
-        searchEngineURL: "https://ci.kbase.us/services/relationengine/",
+        searchEngineURL: 'https://ci.kbase.us/services/relationengine/',
         // searchEngineURL: "http://192.168.99.100:29999/",
-        srvVersion:"",
+        srvVersion: '',
         genericClient: null,
 
         PAGE_SIZE: 20,
-        searchText: "",
-        searchObjectType: "",
+        searchText: '',
+        searchObjectType: '',
         $container: null,
         $searchTypesResultPane: null,
         $searchObjectsResultPane: null,
 
-        listTypesInput:{
-            object_type:"data_type, but it is optional"
+        listTypesInput: {
+            object_type: 'data_type, but it is optional',
         },
-
 
         escapeSymbols: {
             '&': '&amp;',
@@ -52,119 +43,123 @@
             '`': '&#x60;',
             '=': '&#x3D;',
             '\n': ' ',
-            '\r': ''
+            '\r': '',
         },
 
         // examples...
-        listTypesOutput:{
-            "types": {
-                "Genome":{
-                    type_name: "Genome",
-                    type_ui_title: "Genome",
-                    keys: [{key_name:"key1", key_ui_title: "title1", key_value_type:"value_type"}],
+        listTypesOutput: {
+            types: {
+                Genome: {
+                    type_name: 'Genome',
+                    type_ui_title: 'Genome',
+                    keys: [
+                        { key_name: 'key1', key_ui_title: 'title1', key_value_type: 'value_type' },
+                    ],
                 },
-                "Feature":{
-                    type_name: "Feature",
-                    type_ui_title: "Feature",
-                    keys: [{key_name:"key1", key_ui_title: "title1", key_value_type:"value_type"}],
+                Feature: {
+                    type_name: 'Feature',
+                    type_ui_title: 'Feature',
+                    keys: [
+                        { key_name: 'key1', key_ui_title: 'title1', key_value_type: 'value_type' },
+                    ],
                 },
-                "Domain":{
-                    type_name: "Domain",
-                    type_ui_title: "Domain",
-                    keys: [{key_name:"key1", key_ui_title: "title1", key_value_type:"value_type"}],
-                }
-            }
-        },
-        searchTypesInput:{
-            match_filter:{
-                full_text_in_all: "text",
-                access_group_id: 123,
-                object_name: "name",
-                parent_guid: 234234,
-                timestamp: {},
-                lookupInKeys: {}
+                Domain: {
+                    type_name: 'Domain',
+                    type_ui_title: 'Domain',
+                    keys: [
+                        { key_name: 'key1', key_ui_title: 'title1', key_value_type: 'value_type' },
+                    ],
+                },
             },
-            access_filter:{}
         },
-
-        searchTypesOutput:{
-            type_to_count: {
-                "Genome": 140,
-                "Feature": 120,
-                "Domain": 10,
-            },
-            search_time: 123
-        },
-
-        searchObjectsInput:{
-            object_type: "object type",
+        searchTypesInput: {
             match_filter: {
-                full_text_in_all: "text",
+                full_text_in_all: 'text',
                 access_group_id: 123,
-                object_name: "name",
+                object_name: 'name',
                 parent_guid: 234234,
                 timestamp: {},
-                lookupInKeys: {}
+                lookupInKeys: {},
+            },
+            access_filter: {},
+        },
+
+        searchTypesOutput: {
+            type_to_count: {
+                Genome: 140,
+                Feature: 120,
+                Domain: 10,
+            },
+            search_time: 123,
+        },
+
+        searchObjectsInput: {
+            object_type: 'object type',
+            match_filter: {
+                full_text_in_all: 'text',
+                access_group_id: 123,
+                object_name: 'name',
+                parent_guid: 234234,
+                timestamp: {},
+                lookupInKeys: {},
             },
             sorting_rules: [],
             access_filter: {},
             pagination: {
                 start: 0,
-                count: 0    
+                count: 0,
             },
-            post_processing:{
+            post_processing: {
                 ids_only: false,
                 skip_info: false,
                 skip_keys: false,
                 skip_data: false,
-                data_includes: [] 
-            }
+                data_includes: [],
+            },
         },
         searchObjectsOutput: {
-            pagination :{
+            pagination: {
                 start: 21,
-                count: 40        
+                count: 40,
             },
             sorting_rules: [],
             objects: [
                 {
-                    guid:"234.432",
-                    parent_guid:"",
-                    object_name: "crp ",
+                    guid: '234.432',
+                    parent_guid: '',
+                    object_name: 'crp ',
                     timestamp: 1341834148,
                     parent_data: {},
-                    data : {},
-                    key_props: {"key1":"prop1", "key2":"prop2"}
+                    data: {},
+                    key_props: { key1: 'prop1', key2: 'prop2' },
                 },
                 {
-                    guid:"234.536",
-                    parent_guid:"5455323.3454",
-                    object_name: "lexA",
+                    guid: '234.536',
+                    parent_guid: '5455323.3454',
+                    object_name: 'lexA',
                     timestamp: 1341834148,
                     parent_data: {},
-                    data : {},
-                    key_props: {"key1":"prop1", "key2":"prop2"}
-                }
+                    data: {},
+                    key_props: { key1: 'prop1', key2: 'prop2' },
+                },
             ],
             total: 100,
-            search_time: 1234
+            search_time: 1234,
         },
 
-
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             this.pref = this.uuid();
 
             // Create a message pane
-            this.$messagePane = $("<div/>")
-                .addClass("kbwidget-message-pane kbwidget-hide-message")
+            this.$messagePane = $('<div/>')
+                .addClass('kbwidget-message-pane kbwidget-hide-message')
                 .appendTo(this.$elem);
 
             return this;
         },
 
-
-        buildKBaseSearchPanel: function(){
+        buildKBaseSearchPanel: function () {
             var self = this;
             var $panel = $(
                 `
@@ -192,62 +187,60 @@
             self.$container.append($panel);
 
             var query = self.options.query;
-            if( query != null && query.length > 0){
+            if (query != null && query.length > 0) {
                 $('#searchTypesImput').val(query);
             }
 
-            $('#searchTypesBtn')
-            .on('click', function (e) {
+            $('#searchTypesBtn').on('click', function (e) {
                 self.onSearchTypesClick();
             });
 
-            $('#searchTypesImput').keyup(function(e){
-                if(e.keyCode == 13)
-                {
+            $('#searchTypesImput').keyup(function (e) {
+                if (e.keyCode == 13) {
                     self.onSearchTypesClick();
                 }
             });
-
         },
 
-        onSearchTypesClick: function(){
-            var self = this;            
-            self.searchText = $("#searchTypesImput").val().trim();
+        onSearchTypesClick: function () {
+            var self = this;
+            self.searchText = $('#searchTypesImput').val().trim();
 
-            if( self.$searchObjectsResultPane != null){
+            if (self.$searchObjectsResultPane != null) {
                 self.$searchObjectsResultPane.remove();
-                self.$searchObjectsResultPane = null;                
+                self.$searchObjectsResultPane = null;
             }
 
-            if( self.$searchTypesResultPane != null){
+            if (self.$searchTypesResultPane != null) {
                 self.$searchTypesResultPane.remove();
-                self.$searchTypesResultPane = null;                
+                self.$searchTypesResultPane = null;
             }
 
             self.searchTypesInput = {
-                match_filter:{
+                match_filter: {},
+                access_filter: {
+                    with_private: 1,
                 },
-                access_filter:{
-                    with_private: 1
-                }
             };
 
-            if(self.searchText.length != 0 ){
+            if (self.searchText.length != 0) {
                 self.searchTypesInput.match_filter['full_text_in_all'] = self.searchText;
             }
 
-            self.genericClient.sync_call("KBaseRelationEngine.search_types",
-                    [self.searchTypesInput], function(data){
+            self.genericClient.sync_call(
+                'KBaseRelationEngine.search_types',
+                [self.searchTypesInput],
+                function (data) {
                     self.searchTypesOutput = data[0];
                     self.buildSearchTypesResultPane(self.searchTypesOutput);
                 },
-                function(error){
+                function (error) {
                     // self.clientError(error);
-                });
+                }
+            );
         },
 
-
-        buildSearchTypesResultPane: function(searchTypesOutput){
+        buildSearchTypesResultPane: function (searchTypesOutput) {
             var self = this;
             self.$searchTypesResultPane = $(
                 `
@@ -271,11 +264,11 @@
             );
             self.$container.append(self.$searchTypesResultPane);
 
-            var $searchTypeRestulsListGroup = $("#searchTypeRestulsListGroup");
+            var $searchTypeRestulsListGroup = $('#searchTypeRestulsListGroup');
 
             var types2counts = searchTypesOutput.type_to_count;
-            Object.keys(types2counts).forEach(function (dtype) { 
-                var count = types2counts[dtype]
+            Object.keys(types2counts).forEach(function (dtype) {
+                var count = types2counts[dtype];
                 $searchTypeRestulsListGroup.append(
                     $(
                         `
@@ -287,69 +280,69 @@
                     )
                 );
             });
-            $('.search_type_results a').click(function(evt) {
+            $('.search_type_results a').click(function (evt) {
                 self.searchObjectType = evt.target.text;
-                self.onSelectTypeResultClick(evt.target.text,{
+                self.onSelectTypeResultClick(evt.target.text, {
                     start: 0,
-                    count: self.PAGE_SIZE    
+                    count: self.PAGE_SIZE,
                 });
             });
-
         },
 
-        onSelectTypeResultClick: function(dType, pagination){
+        onSelectTypeResultClick: function (dType, pagination) {
             var self = this;
 
-            if( self.$searchObjectsResultPane != null){
+            if (self.$searchObjectsResultPane != null) {
                 self.$searchObjectsResultPane.remove();
-                self.$searchObjectsResultPane = null;                
+                self.$searchObjectsResultPane = null;
             }
 
             self.searchObjectsInput = {
                 object_type: dType,
-                match_filter: {
+                match_filter: {},
+                access_filter: {
+                    with_private: 1,
                 },
-                access_filter:{
-                    with_private: 1
-                },
-                pagination: pagination
+                pagination: pagination,
             };
 
-            if(self.searchText.length != 0 ){
+            if (self.searchText.length != 0) {
                 self.searchObjectsInput.match_filter['full_text_in_all'] = self.searchText;
             }
 
-            console.log("searchObjectsInput: ",  self.searchObjectsInput);
-            self.genericClient.sync_call("KBaseRelationEngine.search_objects",
-                    [self.searchObjectsInput], function(data){
+            console.log('searchObjectsInput: ', self.searchObjectsInput);
+            self.genericClient.sync_call(
+                'KBaseRelationEngine.search_objects',
+                [self.searchObjectsInput],
+                function (data) {
                     self.searchObjectsOutput = data[0];
                     self.buildSearchObjectsResultPane(self.searchObjectsOutput);
                 },
-                function(error){
+                function (error) {
                     // self.clientError(error);
-                });
+                }
+            );
         },
 
-        buildPagenator: function($container, searchObjectsOutput){
+        buildPagenator: function ($container, searchObjectsOutput) {
             var self = this;
-            var start  = searchObjectsOutput.pagination.start + 1;
+            var start = searchObjectsOutput.pagination.start + 1;
             var count = searchObjectsOutput.objects.length;
             var end = searchObjectsOutput.pagination.start + 1 + count - 1;
             var total = searchObjectsOutput.total;
-            var pageIndex = Math.floor((end-1)/self.PAGE_SIZE) + 1;
-            var pageTotal = Math.floor((total-1)/self.PAGE_SIZE) + 1;
+            var pageIndex = Math.floor((end - 1) / self.PAGE_SIZE) + 1;
+            var pageTotal = Math.floor((total - 1) / self.PAGE_SIZE) + 1;
 
-            var firstClass = (start > 1) ? "enabled" : "disabled";
-            var prevClass = (start > 1) ? "enabled" : "disabled";
+            var firstClass = start > 1 ? 'enabled' : 'disabled';
+            var prevClass = start > 1 ? 'enabled' : 'disabled';
 
-            // TODO problem with elasticsearch scroll            
-            var nextClass = (end < total && end < 10000 - self.PAGE_SIZE) ? "enabled" : "disabled";
-            var lastClass = (end < total && end < 10000 - self.PAGE_SIZE) ? "enabled" : "disabled";
-
+            // TODO problem with elasticsearch scroll
+            var nextClass = end < total && end < 10000 - self.PAGE_SIZE ? 'enabled' : 'disabled';
+            var lastClass = end < total && end < 10000 - self.PAGE_SIZE ? 'enabled' : 'disabled';
 
             $container.append(
-                 $(
-            `                
+                $(
+                    `                
                 <div class="row align-items-center" style="margin-top:30px">
                     <div class="col col-sm-1"></div>
                     <div class="col col-sm-11">                
@@ -362,58 +355,60 @@
                         </ul>
                     </div>
                 </div>
-            `));
+            `
+                )
+            );
 
-
-            $("#firstItem").click(function(e){
+            $('#firstItem').click(function (e) {
                 self.onSelectTypeResultClick(self.searchObjectType, {
                     start: 0,
-                    count: self.PAGE_SIZE
+                    count: self.PAGE_SIZE,
                 });
             });
 
-            $("#prevItem").click(function(e){
+            $('#prevItem').click(function (e) {
                 var newStart = searchObjectsOutput.pagination.start - self.PAGE_SIZE;
-                if(newStart < 0) newStart = 0;
+                if (newStart < 0) newStart = 0;
                 self.onSelectTypeResultClick(self.searchObjectType, {
                     start: newStart,
-                    count: self.PAGE_SIZE
+                    count: self.PAGE_SIZE,
                 });
             });
 
-
-            $("#nextItem").click(function(e){
-                var newStart = searchObjectsOutput.pagination.start + searchObjectsOutput.pagination.count;
+            $('#nextItem').click(function (e) {
+                var newStart =
+                    searchObjectsOutput.pagination.start + searchObjectsOutput.pagination.count;
                 self.onSelectTypeResultClick(self.searchObjectType, {
-                    start:newStart,
-                    count: self.PAGE_SIZE
+                    start: newStart,
+                    count: self.PAGE_SIZE,
                 });
             });
 
-            $("#lastItem").click(function(e){
-                var newStart = Math.floor( searchObjectsOutput.total/self.PAGE_SIZE )*self.PAGE_SIZE;    
+            $('#lastItem').click(function (e) {
+                var newStart =
+                    Math.floor(searchObjectsOutput.total / self.PAGE_SIZE) * self.PAGE_SIZE;
 
-                // TODO problem with elasticsearch scroll                
-                if(newStart > 10000 - self.PAGE_SIZE){
+                // TODO problem with elasticsearch scroll
+                if (newStart > 10000 - self.PAGE_SIZE) {
                     newStart = 10000 - self.PAGE_SIZE;
                 }
                 self.onSelectTypeResultClick(self.searchObjectType, {
-                    start:newStart,
-                    count: self.PAGE_SIZE
+                    start: newStart,
+                    count: self.PAGE_SIZE,
                 });
             });
         },
 
-        buildSearchObjectsResultPane: function(searchObjectsOutput){
+        buildSearchObjectsResultPane: function (searchObjectsOutput) {
             var self = this;
             var dtype = self.searchObjectType;
-            var start  = searchObjectsOutput.pagination.start + 1;
+            var start = searchObjectsOutput.pagination.start + 1;
             var count = searchObjectsOutput.objects.length;
             var end = searchObjectsOutput.pagination.start + 1 + count - 1;
             var total = searchObjectsOutput.total;
 
             self.$searchObjectsResultPane = $(
-            `
+                `
                 <div class="panel panel-default" style="margin-top:20px;">
                     <div class="panel-heading">...</div>
                     <div id="searchResultPanel" class="panel-body" >
@@ -432,20 +427,21 @@
 
                     </div>
                 </div>
-            `);   
-
+            `
+            );
 
             self.$container.append(self.$searchObjectsResultPane);
-            var $searchResultPanel = $("#searchResultPanel");
+            var $searchResultPanel = $('#searchResultPanel');
 
-            $.each( searchObjectsOutput.objects, function(i, value){
-                $searchResultPanel.append($(
-                    `
+            $.each(searchObjectsOutput.objects, function (i, value) {
+                $searchResultPanel.append(
+                    $(
+                        `
                       <div class="row" style="margin-top:30px;">
                         <div class="col col-sm-1">
                         </div>
                         <div class="col col-sm-1">
-                            <b>${ (i+start) }. </b>
+                            <b>${i + start}. </b>
                         </div>
                         <div id="row${i}" class="col col-sm-8" style="background-color:#EEFFEE;">
                             <b>GUID:</b> ${value.guid} <br>
@@ -455,73 +451,66 @@
                         </div>
                       </div>
                     `
-                ));
+                    )
+                );
                 var $row = $(`#row${i}`);
                 Object.keys(value.key_props).forEach(function (key) {
                     var val = self.escapeHtml(value.key_props[key]);
-                    if(val.length > 100){
-                        val = val.substring(0,100) + "...";
+                    if (val.length > 100) {
+                        val = val.substring(0, 100) + '...';
                     }
                     $row.append($(` <b>${key}:</b> ${val}  <br> `));
-                 });
-
-
+                });
             });
             $searchResultPanel.append($('<hr>'));
             self.buildPagenator($searchResultPanel, searchObjectsOutput);
 
-
-            var $searchTypeRestulsListGroup = $("#searchTypeRestulsListGroup");
+            var $searchTypeRestulsListGroup = $('#searchTypeRestulsListGroup');
         },
 
-
-        loggedInCallback: function(event, auth) {
-
+        loggedInCallback: function (event, auth) {
             this.genericClient = new GenericClient(this.searchEngineURL, auth, null, false);
             this.render();
             return this;
         },
 
-        render: function(){
+        render: function () {
             var self = this;
-            var $container = $("<div/>");
-            self.$elem.append( $container );
+            var $container = $('<div/>');
+            self.$elem.append($container);
             self.$container = $container;
 
             self.loading(false);
             self.buildKBaseSearchPanel();
         },
 
-        loading: function(isLoading) {
-            if (isLoading)
-                this.showMessage("<img src='" + loadingImage + "'/>");
-            else
-                this.hideMessage();
+        loading: function (isLoading) {
+            if (isLoading) this.showMessage("<img src='" + loadingImage + "'/>");
+            else this.hideMessage();
         },
 
-        showMessage: function(message) {
-            var span = $("<span/>").append(message);
+        showMessage: function (message) {
+            var span = $('<span/>').append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();
         },
 
-        hideMessage: function() {
+        hideMessage: function () {
             this.$messagePane.hide();
             this.$messagePane.empty();
         },
 
-        clientError: function(error){
+        clientError: function (error) {
             this.loading(false);
             this.showMessage(error.error.error);
-        },        
+        },
 
-        escapeHtml:  function(string) {
+        escapeHtml: function (string) {
             var self = this;
             return String(string).replace(/[&<>"'`=\/]/g, function (s) {
                 return self.escapeSymbols[s];
             });
-        }        
+        },
     });
 });
-

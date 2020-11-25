@@ -5,45 +5,44 @@ define([
     'api/auth',
     'kbase/js/widgets/narrative_core/upload/fileUploadWidget',
     'kbase/js/widgets/narrative_core/upload/stagingAreaViewer',
-    'base/js/namespace'
-], function(
-    $,
-    KBWidget,
-    Config,
-    Auth,
-    FileUploadWidget,
-    StagingAreaViewer,
-    Jupyter
-) {
+    'base/js/namespace',
+], function ($, KBWidget, Config, Auth, FileUploadWidget, StagingAreaViewer, Jupyter) {
     'use strict';
     return new KBWidget({
         name: 'kbaseNarrativeStagingDataTab',
         $myFiles: $('<div>'),
-        minRefreshTime: 1000,   // minimum ms required before letting updateView do its update
-        lastRefresh: 0,         // the last time (in ms since epoch) that updateView was run
-        updateTimeout: null,    // a Timeout that reconciles the above times (resets to null)
+        minRefreshTime: 1000, // minimum ms required before letting updateView do its update
+        lastRefresh: 0, // the last time (in ms since epoch) that updateView was run
+        updateTimeout: null, // a Timeout that reconciles the above times (resets to null)
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             this.path = '/';
         },
 
-        getUserInfo: function() {
-            const auth = Auth.make({url: Config.url('auth')});
+        getUserInfo: function () {
+            const auth = Auth.make({ url: Config.url('auth') });
             let userInfo;
-            return auth.getCurrentProfile(auth.getAuthToken())
-                .then(info => {
+            return auth
+                .getCurrentProfile(auth.getAuthToken())
+                .then((info) => {
                     userInfo = {
                         user: info.user,
-                        globusLinked: info.idents && info.idents.some(ident => ident.provider.toLocaleLowerCase() === 'globus')
+                        globusLinked:
+                            info.idents &&
+                            info.idents.some(
+                                (ident) => ident.provider.toLocaleLowerCase() === 'globus'
+                            ),
                     };
                     return userInfo;
                 })
                 .catch(() => {
-                    console.error('An error occurred while determining whether the user account is linked to Globus. Continuing without links.');
+                    console.error(
+                        'An error occurred while determining whether the user account is linked to Globus. Continuing without links.'
+                    );
                     userInfo = {
                         user: Jupyter.narrative.userId,
-                        globusLinked: false
+                        globusLinked: false,
                     };
                     return userInfo;
                 })
@@ -52,52 +51,46 @@ define([
                 });
         },
 
-        activate: function() {
+        activate: function () {
             this.stagingAreaViewer.activate();
         },
 
-        deactivate: function() {
+        deactivate: function () {
             this.stagingAreaViewer.deactivate();
         },
 
-        updatePath: function(newPath) {
+        updatePath: function (newPath) {
             this.path = newPath;
             this.uploadWidget.setPath(newPath);
             this.stagingAreaViewer.setPath(newPath);
         },
 
-        render: function() {
-            return this.getUserInfo()
-                .then(userInfo => {
-                    const $mainElem = $('<div>')
-                        .addClass('kb-data-staging__container');
-                    const $dropzoneElem = $('<div>');
-                    this.$elem
-                        .empty()
-                        .append($mainElem
-                            .append($dropzoneElem)
-                            .append(this.$myFiles));
+        render: function () {
+            return this.getUserInfo().then((userInfo) => {
+                const $mainElem = $('<div>').addClass('kb-data-staging__container');
+                const $dropzoneElem = $('<div>');
+                this.$elem.empty().append($mainElem.append($dropzoneElem).append(this.$myFiles));
 
-                    this.uploadWidget = new FileUploadWidget($dropzoneElem, {
-                        path: this.path,
-                        userInfo: userInfo,
-                        userId: Jupyter.narrative.userId
-                    });
-
-                    this.uploadWidget.dropzone.on('complete', (file) => {
-                        if(file.status !== 'canceled') {
-                            this.updateView();
-                        }
-                    });
-
-                    this.stagingAreaViewer = new StagingAreaViewer(this.$myFiles, {
-                        path: this.path,
-                        updatePathFn: this.updatePath.bind(this),
-                        userInfo: userInfo
-                    });
-
-                    this.updateView();
+                this.uploadWidget = new FileUploadWidget($dropzoneElem, {
+                    path: this.path,
+                    userInfo: userInfo,
+                    userId: Jupyter.narrative.userId,
                 });
+
+                this.uploadWidget.dropzone.on('complete', (file) => {
+                    if (file.status !== 'canceled') {
+                        this.updateView();
+                    }
+                });
+
+                this.stagingAreaViewer = new StagingAreaViewer(this.$myFiles, {
+                    path: this.path,
+                    updatePathFn: this.updatePath.bind(this),
+                    userInfo: userInfo,
+                });
+
+                this.updateView();
+            });
         },
 
         /**
@@ -109,7 +102,7 @@ define([
          * If the next time this is called is less than some minRefreshTime apart, this
          * makes a timeout with the time difference.
          */
-        updateView: function() {
+        updateView: function () {
             // this does the staging area re-render, then tracks the time
             // it was last done.
             const renderStagingArea = () => {
@@ -129,10 +122,9 @@ define([
                         this.updateTimeout = null;
                     }, refreshDiff);
                 }
-            }
-            else {
+            } else {
                 renderStagingArea();
             }
-        }
+        },
     });
 });

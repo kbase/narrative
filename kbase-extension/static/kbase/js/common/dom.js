@@ -1,12 +1,11 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
-define([
-    'kb_common/html'
-], function (html) {
+define(['kb_common/html'], function (html) {
     'use strict';
     var t = html.tag,
-        div = t('div'), span = t('span'),
+        div = t('div'),
+        span = t('span'),
         button = t('button');
 
     function factory(config) {
@@ -20,9 +19,11 @@ define([
             if (typeof names === 'string') {
                 names = names.split('.');
             }
-            var selector = names.map(function (name) {
-                return '[data-element="' + name + '"]';
-            }).join(' ');
+            var selector = names
+                .map(function (name) {
+                    return '[data-element="' + name + '"]';
+                })
+                .join(' ');
 
             return container.querySelector(selector);
         }
@@ -35,7 +36,7 @@ define([
             }
             var selector = '[data-button="' + name + '"]',
                 buttonNode = container.querySelector(selector);
-            
+
             if (!buttonNode) {
                 throw new Error('Button ' + name + ' not found');
             }
@@ -46,9 +47,11 @@ define([
             if (typeof names === 'string') {
                 names = [names];
             }
-            var selector = names.map(function (dataSelector) {
-                return '[data-' + dataSelector.type + '="' + dataSelector.name + '"]';
-            }).join(' ');
+            var selector = names
+                .map(function (dataSelector) {
+                    return '[data-' + dataSelector.type + '="' + dataSelector.name + '"]';
+                })
+                .join(' ');
 
             return container.querySelector(selector);
         }
@@ -61,20 +64,23 @@ define([
             return events.addEvent({
                 type: 'click',
                 handler: function (e) {
-                    bus.send({event: e}, {key: {type: eventName}});
-                }
+                    bus.send({ event: e }, { key: { type: eventName } });
+                },
             });
         }
 
         function makeButton(label, name, options) {
             var klass = options.type || 'default',
                 events = options.events;
-            return button({
-                type: 'button',
-                class: ['btn', 'btn-' + klass].join(' '),
-                dataButton: name,
-                id: addButtonClickEvent(events, name)
-            }, label);
+            return button(
+                {
+                    type: 'button',
+                    class: ['btn', 'btn-' + klass].join(' '),
+                    dataButton: name,
+                    id: addButtonClickEvent(events, name),
+                },
+                label
+            );
         }
 
         function enableButton(name) {
@@ -88,22 +94,22 @@ define([
         function setButtonLabel(name, label) {
             getButton(name).innerHTML = label;
         }
-        
+
         // Hmm, something like this, but need to think it through more.
-//        function setButton(name, options) {            
-//            var buttonNode = getButton(name);
-//            if (options.label) {
-//                buttonNode.innerHTML = options.label;
-//            }
-//            if (options.classes) {
-//                // who no classList.empty()?
-//                options.className = null;
-//                options.classes.forEach(function (klass) {
-//                    buttonNode.classList.add(klass);
-//                });
-//            }
-//                
-//        }
+        //        function setButton(name, options) {
+        //            var buttonNode = getButton(name);
+        //            if (options.label) {
+        //                buttonNode.innerHTML = options.label;
+        //            }
+        //            if (options.classes) {
+        //                // who no classList.empty()?
+        //                options.className = null;
+        //                options.classes.forEach(function (klass) {
+        //                    buttonNode.classList.add(klass);
+        //                });
+        //            }
+        //
+        //        }
 
         function ensureOriginalDisplayStyle(el) {
             if (el.getAttribute('data-original-display-style') === null) {
@@ -133,13 +139,11 @@ define([
         }
 
         function makePanel(title, elementName) {
-            return  div({class: 'panel panel-primary'}, [
-                div({class: 'panel-heading'}, [
-                    div({class: 'panel-title'}, title)
+            return div({ class: 'panel panel-primary' }, [
+                div({ class: 'panel-heading' }, [div({ class: 'panel-title' }, title)]),
+                div({ class: 'panel-body' }, [
+                    div({ dataElement: elementName, class: 'container-fluid' }),
                 ]),
-                div({class: 'panel-body'}, [
-                    div({dataElement: elementName, class: 'container-fluid'})
-                ])
             ]);
         }
 
@@ -150,45 +154,48 @@ define([
                 classes.push('hidden');
                 // style.display = 'none';
             }
-            return  div({class: classes.join(' '), dataElement: args.name}, [
-                (function () { 
+            return div({ class: classes.join(' '), dataElement: args.name }, [
+                (function () {
                     if (args.title) {
-                        return div({class: 'panel-heading'}, [
-                            div({class: 'panel-title'}, args.title)
+                        return div({ class: 'panel-heading' }, [
+                            div({ class: 'panel-title' }, args.title),
                         ]);
-                    }                    
-                }()),
-                div({class: 'panel-body'}, [
-                    args.body
-                ])
+                    }
+                })(),
+                div({ class: 'panel-body' }, [args.body]),
             ]);
         }
 
         function makeCollapsiblePanel(title, elementName) {
             var collapseId = html.genId();
 
-            return div({class: 'panel panel-default'}, [
-                div({class: 'panel-heading'}, [
-                    div({class: 'panel-title'}, span({
-                        class: 'collapsed',
-                        dataToggle: 'collapse',
-                        dataTarget: '#' + collapseId,
-                        style: {cursor: 'pointer'}
-                    },
-                        title
-                        ))
+            return div({ class: 'panel panel-default' }, [
+                div({ class: 'panel-heading' }, [
+                    div(
+                        { class: 'panel-title' },
+                        span(
+                            {
+                                class: 'collapsed',
+                                dataToggle: 'collapse',
+                                dataTarget: '#' + collapseId,
+                                style: { cursor: 'pointer' },
+                            },
+                            title
+                        )
+                    ),
                 ]),
-                div({id: collapseId, class: 'panel-collapse collapse'},
-                    div({class: 'panel-body'}, [
-                        div({dataElement: elementName, class: 'container-fluid'})
+                div(
+                    { id: collapseId, class: 'panel-collapse collapse' },
+                    div({ class: 'panel-body' }, [
+                        div({ dataElement: elementName, class: 'container-fluid' }),
                     ])
-                    )
+                ),
             ]);
         }
 
         function buildCollapsiblePanel(args) {
             var collapseId = html.genId(),
-                type = args.type || 'primary',                
+                type = args.type || 'primary',
                 classes = ['panel', 'panel-' + type],
                 collapseClasses = ['panel-collapse collapse'],
                 toggleClasses = [];
@@ -202,25 +209,28 @@ define([
                 toggleClasses.push('collapsed');
             }
 
-            return div({class: classes.join(' '), dataElement: args.name}, [
-                div({class: 'panel-heading'}, [
-                    div({class: 'panel-title'}, span({
-                        class: toggleClasses.join(' '),
-                        dataToggle: 'collapse',
-                        dataTarget: '#' + collapseId,
-                        style: {cursor: 'pointer'}
-                    },
-                        args.title
-                        ))
+            return div({ class: classes.join(' '), dataElement: args.name }, [
+                div({ class: 'panel-heading' }, [
+                    div(
+                        { class: 'panel-title' },
+                        span(
+                            {
+                                class: toggleClasses.join(' '),
+                                dataToggle: 'collapse',
+                                dataTarget: '#' + collapseId,
+                                style: { cursor: 'pointer' },
+                            },
+                            args.title
+                        )
+                    ),
                 ]),
-                div({id: collapseId, class: collapseClasses.join(' ')},
-                    div({class: 'panel-body'}, [
-                        args.body
-                    ])
-                    )
+                div(
+                    { id: collapseId, class: collapseClasses.join(' ') },
+                    div({ class: 'panel-body' }, [args.body])
+                ),
             ]);
         }
-        
+
         function collapsePanel(path) {
             var node = getElement(path);
             if (!node) {
@@ -229,7 +239,7 @@ define([
             var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
-            
+
             collapseToggle.classList.add('collapsed');
             collapseToggle.setAttribute('aria-expanded', 'false');
             collapseTarget.classList.remove('in');
@@ -243,7 +253,7 @@ define([
             var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
-            
+
             collapseToggle.classList.remove('collapsed');
             collapseToggle.setAttribute('aria-expanded', 'true');
             collapseTarget.classList.add('in');
@@ -264,7 +274,7 @@ define([
         }
 
         function na() {
-            return span({style: {fontStyle: 'italic', color: 'orange'}}, 'NA');
+            return span({ style: { fontStyle: 'italic', color: 'orange' } }, 'NA');
         }
 
         return {
@@ -287,13 +297,13 @@ define([
             expandPanel: expandPanel,
             createNode: createNode,
             setContent: setContent,
-            na: na
+            na: na,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

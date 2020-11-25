@@ -1,8 +1,4 @@
-define([
-    'bluebird'
-], function (
-    Promise
-) {
+define(['bluebird'], function (Promise) {
     function copyValue(obj) {
         if (obj !== undefined) {
             return JSON.parse(JSON.stringify(obj));
@@ -21,6 +17,6 @@ define([
 
     return Object.freeze({
         copy: copyValue,
-        pRequire: pRequire
+        pRequire: pRequire,
     });
 });

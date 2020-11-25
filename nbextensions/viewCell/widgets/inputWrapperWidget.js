@@ -1,6 +1,4 @@
-define([
-    'kb_common/html'
-], function (html) {
+define(['kb_common/html'], function (html) {
     'use strict';
     var t = html.tag,
         div = t('div');
@@ -10,7 +8,7 @@ define([
             wrappedId = html.genId();
 
         function layout() {
-            return div({id: wrappedId});
+            return div({ id: wrappedId });
         }
 
         function attach(node) {
@@ -34,13 +32,13 @@ define([
         return {
             attach: attach,
             start: start,
-            run: run
+            run: run,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -11,17 +11,8 @@ define([
     '../inputUtils',
 
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props,
-    Runtime,
-    inputUtils
-) {
+    'css!font-awesome',
+], function (Promise, html, Validation, Events, UI, Props, Runtime, inputUtils) {
     'use strict';
 
     var t = html.tag,
@@ -69,29 +60,25 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-
-
         // VALIDATION
 
         function importControlValue() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 return Validation.importString(getControlValue());
             });
         }
 
         function validate(value) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 return Validation.validate(value, spec);
             });
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function(result) {
-                    channel.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then(function (result) {
+                channel.emit('validation', result);
+            });
         }
-
 
         // DOM & RENDERING
 
@@ -108,31 +95,31 @@ define([
             var editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
-                handler: function(e) {
+                handler: function (e) {
                     channel.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function() {
+                    autoChangeTimer = window.setTimeout(function () {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
-                }
+                },
             };
         }
 
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     cancelTouched();
                     importControlValue()
-                        .then(function(value) {
+                        .then(function (value) {
                             model.setItem('value', value);
                             channel.emit('changed', {
-                                newValue: value
+                                newValue: value,
                             });
                             return validate(value);
                         })
-                        .then(function(result) {
+                        .then(function (result) {
                             if (result.isValid) {
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
@@ -146,7 +133,7 @@ define([
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
-                                        message: result.errorMessage
+                                        message: result.errorMessage,
                                     });
                                     ui.setContent('input-container.message', message.content);
                                     message.events.attachEvents();
@@ -154,33 +141,34 @@ define([
                             }
                             channel.emit('validation', result);
                         })
-                        .catch(function(err) {
+                        .catch(function (err) {
                             channel.emit('validation', {
                                 isValid: false,
                                 diagnosis: 'invalid',
-                                errorMessage: err.message
+                                errorMessage: err.message,
                             });
                         });
-                }
+                },
             };
         }
 
         function makeInputControl(events) {
             return input({
                 id: events.addEvents({
-                    events: [handleTouched(), handleChanged()]
+                    events: [handleTouched(), handleChanged()],
                 }),
                 class: 'form-control',
-                dataElement: 'input'
+                dataElement: 'input',
             });
         }
 
         function render(events) {
-            return div({
-                dataElement: 'input-container'
-            }, [
-                makeInputControl(events)
-            ]);
+            return div(
+                {
+                    dataElement: 'input-container',
+                },
+                [makeInputControl(events)]
+            );
         }
 
         // EVENT HANDLERS
@@ -195,15 +183,13 @@ define([
             }
         }
 
-
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
-
 
                 var events = Events.make();
                 container.innerHTML = render(events);
@@ -212,15 +198,15 @@ define([
                 syncModelToControl();
                 autoValidate();
 
-                channel.on('reset-to-defaults', function() {
+                channel.on('reset-to-defaults', function () {
                     resetModelValue();
                 });
-                channel.on('update', function(message) {
+                channel.on('update', function (message) {
                     setModelValue(message.value);
                     syncModelToControl();
                     autoValidate();
                 });
-                channel.on('focus', function() {
+                channel.on('focus', function () {
                     doFocus();
                 });
                 // channel.emit('sync');
@@ -228,7 +214,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -240,25 +226,25 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: function() {
+            onUpdate: function () {
                 //syncModelToControl();
                 //autoValidate();
-            }
+            },
         });
 
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

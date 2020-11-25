@@ -5,3 +5,9 @@ js-coverage
 kbase-extension/static/ext_components
 kbase-extension/static/ext_packages
 kbase-extension/static/kbase/js/patched-components
+kbase-extension/static/kbase/js/widgets/vis/plants/kbasePMIBarchart.js
+kbase-extension/static/kbase/js/widgets/vis/kbaseTreechart.js
+kbase-extension/static/kbase/js/widgets/narrative_core/kbaseNarrativeOutputCell.js
+kbase-extension/static/kbase/js/widgets/narrative_core/kbaseNarrativeMethodCell.js
+kbase-extension/static/kbase/js/widgets/narrative_core/catalog/kbaseCatalogBrowser.js
+kbase-extension/static/kbase/js/widgets/function_output/kbaseGenomeAnnotationViewer.js

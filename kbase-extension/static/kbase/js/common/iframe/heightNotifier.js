@@ -1,16 +1,11 @@
-define([
-    './messages'
-], function (IFrameMessages) {
-
-
-// interface ConstructorParams {
-//     interval: number,
-//     messageManager: IFrameMessages,
-//     nodeGetter: Function
-// }
+define(['./messages'], function (IFrameMessages) {
+    // interface ConstructorParams {
+    //     interval: number,
+    //     messageManager: IFrameMessages,
+    //     nodeGetter: Function
+    // }
 
     function factory(config) {
-
         var resizeCheckInterval = config.interval;
         var messageManager = config.messageManager;
         var nodeGetter = config.nodeGetter;
@@ -30,7 +25,7 @@ define([
         function sendSize() {
             messageManager.send('parent', {
                 name: 'rendered',
-                height: getHeight()
+                height: getHeight(),
             });
         }
 
@@ -61,13 +56,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

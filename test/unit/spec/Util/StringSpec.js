@@ -4,29 +4,25 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define ([
-    'util/string'
-], function(
-    StringUtil
-) {
+define(['util/string'], function (StringUtil) {
     'use strict';
 
-    describe('KBase String Utility function module', function() {
-        it('uuid() should create a uuid', function() {
+    describe('KBase String Utility function module', function () {
+        it('uuid() should create a uuid', function () {
             var uuid = StringUtil.uuid();
             expect(uuid.length).toBe(36);
         });
 
-        it('uuid() should create a unique uuid', function() {
+        it('uuid() should create a unique uuid', function () {
             var uuid1 = StringUtil.uuid();
             var uuid2 = StringUtil.uuid();
             expect(uuid1).not.toBe(uuid2);
         });
 
-        it('safeJSONStringify should stringify a normal object', function() {
+        it('safeJSONStringify should stringify a normal object', function () {
             var plainObj = {
                 a: 1,
-                b: 'a string'
+                b: 'a string',
             };
 
             var jsonified = StringUtil.safeJSONStringify(plainObj);
@@ -36,11 +32,11 @@ define ([
             expect(jsonified).toContain('"b":"a string"');
         });
 
-        it('safeJSONStringify should HTML-escape quotes', function() {
+        it('safeJSONStringify should HTML-escape quotes', function () {
             var quoteObj = {
                 a: 1,
                 b: 'a "string"',
-                c: "another 'string'"
+                c: "another 'string'",
             };
 
             var jsonified = StringUtil.safeJSONStringify(quoteObj);
@@ -49,7 +45,7 @@ define ([
             expect(jsonified).toContain('"c":"another &apos;string&apos;"');
         });
 
-        it('readableBytes should return reasonable values', function() {
+        it('readableBytes should return reasonable values', function () {
             expect(StringUtil.readableBytes(1000)).toBe('1000 B');
             expect(StringUtil.readableBytes(0)).toBe('0 B');
             expect(StringUtil.readableBytes(10000)).toBe('9.77 KB');
@@ -59,29 +55,30 @@ define ([
             expect(StringUtil.readableBytes(99999999999999999999999999999)).toBe('82718.06 YB');
         });
 
-        it('pretty print JSON should do exactly that', function() {
+        it('pretty print JSON should do exactly that', function () {
             var obj = {
                 a: 1,
                 b: true,
                 c: [1, 2, 3],
                 d: {
-                    e: "foo",
-                    f: null
-                }
+                    e: 'foo',
+                    f: null,
+                },
             };
-            var result = '{\n' +
-                         '  <span class="key">"a":</span> <span class="number">1</span>,\n' +
-                         '  <span class="key">"b":</span> <span class="boolean">true</span>,\n' +
-                         '  <span class="key">"c":</span> [\n' +
-                         '    <span class="number">1</span>,\n' +
-                         '    <span class="number">2</span>,\n' +
-                         '    <span class="number">3</span>\n' +
-                         '  ],\n' +
-                         '  <span class="key">"d":</span> {\n' +
-                         '    <span class="key">"e":</span> <span class="string">"foo"</span>,\n' +
-                         '    <span class="key">"f":</span> <span class="null">null</span>\n' +
-                         '  }\n' +
-                         '}';
+            var result =
+                '{\n' +
+                '  <span class="key">"a":</span> <span class="number">1</span>,\n' +
+                '  <span class="key">"b":</span> <span class="boolean">true</span>,\n' +
+                '  <span class="key">"c":</span> [\n' +
+                '    <span class="number">1</span>,\n' +
+                '    <span class="number">2</span>,\n' +
+                '    <span class="number">3</span>\n' +
+                '  ],\n' +
+                '  <span class="key">"d":</span> {\n' +
+                '    <span class="key">"e":</span> <span class="string">"foo"</span>,\n' +
+                '    <span class="key">"f":</span> <span class="null">null</span>\n' +
+                '  }\n' +
+                '}';
             expect(StringUtil.prettyPrintJSON(obj)).toBe(result);
         });
 
@@ -90,9 +87,9 @@ define ([
                 ['foo', 'foo'],
                 ['<script>', '&lt;script&gt;'],
                 ['&<>"\'', '&amp;&lt;&gt;&quot;&#39;'],
-                ['some string', 'some string']
+                ['some string', 'some string'],
             ];
-            tests.forEach(t => {
+            tests.forEach((t) => {
                 expect(StringUtil.escape(t[0])).toEqual(t[1]);
             });
         });
@@ -102,11 +99,11 @@ define ([
                 ['', ''],
                 [false, false],
                 [undefined, undefined],
-                [null, null]
+                [null, null],
             ];
-            tests.forEach(t => {
+            tests.forEach((t) => {
                 expect(StringUtil.escape(t[0])).toEqual(t[1]);
             });
-        })
+        });
     });
 });

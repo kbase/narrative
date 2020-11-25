@@ -13,22 +13,9 @@ define([
     'kb_service/client/shock',
     '../validators/text',
 
-
     'bootstrap',
-    'css!font-awesome'
-], function (
-    Promise,
-    $,
-    Jupyter,
-    html,
-    Events,
-    UI,
-    Runtime,
-    Props,
-    UJS,
-    Shock,
-    Validation
-) {
+    'css!font-awesome',
+], function (Promise, $, Jupyter, html, Events, UI, Runtime, Props, UJS, Shock, Validation) {
     'use strict';
 
     // Constants
@@ -70,12 +57,11 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-        // CONTROL 
+        // CONTROL
 
         function setControlValue(newValue) {
             ui.getElement('input-container.input').value = newValue;
         }
-
 
         // VALIDATION
 
@@ -86,10 +72,9 @@ define([
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function (result) {
-                    channel.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then(function (result) {
+                channel.emit('validation', result);
+            });
         }
 
         function makeViewControl(currentValue) {
@@ -97,7 +82,7 @@ define([
                 class: 'form-control',
                 readonly: true,
                 dataElement: 'input',
-                value: currentValue
+                value: currentValue,
             });
         }
 
@@ -108,21 +93,21 @@ define([
 
                 ui.setContent('input-container', inputControl);
                 events.attachEvents(container);
-            })
-            .then(function () {
+            }).then(function () {
                 return autoValidate();
             });
         }
 
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            var content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -146,7 +131,6 @@ define([
                 autoValidate();
                 syncModelToControl();
 
-
                 channel.on('reset-to-defaults', function (message) {
                     resetModelValue();
                 });
@@ -168,23 +152,23 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
             onUpdate: function () {
                 //syncModelToControl();
                 //autoValidate();
-            }
+            },
         });
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

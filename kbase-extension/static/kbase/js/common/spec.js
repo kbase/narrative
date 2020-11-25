@@ -11,8 +11,8 @@ define([
     'common/lang',
     'common/sdk',
     'common/specValidation',
-    'widgets/appWidgets2/validators/resolver'
-], function(require, Promise, lang, sdk, Validation, validationResolver) {
+    'widgets/appWidgets2/validators/resolver',
+], function (require, Promise, lang, sdk, Validation, validationResolver) {
     'use strict';
 
     function factory(config) {
@@ -37,8 +37,10 @@ define([
          */
         function makeEmptyModel() {
             var model = {};
-            spec.parameters.layout.forEach(function(id) {
-                model[id] = spec.parameters.specs[id].data.defaultValue || spec.parameters.specs[id].data.nullValue;
+            spec.parameters.layout.forEach(function (id) {
+                model[id] =
+                    spec.parameters.specs[id].data.defaultValue ||
+                    spec.parameters.specs[id].data.nullValue;
             });
             return model;
         }
@@ -54,7 +56,7 @@ define([
         */
         function makeDefaultedModel() {
             var model = {};
-            spec.parameters.layout.forEach(function(id) {
+            spec.parameters.layout.forEach(function (id) {
                 var paramSpec = spec.parameters.specs[id];
                 var modelValue;
                 if (paramSpec.data.type === 'struct') {
@@ -76,8 +78,8 @@ define([
             int: 'int',
             float: 'float',
             sequence: 'sequence',
-            struct: 'struct'
-        }
+            struct: 'struct',
+        };
 
         function getValidatorModule(fieldSpec) {
             var moduleName = typeToValidatorModule[fieldSpec.data.type];
@@ -91,7 +93,7 @@ define([
             // TODO: spec at the top level should be a struct...
             // return;
             var validationMap = {};
-            spec.parameters.layout.forEach(function(id) {
+            spec.parameters.layout.forEach(function (id) {
                 var fieldValue = model[id];
                 var fieldSpec = spec.parameters.specs[id];
                 validationMap[id] = validationResolver.validate(fieldValue, fieldSpec);
@@ -103,13 +105,13 @@ define([
             getSpec: getSpec,
             makeEmptyModel: makeEmptyModel,
             makeDefaultedModel: makeDefaultedModel,
-            validateModel: validateModel
+            validateModel: validateModel,
         });
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

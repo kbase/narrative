@@ -8,8 +8,7 @@ define([
     'kbaseNarrativeDataPanel',
     'kbaseNarrativeAppPanel',
     'kbaseNarrativeManagePanel',
-],
-function(
+], function (
     KBWidget,
     $,
     Jupyter,
@@ -43,67 +42,89 @@ function(
          * Does the initial panel layout - tabs and spots for each widget
          * It then instantiates them, but not until told to render (unless autorender = true)
          */
-        init: function(options) {
+        init: function (options) {
             this._super(options);
-            var analysisWidgets = this.buildPanelSet([{
-                name: 'kbaseNarrativeDataPanel',
-                params: {
-                    collapseCallback: $.proxy(function(isMinimized) {
-                        this.handleMinimizedDataPanel(isMinimized);
-                    }, this)
-                }
-            },
-            {
-                name: 'kbaseNarrativeAppPanel',
-                params: {
-                    autopopulate: false,
-                    collapseCallback: $.proxy(function(isMinimized) {
-                        this.handleMinimizedMethodPanel(isMinimized);
-                    }, this)
-                }
-            }]);
+            var analysisWidgets = this.buildPanelSet([
+                {
+                    name: 'kbaseNarrativeDataPanel',
+                    params: {
+                        collapseCallback: $.proxy(function (isMinimized) {
+                            this.handleMinimizedDataPanel(isMinimized);
+                        }, this),
+                    },
+                },
+                {
+                    name: 'kbaseNarrativeAppPanel',
+                    params: {
+                        autopopulate: false,
+                        collapseCallback: $.proxy(function (isMinimized) {
+                            this.handleMinimizedMethodPanel(isMinimized);
+                        }, this),
+                    },
+                },
+            ]);
             this.$dataWidget = analysisWidgets['kbaseNarrativeDataPanel'];
             this.$methodsWidget = analysisWidgets['kbaseNarrativeAppPanel'];
 
             var $analysisPanel = analysisWidgets['panelSet'];
 
-            var manageWidgets = this.buildPanelSet([{
-                name: 'kbaseNarrativeManagePanel',
-                params: { autopopulate: false, showTitle: false }
-            }, ]);
+            var manageWidgets = this.buildPanelSet([
+                {
+                    name: 'kbaseNarrativeManagePanel',
+                    params: { autopopulate: false, showTitle: false },
+                },
+            ]);
 
             this.$narrativesWidget = manageWidgets['kbaseNarrativeManagePanel'];
             var $managePanel = manageWidgets['panelSet'];
 
-            this.$tabs = this.buildTabs([{
-                tabName: 'Analyze',
-                content: $analysisPanel,
-                widgets: [this.$dataWidget, this.$methodsWidget]
-            }, {
-                tabName: 'Narratives',
-                content: $managePanel,
-                widgets: [this.$narrativesWidget]
-            },
-            ], true);
+            this.$tabs = this.buildTabs(
+                [
+                    {
+                        tabName: 'Analyze',
+                        content: $analysisPanel,
+                        widgets: [this.$dataWidget, this.$methodsWidget],
+                    },
+                    {
+                        tabName: 'Narratives',
+                        content: $managePanel,
+                        widgets: [this.$narrativesWidget],
+                    },
+                ],
+                true
+            );
 
             this.$elem.addClass('kb-side-panel');
-            this.$elem.append(this.$tabs.header)
-                .append(this.$tabs.body);
+            this.$elem.append(this.$tabs.header).append(this.$tabs.body);
 
-            $(document).on('showSidePanelOverlay.Narrative', $.proxy(function(event, panel) {
-                this.showOverlay(panel);
-            }, this));
+            $(document).on(
+                'showSidePanelOverlay.Narrative',
+                $.proxy(function (event, panel) {
+                    this.showOverlay(panel);
+                }, this)
+            );
 
-            $(document).on('hideSidePanelOverlay.Narrative', $.proxy(function(event, panel) {
-                this.hideOverlay(panel);
-            }, this));
+            $(document).on(
+                'hideSidePanelOverlay.Narrative',
+                $.proxy(function (event, panel) {
+                    this.hideOverlay(panel);
+                }, this)
+            );
 
-            $(document).on('toggleSidePanelOverlay.Narrative', $.proxy(function(event, panel) {
-                this.toggleOverlay(panel);
-            }, this));
+            $(document).on(
+                'toggleSidePanelOverlay.Narrative',
+                $.proxy(function (event, panel) {
+                    this.toggleOverlay(panel);
+                }, this)
+            );
 
             // handle window size change in left panel, and call it once to set the correct size now
-            $(window).on('resize', $.proxy(function() { this.windowSizeChange(); }, this));
+            $(window).on(
+                'resize',
+                $.proxy(function () {
+                    this.windowSizeChange();
+                }, this)
+            );
             this.windowSizeChange();
 
             if (this.autorender) {
@@ -121,7 +142,7 @@ function(
          * So we need to remove the 'Jobs' header all together, then hide the methods panel,
          * and expand the data panel to fill the screen
          */
-        setReadOnlyMode: function(readOnly) {
+        setReadOnlyMode: function (readOnly) {
             this.$dataWidget.setReadOnlyMode(readOnly);
             this.$methodsWidget.setReadOnlyMode(readOnly);
         },
@@ -137,75 +158,76 @@ function(
          * not to an inner set of tabs. That is, when any new tab is selected, it hides the overlay,
          * if it's open.
          */
-        buildTabs: function(tabs, isOuter) {
+        buildTabs: function (tabs, isOuter) {
             var $header = $('<div>');
             var $body = $('<div>');
             $body.addClass('narrative-side-panel-content');
             $body.css('height', 'calc(100% - 45px)');
 
-            $header.append($('<div>')
-                .addClass('kb-side-toggle')
-                .css('width', this.hideButtonSize + '%')
-                .append($('<span>')
-                    .addClass('fa fa-caret-left'))
-                .click(function() {
-                    Jupyter.narrative.toggleSidePanel();
-                }));
+            $header.append(
+                $('<div>')
+                    .addClass('kb-side-toggle')
+                    .css('width', this.hideButtonSize + '%')
+                    .append($('<span>').addClass('fa fa-caret-left'))
+                    .click(function () {
+                        Jupyter.narrative.toggleSidePanel();
+                    })
+            );
             for (var i = 0; i < tabs.length; i++) {
                 var tab = tabs[i];
-                $header.append($('<div>')
-                    .addClass('kb-side-header')
-                    .css('width', ((100 - this.hideButtonSize) / tabs.length) + '%')
-                    .append(tab.tabName)
-                    .attr('kb-data-id', i));
-                $body.append($('<div>')
-                    .addClass('kb-side-tab')
-                    .append(tab.content)
-                    .attr('kb-data-id', i));
+                $header.append(
+                    $('<div>')
+                        .addClass('kb-side-header')
+                        .css('width', (100 - this.hideButtonSize) / tabs.length + '%')
+                        .append(tab.tabName)
+                        .attr('kb-data-id', i)
+                );
+                $body.append(
+                    $('<div>').addClass('kb-side-tab').append(tab.content).attr('kb-data-id', i)
+                );
             }
 
-            $header.find('div[kb-data-id]').click($.proxy(function(event) {
-                var $headerDiv = $(event.currentTarget);
+            $header.find('div[kb-data-id]').click(
+                $.proxy(function (event) {
+                    var $headerDiv = $(event.currentTarget);
 
-                if (!$headerDiv.hasClass('active')) {
-                    var idx = $headerDiv.attr('kb-data-id');
-                    $header.find('div').removeClass('active');
-                    $headerDiv.addClass('active');
-                    $body.find('div.kb-side-tab').removeClass('active');
-                    $body.find('[kb-data-id=' + idx + ']').addClass('active');
-                    tabs[idx].widgets.forEach(w => {
-                        w.activate();
-                    });
-                    if (isOuter)
-                        this.hideOverlay();
-                }
-            }, this));
+                    if (!$headerDiv.hasClass('active')) {
+                        var idx = $headerDiv.attr('kb-data-id');
+                        $header.find('div').removeClass('active');
+                        $headerDiv.addClass('active');
+                        $body.find('div.kb-side-tab').removeClass('active');
+                        $body.find('[kb-data-id=' + idx + ']').addClass('active');
+                        tabs[idx].widgets.forEach((w) => {
+                            w.activate();
+                        });
+                        if (isOuter) this.hideOverlay();
+                    }
+                }, this)
+            );
 
             $header.find('div:nth-child(2)').addClass('active');
             $body.find('div:first-child.kb-side-tab').addClass('active');
-            tabs[0].widgets.forEach(w => {
+            tabs[0].widgets.forEach((w) => {
                 w.activate();
             });
 
             return {
                 header: $header,
-                body: $body
+                body: $body,
             };
         },
 
-        initOverlay: function() {
+        initOverlay: function () {
             var self = this;
 
             this.$overlayBody = $('<div class="kb-overlay-body">');
             this.$overlayFooter = $('<div class="kb-overlay-footer">');
-            this.$overlay = $('<div>')
-                .addClass('kb-side-overlay-container');
+            this.$overlay = $('<div>').addClass('kb-side-overlay-container');
 
             $('body').append(this.$overlay);
             this.$overlay.hide();
 
-            this.$narrativeDimmer = $('<div>')
-                .addClass('kb-overlay-dimmer');
+            this.$narrativeDimmer = $('<div>').addClass('kb-overlay-dimmer');
 
             $('body').append(this.$narrativeDimmer);
             this.$narrativeDimmer.hide();
@@ -213,12 +235,12 @@ function(
 
             // hide panel when clicking outside
             this.$narrativeDimmer.unbind('click');
-            this.$narrativeDimmer.click(function() {
+            this.$narrativeDimmer.click(function () {
                 self.hideOverlay();
             });
         },
 
-        updateOverlayPosition: function() {
+        updateOverlayPosition: function () {
             this.$overlay.position({ my: 'left top', at: 'right top', of: this.$elem });
             this.$narrativeDimmer.position({ my: 'left top', at: 'right top', of: this.$elem });
         },
@@ -233,41 +255,49 @@ function(
          *     the new panel is attached and the overlay is redisplayed.
          * 2. If the overlay is currently hidden, it is shown with the given panel.
          */
-        toggleOverlay: function(panel) {
+        toggleOverlay: function (panel) {
             if (this.$overlay.is(':visible')) {
                 this.hideOverlay();
                 if (panel && panel !== this.currentPanel) {
                     this.showOverlay(panel);
                 }
-            } else
-                this.showOverlay(panel);
+            } else this.showOverlay(panel);
         },
 
-        showOverlay: function(panel) {
+        showOverlay: function (panel) {
             if (this.$overlay) {
                 if (panel) {
-                    if (this.currentPanel)
-                        $(this.currentPanel).detach();
+                    if (this.currentPanel) $(this.currentPanel).detach();
                     this.$overlay.append(panel);
                     this.currentPanel = panel;
                 }
                 Jupyter.narrative.disableKeyboardManager();
                 this.$narrativeDimmer.show();
                 this.$elem.find('.kb-side-header, .kb-side-toggle').addClass('kb-overlay-active');
-                this.$overlay.show('slide', 'fast', $.proxy(function() {
-                    this.trigger('sidePanelOverlayShown.Narrative');
-                }, this));
+                this.$overlay.show(
+                    'slide',
+                    'fast',
+                    $.proxy(function () {
+                        this.trigger('sidePanelOverlayShown.Narrative');
+                    }, this)
+                );
             }
         },
 
-        hideOverlay: function() {
+        hideOverlay: function () {
             if (this.$overlay) {
                 Jupyter.narrative.enableKeyboardManager();
                 this.$narrativeDimmer.hide();
-                this.$elem.find('.kb-side-header, .kb-side-toggle').removeClass('kb-overlay-active');
-                this.$overlay.hide('slide', 'fast', $.proxy(function() {
-                    this.trigger('sidePanelOverlayHidden.Narrative');
-                }, this));
+                this.$elem
+                    .find('.kb-side-header, .kb-side-toggle')
+                    .removeClass('kb-overlay-active');
+                this.$overlay.hide(
+                    'slide',
+                    'fast',
+                    $.proxy(function () {
+                        this.trigger('sidePanelOverlayHidden.Narrative');
+                    }, this)
+                );
             }
         },
 
@@ -285,38 +315,40 @@ function(
          * @param {object} widgets
          *
          */
-        buildPanelSet: function(widgets) {
-            var $panelSet = $('<div>')
-                .addClass('kb-narr-side-panel-set')
-                .css('height', '100%');
-            if (!widgets || Object.prototype.toString.call(widgets) !== '[object Array]' || widgets.length === 0)
+        buildPanelSet: function (widgets) {
+            var $panelSet = $('<div>').addClass('kb-narr-side-panel-set').css('height', '100%');
+            if (
+                !widgets ||
+                Object.prototype.toString.call(widgets) !== '[object Array]' ||
+                widgets.length === 0
+            )
                 return $panelSet;
-
 
             var retObj = {};
             for (var i = 0; i < widgets.length; i++) {
                 var widgetInfo = widgets[i];
-                var $widgetDiv = $('<div>')
-                    .addClass('kb-side-separator');
+                var $widgetDiv = $('<div>').addClass('kb-side-separator');
 
                 var constructor_mapping = {
-                    'kbaseNarrativeDataPanel': kbaseNarrativeDataPanel,
-                    'kbaseNarrativeAppPanel': kbaseNarrativeAppPanel,
-                    'kbaseNarrativeManagePanel': kbaseNarrativeManagePanel
+                    kbaseNarrativeDataPanel: kbaseNarrativeDataPanel,
+                    kbaseNarrativeAppPanel: kbaseNarrativeAppPanel,
+                    kbaseNarrativeManagePanel: kbaseNarrativeManagePanel,
                 };
-                retObj[widgetInfo.name] = new constructor_mapping[widgetInfo.name]($widgetDiv, widgetInfo.params);
+                retObj[widgetInfo.name] = new constructor_mapping[widgetInfo.name](
+                    $widgetDiv,
+                    widgetInfo.params
+                );
                 $panelSet.append($widgetDiv);
             }
             retObj['panelSet'] = $panelSet;
             return retObj;
         },
 
-
         /**
          * Specialized callback controlling heights of panels when data panel is minimized.
          * Assumes data and method panel are on the same tab.
          */
-        handleMinimizedDataPanel: function(isMinimized) {
+        handleMinimizedDataPanel: function (isMinimized) {
             if (isMinimized) {
                 // data panel was minimized
                 this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[1], true);
@@ -330,7 +362,7 @@ function(
          * Specialized callback controlling heights of panels when method panel is minimized.
          * Assumes data and method panel are on the same tab.
          */
-        handleMinimizedMethodPanel: function(isMinimized) {
+        handleMinimizedMethodPanel: function (isMinimized) {
             if (isMinimized) {
                 // data panel was minimized
                 this.$dataWidget.setListHeight(this.dataWidgetListHeight[1], true);
@@ -340,14 +372,13 @@ function(
             }
         },
 
-
-        windowSizeChange: function() {
-
+        windowSizeChange: function () {
             // determine height of panels, and set the bounds
             var $window = $(window);
             var h = $window.height();
 
-            if (h < 300) { // below a height of 300px, don't trim anymore, just let the rest be clipped
+            if (h < 300) {
+                // below a height of 300px, don't trim anymore, just let the rest be clipped
                 h = 300;
             }
             var max = h - this.heightListOffset;
@@ -373,9 +404,8 @@ function(
             this.$narrativesWidget.setHeight(fullSize);
         },
 
-        render: function() {
+        render: function () {
             this.initOverlay();
-        }
-
+        },
     });
 });

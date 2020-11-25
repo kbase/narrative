@@ -9,17 +9,8 @@ define([
     'util/jobLogViewer',
     './jobStateViewer',
     './jobStateList',
-    './jobInputParams'
-], function (
-    Promise,
-    html,
-    UI,
-    Runtime,
-    LogViewer,
-    JobStateViewer,
-    JobStateList,
-    JobInputParams
-) {
+    './jobInputParams',
+], function (Promise, html, UI, Runtime, LogViewer, JobStateViewer, JobStateList, JobInputParams) {
     'use strict';
 
     var t = html.tag,
@@ -42,74 +33,73 @@ define([
          * Used only if we're in Batch mode.
          */
         function batchLayout() {
-            var list = div({ class: 'col-md-3 batch-mode-col', dataElement: 'kb-job-list-wrapper' }, [
-                ui.buildPanel({
-                    title: 'Job Batch',
-                    name: 'subjobs',
-                    classes: [
-                        'kb-panel-light'
-                    ]
-                })
-            ]);
+            var list = div(
+                { class: 'col-md-3 batch-mode-col', dataElement: 'kb-job-list-wrapper' },
+                [
+                    ui.buildPanel({
+                        title: 'Job Batch',
+                        name: 'subjobs',
+                        classes: ['kb-panel-light'],
+                    }),
+                ]
+            );
 
-            var jobStatus = div({ class: 'col-md-9 batch-mode-col',  dataElement: 'kb-job-status-wrapper' },[
-                ui.buildCollapsiblePanel({
-                    title: 'Job Params',
-                    name: 'job-params-section-toggle',
-                    hidden: false,
-                    type: 'default',
-                    classes: ['kb-panel-container'],
-                    body: div({ }, [
-                        ui.buildPanel({
-                            name: 'params',
-                            classes: [
-                                'kb-panel-light'
-                            ]
-                        })
-                    ])
-                }),
-                ui.buildCollapsiblePanel({
-                    title: 'Job Status',
-                    name: 'job-status-section-toggle',
-                    hidden: false,
-                    type: 'default',
-                    collapsed: true,
-                    classes: ['kb-panel-container'],
-                    body: div({ }, [
-                        ui.buildPanel({
-                            name: 'jobState',
-                            classes: [
-                                'kb-panel-light'
-                            ]
-                        })
-                    ])
-                }),
-                ui.buildCollapsiblePanel({
-                    title: 'Job Log',
-                    name: 'job-log-section-toggle',
-                    hidden: false,
-                    type: 'default',
-                    collapsed: true,
-                    classes: ['kb-panel-container'],
-                    body: div({}, [
-                        ui.buildPanel({
-                            name: 'log',
-                            classes: [
-                                'kb-panel-light'
-                            ]
-                        })
-                    ])
-                })
-            ]);
+            var jobStatus = div(
+                { class: 'col-md-9 batch-mode-col', dataElement: 'kb-job-status-wrapper' },
+                [
+                    ui.buildCollapsiblePanel({
+                        title: 'Job Params',
+                        name: 'job-params-section-toggle',
+                        hidden: false,
+                        type: 'default',
+                        classes: ['kb-panel-container'],
+                        body: div({}, [
+                            ui.buildPanel({
+                                name: 'params',
+                                classes: ['kb-panel-light'],
+                            }),
+                        ]),
+                    }),
+                    ui.buildCollapsiblePanel({
+                        title: 'Job Status',
+                        name: 'job-status-section-toggle',
+                        hidden: false,
+                        type: 'default',
+                        collapsed: true,
+                        classes: ['kb-panel-container'],
+                        body: div({}, [
+                            ui.buildPanel({
+                                name: 'jobState',
+                                classes: ['kb-panel-light'],
+                            }),
+                        ]),
+                    }),
+                    ui.buildCollapsiblePanel({
+                        title: 'Job Log',
+                        name: 'job-log-section-toggle',
+                        hidden: false,
+                        type: 'default',
+                        collapsed: true,
+                        classes: ['kb-panel-container'],
+                        body: div({}, [
+                            ui.buildPanel({
+                                name: 'log',
+                                classes: ['kb-panel-light'],
+                            }),
+                        ]),
+                    }),
+                ]
+            );
             return div({}, [list, jobStatus]);
         }
 
         function queueLayout() {
-            return div({
-                dataElement: 'kb-job-status-wrapper'
-            }, [
-                'This job is currently queued for execution and will start running soon.'
-            ]);
+            return div(
+                {
+                    dataElement: 'kb-job-status-wrapper',
+                },
+                ['This job is currently queued for execution and will start running soon.']
+            );
         }
 
         function singleLayout() {
@@ -117,17 +107,13 @@ define([
                 ui.buildPanel({
                     title: 'Job Status',
                     name: 'jobState',
-                    classes: [
-                        'kb-panel-light'
-                    ]
+                    classes: ['kb-panel-light'],
                 }),
                 ui.buildPanel({
                     title: 'Job Log',
                     name: 'log',
-                    classes: [
-                        'kb-panel-light'
-                    ]
-                })
+                    classes: ['kb-panel-light'],
+                }),
             ]);
         }
 
@@ -136,21 +122,21 @@ define([
         }
 
         function startBatch(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 container.innerHTML = batchLayout();
 
                 //display widgets
                 widgets.params = JobInputParams.make({
-                    model: model
+                    model: model,
                 });
                 widgets.log = LogViewer.make();
                 widgets.jobState = JobStateViewer.make({
-                    model: model
+                    model: model,
                 });
 
                 //rows as widgets to get live update
                 widgets.stateList = JobStateList.make({
-                    model: model
+                    model: model,
                 });
 
                 let childJobs = model.getItem('exec.jobState.child_jobs');
@@ -159,29 +145,31 @@ define([
                 }
                 startDetails({
                     jobId: selectedJobId,
-                    isParentJob: true
+                    isParentJob: true,
                 });
 
                 function startDetails(arg) {
-                    var selectedJobId = arg.jobId ? arg.jobId : model.getItem('exec.jobState.job_id');
+                    var selectedJobId = arg.jobId
+                        ? arg.jobId
+                        : model.getItem('exec.jobState.job_id');
                     config.clickedId = selectedJobId;
                     return Promise.all([
                         widgets.params.start({
                             node: ui.getElement('params.body'),
                             jobId: selectedJobId,
                             parentJobId: model.getItem('exec.jobState.job_id'),
-                            isParentJob: arg.isParentJob
+                            isParentJob: arg.isParentJob,
                         }),
                         widgets.log.start({
                             node: ui.getElement('log.body'),
                             jobId: selectedJobId,
-                            parentJobId: model.getItem('exec.jobState.job_id')
+                            parentJobId: model.getItem('exec.jobState.job_id'),
                         }),
                         widgets.jobState.start({
                             node: ui.getElement('jobState.body'),
                             jobId: selectedJobId,
-                            parentJobId: model.getItem('exec.jobState.job_id')
-                        })
+                            parentJobId: model.getItem('exec.jobState.job_id'),
+                        }),
                     ]);
                 }
                 return Promise.all([
@@ -190,8 +178,8 @@ define([
                         childJobs: model.getItem('exec.jobState.child_jobs'),
                         clickFunction: startDetails,
                         parentJobId: model.getItem('exec.jobState.job_id'),
-                        batchSize: model.getItem('exec.jobState.batch_size')
-                    })
+                        batchSize: model.getItem('exec.jobState.batch_size'),
+                    }),
                 ]);
             });
         }
@@ -206,28 +194,29 @@ define([
         function start(arg) {
             container = arg.node.appendChild(document.createElement('div'));
             ui = UI.make({
-                node: container
+                node: container,
             });
 
             if (model.getItem('exec.jobState.status') === 'queued') {
                 container.innerHTML = queueLayout();
-                queueListener = Runtime.make().bus().listen({
-                    channel: {
-                        jobId: model.getItem('exec.jobState.job_id')
-                    },
-                    key: {
-                        type: 'job-status'
-                    },
-                    handle: (message) => {
-                        if (message.jobState.status !== 'queued') {
-                            container.innerHTML = '';
-                            Runtime.make().bus().removeListener(queueListener);
-                            startNonQueued(arg);
-                        }
-                    }
-                });
-            }
-            else {
+                queueListener = Runtime.make()
+                    .bus()
+                    .listen({
+                        channel: {
+                            jobId: model.getItem('exec.jobState.job_id'),
+                        },
+                        key: {
+                            type: 'job-status',
+                        },
+                        handle: (message) => {
+                            if (message.jobState.status !== 'queued') {
+                                container.innerHTML = '';
+                                Runtime.make().bus().removeListener(queueListener);
+                                startNonQueued(arg);
+                            }
+                        },
+                    });
+            } else {
                 startNonQueued(arg);
             }
         }
@@ -236,8 +225,7 @@ define([
             let childJobs = model.getItem('exec.jobState.child_jobs');
             if ((childJobs && childJobs.length > 0) || model.getItem('user-settings.batchMode')) {
                 startBatch(arg);
-            }
-            else {
+            } else {
                 startSingle(arg);
             }
         }
@@ -247,17 +235,17 @@ define([
                 container.innerHTML = singleLayout();
                 widgets.log = LogViewer.make();
                 widgets.jobState = JobStateViewer.make({
-                    model: model
+                    model: model,
                 });
                 return Promise.all([
                     widgets.log.start({
                         node: ui.getElement('log.body'),
-                        jobId: model.getItem('exec.jobState.job_id')
+                        jobId: model.getItem('exec.jobState.job_id'),
                     }),
                     widgets.jobState.start({
                         node: ui.getElement('jobState.body'),
-                        jobId: model.getItem('exec.jobState.job_id')
-                    })
+                        jobId: model.getItem('exec.jobState.job_id'),
+                    }),
                 ]);
             });
         }
@@ -265,9 +253,11 @@ define([
         function stop() {
             return Promise.try(function () {
                 if (widgets) {
-                    return Promise.all(Object.keys(widgets).map(function (key) {
-                        return widgets[key].stop();
-                    }));
+                    return Promise.all(
+                        Object.keys(widgets).map(function (key) {
+                            return widgets[key].stop();
+                        })
+                    );
                 }
             });
         }
@@ -275,13 +265,13 @@ define([
         return {
             start: start,
             stop: stop,
-            getSelectedJobId: getSelectedJobId
+            getSelectedJobId: getSelectedJobId,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

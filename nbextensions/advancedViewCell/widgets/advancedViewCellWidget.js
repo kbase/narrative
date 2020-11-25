@@ -19,7 +19,7 @@ define([
     'google-code-prettify/prettify',
     './advancedViewCellWidget-fsm',
     'css!google-code-prettify/prettify.css',
-    'css!font-awesome.css'
+    'css!font-awesome.css',
 ], function (
     $,
     Promise,
@@ -54,7 +54,8 @@ define([
         img = t('img');
 
     function factory(config) {
-        var container, ui,
+        var container,
+            ui,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
             cell = config.cell,
@@ -66,29 +67,28 @@ define([
             bus = runtime.bus().makeChannelBus({ description: 'A view cell widget' }),
             env = {},
             model,
-
             eventManager = BusEventManager.make({
-                bus: runtime.bus()
+                bus: runtime.bus(),
             }),
             // HMM. Sync with metadata, or just keep everything there?
             settings = {
                 showAdvanced: {
                     label: 'Show advanced parameters',
                     defaultValue: false,
-                    type: 'custom'
+                    type: 'custom',
                 },
                 showNotifications: {
                     label: 'Show the notifications panel',
                     defaultValue: false,
                     type: 'toggle',
-                    element: 'notifications'
+                    element: 'notifications',
                 },
                 showAboutApp: {
                     label: 'Show the About App panel',
                     defaultValue: false,
                     type: 'toggle',
-                    element: 'about-app'
-                }
+                    element: 'about-app',
+                },
             },
             widgets = {},
             fsm;
@@ -98,7 +98,7 @@ define([
                 label: 'Show developer features',
                 defaultValue: false,
                 type: 'toggle',
-                element: 'developer-options'
+                element: 'developer-options',
             };
         }
 
@@ -115,22 +115,23 @@ define([
         function syncAppSpec(appId, appTag) {
             var appRef = {
                     ids: [appId],
-                    tag: appTag
+                    tag: appTag,
                 },
-                nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
-                    token: runtime.authToken()
-                });
-
-            return nms.get_method_spec(appRef)
-                .then(function (data) {
-                    if (!data[0]) {
-                        throw new Error('App not found');
+                nms = new NarrativeMethodStore(
+                    runtime.config('services.narrative_method_store.url'),
+                    {
+                        token: runtime.authToken(),
                     }
-                });
+                );
+
+            return nms.get_method_spec(appRef).then(function (data) {
+                if (!data[0]) {
+                    throw new Error('App not found');
+                }
+            });
         }
 
         // RENDER API
-
 
         function syncFatalError() {
             ui.setContent('fatal-error.title', model.getItem('fatalError.title'));
@@ -159,19 +160,18 @@ define([
         // for a beta or release tag ...
         function fixApp(app) {
             switch (app.tag) {
-                case 'release':
-                {
+                case 'release': {
                     return {
                         id: app.id,
                         tag: app.tag,
-                        version: app.version
+                        version: app.version,
                     };
                 }
                 case 'beta':
                 case 'dev':
                     return {
                         id: app.id,
-                        tag: app.tag
+                        tag: app.tag,
                     };
                 default:
                     throw new Error('Invalid tag for app ' + app.id);
@@ -182,7 +182,13 @@ define([
             var runId = new Uuid(4).format(),
                 app = fixApp(app),
                 outputWidgetState = utils.getCellMeta(cell, 'viewCell.outputWidgetState') || null,
-                code = PythonInterop.buildAdvancedViewRunner(cellId, runId, app, params, outputWidgetState);
+                code = PythonInterop.buildAdvancedViewRunner(
+                    cellId,
+                    runId,
+                    app,
+                    params,
+                    outputWidgetState
+                );
             // TODO: do something with the runId
             cell.set_text(code);
         }
@@ -202,7 +208,7 @@ define([
             fsm = Fsm.make({
                 states: appStates,
                 initialState: {
-                    mode: 'new'
+                    mode: 'new',
                 },
                 //xinitialState: {
                 //    mode: 'editing', params: 'incomplete'
@@ -210,9 +216,8 @@ define([
                 onNewState: function (fsm) {
                     model.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
-
                 },
-                bus: bus
+                bus: bus,
             });
             fsm.start(currentState);
         }
@@ -260,22 +265,30 @@ define([
         function renderNotifications() {
             var events = Events.make(),
                 notifications = model.getItem('notifications') || [],
-                content = notifications.map(function (notification, index) {
-                    return div({ class: 'row' }, [
-                        div({ class: 'col-md-10' }, notification),
-                        div({ class: 'col-md-2', style: { textAlign: 'right' } }, span({}, [
-                            a({
-                                class: 'btn btn-default',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function () {
-                                        doRemoveNotification(index);
-                                    }
-                                })
-                            }, 'X')
-                        ]))
-                    ]);
-                }).join('\n');
+                content = notifications
+                    .map(function (notification, index) {
+                        return div({ class: 'row' }, [
+                            div({ class: 'col-md-10' }, notification),
+                            div(
+                                { class: 'col-md-2', style: { textAlign: 'right' } },
+                                span({}, [
+                                    a(
+                                        {
+                                            class: 'btn btn-default',
+                                            id: events.addEvent({
+                                                type: 'click',
+                                                handler: function () {
+                                                    doRemoveNotification(index);
+                                                },
+                                            }),
+                                        },
+                                        'X'
+                                    ),
+                                ])
+                            ),
+                        ]);
+                    })
+                    .join('\n');
             ui.setContent('notifications.content', content);
             events.attachEvents(container);
         }
@@ -297,16 +310,16 @@ define([
             var bus = runtime.bus().makeChannelBus({ description: 'Bus for showWidget' }),
                 widget = widgetModule.make({
                     bus: bus,
-                    workspaceInfo: workspaceInfo
+                    workspaceInfo: workspaceInfo,
                 });
             widgets[name] = {
                 path: path,
                 module: widgetModule,
-                instance: widget
+                instance: widget,
             };
             widget.start();
             bus.emit('attach', {
-                node: ui.getElement(path)
+                node: ui.getElement(path),
             });
         }
 
@@ -326,7 +339,6 @@ define([
                 ui.disableButton(button);
             });
 
-
             // Element state
             state.ui.elements.show.forEach(function (element) {
                 ui.showElement(element);
@@ -337,92 +349,148 @@ define([
         }
 
         function renderLayout() {
-
             var readOnlyStyle = {};
             if (JupyterNamespace.narrative.readonly) {
                 readOnlyStyle.display = 'none';
             }
             var events = Events.make(),
                 configureId = html.genId(),
-                content = div({
-                    class: 'kbase-extension kb-app-cell',
-                    style: {
-                        display: 'flex',
-                        alignItems: 'stretch'
-                    }
-                }, [
-                    div({ class: 'prompt', dataElement: 'prompt', style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' } }, [
-                        div({ dataElement: 'status' })
-                    ]),
-                    div({
-                        class: 'body',
-                        dataElement: 'body',
-                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1', width: '100%' }
-                    }, [
-                        div({ dataElement: 'widget', style: { display: 'block', width: '100%' } }, [
-                            div({ class: 'container-fluid' }, [
-                                ui.buildPanel({
-                                    title: 'Error',
-                                    name: 'fatal-error',
-                                    hidden: true,
-                                    type: 'danger',
-                                    classes: ['kb-panel-container'],
-                                    body: div([
-                                        table({ class: 'table table-striped' }, [
-                                            tr([
-                                                th('Title'), td({ dataElement: 'title' }),
-                                                td('Message', td({ dataElement: 'message' }))
-                                            ])
-                                        ])
-                                    ])
-                                }),
-                                ui.buildCollapsiblePanel({
-                                    title: 'Notifications',
-                                    name: 'notifications',
-                                    hidden: true,
-                                    type: 'default',
-                                    classes: ['kb-panel-container'],
-                                    body: [
-                                        div({ dataElement: 'content' })
-                                    ]
-                                }),
-                                ui.buildCollapsiblePanel({
-                                    // title: 'Input ' + span({ class: 'fa fa-arrow-right' }),
-                                    id: configureId,
-                                    title: 'Configure ' + span({class: 'fa fa-cogs'}),
-                                    name: 'parameters-group',
-                                    hidden: false,
-                                    collapsed: utils.getCellMeta(cell, 'kbase.viewCell.user-settings.collapsedConfigurePanel', false),
-                                    type: 'default',
-                                    classes: ['kb-panel-container'],
-                                    body: div([
-                                        div({
-                                            dataElement: 'widget'
-                                        }),
+                content = div(
+                    {
+                        class: 'kbase-extension kb-app-cell',
+                        style: {
+                            display: 'flex',
+                            alignItems: 'stretch',
+                        },
+                    },
+                    [
+                        div(
+                            {
+                                class: 'prompt',
+                                dataElement: 'prompt',
+                                style: {
+                                    display: 'flex',
+                                    alignItems: 'stretch',
+                                    flexDirection: 'column',
+                                },
+                            },
+                            [div({ dataElement: 'status' })]
+                        ),
+                        div(
+                            {
+                                class: 'body',
+                                dataElement: 'body',
+                                style: {
+                                    display: 'flex',
+                                    alignItems: 'stretch',
+                                    flexDirection: 'column',
+                                    flex: '1',
+                                    width: '100%',
+                                },
+                            },
+                            [
+                                div(
+                                    {
+                                        dataElement: 'widget',
+                                        style: { display: 'block', width: '100%' },
+                                    },
+                                    [
+                                        div({ class: 'container-fluid' }, [
+                                            ui.buildPanel({
+                                                title: 'Error',
+                                                name: 'fatal-error',
+                                                hidden: true,
+                                                type: 'danger',
+                                                classes: ['kb-panel-container'],
+                                                body: div([
+                                                    table({ class: 'table table-striped' }, [
+                                                        tr([
+                                                            th('Title'),
+                                                            td({ dataElement: 'title' }),
+                                                            td(
+                                                                'Message',
+                                                                td({ dataElement: 'message' })
+                                                            ),
+                                                        ]),
+                                                    ]),
+                                                ]),
+                                            }),
+                                            ui.buildCollapsiblePanel({
+                                                title: 'Notifications',
+                                                name: 'notifications',
+                                                hidden: true,
+                                                type: 'default',
+                                                classes: ['kb-panel-container'],
+                                                body: [div({ dataElement: 'content' })],
+                                            }),
+                                            ui.buildCollapsiblePanel({
+                                                // title: 'Input ' + span({ class: 'fa fa-arrow-right' }),
+                                                id: configureId,
+                                                title: 'Configure ' + span({ class: 'fa fa-cogs' }),
+                                                name: 'parameters-group',
+                                                hidden: false,
+                                                collapsed: utils.getCellMeta(
+                                                    cell,
+                                                    'kbase.viewCell.user-settings.collapsedConfigurePanel',
+                                                    false
+                                                ),
+                                                type: 'default',
+                                                classes: ['kb-panel-container'],
+                                                body: div([
+                                                    div({
+                                                        dataElement: 'widget',
+                                                    }),
 
-                                        div({
-                                            dataElement: 'availableActions',
-                                            style: readOnlyStyle,
-                                        }, [
-                                            div({ class: 'btn-toolbar kb-btn-toolbar-cell-widget' }, [
-                                                div({ class: 'btn-group' }, [
-                                                    ui.makeButton('View', 'run-app', { events: events, type: 'primary' })
-                                                ])
-                                            ])
-                                        ])
-                                    ])
-                                })
-                            ])
-                        ])
-                    ])
-                ]);
+                                                    div(
+                                                        {
+                                                            dataElement: 'availableActions',
+                                                            style: readOnlyStyle,
+                                                        },
+                                                        [
+                                                            div(
+                                                                {
+                                                                    class:
+                                                                        'btn-toolbar kb-btn-toolbar-cell-widget',
+                                                                },
+                                                                [
+                                                                    div({ class: 'btn-group' }, [
+                                                                        ui.makeButton(
+                                                                            'View',
+                                                                            'run-app',
+                                                                            {
+                                                                                events: events,
+                                                                                type: 'primary',
+                                                                            }
+                                                                        ),
+                                                                    ]),
+                                                                ]
+                                                            ),
+                                                        ]
+                                                    ),
+                                                ]),
+                                            }),
+                                        ]),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ]
+                );
             container.innerHTML = content;
             events.attachEvents(container);
-            $('#' + configureId + ' .collapse').on('hidden.bs.collapse', function() {
-                utils.setCellMeta(cell, 'kbase.viewCell.user-settings.collapsedConfigurePanel', true);
+            $('#' + configureId + ' .collapse').on('hidden.bs.collapse', function () {
+                utils.setCellMeta(
+                    cell,
+                    'kbase.viewCell.user-settings.collapsedConfigurePanel',
+                    true
+                );
             });
-            $('#' + configureId + ' .collapse').on('shown.bs.collapse', function() {
-                utils.setCellMeta(cell, 'kbase.viewCell.user-settings.collapsedConfigurePanel', false);
+            $('#' + configureId + ' .collapse').on('shown.bs.collapse', function () {
+                utils.setCellMeta(
+                    cell,
+                    'kbase.viewCell.user-settings.collapsedConfigurePanel',
+                    false
+                );
             });
         }
 
@@ -431,20 +499,21 @@ define([
                 p([
                     'Deleting this cell will remove the data visualization, ',
                     'but will not delete the data object, which will still be available ',
-                    'in the data panel.'
+                    'in the data panel.',
                 ]),
-                p('Continue to delete this data cell?')
+                p('Continue to delete this data cell?'),
             ]);
-            ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-                .then(function (confirmed) {
-                    if (!confirmed) {
-                        return;
-                    }
+            ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content }).then(function (
+                confirmed
+            ) {
+                if (!confirmed) {
+                    return;
+                }
 
-                    bus.emit('stop');
+                bus.emit('stop');
 
-                    Jupyter.deleteCell(cell);
-                });
+                Jupyter.deleteCell(cell);
+            });
         }
 
         function doRun() {
@@ -467,7 +536,7 @@ define([
                 container = node;
                 ui = Ui.make({
                     node: container,
-                    bus: bus
+                    bus: bus,
                 });
 
                 if (ui.isDeveloper()) {
@@ -475,12 +544,11 @@ define([
                         label: 'Show developer features',
                         defaultValue: false,
                         type: 'toggle',
-                        element: 'developer-options'
+                        element: 'developer-options',
                     };
                 }
 
                 renderLayout();
-
 
                 return null;
             });
@@ -522,18 +590,22 @@ define([
 
                 cellBus = runtime.bus().makeChannelBus({
                     name: {
-                        cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
+                        cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id'),
                     },
-                    description: 'A cell channel'
+                    description: 'A cell channel',
                 });
 
-                eventManager.add(cellBus.on('delete-cell', function () {
-                    doDeleteCell();
-                }));
+                eventManager.add(
+                    cellBus.on('delete-cell', function () {
+                        doDeleteCell();
+                    })
+                );
 
-                eventManager.add(cellBus.on('metadata-changed', function () {
-                    evaluateAppState();
-                }));
+                eventManager.add(
+                    cellBus.on('metadata-changed', function () {
+                        evaluateAppState();
+                    })
+                );
 
                 showCodeInputArea();
 
@@ -551,7 +623,10 @@ define([
                     paramSpec = parameters.specs[key];
 
                 if (!paramSpec) {
-                    console.error('Parameter ' + key + ' is not defined in the parameter map', parameters);
+                    console.error(
+                        'Parameter ' + key + ' is not defined in the parameter map',
+                        parameters
+                    );
                     throw new Error('Parameter ' + key + ' is not defined in the parameter map');
                 }
 
@@ -567,55 +642,63 @@ define([
 
                 require([selectedWidget], function (Widget) {
                     // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
+                    var bus = runtime
+                            .bus()
+                            .makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
                             bus: bus,
-                            workspaceInfo: workspaceInfo
+                            workspaceInfo: workspaceInfo,
                         });
                     widgets.paramsInputWidget = {
                         path: ['parameters-group', 'widget'],
                         // module: widgetModule,
                         bus: bus,
-                        instance: widget
+                        instance: widget,
                     };
                     bus.on('parameter-sync', function (message) {
                         var value = model.getItem(['params', message.parameter]);
-                        bus.send({
-                            parameter: message.parameter,
-                            value: value
-                        }, {
-                            // This points the update back to a listener on this key
-                            key: {
-                                type: 'update',
-                                parameter: message.parameter
+                        bus.send(
+                            {
+                                parameter: message.parameter,
+                                value: value,
+                            },
+                            {
+                                // This points the update back to a listener on this key
+                                key: {
+                                    type: 'update',
+                                    parameter: message.parameter,
+                                },
                             }
-                        });
+                        );
                     });
 
                     bus.on('sync-params', function (message) {
                         message.parameters.forEach(function (paramId) {
-                            bus.send({
-                                parameter: paramId,
-                                value: model.getItem(['params', message.parameter])
-                            }, {
-                                key: {
-                                    type: 'parameter-value',
-                                    parameter: paramId
+                            bus.send(
+                                {
+                                    parameter: paramId,
+                                    value: model.getItem(['params', message.parameter]),
                                 },
-                                channel: message.replyToChannel
-                            });
+                                {
+                                    key: {
+                                        type: 'parameter-value',
+                                        parameter: paramId,
+                                    },
+                                    channel: message.replyToChannel,
+                                }
+                            );
                         });
                     });
 
                     bus.respond({
                         key: {
-                            type: 'get-parameter'
+                            type: 'get-parameter',
                         },
                         handle: function (message) {
                             return {
-                                value: model.getItem(['params', message.parameterName])
+                                value: model.getItem(['params', message.parameterName]),
                             };
-                        }
+                        },
                     });
 
                     bus.on('parameter-changed', function (message) {
@@ -623,12 +706,13 @@ define([
                         model.setItem(['params', message.parameter], message.newValue);
                         evaluateAppState();
                     });
-                    widget.start({
-                        node: ui.getElement(['parameters-group', 'widget']),
-                        appSpec: model.getItem('app.spec'),
-                        parameters: spec.getSpec().parameters,
-                        params: model.getItem('params')
-                    })
+                    widget
+                        .start({
+                            node: ui.getElement(['parameters-group', 'widget']),
+                            appSpec: model.getItem('app.spec'),
+                            parameters: spec.getSpec().parameters,
+                            params: model.getItem('params'),
+                        })
                         .then(function () {
                             resolve();
                         });
@@ -647,15 +731,27 @@ define([
 
             if (iconUrl) {
                 return span({ class: 'fa-stack fa-2x', style: { padding: '2px' } }, [
-                    img({ src: nmsBase + iconUrl, style: { maxWidth: '46px', maxHeight: '46px', margin: '2px' } })
+                    img({
+                        src: nmsBase + iconUrl,
+                        style: { maxWidth: '46px', maxHeight: '46px', margin: '2px' },
+                    }),
                 ]);
             }
 
             return span({ style: '' }, [
-                span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: 'rgb(103,58,183)' } }, [
-                    span({ class: 'fa fa-square fa-stack-2x', style: { color: 'rgb(103,58,183)' } }),
-                    span({ class: 'fa fa-inverse fa-stack-1x fa-cube' })
-                ])
+                span(
+                    {
+                        class: 'fa-stack fa-2x',
+                        style: { textAlign: 'center', color: 'rgb(103,58,183)' },
+                    },
+                    [
+                        span({
+                            class: 'fa fa-square fa-stack-2x',
+                            style: { color: 'rgb(103,58,183)' },
+                        }),
+                        span({ class: 'fa fa-inverse fa-stack-1x fa-cube' }),
+                    ]
+                ),
             ]);
         }
 
@@ -697,7 +793,12 @@ define([
                     var messages = gatherValidationMessages(result);
 
                     if (messages.length === 0) {
-                        buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
+                        buildPython(
+                            cell,
+                            utils.getMeta(cell, 'attributes').id,
+                            model.getItem('app'),
+                            exportParams()
+                        );
                         fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
                         renderUI();
                     } else {
@@ -707,8 +808,7 @@ define([
                     }
                 })
                 .catch(function (err) {
-                    alert('internal error'),
-                    console.error('INTERNAL ERROR', err);
+                    alert('internal error'), console.error('INTERNAL ERROR', err);
                 });
         }
 
@@ -717,15 +817,23 @@ define([
             // with the parameters returned.
             return syncAppSpec(params.appId, params.appTag)
                 .then(function () {
-                    var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
+                    var appRef = [model.getItem('app.id'), model.getItem('app.tag')]
+                            .filter(toBoolean)
+                            .join('/'),
                         url = '/#appcatalog/app/' + appRef;
-                    utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
-                    utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
+                    utils.setCellMeta(
+                        cell,
+                        'kbase.attributes.title',
+                        model.getItem('app.spec.info.name')
+                    );
+                    utils.setCellMeta(
+                        cell,
+                        'kbase.attributes.subtitle',
+                        model.getItem('app.spec.info.subtitle')
+                    );
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
                     utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
-                    return Promise.all([
-                        loadInputWidget()
-                    ]);
+                    return Promise.all([loadInputWidget()]);
                 })
                 .then(function () {
                     // this will not change, so we can just render it here.
@@ -746,7 +854,7 @@ define([
                     addNotification('Error loading main widgets: ' + err.message);
                     model.setItem('fatalError', {
                         title: 'Error loading main widgets',
-                        message: err.message
+                        message: err.message,
                     });
                     syncFatalError();
                     fsm.newState({ mode: 'fatal-error' });
@@ -761,25 +869,25 @@ define([
             onUpdate: function (props) {
                 utils.setMeta(cell, 'viewCell', props.getRawObject());
                 // saveNarrative();
-            }
+            },
         });
 
         spec = Spec.make({
-            appSpec: model.getItem('app.spec')
+            appSpec: model.getItem('app.spec'),
         });
 
         return {
             init: init,
             attach: attach,
             start: start,
-            run: run
+            run: run,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 }, function (err) {
     'use strict';

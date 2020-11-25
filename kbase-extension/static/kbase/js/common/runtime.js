@@ -6,15 +6,8 @@ define([
     'narrativeConfig',
     'common/props',
     'common/clock',
-    './monoBus'
-], function (
-    $,
-    Jupyter,
-    Config,
-    Props,
-    Clock,
-    Bus
-) {
+    './monoBus',
+], function ($, Jupyter, Config, Props, Clock, Bus) {
     'use strict';
     var narrativeConfig = Props.make({ data: Config.getConfig() });
 
@@ -24,7 +17,7 @@ define([
 
             var clock = Clock.make({
                 bus: bus,
-                resolution: 1000
+                resolution: 1000,
             });
             clock.start();
 
@@ -35,7 +28,7 @@ define([
             return {
                 created: new Date(),
                 bus: bus,
-                env: Props.make({})
+                env: Props.make({}),
             };
         }
 
@@ -51,7 +44,6 @@ define([
         function bus() {
             return window.kbaseRuntime.bus;
         }
-
 
         // These are still module scope
 
@@ -79,8 +71,6 @@ define([
             }
             return setting;
         }
-
-
 
         function setEnv(key, value) {
             window.kbaseRuntime.env.setItem(key, value);
@@ -111,13 +101,13 @@ define([
             setEnv: setEnv,
             getEnv: getEnv,
             workspaceId: workspaceId,
-            userId: userId
+            userId: userId,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

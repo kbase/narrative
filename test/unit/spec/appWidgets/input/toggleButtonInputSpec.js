@@ -3,14 +3,8 @@ define([
     'common/runtime',
     'base/js/namespace',
     'kbaseNarrative',
-    'widgets/appWidgets2/input/toggleButtonInput'
-], (
-    TestUtil,
-    Runtime,
-    Jupyter,
-    Narrative,
-    ToggleButtonInput
-) => {
+    'widgets/appWidgets2/input/toggleButtonInput',
+], (TestUtil, Runtime, Jupyter, Narrative, ToggleButtonInput) => {
     'use strict';
     let bus,
         testConfig,
@@ -27,13 +21,13 @@ define([
                     defaultValue: defaultValue,
                     nullValue: null,
                     constraints: {
-                        required: required
-                    }
+                        required: required,
+                    },
                 },
                 defaultValue: () => defaultValue,
-                required: () => required
+                required: () => required,
             },
-            channelName: bus.channelName
+            channelName: bus.channelName,
         };
     }
 
@@ -60,7 +54,7 @@ define([
             // which does the rendering. THEN we can examine that it's rendered right.
             bus.on('sync', () => {
                 expect(node.querySelector('[data-element="main-panel"]')).toBeDefined();
-                bus.emit('update', {value: true});
+                bus.emit('update', { value: true });
                 setTimeout(() => {
                     let inputElem = node.querySelector('input[type="checkbox"]');
                     expect(inputElem).toBeDefined();
@@ -69,10 +63,9 @@ define([
                 }, 100);
             });
 
-            widget.start()
-                .then(() => {
-                    bus.emit('run', {node: node});
-                });
+            widget.start().then(() => {
+                bus.emit('run', { node: node });
+            });
         });
 
         it('Should update value via bus', (done, fail) => {
@@ -87,9 +80,11 @@ define([
             });
 
             bus.on('sync', () => {
-                bus.emit('update', {value: defaultValue}); // no change, just verify it's there.
+                bus.emit('update', { value: defaultValue }); // no change, just verify it's there.
             });
-            widget.start().then(() => {bus.emit('run', {node: node})});
+            widget.start().then(() => {
+                bus.emit('run', { node: node });
+            });
         });
 
         it('should reset value via bus', (done) => {
@@ -102,24 +97,25 @@ define([
                         expect(inputElem.getAttribute('checked')).toBeNull();
                         validationCount++;
                         bus.emit('reset-to-defaults');
-                    }
-                    else {
+                    } else {
                         expect(inputElem.getAttribute('checked')).not.toBeNull();
                         done();
                     }
                 }
             });
             bus.on('sync', () => {
-                bus.emit('update', {value: false});
+                bus.emit('update', { value: false });
             });
-            widget.start().then(() => {bus.emit('run', {node: node})});
+            widget.start().then(() => {
+                bus.emit('run', { node: node });
+            });
         });
 
         it('Should respond to input change events with "changed"', (done) => {
             let widget = ToggleButtonInput.make(testConfig);
 
             bus.on('sync', () => {
-                bus.emit('update', {value: defaultValue});
+                bus.emit('update', { value: defaultValue });
             });
             bus.on('validation', () => {
                 let inputElem = node.querySelector('input[type="checkbox"]');
@@ -133,7 +129,9 @@ define([
                 done();
             });
 
-            widget.start().then(() => {bus.emit('run', {node: node})});
+            widget.start().then(() => {
+                bus.emit('run', { node: node });
+            });
         });
 
         it('Should respond to input change events', (done) => {
@@ -155,10 +153,12 @@ define([
             });
 
             bus.on('sync', () => {
-                bus.emit('update', {value: defaultValue});
+                bus.emit('update', { value: defaultValue });
             });
 
-            widget.start().then(() => {bus.emit('run', {node: node})});
+            widget.start().then(() => {
+                bus.emit('run', { node: node });
+            });
         });
     });
-})
+});

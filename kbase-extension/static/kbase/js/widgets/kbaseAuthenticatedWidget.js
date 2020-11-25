@@ -2,40 +2,26 @@
 
 */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery'
-	], function(
-		KBWidget,
-		bootstrap,
-		$
-	) {
-
-
-
+define(['kbwidget', 'bootstrap', 'jquery'], function (KBWidget, bootstrap, $) {
     return KBWidget({
+        name: 'kbaseAuthenticatedWidget',
 
-		  name: "kbaseAuthenticatedWidget",
-
-        version: "1.0.0",
-        _accessors : [
-            {name : 'auth', setter: 'setAuth'},
+        version: '1.0.0',
+        _accessors: [
+            { name: 'auth', setter: 'setAuth' },
             'sessionId',
             'authToken',
             'user_id',
             'loggedInCallback',
             'logInCanceledCallback',
             'loggedOutCallback',
-            'loggedInQueryCallback'
+            'loggedInQueryCallback',
         ],
         options: {
-            auth : undefined
+            auth: undefined,
         },
 
-        init: function(options) {
-
+        init: function (options) {
             this._super(options);
 
             $(document).on(
@@ -68,7 +54,6 @@ define (
                 }, this)
             );
 
-
             $(document).trigger(
                 'loggedInQuery',
                 $.proxy(function (auth) {
@@ -76,9 +61,9 @@ define (
 
                     if (auth.kbase_sessionid) {
                         this.callAfterInit(
-                            $.proxy(function() {
+                            $.proxy(function () {
                                 if (this.loggedInQueryCallback) {
-                                    this.loggedInQueryCallback(auth)
+                                    this.loggedInQueryCallback(auth);
                                 }
                             }, this)
                         );
@@ -87,10 +72,9 @@ define (
             );
 
             return this;
-
         },
 
-        setAuth : function (newAuth) {
+        setAuth: function (newAuth) {
             this.setValueForKey('auth', newAuth);
             if (newAuth == undefined) {
                 newAuth = {};
@@ -100,12 +84,10 @@ define (
             this.user_id(newAuth.user);
         },
 
-        loggedInQueryCallback : function(args) {
+        loggedInQueryCallback: function (args) {
             if (this.loggedInCallback) {
-                this.loggedInCallback(undefined,args);
+                this.loggedInCallback(undefined, args);
             }
         },
-
     });
-
 });

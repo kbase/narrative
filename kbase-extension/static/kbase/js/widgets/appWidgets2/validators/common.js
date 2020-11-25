@@ -1,4 +1,4 @@
-define([], function() {
+define([], function () {
     function isEmptyString(value) {
         if (value === null) {
             return true;
@@ -9,6 +9,6 @@ define([], function() {
         return false;
     }
     return {
-        isEmptyString: isEmptyString
-    }
+        isEmptyString: isEmptyString,
+    };
 });

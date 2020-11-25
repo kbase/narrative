@@ -4,15 +4,8 @@ define([
     'common/ui',
     'kb_common/html',
     './status/jobStateList',
-    './resultsViewer'
-], function (
-    Promise,
-    Uuid,
-    UI,
-    html,
-    JobStateList,
-    JobResult
-) {
+    './resultsViewer',
+], function (Promise, Uuid, UI, html, JobStateList, JobResult) {
     'use strict';
     var t = html.tag,
         div = t('div');
@@ -32,47 +25,50 @@ define([
             var jobState = model.getItem('exec.jobState');
             if (jobState.child_jobs && jobState.child_jobs.length) {
                 return startBatch(jobState);
-            }
-            else {
+            } else {
                 return startSingle(jobState);
             }
         }
 
         function batchLayout() {
-            var list = div({ class: 'col-md-3 batch-mode-col', dataElement: 'kb-job-list-wrapper' }, [
-                ui.buildPanel({
-                    title: 'Job Batch',
-                    name: 'subjobs',
-                    classes: [
-                        'kb-panel-light'
-                    ]
-                })
-            ]);
+            var list = div(
+                { class: 'col-md-3 batch-mode-col', dataElement: 'kb-job-list-wrapper' },
+                [
+                    ui.buildPanel({
+                        title: 'Job Batch',
+                        name: 'subjobs',
+                        classes: ['kb-panel-light'],
+                    }),
+                ]
+            );
 
-            var jobStatus = div({ class: 'col-md-9 batch-mode-col',  dataElement: 'kb-job-status-wrapper' }, [
-                ui.buildCollapsiblePanel({
-                    title: 'Result',
-                    name: 'job-result',
-                    hidden: false,
-                    type: 'default',
-                    classes: ['kb-panel-container'],
-                    body: div({}, [
-                        ui.buildPanel({
-                            name: 'child-result',
-                            classes: [
-                                'kb-panel-light'
-                            ]
-                        })
-                    ])
-                })
-            ]);
+            var jobStatus = div(
+                { class: 'col-md-9 batch-mode-col', dataElement: 'kb-job-status-wrapper' },
+                [
+                    ui.buildCollapsiblePanel({
+                        title: 'Result',
+                        name: 'job-result',
+                        hidden: false,
+                        type: 'default',
+                        classes: ['kb-panel-container'],
+                        body: div({}, [
+                            ui.buildPanel({
+                                name: 'child-result',
+                                classes: ['kb-panel-light'],
+                            }),
+                        ]),
+                    }),
+                ]
+            );
             return div({}, [list, jobStatus]);
         }
 
         function renderError(jobState, errorNode) {
             function convertJobError(errorInfo) {
                 var errorId = new Uuid(4).format(),
-                    errorType, errorMessage, errorDetail;
+                    errorType,
+                    errorMessage,
+                    errorDetail;
                 if (errorInfo.error) {
                     // Classic KBase rpc error message
                     errorType = errorInfo.name;
@@ -92,41 +88,36 @@ define([
                     location: 'job execution',
                     type: errorType,
                     message: errorMessage,
-                    detail: errorDetail
+                    detail: errorDetail,
                 };
             }
 
             function renderErrorLayout() {
                 return div([
-                    div({
-                        style: {
-                            fontWeight: 'bold',
-                            color: 'red',
-                            borderBottom: '1px solid eee',
-                            marginBottom: '1em'
-                        }
-                    }, [
-                        'An error occurred in this job!'
-                    ]),
-                    div({ style: { fontWeight: 'bold' } }, [
-                        'Type'
-                    ]),
+                    div(
+                        {
+                            style: {
+                                fontWeight: 'bold',
+                                color: 'red',
+                                borderBottom: '1px solid eee',
+                                marginBottom: '1em',
+                            },
+                        },
+                        ['An error occurred in this job!']
+                    ),
+                    div({ style: { fontWeight: 'bold' } }, ['Type']),
                     div({ dataElement: 'type' }),
-                    div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                        'Message'
-                    ]),
+                    div({ style: { fontWeight: 'bold', marginTop: '1em' } }, ['Message']),
                     div({ dataElement: 'message' }),
-                    div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                        'Detail'
-                    ]),
+                    div({ style: { fontWeight: 'bold', marginTop: '1em' } }, ['Detail']),
                     div({
                         dataElement: 'detail',
                         style: {
                             border: '0px silver solid',
                             padding: '4px',
-                            wordBreak: 'break-word'
-                        }
-                    })
+                            wordBreak: 'break-word',
+                        },
+                    }),
                 ]);
             }
 
@@ -148,7 +139,7 @@ define([
                 resultsViewer = JobResult.make({ model: model });
                 startResults({
                     jobId: model.getItem('exec.jobState.job_id'),
-                    isParentJob: true
+                    isParentJob: true,
                 });
 
                 function startResults(arg) {
@@ -158,28 +149,28 @@ define([
 
                     if (Number.isInteger(arg.jobIndex)) {
                         jobState = model.getItem('exec.jobState.child_jobs')[arg.jobIndex];
-                    }
-                    else if (arg.isParentJob) {
+                    } else if (arg.isParentJob) {
                         jobState = model.getItem('exec.jobState');
                     }
                     return Promise.try(() => {
                         // branch based on jobState.
                         // If there's an error, we should show the error widget instead.
                         let resultNode = ui.getElement('child-result.body');
-                        switch(jobState.status) {
+                        switch (jobState.status) {
                             case 'completed':
                                 return resultsViewer.start({
                                     node: resultNode,
                                     jobId: selectedJobId,
                                     isParentJob: arg.isParentJob,
-                                    jobState: jobState
+                                    jobState: jobState,
                                 });
                             case 'error':
                             case 'suspend':
                                 renderError(jobState, resultNode);
                                 break;
                             case 'canceled':
-                                resultNode.innerHTML = 'Job was stopped before it finished. Nothing to see here.';
+                                resultNode.innerHTML =
+                                    'Job was stopped before it finished. Nothing to see here.';
                                 break;
                             default:
                                 resultNode.innerHTML = 'Not done running. Be patient, grasshopper.';
@@ -193,7 +184,7 @@ define([
                     childJobs: model.getItem('exec.jobState.child_jobs'),
                     clickFunction: startResults,
                     parentJobId: model.getItem('exec.jobState.job_id'),
-                    batchSize: model.getItem('exec.jobState.batch_size')
+                    batchSize: model.getItem('exec.jobState.batch_size'),
                 });
             });
         }
@@ -205,7 +196,7 @@ define([
                     node: container,
                     jobId: jobState.job_id,
                     jobState: jobState,
-                    isParentJob: true
+                    isParentJob: true,
                 });
             });
         }
@@ -223,13 +214,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

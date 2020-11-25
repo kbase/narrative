@@ -14,28 +14,20 @@
  *
  */
 
-
 define([
     'kbwidget',
     'bootstrap',
     'jquery',
     'ModelingAPI',
     'kbaseAuthenticatedWidget',
-    'kbaseModal'
-], function (
-    KBWidget,
-    bootstrap,
-    $,
-    ModelingAPI,
-    kbaseAuthenticatedWidget,
-    kbaseModal
-    ) {
+    'kbaseModal',
+], function (KBWidget, bootstrap, $, ModelingAPI, kbaseAuthenticatedWidget, kbaseModal) {
     'use strict';
 
     return KBWidget({
-        name: "kbaseMediaEditor",
+        name: 'kbaseMediaEditor',
         parent: kbaseAuthenticatedWidget,
-        version: "1.0.0",
+        version: '1.0.0',
         options: {},
         init: function (input) {
             this._super(input);
@@ -43,7 +35,6 @@ define([
                 container = $('<div class="kb-editor">');
 
             self.$elem.append(container);
-
 
             var modeling = new ModelingAPI(self.authToken()),
                 kbapi = modeling.api,
@@ -54,80 +45,90 @@ define([
             var wsName = input.ws,
                 objName = input.obj;
 
-            if (isNaN(wsName) && isNaN(objName))
-                var param = {workspace: wsName, name: objName};
-            else if (!isNaN(wsName) && !isNaN(objName))
-                var param = {ref: wsName + '/' + objName};
+            if (isNaN(wsName) && isNaN(objName)) var param = { workspace: wsName, name: objName };
+            else if (!isNaN(wsName) && !isNaN(objName)) var param = { ref: wsName + '/' + objName };
             else {
-                self.$elem.append('kbaseMediaEditor arguments are invalid: ', JSON.stringify(input));
+                self.$elem.append(
+                    'kbaseMediaEditor arguments are invalid: ',
+                    JSON.stringify(input)
+                );
                 return this;
             }
 
             var table, // main table to be rendered
                 media, // actual media data
-                rawData;  // raw workspace object
+                rawData; // raw workspace object
 
             // some controls for the table
-            var saveBtn = $('<button class="btn btn-primary edit-btn pull-right hide">' +
-                'Save</button>');
-            var saveAsBtn = $('<button class="btn btn-primary edit-btn pull-right hide">' +
-                'Save as...</button>');
-            var addBtn = $('<button class="btn btn-primary pull-right">' +
-                '<i class="fa fa-plus"></i> Add compounds...</button>');
+            var saveBtn = $(
+                '<button class="btn btn-primary edit-btn pull-right hide">' + 'Save</button>'
+            );
+            var saveAsBtn = $(
+                '<button class="btn btn-primary edit-btn pull-right hide">' + 'Save as...</button>'
+            );
+            var addBtn = $(
+                '<button class="btn btn-primary pull-right">' +
+                    '<i class="fa fa-plus"></i> Add compounds...</button>'
+            );
             var rmBtn = $('<button class="btn btn-danger pull-right hide">');
-            var undoBtn = $('<button class="btn btn-danger edit-btn pull-right hide">' +
-                '<i class="fa fa-undo"></i>' +
-                '</button>');
+            var undoBtn = $(
+                '<button class="btn btn-danger edit-btn pull-right hide">' +
+                    '<i class="fa fa-undo"></i>' +
+                    '</button>'
+            );
 
             // keep track of edits
             var _editHistory = new EditHistory();
 
             // get media data
             container.loading();
-            kbapi('ws', 'get_objects', [param])
-                .done(function (res) {
-                    console.log('get media res:', res)
-                    rawData = $.extend(true, {}, res[0]);
-                    console.log('raw media data', rawData)
+            kbapi('ws', 'get_objects', [param]).done(function (res) {
+                console.log('get media res:', res);
+                rawData = $.extend(true, {}, res[0]);
+                console.log('raw media data', rawData);
 
-                    media = sanitizeMedia(res[0].data.mediacompounds);
+                media = sanitizeMedia(res[0].data.mediacompounds);
 
-                    // get cpd names from biochem, add to media data
-                    // and render table
-                    var ids = getCpdIds(media);
-                    console.log('ids', ids)
-                    getCpds(ids, {select: ['name', 'id']})
-                        .then(function (objs) {
-                            for (var i = 0; i < objs.length; i++) {
-                                media[i].name = objs[i].name;
-                            }
+                // get cpd names from biochem, add to media data
+                // and render table
+                var ids = getCpdIds(media);
+                console.log('ids', ids);
+                getCpds(ids, { select: ['name', 'id'] }).then(function (objs) {
+                    for (var i = 0; i < objs.length; i++) {
+                        media[i].name = objs[i].name;
+                    }
 
-                            renderTable(media);
-                            container.rmLoading();
-                        })
-                })
+                    renderTable(media);
+                    container.rmLoading();
+                });
+            });
 
             // renders table, any associated controls, and events
             function renderTable(data) {
-                table = $('<table class="table table-bordered table-striped' +
-                    ' kb-editor-table" style="width: 100% !important;">')
+                table = $(
+                    '<table class="table table-bordered table-striped' +
+                        ' kb-editor-table" style="width: 100% !important;">'
+                );
                 container.append(table);
 
                 table = table.DataTable({
                     data: data,
-                    order: [[2, "asc"]],
+                    order: [[2, 'asc']],
                     dom: '<"top col-sm-8 controls"l><"top col-sm-4"f>rt<"bottom"ip><"clear">',
                     columns: [
-                        {orderable: false, data: function (row) {
+                        {
+                            orderable: false,
+                            data: function (row) {
                                 return '<i class="fa fa-square-o"></i>';
-                            }},
-                        {title: "Name", data: 'name'},
-                        {title: "Compound", data: 'id'},
-                        {title: "Concentration", data: 'concentration', className: 'editable'},
-                        {title: "Max Flux", data: 'maxFlux', className: 'editable'},
-                        {title: "Min Flux", data: 'minFlux', className: 'editable'}
-                    ]
-                })
+                            },
+                        },
+                        { title: 'Name', data: 'name' },
+                        { title: 'Compound', data: 'id' },
+                        { title: 'Concentration', data: 'concentration', className: 'editable' },
+                        { title: 'Max Flux', data: 'maxFlux', className: 'editable' },
+                        { title: 'Min Flux', data: 'minFlux', className: 'editable' },
+                    ],
+                });
 
                 // add controls
                 var controls = container.find('.controls');
@@ -140,7 +141,7 @@ define([
 
                 addBtn.on('click', cpdModal);
                 saveBtn.on('click', function () {
-                    saveData(getTableData(), wsName, objName)
+                    saveData(getTableData(), wsName, objName);
                 });
                 saveAsBtn.on('click', saveModal);
                 rmBtn.on('click', function () {
@@ -148,16 +149,16 @@ define([
                     var data = getTableData('.row-select');
 
                     // edit table
-                    var op = {op: 'rm', data: data};
+                    var op = { op: 'rm', data: data };
                     editTable(op);
                     modeling.notice(container, 'Removed ' + data.length + ' compounds');
 
                     $(this).addClass('hide');
                     addBtn.removeClass('hide');
-                })
+                });
 
                 undoBtn.on('click', function () {
-                    console.log('undo!')
+                    console.log('undo!');
                     var op = _editHistory.popOp();
                 });
 
@@ -169,8 +170,9 @@ define([
 
                     if (count > 0) {
                         addBtn.addClass('hide');
-                        rmBtn.html('<i class="fa fa-minus"></i> ' +
-                            'Remove ' + count + ' compounds')
+                        rmBtn.html(
+                            '<i class="fa fa-minus"></i> ' + 'Remove ' + count + ' compounds'
+                        );
                         rmBtn.removeClass('hide');
                     } else {
                         rmBtn.addClass('hide');
@@ -183,7 +185,7 @@ define([
                     $(this).attr('contentEditable', true);
                     $(this).addClass('editing-focus');
                     $(this).focus();
-                })
+                });
 
                 table.on('blur', 'td.editable', function () {
                     var before = table.cell(this).data(),
@@ -191,16 +193,15 @@ define([
 
                     // fixme: add better validation and error handling
                     after = parseFloat(after);
-                    if (before === after)
-                        return;
+                    if (before === after) return;
 
                     // set data in datable memory
-                    table.cell(this).data(after).draw()
+                    table.cell(this).data(after).draw();
 
                     // save in history
-                    var op = {op: 'modify', before: before, after: after};
-                    editTable(op)
-                })
+                    var op = { op: 'modify', before: before, after: after };
+                    editTable(op);
+                });
 
                 // emit blur on enter as well
                 table.on('keydown', 'td.editable', function (e) {
@@ -208,7 +209,7 @@ define([
                         e.preventDefault();
                         $(this).blur();
                     }
-                })
+                });
             }
 
             // takes media data, adds id key/value, and sorts it.
@@ -218,68 +219,73 @@ define([
                     media[i].id = media[i].compound_ref.split('/').pop();
                 }
                 return media.sort(function (a, b) {
-                    if (a.id < b.id)
-                        return -1;
-                    if (a.id > b.id)
-                        return 1;
+                    if (a.id < b.id) return -1;
+                    if (a.id > b.id) return 1;
                     return 0;
-                })
+                });
             }
 
             function getCpdIds(media) {
-                console.log('media', media)
+                console.log('media', media);
                 var ids = [];
                 for (var i = 0; i < media.length; i++) {
-                    ids.push(media[i].id)
+                    ids.push(media[i].id);
                 }
                 return ids;
             }
 
-
             function cpdModal() {
-                var table = $('<table class="table table-bordered table-striped kb-editor-table' +
-                    ' " style="width: 100% !important;">');
+                var table = $(
+                    '<table class="table table-bordered table-striped kb-editor-table' +
+                        ' " style="width: 100% !important;">'
+                );
 
                 var modal = new kbaseModal($('<div>'), {
                     title: 'Add Compounds',
                     subText: 'Select compounds below, then click "add".',
                     body: table,
-                    width: '60%'
-                })
+                    width: '60%',
+                });
 
                 var table = table.DataTable({
                     processing: true,
                     serverSide: true,
                     orderMulti: false,
-                    order: [[2, "asc"]],
+                    order: [[2, 'asc']],
                     ajax: function (opts, callback, settings) {
-                        biochem('compounds', opts,
-                            ['name', 'id', 'mass', 'deltag', 'deltagerr']
-                            ).done(function (res) {
+                        biochem('compounds', opts, [
+                            'name',
+                            'id',
+                            'mass',
+                            'deltag',
+                            'deltagerr',
+                        ]).done(function (res) {
                             var data = {
                                 data: res.docs,
                                 recordsFiltered: res.numFound,
-                                recordsTotal: 27693
-                            }
+                                recordsTotal: 27693,
+                            };
                             callback(data);
-                        })
+                        });
                     },
                     dom: '<"top col-sm-6 controls"l><"top col-sm-6"f>rt<"bottom"ip><"clear">',
                     columns: [
-                        {orderable: false, data: function (row) {
+                        {
+                            orderable: false,
+                            data: function (row) {
                                 return '<i class="fa fa-square-o"></i>';
-                            }},
-                        {title: "Name", data: 'name'},
-                        {title: "Compound", data: 'id'},
-                        {title: "Mass", data: 'mass', defaultContent: '-'},
-                        {title: "DeltaG", data: 'deltag', defaultContent: '-'},
-                        {title: "DeltaG error", data: 'deltagerr', defaultContent: '-'}
+                            },
+                        },
+                        { title: 'Name', data: 'name' },
+                        { title: 'Compound', data: 'id' },
+                        { title: 'Mass', data: 'mass', defaultContent: '-' },
+                        { title: 'DeltaG', data: 'deltag', defaultContent: '-' },
+                        { title: 'DeltaG error', data: 'deltagerr', defaultContent: '-' },
                     ],
                     rowCallback: function (row, data, index) {
-                        if (selectedRows.isSelected(data.id))
-                            $(row).addClass('row-select');
-                    }
-                })
+                        if (selectedRows.isSelected(data.id)) $(row).addClass('row-select');
+                    },
+                });
 
                 // biochem table controls
                 var controls = modal.body().find('.controls');
@@ -294,13 +300,13 @@ define([
 
                     var data = table.rows(this).data()[0];
 
-                    if ($(this).hasClass('row-select'))
-                        selectedRows.add(data);
-                    else
-                        selectedRows.rm(data.id);
+                    if ($(this).hasClass('row-select')) selectedRows.add(data);
+                    else selectedRows.rm(data.id);
 
                     if (selectedRows.count() > 0) {
-                        addBtn.html('<i class="fa fa-plus"></i> Add (' + selectedRows.count() + ')');
+                        addBtn.html(
+                            '<i class="fa fa-plus"></i> Add (' + selectedRows.count() + ')'
+                        );
                         addBtn.removeClass('hide');
                     } else {
                         addBtn.addClass('hide');
@@ -310,21 +316,23 @@ define([
                 // add compounds on click, hide dialog, give notice
                 addBtn.on('click', function () {
                     var data = setCpdDefaults(selectedRows.getSelected()),
-                        op = {op: 'add', data: data};
+                        op = { op: 'add', data: data };
                     editTable(op);
                     modal.hide();
-                    modeling.notice(container, 'Added ' + data.length + ' compounds')
-                })
+                    modeling.notice(container, 'Added ' + data.length + ' compounds');
+                });
 
                 modal.show();
             }
 
             function saveModal() {
-                var name = objName // +'-edited';  save as same name by default.
-                var input = $('<input type="text" class="form-control" placeholder="my-media-name">'),
-                    form = $('<div class="form-group">' +
-                        '<div class="col-sm-10"></div>' +
-                        '</div>');
+                var name = objName; // +'-edited';  save as same name by default.
+                var input = $(
+                        '<input type="text" class="form-control" placeholder="my-media-name">'
+                    ),
+                    form = $(
+                        '<div class="form-group">' + '<div class="col-sm-10"></div>' + '</div>'
+                    );
 
                 input.val(name);
                 form.find('div').append(input);
@@ -332,17 +340,20 @@ define([
                 var modal = new kbaseModal($('<div>'), {
                     title: 'Save Media As...',
                     body: form,
-                    buttons: [{
-                            text: 'Cancel'
-                        }, {
+                    buttons: [
+                        {
+                            text: 'Cancel',
+                        },
+                        {
                             text: 'Save',
-                            kind: 'primary'
-                        }]
-                })
+                            kind: 'primary',
+                        },
+                    ],
+                });
 
                 modal.button('Save').on('click', function () {
-                    saveData(getTableData(), wsName, input.val())
-                })
+                    saveData(getTableData(), wsName, input.val());
+                });
 
                 modal.show();
             }
@@ -358,9 +369,7 @@ define([
                 } else if (operation.op === 'add') {
                     table.rows.add(operation.data).draw();
                 } else if (operation.op === 'rm') {
-                    table.rows('.row-select')
-                        .remove()
-                        .draw();
+                    table.rows('.row-select').remove().draw();
                 }
             }
 
@@ -385,8 +394,7 @@ define([
 
                 this.isSelected = function (id) {
                     for (var i = 0; i < rows.length; i++) {
-                        if (rows[i].id === id)
-                            return true;
+                        if (rows[i].id === id) return true;
                     }
                     return false;
                 };
@@ -410,7 +418,7 @@ define([
 
                 this.add = function (row) {
                     ops.push(row);
-                    console.log('op:', ops)
+                    console.log('op:', ops);
                 };
 
                 this.count = function () {
@@ -438,8 +446,9 @@ define([
             function setCpdDefaults(cpds) {
                 // if not new media, use the same ref
                 var ref = media[0].compound_ref.split('/');
-                var defaultRef = media.length ?
-                    ref.slice(0, ref.length - 1).join('/') + '/' : '489/6/1/compounds/id/';
+                var defaultRef = media.length
+                    ? ref.slice(0, ref.length - 1).join('/') + '/'
+                    : '489/6/1/compounds/id/';
 
                 var newCpds = [];
                 for (var i = 0; i < cpds.length; i++) {
@@ -451,13 +460,12 @@ define([
                         maxFlux: 100,
                         id: cpd.id,
                         compound_ref: defaultRef + cpd.id,
-                        name: cpd.name
+                        name: cpd.name,
                     });
                 }
 
                 return newCpds;
             }
-
 
             // takes optional selector, returns list of
             // data from datatables (instead of api object)
@@ -482,30 +490,34 @@ define([
                 saveBtn.text('saving...');
                 kbapi('ws', 'save_objects', {
                     workspace: wsName,
-                    objects: [{
+                    objects: [
+                        {
                             type: 'KBaseBiochem.Media',
                             data: rawData.data,
                             name: name,
-                            meta: rawData.info[10]
-                        }]
-                }).done(function (res) {
-                    saveBtn.text('Save');
-                    saveAsBtn.text('Save as...');
-                    container.find('.edit-btn').toggleClass('hide');
-                    modeling.notice(container, 'Saved as ' + name, 5000);
-                    if (input.onSave) {
-                        input.onSave();
-                    }
-                }).fail(function (e) {
-                    var error = JSON.stringify(JSON.parse(e.responseText), null, 4);
-                    new kbaseModal($('<div>'), {
-                        title: 'Oh no! Something seems to have gone awry!',
-                        body: '<pre>' + error + '</pre>'
-                    }).show();
-                });
+                            meta: rawData.info[10],
+                        },
+                    ],
+                })
+                    .done(function (res) {
+                        saveBtn.text('Save');
+                        saveAsBtn.text('Save as...');
+                        container.find('.edit-btn').toggleClass('hide');
+                        modeling.notice(container, 'Saved as ' + name, 5000);
+                        if (input.onSave) {
+                            input.onSave();
+                        }
+                    })
+                    .fail(function (e) {
+                        var error = JSON.stringify(JSON.parse(e.responseText), null, 4);
+                        new kbaseModal($('<div>'), {
+                            title: 'Oh no! Something seems to have gone awry!',
+                            body: '<pre>' + error + '</pre>',
+                        }).show();
+                    });
             }
 
             return this;
-        }
+        },
     });
 });

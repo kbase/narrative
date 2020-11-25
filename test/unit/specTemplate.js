@@ -12,17 +12,9 @@
  * This uses the Jasmine framework for testing. You can see usage and examples here:
  * https://jasmine.github.io/2.0/introduction.html
  */
-define ([
-    'kbwidget',
-    'bootstrap',
-    'a_module'
-], function(
-    KBWidget,
-    bootstrap,
-    Module
-) {
+define(['kbwidget', 'bootstrap', 'a_module'], function (KBWidget, bootstrap, Module) {
     'use strict';
-    describe('Test the module', function() {
+    describe('Test the module', function () {
         var myModule;
 
         // Some setup code before each individual test (not always necessary).
@@ -37,7 +29,7 @@ define ([
         });
 
         // A single test case where the result shouldn't be null.
-        it('Should do stuff', function() {
+        it('Should do stuff', function () {
             var result = myModule.doStuff();
             expect(result).not.toBeNull();
         });

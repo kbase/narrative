@@ -1,8 +1,6 @@
 /*global define,describe,it,expect*/
 /*jslint white:true,browser:true*/
-define([
-    'common/props'
-], function (Props) {
+define(['common/props'], function (Props) {
     'use strict';
 
     describe('Props core functions', function () {
@@ -40,9 +38,9 @@ define([
 
         it('Set and get a simple object property', function () {
             var props = Props.make();
-            props.setItem('pet', {type: 'dog', name: 'peet'});
-            expect(props.getItem('pet')).toEqual({type: 'dog', name: 'peet'});
-        });       
+            props.setItem('pet', { type: 'dog', name: 'peet' });
+            expect(props.getItem('pet')).toEqual({ type: 'dog', name: 'peet' });
+        });
         it('Set two object propertyes', function () {
             var props = Props.make();
             props.setItem(['pet', 'coco'], 'yellow');
@@ -50,7 +48,7 @@ define([
             expect(props.getItem('pet.coco')).toEqual('yellow');
             expect(props.getItem('pet.peet')).toEqual('black');
         });
-        
+
         it('Push a value onto a property', function () {
             var props = Props.make();
             props.setItem('array.prop', []);
@@ -59,7 +57,7 @@ define([
             expect(props.popItem('array.prop')).toEqual(123);
             expect(props.getItem('array.prop')).toEqual([]);
         });
-        
+
         it('Push a value onto an empty', function () {
             var props = Props.make();
             props.pushItem('array.prop', 123);
@@ -67,27 +65,25 @@ define([
             expect(props.popItem('array.prop')).toEqual(123);
             expect(props.getItem('array.prop')).toEqual([]);
         });
-        
-        
+
         it('History should undefined', function () {
             var props = Props.make();
             expect(props.getHistoryCount()).toBeUndefined;
         });
-//        it('History should be 1 after one change', function() {
-//            var props = Props.make();
-//            props.setItem('color', 'red');
-//            expect(props.getHistoryCount()).toEqual(1);
-//        });
+        //        it('History should be 1 after one change', function() {
+        //            var props = Props.make();
+        //            props.setItem('color', 'red');
+        //            expect(props.getHistoryCount()).toEqual(1);
+        //        });
 
         it('Update callback should be called', function (done) {
             var props = Props.make({
                 onUpdate: function (props) {
                     expect(true).toEqual(true);
                     done();
-                }
+                },
             });
             props.setItem('color', 'red');
-
         });
 
         it('History should be 1 after one change', function (done) {
@@ -97,10 +93,9 @@ define([
                         expect(props.getHistoryCount()).toEqual(1);
                         done();
                     }
-                }
+                },
             });
             props.setItem('color', 'red');
-
         });
         it('Set and get a simple string property, check last value', function (done) {
             var props = Props.make({
@@ -114,19 +109,19 @@ define([
 
                     expect(last.color).toEqual('red');
                     done();
-                }
+                },
             });
             props.setItem('color', 'red');
         });
 
         it('Copy a property -- it unaffected by changes to the original', function () {
             var props = Props.make({
-                data: {
-                    prop1: {
-                        propA: 42
-                    }
-                }
-            }),
+                    data: {
+                        prop1: {
+                            propA: 42,
+                        },
+                    },
+                }),
                 propCopy = props.copyItem('prop1');
 
             props.setItem('prop1.propA', 53);
@@ -140,5 +135,4 @@ define([
             expect(Props.getDataItem(data, 'color')).toEqual('green');
         });
     });
-
 });

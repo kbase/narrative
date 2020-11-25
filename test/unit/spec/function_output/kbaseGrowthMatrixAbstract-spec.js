@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseGrowthMatrixAbstract'
-], function(Widget) {
-    describe('Test the kbaseGrowthMatrixAbstract widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseGrowthMatrixAbstract'], function (Widget) {
+    describe('Test the kbaseGrowthMatrixAbstract widget', function () {
+        it('Should do things', function () {});
     });
 });

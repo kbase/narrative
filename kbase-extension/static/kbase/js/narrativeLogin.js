@@ -6,7 +6,7 @@
  * the login widget, and wires the environment together.
  * @author Bill Riehl wjriehl@lbl.gov
  */
-define ([
+define([
     'jquery',
     'bluebird',
     'kbapi',
@@ -14,20 +14,11 @@ define ([
     'narrativeConfig',
     'api/auth',
     'userMenu',
-    'util/bootstrapDialog'
-], function(
-    $,
-    Promise,
-    kbapi,
-    JupyterUtils,
-    Config,
-    Auth,
-    UserMenu,
-    BootstrapDialog
-) {
+    'util/bootstrapDialog',
+], function ($, Promise, kbapi, JupyterUtils, Config, Auth, UserMenu, BootstrapDialog) {
     'use strict';
     var baseUrl = JupyterUtils.get_body_data('baseUrl'),
-        authClient = Auth.make({url: Config.url('auth')}),
+        authClient = Auth.make({ url: Config.url('auth') }),
         sessionInfo = null,
         tokenCheckTimer = null,
         tokenWarningTimer = null;
@@ -38,80 +29,86 @@ define ([
     function ipythonLogin(token) {
         window.kb = new KBCacheClient(token);
         $.ajax({
-            url: JupyterUtils.url_join_encode(baseUrl, 'login')
-        }).then(
-            function(ret) {
+            url: JupyterUtils.url_join_encode(baseUrl, 'login'),
+        })
+            .then(function (ret) {
                 // console.log(ret);
-            }
-        ).fail(
-            function(err) {
+            })
+            .fail(function (err) {
                 // console.err(err);
-            }
-        );
+            });
     }
 
     function ipythonLogout() {
         $.ajax({
-            url: JupyterUtils.url_join_encode(baseUrl, 'logout')
-        }).then(
-            function(ret) {
+            url: JupyterUtils.url_join_encode(baseUrl, 'logout'),
+        })
+            .then(function (ret) {
                 // console.log(ret);
-            }
-        ).fail(
-            function(err) {
+            })
+            .fail(function (err) {
                 // console.err(err);
-            }
-        );
+            });
         window.location.href = '/';
     }
 
     function showTokenInjectionDialog() {
         var $inputField = $('<input type="text" class="form-control">');
         var $body = $('<div>')
-            .append('<div>You appear to be working on a local development environment of the Narrative Interface, but you don\'t have a valid auth token. You can paste one in below.</div>')
-            .append('<div><b>You are operating in the ' + Config.get('environment') + ' environment.')
+            .append(
+                "<div>You appear to be working on a local development environment of the Narrative Interface, but you don't have a valid auth token. You can paste one in below.</div>"
+            )
+            .append(
+                '<div><b>You are operating in the ' + Config.get('environment') + ' environment.'
+            )
             .append($('<div>').append($inputField));
         var dialog = new BootstrapDialog({
-            'title': 'Insert an authentication token?',
-            'body': $body,
-            'buttons': [$('<a type="button" class="btn btn-default">')
-                .append('OK')
-                .click(function () {
-                    dialog.hide();
-                    var newToken = $inputField.val();
-                    authClient.setCookie({
-                        name: 'kbase_session',
-                        value: newToken,
-                        domain: 'localhost',
-                        secure: false
-                    });
-                    location.reload();
-                })]
+            title: 'Insert an authentication token?',
+            body: $body,
+            buttons: [
+                $('<a type="button" class="btn btn-default">')
+                    .append('OK')
+                    .click(function () {
+                        dialog.hide();
+                        var newToken = $inputField.val();
+                        authClient.setCookie({
+                            name: 'kbase_session',
+                            value: newToken,
+                            domain: 'localhost',
+                            secure: false,
+                        });
+                        location.reload();
+                    }),
+            ],
         });
         dialog.show();
     }
 
     function showNotLoggedInDialog() {
         var dialog = new BootstrapDialog({
-            'title': 'Not Logged In',
-            'body': $('<div>').append('You are not logged in (or your session has expired), and you will be redirected to the sign in page shortly.'),
-            'buttons': [
+            title: 'Not Logged In',
+            body: $('<div>').append(
+                'You are not logged in (or your session has expired), and you will be redirected to the sign in page shortly.'
+            ),
+            buttons: [
                 $('<a type="button" class="btn btn-default">')
                     .append('OK')
                     .click(function () {
                         dialog.hide();
                         ipythonLogout();
-                    })
-            ]
+                    }),
+            ],
         });
         dialog.show();
     }
 
     function showAboutToLogoutDialog(tokenExpirationTime) {
         var dialog = new BootstrapDialog({
-            'title': 'Expiring session',
-            'body': $('<div>').append('Your authenticated KBase session will expire in approximately 5 minutes. To continue using KBase, we suggest you log out and back in.'),
-            'buttons': [
+            title: 'Expiring session',
+            body: $('<div>').append(
+                'Your authenticated KBase session will expire in approximately 5 minutes. To continue using KBase, we suggest you log out and back in.'
+            ),
+            buttons: [
                 $('<a type="button" class="btn btn-default">')
                     .append('OK')
                     .click(function () {
@@ -119,24 +116,24 @@ define ([
                         if (remainingTime < 0) {
                             remainingTime = 0;
                         }
-                        tokenWarningTimer = setTimeout(function() {
+                        tokenWarningTimer = setTimeout(function () {
                             tokenTimeout();
                         });
                         dialog.hide();
-                    })
-            ]
+                    }),
+            ],
         });
         dialog.show();
     }
 
     function initEvents() {
-        $(document).on('loggedInQuery.kbase', function(e, callback) {
+        $(document).on('loggedInQuery.kbase', function (e, callback) {
             if (callback) {
                 callback(sessionInfo);
             }
         });
 
-        $(document).on('logout.kbase', function(e, hideMessage) {
+        $(document).on('logout.kbase', function (e, hideMessage) {
             tokenTimeout(!hideMessage);
         });
     }
@@ -150,7 +147,7 @@ define ([
             browserSleepValidateTime = Config.get('auth_sleep_recheck_ms'),
             validateOnCheck = false,
             validationInProgress = false;
-        tokenCheckTimer = setInterval(function() {
+        tokenCheckTimer = setInterval(function () {
             var token = authClient.getAuthToken();
             if (!token) {
                 tokenTimeout();
@@ -161,8 +158,9 @@ define ([
             }
             if (validateOnCheck && !validationInProgress) {
                 validationInProgress = true;
-                authClient.validateToken(token)
-                    .then(function(info) {
+                authClient
+                    .validateToken(token)
+                    .then(function (info) {
                         validateOnCheck = false;
                         if (info !== true) {
                             tokenTimeout(true);
@@ -171,12 +169,12 @@ define ([
                             // console.warn('Auth is still valid after ' + (lastCheckInterval/1000) + 's.');
                         }
                     })
-                    .catch(function(error) {
+                    .catch(function (error) {
                         // This might happen while waiting for internet to reconnect.
                         console.error('Error while validating token after sleep. Trying again...');
                         console.error(error);
                     })
-                    .finally(function() {
+                    .finally(function () {
                         validationInProgress = false;
                     });
                 lastCheckTime = new Date().getTime();
@@ -188,12 +186,11 @@ define ([
             // already expired! logout!
             tokenTimeout();
         }
-        var timeToWarning = tokenExpirationTime - currentTime - (1000 * 60 * 5);
+        var timeToWarning = tokenExpirationTime - currentTime - 1000 * 60 * 5;
         if (timeToWarning <= 0) {
             timeToWarning = 0;
-        }
-        else {
-            tokenWarningTimer = setTimeout(function() {
+        } else {
+            tokenWarningTimer = setTimeout(function () {
                 showAboutToLogoutDialog(tokenExpirationTime);
             }, timeToWarning);
         }
@@ -223,8 +220,7 @@ define ([
         // show dialog - you're signed out!
         if (showDialog) {
             showNotLoggedInDialog();
-        }
-        else {
+        } else {
             ipythonLogout();
         }
     }
@@ -247,36 +243,42 @@ define ([
          */
         clearTokenCheckTimers();
         var sessionToken = authClient.getAuthToken();
-        return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])
-            .then(function(results) {
-                var tokenInfo = results[0];
-                sessionInfo = tokenInfo;
-                this.sessionInfo = tokenInfo;
-                this.sessionInfo.token = sessionToken;
-                this.sessionInfo.kbase_sessionid = this.sessionInfo.id;
-                this.sessionInfo.user_id = this.sessionInfo.user;
-                initEvents();
-                initTokenTimer(sessionInfo.expires);
-                UserMenu.make({
-                    target: $elem,
-                    token: sessionToken,
-                    userName: sessionInfo.user,
-                    email: results[1].email,
-                    displayName: results[1].display
-                });
-                if (!noServer) {
-                    ipythonLogin(sessionToken);
-                }
-                $(document).trigger('loggedIn', this.sessionInfo);
-                $(document).trigger('loggedIn.kbase', this.sessionInfo);
-            }.bind(this))
-            .catch(function(error) {
+        return Promise.all([
+            authClient.getTokenInfo(sessionToken),
+            authClient.getUserProfile(sessionToken),
+        ])
+            .then(
+                function (results) {
+                    var tokenInfo = results[0];
+                    sessionInfo = tokenInfo;
+                    this.sessionInfo = tokenInfo;
+                    this.sessionInfo.token = sessionToken;
+                    this.sessionInfo.kbase_sessionid = this.sessionInfo.id;
+                    this.sessionInfo.user_id = this.sessionInfo.user;
+                    initEvents();
+                    initTokenTimer(sessionInfo.expires);
+                    UserMenu.make({
+                        target: $elem,
+                        token: sessionToken,
+                        userName: sessionInfo.user,
+                        email: results[1].email,
+                        displayName: results[1].display,
+                    });
+                    if (!noServer) {
+                        ipythonLogin(sessionToken);
+                    }
+                    $(document).trigger('loggedIn', this.sessionInfo);
+                    $(document).trigger('loggedIn.kbase', this.sessionInfo);
+                }.bind(this)
+            )
+            .catch(function (error) {
                 console.error(error);
-                if (document.location.hostname.indexOf('localhost') !== -1 ||
-                    document.location.hostname.indexOf('0.0.0.0') !== -1) {
+                if (
+                    document.location.hostname.indexOf('localhost') !== -1 ||
+                    document.location.hostname.indexOf('0.0.0.0') !== -1
+                ) {
                     showTokenInjectionDialog();
-                }
-                else {
+                } else {
                     showNotLoggedInDialog();
                 }
             });
@@ -285,6 +287,6 @@ define ([
     return {
         init: init,
         sessionInfo: sessionInfo,
-        getAuthToken: getAuthToken
+        getAuthToken: getAuthToken,
     };
 });

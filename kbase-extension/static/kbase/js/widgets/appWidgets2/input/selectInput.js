@@ -10,15 +10,8 @@ define([
     '../inputUtils',
 
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    html,
-    Events,
-    UI,
-    Runtime,
-    Validation,
-    inputUtils) {
+    'css!font-awesome',
+], function (Promise, html, Events, UI, Runtime, Validation, inputUtils) {
     'use strict';
 
     // Constants
@@ -37,13 +30,13 @@ define([
             container,
             model = {
                 availableValues: null,
-                value: null
+                value: null,
             };
 
         model.availableValues = spec.data.constraints.options;
 
         model.availableValuesMap = {};
-        model.availableValues.forEach(function(item, index) {
+        model.availableValues.forEach(function (item, index) {
             item.index = index;
             model.availableValuesMap[item.value] = item;
         });
@@ -64,22 +57,21 @@ define([
         // VALIDATION
 
         function importControlValue() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 return Validation.importString(getControlValue());
             });
         }
 
         function validate(value) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 return Validation.validate(value, spec);
             });
         }
 
         function autoValidate() {
-            return validate(model.value)
-                .then(function(result) {
-                    channel.emit('validation', result);
-                });
+            return validate(model.value).then(function (result) {
+                channel.emit('validation', result);
+            });
         }
 
         // DOM EVENTS
@@ -87,16 +79,16 @@ define([
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     importControlValue()
-                        .then(function(value) {
+                        .then(function (value) {
                             model.value = value;
                             channel.emit('changed', {
-                                newValue: value
+                                newValue: value,
                             });
                             return validate(value);
                         })
-                        .then(function(result) {
+                        .then(function (result) {
                             if (result.isValid) {
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
@@ -110,7 +102,7 @@ define([
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
-                                        message: result.errorMessage
+                                        message: result.errorMessage,
                                     });
                                     ui.setContent('input-container.message', message.content);
                                     message.events.attachEvents();
@@ -118,37 +110,43 @@ define([
                             }
                             channel.emit('validation', result);
                         })
-                        .catch(function(err) {
+                        .catch(function (err) {
                             channel.emit('validation', {
                                 isValid: false,
                                 diagnosis: 'invalid',
-                                errorMessage: err.message
+                                errorMessage: err.message,
                             });
                         });
-                }
+                },
             };
         }
 
         function makeInputControl(events) {
             var selected,
-                selectOptions = model.availableValues.map(function(item) {
+                selectOptions = model.availableValues.map(function (item) {
                     selected = false;
                     if (item.value === model.value) {
                         selected = true;
                     }
 
-                    return option({
-                        value: item.value,
-                        selected: selected
-                    }, item.display);
+                    return option(
+                        {
+                            value: item.value,
+                            selected: selected,
+                        },
+                        item.display
+                    );
                 });
 
             // CONTROL
-            return select({
-                id: events.addEvents({ events: [handleChanged()] }),
-                class: 'form-control',
-                dataElement: 'input'
-            }, [option({ value: '' }, '')].concat(selectOptions));
+            return select(
+                {
+                    id: events.addEvents({ events: [handleChanged()] }),
+                    class: 'form-control',
+                    dataElement: 'input',
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
         }
 
         function syncModelToControl() {
@@ -166,16 +164,15 @@ define([
         }
 
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' },
-                    makeInputControl(events)
-                )
-            ]);
+            var content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' }, makeInputControl(events))]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -189,11 +186,10 @@ define([
             setModelValue(spec.data.defaultValue);
         }
 
-
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
@@ -204,10 +200,10 @@ define([
                 container.innerHTML = theLayout.content;
                 events.attachEvents();
 
-                channel.on('reset-to-defaults', function() {
+                channel.on('reset-to-defaults', function () {
                     resetModelValue();
                 });
-                channel.on('update', function(message) {
+                channel.on('update', function (message) {
                     setModelValue(message.value);
                 });
                 // bus.emit('sync');
@@ -219,7 +215,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -229,13 +225,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

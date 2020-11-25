@@ -5,7 +5,7 @@
  * Provides app spec functionality.
  */
 
-define([], function() {
+define([], function () {
     'use strict';
 
     function toInteger(value) {
@@ -21,7 +21,7 @@ define([], function() {
                 }
                 throw new Error('Invalid integer format');
             default:
-                throw new Error('Type ' + (typeof value) + ' cannot be converted to integer');
+                throw new Error('Type ' + typeof value + ' cannot be converted to integer');
         }
     }
 
@@ -37,7 +37,10 @@ define([], function() {
 
     function validateWorkspaceObjectNameString(spec, value) {
         var parsedValue,
-            messageId, shortMessage, errorMessage, diagnosis = 'valid';
+            messageId,
+            shortMessage,
+            errorMessage,
+            diagnosis = 'valid';
 
         if (typeof value !== 'string') {
             diagnosis = 'invalid';
@@ -60,10 +63,11 @@ define([], function() {
                 messageId = 'obj-name-not-integer';
                 diagnosis = 'invalid';
                 errorMessage = 'an object name may not be in the form of an integer';
-            } else if (!(/^[A-Za-z0-9|\.|\||_\-]+$/).test(parsedValue)) {
+            } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
                 messageId = 'obj-name-invalid-characters';
                 diagnosis = 'invalid';
-                errorMessage = 'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
+                errorMessage =
+                    'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
             } else if (parsedValue.length > 255) {
                 messageId = 'obj-name-too-long';
                 diagnosis = 'invalid';
@@ -77,13 +81,14 @@ define([], function() {
             shortMessage: shortMessage,
             diagnosis: diagnosis,
             value: value,
-            parsedValue: parsedValue
+            parsedValue: parsedValue,
         };
     }
 
     function validateString(spec, value) {
         var parsedValue,
-            errorMessage, diagnosis = 'valid',
+            errorMessage,
+            diagnosis = 'valid',
             c = spec.data.constraints,
             regexp = c.regexp ? new RegExp(c.regexp) : false;
 
@@ -104,7 +109,7 @@ define([], function() {
             }
         } else if (typeof value !== 'string') {
             diagnosis = 'invalid';
-            errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
+            errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
         } else {
             // parsedValue = value.trim();
             parsedValue = value;
@@ -116,7 +121,8 @@ define([], function() {
                 errorMessage = 'the maximum length for this parameter is ' + c.max;
             } else if (regexp && !regexp.test(parsedValue)) {
                 diagnosis = 'invalid';
-                errorMessage = 'The text value did not match the regular expression constraint ' + c.regexp;
+                errorMessage =
+                    'The text value did not match the regular expression constraint ' + c.regexp;
             } else {
                 diagnosis = 'valid';
             }
@@ -127,13 +133,14 @@ define([], function() {
             errorMessage: errorMessage,
             diagnosis: diagnosis,
             value: value,
-            parsedValue: parsedValue
+            parsedValue: parsedValue,
         };
     }
 
     function validateStruct(spec, value) {
         var parsedValue,
-            errorMessage, diagnosis = 'valid',
+            errorMessage,
+            diagnosis = 'valid',
             c = spec.data.constraints;
 
         // make sure it is a plain object
@@ -144,12 +151,12 @@ define([], function() {
         // use the spec to validate each member
         var result = {};
 
-        spec.parameters.layout.forEach(function(id) {
+        spec.parameters.layout.forEach(function (id) {
             var fieldValue = value[id];
             var fieldSpec = spec.parameters.specs[id];
             result[id] = {
                 id: id,
-                result: validateModel(fieldSpec, fieldValue)
+                result: validateModel(fieldSpec, fieldValue),
             };
         });
 
@@ -158,7 +165,8 @@ define([], function() {
 
     function validateStructList(spec, value) {
         var parsedValue,
-            errorMessage, diagnosis = 'valid',
+            errorMessage,
+            diagnosis = 'valid',
             c = spec.data.constraints;
 
         // make sure it is a plain object
@@ -180,14 +188,14 @@ define([], function() {
                     errorMessage: 'Required but empty',
                     diagnosis: 'required-missing',
                     value: value,
-                    parsedValue: spec.nullValue
+                    parsedValue: spec.nullValue,
                 };
             } else {
                 return {
                     isValid: true,
                     diagnosis: 'empty-optional',
                     value: value,
-                    parsedValue: spec.nullValue
+                    parsedValue: spec.nullValue,
                 };
             }
         }
@@ -196,9 +204,9 @@ define([], function() {
 
         // validate eacn item in the value.
 
-        var results = value.map(function(item) {
-            // yes, the spec for a struct list is identical (for now) to 
-            // a struct. 
+        var results = value.map(function (item) {
+            // yes, the spec for a struct list is identical (for now) to
+            // a struct.
             // TODO: we need an ordered set type to wrap the struct!!!!!!
             return validateStruct(spec.parameters.specs.item, item);
         });
@@ -212,7 +220,7 @@ define([], function() {
             errorMessage: null,
             diagnosis: 'valid',
             value: value,
-            parsedValue: value
+            parsedValue: value,
         };
     }
 
@@ -234,7 +242,7 @@ define([], function() {
                 fun = validateTrue;
         }
 
-        return function(value) {
+        return function (value) {
             return fun(spec, value);
         };
     }
@@ -248,13 +256,13 @@ define([], function() {
 
     function factory(config) {
         return Object.freeze({
-            validateModel: validateModel
+            validateModel: validateModel,
         });
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

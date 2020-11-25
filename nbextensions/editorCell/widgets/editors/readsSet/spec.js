@@ -1,4 +1,4 @@
-define([], function() {
+define([], function () {
     'use strict';
     return {
         parameters: {
@@ -14,17 +14,17 @@ define([], function() {
                         description: 'Name of the reads set',
                         hint: 'The name of the set of sequence reads',
                         class: 'parameter',
-                        control: null
+                        control: null,
                     },
                     data: {
                         type: 'string',
                         constraints: {
                             required: true,
-                            rule: 'WorkspaceObjectName' // ws data_type
+                            rule: 'WorkspaceObjectName', // ws data_type
                         },
                         defaultValue: '',
-                        nullValue: ''
-                    }
+                        nullValue: '',
+                    },
                 },
                 description: {
                     id: 'description',
@@ -35,17 +35,17 @@ define([], function() {
                         hint: 'The description of the set of sequence reads',
                         class: 'parameter',
                         control: 'textarea',
-                        rows: 5
+                        rows: 5,
                     },
                     data: {
                         type: 'string',
                         constraints: {
                             required: false,
-                            multiLine: true
+                            multiLine: true,
                         },
                         defaultValue: '',
-                        nullValue: null
-                    }
+                        nullValue: null,
+                    },
                 },
                 items: {
                     id: 'items',
@@ -55,15 +55,15 @@ define([], function() {
                         hint: 'A set of Reads Objects',
                         class: 'parameter',
                         control: '',
-                        layout: ['item']
+                        layout: ['item'],
                     },
                     data: {
                         type: 'sequence',
                         constraints: {
-                            required: false
+                            required: false,
                         },
                         defaultValue: [],
-                        nullValue: null
+                        nullValue: null,
                     },
                     parameters: {
                         layout: ['item'],
@@ -77,22 +77,22 @@ define([], function() {
                                     hint: 'A set of Reads Objects',
                                     class: 'parameter',
                                     control: '',
-                                    layout: ['ref', 'label']
+                                    layout: ['ref', 'label'],
                                 },
                                 data: {
                                     type: 'struct',
                                     constraints: {
-                                        required: true
+                                        required: true,
                                     },
                                     defaultValue: {
                                         ref: null,
-                                        label: null
+                                        label: null,
                                     },
                                     nullValue: null,
                                     zeroValue: {
                                         ref: null,
-                                        label: null
-                                    }
+                                        label: null,
+                                    },
                                 },
                                 parameters: {
                                     layout: ['ref', 'label'],
@@ -106,17 +106,20 @@ define([], function() {
                                                 label: 'Reads Object',
                                                 description: 'This is param 1',
                                                 hint: 'Hint 1',
-                                                class: 'parameter'
+                                                class: 'parameter',
                                             },
                                             data: {
                                                 type: 'workspaceObjectRef',
                                                 constraints: {
                                                     required: true,
-                                                    types: ['KBaseFile.PairedEndLibrary', 'KBaseFile.SingleEndLibrary']
+                                                    types: [
+                                                        'KBaseFile.PairedEndLibrary',
+                                                        'KBaseFile.SingleEndLibrary',
+                                                    ],
                                                 },
                                                 defaultValue: null,
-                                                nullValue: null
-                                            }
+                                                nullValue: null,
+                                            },
                                         },
                                         label: {
                                             id: 'label',
@@ -127,25 +130,24 @@ define([], function() {
                                                 label: 'Label',
                                                 description: 'This is param 2',
                                                 hint: 'Hint 2',
-                                                class: 'parameter'
+                                                class: 'parameter',
                                             },
                                             data: {
                                                 type: 'string',
                                                 constraints: {
-                                                    required: true
+                                                    required: true,
                                                 },
                                                 defaultValue: null,
-                                                nullValue: null
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+                                                nullValue: null,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
     };
-
 });

@@ -1,12 +1,10 @@
 /*global define*/
 /*jslint white:true,browser:true*/
-define([
-    
-], function () {
+define([], function () {
     'use strict';
-    
+
     function factory(config) {
-         var url = config.url,
+        var url = config.url,
             cdnUrl = config.cdn;
         // NB: For prototyping we supply this widget db in code.
         // This is modeling a service which provides widget lookup.
@@ -18,8 +16,8 @@ define([
                         version: '0.1.0',
                         config: {
                             runtime: {
-                                version: '0.1.1'
-                            }
+                                version: '0.1.1',
+                            },
                         },
                         widgets: [
                             {
@@ -30,9 +28,9 @@ define([
                                 input: {
                                     objectRef: {
                                         required: true,
-                                        type: '??'
-                                    }
-                                }
+                                        type: '??',
+                                    },
+                                },
                             },
                             {
                                 widgetName: 'pairedEndLibrary',
@@ -41,11 +39,11 @@ define([
                                 input: {
                                     objects: {
                                         objectRef: {
-                                            required: true
-                                        }
+                                            required: true,
+                                        },
                                     },
-                                    options: {}
-                                }
+                                    options: {},
+                                },
                             },
                             {
                                 widgetName: 'contigSet',
@@ -54,11 +52,11 @@ define([
                                 input: {
                                     objects: {
                                         objectRef: {
-                                            required: true
-                                        }
+                                            required: true,
+                                        },
                                     },
-                                    options: {}
-                                }
+                                    options: {},
+                                },
                             },
                             {
                                 widgetName: 'genomeComparison',
@@ -67,10 +65,10 @@ define([
                                 input: {
                                     objects: {
                                         objectRef: {
-                                            required: true
-                                        }
-                                    }
-                                }
+                                            required: true,
+                                        },
+                                    },
+                                },
                             },
                             {
                                 widgetName: 'objectOverview',
@@ -82,10 +80,10 @@ define([
                                 input: {
                                     objects: {
                                         objectRef: {
-                                            required: true
-                                        }
-                                    }
-                                }
+                                            required: true,
+                                        },
+                                    },
+                                },
                             },
                             {
                                 widgetName: 'pairedEndLibrary',
@@ -97,27 +95,29 @@ define([
                                 input: {
                                     objects: {
                                         objectRef: {
-                                            required: true
-                                        }
-                                    }
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }
+                                            required: true,
+                                        },
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                ],
+            },
         ];
-        
+
         var widgetDb = {};
         widgetPackages.forEach(function (widgetPackage) {
             widgetDb[widgetPackage.name] = {};
-            widgetPackage.versions.forEach(function(version) {
+            widgetPackage.versions.forEach(function (version) {
                 widgetDb[widgetPackage.name][version.version] = {
                     config: version.config,
-                    widgets: {}
+                    widgets: {},
                 };
                 version.widgets.forEach(function (widget) {
-                    widgetDb[widgetPackage.name][version.version].widgets[widget.widgetName] = widget;
+                    widgetDb[widgetPackage.name][version.version].widgets[
+                        widget.widgetName
+                    ] = widget;
                 });
             });
         });
@@ -141,18 +141,25 @@ define([
         function getWidget(packageName, version, widgetName) {
             var versionedPackage = findPackage(packageName, version),
                 widget = versionedPackage.widgets[widgetName];
-            
+
             if (!widget) {
-                throw new Error('Cannot locate widget ' + widgetName + ' in package ' + packageName + ' version ' + version);
+                throw new Error(
+                    'Cannot locate widget ' +
+                        widgetName +
+                        ' in package ' +
+                        packageName +
+                        ' version ' +
+                        version
+                );
             }
 
             return {
                 widget: widget,
                 packageName: packageName,
-                packageVersion: version
+                packageVersion: version,
             };
         }
-        
+
         /*
          * Find a widget with certain constraints.
          * Currently finds the most recent widget
@@ -169,12 +176,11 @@ define([
                             return {
                                 packageName: widgetPackage.name,
                                 packageVersion: version.version,
-                                widget: widget
+                                widget: widget,
                             };
                         }
                     }
                 }
-                
             }
         }
 
@@ -187,13 +193,13 @@ define([
             getWidget: getWidget,
             findWidget: findWidget,
             version: '0.1.0',
-            about: 'This is the Widget Service Factory'
+            about: 'This is the Widget Service Factory',
         });
     }
-    
+
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

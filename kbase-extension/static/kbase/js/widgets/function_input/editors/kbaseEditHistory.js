@@ -25,74 +25,74 @@
  *
  */
 
-define([], function() {
-
+define([], function () {
     function EditHistory() {
         var ops = [];
 
         // master copy
         var added = {};
         var removed = {};
-        var edits = {};  // has form {<id>: {<kind>: {before: <before>, after: <after>}}}
+        var edits = {}; // has form {<id>: {<kind>: {before: <before>, after: <after>}}}
 
-        this.add = function(newOp) {
+        this.add = function (newOp) {
             ops.push(newOp);
 
             if (newOp.op === 'add') {
-                newOp.ids.forEach(function(id, i) {
+                newOp.ids.forEach(function (id, i) {
                     added[id] = newOp.data[i];
 
                     // remove any removed ids in master
                     if (id in removed) delete removed[id];
-                })
+                });
             } else if (newOp.op === 'rm') {
-                newOp.ids.forEach(function(id, i) {
+                newOp.ids.forEach(function (id, i) {
                     removed[id] = newOp.data[i];
 
                     // remove any edited ids or added ids from master
                     if (id in edits) delete edits[id];
                     if (id in added) delete added[id];
-                })
+                });
             } else if (newOp.op === 'edit') {
                 // for all ids in edit, if edit already exists,
                 // replace with latest edit.  if not, add edit.
-                newOp.ids.forEach(function(id) {
-                    if ( !(id in edits) ) edits[id] = {};
+                newOp.ids.forEach(function (id) {
+                    if (!(id in edits)) edits[id] = {};
 
                     // if this type of edit is already there, use same "before" and new "after"
                     if (newOp.kind in edits[id])
-                        edits[id][newOp.kind] = {before: edits[id][newOp.kind].before, after: newOp.after};
-                    else
-                        edits[id][newOp.kind] = {before: newOp.before, after: newOp.after};
+                        edits[id][newOp.kind] = {
+                            before: edits[id][newOp.kind].before,
+                            after: newOp.after,
+                        };
+                    else edits[id][newOp.kind] = { before: newOp.before, after: newOp.after };
 
                     // remove any added ids from master
                     if (id in added) delete added[id];
-                })
+                });
             }
-        }
+        };
 
-
-        this.count = function() {
+        this.count = function () {
             return ops.length;
-        }
+        };
 
-        this.getHistory = function() {
+        this.getHistory = function () {
             return ops;
-        }
+        };
 
-        this.clearAll = function() {
+        this.clearAll = function () {
             ops = [];
             master = {};
-        }
+        };
 
-        this.getMaster = function() {
+        this.getMaster = function () {
             return {
-                 added: added,
-                 removed: removed,
-                 edits: edits
+                added: added,
+                removed: removed,
+                edits: edits,
             };
-        }
+        };
     }
 
     return EditHistory;
-})
+});

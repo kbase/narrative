@@ -5,30 +5,23 @@
  * @public
  */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseNarrativeParameterInput',
-		'select2'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbaseNarrativeParameterInput
-	) {
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig',
+    'kbaseNarrativeParameterInput',
+    'select2',
+], function (KBWidget, bootstrap, $, Config, kbaseNarrativeParameterInput) {
     'use strict';
     return KBWidget({
-        name: "kbaseNarrativeParameterDropdownInput",
-        parent : kbaseNarrativeParameterInput,
-        version: "1.0.0",
+        name: 'kbaseNarrativeParameterDropdownInput',
+        parent: kbaseNarrativeParameterInput,
+        version: '1.0.0',
         options: {
             loadingImage: Config.get('loading_gif'),
             parsedParameterSpec: null,
-            isInSidePanel: false
+            isInSidePanel: false,
         },
         IGNORE_VERSION: true,
 
@@ -40,19 +33,19 @@ define (
         required: true,
         rowDivs: null,
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             return this;
         },
 
-        render: function() {
+        render: function () {
             var self = this;
             var spec = self.spec;
 
             // check if we need to allow multiple values
             var allow_multiple = false;
             if (spec.allow_multiple) {
-                if (spec.allow_multiple===true || spec.allow_multiple===1) {
+                if (spec.allow_multiple === true || spec.allow_multiple === 1) {
                     allow_multiple = true;
                 }
             }
@@ -61,47 +54,54 @@ define (
             if (!allow_multiple) {
                 // just one field, phew, this one should be easy
                 var d = spec.default_values;
-                self.required= true;
-                if (spec.optional===1) {
+                self.required = true;
+                if (spec.optional === 1) {
                     self.required = false;
                 }
 
-                var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] : "";
+                var defaultValue = d[0] !== '' && d[0] !== undefined ? d[0] : '';
                 var form_id = spec.id;
-                var $dropdown= $('<select id="'+form_id+'">').css({width:"100%"})
-                                .on("change",function() { self.isValid() });
+                var $dropdown = $('<select id="' + form_id + '">')
+                    .css({ width: '100%' })
+                    .on('change', function () {
+                        self.isValid();
+                    });
 
-                if (d && d.length>0 && d[0]==="" && !self.required) {
+                if (d && d.length > 0 && d[0] === '' && !self.required) {
                     // we assume that if there is a single value set as empty, and this is optional, we allow an
                     // empty selection which ends up getting omitted from the params on the backend
                     // annoying select two removes my option if it is left blank!! must disguise it!
                     $dropdown.append($('<option value="">').append('-'));
                 }
 
-
                 var foundOptions = false;
                 /* HOW IT SHOULD BE!!! */
-                  if(spec.dropdown_options) {
+                if (spec.dropdown_options) {
                     if (spec.dropdown_options.options) {
-                        for (var k=0; k<spec.dropdown_options.options.length; k++) {
+                        for (var k = 0; k < spec.dropdown_options.options.length; k++) {
                             var opt = spec.dropdown_options.options[k];
                             if (opt.id && opt.ui_name) {
-                                $dropdown.append($('<option value="'+opt.id+'">').append(opt.ui_name));
+                                $dropdown.append(
+                                    $('<option value="' + opt.id + '">').append(opt.ui_name)
+                                );
                                 foundOptions = true;
-                            } else if (opt.value && opt.display) {  // id was misnamed, should have been value
-                                $dropdown.append($('<option value="'+opt.value+'">').append(opt.display));
+                            } else if (opt.value && opt.display) {
+                                // id was misnamed, should have been value
+                                $dropdown.append(
+                                    $('<option value="' + opt.value + '">').append(opt.display)
+                                );
                                 foundOptions = true;
                             }
                         }
                     }
                 }
-                if(spec.dropdown_options) {
+                if (spec.dropdown_options) {
                     if (spec.dropdown_options.ids_to_options) {
                         $dropdown.empty();
                         for (var optId in spec.dropdown_options.ids_to_options) {
-                            if(spec.dropdown_options.ids_to_options.hasOwnProperty(optId)){
+                            if (spec.dropdown_options.ids_to_options.hasOwnProperty(optId)) {
                                 var opt = spec.dropdown_options.ids_to_options[optId];
-                                $dropdown.append($('<option value="'+optId+'">').append(opt));
+                                $dropdown.append($('<option value="' + optId + '">').append(opt));
                                 foundOptions = true;
                             }
                         }
@@ -109,86 +109,104 @@ define (
                 }
 
                 if (!foundOptions) {
-                    $dropdown.append($('<option value="">').append("no options found in method spec"));
+                    $dropdown.append(
+                        $('<option value="">').append('no options found in method spec')
+                    );
                 }
 
-                var $feedbackTip = $("<span>").removeClass();
+                var $feedbackTip = $('<span>').removeClass();
                 if (self.required) {
-                    $feedbackTip.addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
+                    $feedbackTip
+                        .addClass(
+                            'kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left'
+                        )
+                        .prop('title', 'required field');
                 }
 
                 // set the widths of the columns
-                var nameColClass  = "col-md-2";
-                var inputColClass = "col-md-5";
-                var hintColClass  = "col-md-5";
+                var nameColClass = 'col-md-2';
+                var inputColClass = 'col-md-5';
+                var hintColClass = 'col-md-5';
                 if (self.options.isInSidePanel) {
-                	nameColClass  = "col-md-12";
-                    inputColClass = "col-md-12";
-                    hintColClass  = "col-md-12";
+                    nameColClass = 'col-md-12';
+                    inputColClass = 'col-md-12';
+                    hintColClass = 'col-md-12';
                 }
 
-                var $row = $('<div>').addClass("row kb-method-parameter-row")
-                                .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
-                var $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
-                                    .append(spec.ui_name);
+                var $row = $('<div>')
+                    .addClass('row kb-method-parameter-row')
+                    .hover(function () {
+                        $(this).toggleClass('kb-method-parameter-row-hover');
+                    });
+                var $nameCol = $('<div>')
+                    .addClass(nameColClass)
+                    .addClass('kb-method-parameter-name')
+                    .append(spec.ui_name);
                 if (self.options.isInSidePanel)
-                	$nameCol.css({'text-align': 'left', 'padding-left': '10px'});
-                var $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
-                                .append($('<div>').css({"width":"100%","display":"inline-block"}).append($dropdown))
-                                .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
-                var $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
-                                .append(spec.short_hint);
+                    $nameCol.css({ 'text-align': 'left', 'padding-left': '10px' });
+                var $inputCol = $('<div>')
+                    .addClass(inputColClass)
+                    .addClass('kb-method-parameter-input')
+                    .append(
+                        $('<div>').css({ width: '100%', display: 'inline-block' }).append($dropdown)
+                    )
+                    .append($('<div>').css({ display: 'inline-block' }).append($feedbackTip));
+                var $hintCol = $('<div>')
+                    .addClass(hintColClass)
+                    .addClass('kb-method-parameter-hint')
+                    .append(spec.short_hint);
                 if (spec.description && spec.short_hint !== spec.description) {
-                    $hintCol.append($('<span>').addClass('fa fa-info kb-method-parameter-info')
-                                    .tooltip({title:spec.description, html:true, container: 'body'}));
+                    $hintCol.append(
+                        $('<span>')
+                            .addClass('fa fa-info kb-method-parameter-info')
+                            .tooltip({ title: spec.description, html: true, container: 'body' })
+                    );
                 }
                 $row.append($nameCol).append($inputCol).append($hintCol);
 
-                var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
-                var $errorRow = $('<div>').addClass('row')
-                                    .append($('<div>').addClass(nameColClass))
-                                    .append($errorPanel.addClass(inputColClass));
+                var $errorPanel = $('<div>').addClass('kb-method-parameter-error-mssg').hide();
+                var $errorRow = $('<div>')
+                    .addClass('row')
+                    .append($('<div>').addClass(nameColClass))
+                    .append($errorPanel.addClass(inputColClass));
 
                 self.$mainPanel.append($row);
                 self.$mainPanel.append($errorRow);
-                self.rowDivs.push({$row:$row, $error:$errorPanel, $feedback:$feedbackTip});
+                self.rowDivs.push({ $row: $row, $error: $errorPanel, $feedback: $feedbackTip });
 
                 /* for some reason, we need to actually have the input added to the main panel before this will work */
-                this.setupSelect2($dropdown,"",defaultValue);
+                this.setupSelect2($dropdown, '', defaultValue);
 
                 // for dropdowns, we always validate (because it adds the green check feedback)
                 this.isValid();
-
             } else {
                 // need to handle multiple fields- do something better!
-                self.$mainPanel.append("<div>multiple dropdown fields not yet supported</div>");
+                self.$mainPanel.append('<div>multiple dropdown fields not yet supported</div>');
             }
         },
 
-
-        refresh: function() {
+        refresh: function () {
             // we don't allow types to be displayed, so we don't have to refresh
         },
-
 
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input, placeholder, defaultValue) {
             var self = this;
-            var noMatchesFoundStr = "No matching data found.";
+            var noMatchesFoundStr = 'No matching data found.';
             if (self.isOutputName) {
-                noMatchesFoundStr = "Enter a name for the output data object.";
+                noMatchesFoundStr = 'Enter a name for the output data object.';
             }
             $input.select2({
                 minimumResultsForSearch: -1,
                 selectOnBlur: true,
                 //placeholder:placeholder,
                 //allowClear: true,
-                templateResult: function(object) {
+                templateResult: function (object) {
                     return $('<span class="kb-parameter-data-selection">').append(object.text);
                 },
-                templateSelection: function(object) {
+                templateSelection: function (object) {
                     return $('<span class="kb-parameter-data-selection">').append(object.text);
-                }
+                },
                 //
                 // formatSelection: function(object, container) {
                 //     var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
@@ -201,7 +219,7 @@ define (
             });
 
             if (defaultValue) {
-                $input.select2("val",defaultValue);
+                $input.select2('val', defaultValue);
             }
         },
 
@@ -212,15 +230,15 @@ define (
          * called, you should visually indicate which parameters are invalid by marking them
          * red (see kbaseNarrativeMethodInput for default styles).
          */
-        isValid: function() {
+        isValid: function () {
             var self = this;
             if (!self.enabled) {
-                return { isValid: true, errormssgs:[]}; // do not validate if disabled
+                return { isValid: true, errormssgs: [] }; // do not validate if disabled
             }
             var p = self.getParameterValue();
             var errorDetected = false;
             var errorMessages = [];
-            if(p instanceof Array) {
+            if (p instanceof Array) {
                 // todo: handle this case when there are multiple fields
             } else {
                 if (p) {
@@ -228,39 +246,48 @@ define (
                 }
                 // if it is a required selection and is empty, keep the required icon around but we have an error
                 if (!p && self.required) {
-                    self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
-                    self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
+                    self.rowDivs[0].$row.removeClass('kb-method-parameter-row-error');
+                    self.rowDivs[0].$feedback
+                        .removeClass()
+                        .addClass(
+                            'kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left'
+                        )
+                        .prop('title', 'required field');
                     self.rowDivs[0].$feedback.show();
                     self.rowDivs[0].$error.hide();
                     errorDetected = true;
-                    errorMessages.push("required field "+self.spec.ui_name+" missing.");
+                    errorMessages.push('required field ' + self.spec.ui_name + ' missing.');
                 }
 
                 // no error, so we hide the error if any, and show the "accepted" icon if it is not empty
                 if (!errorDetected) {
                     if (self.rowDivs[0]) {
-                        self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
+                        self.rowDivs[0].$row.removeClass('kb-method-parameter-row-error');
                         self.rowDivs[0].$error.hide();
                         self.rowDivs[0].$feedback.removeClass();
-                        if (p!=='') {
-                            self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
+                        if (p !== '') {
+                            self.rowDivs[0].$feedback
+                                .removeClass()
+                                .addClass(
+                                    'kb-method-parameter-accepted-glyph glyphicon glyphicon-ok'
+                                );
                         }
                     }
                 } else {
                     // something went wrong...  possibly no options set in the spec?
                 }
             }
-            return { isValid: !errorDetected, errormssgs:errorMessages};
+            return { isValid: !errorDetected, errormssgs: errorMessages };
         },
 
         /*
          * Necessary for Apps to disable editing parameters that are automatically filled
          * from a previous step.  Returns nothing.
          */
-        disableParameterEditing: function() {
+        disableParameterEditing: function () {
             // disable the input
             this.enabled = false;
-            this.$elem.find("#"+this.spec.id).select2('disable',true);
+            this.$elem.find('#' + this.spec.id).select2('disable', true);
             // stylize the row div
             if (this.rowDivs) {
                 this.rowDivs[0].$feedback.removeClass();
@@ -270,49 +297,46 @@ define (
         /*
          * Allows those parameters to be renabled, which may be an option for advanced users.
          */
-        enableParameterEditing: function() {
+        enableParameterEditing: function () {
             // enable the input
             this.enabled = true;
-            this.$elem.find("#"+this.spec.id).select2('enable',true);
+            this.$elem.find('#' + this.spec.id).select2('enable', true);
             this.isValid();
         },
 
-
-        lockInputs: function() {
+        lockInputs: function () {
             if (this.enabled) {
-                this.$elem.find("#"+this.spec.id).select2('disable',true);
+                this.$elem.find('#' + this.spec.id).select2('disable', true);
             }
             // stylize the row div
             if (this.rowDivs) {
                 this.rowDivs[0].$feedback.removeClass();
             }
         },
-        unlockInputs: function() {
+        unlockInputs: function () {
             if (this.enabled) {
-                this.$elem.find("#"+this.spec.id).select2('enable',true);
+                this.$elem.find('#' + this.spec.id).select2('enable', true);
             }
             this.isValid();
         },
 
-
-
-        addInputListener: function(onChangeFunc) {
-            this.$elem.find("#"+this.spec.id).on("change",onChangeFunc);
+        addInputListener: function (onChangeFunc) {
+            this.$elem.find('#' + this.spec.id).on('change', onChangeFunc);
         },
 
         /*
          * An App (or a narrative that needs to auto populate certain fields) needs to set
          * specific parameter values based on the App spec, so we need a way to do this.
          */
-        setParameterValue: function(value) {
+        setParameterValue: function (value) {
             // todo: handle case where this is a multiple, we need to check if value array matches number of elements,
             // and if not we must do something special   ...
             if (this.enabled) {
-                this.$elem.find("#"+this.spec.id).select2("val",value);
+                this.$elem.find('#' + this.spec.id).select2('val', value);
             } else {
-                this.$elem.find("#"+this.spec.id).select2('disable',false);
-                this.$elem.find("#"+this.spec.id).select2("val",value);
-                this.$elem.find("#"+this.spec.id).select2('disable',true);
+                this.$elem.find('#' + this.spec.id).select2('disable', false);
+                this.$elem.find('#' + this.spec.id).select2('val', value);
+                this.$elem.find('#' + this.spec.id).select2('disable', true);
             }
             this.isValid();
         },
@@ -322,13 +346,12 @@ define (
          * values may be strings, numbers, objects, or lists, but must match what is declared
          * in the method spec.
          */
-        getParameterValue: function() {
-            var value = this.$elem.find("#"+this.spec.id).val();
-            if (value==="") {
+        getParameterValue: function () {
+            var value = this.$elem.find('#' + this.spec.id).val();
+            if (value === '') {
                 return null;
             }
             return value;
-        }
-
+        },
     });
 });

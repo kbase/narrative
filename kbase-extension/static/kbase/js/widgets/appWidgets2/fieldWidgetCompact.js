@@ -16,16 +16,8 @@ define([
     'common/props',
     'common/runtime',
     './errorControl',
-    'css!google-code-prettify/prettify.css'
-], function(
-    Promise,
-    PR,
-    html,
-    Events,
-    UI,
-    Props,
-    Runtime,
-    ErrorControlFactory) {
+    'css!google-code-prettify/prettify.css',
+], function (Promise, PR, html, Events, UI, Props, Runtime, ErrorControlFactory) {
     'use strict';
 
     var t = html.tag,
@@ -42,18 +34,19 @@ define([
             standard: {
                 nameColClass: 'col-md-2',
                 inputColClass: 'col-md-5',
-                hintColClass: 'col-md-5'
-            }
+                hintColClass: 'col-md-5',
+            },
         };
 
     function factory(config) {
         var ui,
             runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({
-                description: 'Field bus'
+                description: 'Field bus',
             }),
             places,
-            parent, container,
+            parent,
+            container,
             inputControlFactory = config.inputControlFactory,
             inputControl,
             options = {},
@@ -74,12 +67,12 @@ define([
                 workspaceId: config.workspaceId,
                 fieldSpec: config.fieldSpec,
                 referenceType: config.referenceType,
-                closeParameters: closeParameters
+                closeParameters: closeParameters,
             });
         } catch (ex) {
             console.error('Error creating input control', ex);
             inputControl = ErrorControlFactory.make({
-                message: ex.message
+                message: ex.message,
             }).make();
         }
 
@@ -109,34 +102,40 @@ define([
         function showMessageDialog(id) {
             ui.showInfoDialog({
                 title: 'MESSAGE TITLE',
-                body: 'Message id: ' + id
+                body: 'Message id: ' + id,
             });
         }
 
         function buildInputMessage(messageDef) {
             var events = Events.make(),
-                content = div({
-                    class: 'alert alert-' + messageDef.type,
-                    role: 'alert'
-                }, [
-                    span({ style: { fontWeight: 'bold' } }, messageDef.title),
-                    ': ',
-                    messageDef.message,
-                    ' ',
-                    button({
-                        type: 'button',
-                        class: 'btn btn-link alert-link',
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function() {
-                                showMessageDialog(messageDef.id);
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'info-circle' }))
-                ]);
+                content = div(
+                    {
+                        class: 'alert alert-' + messageDef.type,
+                        role: 'alert',
+                    },
+                    [
+                        span({ style: { fontWeight: 'bold' } }, messageDef.title),
+                        ': ',
+                        messageDef.message,
+                        ' ',
+                        button(
+                            {
+                                type: 'button',
+                                class: 'btn btn-link alert-link',
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function () {
+                                        showMessageDialog(messageDef.id);
+                                    },
+                                }),
+                            },
+                            ui.buildIcon({ name: 'info-circle' })
+                        ),
+                    ]
+                );
             return {
                 events: events,
-                content: content
+                content: content,
             };
         }
 
@@ -145,7 +144,7 @@ define([
                 title: 'ERROR',
                 type: 'danger',
                 message: error.message,
-                id: error.id
+                id: error.id,
             });
             places.messagePanel.classList.remove('hidden');
             places.message.innerHTML = component.content;
@@ -158,7 +157,7 @@ define([
                 title: 'Warning',
                 type: 'warning',
                 message: warning.message,
-                id: warning.id
+                id: warning.id,
             });
             places.messagePanel.classList.remove('hidden');
             places.message.innerHTML = component.content;
@@ -205,7 +204,7 @@ define([
             return div({ style: { padding: '0px' } }, [
                 div({ style: { fontWeight: 'bold' } }, spec.ui.label),
                 div({ style: { fontStyle: 'italic' } }, spec.id),
-                div({ style: { fontSize: '80%' } }, spec.ui.description)
+                div({ style: { fontSize: '80%' } }, spec.ui.description),
             ]);
         }
 
@@ -215,28 +214,33 @@ define([
                 case 'int':
                     return [
                         tr([th('Min'), td(spec.data.constraints.min)]),
-                        tr([th('Max'), td(spec.data.constraints.max)])
+                        tr([th('Max'), td(spec.data.constraints.max)]),
                     ];
             }
         }
 
         function parameterInfoRules(spec) {
-            return table({ class: 'table table-striped' }, [
-                tr([th('Required'), td(spec.data.constraints.required ? 'yes' : 'no')]),
-                tr([th('Data type'), td(spec.data.type)]),
-                // tr([th('Field type'), td(spec.spec.field_type)]),
-                tr([th('Multiple values?'), td(spec.multipleItems ? 'yes' : 'no')]),
-                (function() {
-                    return tr([th('Default value'), td(spec.data.defaultValue)]);
-                }()),
-                (function() {
-                    if (spec.data.constraints.types) {
-                        return tr([th('Valid types'), td(spec.data.constraints.types.join('<br>'))]);
-                    }
-                }())
-            ].concat(parameterInfoTypeRules(spec)));
+            return table(
+                { class: 'table table-striped' },
+                [
+                    tr([th('Required'), td(spec.data.constraints.required ? 'yes' : 'no')]),
+                    tr([th('Data type'), td(spec.data.type)]),
+                    // tr([th('Field type'), td(spec.spec.field_type)]),
+                    tr([th('Multiple values?'), td(spec.multipleItems ? 'yes' : 'no')]),
+                    (function () {
+                        return tr([th('Default value'), td(spec.data.defaultValue)]);
+                    })(),
+                    (function () {
+                        if (spec.data.constraints.types) {
+                            return tr([
+                                th('Valid types'),
+                                td(spec.data.constraints.types.join('<br>')),
+                            ]);
+                        }
+                    })(),
+                ].concat(parameterInfoTypeRules(spec))
+            );
         }
-
 
         function renderInfoTip() {
             var infoTipText;
@@ -248,30 +252,34 @@ define([
 
             return div([
                 // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
-                div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
-                    alignRight: true,
-                    tabs: [{
-                        label: 'Description',
-                        name: 'description',
-                        content: div({ style: { padding: '0px' } }, infoTipText)
-                    },
-                    {
-                        label: 'About',
-                        name: 'about',
-                        content: parameterInfoContent(spec)
-                    },
-                    {
-                        label: 'Rules',
-                        name: 'rules',
-                        content: parameterInfoRules(spec)
-                    },
-                    {
-                        label: 'Spec',
-                        name: 'spec',
-                        content: rawSpec(spec)
-                    }
-                    ]
-                }))
+                div(
+                    { dataElement: 'big-tip', class: 'hidden' },
+                    html.makeTabs({
+                        alignRight: true,
+                        tabs: [
+                            {
+                                label: 'Description',
+                                name: 'description',
+                                content: div({ style: { padding: '0px' } }, infoTipText),
+                            },
+                            {
+                                label: 'About',
+                                name: 'about',
+                                content: parameterInfoContent(spec),
+                            },
+                            {
+                                label: 'Rules',
+                                name: 'rules',
+                                content: parameterInfoRules(spec),
+                            },
+                            {
+                                label: 'Spec',
+                                name: 'spec',
+                                content: rawSpec(spec),
+                            },
+                        ],
+                    })
+                ),
             ]);
         }
 
@@ -283,7 +291,7 @@ define([
                 infoPanel: html.genId(),
                 feedback: html.genId(),
                 feedbackIndicator: html.genId(),
-                inputControl: html.genId()
+                inputControl: html.genId(),
             };
 
             // FEEDBACK
@@ -304,73 +312,89 @@ define([
                 infoTipText = spec.ui.hint || spec.ui.description;
             }
 
-            var content = div({
-                class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '),
-                dataAdvancedParameter: spec.ui.advanced,
-                id: fieldId,
-                style: { position: 'relative' }
-            }, [
-                // disabled mask
-                div({
-                    dataElement: 'field-mask',
-                    class: 'hidden',
-                    style: {
-                        position: 'absolute',
-                        top: '0',
-                        bottom: '0',
-                        left: '0',
-                        right: '0',
-                        backgroundColor: 'rgba(255,255,255, 0.5)',
-                        zIndex: '100'
-                    }
-                }),
-                span({
-                    id: ids.fieldPanel,
-                    class: 'form-group kb-app-parameter-input field-panel',
-                    dataElement: 'field-panel',
-                    style: {
-                        marginBottom: '0'
-                    }
-                }, [
-                    div({ class: 'col-md-3' }, [
-                        label({
-                            class: 'xcontrol-label kb-app-parameter-name control-label',
-                            title: infoTipText,
-                            style: { cursor: 'help' },
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: function() {
-                                    places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
-                                }
-                            })
-                        }, [
-                            spec.ui.label || spec.ui.id
-                        ])
-                    ]),
-                    div({ class: 'input-group col-md-9' }, [
-                        div({
-                            id: ids.inputControl,
-                            dataElement: 'input-control'
-                        }),
-                        div({
-                            id: ids.feedback,
-                            class: 'input-group-addon kb-input-group-addon kb-app-field-feedback',
-                            dataElement: 'feedback',
+            var content = div(
+                {
+                    class: [
+                        'form-horizontal',
+                        'kb-app-parameter-row',
+                        'parameter-panel',
+                        advanced,
+                    ].join(' '),
+                    dataAdvancedParameter: spec.ui.advanced,
+                    id: fieldId,
+                    style: { position: 'relative' },
+                },
+                [
+                    // disabled mask
+                    div({
+                        dataElement: 'field-mask',
+                        class: 'hidden',
+                        style: {
+                            position: 'absolute',
+                            top: '0',
+                            bottom: '0',
+                            left: '0',
+                            right: '0',
+                            backgroundColor: 'rgba(255,255,255, 0.5)',
+                            zIndex: '100',
+                        },
+                    }),
+                    span(
+                        {
+                            id: ids.fieldPanel,
+                            class: 'form-group kb-app-parameter-input field-panel',
+                            dataElement: 'field-panel',
                             style: {
-                                width: '3px',
-                                height: '100%',
-                                'margin-left': '4px'
-                            }
-                        }, [
-                            div({
-                                id: ids.feedbackIndicator,
-                                dataElement: 'indicator',
-                                style: {
-                                    width: '3px'
-                                }
-                            })
-                        ]),
-                        /*div({
+                                marginBottom: '0',
+                            },
+                        },
+                        [
+                            div({ class: 'col-md-3' }, [
+                                label(
+                                    {
+                                        class: 'xcontrol-label kb-app-parameter-name control-label',
+                                        title: infoTipText,
+                                        style: { cursor: 'help' },
+                                        id: events.addEvent({
+                                            type: 'click',
+                                            handler: function () {
+                                                places.infoPanel
+                                                    .querySelector('[data-element="big-tip"]')
+                                                    .classList.toggle('hidden');
+                                            },
+                                        }),
+                                    },
+                                    [spec.ui.label || spec.ui.id]
+                                ),
+                            ]),
+                            div({ class: 'input-group col-md-9' }, [
+                                div({
+                                    id: ids.inputControl,
+                                    dataElement: 'input-control',
+                                }),
+                                div(
+                                    {
+                                        id: ids.feedback,
+                                        class:
+                                            'input-group-addon kb-input-group-addon kb-app-field-feedback',
+                                        dataElement: 'feedback',
+                                        style: {
+                                            width: '3px',
+                                            height: '100%',
+                                            'margin-left': '4px',
+                                        },
+                                    },
+                                    [
+                                        div({
+                                            id: ids.feedbackIndicator,
+                                            dataElement: 'indicator',
+                                            style: {
+                                                width: '3px',
+                                            },
+                                        }),
+                                    ]
+                                ),
+                                /*div({
                             class: 'input-group-addon kb-input-group-addon',
                             style: {
                                 width: '30px',
@@ -390,49 +414,52 @@ define([
                                 })
                             }, span({ class: 'fa fa-info-circle' })))
                         ])*/
-                    ])
-                ]),
-                div({
-                    id: ids.messagePanel,
-                    class: 'message-panel hidden',
-                    dataElement: 'message-panel'
-                }, [
-                    div({ class: 'col-md-3' }),
-                    div({ class: 'col-md-9' }, [
-                        div({
-                            id: ids.message,
-                            class: 'message',
-                            dataElement: 'message'
-                        })
-                    ])
-                ]),
-                div({
-                    id: ids.infoPanel,
-                    class: 'info-panel row',
-                    dataElement: 'info-panel'
-                }, [
-                    div({ class: 'col-md-12' }, div({ id: infoId }, [
-                        renderInfoTip()
-                    ]))
-
-                ])
-            ]);
+                            ]),
+                        ]
+                    ),
+                    div(
+                        {
+                            id: ids.messagePanel,
+                            class: 'message-panel hidden',
+                            dataElement: 'message-panel',
+                        },
+                        [
+                            div({ class: 'col-md-3' }),
+                            div({ class: 'col-md-9' }, [
+                                div({
+                                    id: ids.message,
+                                    class: 'message',
+                                    dataElement: 'message',
+                                }),
+                            ]),
+                        ]
+                    ),
+                    div(
+                        {
+                            id: ids.infoPanel,
+                            class: 'info-panel row',
+                            dataElement: 'info-panel',
+                        },
+                        [div({ class: 'col-md-12' }, div({ id: infoId }, [renderInfoTip()]))]
+                    ),
+                ]
+            );
 
             return {
                 content: content,
-                places: ids
+                places: ids,
             };
         }
 
         // LIFECYCLE
 
         function attach(node) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
                 var events = Events.make({
-                    node: container
+                    node: container,
                 });
 
                 var rendered = render(events);
@@ -450,7 +477,7 @@ define([
                     infoPanel: document.getElementById(rendered.places.infoPanel),
                     feedback: document.getElementById(rendered.places.feedback),
                     feedbackIndicator: document.getElementById(rendered.places.feedbackIndicator),
-                    inputControl: document.getElementById(rendered.places.inputControl)
+                    inputControl: document.getElementById(rendered.places.inputControl),
                 };
                 if (inputControl.attach) {
                     return inputControl.attach(places.inputControl);
@@ -459,90 +486,89 @@ define([
         }
 
         function start(arg) {
-            return attach(arg.node)
-                .then(function() {
-                    bus.on('validation', function(message) {
-                        switch (message.diagnosis) {
-                            case 'valid':
-                                feedbackOk();
-                                clearError();
-                                break;
-                            case 'required-missing':
-                                feedbackRequired();
-                                clearError();
-                                break;
-                            case 'suspect':
-                                feedbackOk();
-                                clearError();
-                                setWarning({
-                                    message: message.shortMessage,
-                                    id: message.messageId
-                                });
-                                break;
-                            case 'invalid':
-                                feedbackError();
-                                clearError();
-                                setError({
-                                    id: message.messageId,
-                                    message: message.errorMessage
-                                });
-                                break;
-                            case 'optional-empty':
-                                feedbackNone();
-                                clearError();
-                                break;
-                        }
-                    });
-                    // bus.on('touched', function (message) {
-                    //     places.feedback.style.backgroundColor = 'yellow';
-                    // });
-                    // bus.on('changed', function () {
-                    //     places.feedback.style.backgroundColor = '';
-                    // });
-                    bus.on('enable', function() {
-                        doEnable();
-                    });
-                    bus.on('disable', function() {
-                        doDisable();
-                    });
-
-                    if (inputControl.start) {
-                        return inputControl.start({
-                            node: places.inputControl
-                        })
-                            .then(function() {
-                                // TODO: get rid of this pattern
-                                bus.emit('run', {
-                                    node: places.inputControl
-                                });
+            return attach(arg.node).then(function () {
+                bus.on('validation', function (message) {
+                    switch (message.diagnosis) {
+                        case 'valid':
+                            feedbackOk();
+                            clearError();
+                            break;
+                        case 'required-missing':
+                            feedbackRequired();
+                            clearError();
+                            break;
+                        case 'suspect':
+                            feedbackOk();
+                            clearError();
+                            setWarning({
+                                message: message.shortMessage,
+                                id: message.messageId,
                             });
+                            break;
+                        case 'invalid':
+                            feedbackError();
+                            clearError();
+                            setError({
+                                id: message.messageId,
+                                message: message.errorMessage,
+                            });
+                            break;
+                        case 'optional-empty':
+                            feedbackNone();
+                            clearError();
+                            break;
                     }
                 });
+                // bus.on('touched', function (message) {
+                //     places.feedback.style.backgroundColor = 'yellow';
+                // });
+                // bus.on('changed', function () {
+                //     places.feedback.style.backgroundColor = '';
+                // });
+                bus.on('enable', function () {
+                    doEnable();
+                });
+                bus.on('disable', function () {
+                    doDisable();
+                });
+
+                if (inputControl.start) {
+                    return inputControl
+                        .start({
+                            node: places.inputControl,
+                        })
+                        .then(function () {
+                            // TODO: get rid of this pattern
+                            bus.emit('run', {
+                                node: places.inputControl,
+                            });
+                        });
+                }
+            });
         }
 
         function stop() {
-            return Promise.try(function() {
-                return inputControl.stop()
-                    .then(function() {
-                        if (parent && container) {
-                            parent.removeChild(container);
-                        }
-                        bus.stop();
-                        return null;
-                    });
+            return Promise.try(function () {
+                return inputControl.stop().then(function () {
+                    if (parent && container) {
+                        parent.removeChild(container);
+                    }
+                    bus.stop();
+                    return null;
+                });
             });
         }
 
         return {
             start: start,
             stop: stop,
-            bus: bus
+            bus: bus,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

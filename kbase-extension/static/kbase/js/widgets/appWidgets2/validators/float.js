@@ -1,8 +1,4 @@
-define([
-    'bluebird'
-], function(
-    Promise
-) {
+define(['bluebird'], function (Promise) {
     'use strict';
 
     function importString(value) {
@@ -13,7 +9,7 @@ define([
         }
 
         if (typeof value !== 'string') {
-            throw new Error('value must be a string (it is of type "' + (typeof value) + '")');
+            throw new Error('value must be a string (it is of type "' + typeof value + '")');
         }
         normalizedValue = value.trim();
         if (value === '') {
@@ -58,12 +54,12 @@ define([
         return {
             isValid: errorMessage ? false : true,
             errorMessage: errorMessage,
-            diagnosis: diagnosis
+            diagnosis: diagnosis,
         };
     }
 
     function validate(value, spec) {
-        return Promise.try(function() {
+        return Promise.try(function () {
             return applyConstraints(value, spec.data.constraints);
         });
     }
@@ -96,6 +92,6 @@ define([
     return {
         importString: importString,
         applyConstraints: applyConstraints,
-        validate: validate
-    }
+        validate: validate,
+    };
 });

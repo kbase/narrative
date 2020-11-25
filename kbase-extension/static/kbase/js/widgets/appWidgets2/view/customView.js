@@ -10,16 +10,8 @@ define([
     '../inputUtils',
 
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props,
-    inputUtils
-) {
+    'css!font-awesome',
+], function (Promise, html, Validation, Events, UI, Props, inputUtils) {
     'use strict';
 
     var t = html.tag,
@@ -65,29 +57,25 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-
-
         // VALIDATION
 
         function importControlValue() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 return Validation.importString(getControlValue());
             });
         }
 
         function validate(value) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 return Validation.validate(value, spec);
             });
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function(result) {
-                    bus.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then(function (result) {
+                bus.emit('validation', result);
+            });
         }
-
 
         // DOM & RENDERING
 
@@ -95,16 +83,17 @@ define([
             return input({
                 class: 'form-control',
                 readonly: true,
-                dataElement: 'input'
+                dataElement: 'input',
             });
         }
 
         function render(events) {
-            return div({
-                dataElement: 'input-container'
-            }, [
-                makeViewControl(events)
-            ]);
+            return div(
+                {
+                    dataElement: 'input-container',
+                },
+                [makeViewControl(events)]
+            );
         }
 
         // EVENT HANDLERS
@@ -119,15 +108,13 @@ define([
             }
         }
 
-
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
-
 
                 var events = Events.make();
                 container.innerHTML = render(events);
@@ -136,15 +123,15 @@ define([
                 syncModelToControl();
                 autoValidate();
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', function () {
                     resetModelValue();
                 });
-                bus.on('update', function(message) {
+                bus.on('update', function (message) {
                     setModelValue(message.value);
                     syncModelToControl();
                     autoValidate();
                 });
-                bus.on('focus', function() {
+                bus.on('focus', function () {
                     doFocus();
                 });
                 // bus.emit('sync');
@@ -152,7 +139,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -163,25 +150,25 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: function() {
+            onUpdate: function () {
                 //syncModelToControl();
                 //autoValidate();
-            }
+            },
         });
 
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

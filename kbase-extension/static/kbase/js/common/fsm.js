@@ -8,15 +8,8 @@
  *
  */
 
-define([
-    './unodep',
-    'common/runtime'
-], function(
-    utils,
-    Runtime
-) {
+define(['./unodep', 'common/runtime'], function (utils, Runtime) {
     'use strict';
-
 
     function factory(config) {
         var allStates = config.states,
@@ -24,7 +17,8 @@ define([
             fallbackState = config.fallbackState,
             currentState,
             api,
-            timer, newStateHandler = config.onNewState;
+            timer,
+            newStateHandler = config.onNewState;
 
         var runtime = Runtime.make();
 
@@ -38,7 +32,6 @@ define([
          */
         function validate() {
             // find initial state
-
             // ...
         }
 
@@ -49,7 +42,7 @@ define([
             if (timer) {
                 return;
             }
-            timer = window.setTimeout(function() {
+            timer = window.setTimeout(function () {
                 try {
                     timer = null;
                     newStateHandler(api);
@@ -60,7 +53,7 @@ define([
         }
 
         function findState(stateToFind) {
-            var foundStates = allStates.filter(function(stateDef) {
+            var foundStates = allStates.filter(function (stateDef) {
                 return utils.isEqual(stateToFind, stateDef.state);
             });
             if (foundStates.length === 1) {
@@ -70,14 +63,13 @@ define([
                 console.error('state error: multiple states found:', stateToFind, foundStates);
                 throw new Error('state error: multiple states found');
             }
-
         }
 
         function doMessages(changeType) {
             var state = currentState;
             if (state.on && state.on[changeType]) {
                 if (state.on[changeType].messages) {
-                    state.on[changeType].messages.forEach(function(msg) {
+                    state.on[changeType].messages.forEach(function (msg) {
                         if (msg.emit) {
                             bus.emit(msg.emit, msg.message);
                         } else if (msg.send) {
@@ -101,7 +93,7 @@ define([
         }
 
         function findNextState(stateList, stateToFind) {
-            var foundStates = stateList.filter(function(state) {
+            var foundStates = stateList.filter(function (state) {
                 if (utils.isEqual(state, stateToFind)) {
                     return true;
                 }
@@ -142,13 +134,12 @@ define([
 
             doMessages('enter');
 
-
             run();
         }
 
         function updateState(nextState) {
             var updatedState = JSON.parse(JSON.stringify(currentState.state));
-            Object.keys(nextState).forEach(function(key) {
+            Object.keys(nextState).forEach(function (key) {
                 updatedState[key] = nextState[key];
             });
             newState(updatedState);
@@ -177,9 +168,7 @@ define([
             doResumeState();
         }
 
-        function stop() {
-
-        }
+        function stop() {}
 
         // API
 
@@ -190,16 +179,15 @@ define([
             updateState: updateState,
             getCurrentState: getCurrentState,
             findState: findState,
-            bus: bus
+            bus: bus,
         });
 
         return api;
     }
 
-
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

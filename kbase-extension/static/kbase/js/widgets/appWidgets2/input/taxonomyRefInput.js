@@ -17,8 +17,8 @@ define([
 
     'select2',
     'bootstrap',
-    'css!font-awesome'
-], function(
+    'css!font-awesome',
+], function (
     Promise,
     $,
     html,
@@ -31,7 +31,8 @@ define([
     UI,
     Data,
     TimeFormat,
-    GenericClient) {
+    GenericClient
+) {
     'use strict';
 
     // Constants
@@ -49,16 +50,19 @@ define([
             channel = bus.channel(config.channelName),
             ui,
             model = {
-                value: undefined
+                value: undefined,
             },
             eventListeners = [];
 
         function makeInputControl() {
             var selectOptions;
-            var selectElem = select({
-                class: 'form-control',
-                dataElement: 'input'
-            }, [option({ value: '' }, '')].concat(selectOptions));
+            var selectElem = select(
+                {
+                    class: 'form-control',
+                    dataElement: 'input',
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
 
             return selectElem;
         }
@@ -117,7 +121,7 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 var value = getControlValue();
 
                 // console.log('value', value);
@@ -128,56 +132,70 @@ define([
                     diagnosis: 'valid',
                     errorMessage: null,
                     value: value,
-                    parsedValue: value
+                    parsedValue: value,
                 };
             });
         }
 
         function doChange() {
-            validate()
-                .then(function(result) {
-                    // console.log('validated??', result);
-                    if (result.isValid) {
-                        model.value = result.parsedValue;
-                        channel.emit('changed', {
-                            newValue: result.parsedValue
-                        });
-                    } else if (result.diagnosis === 'required-missing') {
-                        model.value = spec.data.nullValue;
-                        channel.emit('changed', {
-                            newValue: spec.data.nullValue
-                        });
-                    }
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
+            validate().then(function (result) {
+                // console.log('validated??', result);
+                if (result.isValid) {
+                    model.value = result.parsedValue;
+                    channel.emit('changed', {
+                        newValue: result.parsedValue,
                     });
+                } else if (result.diagnosis === 'required-missing') {
+                    model.value = spec.data.nullValue;
+                    channel.emit('changed', {
+                        newValue: spec.data.nullValue,
+                    });
+                }
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         function doTemplateResult(item) {
             // console.log('template', item);
             if (!item.id) {
-                return $(div({
-                    style: {
-                        display: 'block',
-                        height: '20px'
-                    }
-                }, item.label || ''));
+                return $(
+                    div(
+                        {
+                            style: {
+                                display: 'block',
+                                height: '20px',
+                            },
+                        },
+                        item.label || ''
+                    )
+                );
             }
-            return $(div({
-                style: {
-                    display: 'block'
-                }
-            }, item.label));
+            return $(
+                div(
+                    {
+                        style: {
+                            display: 'block',
+                        },
+                    },
+                    item.label
+                )
+            );
         }
 
         function doTemplateSelection(item) {
-            return $(div({
-                style: {
-                    display: 'block'
-                }
-            }, item.label));
+            return $(
+                div(
+                    {
+                        style: {
+                            display: 'block',
+                        },
+                    },
+                    item.label
+                )
+            );
         }
 
         var totalItems;
@@ -204,21 +222,32 @@ define([
                 url: runtime.config('services.service_wizard.url'),
                 module: 'taxonomy_service',
                 // version: 'dev',
-                token: Runtime.make().authToken()
+                token: Runtime.make().authToken(),
             });
-            return taxonClient.callFunc('search_taxonomy', [{
-                    private: 0,
-                    public: 1,
-                    search: term,
-                    limit: pageSize,
-                    start: startItem
-                }])
-                .then(function(result) {
+            return taxonClient
+                .callFunc('search_taxonomy', [
+                    {
+                        private: 0,
+                        public: 1,
+                        search: term,
+                        limit: pageSize,
+                        start: startItem,
+                    },
+                ])
+                .then(function (result) {
                     var elapsed = new Date().getTime() - start;
-                    console.log('Loaded data ' + result[0].hits.length + ' items of ' + result[0].num_of_hits + ' in ' + elapsed + 'ms');
+                    console.log(
+                        'Loaded data ' +
+                            result[0].hits.length +
+                            ' items of ' +
+                            result[0].num_of_hits +
+                            ' in ' +
+                            elapsed +
+                            'ms'
+                    );
                     totalItems = result[0].num_of_hits;
                     return result[0];
-                })
+                });
         }
 
         function getTaxonomyItem(taxonObject) {
@@ -228,103 +257,103 @@ define([
                     url: runtime.config('services.service_wizard.url'),
                     module: 'TaxonAPI',
                     // version: 'dev',
-                    token: Runtime.make().authToken()
+                    token: Runtime.make().authToken(),
                 });
-            return taxonClient.callFunc('get_scientific_name', [ref])
-                .then(function(result) {
-                    if (result.length === 0) {
-                        throw new Error('Cannot find taxon: ' + ref);
-                    }
-                    if (result.length > 1) {
-                        throw new Error('Too many taxa found for ' + ref);
-                    }
-                    // simulate the result from the taxonomy service
-                    return [{
+            return taxonClient.callFunc('get_scientific_name', [ref]).then(function (result) {
+                if (result.length === 0) {
+                    throw new Error('Cannot find taxon: ' + ref);
+                }
+                if (result.length > 1) {
+                    throw new Error('Too many taxa found for ' + ref);
+                }
+                // simulate the result from the taxonomy service
+                return [
+                    {
                         id: taxonObject,
-                        label: result[0]
-                    }];
-                })
+                        label: result[0],
+                    },
+                ];
+            });
         }
 
         function render() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 var events = Events.make(),
                     inputControl = makeInputControl(events),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
                 ui.setContent('input-container', content);
 
-                $(ui.getElement('input-container.input')).select2({
-                    templateResult: doTemplateResult,
-                    templateSelection: doTemplateSelection,
-                    minimumInputLength: 2,
-                    escapeMarkup: function(markup) {
-                        return markup;
-                    },
-                    initSelection: function(element, callback) {
-                        var currentValue = model.value;
-                        if (!currentValue) {
-                            return;
-                        }
-                        getTaxonomyItem(currentValue)
-                            .then(function(taxon) {
+                $(ui.getElement('input-container.input'))
+                    .select2({
+                        templateResult: doTemplateResult,
+                        templateSelection: doTemplateSelection,
+                        minimumInputLength: 2,
+                        escapeMarkup: function (markup) {
+                            return markup;
+                        },
+                        initSelection: function (element, callback) {
+                            var currentValue = model.value;
+                            if (!currentValue) {
+                                return;
+                            }
+                            getTaxonomyItem(currentValue).then(function (taxon) {
                                 // console.log('TAXON', taxon);
                                 callback(taxon);
                             });
-                    },
-                    formatMoreResults: function(page) {
-                        return "more???";
-                    },
-                    language: {
-                        loadingMore: function(arg) {
-                            // console.log('ARG', arg);
-                            return html.loading('Loading more scientific names');
-                        }
-                    },
-                    ajax: {
-                        service: 'myservice',
-                        dataType: 'json',
-                        delay: 500,
-                        data: function(params) {
-                            return {
-                                q: params.term,
-                                page: params.page
-                            };
                         },
-                        processResults: function(data, params) {
-                            // console.log('processing', data, params);
-                            params.page = params.page || 1;
-                            return {
-                                results: data.hits,
-                                pagination: {
-                                    more: (params.page * pageSize) < data.num_of_hits
-                                }
-                            }
+                        formatMoreResults: function (page) {
+                            return 'more???';
                         },
-                        transport: function(options, success, failure) {
+                        language: {
+                            loadingMore: function (arg) {
+                                // console.log('ARG', arg);
+                                return html.loading('Loading more scientific names');
+                            },
+                        },
+                        ajax: {
+                            service: 'myservice',
+                            dataType: 'json',
+                            delay: 500,
+                            data: function (params) {
+                                return {
+                                    q: params.term,
+                                    page: params.page,
+                                };
+                            },
+                            processResults: function (data, params) {
+                                // console.log('processing', data, params);
+                                params.page = params.page || 1;
+                                return {
+                                    results: data.hits,
+                                    pagination: {
+                                        more: params.page * pageSize < data.num_of_hits,
+                                    },
+                                };
+                            },
+                            transport: function (options, success, failure) {
+                                var status = null;
 
-                            var status = null;
+                                doTaxonomySearch(options.data)
+                                    .then(function (results) {
+                                        success(results);
+                                    })
+                                    .catch(function (err) {
+                                        status = 'error';
+                                        failure();
+                                    });
+                                // console.log('transport got ', options);
 
-                            doTaxonomySearch(options.data)
-                                .then(function(results) {
-                                    success(results);
-                                })
-                                .catch(function(err) {
-                                    status = 'error';
-                                    failure();
-                                });
-                            // console.log('transport got ', options);
-
-                            return {
-                                status: status
-                            };
-                        }
-                    }
-                }).on('change', function() {
-                    doChange();
-                });
+                                return {
+                                    status: status,
+                                };
+                            },
+                        },
+                    })
+                    .on('change', function () {
+                        doChange();
+                    });
                 events.attachEvents(container);
-
             });
         }
 
@@ -334,25 +363,25 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            var content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate()
-                .then(function(result) {
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then(function (result) {
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // function syncModelToControl() {
@@ -364,7 +393,7 @@ define([
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
@@ -379,33 +408,31 @@ define([
                     model.value = config.initialValue;
                 }
 
-                render()
-                    .then(function() {
-
-                        channel.on('reset-to-defaults', function() {
-                            resetModelValue();
-                        });
-                        channel.on('update', function(message) {
-                            setModelValue(message.value);
-                        });
-                        // bus.channel().on('workspace-changed', function() {
-                        //     doWorkspaceChanged();
-                        // });
-                        // bus.emit('sync');
-
-                        setControlValue(getModelValue());
-                        autoValidate();
+                render().then(function () {
+                    channel.on('reset-to-defaults', function () {
+                        resetModelValue();
                     });
+                    channel.on('update', function (message) {
+                        setModelValue(message.value);
+                    });
+                    // bus.channel().on('workspace-changed', function() {
+                    //     doWorkspaceChanged();
+                    // });
+                    // bus.emit('sync');
+
+                    setControlValue(getModelValue());
+                    autoValidate();
+                });
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
                 bus.stop();
-                eventListeners.forEach(function(id) {
+                eventListeners.forEach(function (id) {
                     runtime.bus().removeListener(id);
                 });
             });
@@ -413,16 +440,15 @@ define([
 
         // INIT
 
-
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

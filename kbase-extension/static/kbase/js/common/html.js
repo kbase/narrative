@@ -5,13 +5,9 @@
  browser: true,
  white: true
  */
-define([
-    'underscore',
-    'uuid'
-], function (underscore, Uuid) {
+define(['underscore', 'uuid'], function (underscore, Uuid) {
     'use strict';
     return (function () {
-
         function jsonToHTML(node) {
             var nodeType = typeof node,
                 out;
@@ -53,7 +49,7 @@ define([
 
         var tags = {};
         /**
-         * Given a simple object of keys and values, create a string which 
+         * Given a simple object of keys and values, create a string which
          * encodes them into a form suitable for the value of a style attribute.
          * Style attribute values are themselves attributes, but due to the limitation
          * of html attributes, they are embedded in a string:
@@ -101,7 +97,7 @@ define([
          * will remain as raw names/symbols/numbers, and quoted strings will retain
          * the quotes.
          * TODO: it would be smarter to detect if it was a quoted string
-         * 
+         *
          * @param {type} attribs
          * @returns {String}
          */
@@ -130,7 +126,7 @@ define([
         }
 
         /**
-         * Given a simple object of keys and values, create a string which 
+         * Given a simple object of keys and values, create a string which
          * encodes a set of html tag attributes.
          * String values escape the "
          * Boolean values either insert the attribute name or not
@@ -139,14 +135,15 @@ define([
          * @returns {String}
          */
         function makeTagAttribs(attribs) {
-            var quoteChar = '"', escapedValue;
+            var quoteChar = '"',
+                escapedValue;
             if (attribs) {
                 return Object.keys(attribs)
                     .map(function (key) {
                         var value = attribs[key],
                             attribName = camelToHyphen(key);
                         // The value may itself be an object, which becomes a special string.
-                        // This applies for "style" and "data-bind", each of which have a 
+                        // This applies for "style" and "data-bind", each of which have a
                         // structured string value.
                         // Another special case is an array, useful for space-separated
                         // attributes, esp. "class".
@@ -162,7 +159,7 @@ define([
                                         value = makeStyleAttribs(value);
                                         break;
                                     case 'data-bind':
-                                        // reverse the quote char, since data-bind attributes 
+                                        // reverse the quote char, since data-bind attributes
                                         // can contain double-quote, which can't itself
                                         // be quoted.
                                         quoteChar = "'";
@@ -174,7 +171,10 @@ define([
                             }
                         }
                         if (typeof value === 'string') {
-                            escapedValue = value.replace(new RegExp('\\' + quoteChar, 'g'), '\\' + quoteChar);
+                            escapedValue = value.replace(
+                                new RegExp('\\' + quoteChar, 'g'),
+                                '\\' + quoteChar
+                            );
                             return attribName + '=' + quoteChar + escapedValue + quoteChar;
                         }
                         if (typeof value === 'boolean') {
@@ -204,9 +204,11 @@ define([
                     return String(children);
                 }
                 if (underscore.isArray(children)) {
-                    return children.map(function (item) {
-                        return renderContent(item);
-                    }).join('');
+                    return children
+                        .map(function (item) {
+                            return renderContent(item);
+                        })
+                        .join('');
                 }
             } else {
                 return '';
@@ -214,9 +216,7 @@ define([
         }
         function merge(obj1, obj2) {
             function isObject(x) {
-                if (typeof x === 'object' &&
-                    x !== null &&
-                    !(x instanceof Array)) {
+                if (typeof x === 'object' && x !== null && !(x instanceof Array)) {
                     return true;
                 }
                 return false;
@@ -267,7 +267,7 @@ define([
                     }
                     attribs = null;
                 } else {
-                    throw 'Cannot make tag ' + tagName + ' from a ' + (typeof attribs);
+                    throw 'Cannot make tag ' + tagName + ' from a ' + typeof attribs;
                 }
                 attribs = attribs || options.attribs;
                 if (attribs) {
@@ -290,7 +290,7 @@ define([
             return tagFun;
         }
         function genId() {
-            return 'kb_html_' + (new Uuid(4)).format();
+            return 'kb_html_' + new Uuid(4).format();
         }
         function makeTable(arg) {
             var table = tag('table'),
@@ -298,29 +298,39 @@ define([
                 tbody = tag('tbody'),
                 tr = tag('tr'),
                 th = tag('th'),
-                td = tag('td'), id, attribs;
+                td = tag('td'),
+                id,
+                attribs;
             arg = arg || {};
             if (arg.id) {
                 id = arg.id;
             } else {
                 id = genId();
-                arg.generated = {id: id};
+                arg.generated = { id: id };
             }
-            attribs = {id: id};
+            attribs = { id: id };
             if (arg.class) {
                 attribs.class = arg.class;
             } else if (arg.classes) {
                 attribs.class = arg.classes.join(' ');
             }
             return table(attribs, [
-                thead(tr(arg.columns.map(function (x) {
-                    return th(x);
-                }))),
-                tbody(arg.rows.map(function (row) {
-                    return tr(row.map(function (x) {
-                        return td(x);
-                    }));
-                }))
+                thead(
+                    tr(
+                        arg.columns.map(function (x) {
+                            return th(x);
+                        })
+                    )
+                ),
+                tbody(
+                    arg.rows.map(function (row) {
+                        return tr(
+                            row.map(function (x) {
+                                return td(x);
+                            })
+                        );
+                    })
+                ),
             ]);
         }
 
@@ -328,13 +338,9 @@ define([
             var div = tag('div'),
                 span = tag('span');
 
-            return div({class: 'panel panel-default'}, [
-                div({class: 'panel-heading'}, [
-                    span({class: 'panel-title'}, title)
-                ]),
-                div({class: 'panel-body'}, [
-                    content
-                ])
+            return div({ class: 'panel panel-default' }, [
+                div({ class: 'panel-heading' }, [span({ class: 'panel-title' }, title)]),
+                div({ class: 'panel-body' }, [content]),
             ]);
         }
 
@@ -343,13 +349,9 @@ define([
                 span = tag('span'),
                 klass = arg.class || 'default';
 
-            return div({class: 'panel panel-' + klass}, [
-                div({class: 'panel-heading'}, [
-                    span({class: 'panel-title'}, arg.title)
-                ]),
-                div({class: 'panel-body'}, [
-                    arg.content
-                ])
+            return div({ class: 'panel panel-' + klass }, [
+                div({ class: 'panel-heading' }, [span({ class: 'panel-title' }, arg.title)]),
+                div({ class: 'panel-body' }, [arg.content]),
             ]);
         }
 
@@ -360,14 +362,11 @@ define([
             if (msg) {
                 prompt = msg + '... &nbsp &nbsp';
             }
-            return span([
-                prompt,
-                i({class: 'fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom'})
-            ]);
+            return span([prompt, i({ class: 'fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom' })]);
         }
 
         /*
-         * 
+         *
          */
         function makeTableRotated(arg) {
             function columnLabel(column) {
@@ -382,9 +381,10 @@ define([
                 }
                 return key
                     .replace(/(id|Id)/g, 'ID')
-                    .split(/_/g).map(function (word) {
-                    return word.charAt(0).toUpperCase() + word.slice(1);
-                })
+                    .split(/_/g)
+                    .map(function (word) {
+                        return word.charAt(0).toUpperCase() + word.slice(1);
+                    })
                     .join(' ');
             }
             function formatValue(rawValue, column) {
@@ -414,22 +414,24 @@ define([
                 th = tag('th'),
                 td = tag('td'),
                 id = genId(),
-                attribs = {id: id};
+                attribs = { id: id };
             if (arg.class) {
                 attribs.class = arg.class;
             } else if (arg.classes) {
                 attribs.class = arg.classes.join(' ');
             }
 
-            return table(attribs,
+            return table(
+                attribs,
                 arg.columns.map(function (column, index) {
                     return tr([
                         th(columnLabel(column)),
                         arg.rows.map(function (row) {
                             return td(formatValue(row[index], column));
-                        })
+                        }),
                     ]);
-                }));
+                })
+            );
         }
 
         function makeRotatedTable(data, columns) {
@@ -445,9 +447,10 @@ define([
                 }
                 return key
                     .replace(/(id|Id)/g, 'ID')
-                    .split(/_/g).map(function (word) {
-                    return word.charAt(0).toUpperCase() + word.slice(1);
-                })
+                    .split(/_/g)
+                    .map(function (word) {
+                        return word.charAt(0).toUpperCase() + word.slice(1);
+                    })
                     .join(' ');
             }
             function columnValue(row, column) {
@@ -474,14 +477,17 @@ define([
                 tr = tag('tr'),
                 th = tag('th'),
                 td = tag('td');
-            return table({class: 'table table-stiped table-bordered'},
+            return table(
+                { class: 'table table-stiped table-bordered' },
                 columns.map(function (column) {
                     return tr([
-                        th(columnLabel(column)), data.map(function (row) {
+                        th(columnLabel(column)),
+                        data.map(function (row) {
                             return td(columnValue(row, column));
-                        })
+                        }),
                     ]);
-                }));
+                })
+            );
         }
 
         function properCase(string) {
@@ -490,12 +496,14 @@ define([
 
         function makeObjTable(data, options) {
             var tableData = (data instanceof Array && data) || [data],
-                columns = (options && options.columns) || Object.keys(tableData[0]).map(function (key) {
-                return {
-                    key: key,
-                    label: properCase(key)
-                };
-            }),
+                columns =
+                    (options && options.columns) ||
+                    Object.keys(tableData[0]).map(function (key) {
+                        return {
+                            key: key,
+                            label: properCase(key),
+                        };
+                    }),
                 classes = (options && options.classes) || ['table-striped', 'table-bordered'],
                 table = tag('table'),
                 tr = tag('tr'),
@@ -522,24 +530,36 @@ define([
                 return rawValue;
             }
             if (options && options.rotated) {
-                return table({class: 'table ' + classes.join(' ')},
+                return table(
+                    { class: 'table ' + classes.join(' ') },
                     columns.map(function (column) {
                         return tr([
                             th(column.label),
                             tableData.map(function (row) {
-                                return td({dataElement: column.key}, columnValue(row, column));
-                            })
+                                return td({ dataElement: column.key }, columnValue(row, column));
+                            }),
                         ]);
-                    }));
+                    })
+                );
             }
-            return table({class: 'table ' + classes.join(' ')},
-                [tr(columns.map(function (column) {
-                        return th(column.label);
-                    }))].concat(tableData.map(function (row) {
-                return tr(columns.map(function (column) {
-                    return td({dataElement: column.key}, columnValue(row, column));
-                }));
-            })));
+            return table(
+                { class: 'table ' + classes.join(' ') },
+                [
+                    tr(
+                        columns.map(function (column) {
+                            return th(column.label);
+                        })
+                    ),
+                ].concat(
+                    tableData.map(function (row) {
+                        return tr(
+                            columns.map(function (column) {
+                                return td({ dataElement: column.key }, columnValue(row, column));
+                            })
+                        );
+                    })
+                )
+            );
         }
 
         function makeObjectTable(data, options) {
@@ -555,9 +575,10 @@ define([
                 }
                 return key
                     .replace(/(id|Id)/g, 'ID')
-                    .split(/_/g).map(function (word) {
-                    return word.charAt(0).toUpperCase() + word.slice(1);
-                })
+                    .split(/_/g)
+                    .map(function (word) {
+                        return word.charAt(0).toUpperCase() + word.slice(1);
+                    })
                     .join(' ');
             }
             function columnValue(row, column) {
@@ -591,14 +612,14 @@ define([
             if (!columns) {
                 columns = Object.keys(data).map(function (columnName) {
                     return {
-                        key: columnName
+                        key: columnName,
                     };
                 });
             } else {
                 columns = columns.map(function (column) {
                     if (typeof column === 'string') {
                         return {
-                            key: column
+                            key: column,
                         };
                     }
                     return column;
@@ -614,13 +635,12 @@ define([
                 tr = tag('tr'),
                 th = tag('th'),
                 td = tag('td'),
-                result = table({class: 'table ' + classes.join(' ')},
+                result = table(
+                    { class: 'table ' + classes.join(' ') },
                     columns.map(function (column) {
-                        return tr([
-                            th(columnLabel(column)),
-                            td(columnValue(data, column))
-                        ]);
-                    }));
+                        return tr([th(columnLabel(column)), td(columnValue(data, column))]);
+                    })
+                );
             return result;
         }
 
@@ -629,9 +649,11 @@ define([
                 return html;
             }
             if (underscore.isArray(html)) {
-                return html.map(function (h) {
-                    return flatten(h);
-                }).join('');
+                return html
+                    .map(function (h) {
+                        return flatten(h);
+                    })
+                    .join('');
             }
             throw new Error('Not a valid html representation -- must be string or list');
         }
@@ -640,9 +662,11 @@ define([
             if (underscore.isArray(arg.items)) {
                 var ul = tag('ul'),
                     li = tag('li');
-                return ul(arg.items.map(function (item) {
-                    return li(item);
-                }));
+                return ul(
+                    arg.items.map(function (item) {
+                        return li(item);
+                    })
+                );
             }
             return 'Sorry, cannot make a list from that';
         }
@@ -653,18 +677,20 @@ define([
          * arg.tabs.label
          * arg.tabs.name
          * arg.tabs.content
-         * 
+         *
          * @param {type} arg
          * @returns {unresolved}
          */
         function reverse(arr) {
-            var newArray = [], i, len = arr.length;
-            for (i = len-1; i >= 0; i -= 1) {
+            var newArray = [],
+                i,
+                len = arr.length;
+            for (i = len - 1; i >= 0; i -= 1) {
                 newArray.push(arr[i]);
             }
             return newArray;
         }
-        
+
         function makeTabs(arg) {
             var ul = tag('ul'),
                 li = tag('li'),
@@ -673,9 +699,11 @@ define([
                 tabsId = arg.id,
                 tabsAttribs = {},
                 tabClasses = ['nav', 'nav-tabs'],
-                tabStyle = {}, activeIndex, tabTabs,
+                tabStyle = {},
+                activeIndex,
+                tabTabs,
                 tabs = arg.tabs.filter(function (tab) {
-                    return (tab ? true : false);
+                    return tab ? true : false;
                 });
 
             if (tabsId) {
@@ -693,28 +721,37 @@ define([
                 activeIndex = 0;
             }
             return div(tabsAttribs, [
-                ul({class: tabClasses.join(' '), role: 'tablist'},
+                ul(
+                    { class: tabClasses.join(' '), role: 'tablist' },
                     tabTabs.map(function (tab, index) {
                         var attribs = {
-                            role: 'presentation'
+                            role: 'presentation',
                         };
                         if (index === activeIndex) {
                             attribs.class = 'active';
                         }
                         attribs.style = tabStyle;
-                        return li(attribs, a({
-                            href: '#' + tab.id,
-                            ariaControls: 'home',
-                            role: 'tab',
-                            dataToggle: 'tab'
-                        }, tab.label));
-                    })),
-                div({class: 'tab-content'},
+                        return li(
+                            attribs,
+                            a(
+                                {
+                                    href: '#' + tab.id,
+                                    ariaControls: 'home',
+                                    role: 'tab',
+                                    dataToggle: 'tab',
+                                },
+                                tab.label
+                            )
+                        );
+                    })
+                ),
+                div(
+                    { class: 'tab-content' },
                     tabs.map(function (tab, index) {
                         var attribs = {
                             role: 'tabpanel',
                             class: 'tab-pane',
-                            id: tab.id
+                            id: tab.id,
                         };
                         if (tab.name) {
                             attribs['data-name'] = tab.name;
@@ -724,7 +761,7 @@ define([
                         }
                         return div(attribs, tab.content);
                     })
-                    )
+                ),
             ]);
         }
 
@@ -743,7 +780,7 @@ define([
             loading: loading,
             flatten: flatten,
             makeList: makeList,
-            makeTabs: makeTabs
+            makeTabs: makeTabs,
         };
-    }());
+    })();
 });

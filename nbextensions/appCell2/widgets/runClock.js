@@ -1,9 +1,4 @@
-define([
-    'bluebird',
-    'common/runtime',
-    'kb_common/html',
-    'common/format'
-], function (
+define(['bluebird', 'common/runtime', 'kb_common/html', 'common/format'], function (
     Promise,
     Runtime,
     html,
@@ -25,7 +20,7 @@ define([
         function buildLayout() {
             return span({
                 id: clockId,
-                style: {}
+                style: {},
             });
         }
 
@@ -55,7 +50,11 @@ define([
                     stop();
                     return;
                 }
-                clockNode.innerHTML = [config.prefix || '', format.niceDuration(elapsed), config.suffix || ''].join('');
+                clockNode.innerHTML = [
+                    config.prefix || '',
+                    format.niceDuration(elapsed),
+                    config.suffix || '',
+                ].join('');
             }
         }
 
@@ -81,13 +80,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

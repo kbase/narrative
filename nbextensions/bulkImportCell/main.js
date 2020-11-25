@@ -21,17 +21,8 @@ define([
     './bulkImportCell',
     'kb_service/client/workspace',
     'kb_service/utils',
-    'custom/custom'
-], function(
-    $,
-    Jupyter,
-    Promise,
-    Runtime,
-    Error,
-    BulkImportCell, 
-    Workspace,
-    serviceUtils,
-) {
+    'custom/custom',
+], function ($, Jupyter, Promise, Runtime, Error, BulkImportCell, Workspace, serviceUtils) {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
     const runtime = Runtime.make();
@@ -41,38 +32,39 @@ define([
      * and if it's a bulk import cell, then we init the wrapping BulkImportCell class.
      */
     function setupNotebook(workspaceInfo) {
-        return Promise.all(Jupyter.notebook.get_cells().map((cell) => {
-            if (BulkImportCell.isBulkImportCell(cell)) {
-                try {
-                    BulkImportCell.make({
-                        cell,
-                        workspaceInfo
-                    });
-                }
-                catch(error) {
-                    // If we have an error here, there is a serious problem setting up the cell and it is not usable.
-                    // What to do? The safest thing to do is inform the user, and then strip out the cell, leaving
-                    // in it's place a markdown cell with the error info.
-                    // For now, just pop up an error dialog;
+        return Promise.all(
+            Jupyter.notebook.get_cells().map((cell) => {
+                if (BulkImportCell.isBulkImportCell(cell)) {
+                    try {
+                        BulkImportCell.make({
+                            cell,
+                            workspaceInfo,
+                        });
+                    } catch (error) {
+                        // If we have an error here, there is a serious problem setting up the cell and it is not usable.
+                        // What to do? The safest thing to do is inform the user, and then strip out the cell, leaving
+                        // in it's place a markdown cell with the error info.
+                        // For now, just pop up an error dialog;
 
-                    Error.reportCellError('Error starting bulk import cell',
-                        'There was an error starting the bulk import cell',
-                        error);
+                        Error.reportCellError(
+                            'Error starting bulk import cell',
+                            'There was an error starting the bulk import cell',
+                            error
+                        );
+                    }
                 }
-            }
-        }));
+            })
+        );
     }
-
 
     function setupWorkspace(workspaceUrl) {
         // TODO where to get config from generally?
         var workspaceRef = { id: runtime.workspaceId() },
             workspace = new Workspace(workspaceUrl, {
-                token: runtime.authToken()
+                token: runtime.authToken(),
             });
 
         return workspace.get_workspace_info(workspaceRef);
-
     }
 
     /*
@@ -88,17 +80,17 @@ define([
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
         // triggers that the ws has changed, not the worst.
-        $(document).on('dataUpdated.Narrative', function() {
+        $(document).on('dataUpdated.Narrative', function () {
             // Tell each cell that the workspace has been updated.
             // This is what is interesting, no?
             runtime.bus().emit('workspace-changed');
         });
 
         setupWorkspace(runtime.config('services.workspace.url'))
-            .then(function(wsInfo) {
+            .then(function (wsInfo) {
                 workspaceInfo = serviceUtils.workspaceInfoToObject(wsInfo);
             })
-            .then(function() {
+            .then(function () {
                 return setupNotebook(workspaceInfo);
             })
             .then(() => {
@@ -107,9 +99,7 @@ define([
                         setupData = payload.data,
                         jupyterCellType = payload.type;
 
-                    if (jupyterCellType !== 'code' ||
-                        !setupData ||
-                        setupData.type !== CELL_TYPE) {
+                    if (jupyterCellType !== 'code' || !setupData || setupData.type !== CELL_TYPE) {
                         return;
                     }
                     const importData = setupData.typesToFiles || {};
@@ -119,14 +109,15 @@ define([
                             cell,
                             importData,
                             initialize: true,
-                            workspaceInfo
+                            workspaceInfo,
                         });
-                    }
-                    catch(error) {
+                    } catch (error) {
                         Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
-                        Error.reportCellError('Error inserting bulk import cell',
+                        Error.reportCellError(
+                            'Error inserting bulk import cell',
                             'Could not insert the App Cell due to errors.',
-                            error);
+                            error
+                        );
                     }
                 });
             });
@@ -141,8 +132,7 @@ define([
         /* Only initialize after the notebook is fully loaded. */
         if (Jupyter.notebook._fully_loaded) {
             return load_ipython_extension();
-        }
-        else {
+        } else {
             return Promise.try(() => {
                 $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
                     load_ipython_extension();
@@ -153,7 +143,7 @@ define([
 
     return {
         // This is the sole ipython/jupyter api call
-        load_ipython_extension: load
+        load_ipython_extension: load,
     };
 }, (err) => {
     'use strict';

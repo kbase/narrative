@@ -16,8 +16,8 @@ define([
     'widgets/appWidgets2/common',
     'select2',
     'bootstrap',
-    'css!font-awesome'
-], function(
+    'css!font-awesome',
+], function (
     Promise,
     $,
     html,
@@ -30,7 +30,7 @@ define([
     UI,
     Data,
     TimeFormat,
-    WidgetCommon,
+    WidgetCommon
 ) {
     'use strict';
 
@@ -56,7 +56,7 @@ define([
                 blacklistValues: undefined,
                 availableValues: undefined,
                 availableValuesMap: {},
-                value: undefined
+                value: undefined,
             },
             eventListeners = [],
             workspaceId = runtime.getEnv('workspaceId');
@@ -79,9 +79,9 @@ define([
             if (model.availableValues) {
                 var filteredOptions = [];
                 selectOptions = model.availableValues
-                    .filter(function(objectInfo, idx) {
+                    .filter(function (objectInfo, idx) {
                         if (model.blacklistValues) {
-                            return !model.blacklistValues.some(function(value) {
+                            return !model.blacklistValues.some(function (value) {
                                 if (objectInfoHasRef(objectInfo, value)) {
                                     // if (value === getObjectRef(objectInfo)) {
                                     filteredOptions.push(idx);
@@ -91,32 +91,38 @@ define([
                             });
                         }
                     })
-                    .map(function(objectInfo, idx) {
+                    .map(function (objectInfo, idx) {
                         var selected = false,
                             ref = idx; //getObjectRef(objectInfo);
                         if (objectInfoHasRef(objectInfo, model.value)) {
                             // if (getObjectRef(objectInfo) === model.value) {
                             selected = true;
                         }
-                        return option({
-                            value: ref,
-                            selected: selected,
-                            disabled: true
-                        }, objectInfo.name);
+                        return option(
+                            {
+                                value: ref,
+                                selected: selected,
+                                disabled: true,
+                            },
+                            objectInfo.name
+                        );
                     });
             }
 
             // CONTROL
 
-            var selectElem = select({
-                id: html.genId(),
-                class: 'form-control',
-                style: {
-                    width: '100%'
+            var selectElem = select(
+                {
+                    id: html.genId(),
+                    class: 'form-control',
+                    style: {
+                        width: '100%',
+                    },
+                    dataElement: 'input',
+                    disabled: true,
                 },
-                dataElement: 'input',
-                disabled: true
-            }, [option({ value: '' }, '')].concat(selectOptions));
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
 
             return selectElem;
         }
@@ -133,7 +139,6 @@ define([
             // first selected element, which is all there should be!
             return selected.item(0).value;
         }
-
 
         function setControlValue(value) {
             var stringValue;
@@ -174,17 +179,20 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 var objInfo = model.availableValues[getControlValue()],
                     processedValue = '',
                     validationOptions = {
                         required: spec.data.constraints.required,
                         authToken: runtime.authToken(),
-                        workspaceServiceUrl: runtime.config('services.workspace.url')
+                        workspaceServiceUrl: runtime.config('services.workspace.url'),
                     };
 
                 if (objInfo && objInfo.dataPaletteRef) {
-                    return Validation.validateWorkspaceDataPaletteRef(objInfo.dataPaletteRef, validationOptions);
+                    return Validation.validateWorkspaceDataPaletteRef(
+                        objInfo.dataPaletteRef,
+                        validationOptions
+                    );
                 }
 
                 if (objInfo) {
@@ -193,39 +201,42 @@ define([
 
                 switch (objectRefType) {
                     case 'ref':
-                        return Validation.validateWorkspaceObjectRef(processedValue, validationOptions);
+                        return Validation.validateWorkspaceObjectRef(
+                            processedValue,
+                            validationOptions
+                        );
                     case 'name':
                     default:
-                        return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
+                        return Validation.validateWorkspaceObjectName(
+                            processedValue,
+                            validationOptions
+                        );
                 }
             });
         }
 
         function getObjectsByTypes_datalist(types) {
-            return Data.getObjectsByTypes(types, bus, function(result) {
-                    doWorkspaceUpdated(result.data);
-                })
-                .then(function(result) {
-                    return result.data;
-                });
+            return Data.getObjectsByTypes(types, bus, function (result) {
+                doWorkspaceUpdated(result.data);
+            }).then(function (result) {
+                return result.data;
+            });
         }
-
 
         function fetchData() {
             var types = spec.data.constraints.types;
-            return getObjectsByTypes_datalist(types)
-                .then(function(objects) {
-                    objects.sort(function(a, b) {
-                        if (a.saveDate < b.saveDate) {
-                            return 1;
-                        }
-                        if (a.saveDate === b.saveDate) {
-                            return 0;
-                        }
-                        return -1;
-                    });
-                    return objects;
+            return getObjectsByTypes_datalist(types).then(function (objects) {
+                objects.sort(function (a, b) {
+                    if (a.saveDate < b.saveDate) {
+                        return 1;
+                    }
+                    if (a.saveDate === b.saveDate) {
+                        return 0;
+                    }
+                    return -1;
                 });
+                return objects;
+            });
         }
 
         /**
@@ -236,17 +247,20 @@ define([
                 return $('<div style="display:block; height:20px">').append(object.text);
             }
             var objectInfo = model.availableValues[object.id];
-            return $(div([
-                span({ style: 'word-wrap: break-word' }, [
-                    b(objectInfo.name)
-                ]),
-                ' (v' + objectInfo.version + ')<br>',
-                div({ style: 'margin-left: 7px' }, [
-                    '<i>' + objectInfo.typeName + '</i><br>',
-                    'Narrative id: ' + objectInfo.wsid + '<br>',
-                    'updated ' + TimeFormat.getTimeStampStr(objectInfo.save_date) + ' by ' + objectInfo.saved_by
+            return $(
+                div([
+                    span({ style: 'word-wrap: break-word' }, [b(objectInfo.name)]),
+                    ' (v' + objectInfo.version + ')<br>',
+                    div({ style: 'margin-left: 7px' }, [
+                        '<i>' + objectInfo.typeName + '</i><br>',
+                        'Narrative id: ' + objectInfo.wsid + '<br>',
+                        'updated ' +
+                            TimeFormat.getTimeStampStr(objectInfo.save_date) +
+                            ' by ' +
+                            objectInfo.saved_by,
+                    ]),
                 ])
-            ]));
+            );
         }
 
         /*
@@ -255,32 +269,37 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 var events = Events.make(),
                     inputControl = makeInputControl(events);
 
                 ui.setContent('input-container', '');
                 const container = ui.getElement('input-container');
                 const content = WidgetCommon.containerContent(
-                    div, button, events, ui, container, inputControl
+                    div,
+                    button,
+                    events,
+                    ui,
+                    container,
+                    inputControl
                 );
                 ui.setContent('input-container', content);
 
-                $(ui.getElement('input-container.input')).select2({
+                $(ui.getElement('input-container.input'))
+                    .select2({
                         readonly: true,
                         templateResult: formatObjectDisplay,
-                        templateSelection: function(object) {
+                        templateSelection: function (object) {
                             if (!object.id) {
                                 return object.text;
                             }
                             return model.availableValues[object.id].name;
-                        }
+                        },
                     })
-                    .on('advanced-shown.kbase', function(e) {
+                    .on('advanced-shown.kbase', function (e) {
                         $(e.target).select2({ width: 'resolve' });
                     });
                 events.attachEvents(container);
-
             });
         }
 
@@ -290,25 +309,25 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            var content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate()
-                .then(function(result) {
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then(function (result) {
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // function getObjectRef(objectInfo) {
@@ -338,11 +357,11 @@ define([
                 // our map is a little strange.
                 // we have dataPaletteRefs, which are always ref paths
                 // we have object ref or names otherwise.
-                // whether we are using refs or names depends on the 
+                // whether we are using refs or names depends on the
                 // config setting. This is because some apps don't yet accept
-                // names... 
+                // names...
                 // So our key is either dataPaletteRef or (ref or name)
-                model.availableValues.forEach(function(objectInfo, index) {
+                model.availableValues.forEach(function (objectInfo, index) {
                     var id;
                     if (objectInfo.dataPaletteRef) {
                         id = objectInfo.dataPaletteRef;
@@ -353,17 +372,16 @@ define([
                     }
                     model.availableValuesMap[id] = index;
                 });
-                return render()
-                    .then(function() {
-                        setControlValue(getModelValue());
-                        autoValidate();
-                    });
+                return render().then(function () {
+                    setControlValue(getModelValue());
+                    autoValidate();
+                });
             }
         }
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
@@ -379,16 +397,15 @@ define([
                 }
 
                 return fetchData()
-                    .then(function(data) {
+                    .then(function (data) {
                         doWorkspaceUpdated(data);
                         return render();
                     })
-                    .then(function() {
-
-                        channel.on('reset-to-defaults', function() {
+                    .then(function () {
+                        channel.on('reset-to-defaults', function () {
                             resetModelValue();
                         });
-                        channel.on('update', function(message) {
+                        channel.on('update', function (message) {
                             setModelValue(message.value);
                         });
 
@@ -399,12 +416,12 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
                 bus.stop();
-                eventListeners.forEach(function(id) {
+                eventListeners.forEach(function (id) {
                     runtime.bus().removeListener(id);
                 });
             });
@@ -412,16 +429,15 @@ define([
 
         // INIT
 
-
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

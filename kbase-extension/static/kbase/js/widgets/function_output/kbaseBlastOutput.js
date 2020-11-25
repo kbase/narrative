@@ -1,36 +1,35 @@
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'util/string',
-		'd3',
-		'kbaseAuthenticatedWidget',
-		'kbaseTabs',
-		'jquery-dataTables'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		StringUtil,
-		d3,
-		kbaseAuthenticatedWidget,
-		kbaseTabs,
-		jquery_dataTables
-	) {
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'util/string',
+    'd3',
+    'kbaseAuthenticatedWidget',
+    'kbaseTabs',
+    'jquery-dataTables',
+], function (
+    KBWidget,
+    bootstrap,
+    $,
+    StringUtil,
+    d3,
+    kbaseAuthenticatedWidget,
+    kbaseTabs,
+    jquery_dataTables
+) {
     return KBWidget({
-        name: "kbaseBlastOutput",
-        parent : kbaseAuthenticatedWidget,
-        version: "1.0.0",
+        name: 'kbaseBlastOutput',
+        parent: kbaseAuthenticatedWidget,
+        version: '1.0.0',
         ws_id: null,
         ws_name: null,
         token: null,
         width: 1150,
         options: {
             ws_id: null,
-            ws_name: null
+            ws_name: null,
         },
-        loadingImage: "static/kbase/images/ajax-loader.gif",
+        loadingImage: 'static/kbase/images/ajax-loader.gif',
         wsUrl: window.kbconfig.urls.workspace,
         timer: null,
         lastElemTabNum: 0,
@@ -46,7 +45,7 @@ define (
         tabData: function () {
             return {
                 names: ['Overview', 'Hits', 'Graphical Alignment', 'Sequence Alignment'],
-                ids: ['overview', 'contigs', 'genes', 'alignments']
+                ids: ['overview', 'contigs', 'genes', 'alignments'],
             };
         },
 
@@ -62,14 +61,14 @@ define (
                 return;
             }
 
-            var kbws = new Workspace(self.wsUrl, {'token': self.token});
+            var kbws = new Workspace(self.wsUrl, { token: self.token });
 
             var ready = function (data) {
                 container.empty();
                 data = data[0].data;
                 var tabPane = $('<div id="' + pref + 'tab-content">');
                 container.append(tabPane);
-                var tabWidget = new kbaseTabs(tabPane, {canDelete: true, tabs: []});
+                var tabWidget = new kbaseTabs(tabPane, { canDelete: true, tabs: [] });
 
                 var tabData = self.tabData();
                 var tabNames = tabData.names;
@@ -81,7 +80,7 @@ define (
                         tab: tabNames[i],
                         content: tabDiv,
                         canDelete: false,
-                        show: (i == 0)
+                        show: i == 0,
                     });
                 });
 
@@ -94,22 +93,42 @@ define (
                 var query_info = data.BlastOutput_iterations.Iteration[0]['Iteration_query-def'];
                 var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
 
-                $('#' + pref + 'overview').append('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;" id="' + pref + 'overview-table"/>');
-                var overviewLabels = ["Input Sequence ids", "Input Genome id(s)", "Total number of hits"];
+                $('#' + pref + 'overview').append(
+                    '<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;" id="' +
+                        pref +
+                        'overview-table"/>'
+                );
+                var overviewLabels = [
+                    'Input Sequence ids',
+                    'Input Genome id(s)',
+                    'Total number of hits',
+                ];
                 var overviewData = [query_info, db, hits.length];
 
                 var overviewTable = $('#' + pref + 'overview-table');
                 for (var i = 0; i < overviewData.length; i++) {
-                    overviewTable.append('<tr><td>' + overviewLabels[i] + '</td><td>' + overviewData[i] + '</td></tr>');
+                    overviewTable.append(
+                        '<tr><td>' +
+                            overviewLabels[i] +
+                            '</td><td>' +
+                            overviewData[i] +
+                            '</td></tr>'
+                    );
                 }
 
                 for (var key in parameters) {
-                    overviewTable.append('<tr><td>' + key + '</td><td>' + parameters[key] + '</td></tr>');
+                    overviewTable.append(
+                        '<tr><td>' + key + '</td><td>' + parameters[key] + '</td></tr>'
+                    );
                 }
 
                 ////////////////////////////////Hits tab////////////////////
 
-                $('#' + pref + 'contigs').append('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;" id="' + pref + 'contigs-table"/>');
+                $('#' + pref + 'contigs').append(
+                    '<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;" id="' +
+                        pref +
+                        'contigs-table"/>'
+                );
 
                 var formatEvalue = function (value) {
                     if (value.includes('e')) {
@@ -124,32 +143,37 @@ define (
                 var genesData = [];
 
                 //var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
-                var query_len = parseInt(data.BlastOutput_iterations.Iteration[0]['Iteration_query-len']);
+                var query_len = parseInt(
+                    data.BlastOutput_iterations.Iteration[0]['Iteration_query-len']
+                );
                 hits.forEach(function (d) {
-                    var hit_id = d["Hit_id"];
-                    var hit_def = d["Hit_def"];
-                    var hit_len = d["Hit_len"];
+                    var hit_id = d['Hit_id'];
+                    var hit_def = d['Hit_def'];
+                    var hit_len = d['Hit_len'];
 
-                    var hsps = d["Hit_hsps"].Hsp;
+                    var hsps = d['Hit_hsps'].Hsp;
                     var hsp = hsps[0];
 
-                    var evalue = hsp["Hsp_evalue"];
-                    var identity = hsp["Hsp_identity"];
-                    var align_len = hsp["Hsp_align-len"];
-                    var query_to = hsp["Hsp_query-to"];
-                    var query_from = hsp["Hsp_query-from"];
-                    var hit_to = hsp["Hsp_hit-to"];
-                    var hit_from = hsp["Hsp_hit-from"];
-                    var bit_score = hsp["Hsp_bit-score"];
+                    var evalue = hsp['Hsp_evalue'];
+                    var identity = hsp['Hsp_identity'];
+                    var align_len = hsp['Hsp_align-len'];
+                    var query_to = hsp['Hsp_query-to'];
+                    var query_from = hsp['Hsp_query-from'];
+                    var hit_to = hsp['Hsp_hit-to'];
+                    var hit_from = hsp['Hsp_hit-from'];
+                    var bit_score = hsp['Hsp_bit-score'];
 
                     genesData.push({
                         gene_id: hit_id,
                         evalue: formatEvalue(evalue),
                         gene_annotation: hit_def,
-                        identity: Math.round(identity / align_len * 100) + '%',
-                        query_cov: Math.round((Math.abs(query_to - query_from) + 1) / query_len * 100) + '%',
-                        subject_cov: Math.round((Math.abs(hit_to - hit_from) + 1) / hit_len * 100) + '%',
-                        score: bit_score
+                        identity: Math.round((identity / align_len) * 100) + '%',
+                        query_cov:
+                            Math.round(((Math.abs(query_to - query_from) + 1) / query_len) * 100) +
+                            '%',
+                        subject_cov:
+                            Math.round(((Math.abs(hit_to - hit_from) + 1) / hit_len) * 100) + '%',
+                        score: bit_score,
                     });
                 });
 
@@ -163,24 +187,27 @@ define (
                 }
 
                 var genesSettings = {
-                    "sPaginationType": "full_numbers",
-                    "iDisplayLength": 10,
-                    "aaSorting": [[5, "desc"], [1, "asc"]],
-                    "aoColumns": [
-                        {sTitle: "GeneID", mData: "gene_id"},
-                        {sTitle: "E Value", mData: "evalue"},
-                        {sTitle: "Identity", mData: "identity"},
-                        {sTitle: "Query cover", mData: "query_cov"},
-                        {sTitle: "Subject cover", mData: "subject_cov"},
-                        {sTitle: "Score", mData: "score"},
-                        {sTitle: "Function", mData: "gene_annotation"}
+                    sPaginationType: 'full_numbers',
+                    iDisplayLength: 10,
+                    aaSorting: [
+                        [5, 'desc'],
+                        [1, 'asc'],
                     ],
-                    "aaData": [],
-                    "oLanguage": {
-                        "sSearch": "Search Hits:",
-                        "sEmptyTable": "No Hits found."
+                    aoColumns: [
+                        { sTitle: 'GeneID', mData: 'gene_id' },
+                        { sTitle: 'E Value', mData: 'evalue' },
+                        { sTitle: 'Identity', mData: 'identity' },
+                        { sTitle: 'Query cover', mData: 'query_cov' },
+                        { sTitle: 'Subject cover', mData: 'subject_cov' },
+                        { sTitle: 'Score', mData: 'score' },
+                        { sTitle: 'Function', mData: 'gene_annotation' },
+                    ],
+                    aaData: [],
+                    oLanguage: {
+                        sSearch: 'Search Hits:',
+                        sEmptyTable: 'No Hits found.',
                     },
-                    "fnDrawCallback": geneEvents
+                    fnDrawCallback: geneEvents,
                 };
                 var contigsDiv = $('#' + pref + 'contigs-table').dataTable(genesSettings);
                 contigsDiv.fnAddData(genesData);
@@ -206,8 +233,7 @@ define (
                     if (n >= 200) {
                         color = '#FF0000';
                     }
-                    return (color);
-
+                    return color;
                 };
 
                 var id = pref + 'genes';
@@ -217,9 +243,8 @@ define (
                     var formatted_hits = [{}];
                     Hit.forEach(function (oneHit, idx) {
                         oneHit['Hit_hsps']['Hsp'].forEach(function (hsp) {
-
-                            var begin = hsp["Hsp_query-from"];
-                            var end = hsp["Hsp_query-to"];
+                            var begin = hsp['Hsp_query-from'];
+                            var end = hsp['Hsp_query-to'];
 
                             if (begin > end) {
                                 var tmp = begin;
@@ -227,24 +252,22 @@ define (
                                 end = tmp;
                             }
                             formatted_hits.push({
-                                "begin": begin,
-                                "seqlength": (end - begin),
-                                "rownumber": idx,
-                                "bitscore": hsp["Hsp_bit-score"],
-                                "id": oneHit['Hit_id']
+                                begin: begin,
+                                seqlength: end - begin,
+                                rownumber: idx,
+                                bitscore: hsp['Hsp_bit-score'],
+                                id: oneHit['Hit_id'],
                             });
-
                         });
                     });
-                    return (formatted_hits);
-
+                    return formatted_hits;
                 };
 
                 var querylength = data.BlastOutput_iterations.Iteration[0]['Iteration_query-len'];
                 //var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
 
                 //set up svg display for graphics alignment
-                var margin = {top: 0, right: 0, bottom: 0, left: 10},
+                var margin = { top: 0, right: 0, bottom: 0, left: 10 },
                     width = 540 - margin.left - margin.right,
                     height = 500 - margin.top - margin.bottom;
 
@@ -252,28 +275,29 @@ define (
 
                 var scaley = margin.top + 20;
                 var rect1 = margin.top + 10;
-                var fullscalelength = (10 - Number(querylength) % 10) + Number(querylength);
+                var fullscalelength = 10 - (Number(querylength) % 10) + Number(querylength);
 
-                var x = d3.scale.linear()
+                var x = d3.scale
+                    .linear()
                     .domain([0, querylength])
                     .range([0, width - 30]);
 
-                var xAxis = d3.svg.axis()
-                    .scale(x)
-                    .orient("bottom");
-                var svg = d3.select(genesDivdata).append("svg")
-                    .attr("width", width)
-                    .attr("height", height)
-                    .append("g")
-                    .attr("transform", "translate(" + 10 + "," + margin.top + ")");
+                var xAxis = d3.svg.axis().scale(x).orient('bottom');
+                var svg = d3
+                    .select(genesDivdata)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height)
+                    .append('g')
+                    .attr('transform', 'translate(' + 10 + ',' + margin.top + ')');
 
-                svg.append("rect")
-                    .attr("x", 0)
-                    .attr("fill", "green")
-                    .attr("y", 0)
-                    .attr("width", x(querylength))
-                    .attr("height", 6)
-                    .attr("transform", "translate(" + 10 + "," + margin.top + ")");
+                svg.append('rect')
+                    .attr('x', 0)
+                    .attr('fill', 'green')
+                    .attr('y', 0)
+                    .attr('width', x(querylength))
+                    .attr('height', 6)
+                    .attr('transform', 'translate(' + 10 + ',' + margin.top + ')');
 
                 //Prepare data to use with d3
 
@@ -281,30 +305,30 @@ define (
 
                 //display svg
 
-                svg.selectAll("rect")
+                svg.selectAll('rect')
                     .data(formattedhits)
                     .enter()
-                    .append("rect")
-                    .attr("fill", function (d) {
-                        return (gethitcolor(d.bitscore));
+                    .append('rect')
+                    .attr('fill', function (d) {
+                        return gethitcolor(d.bitscore);
                     })
-                    .attr("y", function (d) {
-                        return (d.rownumber * 7)
+                    .attr('y', function (d) {
+                        return d.rownumber * 7;
                     })
-                    .attr("x", function (d) {
+                    .attr('x', function (d) {
                         return x(d.begin);
                     })
-                    .attr("width", function (d) {
+                    .attr('width', function (d) {
                         return x(d.seqlength);
                     })
-                    .attr("height", function () {
+                    .attr('height', function () {
                         return 4;
                     })
-                    .attr("transform", "translate(" + 10 + "," + 30 + ")");
+                    .attr('transform', 'translate(' + 10 + ',' + 30 + ')');
 
-                svg.append("g")
-                    .attr("class", "axis") //Assign "axis" class
-                    .attr("transform", "translate(" + 10 + "," + 10 + ")")
+                svg.append('g')
+                    .attr('class', 'axis') //Assign "axis" class
+                    .attr('transform', 'translate(' + 10 + ',' + 10 + ')')
                     .call(xAxis);
 
                 //////////////////////////////// Sequence Alignment tab ////////////////////
@@ -320,37 +344,37 @@ define (
                 //formatter for hits
 
                 var formatter = function (d, al) {
-                    var accession = d["Hit_accession"];
-                    var hit_def = d["Hit_def"];
-                    var hit_len = d["Hit_len"];
-                    var hsps = d["Hit_hsps"].Hsp;
+                    var accession = d['Hit_accession'];
+                    var hit_def = d['Hit_def'];
+                    var hit_len = d['Hit_len'];
+                    var hsps = d['Hit_hsps'].Hsp;
                     var num_matches = hsps.length;
 
                     var str = '<div STYLE="font-family: monospace;  white-space: pre;">';
                     str += '</br><hr>' + 'Sequence ID:' + accession + '</br>';
-                    str += "Hit_def:" + hit_def + '</br>' + "Length:" + hit_len + ' ';
-                    str += "Number of matches:" + num_matches + '<hr>';
+                    str += 'Hit_def:' + hit_def + '</br>' + 'Length:' + hit_len + ' ';
+                    str += 'Number of matches:' + num_matches + '<hr>';
                     al.append(str);
 
                     hsps.forEach(function (hsp, counter) {
                         var match_number = counter + 1;
-                        var align_len = hsp["Hsp_align-len"];
-                        var bit_score = hsp["Hsp_bit-score"];
-                        var evalue = hsp["Hsp_evalue"];
-                        var gaps = hsp["Hsp_gaps"];
-                        var hit_frame = hsp["Hsp_hit-frame"];
-                        var hit_from = hsp["Hsp_hit-from"];
-                        var hit_to = hsp["Hsp_hit-to"];
-                        var hseq = hsp["Hsp_hseq"];
-                        var identity = hsp["Hsp_identity"];
-                        var midline = hsp["Hsp_midline"];
-                        var num = hsp["Hsp_num"];
-                        var positive = hsp["Hsp_positive"];
-                        var qseq = hsp["Hsp_qseq"];
-                        var query_frame = hsp["Hsp_query-frame"];
-                        var query_from = hsp["Hsp_query-from"];
-                        var query_to = hsp["Hsp_query-to"];
-                        var score = hsp["Hsp_score"];
+                        var align_len = hsp['Hsp_align-len'];
+                        var bit_score = hsp['Hsp_bit-score'];
+                        var evalue = hsp['Hsp_evalue'];
+                        var gaps = hsp['Hsp_gaps'];
+                        var hit_frame = hsp['Hsp_hit-frame'];
+                        var hit_from = hsp['Hsp_hit-from'];
+                        var hit_to = hsp['Hsp_hit-to'];
+                        var hseq = hsp['Hsp_hseq'];
+                        var identity = hsp['Hsp_identity'];
+                        var midline = hsp['Hsp_midline'];
+                        var num = hsp['Hsp_num'];
+                        var positive = hsp['Hsp_positive'];
+                        var qseq = hsp['Hsp_qseq'];
+                        var query_frame = hsp['Hsp_query-frame'];
+                        var query_from = hsp['Hsp_query-from'];
+                        var query_to = hsp['Hsp_query-to'];
+                        var score = hsp['Hsp_score'];
 
                         if (gaps == null) {
                             gaps = 0;
@@ -360,19 +384,49 @@ define (
 
                         var pctid = (Number(identity) / Number(align_len)) * 100;
                         var pctpositive = (Number(positive) / Number(align_len)) * 100;
-                        var pctgap = (Number(gaps) / Number(align_len) ) * 100;
+                        var pctgap = (Number(gaps) / Number(align_len)) * 100;
 
                         var str = '<div STYLE="font-family: monospace;  white-space: pre;">';
-                        str += '</br>' + 'Range ' + match_number + ': ' + hit_from + ' to ' + hit_to + '</br>';
-                        str += 'Score = ' + bit_score + '(' + score + '), ' + 'Expect = ' + evalue + '</br>';
-                        str += 'Identities = ' + identity + '/' + align_len + '(' + Math.round(pctid) + '%), ';
-                        str += 'Positives = ' + positive + '/' + align_len + '(' + Math.round(pctpositive) + '%), ';
+                        str +=
+                            '</br>' +
+                            'Range ' +
+                            match_number +
+                            ': ' +
+                            hit_from +
+                            ' to ' +
+                            hit_to +
+                            '</br>';
+                        str +=
+                            'Score = ' +
+                            bit_score +
+                            '(' +
+                            score +
+                            '), ' +
+                            'Expect = ' +
+                            evalue +
+                            '</br>';
+                        str +=
+                            'Identities = ' +
+                            identity +
+                            '/' +
+                            align_len +
+                            '(' +
+                            Math.round(pctid) +
+                            '%), ';
+                        str +=
+                            'Positives = ' +
+                            positive +
+                            '/' +
+                            align_len +
+                            '(' +
+                            Math.round(pctpositive) +
+                            '%), ';
                         str += 'Gaps = ' + gaps + '/' + align_len + '(' + Math.round(pctgap) + ')';
                         if (query_frame || hit_frame) {
                             str += ', Frame = ';
-                            (query_frame) ? str += query_frame : '';
-                            (query_frame && hit_frame) ? str += '/' : '';
-                            (hit_frame) ? str += hit_frame : '';
+                            query_frame ? (str += query_frame) : '';
+                            query_frame && hit_frame ? (str += '/') : '';
+                            hit_frame ? (str += hit_frame) : '';
                         }
                         str += '</br></br>';
                         al.append(str);
@@ -393,14 +447,13 @@ define (
                             if (i == 0) {
                                 q_start = Number(query_from);
                                 h_start = Number(hit_from);
-                            }
-                            else {
+                            } else {
                                 h_start = h_end + 1;
                                 q_start = q_end + 1;
                             }
 
-                            var c1 = p1.replace(/-/g, "");
-                            var c3 = p3.replace(/-/g, "");
+                            var c1 = p1.replace(/-/g, '');
+                            var c3 = p3.replace(/-/g, '');
 
                             q_end = q_start + c3.length - 1;
                             h_end = h_start + c1.length - 1;
@@ -413,7 +466,6 @@ define (
                             al.append(alnstr);
                             i = end;
                         }
-
                     });
                 };
 
@@ -424,19 +476,23 @@ define (
                 hits.forEach(function (hit) {
                     formatter(hit, al);
                 });
-
             };
 
             container.empty();
-            container.append("<div><img src=\"" + self.loading_image + "\">&nbsp;&nbsp;loading data...</div>");
+            container.append(
+                '<div><img src="' + self.loading_image + '">&nbsp;&nbsp;loading data...</div>'
+            );
 
-            kbws.get_objects([{ref: self.ws_name + "/" + self.ws_id}], function (data) {
-                    ready(data)
+            kbws.get_objects(
+                [{ ref: self.ws_name + '/' + self.ws_id }],
+                function (data) {
+                    ready(data);
                 },
                 function (data) {
                     container.empty();
                     container.append('<p>[Error] ' + data.error.message + '</p>');
-                });
+                }
+            );
             return this;
         },
 
@@ -450,6 +506,6 @@ define (
             this.token = null;
             this.render();
             return this;
-        }
+        },
     });
 });

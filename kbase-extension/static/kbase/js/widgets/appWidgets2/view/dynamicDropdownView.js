@@ -10,16 +10,8 @@ define([
     '../inputUtils',
 
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props,
-    inputUtils
-) {
+    'css!font-awesome',
+], function (Promise, html, Validation, Events, UI, Props, inputUtils) {
     'use strict';
 
     var t = html.tag,
@@ -65,22 +57,24 @@ define([
         // DOM & RENDERING
 
         function makeViewControl(events) {
-            return select({
-                class: 'form-control',
-                readonly: true,
-                dataElement: 'input',
-                disabled: true
-            }, [
-                option({})
-            ]);
+            return select(
+                {
+                    class: 'form-control',
+                    readonly: true,
+                    dataElement: 'input',
+                    disabled: true,
+                },
+                [option({})]
+            );
         }
 
         function render(events) {
-            return div({
-                dataElement: 'input-container'
-            }, [
-                makeViewControl(events)
-            ]);
+            return div(
+                {
+                    dataElement: 'input-container',
+                },
+                [makeViewControl(events)]
+            );
         }
 
         // EVENT HANDLERS
@@ -98,11 +92,10 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
-
 
                 var events = Events.make();
                 container.innerHTML = render(events);
@@ -110,10 +103,10 @@ define([
                 // model.setItem('value', config.initialValue);
                 syncModelToControl();
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', function () {
                     resetModelValue();
                 });
-                bus.on('focus', function() {
+                bus.on('focus', function () {
                     doFocus();
                 });
                 // bus.emit('sync');
@@ -121,7 +114,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -132,22 +125,22 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: function() {}
+            onUpdate: function () {},
         });
 
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

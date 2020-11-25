@@ -4,25 +4,19 @@ define([
     'common/runtime',
     'base/js/namespace',
     'kbaseNarrative',
-    'testUtil'
-], function(
-    CheckboxInput,
-    Runtime,
-    Jupyter,
-    Narrative,
-    TestUtil
-) {
+    'testUtil',
+], function (CheckboxInput, Runtime, Jupyter, Narrative, TestUtil) {
     'use strict';
 
-    describe('Test checkbox data input widget', function() {
+    describe('Test checkbox data input widget', function () {
         let testConfig = {},
             runtime,
             bus;
 
-        beforeEach(function() {
+        beforeEach(function () {
             runtime = Runtime.make();
             bus = runtime.bus().makeChannelBus({
-                description: 'checkbox testing'
+                description: 'checkbox testing',
             });
             testConfig = {
                 bus: bus,
@@ -31,13 +25,12 @@ define([
                         defaultValue: '',
                         nullValue: '',
                         constraints: {
-                            required: false
-                        }
-
+                            required: false,
+                        },
                     },
                     original: {
-                        text_subdata_options: {}
-                    }
+                        text_subdata_options: {},
+                    },
                 },
                 channelName: bus.channelName,
             };
@@ -49,11 +42,11 @@ define([
             }
         });
 
-        it('should be real!', function() {
+        it('should be real!', function () {
             expect(CheckboxInput).not.toBeNull();
         });
 
-        it('should instantiate with a test config', function() {
+        it('should instantiate with a test config', function () {
             TestUtil.pendingIfNoToken();
             var widget = CheckboxInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
@@ -62,7 +55,8 @@ define([
         it('should start and stop properly without initial value', (done) => {
             let widget = CheckboxInput.make(testConfig);
             let node = document.createElement('div');
-            widget.start({node: node})
+            widget
+                .start({ node: node })
                 .then(() => {
                     expect(node.childElementCount).toBeGreaterThan(0);
                     const input = node.querySelector('input[type="checkbox"]');
@@ -80,7 +74,8 @@ define([
             testConfig.initialValue = 1;
             let widget = CheckboxInput.make(testConfig);
             let node = document.createElement('div');
-            widget.start({node: node})
+            widget
+                .start({ node: node })
                 .then(() => {
                     expect(node.childElementCount).toBeGreaterThan(0);
                     const input = node.querySelector('input[type="checkbox"]');
@@ -92,22 +87,20 @@ define([
                     expect(node.childElementCount).toBe(0);
                     done();
                 });
-
-        })
+        });
 
         it('should update model properly', (done) => {
             bus.on('changed', (value) => {
-                expect(value).toEqual({newValue: 1});
+                expect(value).toEqual({ newValue: 1 });
                 done();
             });
             let widget = CheckboxInput.make(testConfig);
             let node = document.createElement('div');
-            widget.start({node: node})
-                .then(() => {
-                    const input = node.querySelector('input[type="checkbox"]');
-                    input.setAttribute('checked', true);
-                    input.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                const input = node.querySelector('input[type="checkbox"]');
+                input.setAttribute('checked', true);
+                input.dispatchEvent(new Event('change'));
+            });
         });
 
         it('should show message when configured', (done) => {
@@ -117,12 +110,11 @@ define([
             bus.on('changed', (value) => {
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    const input = node.querySelector('input[type="checkbox"]');
-                    input.setAttribute('checked', true);
-                    input.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                const input = node.querySelector('input[type="checkbox"]');
+                input.setAttribute('checked', true);
+                input.dispatchEvent(new Event('change'));
+            });
         });
     });
 });

@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseNarrativeWorkspace'
-], function(Widget) {
-    describe('Test the kbaseNarrativeWorkspace widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseNarrativeWorkspace'], function (Widget) {
+    describe('Test the kbaseNarrativeWorkspace widget', function () {
+        it('Should do things', function () {});
     });
 });

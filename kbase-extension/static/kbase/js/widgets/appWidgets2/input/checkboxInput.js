@@ -7,15 +7,8 @@ define([
     '../validation',
 
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    html,
-    Events,
-    UI,
-    Runtime,
-    Validation
-) {
+    'css!font-awesome',
+], function (Promise, html, Events, UI, Runtime, Validation) {
     'use strict';
 
     // Constants
@@ -29,11 +22,12 @@ define([
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            parent, container,
+            parent,
+            container,
             ui,
             model = {
                 updates: 0,
-                value: undefined
+                value: undefined,
             };
 
         // MODEL
@@ -42,7 +36,7 @@ define([
             if (model.value !== value) {
                 model.value = value;
                 channel.emit('changed', {
-                    newValue: model.value
+                    newValue: model.value,
                 });
             }
         }
@@ -73,24 +67,23 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 var rawValue = getControlValue(),
                     validationOptions = {
                         required: spec.data.constraints.required,
-                        values: [0, 1]
+                        values: [0, 1],
                     };
                 return Validation.validateSet(rawValue, validationOptions);
             });
         }
 
         function autoValidate() {
-            return validate()
-                .then(function(result) {
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then(function (result) {
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // RENDERING
@@ -104,11 +97,11 @@ define([
             return label([
                 input({
                     id: events.addEvents({
-                        events: [{
-                            type: 'change',
-                            handler: function() {
-                                validate()
-                                    .then(function(result) {
+                        events: [
+                            {
+                                type: 'change',
+                                handler: function () {
+                                    validate().then(function (result) {
                                         if (config.showOwnMessages) {
                                             ui.setContent('input-container.message', '');
                                         }
@@ -119,43 +112,43 @@ define([
                                         }
                                         channel.emit('validation', {
                                             errorMessage: result.errorMessage,
-                                            diagnosis: result.diagnosis
+                                            diagnosis: result.diagnosis,
                                         });
                                     });
-                            }
-                        }]
+                                },
+                            },
+                        ],
                     }),
                     type: 'checkbox',
                     dataElement: 'input',
                     checked: checked,
-                    value: 1
-                })
+                    value: 1,
+                }),
             ]);
         }
 
         function render(events) {
-            return div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' },
-                    makeInputControl(events)
-                )
-            ]);
+            return div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' }, makeInputControl(events))]
+            );
         }
 
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
 
                 ui = UI.make({
-                    node: container
+                    node: container,
                 });
 
                 var events = Events.make({
-                    node: container
+                    node: container,
                 });
 
                 setModelValue(config.initialValue);
@@ -166,15 +159,14 @@ define([
 
                 // Listen for events from the containing environment.
 
-                channel.on('reset-to-defaults', function() {
+                channel.on('reset-to-defaults', function () {
                     resetModelValue();
                 });
 
-                channel.on('update', function(message) {
+                channel.on('update', function (message) {
                     setModelValue(message.value);
                     syncModelToControl();
                 });
-
 
                 // bus.emit('sync');
                 return null;
@@ -182,7 +174,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -190,18 +182,17 @@ define([
             });
         }
 
-
         // INIT
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -1,9 +1,4 @@
-define([
-    'require',
-    'bluebird'
-], function(
-    require,
-    Promise) {
+define(['require', 'bluebird'], function (require, Promise) {
     'use strict';
 
     var typeToValidatorModule = {
@@ -17,7 +12,7 @@ define([
         subdata: 'subdata',
         customSubdata: 'customSubdata',
         custom: 'custom',
-        dynamicDropdown: 'dynamicDropdown'
+        dynamicDropdown: 'dynamicDropdown',
     };
 
     function getValidatorModule(fieldSpec) {
@@ -29,21 +24,21 @@ define([
     }
 
     function validate(fieldValue, fieldSpec) {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
             try {
                 var validatorModule = getValidatorModule(fieldSpec);
             } catch (ex) {
                 reject(ex);
             }
-            require(['./' + validatorModule], function(validator) {
+            require(['./' + validatorModule], function (validator) {
                 resolve(validator.validate(fieldValue, fieldSpec));
-            }, function(err) {
+            }, function (err) {
                 reject(err);
             });
         });
     }
 
     return {
-        validate: validate
-    }
+        validate: validate,
+    };
 });

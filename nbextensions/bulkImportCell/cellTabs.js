@@ -1,14 +1,4 @@
-define([
-    'bluebird',
-    'common/html',
-    'common/ui',
-    'common/events'
-], (
-    Promise,
-    html,
-    UI,
-    Events
-) => {
+define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html, UI, Events) => {
     'use strict';
 
     const div = html.tag('div'),
@@ -55,78 +45,87 @@ define([
 
         function renderLayout() {
             const events = Events.make(),
-                content = div({
-                    class: `${cssCellType}-tabs__container`,
-                }, [
-                    div({
-                        class: `${cssCellType}-tabs__toolbar btn-toolbar`,
-                    }, [
-                        buildTabButtons(events)
-                    ])
-                ]);
+                content = div(
+                    {
+                        class: `${cssCellType}-tabs__container`,
+                    },
+                    [
+                        div(
+                            {
+                                class: `${cssCellType}-tabs__toolbar btn-toolbar`,
+                            },
+                            [buildTabButtons(events)]
+                        ),
+                    ]
+                );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function buildTabButtons(events) {
-            const buttons = Object.keys(controlBarTabs.tabs).map((key) => {
-                const tab = controlBarTabs.tabs[key];
-                let icon;
-                if (!tab) {
-                    console.warn('Tab not defined: ' + key);
-                    return;
-                }
-                if (tab.icon) {
-                    if (typeof tab.icon === 'string') {
-                        icon = {
-                            name: tab.icon,
-                            size: 2
-                        };
-                    } else {
-                        icon = {size: 2};
+            const buttons = Object.keys(controlBarTabs.tabs)
+                .map((key) => {
+                    const tab = controlBarTabs.tabs[key];
+                    let icon;
+                    if (!tab) {
+                        console.warn('Tab not defined: ' + key);
+                        return;
                     }
-                }
-                return ui.buildButton({
-                    label: tab.label,
-                    name: key,
-                    events: events,
-                    type: tab.type || 'primary',
-                    hidden: true,
-                    features: tab.features,
-                    classes: [`${cssCellType}-tabs__button kb-app-cell-btn`],
-                    event: {
-                        type: 'control-panel-tab',
-                        data: {
-                            tab: key
+                    if (tab.icon) {
+                        if (typeof tab.icon === 'string') {
+                            icon = {
+                                name: tab.icon,
+                                size: 2,
+                            };
+                        } else {
+                            icon = { size: 2 };
                         }
-                    },
-                    icon: icon
+                    }
+                    return ui.buildButton({
+                        label: tab.label,
+                        name: key,
+                        events: events,
+                        type: tab.type || 'primary',
+                        hidden: true,
+                        features: tab.features,
+                        classes: [`${cssCellType}-tabs__button kb-app-cell-btn`],
+                        event: {
+                            type: 'control-panel-tab',
+                            data: {
+                                tab: key,
+                            },
+                        },
+                        icon: icon,
+                    });
+                })
+                .filter(function (x) {
+                    return x ? true : false;
                 });
-            }).filter(function(x) {
-                return x ? true : false;
-            });
             bus.on('control-panel-tab', (message) => {
                 var tab = message.data.tab;
                 tabToggleAction(tab);
             });
 
-            var outdatedBtn = a({
-                tabindex: '0',
-                type: 'button',
-                class: `${cssCellType}-tabs__button--outdated btn hidden`,
-                dataContainer: 'body',
-                container: 'body',
-                dataToggle: 'popover',
-                dataPlacement: 'bottom',
-                dataTrigger: 'focus',
-                dataElement: 'outdated',
-                role: 'button',
-                title: 'New version available',
-            }, span({
-                class: 'fa fa-exclamation-triangle fa-2x'
-            }));
+            var outdatedBtn = a(
+                {
+                    tabindex: '0',
+                    type: 'button',
+                    class: `${cssCellType}-tabs__button--outdated btn hidden`,
+                    dataContainer: 'body',
+                    container: 'body',
+                    dataToggle: 'popover',
+                    dataPlacement: 'bottom',
+                    dataTrigger: 'focus',
+                    dataElement: 'outdated',
+                    role: 'button',
+                    title: 'New version available',
+                },
+                span({
+                    class: 'fa fa-exclamation-triangle fa-2x',
+                })
+            );
             buttons.unshift(outdatedBtn);
 
             return buttons;
@@ -137,7 +136,7 @@ define([
                 container = args.node;
                 ui = UI.make({
                     node: container,
-                    bus: bus
+                    bus: bus,
                 });
                 const layout = renderLayout();
                 container.innerHTML = layout.content;
@@ -146,20 +145,17 @@ define([
         }
 
         function stop() {
-            return Promise.try(() => {
-
-            });
+            return Promise.try(() => {});
         }
 
         return {
             start: start,
             stop: stop,
-            setState: setState
+            setState: setState,
         };
-
     }
 
     return {
-        make: CellTabs
+        make: CellTabs,
     };
 });

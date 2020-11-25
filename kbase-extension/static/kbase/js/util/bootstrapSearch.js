@@ -17,19 +17,10 @@
  * delay - time in ms before firing the input function (default 300)
  */
 
-define([
-    'jquery',
-    'bluebird',
-    'base/js/namespace',
-    'bootstrap'
-], function (
-    $,
-    Promise,
-    Jupyter
-) {
+define(['jquery', 'bluebird', 'base/js/namespace', 'bootstrap'], function ($, Promise, Jupyter) {
     'use strict';
 
-    var BootstrapSearch = function($target, options) {
+    var BootstrapSearch = function ($target, options) {
         options = options || {};
 
         if (!options.placeholder) {
@@ -55,7 +46,7 @@ define([
         this.initialize($target);
     };
 
-    BootstrapSearch.prototype.initialize = function($target) {
+    BootstrapSearch.prototype.initialize = function ($target) {
         var self = this;
 
         // structure.
@@ -67,67 +58,65 @@ define([
             .addClass('input-group-addon btn btn-default kb-method-search-clear')
             .attr('type', 'button')
             .css({
-                'border': '1px solid #ccc',
+                border: '1px solid #ccc',
                 'border-radius': '2px',
-                'border-left': 'none'
+                'border-left': 'none',
             });
 
-        var $addonIcon = $('<span>')
-            .addClass('fa ' + this.options.emptyIcon);
+        var $addonIcon = $('<span>').addClass('fa ' + this.options.emptyIcon);
 
         $addonBtn.append($addonIcon);
 
-        var $container = $('<div>')
-            .addClass('input-group')
-            .append($input)
-            .append($addonBtn);
+        var $container = $('<div>').addClass('input-group').append($input).append($addonBtn);
 
         $target.append($container);
 
         // event bindings.
-        $input.on('focus', function () {
-            if (Jupyter && Jupyter.narrative) {
-                Jupyter.narrative.disableKeyboardManager();
-            }
-        }).on('blur', function () {
-            if (Jupyter && Jupyter.narrative) {
-                Jupyter.narrative.disableKeyboardManager();
-            }
-        }).on('input', function (e, ignoreDelay) {
-            if ($input.val()) {
-                $addonIcon.removeClass(self.options.emptyIcon);
-                $addonIcon.addClass(self.options.filledIcon);
-            }
-            else {
-                $addonIcon.removeClass(self.options.filledIcon);
-                $addonIcon.addClass(self.options.emptyIcon);
-            }
-            if (self.options.inputFunction) {
-                if (self.delayTimeout) {
-                    clearTimeout(self.delayTimeout);
+        $input
+            .on('focus', function () {
+                if (Jupyter && Jupyter.narrative) {
+                    Jupyter.narrative.disableKeyboardManager();
                 }
-                if (ignoreDelay) {
-                    return self.options.inputFunction(e);
+            })
+            .on('blur', function () {
+                if (Jupyter && Jupyter.narrative) {
+                    Jupyter.narrative.disableKeyboardManager();
                 }
-                self.delayTimeout = setTimeout(
-                    () => self.options.inputFunction(e),
-                    self.options.delay
-                );
-            }
-        }).on('keyup', function (e) {
-            if (e.keyCode === 27) {
-                if (self.options.escFunction) {
-                    self.options.escFunction(e);
+            })
+            .on('input', function (e, ignoreDelay) {
+                if ($input.val()) {
+                    $addonIcon.removeClass(self.options.emptyIcon);
+                    $addonIcon.addClass(self.options.filledIcon);
+                } else {
+                    $addonIcon.removeClass(self.options.filledIcon);
+                    $addonIcon.addClass(self.options.emptyIcon);
                 }
-            }
-        });
+                if (self.options.inputFunction) {
+                    if (self.delayTimeout) {
+                        clearTimeout(self.delayTimeout);
+                    }
+                    if (ignoreDelay) {
+                        return self.options.inputFunction(e);
+                    }
+                    self.delayTimeout = setTimeout(
+                        () => self.options.inputFunction(e),
+                        self.options.delay
+                    );
+                }
+            })
+            .on('keyup', function (e) {
+                if (e.keyCode === 27) {
+                    if (self.options.escFunction) {
+                        self.options.escFunction(e);
+                    }
+                }
+            });
 
-        $addonBtn.click(function(e) {
+        $addonBtn.click(function (e) {
             if (!self.options.addonFunction) {
                 $input.val('');
                 $input.trigger('input', [true]);
-            }
-            else {
+            } else {
                 self.options.addonFunction(e);
             }
         });
@@ -136,19 +125,18 @@ define([
         this.$container = $container;
     };
 
-    BootstrapSearch.prototype.val = function(val) {
+    BootstrapSearch.prototype.val = function (val) {
         var retVal;
         if (val === undefined || val === null) {
             retVal = this.$input.val();
-        }
-        else {
+        } else {
             retVal = this.$input.val(val);
             this.$input.trigger('input', [true]);
         }
         return retVal;
     };
 
-    BootstrapSearch.prototype.focus = function() {
+    BootstrapSearch.prototype.focus = function () {
         this.$input.focus();
     };
 

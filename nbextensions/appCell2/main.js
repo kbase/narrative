@@ -26,19 +26,8 @@ define([
     'kb_service/client/workspace',
     './appCell',
     'bootstrap',
-    'custom/custom'
-], function(
-    $,
-    Jupyter,
-    Promise,
-    Runtime,
-    Clock,
-    UI,
-    html,
-    serviceUtils,
-    Workspace,
-    AppCell
-) {
+    'custom/custom',
+], function ($, Jupyter, Promise, Runtime, Clock, UI, html, serviceUtils, Workspace, AppCell) {
     'use strict';
     var runtime = Runtime.make();
     var t = html.tag,
@@ -47,52 +36,57 @@ define([
 
     function setupNotebook(workspaceInfo) {
         // console.log(Jupyter.notebook.get_cells());
-        return Promise.all(Jupyter.notebook.get_cells().map(function(cell) {
-            if (AppCell.isAppCell(cell)) {
-                var appCell = AppCell.make({
-                    cell: cell,
-                    workspaceInfo: workspaceInfo
-                });
-                return appCell.setupCell(cell)
-                    .catch(function(err) {
+        return Promise.all(
+            Jupyter.notebook.get_cells().map(function (cell) {
+                if (AppCell.isAppCell(cell)) {
+                    var appCell = AppCell.make({
+                        cell: cell,
+                        workspaceInfo: workspaceInfo,
+                    });
+                    return appCell.setupCell(cell).catch(function (err) {
                         // If we have an error here, there is a serious problem setting up the cell and it is not usable.
                         // What to do? The safest thing to do is inform the user, and then strip out the cell, leaving
                         // in it's place a markdown cell with the error info.
                         // For now, just pop up an error dialog;
                         var ui = UI.make({
-                            node: document.body
+                            node: document.body,
                         });
                         ui.showInfoDialog({
                             title: 'Error',
-                            body: div({
-                                style: {
-                                    margin: '10px'
-                                }
-                            }, [
-                                ui.buildPanel({
-                                    title: 'Error Starting App Cell',
-                                    type: 'danger',
-                                    body: ui.buildErrorTabs({
-                                        preamble: p('There was an error starting the app cell.'),
-                                        error: err
-                                    })
-                                })
-                            ])
+                            body: div(
+                                {
+                                    style: {
+                                        margin: '10px',
+                                    },
+                                },
+                                [
+                                    ui.buildPanel({
+                                        title: 'Error Starting App Cell',
+                                        type: 'danger',
+                                        body: ui.buildErrorTabs({
+                                            preamble: p(
+                                                'There was an error starting the app cell.'
+                                            ),
+                                            error: err,
+                                        }),
+                                    }),
+                                ]
+                            ),
                         });
                     });
-            }
-        }));
+                }
+            })
+        );
     }
 
     function setupWorkspace(workspaceUrl) {
         // TODO where to get config from generally?
         var workspaceRef = { id: runtime.workspaceId() },
             workspace = new Workspace(workspaceUrl, {
-                token: runtime.authToken()
+                token: runtime.authToken(),
             });
 
         return workspace.get_workspace_info(workspaceRef);
-
     }
 
     /*
@@ -110,7 +104,7 @@ define([
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
         // triggers that the ws has changed, not the worst.
-        $(document).on('dataUpdated.Narrative', function() {
+        $(document).on('dataUpdated.Narrative', function () {
             // Tell each cell that the workspace has been updated.
             // This is what is interesting, no?
             runtime.bus().emit('workspace-changed');
@@ -120,19 +114,19 @@ define([
         // the workspace name, ...
 
         setupWorkspace(runtime.config('services.workspace.url'))
-            .then(function(wsInfo) {
+            .then(function (wsInfo) {
                 workspaceInfo = serviceUtils.workspaceInfoToObject(wsInfo);
             })
-            .then(function() {
+            .then(function () {
                 return setupNotebook(workspaceInfo);
             })
-            .then(function() {
+            .then(function () {
                 // set up event hooks
 
                 // Primary hook for new cell creation.
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
-                $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
+                $([Jupyter.events]).on('insertedAtIndex.Cell', function (event, payload) {
                     var cell = payload.cell;
                     var setupData = payload.data;
                     var jupyterCellType = payload.type;
@@ -141,48 +135,55 @@ define([
                         setupData.type = 'app';
                     }
 
-                    if (jupyterCellType !== 'code' ||
+                    if (
+                        jupyterCellType !== 'code' ||
                         !setupData ||
-                        !(setupData.type === 'app'  ||
-                          setupData.type === 'devapp')) {
+                        !(setupData.type === 'app' || setupData.type === 'devapp')
+                    ) {
                         return;
                     }
 
                     var appCell = AppCell.make({
                         cell: cell,
-                        workspaceInfo: workspaceInfo
+                        workspaceInfo: workspaceInfo,
                     });
-                    appCell.upgradeToAppCell(setupData.appSpec, setupData.appTag, setupData.type)
-                        .catch(function(err) {
+                    appCell
+                        .upgradeToAppCell(setupData.appSpec, setupData.appTag, setupData.type)
+                        .catch(function (err) {
                             console.error('ERROR creating cell', err);
                             Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
                             // For now, just pop up an error dialog;
                             var ui = UI.make({
-                                node: document.body
+                                node: document.body,
                             });
                             ui.showInfoDialog({
                                 title: 'Error',
-                                body: div({
-                                    style: {
-                                        margin: '10px'
-                                    }
-                                }, [
-                                    ui.buildPanel({
-                                        title: 'Error Inserting App Cell',
-                                        type: 'danger',
-                                        body: ui.buildErrorTabs({
-                                            preamble: p('Could not insert the App Cell due to errors.'),
-                                            error: err
-                                        })
-                                    })
-                                ])
+                                body: div(
+                                    {
+                                        style: {
+                                            margin: '10px',
+                                        },
+                                    },
+                                    [
+                                        ui.buildPanel({
+                                            title: 'Error Inserting App Cell',
+                                            type: 'danger',
+                                            body: ui.buildErrorTabs({
+                                                preamble: p(
+                                                    'Could not insert the App Cell due to errors.'
+                                                ),
+                                                error: err,
+                                            }),
+                                        }),
+                                    ]
+                                ),
                             });
                         });
                 });
                 // also delete.Cell, edit_mode.Cell, select.Cell, command_mocd.Cell, output_appended.OutputArea ...
                 // preset_activated.CellToolbar, preset_added.CellToolbar
             })
-            .catch(function(err) {
+            .catch(function (err) {
                 console.error('ERROR setting up notebook', err);
             });
     }
@@ -193,7 +194,7 @@ define([
     // TODO: move this to a another location!!
     var clock = Clock.make({
         bus: runtime.bus(),
-        resolution: 1000
+        resolution: 1000,
     });
     clock.start();
 
@@ -201,8 +202,7 @@ define([
         /* Only initialize after the notebook is fully loaded. */
         if (Jupyter.notebook._fully_loaded) {
             load_ipython_extension();
-        }
-        else {
+        } else {
             $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
                 load_ipython_extension();
             });
@@ -211,7 +211,7 @@ define([
 
     return {
         // This is the sole ipython/jupyter api call
-        load_ipython_extension: load
+        load_ipython_extension: load,
     };
 }, function (err) {
     'use strict';

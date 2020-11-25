@@ -27,41 +27,27 @@
     );
 */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery'
-	], function(
-		KBWidget,
-		bootstrap,
-		$
-	) {
-
+define(['kbwidget', 'bootstrap', 'jquery'], function (KBWidget, bootstrap, $) {
     return KBWidget({
+        name: 'kbaseSearchControls',
 
-		  name: "kbaseSearchControls",
-
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
-            controls : [],
-            onMouseover : true,
-            position : 'top',
-            type : 'floating',
+            controls: [],
+            onMouseover: true,
+            position: 'top',
+            type: 'floating',
         },
 
-        init: function(options) {
-
+        init: function (options) {
             this._super(options);
 
-            this.appendUI( $( this.$elem ) );
+            this.appendUI($(this.$elem));
 
             return this;
-
         },
 
-        appendUI : function ($elem) {
-
+        appendUI: function ($elem) {
             var $sc = this;
 
             var restoreMouseOver = this.options.onMouseover;
@@ -69,67 +55,63 @@ define (
             if (this.options.type == 'floating') {
                 $elem.css('position', 'relative');
             }
-            var $filterbox =
-                $.jqElem('div')
-                    .addClass('input-group input-group-sm')
-                    .append(
-                        $.jqElem('input')
-                            .attr('type', 'text')
-                            .addClass('form-control')
-                            .attr('id', 'searchBox')
-                            .on('keyup', function(e) {
-                                if (e.keyCode == 27) {
-                                    $sc.value(undefined);
+            var $filterbox = $.jqElem('div')
+                .addClass('input-group input-group-sm')
+                .append(
+                    $.jqElem('input')
+                        .attr('type', 'text')
+                        .addClass('form-control')
+                        .attr('id', 'searchBox')
+                        .on('keyup', function (e) {
+                            if (e.keyCode == 27) {
+                                $sc.value(undefined);
+                            }
+
+                            var value = $sc.value();
+
+                            if (value.length) {
+                                $sc.data('searchIcon').removeClass('fa-search');
+                                $sc.data('searchIcon').addClass('fa-times');
+                                $sc.options.onMouseover = false;
+                            } else {
+                                $sc.data('searchIcon').addClass('fa-search');
+                                $sc.data('searchIcon').removeClass('fa-times');
+                                if (restoreMouseOver) {
+                                    $sc.options.onMouseover = true;
                                 }
+                            }
 
-                                var value = $sc.value();
-
-                                if (value.length) {
-                                    $sc.data('searchIcon').removeClass('fa-search');
-                                    $sc.data('searchIcon').addClass('fa-times');
-                                    $sc.options.onMouseover = false;
-                                }
-                                else {
-                                    $sc.data('searchIcon').addClass('fa-search');
-                                    $sc.data('searchIcon').removeClass('fa-times');
-                                    if (restoreMouseOver) {
-                                        $sc.options.onMouseover = true;
-                                    }
-                                }
-
-                                $sc.options.searchCallback.call(this, e, value, $sc.options.context);
-
-                            })
-                    )
-                    .append(
-                        $.jqElem('span')
-                            .addClass('input-group-btn')
-                            .append(
-                                $.jqElem('button')
-                                    .addClass('btn btn-default')
-                                    .attr('id', 'searchButton')
-                                    .append(
-                                        $.jqElem('i')
-                                            .attr('id', 'searchIcon')
-                                            .addClass('fa fa-search')
-                                    )
-                                    .on('click', function(e) {
-
-                                        if ($sc.data('searchIcon').hasClass('fa-times')) {
-                                            $sc.value(undefined);
-                                            $sc.data('searchBox').focus();
-                                            if (restoreMouseOver) {
-                                                $sc.options.onMouseover = true;
-                                            }
+                            $sc.options.searchCallback.call(this, e, value, $sc.options.context);
+                        })
+                )
+                .append(
+                    $.jqElem('span')
+                        .addClass('input-group-btn')
+                        .append(
+                            $.jqElem('button')
+                                .addClass('btn btn-default')
+                                .attr('id', 'searchButton')
+                                .append(
+                                    $.jqElem('i').attr('id', 'searchIcon').addClass('fa fa-search')
+                                )
+                                .on('click', function (e) {
+                                    if ($sc.data('searchIcon').hasClass('fa-times')) {
+                                        $sc.value(undefined);
+                                        $sc.data('searchBox').focus();
+                                        if (restoreMouseOver) {
+                                            $sc.options.onMouseover = true;
                                         }
+                                    }
 
-                                        $sc.options.searchCallback.call(this, e, $sc.value(), $sc.options.context);
-
-                                    })
-                            )
-                    )
-            ;
-
+                                    $sc.options.searchCallback.call(
+                                        this,
+                                        e,
+                                        $sc.value(),
+                                        $sc.options.context
+                                    );
+                                })
+                        )
+                );
             if (this.options.type == 'floating') {
                 $filterbox
                     .css('right', '0px')
@@ -146,37 +128,29 @@ define (
             $elem.data('searchControls', $filterbox);
 
             $elem
-                .on('mouseover.kbaseSearchControls',
-                    function(e) {
-                        if ($sc.options.onMouseover) {
-                            $filterbox.show();
-                        }
+                .on('mouseover.kbaseSearchControls', function (e) {
+                    if ($sc.options.onMouseover) {
+                        $filterbox.show();
                     }
-                )
-                .on('mouseout.kbaseSearchControls',
-                    function(e) {
-                        if ($sc.options.onMouseover) {
-                            $filterbox.hide();
-                        }
-                        $sc.data('searchBox').blur();
+                })
+                .on('mouseout.kbaseSearchControls', function (e) {
+                    if ($sc.options.onMouseover) {
+                        $filterbox.hide();
                     }
-                )
-            ;
+                    $sc.data('searchBox').blur();
+                });
             if (this.options.onMouseover) {
                 $filterbox.hide();
-            };
+            }
 
             return this;
-
         },
 
-        value : function(newVal) {
+        value: function (newVal) {
             if (arguments.length) {
                 this.data('searchBox').val(newVal);
             }
             return this.data('searchBox').val();
         },
-
     });
-
-} );
+});

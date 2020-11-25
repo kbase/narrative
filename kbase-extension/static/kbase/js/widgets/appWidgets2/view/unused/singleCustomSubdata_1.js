@@ -12,19 +12,8 @@ define([
     'common/dom',
     'common/props',
     'bootstrap',
-    'css!font-awesome'
-], function (
-    $,
-    Promise,
-    Handlebars,
-    html,
-    Workspace,
-    Validation,
-    Events,
-    Runtime,
-    Dom,
-    Props
-    ) {
+    'css!font-awesome',
+], function ($, Promise, Handlebars, html, Workspace, Validation, Events, Runtime, Dom, Props) {
     'use strict';
 
     /*
@@ -44,7 +33,8 @@ define([
 
     // Constants
     var t = html.tag,
-        div = t('div'), p = t('p'),
+        div = t('div'),
+        p = t('p'),
         select = t('select'),
         option = t('option');
 
@@ -65,9 +55,9 @@ define([
             //    value: null
             //},
             options = {
-                objectSelectionPageSize: 20
+                objectSelectionPageSize: 20,
             },
-        runtime = Runtime.make(),
+            runtime = Runtime.make(),
             dom;
 
         // Validate configuration.
@@ -83,34 +73,38 @@ define([
         function buildOptions() {
             var availableValues = model.getItem('availableValues'),
                 value = model.getItem('value') || [],
-                selectOptions = [option({value: ''}, '')];
+                selectOptions = [option({ value: '' }, '')];
             if (!availableValues) {
                 return selectOptions;
             }
-            return selectOptions.concat(availableValues.map(function (availableValue) {
-                var selected = false,
-                    optionLabel = availableValue.desc,
-                    optionValue = availableValue.id;
-                // TODO: pull the value out of the object
-                if (value === availableValue.id) {
-                    selected = true;
-                }
-                return option({
-                    value: optionValue,
-                    selected: selected
-                }, optionLabel);
-            }));
+            return selectOptions.concat(
+                availableValues.map(function (availableValue) {
+                    var selected = false,
+                        optionLabel = availableValue.desc,
+                        optionValue = availableValue.id;
+                    // TODO: pull the value out of the object
+                    if (value === availableValue.id) {
+                        selected = true;
+                    }
+                    return option(
+                        {
+                            value: optionValue,
+                            selected: selected,
+                        },
+                        optionLabel
+                    );
+                })
+            );
         }
 
         function buildCount() {
             var availableValues = model.getItem('availableValues') || [],
                 value = model.getItem('value') || null;
-            
+
             if (value) {
-                return  '1 / ' + String(availableValues.length) + ' items';
+                return '1 / ' + String(availableValues.length) + ' items';
             } else {
-                return  '0 / ' + String(availableValues.length) + ' items';
-                
+                return '0 / ' + String(availableValues.length) + ' items';
             }
         }
 
@@ -128,7 +122,19 @@ define([
                 multiple = true;
             }
             if (!availableValues) {
-                return p({class: 'form-control-static', style: {fontStyle: 'italic', whiteSpace: 'normal', padding: '3px', border: '1px silver solid'}}, 'Items will be available after selecting a value for ' + constraints.referredParameter);
+                return p(
+                    {
+                        class: 'form-control-static',
+                        style: {
+                            fontStyle: 'italic',
+                            whiteSpace: 'normal',
+                            padding: '3px',
+                            border: '1px silver solid',
+                        },
+                    },
+                    'Items will be available after selecting a value for ' +
+                        constraints.referredParameter
+                );
             }
             //if (availableValues.length === 0) {
             //    return 'No items found';
@@ -137,39 +143,41 @@ define([
             selectOptions = buildOptions();
 
             // CONTROL
-            return div({style: {border: '1px silver solid'}}, [
-                div({style: {fontStyle: 'italic'}, dataElement: 'count'}, buildCount()),
-                select({
-                    id: events.addEvent({
-                        type: 'change',
-                        handler: function (e) {
-                            validate()
-                                .then(function (result) {
+            return div({ style: { border: '1px silver solid' } }, [
+                div({ style: { fontStyle: 'italic' }, dataElement: 'count' }, buildCount()),
+                select(
+                    {
+                        id: events.addEvent({
+                            type: 'change',
+                            handler: function (e) {
+                                validate().then(function (result) {
                                     if (result.isValid) {
                                         model.setItem('value', result.value);
                                         updateInputControl('value');
                                         bus.emit('changed', {
-                                            newValue: result.value
+                                            newValue: result.value,
                                         });
                                     } else if (result.diagnosis === 'required-missing') {
                                         model.setItem('value', result.value);
                                         updateInputControl('value');
                                         bus.emit('changed', {
-                                            newValue: result.value
+                                            newValue: result.value,
                                         });
                                     }
                                     bus.emit('validation', {
                                         errorMessage: result.errorMessage,
-                                        diagnosis: result.diagnosis
+                                        diagnosis: result.diagnosis,
                                     });
                                 });
-                        }
-                    }),
-                    size: size,
-                    multiple: multiple,
-                    class: 'form-control',
-                    dataElement: 'input'
-                }, selectOptions)
+                            },
+                        }),
+                        size: size,
+                        multiple: multiple,
+                        class: 'form-control',
+                        dataElement: 'input',
+                    },
+                    selectOptions
+                ),
             ]);
         }
 
@@ -177,12 +185,12 @@ define([
          * Given an existing input control, and new model state, update the
          * control to suite the new data.
          * Cases:
-         * 
+         *
          * - change in source data - fetch new data, populate available values,
          *   reset selected values, remove existing options, add new options.
-         *   
+         *
          * - change in selected items - remove all selections, add new selections
-         * 
+         *
          */
         function updateInputControl(changedProperty) {
             switch (changedProperty) {
@@ -202,12 +210,10 @@ define([
 
                     break;
                 case 'referenceObjectName':
-                    // refetch the available values
-                    // set available values
-                    // update input control for available values
-                    // set value to null
-
-
+                // refetch the available values
+                // set available values
+                // update input control for available values
+                // set value to null
             }
         }
 
@@ -225,8 +231,9 @@ define([
                 return null;
             }
             var input = control.selectedOptions,
-                i, values = [];
-            
+                i,
+                values = [];
+
             if (control.selectedOptions.length === 0) {
                 return;
             }
@@ -249,26 +256,25 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: 'disabled',
                     };
                 }
 
                 var rawValue = getInputValue(),
                     validationOptions = {
-                        required: constraints.required
+                        required: constraints.required,
                     };
 
                 return Validation.validateText(rawValue, validationOptions);
-            })
-                .then(function (validationResult) {
-                    return {
-                        isValid: validationResult.isValid,
-                        validated: true,
-                        diagnosis: validationResult.diagnosis,
-                        errorMessage: validationResult.errorMessage,
-                        value: validationResult.parsedValue
-                    };
-                });
+            }).then(function (validationResult) {
+                return {
+                    isValid: validationResult.isValid,
+                    validated: true,
+                    diagnosis: validationResult.diagnosis,
+                    errorMessage: validationResult.errorMessage,
+                    value: validationResult.parsedValue,
+                };
+            });
         }
 
         // unsafe, but pretty.
@@ -286,40 +292,34 @@ define([
                 return [];
             }
             var workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
-            }),
+                    token: runtime.authToken(),
+                }),
                 subObjectIdentity = {
                     ref: workspaceId + '/' + model.getItem('referenceObjectName'),
-                    included: [constraints.subdataIncluded]
+                    included: [constraints.subdataIncluded],
                 };
-            return workspace.get_object_subset([
-                subObjectIdentity
-            ])
-                .then(function (result) {
-                    var subdata = Props.make({data: result[0].data}).getItem(constraints.subdataPath);
-                    return constraints.map(subdata);
-                });
+            return workspace.get_object_subset([subObjectIdentity]).then(function (result) {
+                var subdata = Props.make({ data: result[0].data }).getItem(constraints.subdataPath);
+                return constraints.map(subdata);
+            });
         }
 
         function syncAvailableValues() {
             return Promise.try(function () {
                 return fetchData();
-            })
-                .then(function (data) {
-                    model.setItem('availableValues', data);
-                });
+            }).then(function (data) {
+                model.setItem('availableValues', data);
+            });
         }
 
         function autoValidate() {
-            return validate()
-                .then(function (result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then(function (result) {
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
-
 
         /*
          * Creates the markup
@@ -330,12 +330,15 @@ define([
             return Promise.try(function () {
                 var events = Events.make(),
                     inputControl = makeInputControl(events, bus),
-                    content = div({
-                        class: 'input-group',
-                        style: {
-                            width: '100%'
-                        }
-                    }, inputControl);
+                    content = div(
+                        {
+                            class: 'input-group',
+                            style: {
+                                width: '100%',
+                            },
+                        },
+                        inputControl
+                    );
 
                 dom.setContent('input-container', content);
                 events.attachEvents(container);
@@ -354,16 +357,19 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({
-                    dataElement: 'input-container'
-                })
-            ]);
+            var content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [
+                    div({
+                        dataElement: 'input-container',
+                    }),
+                ]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -416,10 +422,10 @@ define([
             // Rather than explicitly refer to that parameter, we have a
             // generic capability to receive updates for that value, after
             // which we re-fetch the values, and re-render the control.
-//            bus.on('update-reference-object', function (message) {
-//                model.setItem('referenceObjectName', value)
-//                setReferenceValue(message.objectRef);
-//            });
+            //            bus.on('update-reference-object', function (message) {
+            //                model.setItem('referenceObjectName', value)
+            //                setReferenceValue(message.objectRef);
+            //            });
             bus.emit('sync');
         }
 
@@ -432,7 +438,7 @@ define([
                     container = parent.appendChild(document.createElement('div'));
                     $container = $(container);
                     dom = Dom.make({
-                        node: container
+                        node: container,
                     });
 
                     var events = Events.make(),
@@ -455,8 +461,8 @@ define([
             data: {
                 referenceObjectName: null,
                 availableValues: [],
-                value: null
-            }
+                value: null,
+            },
             //,
             //onUpdate: function (props) {
             //    // render();
@@ -465,13 +471,13 @@ define([
         });
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

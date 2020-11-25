@@ -1,5 +1,3 @@
-
-
 /*
  Object selector
  The object selector's jobs is to provide access to existing editable objects of the
@@ -23,9 +21,8 @@ define([
     'common/events',
     'common/props',
     'common/error',
-    'common/data'
-
-], function(
+    'common/data',
+], function (
     Promise,
     html,
     GenericClient,
@@ -53,14 +50,16 @@ define([
     function factory(config) {
         var runtime = Runtime.make(),
             workspaceInfo = config.workspaceInfo,
-            parent, container,
+            parent,
+            container,
             ui,
             // bus = runtime.bus().makeChannelBus({ description: 'object selector bus' }),
             bus = runtime.bus().connect(),
             channelName = bus.genName(),
             channel = bus.channel(channelName),
             model = Props.make(),
-            availableReadsSets, availableReadsSetsMap;
+            availableReadsSets,
+            availableReadsSetsMap;
 
         function doCreate(e) {
             e.preventDefault();
@@ -68,7 +67,7 @@ define([
             var name = ui.getElement('new-object-name').value;
             // value = ui.getElement('new-object-type').value;
             channel.emit('create-new-set', {
-                name: name
+                name: name,
                 // type: value
             });
             return false;
@@ -85,27 +84,36 @@ define([
                 content = div([
                     div({ class: 'form-inline' }, [
                         'Select a Reads Set to edit: ',
-                        span({ dataElement: 'object-selector' })
+                        span({ dataElement: 'object-selector' }),
                     ]),
                     div({ style: { fontStyle: 'italic' } }, 'or'),
-                    form({
-                        class: 'form-inline',
-                        id: events.addEvent({ type: 'submit', handler: doCreate })
-                    }, [
-                        span({ style: { padding: '0 4px 0 0' } }, 'Create a new Reads Set named:'),
-                        input({ dataElement: 'new-object-name', class: 'form-control' }),
-                        ' ',
-                        button({
-                            class: 'btn btn-primary',
-                            type: 'button',
-                            id: events.addEvent({ type: 'click', handler: doCreate })
-                        }, 'Create')
-                    ])
+                    form(
+                        {
+                            class: 'form-inline',
+                            id: events.addEvent({ type: 'submit', handler: doCreate }),
+                        },
+                        [
+                            span(
+                                { style: { padding: '0 4px 0 0' } },
+                                'Create a new Reads Set named:'
+                            ),
+                            input({ dataElement: 'new-object-name', class: 'form-control' }),
+                            ' ',
+                            button(
+                                {
+                                    class: 'btn btn-primary',
+                                    type: 'button',
+                                    id: events.addEvent({ type: 'click', handler: doCreate }),
+                                },
+                                'Create'
+                            ),
+                        ]
+                    ),
                 ]);
 
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -128,7 +136,7 @@ define([
             var control = ui.getElement('object-selector').querySelector('select');
 
             var selected = Array.prototype.slice.call(control.selectedOptions);
-            selected.forEach(function(option) {
+            selected.forEach(function (option) {
                 option.selected = false;
             });
 
@@ -153,7 +161,6 @@ define([
             //     }
             // })
 
-
             // var newlySelected = control.querySelector('option[value="' + ref + '"]');
 
             // //console.log('autoselect', newlySelected);
@@ -175,7 +182,7 @@ define([
 
         function emitChanged() {
             channel.emit('changed', {
-                objectInfo: availableReadsSetsMap[model.getItem('objectRef')]
+                objectInfo: availableReadsSetsMap[model.getItem('objectRef')],
             });
         }
 
@@ -184,24 +191,21 @@ define([
             emitChanged();
         }
 
-        function doDataUpdated(newData) {
-
-        }
+        function doDataUpdated(newData) {}
 
         function fetchData() {
             var types = ['KBaseSets.ReadsSet'];
-            return Data.getObjectsByTypes(types, bus, function(newData) {
+            return Data.getObjectsByTypes(types, bus, function (newData) {
                 doDataUpdated(newData.data);
-            })
-                .then(function(result) {
-                    availableReadsSetsMap = {};
-                    availableReadsSets = result.data;
-                    result.data.forEach(function(resultItem) {
-                        // var info = serviceUtils.objectInfoToObject(resultItem);
-                        availableReadsSetsMap[resultItem.ref] = resultItem;
-                    });
-                    return result.data;
+            }).then(function (result) {
+                availableReadsSetsMap = {};
+                availableReadsSets = result.data;
+                result.data.forEach(function (resultItem) {
+                    // var info = serviceUtils.objectInfoToObject(resultItem);
+                    availableReadsSetsMap[resultItem.ref] = resultItem;
                 });
+                return result.data;
+            });
         }
 
         function fetchDatax() {
@@ -209,27 +213,26 @@ define([
                     url: runtime.config('services.service_wizard.url'),
                     token: runtime.authToken(),
                     module: 'SetAPI',
-                    version: 'dev'
+                    version: 'dev',
                 }),
                 params = {
                     workspace: String(workspaceInfo.name),
-                    include_set_item_info: 1
+                    include_set_item_info: 1,
                 };
 
-            return setApiClient.callFunc('list_sets', [params])
-                .then(function(result) {
-                    availableReadsSetsMap = {};
-                    availableReadsSets = result[0].sets.map(function(resultItem) {
-                        var info = serviceUtils.objectInfoToObject(resultItem.info);
-                        availableReadsSetsMap[info.ref] = info;
-                        return info;
-                    });
+            return setApiClient.callFunc('list_sets', [params]).then(function (result) {
+                availableReadsSetsMap = {};
+                availableReadsSets = result[0].sets.map(function (resultItem) {
+                    var info = serviceUtils.objectInfoToObject(resultItem.info);
+                    availableReadsSetsMap[info.ref] = info;
+                    return info;
                 });
+            });
         }
 
         function renderAvailableObjects() {
             var events = Events.make({
-                    node: container
+                    node: container,
                 }),
                 controlNode = ui.getElement('object-selector'),
                 selectedItem = model.getItem('objectRef');
@@ -237,41 +240,56 @@ define([
             controlNode.innerHTML = html.loading();
 
             return fetchData()
-                .then(function() {
-                    var content = (function() {
+                .then(function () {
+                    var content = (function () {
                         if (availableReadsSets.length === 0) {
-                            return span({ style: { fontWeight: 'bold', fontStyle: 'italic', color: '#CCC' } }, [
-                                'No Reads Sets yet in this Narrative -- you can create one below'
-                            ]);
+                            return span(
+                                {
+                                    style: {
+                                        fontWeight: 'bold',
+                                        fontStyle: 'italic',
+                                        color: '#CCC',
+                                    },
+                                },
+                                ['No Reads Sets yet in this Narrative -- you can create one below']
+                            );
                         }
-                        return select({
-                            class: 'form-control',
-                            id: events.addEvent({ type: 'change', handler: doItemSelected })
-                        }, [option({ value: '' }, '-- No reads set selected --')]
-                            .concat(availableReadsSets.map(function(objectInfo) {
-                                var selected = false;
-                                if (selectedItem === objectInfo.ref) {
-                                    selected = true;
-                                }
-                                return option({ value: objectInfo.ref, selected: selected }, objectInfo.name);
-                            })));
-                    }());
+                        return select(
+                            {
+                                class: 'form-control',
+                                id: events.addEvent({ type: 'change', handler: doItemSelected }),
+                            },
+                            [option({ value: '' }, '-- No reads set selected --')].concat(
+                                availableReadsSets.map(function (objectInfo) {
+                                    var selected = false;
+                                    if (selectedItem === objectInfo.ref) {
+                                        selected = true;
+                                    }
+                                    return option(
+                                        { value: objectInfo.ref, selected: selected },
+                                        objectInfo.name
+                                    );
+                                })
+                            )
+                        );
+                    })();
 
                     controlNode.innerHTML = content;
                     events.attachEvents();
                     return availableReadsSets.length;
                 })
-                .catch(sdkClientExceptions.RequestError, function(err) {
+                .catch(sdkClientExceptions.RequestError, function (err) {
                     throw new kbError.KBError({
                         type: 'GeneralError',
                         original: err,
                         message: err.message,
                         reason: 'This is an unknown error connecting to a service',
-                        detail: 'This is an unknown error connecting to a service. Additional details may be available in your browser log',
+                        detail:
+                            'This is an unknown error connecting to a service. Additional details may be available in your browser log',
                         advice: [
                             'This problem may be temporary -- try again later',
-                            'You may wish to <href="https://www.kbase.us/support">report this error to kbase</a>'
-                        ]
+                            'You may wish to <href="https://www.kbase.us/support">report this error to kbase</a>',
+                        ],
                     });
                 });
         }
@@ -308,37 +326,35 @@ define([
         //            });
         //        }
 
-
         /*
          * Now
          */
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 doAttach(arg.node);
                 model.setItem('objectRef', arg.selectedSet);
                 renderAvailableObjects()
-                    .then(function() {
+                    .then(function () {
                         selectCurrentItem();
                     })
-                    .catch(function(err) {
+                    .catch(function (err) {
                         console.log('ERROR', err);
                         channel.emit('fatal-error', {
                             location: 'render-available-objects',
-                            error: err
+                            error: err,
                         });
                     });
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 // TODO: stop the bus!
-                bus.stop()
-                    .then(function() {
-                        if (parent && container) {
-                            parent.removeChild(container);
-                        }
-                    });
+                bus.stop().then(function () {
+                    if (parent && container) {
+                        parent.removeChild(container);
+                    }
+                });
             });
         }
 
@@ -349,13 +365,13 @@ define([
         return {
             start: start,
             stop: stop,
-            channel: channel
+            channel: channel,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

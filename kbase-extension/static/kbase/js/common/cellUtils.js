@@ -1,12 +1,12 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
-define([
-    'kb_common/html',
-    'kb_common/format',
-    'common/props',
-    'base/js/namespace'
-], function (html, format, Props, Jupyter) {
+define(['kb_common/html', 'kb_common/format', 'common/props', 'base/js/namespace'], function (
+    html,
+    format,
+    Props,
+    Jupyter
+) {
     'use strict';
 
     function createMeta(cell, initial) {
@@ -55,19 +55,18 @@ define([
 
     function getTitle(cellId) {
         var cells = Jupyter.notebook.get_cells().filter(function (cell) {
-            return (cellId === Props.getDataItem(cell.metadata, 'kbase.attributes.id'));
+            return cellId === Props.getDataItem(cell.metadata, 'kbase.attributes.id');
         });
         if (cells.length === 0) {
             return;
         }
         return Props.getDataItem(cells[0].metadata, 'kbase.attributes.title');
-
     }
 
     function findById(id) {
         var matchingCells = Jupyter.notebook.get_cells().filter(function (cell) {
             if (cell.metadata && cell.metadata.kbase && cell.metadata.kbase.attributes) {
-                return (cell.metadata.kbase.attributes.id === id);
+                return cell.metadata.kbase.attributes.id === id;
             }
             return false;
         });
@@ -86,6 +85,6 @@ define([
         setMeta: setMeta,
         pushMeta: pushMeta,
         getTitle: getTitle,
-        findById: findById
+        findById: findById,
     };
 });

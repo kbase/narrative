@@ -5,11 +5,11 @@ define(['jquery', 'bluebird', './exceptions'], function ($, Promise, exceptions)
 
     function request(url, method, params, numRets, options) {
         var rpc = {
-            params: params,
-            method: method,
-            version: '1.1',
-            id: String(Math.random()).slice(2)
-        },
+                params: params,
+                method: method,
+                version: '1.1',
+                id: String(Math.random()).slice(2),
+            },
             beforeSend;
 
         if (options.rpcContext) {
@@ -21,7 +21,7 @@ define(['jquery', 'bluebird', './exceptions'], function ($, Promise, exceptions)
                 xhr.setRequestHeader('Authorization', options.authorization);
             };
         }
-        
+
         return new Promise(function (resolve, reject) {
             $.ajax({
                 url: url,
@@ -54,22 +54,42 @@ define(['jquery', 'bluebird', './exceptions'], function ($, Promise, exceptions)
                             // response will be a normal response (200) with an error
                             // json payload.
                             // Still, lets honor this and issue a warning.
-                            console.warn('Invalid JSON RPC error response - should not return json-rpc error as http error', xhr.status, xhr.statusText, resp);
+                            console.warn(
+                                'Invalid JSON RPC error response - should not return json-rpc error as http error',
+                                xhr.status,
+                                xhr.statusText,
+                                resp
+                            );
                             resolve(resp);
                         } catch (err) {
                             // A server error which is not valid JSON.
                             // This actually is the expected condition for a server error.
-                            reject(new exceptions.RequestError(xhr.status, xhr.statusText, textStatus, url, xhr.responseText));
+                            reject(
+                                new exceptions.RequestError(
+                                    xhr.status,
+                                    xhr.statusText,
+                                    textStatus,
+                                    url,
+                                    xhr.responseText
+                                )
+                            );
                         }
                     } else {
-                        reject(new exceptions.RequestError(xhr.status, xhr.statusText, url, 'Unknown Error'));
+                        reject(
+                            new exceptions.RequestError(
+                                xhr.status,
+                                xhr.statusText,
+                                url,
+                                'Unknown Error'
+                            )
+                        );
                     }
-                }
+                },
             });
         });
     }
 
     return Object.freeze({
-        request: request
+        request: request,
     });
 });

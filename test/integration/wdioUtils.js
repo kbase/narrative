@@ -1,11 +1,13 @@
 /* eslint strict: ["error", "global"] */
-/* global browser */
+/*global browser, $*/
 
 'use strict';
 const TOKEN = browser.config.kbaseToken;
-const URL_BASE = browser.config.baseUrl;
+const BASE_URL = browser.config.baseUrl;
 
-const makeURL = (path) => `${URL_BASE}/${path}`;
+function makeURL(path) {
+    return `${BASE_URL}/${path}`;
+}
 
 async function setSessionCookie () {
     return await browser.setCookies([{
@@ -18,13 +20,35 @@ async function setSessionCookie () {
 }
 
 async function login() {
-    await browser.url(makeURL('narrative/static/kbase/config/config.json'));
+    const url = makeURL('narrative/static/kbase/config/config.json');
+    await browser.url(url);
     await setSessionCookie();
     return;
 }
 
+async function sendString(s) {
+    for (const letter of s.split()) {
+        await browser.keys(letter);
+    }
+}
+
+async function openNarrative(workspaceId) {
+    await browser.url(makeURL(`narrative/${workspaceId}`));
+    await $('#notebook-container');
+}
+
+// async function init() {
+//     browser.setTimeout({ 'implicit': 30000 });
+// }
+
+// async function finish() {
+//     await browser.reloadSession();
+// }
+
 module.exports = {
-    setSessionCookie: setSessionCookie,
-    login: login,
-    makeURL: makeURL
+    setSessionCookie,
+    login,
+    makeURL,
+    sendString,
+    openNarrative
 };

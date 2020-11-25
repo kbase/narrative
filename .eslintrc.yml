@@ -3,7 +3,9 @@ env:
   browser: true
   es6: true
   node: true
-extends: 'eslint:recommended'
+extends:
+  - 'eslint:recommended'
+  - prettier
 parserOptions:
     ecmaVersion: 2018
 root: true

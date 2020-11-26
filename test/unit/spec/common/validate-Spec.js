@@ -440,21 +440,20 @@ define(['bluebird', 'common/validation'], function (Promise, Validation) {
                 testSet.forEach(function (test) {
                     if (test.options.required === undefined) {
                         [true, false].forEach(function (required) {
-                            it(
-                                method + ' - ' + test.title + ' - required: ' + required,
-                                function (done) {
-                                    Promise.try(function () {
-                                        let options = test.options;
-                                        options.required = required;
-                                        return Validation[method](test.value, options);
-                                    }).then(function (result) {
-                                        Object.keys(test.result).forEach(function (key) {
-                                            expect(result[key]).toEqual(test.result[key]);
-                                        });
-                                        done();
+                            it(method + ' - ' + test.title + ' - required: ' + required, function (
+                                done
+                            ) {
+                                Promise.try(function () {
+                                    let options = test.options;
+                                    options.required = required;
+                                    return Validation[method](test.value, options);
+                                }).then(function (result) {
+                                    Object.keys(test.result).forEach(function (key) {
+                                        expect(result[key]).toEqual(test.result[key]);
                                     });
-                                }
-                            );
+                                    done();
+                                });
+                            });
                         });
                     } else {
                         it(method + ' - ' + test.title, function (done) {

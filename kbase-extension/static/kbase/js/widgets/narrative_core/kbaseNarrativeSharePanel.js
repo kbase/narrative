@@ -686,82 +686,82 @@ define([
             var self = this;
             var noMatchesFoundStr = 'Search by Name or Username';
 
-            $.fn.select2.amd.require(
-                ['select2/data/array', 'select2/utils'],
-                function (ArrayData, Utils) {
-                    function CustomData($element, options) {
-                        CustomData.__super__.constructor.call(this, $element, options);
-                    }
-                    Utils.Extend(CustomData, ArrayData);
-
-                    CustomData.prototype.query = function (params, callback) {
-                        var term = params.term || '';
-                        term = term.trim();
-                        if (term.length >= 2) {
-                            Promise.resolve(self.authClient.searchUserNames(null, term)).then(
-                                function (users) {
-                                    var results = [];
-                                    Object.keys(users).forEach(function (username) {
-                                        if (username !== self.my_user_id) {
-                                            results.push({
-                                                id: username,
-                                                text: users[username],
-                                                found: true,
-                                            });
-                                        }
-                                    });
-                                    if (results.length === 0) {
-                                        results = [
-                                            {
-                                                id: term,
-                                                text: term,
-                                                found: false,
-                                            },
-                                        ];
-                                    }
-                                    callback({ results: results });
-                                }
-                            );
-                        } else {
-                            callback({ results: [] });
-                        }
-                    };
-
-                    $input.select2({
-                        formatNoMatches: noMatchesFoundStr,
-                        placeholder: function () {
-                            return $(this).data('placeholder');
-                        },
-                        delay: 250,
-                        width: '40%',
-                        dataAdapter: CustomData,
-                        minimumResultsForSearch: 0,
-                        language: {
-                            noResults: function () {
-                                return noMatchesFoundStr;
-                            },
-                        },
-                        templateSelection: function (object) {
-                            if (object.found) {
-                                var toShow = self.renderUserIconAndName(object.id, object.text);
-                                return $('<span>')
-                                    .append(toShow[0])
-                                    .append(toShow[1].css({ 'white-space': 'normal' }))
-                                    .css({ width: '100%' });
-                            }
-                            return $('<b>' + object.text + '</b> (not found)');
-                        },
-                        templateResult: function (object) {
-                            if (object.found) {
-                                var toShow = self.renderUserIconAndName(object.id, object.text);
-                                return $('<span>').append(toShow[0]).append(toShow[1]);
-                            }
-                            return $('<b>' + object.text + '</b> (not found)');
-                        },
-                    });
-                    $input.trigger('change');
+            $.fn.select2.amd.require(['select2/data/array', 'select2/utils'], function (
+                ArrayData,
+                Utils
+            ) {
+                function CustomData($element, options) {
+                    CustomData.__super__.constructor.call(this, $element, options);
                 }
-            );
+                Utils.Extend(CustomData, ArrayData);
+
+                CustomData.prototype.query = function (params, callback) {
+                    var term = params.term || '';
+                    term = term.trim();
+                    if (term.length >= 2) {
+                        Promise.resolve(self.authClient.searchUserNames(null, term)).then(function (
+                            users
+                        ) {
+                            var results = [];
+                            Object.keys(users).forEach(function (username) {
+                                if (username !== self.my_user_id) {
+                                    results.push({
+                                        id: username,
+                                        text: users[username],
+                                        found: true,
+                                    });
+                                }
+                            });
+                            if (results.length === 0) {
+                                results = [
+                                    {
+                                        id: term,
+                                        text: term,
+                                        found: false,
+                                    },
+                                ];
+                            }
+                            callback({ results: results });
+                        });
+                    } else {
+                        callback({ results: [] });
+                    }
+                };
+
+                $input.select2({
+                    formatNoMatches: noMatchesFoundStr,
+                    placeholder: function () {
+                        return $(this).data('placeholder');
+                    },
+                    delay: 250,
+                    width: '40%',
+                    dataAdapter: CustomData,
+                    minimumResultsForSearch: 0,
+                    language: {
+                        noResults: function () {
+                            return noMatchesFoundStr;
+                        },
+                    },
+                    templateSelection: function (object) {
+                        if (object.found) {
+                            var toShow = self.renderUserIconAndName(object.id, object.text);
+                            return $('<span>')
+                                .append(toShow[0])
+                                .append(toShow[1].css({ 'white-space': 'normal' }))
+                                .css({ width: '100%' });
+                        }
+                        return $('<b>' + object.text + '</b> (not found)');
+                    },
+                    templateResult: function (object) {
+                        if (object.found) {
+                            var toShow = self.renderUserIconAndName(object.id, object.text);
+                            return $('<span>').append(toShow[0]).append(toShow[1]);
+                        }
+                        return $('<b>' + object.text + '</b> (not found)');
+                    },
+                });
+                $input.trigger('change');
+            });
         },
         // setting up Select2 for inputOrg
         orgSetupSelect2: function ($inputOrg) {
@@ -770,32 +770,32 @@ define([
             var orgData = [];
             var noMatchedOrgFoundStr = 'Search by Organization name';
 
-            $.fn.select2.amd.require(
-                ['select2/data/array', 'select2/utils'],
-                function (ArrayData, Utils) {
-                    if (!orgList) return;
-                    orgList.forEach((org) => {
-                        orgData.push({ id: org.id, text: org.name });
-                    });
-                    $inputOrg.select2({
-                        formatNoMatches: noMatchedOrgFoundStr,
-                        placeholder: function () {
-                            return $(this).data('placeholder');
+            $.fn.select2.amd.require(['select2/data/array', 'select2/utils'], function (
+                ArrayData,
+                Utils
+            ) {
+                if (!orgList) return;
+                orgList.forEach((org) => {
+                    orgData.push({ id: org.id, text: org.name });
+                });
+                $inputOrg.select2({
+                    formatNoMatches: noMatchedOrgFoundStr,
+                    placeholder: function () {
+                        return $(this).data('placeholder');
+                    },
+                    delay: 250,
+                    width: '40%',
+                    data: orgData,
+                    minimumResultsForSearch: 0,
+                    allowClear: true,
+                    language: {
+                        noResults: function () {
+                            return noMatchedOrgFoundStr;
                         },
-                        delay: 250,
-                        width: '40%',
-                        data: orgData,
-                        minimumResultsForSearch: 0,
-                        allowClear: true,
-                        language: {
-                            noResults: function () {
-                                return noMatchedOrgFoundStr;
-                            },
-                        },
-                    });
-                    $inputOrg.trigger('change');
-                }
-            );
+                    },
+                });
+                $inputOrg.trigger('change');
+            });
         },
 
         showWorking: function (message) {

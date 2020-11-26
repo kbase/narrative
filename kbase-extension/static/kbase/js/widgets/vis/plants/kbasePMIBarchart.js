@@ -158,14 +158,14 @@ define([
                                         }
 
                                         var selected_subsystems = [];
-                                        $.each(
-                                            $pmi.$elem.find('.subsystem-checkbox'),
-                                            function (i, c) {
-                                                if (c.checked) {
-                                                    selected_subsystems.push($(c).val());
-                                                }
+                                        $.each($pmi.$elem.find('.subsystem-checkbox'), function (
+                                            i,
+                                            c
+                                        ) {
+                                            if (c.checked) {
+                                                selected_subsystems.push($(c).val());
                                             }
-                                        );
+                                        });
 
                                         $pmi.displaySubsystems(selected_subsystems);
                                     })
@@ -216,14 +216,14 @@ define([
                                         }
 
                                         var selected_subsystems = [];
-                                        $.each(
-                                            $pmi.$elem.find('.subsystem-checkbox'),
-                                            function (i, c) {
-                                                if (c.checked) {
-                                                    selected_subsystems.push($(c).val());
-                                                }
+                                        $.each($pmi.$elem.find('.subsystem-checkbox'), function (
+                                            i,
+                                            c
+                                        ) {
+                                            if (c.checked) {
+                                                selected_subsystems.push($(c).val());
                                             }
-                                        );
+                                        });
 
                                         $pmi.displaySubsystems(selected_subsystems);
                                     })

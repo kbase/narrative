@@ -97,51 +97,50 @@ define([
             container.append(r);
 
             // Get list of metagenome ids from workspace
-            kbws.list_objects(
-                { ids: [self.ws_id], type: 'Communities.Metagenome' },
-                function (data) {
-                    var idList = [];
-                    for (var i = 0; i < data.length; i++) {
-                        idList.push({ ref: self.ws_id + '/' + data[i][0] });
-                    }
-                    //console.log(idList);
-                    if (idList.length > 0) {
-                        // get the metadata for the ids
-                        kbws.get_objects(idList, function (resData) {
-                            var listSelectData = [];
-                            for (var i = 0; i < resData.length; i++) {
-                                listSelectData.push({
-                                    wsid: resData[i].info[6],
-                                    wsitem: resData[i].info[0],
-                                    id: resData[i].data.id,
-                                    name: resData[i].data.name,
-                                    'project id': resData[i].data.mixs.project_id,
-                                    'project name': resData[i].data.mixs.project_name,
-                                    'PI lastname': resData[i].data.mixs.PI_lastname,
-                                    biome: resData[i].data.mixs.biome,
-                                    feature: resData[i].data.mixs.feature,
-                                    material: resData[i].data.mixs.material,
-                                    'env package': resData[i].data.mixs.env_package,
-                                    location: resData[i].data.mixs['location'],
-                                    country: resData[i].data.mixs.country,
-                                    longitude: resData[i].data.mixs.longitude,
-                                    latitude: resData[i].data.mixs.latitude,
-                                    'collection date': resData[i].data.mixs.collection_date,
-                                    'sequence type': resData[i].data.mixs.sequence_type,
-                                    'sequencing method': resData[i].data.mixs.seq_method,
-                                    status: resData[i].data['status'],
-                                    created: resData[i].data.created,
-                                });
-                            }
-                            listSelect.settings.data = listSelectData;
-                            listSelect.render(lslen);
-                        });
-                    } else {
-                        listSelect.settings.data = [];
-                        listSelect.render(lslen);
-                    }
+            kbws.list_objects({ ids: [self.ws_id], type: 'Communities.Metagenome' }, function (
+                data
+            ) {
+                var idList = [];
+                for (var i = 0; i < data.length; i++) {
+                    idList.push({ ref: self.ws_id + '/' + data[i][0] });
                 }
-            );
+                //console.log(idList);
+                if (idList.length > 0) {
+                    // get the metadata for the ids
+                    kbws.get_objects(idList, function (resData) {
+                        var listSelectData = [];
+                        for (var i = 0; i < resData.length; i++) {
+                            listSelectData.push({
+                                wsid: resData[i].info[6],
+                                wsitem: resData[i].info[0],
+                                id: resData[i].data.id,
+                                name: resData[i].data.name,
+                                'project id': resData[i].data.mixs.project_id,
+                                'project name': resData[i].data.mixs.project_name,
+                                'PI lastname': resData[i].data.mixs.PI_lastname,
+                                biome: resData[i].data.mixs.biome,
+                                feature: resData[i].data.mixs.feature,
+                                material: resData[i].data.mixs.material,
+                                'env package': resData[i].data.mixs.env_package,
+                                location: resData[i].data.mixs['location'],
+                                country: resData[i].data.mixs.country,
+                                longitude: resData[i].data.mixs.longitude,
+                                latitude: resData[i].data.mixs.latitude,
+                                'collection date': resData[i].data.mixs.collection_date,
+                                'sequence type': resData[i].data.mixs.sequence_type,
+                                'sequencing method': resData[i].data.mixs.seq_method,
+                                status: resData[i].data['status'],
+                                created: resData[i].data.created,
+                            });
+                        }
+                        listSelect.settings.data = listSelectData;
+                        listSelect.render(lslen);
+                    });
+                } else {
+                    listSelect.settings.data = [];
+                    listSelect.render(lslen);
+                }
+            });
         },
 
         loggedInCallback: function (event, auth) {

@@ -979,12 +979,11 @@ define([
 
             if (this.options.rootRegion) {
                 var rootRegion = $vis.region('root', true);
-                D3svg = D3svg.selectAll('.' + rootRegion).data(
-                    [{ region: rootRegion }],
-                    function (d) {
-                        return d.region;
-                    }
-                );
+                D3svg = D3svg.selectAll('.' + rootRegion).data([{ region: rootRegion }], function (
+                    d
+                ) {
+                    return d.region;
+                });
                 D3svg.enter()
                     .append('g')
                     .attr('class', function (d) {

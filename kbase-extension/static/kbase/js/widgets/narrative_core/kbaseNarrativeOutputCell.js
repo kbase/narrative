@@ -272,8 +272,8 @@ define([
                     self.$body.append(self.$widgetBody);
                     self.$outWidget = new W(self.$widgetBody, widgetData);
                     resolve();
-                }, // otherwise on error the promise will dangle. // TODO: No, should reject the promise, or handle here and resolve,
-                function (err) {
+                }, function (err) {
+                    // otherwise on error the promise will dangle. // TODO: No, should reject the promise, or handle here and resolve,
                     return self.renderError(err);
                 });
             });

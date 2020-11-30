@@ -28,6 +28,9 @@ define([
         span = tag('span'),
         button = tag('button'),
         div = tag('div'),
+        table = tag('table'),
+        tr = tag('tr'),
+        td = tag('td'),
         cssBaseClass = 'kb-file-path',
         cssClassType = 'parameter';
 
@@ -215,11 +218,11 @@ define([
                     title: span(['File Paths']),
                     name: `${cssClassType}s-area`,
                     body: [
-                        tag('div')({
+                        table({
                             class: `${cssBaseClass}__table`,
                             dataElement: `${cssClassType}-fields`
                         }, [
-                            tag('div')({
+                            tr({
                                 class: `${cssBaseClass}__table_row`,
                                 dataElement: `${cssClassType}-fields-row`,
                             })
@@ -381,23 +384,22 @@ define([
                             }));
                         }
                     }).then(function() {
-                    //     TODO: commenting out for now as we need to figure out styling for the row number and trash icon. Should have a convo with design about how they want to handle given the current designs only show how to handle one or two file inputs, and in our current example we have 3 file inputs + 1 output
-                    //     $(places.parameterFields).prepend(
-                    //         span({
-                    //             class: `${cssBaseClass}__file_number`,
-                    //         }, [
-                    //             '1'
-                    //         ])
-                    //     );
-                    //     $(places.parameterFields).append(
-                    //         span({
-                    //             class: `${cssBaseClass}__icon_cell--trash`,
-                    //         }, [
-                    //             span({
-                    //                 class: `${cssBaseClass}__icon--trash fa fa-trash-o fa-lg`,
-                    //             })
-                    //         ])
-                    //     );
+                        $(places.parameterFields).prepend(
+                            td({
+                                class: `${cssBaseClass}__file_number`,
+                            }, [
+                                '1'
+                            ])
+                        );
+                        $(places.parameterFields).append(
+                            td({
+                                class: `${cssBaseClass}__icon_cell--trash`,
+                            }, [
+                                span({
+                                    class: 'fa fa-trash-o fa-lg',
+                                })
+                            ])
+                        );
                     });
             });
         }

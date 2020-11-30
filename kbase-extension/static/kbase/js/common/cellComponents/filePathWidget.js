@@ -209,6 +209,32 @@ define([
                 });
         }
 
+        function addRow(){
+            $(`.${cssBaseClass}__table`).append(
+                tr({
+                    class: `${cssBaseClass}__table_row`,
+                    dataElement: `${cssClassType}-fields-row`,
+                })
+            );
+
+            places = {
+                parameterRows: ui.getElements(`${cssClassType}-fields-row`)
+            };
+
+            places.parameterRows.forEach((parameterRow, index) => {
+                let rowNumber = index + 1;
+                renderParameterRow(parameterRow, rowNumber)
+                    .then(function () {
+                        // do something after success
+                        attachEvents();
+                    })
+                    .catch(function (err) {
+                        // do something with the error.
+                        console.error('ERROR in start', err);
+                    });
+            });
+        }
+
         function renderLayout() {
             const events = Events.make();
             let formContent = [];
@@ -230,7 +256,10 @@ define([
                         button({
                             class: `${cssBaseClass}__button--add_row btn btn__text`,
                             type: 'button',
-                            id: events.addEvent({ type: 'click'})
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: addRow
+                            })
                         }, [
                             span({
                                 class: `${cssBaseClass}__button_icon--add_row fa fa-plus`,
@@ -265,7 +294,7 @@ define([
             layout.events.attachEvents(container);
 
             places = {
-                parameterFields: ui.getElement(`${cssClassType}-fields-row`)
+                parameterRows: ui.getElements(`${cssClassType}-fields-row`)
             };
         }
 
@@ -316,8 +345,55 @@ define([
             };
         }
 
+        function findPathParams(params){
+            return params.layout.filter(function (id) {
+                const original = params.specs[id].original;
+
+                let isFilePathParam = false;
+
+                if (original) {
+
+                    //looking for file inputs via the dynamic_dropdown data source
+                    if (original.dynamic_dropdown_options) {
+                        isFilePathParam = original.dynamic_dropdown_options.data_source === 'ftp_staging';
+                    }
+
+                    //looking for output fields - these should go in file paths
+                    else if (original.text_options && original.text_options.is_output_name) {
+                        isFilePathParam = true;
+                    }
+                }
+
+                return isFilePathParam;
+
+            }).map(function (id) {
+                return params.specs[id];
+            });
+        }
+
+        function createParamWidget(appSpec, filePathParams, parameterId) {
+            const spec = filePathParams.paramMap[parameterId];
+            try {
+                return makeFieldWidget(appSpec, spec, initialParams[spec.id], filePathParams.layout)
+                    .then((widget) => {
+                        widgets.push(widget);
+                        return widget.start({
+                            node: document.getElementById(filePathParams.view[spec.id].id)
+                        });
+                    });
+            } catch (ex) {
+                console.error('Error making input field widget', ex);
+                const errorDisplay = div({
+                    class: 'kb-field-widget__error_message--file-paths'
+                }, [
+                    ex.message
+                ]);
+                document.getElementById(filePathParams.view[spec.id].id).innerHTML = errorDisplay;
+            }
+        }
+
         // LIFECYCLE API
-        function renderParameters() {
+        function renderParameterRow(parameterRow, rowNumber) {
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             // Separate out the params into the primary groups.
@@ -325,30 +401,7 @@ define([
 
             return Promise.try(function () {
                 const params = model.getItem('parameters');
-                let filePathParams = makeParamsLayout(
-                    params.layout.filter(function (id) {
-                        const original = params.specs[id].original;
-
-                        let isFilePathParam = false;
-
-                        if (original) {
-
-                            //looking for file inputs via the dynamic_dropdown data source
-                            if (original.dynamic_dropdown_options) {
-                                isFilePathParam = original.dynamic_dropdown_options.data_source === 'ftp_staging';
-                            }
-
-                            //looking for output fields - these should go in file paths
-                            else if (original.text_options && original.text_options.is_output_name) {
-                                isFilePathParam = true;
-                            }
-                        }
-
-                        return isFilePathParam;
-
-                    }).map(function (id) {
-                        return params.specs[id];
-                    }));
+                let filePathParams = makeParamsLayout(findPathParams(params));
 
                 return Promise.resolve()
                     .then(function () {
@@ -356,42 +409,29 @@ define([
                             // TODO: should be own node
                             ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
                         } else {
-                            places.parameterFields.innerHTML = div({
+                            // need to append child instead of replace innerHTML
+                            // places.parameterRows is
+                            // places.parameterRows.forEach((parameterRow) => {
+                            parameterRow.innerHTML = div({
                                 class: `${cssBaseClass}__param_container row`,
                             }, [
                                 filePathParams.content
                             ]);
+                            // });
 
-                            return Promise.all(filePathParams.layout.map(function (parameterId) {
-                                const spec = filePathParams.paramMap[parameterId];
-                                try {
-                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id], filePathParams.layout)
-                                        .then((widget) => {
-                                            widgets.push(widget);
-                                            return widget.start({
-                                                node: document.getElementById(filePathParams.view[spec.id].id)
-                                            });
-                                        });
-                                } catch (ex) {
-                                    console.error('Error making input field widget', ex);
-                                    const errorDisplay = div({
-                                        class: 'kb-field-widget__error_message--file-paths'
-                                    }, [
-                                        ex.message
-                                    ]);
-                                    document.getElementById(filePathParams.view[spec.id].id).innerHTML = errorDisplay;
-                                }
+                            return Promise.all(filePathParams.layout.map((parameterId) => {
+                                createParamWidget(appSpec, filePathParams, parameterId);
                             }));
                         }
                     }).then(function() {
-                        $(places.parameterFields).prepend(
+                        $(parameterRow).prepend(
                             td({
                                 class: `${cssBaseClass}__file_number`,
                             }, [
-                                '1'
+                                rowNumber
                             ])
                         );
-                        $(places.parameterFields).append(
+                        $(parameterRow).append(
                             td({
                                 class: `${cssBaseClass}__icon_cell--trash`,
                             }, [
@@ -429,15 +469,18 @@ define([
                 });
 
 
-                return renderParameters()
-                    .then(function () {
-                        // do something after success
-                        attachEvents();
-                    })
-                    .catch(function (err) {
-                        // do something with the error.
-                        console.error('ERROR in start', err);
-                    });
+                return places.parameterRows.forEach((parameterRow, index) => {
+                    let rowNumber = index + 1;
+                    renderParameterRow(parameterRow, rowNumber)
+                        .then(function () {
+                            // do something after success
+                            attachEvents();
+                        })
+                        .catch(function (err) {
+                            // do something with the error.
+                            console.error('ERROR in start', err);
+                        });
+                });
             });
 
 

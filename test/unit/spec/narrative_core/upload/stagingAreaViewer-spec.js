@@ -37,22 +37,38 @@ define ([
                         path: fakeUser + '/test_folder',
                         mtime: 1532738637499,
                         size: 34,
-                        isFolder: true
+                        isFolder: true,
+                        mappings: null,
                     }, {
                         name: 'file_list.txt',
                         path: fakeUser + '/test_folder/file_list.txt',
                         mtime: 1532738637555,
                         size: 49233,
-                        source: 'KBase upload'
+                        source: 'KBase upload',
+                        mappings: [],
                     }, {
                         name: 'fake_sra_reads.sra',
                         path: fakeUser + '/fake_sra_reads.sra',
                         mtime: 1532738637555,
                         size: 49233,
-                        source: 'KBase upload'
+                        source: 'KBase upload',
+                        mappings: [{'id': 'sra_reads',  'title': 'SRA Reads'}],
                     }
                 ])
             });
+            // Can't figure out a way to map these mappings to the above files
+            const fastq_mapping = [{ 'id': 'fastq_reads', 'title': 'FastQ Reads' }];
+            const sra_mapping = [{ 'id': 'sra_reads', 'title': 'SRA Reads' }];
+            
+            const mappings = { 'mappings': [null,null,null]};
+            jasmine.Ajax.stubRequest(/.*\/staging_service\/importer_mappings\/?/).andReturn({
+                status: 200,
+                statusText: 'success',
+                contentType: 'text/plain',
+                responseHeaders: '',
+                responseText: JSON.stringify(mappings)
+            });
+
             Jupyter.narrative = {
                 userId: fakeUser,
                 getAuthToken: () => 'fakeToken',
@@ -84,6 +100,8 @@ define ([
             $targetNode.remove();
             stagingViewer = null;
         });
+
+
 
         it('Should initialize properly', () => {
             expect(stagingViewer).not.toBeNull();
@@ -336,4 +354,9 @@ define ([
             expect(button.hasClass('kb-staging-table-import__button__disabled')).toBeFalse();
         });
     });
+        
+    //TODO
+    //Test to see if
+    // * for one autodetect mapping, the detected filetype is selected
+    // * for multiple mappings, they are available, and two OptGroups are available
 });

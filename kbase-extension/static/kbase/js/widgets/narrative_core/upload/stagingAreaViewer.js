@@ -122,6 +122,8 @@ define([
                             f.imported = {};
                         }
                     });
+                    return this.identifyImporterMappings(files);
+                }).then(files => {
                     var scrollTop = this.$elem.parent().scrollTop();
                     $('.staging-area-file-metadata').detach();
                     this.$elem.empty();
@@ -129,10 +131,12 @@ define([
                     this.renderFiles(files);
 
                     setTimeout(() => {
-                        this.$elem.parent().scrollTop(scrollTop)
+                        this.$elem.parent().scrollTop(scrollTop);
                     }, 0);
-                })
+                }
+                )
                 .catch(xhr => {
+                    console.error('Staging area failure:', xhr);
                     this.$elem.empty();
                     this.renderFileHeader();
                     this.renderError(xhr.responseText ? xhr.responseText : 'Unknown error - directory was not found, or may have been deleted');
@@ -190,7 +194,7 @@ define([
                             window.open($globusLink.attr('href'), 'globus');
                             return true;
                         }
-                    )
+                    );
             });
 
             // Bind the help button to start the tour.
@@ -231,7 +235,7 @@ define([
             });
         },
 
-        downloadFile: function(url) {
+        downloadFile: function (url) {
             const hiddenIFrameID = 'hiddenDownloader';
             let iframe = document.getElementById(hiddenIFrameID);
             if (iframe === null) {
@@ -253,6 +257,37 @@ define([
             this.$elem.append(errorElem);
         },
 
+
+        identifyImporterMappings: function (stagingFiles) {
+            /*
+                Add a list of top matches for each file, sorted by weight
+            */
+            const fileNames = stagingFiles.map(f => f['path']);
+            const fileList = $.param({ 'file_list': fileNames }, true);
+            var mappings = [];
+            return Promise.resolve(
+                this.stagingServiceClient.importer_mappings(
+                    {
+                        file_list: fileList
+                    }
+                )
+            ).then(function (data) {
+                //Extract mappings, sort by weight, assign mappings to staging files
+                mappings = JSON.parse(data)['mappings'];
+                mappings.forEach(function (mapping) {
+                    if (mapping) {
+                        mapping.sort((a, b) => (a.app_weight < b.app_weight));
+                    }
+                });
+                stagingFiles.map(function (element, index) {
+                    element['mappings'] = mappings[index] || null;
+                });
+                return stagingFiles;
+            }).catch(function (err) {
+                console.error('Error', err);
+            });
+        },
+
         /**
          * This renders the files datatable. If there's no data, it gives a message
          * about no files being present. If there's an error, that gets put in the table instead.
@@ -270,7 +305,7 @@ define([
             }));
 
             stagingAreaViewer.$elem.append($fileTable);
-            
+
             const fullDataTable = stagingAreaViewer.$elem.find('table').dataTable({
                 language: {
                     emptyTable: emptyMsg
@@ -282,7 +317,7 @@ define([
                     $(thead).find('th').eq(0)
                         .on('click keyPress', (e) => {
                             selectAllOrNone(e);
-                        }); 
+                        });
                 },
                 columnDefs: [{
                     targets: 0,
@@ -291,12 +326,12 @@ define([
                     render: function (data) {
                         const fileId = new UUID(4).format();
                         //render checkboxes disabled until the user selects a type
-                        return ('<input class="kb-staging-table-body__checkbox-input"' + 
-                            'type="checkbox" role="checkbox" disabled=true ' + 
-                            'aria-checked="false" tabindex="0"' +
-                            'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
-                            'data-file-name="' + data + '"' + 
-                            'id="' + fileId + '">');
+                        return ('<input class="kb-staging-table-body__checkbox-input"' +
+                                'type="checkbox" role="checkbox" disabled=true ' +
+                                'aria-checked="false" tabindex="0"' +
+                                'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
+                                'data-file-name="' + data + '"' +
+                                'id="' + fileId + '">');
                     }
                 }, {
                     targets: 1,
@@ -330,8 +365,8 @@ define([
                             }
 
                             return '<div class="kb-staging-table-body__name">' + decompressButton +
-                                data +
-                                '</div>';
+                                    data +
+                                    '</div>';
                         }
                         return data;
                     }
@@ -367,25 +402,33 @@ define([
                     const rowFileName = data[2];
                     //use the name to look up all the data we have
                     let rowFileData = getFileFromName(rowFileName);
+                    
+                    //find the initial singly mapped datatype from the staging service
+                    let suggestedTypes = $(data[5]).find('optgroup[label="Suggested Types"]');
+                    let suggestedType = null;
+                    if (suggestedTypes.children().length == 1) {
+                        const option = suggestedTypes.find('option');
+                        suggestedType = { 'id': option.val(), 'title': option.html() };
+                    }
 
+                    //Get selected
                     function changeImportButton(event) {
                         const checked = event.currentTarget.checked;
-
                         if (checked) {
                             stagingAreaViewer.enableImportButton();
                         } else {
                             /*
-                                check state of all checkboxes
-                                if any are checked we leave import button enabled
+                            check state of all checkboxes
+                            if any are checked we leave import button enabled
                             */
                             let anyCheckedBoxes = $('input.kb-staging-table-body__checkbox-input:checked');
 
-                            if(!anyCheckedBoxes.length) {
+                            if (!anyCheckedBoxes.length) {
                                 stagingAreaViewer.disableImportButton();
                             }
                         }
                     }
-  
+
                     $('td:eq(0)', row).find('input.kb-staging-table-body__checkbox-input')
                         .off('click')
                         .on('click keyPress', (e) => {
@@ -414,7 +457,7 @@ define([
                         setTimeout(() => {
                             $caret.parent().parent().after(
                                 stagingAreaViewer.renderMoreFileInfo(rowFileData)
-                            )
+                            );
                         }, 0);
                     }
 
@@ -473,14 +516,14 @@ define([
 
                     //find the element
                     let importDropdown = $('td:eq(5)', row).find('select');
-
+                    
                     /*
-                        when a user selects a data type from the import as dropdown
-                        enable the checkbox for that row (so user can import)
-                        make sure the "select all" checkbox is also enabled
-
-                        accepts dataType: string (the identifier of what the data type is e.g. sra_reads)
-                    */
+                            when a user selects a data type from the import as dropdown
+                            enable the checkbox for that row (so user can import)
+                            make sure the "select all" checkbox is also enabled
+    
+                            accepts dataType: string (the identifier of what the data type is e.g. sra_reads)
+                        */
                     function enableCheckboxes(dataType) {
                         $('td:eq(5)', row)
                             .find('.select2-selection')
@@ -490,19 +533,18 @@ define([
                         //also set the data type so that we have the reference later when importing
                         $('td:eq(0)', row)
                             .find('.kb-staging-table-body__checkbox-input')
-                            .prop('disabled',false)
+                            .prop('disabled', false)
                             .attr('aria-label', 'Select to import file checkbox')
                             .attr('data-type', dataType);
-  
+
                         //make sure select all checkbox is enabled
                         $('#staging_table_select_all')
-                            .prop('disabled',false)
+                            .prop('disabled', false)
                             .attr('aria-label', 'Select to import all files checkbox');
 
                     }
 
                     const storedFileData = stagingAreaViewer.selectedFileTypes[rowFileName];
-
                     //where we have data type set, render those dropdowns correctly
                     if (storedFileData) {
                         //tell select2 which option to set
@@ -512,23 +554,42 @@ define([
                             })
                             .val(storedFileData.dataType)
                             .trigger('change');
-
                         //enable the checkboxes
                         enableCheckboxes(storedFileData.dataType);
                     }
 
                     //otherwise we set the dropdowns with a placeholder
                     else {
-                        importDropdown
-                            .select2({
-                                placeholder: 'Select a type',
-                                containerCssClass: 'kb-staging-table-body__import-dropdown'
-                            });
+                        // And if we have a suggested type, select it and enable the checkboxes
+                        if (suggestedType) {
+                            importDropdown
+                                .select2({
+                                    containerCssClass: 'kb-staging-table-body__import-dropdown kb-staging-table-body__import-type-selected',
+                                    placeholder: 'make the empty option disappear',
+                                })
+                                .val(suggestedType.id)
+                                .trigger('change')
+                                .trigger({
+                                    type: 'select2:select',
+                                });
+                            enableCheckboxes(suggestedType.id);
+                        }
+                        else {
+                            importDropdown
+                                .select2({
+                                    placeholder: 'Select a type',
+                                    containerCssClass: 'kb-staging-table-body__import-dropdown'
+                                });
+                        }
+
                     }
+                    
+
+                    
 
                     //set the behavior on the import dropdown when a user selects a type
                     importDropdown
-                        .on('select2:select', function(e) {
+                        .on('select2:select', function (e) {
                             const dataType = e.currentTarget.value;
 
                             //store the type we selected along with file data so we can persist on a view update
@@ -583,8 +644,8 @@ define([
                 so that we can get entire table data 
                 not just what is drawn in the current dom
                 aka dealing with pagination
-            */ 
-            function selectAllOrNone (event) {
+            */
+            function selectAllOrNone(event) {
                 const selectAllChecked = event.target.checked;
 
                 //get all of the rows in the data table
@@ -593,7 +654,7 @@ define([
                 $('input.kb-staging-table-body__checkbox-input:enabled', nodes)
                     .prop('checked', selectAllChecked)
                     .attr('aria-checked', selectAllChecked);
-                
+
                 //enable or disable import appropriately
                 if (selectAllChecked) {
                     stagingAreaViewer.enableImportButton();
@@ -667,7 +728,7 @@ define([
 
                     var lineCount = parseInt(data.lineCount, 10);
                     if (!Number.isNaN(lineCount)) {
-                        lineCount = lineCount.toLocaleString()
+                        lineCount = lineCount.toLocaleString();
                     } else {
                         lineCount = 'Not provided';
                     }
@@ -708,7 +769,7 @@ define([
                             // XXX - while doing this, I ran into a NaN issue in the file, specifically on the key illumina_read_insert_size_avg_insert.
                             //       So we nuke any NaN fields to make it valid again.
                             var metadataJSON = JSON.parse(dataString.replace(/NaN/g, '\"\"'));
-                            var metadataContents = JSON.stringify(metadataJSON, null, 2)
+                            var metadataContents = JSON.stringify(metadataJSON, null, 2);
 
                             $tabs.addTab({
                                 tab: 'JGI Metadata',
@@ -744,7 +805,7 @@ define([
                 );
         },
 
-        renderImportButton: function() {
+        renderImportButton: function () {
 
             let importButton = $('<button></button>')
                 .addClass('kb-staging-table-import__button btn btn-xs btn-primary')
@@ -758,7 +819,7 @@ define([
             this.disableImportButton();
         },
 
-        disableImportButton: function() {
+        disableImportButton: function () {
 
             this.$elem.find('button.kb-staging-table-import__button')
                 .addClass('kb-staging-table-import__button__disabled')
@@ -773,14 +834,14 @@ define([
                 .off('click');
         },
 
-        enableImportButton: function() {
+        enableImportButton: function () {
             let stagingAreaViewer = this;
 
             this.$elem.find('button.kb-staging-table-import__button')
                 .removeClass('kb-staging-table-import__button__disabled')
                 .tooltip('disable')
                 .off('click')
-                .on('click keyPress', function() {
+                .on('click keyPress', function () {
                     stagingAreaViewer.initBulkImport();
                 });
         },
@@ -796,7 +857,7 @@ define([
          *
          * If no files are selected by their checkbox, then no new cells will be created.
          */
-        initBulkImport: function() {
+        initBulkImport: function () {
             const stagingAreaViewer = this;
 
             // keys = types, values = list of files to be uploaded as that type
@@ -863,7 +924,7 @@ define([
         },
 
         startTour: function () {
-            var tourStartFn = function () {}
+            var tourStartFn = function () { };
 
             if (!this.tour) {
                 this.tour = new UploadTour.Tour(

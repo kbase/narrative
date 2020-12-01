@@ -37,7 +37,7 @@ define([
         cell.minimize = function () {
             var inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea');
+                showCode = utils.getCellMeta(cell, 'kbase.codeCell.user-settings.showCodeInputArea');
 
             if (showCode) {
                 inputArea.classList.remove('-show');
@@ -48,7 +48,7 @@ define([
         cell.maximize = function () {
             var inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea');
+                showCode = utils.getCellMeta(cell, 'kbase.codeCell.user-settings.showCodeInputArea');
 
             if (showCode) {
                 if (!inputArea.classList.contains('-show')) {
@@ -76,7 +76,7 @@ define([
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('-show');
-                utils.setCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea', this.isCodeShowing(), true);
+                utils.setCellMeta(cell, 'kbase.codeCell.user-settings.showCodeInputArea', this.isCodeShowing(), true);
                 // NB purely for side effect - toolbar refresh
                 cell.metadata = cell.metadata;
             }
@@ -101,7 +101,7 @@ define([
         // can chose to override this and this choice should be remembered.
         // import/job cells dont' show code input area as regular code cells do.
         if (utils.getCellMeta(cell, 'kbase.codeCell.jobInfo')) {
-            utils.setCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea', false);
+            utils.setCellMeta(cell, 'kbase.codeCell.user-settings.showCodeInputArea', false);
         }
 
         var widget = CodeCell.make({
@@ -157,7 +157,7 @@ define([
                 subtitle: data.language
             },
             codeCell: {
-                userSettings: {
+                'user-settings': {
                     showCodeInputArea: true
                 }
             }

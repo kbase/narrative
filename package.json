@@ -87,7 +87,5 @@
     "stylelint": "stylelint --config .stylelintrc.yaml --fix kbase-extension/scss/**/*.scss",
     "sassv": "sass --version"
   },
-  "dependencies": {
-    "pre-commit": "^1.2.2"
-  }
+  "dependencies": {}
 }

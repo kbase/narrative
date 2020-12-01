@@ -450,7 +450,7 @@ define([
                             subtitle: ''
                         },
                         codeCell: {
-                            userSettings: {
+                            'user-settings': {
                                 showCodeInputArea: true
                             },
                             jobInfo: {

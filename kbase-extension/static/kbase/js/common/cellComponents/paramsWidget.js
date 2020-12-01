@@ -31,7 +31,7 @@ define([
     function factory(config) {
         let runtime = Runtime.make(),
             bus = config.bus,
-            workspaceInfo = config.workspaceInfo,
+            workspaceId = config.workspaceId,
             initialParams = config.initialParams,
             container,
             ui,
@@ -97,7 +97,7 @@ define([
                         initialValue: value,
                         appSpec: appSpec,
                         parameterSpec: parameterSpec,
-                        workspaceId: workspaceInfo.id,
+                        workspaceId: workspaceId,
                         referenceType: 'name',
                         paramsChannelName: bus.channelName,
                         closeParameters: closeParameters
@@ -389,7 +389,7 @@ define([
 
             const layout = orderedParams.map(function (parameterId) {
                 const elementId = html.genId();
-                const advanced = paramMap[parameterId].ui.advanced ? parameterId : false;       
+                const advanced = paramMap[parameterId].ui.advanced ? parameterId : false;
 
                 view[parameterId] = {
                     id: elementId
@@ -398,7 +398,7 @@ define([
                 return div({
                     id: elementId,
                     dataParameter: parameterId,
-                    dataAdvancedParameter: advanced 
+                    dataAdvancedParameter: advanced
                 });
             }).join('\n');
 
@@ -469,7 +469,7 @@ define([
                                             });
                                         });
                                 } catch (ex) {
-                                    console.error('Error making input field widget', ex);
+                                    // console.error('Error making input field widget', ex);
                                     const errorDisplay = div({
                                         class: 'kb-field-widget__error_message--parameters'
                                     }, [

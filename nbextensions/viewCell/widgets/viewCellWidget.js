@@ -1142,7 +1142,6 @@ define([
                     }
                 })
                 .catch(function(err) {
-                    alert('internal error'),
                     console.error('INTERNAL ERROR', err);
                 });
         }

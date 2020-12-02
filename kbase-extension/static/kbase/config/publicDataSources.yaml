@@ -24,17 +24,21 @@ sources:
     templates:
       title: "{{scientific_name}}"
       metadata:
-        - label: Lineage
+        - id: lineage
+          label: Lineage
           template: "{{lineage taxonomy null 'cellular organisms'}}"
-        - label: KBase ID
+        - id: kbase_id
+          label: KBase ID
           template: "{{genome_id}}"
-        - label: RefSeq ID
+        - id: refseq_id
+          label: RefSeq ID
           template: "{{genome_source_id}}"
-        - label: ""
-          template:
-            - label: Contigs
+        - template:
+            - id: contigs
+              label: Contigs
               template: '{{numeral num_contigs "0,0"}}'
-            - label: Features
+            - id: features
+              label: Features
               template: '{{numeral num_features "0,0"}}'
     searchFields: null
   - name: MycoCosm Genomes
@@ -45,17 +49,21 @@ sources:
     templates:
       title: "{{metadata.Name}}"
       metadata:
-        - label: Lineage
+        - id: lineage
+          label: Lineage
           template: "{{lineage metadata.Taxonomy 'Fungi'}}"
-        - label: MycoCosm ID
+        - id: mycocosm_id
+          label: MycoCosm ID
           template: "{{metadata.[Source ID]}}"
-        - label: ""
-          template:
-            - label: Contigs
+        - template:
+            - id: contigs
+              label: Contigs
               template: '{{numeral metadata.[Number contigs] "0,0"}}'
-            - label: Features
+            - id: features
+              label: Features
               template: '{{numeral metadata.[Number of CDS] "0,0"}}'
-            - label: GC
+            - id: gc
+              label: GC
               template: '{{numeral metadata.[GC content] "0.0%"}}'
     # Note that search fields are object path strings; they are split at dots (.)
     # and used to traverse the object info.
@@ -80,8 +88,7 @@ sources:
           template: "{{lineage metadata.Taxonomy 'Viridiplantae'}}"
         - label: Source ID
           template: "{{metadata.[Source ID]}}"
-        - label: ""
-          template:
+        - template:
             - label: Contigs
               template: '{{numeral metadata.[Number contigs] "0,0"}}'
             - label: Features

@@ -6,20 +6,21 @@ define([
     'use strict';
 
     function compileTemplates(templates) {
-        return templates.map(function (template) {
-            if (typeof template.template === 'string') {
+        return templates.map(function ({template, id, label}) {
+            if (typeof template === 'string') {
                 return {
-                    label: template.label,
-                    template: Handlebars.compile(template.template)
+                    id,
+                    label,
+                    template: Handlebars.compile(template)
                 };
-            } else if (template.template instanceof Array) {
+            } else if (template instanceof Array) {
                 return {
-                    label: template.label,
-                    template: compileTemplates(template.template)
+                    template: compileTemplates(template)
                 };
             } else {
                 return {
-                    label: template.label,
+                    id,
+                    label,
                     template: Handlebars.compile('')
                 };
             }
@@ -27,15 +28,16 @@ define([
     }
 
     function applyMetadataTemplates(templates, data) {
-        return templates.map(function (template) {
+        return templates.map(function ({template, id, label}) {
             var value;
-            if (template.template instanceof Array) {
-                value = applyMetadataTemplates(template.template, data);
+            if (template instanceof Array) {
+                value = applyMetadataTemplates(template, data);
             } else {
-                value = template.template(data);
+                value = template(data);
             }
             return {
-                label: template.label,
+                id: id,
+                label,
                 value: value
             };
         });
@@ -53,8 +55,8 @@ define([
         return arg;
     }
     return Object.freeze({
-        compileTemplates: compileTemplates,
-        applyMetadataTemplates: applyMetadataTemplates,
-        requireArg: requireArg
+        compileTemplates,
+        applyMetadataTemplates,
+        requireArg
     });
 });

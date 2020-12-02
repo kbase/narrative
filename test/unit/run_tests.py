@@ -37,6 +37,7 @@ nb_server = None
 
 
 def run_narrative():
+    print(f'Starting local narrative on {JUPYTER_PORT}')
     nb_command = [
         "kbase-narrative",
         "--no-browser",
@@ -93,7 +94,7 @@ try:
         print("starting unit tests")
         try:
             resp_unit = subprocess.check_call(
-                ["grunt", "test"], stderr=subprocess.STDOUT, shell=False
+                ["npx", "grunt", "test"], stderr=subprocess.STDOUT, shell=False
             )
         except subprocess.CalledProcessError as e:
             resp_unit = e.returncode
@@ -101,8 +102,8 @@ try:
         env = os.environ.copy()
         base_url = env.get('BASE_URL', None)
         if base_url is None:
-            print(f'Starting local narrative on {JUPYTER_PORT}')
-            nb_server = run_narrative()
+            if nb_server is None:
+                nb_server = run_narrative()
             base_url = f"http://localhost:{JUPYTER_PORT}"
             env["BASE_URL"] = base_url
         print("starting integration tests")

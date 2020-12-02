@@ -18,6 +18,7 @@ define([
     'use strict';
 
     const t = html.tag,
+        td = t('td'),
         div = t('div'),
         label = t('label'),
         cssBaseClass = 'kb-field-cell';
@@ -62,7 +63,7 @@ define([
                 inputControl: html.genId(),
             };
 
-            var content = div({
+            var content = td({
                 class: `${cssBaseClass}__tableCell`,
                 id: ids.fieldPanel,
                 dataElement: 'field-panel'

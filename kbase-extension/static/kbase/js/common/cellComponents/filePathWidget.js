@@ -212,6 +212,12 @@ define([
                 });
         }
 
+        function updateRowNumbers(filePathRows){
+            filePathRows.forEach(function(filePathRow, index){
+                $(filePathRow).find(`.${cssBaseClass}__file_number`).text(index + 1);
+            });
+        }
+
         function addRow(){
             $(`.${cssBaseClass}__table`).append(
                 tr({
@@ -220,13 +226,16 @@ define([
                 })
             );
 
-            let parameterRows = ui.getElements(`${cssClassType}-fields-row`);
+            let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
 
-            parameterRows.forEach((parameterRow, index) => {
-                let rowNumber = index + 1;
-                let paramEvents = renderParameterRow(parameterRow, rowNumber);
-                paramEvents.attachEvents(container);
+            filePathRows.forEach((filePathRow) => {
+                // Only render row if it does not have the file path widgets as children (aka an empty row)
+                if (filePathRow.childElementCount === 0){
+                    renderFilePathRow(filePathRow);
+                }
             });
+
+            updateRowNumbers(filePathRows);
         }
 
         function renderLayout() {
@@ -269,10 +278,8 @@ define([
             }, [
                 formContent
             ]);
-            return {
-                content: content,
-                events: events
-            };
+
+            return content;
         }
 
         // MESSAGE HANDLERS
@@ -283,8 +290,8 @@ define([
                 bus: bus
             });
             let layout = renderLayout();
-            container.innerHTML = layout.content;
-            layout.events.attachEvents(container);
+            container.innerHTML = layout;
+            events.attachEvents(container);
         }
 
         // EVENTS
@@ -303,7 +310,7 @@ define([
         //     });
         // }
 
-        function makeParamsLayout(params) {
+        function makeFilePathsLayout(params) {
             let view = {},
                 paramMap = {};
 
@@ -360,56 +367,58 @@ define([
             });
         }
 
-        function createParamWidget(appSpec, filePathParams, parameterId) {
+        function createFilePathWidget(appSpec, filePathParams, parameterId) {
             const spec = filePathParams.paramMap[parameterId];
-            try {
-                return makeFieldWidget(appSpec, spec, initialParams[spec.id], filePathParams.layout)
+            return Promise.try(() => {
+                makeFieldWidget(appSpec, spec, initialParams[spec.id], filePathParams.layout)
                     .then((widget) => {
                         widgets.push(widget);
                         return widget.start({
                             node: document.getElementById(filePathParams.view[spec.id].id)
                         });
                     });
-            } catch (ex) {
-                console.error('Error making input field widget', ex);
+            }).catch((ex) => {
                 const errorDisplay = div({
                     class: 'kb-field-widget__error_message--file-paths'
                 }, [
                     ex.message
                 ]);
                 document.getElementById(filePathParams.view[spec.id].id).innerHTML = errorDisplay;
-            }
+
+                throw new Error('Error making input field widget', ex);
+            });
+
         }
 
         function deleteRow(e){
             $(e.target).closest('tr').remove();
+            let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+            updateRowNumbers(filePathRows);
         }
 
 
-        function renderParameterRow(parameterRow, rowNumber) {
+        function renderFilePathRow(filePathRow) {
             const appSpec = model.getItem('appSpec');
 
             const params = model.getItem('parameters');
-            let filePathParams = makeParamsLayout(findPathParams(params));
+            let filePathParams = makeFilePathsLayout(findPathParams(params));
 
             if (!filePathParams.layout.length) {
                 ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
             } else {
-                parameterRow.innerHTML = div({
+                filePathRow.innerHTML = div({
                     class: `${cssBaseClass}__param_container row`,
                 }, [
                     filePathParams.content
                 ]);
 
-                $(parameterRow).prepend(
+                $(filePathRow).prepend(
                     td({
                         class: `${cssBaseClass}__file_number`,
-                    }, [
-                        rowNumber
-                    ])
+                    })
                 );
 
-                $(parameterRow).append(
+                $(filePathRow).append(
                     td({}, [
                         button({
                             class: 'btn btn__text',
@@ -429,11 +438,11 @@ define([
                     ])
                 );
 
-                filePathParams.layout.map((parameterId) => {
-                    createParamWidget(appSpec, filePathParams, parameterId);
-                });
+                Promise.all(filePathParams.layout.map((parameterId) => {
+                    createFilePathWidget(appSpec, filePathParams, parameterId);
+                }));
 
-                return events;
+                events.attachEvents(container);
             }
         }
 
@@ -457,16 +466,15 @@ define([
                 });
 
 
-                let parameterRows = ui.getElements(`${cssClassType}-fields-row`);
+                let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
 
-                return parameterRows.forEach((parameterRow, index) => {
-                    let rowNumber = index + 1;
-                    let paramEvents = renderParameterRow(parameterRow, rowNumber);
-                    paramEvents.attachEvents(container);
+                filePathRows.forEach((filePathRow) => {
+                    renderFilePathRow(filePathRow);
                 });
+                updateRowNumbers(filePathRows);
+            }).catch((error) => {
+                throw new Error('Unable to start file path widget: ', error);
             });
-
-
         }
 
         function stop() {

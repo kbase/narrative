@@ -250,15 +250,8 @@ $button-outdated: rgb(247, 155, 34);
     flex: 1;
   }
 
-  /* .kb-file-path__icon--trash */
-  &__icon--trash {
-    color: rgb(67, 121, 177);
-    margin-top: 35px;
-    margin-left: 5px;
-  }
-
   &__button--add_row {
-
+    margin-left: 10px;
   }
 
   &__button_icon--add_row {
@@ -267,7 +260,7 @@ $button-outdated: rgb(247, 155, 34);
 
   &__file_number {
     font-weight: 700;
-    margin: 5px;
+    padding-right: 10px;
   }
 
 }

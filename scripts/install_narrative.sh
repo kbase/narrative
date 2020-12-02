@@ -99,33 +99,33 @@ then
     log "Installing front end build components with npm"
     npm install 2>&1 | tee -a ${logfile}
     log "Installing front end components with bower"
-    bower install -V --allow-root --config.interactive=false 2>&1 | tee -a ${logfile}
+    npx bower install -V --allow-root --config.interactive=false 2>&1 | tee -a ${logfile}
 
     # Install IPython
     # ---------------
     log "Installing IPython version $IPYTHON_VERSION"
-    conda install -y ipython==$IPYTHON_VERSION 2>&1 | tee -a ${logfile}
+    pip --no-cache-dir install -y ipython==$IPYTHON_VERSION 2>&1 | tee -a ${logfile}
 
     # Install Jupyter Notebook
     # ------------------------
     log "Installing Jupyter notebook version $NOTEBOOK_VERSION"
-    conda install -y notebook==$NOTEBOOK_VERSION 2>&1 | tee -a ${logfile}
+    pip --no-cache-dir install -y notebook==$NOTEBOOK_VERSION 2>&1 | tee -a ${logfile}
 
     # Setup ipywidgets addon
     log "Installing ipywidgets using $PYTHON"
-    conda install -y ipywidgets==$IPYWIDGETS_VERSION 2>&1 | tee -a ${logfile}
+    pip --no-cache-dir install -y ipywidgets==$IPYWIDGETS_VERSION 2>&1 | tee -a ${logfile}
 
     # Install Narrative requirements
     # ------------------------------
     log "Installing biokbase requirements from src/requirements.txt"
     cd $NARRATIVE_ROOT_DIR/src
-    pip install -r requirements.txt 2>&1 | tee -a ${logfile}
+    pip --no-cache-dir install -r requirements.txt 2>&1 | tee -a ${logfile}
     if [ $? -ne 0 ]; then
         console "pip install for biokbase requirements failed: please examine $logfile"
         exit 1
     fi
 
-    pip install pandas sklearn clustergrammer_widget | tee -a ${logfile}
+    pip --no-cache-dir install pandas sklearn clustergrammer_widget | tee -a ${logfile}
     if [ $? -ne 0 ]; then
         console "pip install for biokbase requirements failed: please examine $logfile"
         exit 1

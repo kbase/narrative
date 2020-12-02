@@ -75,7 +75,7 @@ define([
                 },
                 sort: [
                     {'scientific_name.raw': {order: 'asc'}},
-                    '_score'
+                    {'genome_id': {order: 'asc'}}
                 ],
                 only_public: true,
                 indexes: ['genome'],
@@ -234,9 +234,9 @@ define([
                                     info: null,
                                     id: genomeRecord.genome_id,
                                     objectId: null,
-                                    name: name,
+                                    name,
                                     objectName: genomeRecord.object_name,
-                                    metadata: metadata,
+                                    metadata,
                                     ws: this.config.workspaceName,
                                     type: this.config.type,
                                     attached: false,

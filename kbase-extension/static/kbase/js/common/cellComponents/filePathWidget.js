@@ -36,7 +36,7 @@ define([
     function factory(config) {
         let runtime = Runtime.make(),
             paramsBus = config.bus,
-            workspaceInfo = config.workspaceInfo,
+            workspaceId = config.workspaceId,
             initialParams = config.initialParams,
             container,
             ui,
@@ -60,7 +60,7 @@ define([
                         initialValue: value,
                         appSpec: appSpec,
                         parameterSpec: parameterSpec,
-                        workspaceId: workspaceInfo.id,
+                        workspaceId: workspaceId,
                         referenceType: 'name',
                         paramsChannelName: paramsBus.channelName,
                         closeParameters: closeParameters

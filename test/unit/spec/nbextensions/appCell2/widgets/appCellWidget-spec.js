@@ -134,11 +134,13 @@ define([
         it('has a method stop which returns a Promise', () => {
             var stopPromise = mockAppCell.stop();
             expect(stopPromise instanceof Promise).toBeTrue();
+            return stopPromise;
         });
 
         it('has a method detach which returns a Promise', () => {
             var detachPromise = mockAppCell.detach();
             expect(detachPromise instanceof Promise).toBeTrue();
+            return detachPromise;
         });
 
     });

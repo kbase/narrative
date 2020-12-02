@@ -41,6 +41,7 @@ define('narrativeMocks', [
             .append($toolbar)
             .append(mockCell.input)
             .append(mockCell.output);
+        $('body').append($cellContainer);
         return mockCell;
     }
 

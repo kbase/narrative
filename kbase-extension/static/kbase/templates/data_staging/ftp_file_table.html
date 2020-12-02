@@ -25,9 +25,22 @@
                 <div>
                     <select>
                         <option></option>
-                        {{#each ../uploaders}}
+                        {{#if mappings}}
+                        <optgroup label="Suggested Types">
+                            {{#each mappings as |mapping|}} -->
+                                <option value="{{id}}">{{title}}</option>
+                            {{/each}}
+                        </optgroup>
+                        <optgroup label="Other Types">
+                            {{#each ../uploaders}}
                             <option value="{{id}}">{{name}}</option>
-                        {{/each}}
+                            {{/each}}
+                        {{ else }}
+                            {{#each ../uploaders}}
+                                <option value="{{id}}">{{name}}</option>
+                            {{/each}}
+                        {{/if}}
+                    </optgroup>
                     </select>
                     <button data-download="{{name}}" class="kb-staging-table-body__download btn btn-xs btn-primary" role="button" aria-label="Download Data">
                         <span><i class="fa fa-download"></i></span>

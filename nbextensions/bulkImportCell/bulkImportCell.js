@@ -509,7 +509,7 @@ define([
                     label: 'Data type',
                     icon: 'icon icon-genome'
                 },
-                categories: {
+                fileTypes: {
                     fastq: {
                         label: 'FASTQ Reads (Non-Interleaved)'
                     },
@@ -553,8 +553,8 @@ define([
                             dataElement: 'tab-pane',
                         }, [
                             div({
-                                class: `${cssCellType}__category_panel`,
-                                dataElement: 'category-panel'
+                                class: `${cssCellType}__filetype_panel`,
+                                dataElement: 'filetype-panel'
                             }),
                             div({
                                 class: `${cssCellType}__tab_pane_widget_container`,
@@ -587,7 +587,7 @@ define([
             const layout = renderLayout();
             kbaseNode.innerHTML = layout.content;
             const proms = [
-                buildFileTypePanel(ui.getElement('body.tab-pane.category-panel')),
+                buildFileTypePanel(ui.getElement('body.tab-pane.filetype-panel')),
                 buildTabs(ui.getElement('body.tab-pane.widget-container.tab-container'))
             ];
             return Promise.all(proms)

@@ -1,9 +1,7 @@
 define([
     'bluebird',
     'jquery',
-    // CDN
     'common/html',
-    // LOCAL
     'common/ui',
     'common/events',
     'common/props',
@@ -47,6 +45,10 @@ define([
             paramResolver = ParamResolver.make(),
             widgets = [],
             events = Events.make();
+
+        bus = runtime.bus().makeChannelBus({
+            description: 'An app params widget'
+        });
 
         function makeFieldWidget(appSpec, parameterSpec, value, closeParameters) {
             return paramResolver.loadInputControl(parameterSpec)
@@ -286,20 +288,20 @@ define([
         }
 
         // EVENTS
-        function attachEvents() {
-            bus.on('reset-to-defaults', function () {
-                widgets.forEach(function (widget) {
-                    widget.bus.emit('reset-to-defaults');
-                });
-            });
+        // function attachEvents() {
+        //     bus.on('reset-to-defaults', function () {
+        //         widgets.forEach(function (widget) {
+        //             widget.bus.emit('reset-to-defaults');
+        //         });
+        //     });
 
-            runtime.bus().on('workspace-changed', function () {
-                // tell each input widget about this amazing event!
-                widgets.forEach(function (widget) {
-                    widget.bus.emit('workspace-changed');
-                });
-            });
-        }
+        //     runtime.bus().on('workspace-changed', function () {
+        //         // tell each input widget about this amazing event!
+        //         widgets.forEach(function (widget) {
+        //             widget.bus.emit('workspace-changed');
+        //         });
+        //     });
+        // }
 
         function makeParamsLayout(params) {
             let view = {},
@@ -391,35 +393,12 @@ define([
             let filePathParams = makeParamsLayout(findPathParams(params));
 
             if (!filePathParams.layout.length) {
-                // TODO: should be own node
                 ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
             } else {
                 parameterRow.innerHTML = div({
                     class: `${cssBaseClass}__param_container row`,
                 }, [
-                    // td({
-                    //     class: `${cssBaseClass}__file_number`,
-                    // }, [
-                    //     rowNumber
-                    // ]),
-                    filePathParams.content,
-                    // td({}, [
-                    //     button({
-                    //         class: 'btn btn__text',
-                    //         type: 'button',
-                    //         id: events.addEvent({
-                    //             type: 'click',
-                    //             handler: function(e){
-                    //                 deleteRow(e);
-                    //             }
-
-                    //         })
-                    //     },[
-                    //         icon({
-                    //             class: 'fa fa-trash-o fa-lg',
-                    //         })
-                    //     ])
-                    // ])
+                    filePathParams.content
                 ]);
 
                 $(parameterRow).prepend(
@@ -467,9 +446,6 @@ define([
                 model.setItem('parameters', arg.parameters);
 
                 paramsBus.on('parameter-changed', function (message) {
-                    // Also, tell each of our inputs that a param has changed.
-                    // TODO: use the new key address and subscription
-                    // mechanism to make this more efficient.
                     widgets.forEach(function (widget) {
                         widget.bus.send(message, {
                             key: {
@@ -477,7 +453,6 @@ define([
                                 parameter: message.parameter
                             }
                         });
-                        // bus.emit('parameter-changed', message);
                     });
                 });
 
@@ -499,13 +474,6 @@ define([
                 // really unhook things here.
             });
         }
-
-        // CONSTRUCTION
-
-        bus = runtime.bus().makeChannelBus({
-            description: 'An app params widget'
-        });
-
 
         return {
             start: start,

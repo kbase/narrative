@@ -440,9 +440,10 @@ define([
 
                 Promise.all(filePathParams.layout.map((parameterId) => {
                     createFilePathWidget(appSpec, filePathParams, parameterId);
-                }));
+                })).then(
+                    events.attachEvents(container)
+                );
 
-                events.attachEvents(container);
             }
         }
 

@@ -4,6 +4,8 @@ const {login, openNarrative, sendString} = require('../wdioUtils.js');
 // Ideally the test data should be the same, except for narrative id, in each env.
 // But currently CI and prod are indexed differently.
 
+// Note that the narrativeIds used below must be owned or shared with full rights (at least edit) with the narrativetest user.
+// Note that narrativetest is not yet set up in narrative-dev/prod.
 const allTestCases = {
     ci: {
         TEST_CASE1: {

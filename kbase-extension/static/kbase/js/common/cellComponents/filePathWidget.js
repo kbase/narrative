@@ -31,6 +31,7 @@ define([
         table = tag('table'),
         tr = tag('tr'),
         td = tag('td'),
+        icon = tag('icon'),
         cssBaseClass = 'kb-file-path',
         cssClassType = 'parameter';
 
@@ -42,10 +43,10 @@ define([
             container,
             ui,
             bus,
-            places = {},
             model = Props.make(),
             paramResolver = ParamResolver.make(),
-            widgets = [];
+            widgets = [],
+            events = Events.make();
 
         function makeFieldWidget(appSpec, parameterSpec, value, closeParameters) {
             return paramResolver.loadInputControl(parameterSpec)
@@ -217,26 +218,16 @@ define([
                 })
             );
 
-            places = {
-                parameterRows: ui.getElements(`${cssClassType}-fields-row`)
-            };
+            let parameterRows = ui.getElements(`${cssClassType}-fields-row`);
 
-            places.parameterRows.forEach((parameterRow, index) => {
+            parameterRows.forEach((parameterRow, index) => {
                 let rowNumber = index + 1;
-                renderParameterRow(parameterRow, rowNumber)
-                    .then(function () {
-                        // do something after success
-                        attachEvents();
-                    })
-                    .catch(function (err) {
-                        // do something with the error.
-                        console.error('ERROR in start', err);
-                    });
+                let paramEvents = renderParameterRow(parameterRow, rowNumber);
+                paramEvents.attachEvents(container);
             });
         }
 
         function renderLayout() {
-            const events = Events.make();
             let formContent = [];
 
             formContent = formContent.concat([
@@ -292,10 +283,6 @@ define([
             let layout = renderLayout();
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
-
-            places = {
-                parameterRows: ui.getElements(`${cssClassType}-fields-row`)
-            };
         }
 
         // EVENTS
@@ -392,63 +379,89 @@ define([
             }
         }
 
-        // LIFECYCLE API
+        function deleteRow(e){
+            $(e.target).closest('tr').remove();
+        }
+
+
         function renderParameterRow(parameterRow, rowNumber) {
-            // First get the app specs, which is stashed in the model,
-            // with the parameters returned.
-            // Separate out the params into the primary groups.
             const appSpec = model.getItem('appSpec');
 
-            return Promise.try(function () {
-                const params = model.getItem('parameters');
-                let filePathParams = makeParamsLayout(findPathParams(params));
+            const params = model.getItem('parameters');
+            let filePathParams = makeParamsLayout(findPathParams(params));
 
-                return Promise.resolve()
-                    .then(function () {
-                        if (!filePathParams.layout.length) {
-                            // TODO: should be own node
-                            ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
-                        } else {
-                            // need to append child instead of replace innerHTML
-                            // places.parameterRows is
-                            // places.parameterRows.forEach((parameterRow) => {
-                            parameterRow.innerHTML = div({
-                                class: `${cssBaseClass}__param_container row`,
-                            }, [
-                                filePathParams.content
-                            ]);
-                            // });
+            if (!filePathParams.layout.length) {
+                // TODO: should be own node
+                ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
+            } else {
+                parameterRow.innerHTML = div({
+                    class: `${cssBaseClass}__param_container row`,
+                }, [
+                    // td({
+                    //     class: `${cssBaseClass}__file_number`,
+                    // }, [
+                    //     rowNumber
+                    // ]),
+                    filePathParams.content,
+                    // td({}, [
+                    //     button({
+                    //         class: 'btn btn__text',
+                    //         type: 'button',
+                    //         id: events.addEvent({
+                    //             type: 'click',
+                    //             handler: function(e){
+                    //                 deleteRow(e);
+                    //             }
 
-                            return Promise.all(filePathParams.layout.map((parameterId) => {
-                                createParamWidget(appSpec, filePathParams, parameterId);
-                            }));
-                        }
-                    }).then(function() {
-                        $(parameterRow).prepend(
-                            td({
-                                class: `${cssBaseClass}__file_number`,
-                            }, [
-                                rowNumber
-                            ])
-                        );
-                        $(parameterRow).append(
-                            td({
-                                class: `${cssBaseClass}__icon_cell--trash`,
-                            }, [
-                                span({
-                                    class: 'fa fa-trash-o fa-lg',
-                                })
-                            ])
-                        );
-                    });
-            });
+                    //         })
+                    //     },[
+                    //         icon({
+                    //             class: 'fa fa-trash-o fa-lg',
+                    //         })
+                    //     ])
+                    // ])
+                ]);
+
+                $(parameterRow).prepend(
+                    td({
+                        class: `${cssBaseClass}__file_number`,
+                    }, [
+                        rowNumber
+                    ])
+                );
+
+                $(parameterRow).append(
+                    td({}, [
+                        button({
+                            class: 'btn btn__text',
+                            type: 'button',
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function(e){
+                                    deleteRow(e);
+                                }
+
+                            })
+                        },[
+                            icon({
+                                class: 'fa fa-trash-o fa-lg',
+                            })
+                        ])
+                    ])
+                );
+
+                filePathParams.layout.map((parameterId) => {
+                    createParamWidget(appSpec, filePathParams, parameterId);
+                });
+
+                return events;
+            }
         }
 
         function start(arg) {
             return Promise.try(function () {
-                // send parent the ready message
-
-                doAttach(arg.node);
+                let container = arg.node;
+                doAttach(container);
 
                 model.setItem('appSpec', arg.appSpec);
                 model.setItem('parameters', arg.parameters);
@@ -469,17 +482,12 @@ define([
                 });
 
 
-                return places.parameterRows.forEach((parameterRow, index) => {
+                let parameterRows = ui.getElements(`${cssClassType}-fields-row`);
+
+                return parameterRows.forEach((parameterRow, index) => {
                     let rowNumber = index + 1;
-                    renderParameterRow(parameterRow, rowNumber)
-                        .then(function () {
-                            // do something after success
-                            attachEvents();
-                        })
-                        .catch(function (err) {
-                            // do something with the error.
-                            console.error('ERROR in start', err);
-                        });
+                    let paramEvents = renderParameterRow(parameterRow, rowNumber);
+                    paramEvents.attachEvents(container);
                 });
             });
 

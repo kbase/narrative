@@ -17,11 +17,6 @@ define([
 ) => {
     'use strict';
 
-    // const div = html.tag('div'),
-    //     span = html.tag('span'),
-    //     form = html.tag('form'),
-    //     cssCellType = 'kb-bulk-import-configure';
-
     /*
         Options:
             bus: message bus
@@ -35,7 +30,6 @@ define([
             spec = options.spec;
 
         let container = null,
-            // ui = null,
             runtime = Runtime.make();
 
         /**

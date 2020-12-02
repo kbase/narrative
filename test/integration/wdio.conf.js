@@ -153,32 +153,32 @@ function processPreset(preset) {
                 WIDTH: e.WIDTH || width,
                 HEIGHT: e.HEIGHT || height
             };
-        case 'ss-mac-firefox':
+        case 'ss-firefox':
             // TODO: detect platform
             return {
-                OS: 'OS X',
-                OS_VERSION: null, // TODO: detect os version.
+                OS: null, // not used by selenium standalone -- it runs on the current host
+                OS_VERSION: null, 
                 BROWSER: 'firefox',
-                BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
+                BROWSER_VERSION: null, // will use the installed browser on this host
                 SERVICE: 'selenium-standalone',
                 WIDTH: e.WIDTH || width,
                 HEIGHT: e.HEIGHT || height
             };
-        case 'ss-mac-chrome':
+        case 'ss-chrome':
             // TODO: detect platform
             return {
-                OS: 'OS X',
-                OS_VERSION: null, // TODO: detect os version.
+                OS: null, // not used by selenium standalone -- it runs on the current host
+                OS_VERSION: null, 
                 BROWSER: 'chrome',
                 BROWSER_VERSION: null, // will use the installed browser on this host
                 SERVICE: 'selenium-standalone',
                 WIDTH: e.WIDTH || width,
                 HEIGHT: e.HEIGHT || height
             };
-        case 'cd-mac':
+        case 'cd':
             // TODO: detect platform
             return {
-                OS: 'OS X',
+                OS: null, // not used by chromedriver; it is run on the host, whatever it is
                 OS_VERSION: null, // TODO: detect os version.
                 BROWSER: 'chrome',
                 BROWSER_VERSION: null, // will use the installed chrome on this host

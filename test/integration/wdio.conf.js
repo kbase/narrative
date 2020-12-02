@@ -72,16 +72,18 @@ const serviceConfigs = {
  * @returns {Object} A config object with the following keys: OS, OS_VERSION, BROWSER, BROWSER_VERSION, SERVICE, WIDTH, HEIGHT
  */
 function importEnv() {
-    const OS = process.env.OS || 'Windows';
-    const OS_VERSION = process.env.OS_VERSION || '10';
+    const isRemoteService = (process.env.SERVICE === 'browserstack');
+    const OS = process.env.OS || (isRemoteService ? 'Windows' : null);
+    const OS_VERSION = process.env.OS_VERSION || (isRemoteService ? '10' : null);
     const BROWSER = process.env.BROWSER || 'chrome';
-    const BROWSER_VERSION = process.env.BROWSER_VERSION || 'latest';
-    const SERVICE = process.env.SERVICE || 'chromedriver';
+    const BROWSER_VERSION = process.env.BROWSER_VERSION || (isRemoteService ? 'latest' : null);
+    const SERVICE = process.env.SERVICE || 'selenium-standalone';
+    const HEADLESS = process.env.HEADLESS || (isRemoteService ? 'f' : 't');
 
     const WIDTH= process.env.WIDTH || 1366;
     const HEIGHT= process.env.HEIGHT || 768;
     return {
-        OS, OS_VERSION, BROWSER, BROWSER_VERSION, SERVICE, WIDTH, HEIGHT
+        OS, OS_VERSION, BROWSER, BROWSER_VERSION, HEADLESS, SERVICE, WIDTH, HEIGHT
     }
 }
 
@@ -119,6 +121,7 @@ function processPreset(preset) {
                 OS_VERSION: e.OS_VERSION || '10',
                 BROWSER: 'chrome',
                 BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
+                HEADLESS: e.HEADLESS || 'f',
                 SERVICE: 'browserstack',
                 WIDTH: e.WIDTH || width,
                 HEIGHT: e.HEIGHT || height
@@ -129,6 +132,7 @@ function processPreset(preset) {
                 OS_VERSION: e.OS_VERSION || '10',
                 BROWSER: 'firefox',
                 BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
+                HEADLESS: e.HEADLESS || 'f',
                 SERVICE: 'browserstack',
                 WIDTH: e.WIDTH || width,
                 HEIGHT: e.HEIGHT || height
@@ -139,6 +143,7 @@ function processPreset(preset) {
                 OS_VERSION: e.OS_VERSION || 'Catalina',
                 BROWSER: 'chrome',
                 BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
+                HEADLESS: e.HEADLESS || 'f',
                 SERVICE: 'browserstack',
                 WIDTH: e.WIDTH || width,
                 HEIGHT: e.HEIGHT || height
@@ -149,6 +154,7 @@ function processPreset(preset) {
                 OS_VERSION: e.OS_VERSION || 'Catalina',
                 BROWSER: 'firefox',
                 BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
+                HEADLESS: e.HEADLESS || 'f',
                 SERVICE: 'browserstack',
                 WIDTH: e.WIDTH || width,
                 HEIGHT: e.HEIGHT || height
@@ -160,6 +166,7 @@ function processPreset(preset) {
                 OS_VERSION: null, 
                 BROWSER: 'firefox',
                 BROWSER_VERSION: null, // will use the installed browser on this host
+                HEADLESS: e.HEADLESS || 't',
                 SERVICE: 'selenium-standalone',
                 WIDTH: e.WIDTH || width,
                 HEIGHT: e.HEIGHT || height
@@ -171,6 +178,7 @@ function processPreset(preset) {
                 OS_VERSION: null, 
                 BROWSER: 'chrome',
                 BROWSER_VERSION: null, // will use the installed browser on this host
+                HEADLESS: e.HEADLESS || 't',
                 SERVICE: 'selenium-standalone',
                 WIDTH: e.WIDTH || width,
                 HEIGHT: e.HEIGHT || height
@@ -182,6 +190,7 @@ function processPreset(preset) {
                 OS_VERSION: null, // TODO: detect os version.
                 BROWSER: 'chrome',
                 BROWSER_VERSION: null, // will use the installed chrome on this host
+                HEADLESS: e.HEADLESS || 't',
                 SERVICE: 'chromedriver',
                 WIDTH: e.WIDTH || width,
                 HEIGHT: e.HEIGHT || height

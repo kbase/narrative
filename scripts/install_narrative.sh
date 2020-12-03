@@ -104,16 +104,16 @@ then
     # Install IPython
     # ---------------
     log "Installing IPython version $IPYTHON_VERSION"
-    pip --no-cache-dir install -y ipython=="$IPYTHON_VERSION" 2>&1 | tee -a "${logfile}"
+    pip --no-cache-dir install ipython=="$IPYTHON_VERSION" 2>&1 | tee -a "${logfile}"
 
     # Install Jupyter Notebook
     # ------------------------
     log "Installing Jupyter notebook version $NOTEBOOK_VERSION"
-    pip --no-cache-dir install -y notebook=="$NOTEBOOK_VERSION" 2>&1 | tee -a "${logfile}"
+    pip --no-cache-dir install notebook=="$NOTEBOOK_VERSION" 2>&1 | tee -a "${logfile}"
 
     # Setup ipywidgets addon
     log "Installing ipywidgets using $PYTHON"
-    pip --no-cache-dir install -y ipywidgets=="$IPYWIDGETS_VERSION" 2>&1 | tee -a "${logfile}"
+    pip --no-cache-dir install ipywidgets=="$IPYWIDGETS_VERSION" 2>&1 | tee -a "${logfile}"
 
     # Install Narrative requirements
     # ------------------------------

@@ -1,4 +1,7 @@
-/*global describe, it, browser, expect, $, afterEach*/
+/*global describe, it, browser, expect, $, afterEach, beforeEach*/
+/* eslint {strict: ['error', 'global']} */
+'use strict';
+
 const {login, openNarrative, sendString} = require('../wdioUtils.js');
 
 // Ideally the test data should be the same, except for narrative id, in each env.
@@ -353,7 +356,6 @@ async function openPublicData() {
 }
 
 describe('Test kbaseNarrativeSidePublicTab', () => {
-    'use strict';
 
     beforeEach(async () => {
         await browser.setTimeout({ 'implicit': 30000 });

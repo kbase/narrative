@@ -303,7 +303,7 @@ define([
                     ])
                 ]));
             } else {
-                var replacer = function (match, p1, offset, string) {return ret_obj[p1];};
+                var replacer = function (match, p1) {return ret_obj[p1];};
                 var formatted_string;
                 if (dd_options.description_template) {
                     // use slice to avoid modifying global description_template

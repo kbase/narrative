@@ -68,6 +68,7 @@ async function openNarrative(workspaceId) {
     });
 }
 
+
 module.exports = {
     login,
     makeURL,

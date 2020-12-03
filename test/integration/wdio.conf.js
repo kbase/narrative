@@ -6,60 +6,6 @@
 const testConfig = require('../testConfig');
 const fs = require('fs');
 
-const authToken = (() => {
-    if (process.env.KBASE_TEST_TOKEN) {
-        console.log('loading auth token from environment variable KBASE_TEST_TOKEN');
-        return process.env.KBASE_TEST_TOKEN;
-    } else if (testConfig && testConfig.token && testConfig.token.file && fs.existsSync(testConfig.token.file)) {
-        console.log('loading auth token from file ' + testConfig.token.file);
-        return fs.readFileSync(testConfig.token.file, 'utf-8').trim();
-        
-    } else {
-        console.warn('continuing without valid test token');
-        return 'fakeToken';
-    }
-})();
-
-// Driver config for selenium standalone.
-// Commented out so that it can pick the most recent 
-// drivers (or at least invoking the behavior of the 
-// selenium standalone service installed.)
-// Uncomment if need explicit driver versions.
-// This can be necessary if the installed Chrome or Firefox differs significantly from
-// those supported by the drivers.
-// const drivers = {
-//     chrome: { 
-//         version: '87.0.4280.20' 
-//     }, // https://chromedriver.chromium.org/
-//     firefox: { 
-//         version: '0.28.0'
-//     }, // https://github.com/mozilla/geckodriver/releases
-// }
-
-// Each wdio service supported requires an entry here, even
-// if it doesn't have any specific configuration.
-const serviceConfigs = {
-    'selenium-standalone': {
-        logPath: 'logs',
-        // Uncomment if driver configuration uncommented above.
-        // installArgs: { 
-        //     drivers,
-        //     arch: process.arch
-        // },
-        // args: { 
-        //     drivers,
-        //     arch: process.arch
-        // }
-    },
-    chromedriver: {},
-    browserstack: {
-        browserstackLocal: true,
-        opts: {
-
-        }
-    }
-}
-
 // Import environment variables used to control the tests.
 // Note that most have defaults, and many are only applicable 
 // to testing services
@@ -84,7 +30,7 @@ function importEnv() {
     const HEIGHT= process.env.HEIGHT || 768;
     return {
         OS, OS_VERSION, BROWSER, BROWSER_VERSION, HEADLESS, SERVICE, WIDTH, HEIGHT
-    }
+    };
 }
 
 /**
@@ -110,7 +56,7 @@ function processPreset(preset) {
         switch (process.env.PRESET_DIMENSIONS) {
             case 'xga': return [1024, 768];
             case 'hd': return [1920, 1080];
-            default: throw new Error(`Not a valid PRESET_DIMENSIONS: "${process.env.PRESET_DIMENSIONS}"`)
+            default: throw new Error(`Not a valid PRESET_DIMENSIONS: "${process.env.PRESET_DIMENSIONS}"`);
         }
     })();
 
@@ -196,22 +142,56 @@ function processPreset(preset) {
                 HEIGHT: e.HEIGHT || height
             };
         default: 
-            throw new Error(`Sorry, "${preset}" is not a preset`)
+            throw new Error(`Sorry, "${preset}" is not a preset`);
     }
 }
 
-const preset = process.env.PRESET || null;
+function makeConfig() {
+    const preset = process.env.PRESET || null;
+    const presetConfig = processPreset(preset);
+    
 
-const {OS, OS_VERSION, BROWSER, BROWSER_VERSION, SERVICE, WIDTH, HEIGHT} = processPreset(preset);
+    return {
+        ...presetConfig, 
+        // Note that these service configs are only used for browserstack.
+        SERVICE_USER: process.env.SERVICE_USER || null,
+        SERVICE_KEY: process.env.SERVICE_KEY || null,
 
-// Note that these are only used for browserstack, but we import them here for consistency.
-const SERVICE_USER = process.env.SERVICE_USER || null;
-const SERVICE_KEY = process.env.SERVICE_KEY || null;
+        BASE_URL: process.env.BASE_URL || 'http://localhost:8888',
+        ENV: process.env.ENV || 'ci',
+        HEADLESS: process.env.HEADLESS || 't'
+    };
+}
 
-// These are not preset-able.
-const BASE_URL = process.env.BASE_URL || 'http://localhost:8888';
-const ENV = process.env.ENV || 'ci';
-const HEADLESS = process.env.HEADLESS || 't';
+const authToken = (() => {
+    if (process.env.KBASE_TEST_TOKEN) {
+        console.log('loading auth token from environment variable KBASE_TEST_TOKEN');
+        return process.env.KBASE_TEST_TOKEN;
+    } else if (testConfig && testConfig.token && testConfig.token.file && fs.existsSync(testConfig.token.file)) {
+        console.log('loading auth token from file ' + testConfig.token.file);
+        return fs.readFileSync(testConfig.token.file, 'utf-8').trim();
+        
+    } else {
+        console.warn('continuing without valid test token');
+        return 'fakeToken';
+    }
+})();
+
+// Each wdio service supported requires an entry here, even
+// if it doesn't have any specific configuration.
+const serviceConfigs = {
+    'selenium-standalone': {
+        logPath: 'selenium-standalone-logs'
+    },
+    chromedriver: {},
+    browserstack: {
+        browserstackLocal: true,
+        opts: {
+        }
+    }
+};
+
+const config = makeConfig();
 
 /**
  * Constructs a capabilities object for the current test configuration.
@@ -223,7 +203,7 @@ function makeCapabilities(config) {
     switch (config.SERVICE) {
         case 'chromedriver': 
             return (() => {
-                const args = ['--disable-gpu', '--no-sandbox', `window-size=${config.WIDTH},${HEIGHT}`];
+                const args = ['--disable-gpu', '--no-sandbox', `window-size=${config.WIDTH},${config.HEIGHT}`];
                 if (config.HEADLESS === 't') {
                     args.push('--headless');
                 }
@@ -268,6 +248,8 @@ function makeCapabilities(config) {
                             }
                         };
                     })();
+                default: 
+                    throw new Error(`Browser not supported "${config.BROWSER}"`);
             }
         case 'browserstack':
             // see https://www.browserstack.com/docs/automate/selenium/select-browsers-and-devices
@@ -277,28 +259,26 @@ function makeCapabilities(config) {
                 browser: `${config.BROWSER}`,
                 browser_version: `${config.BROWSER_VERSION}`,
                 resolution: `${config.WIDTH}x${config.HEIGHT}`
-            }
+            };
     }
 }
 
-const CAPABILITIES = makeCapabilities({
-    SERVICE, BROWSER, OS, OS_VERSION, BROWSER_VERSION, WIDTH, HEIGHT, HEADLESS
-});
+const CAPABILITIES = makeCapabilities(config);
 
 console.log('Test Settings');
 console.log('-----------------');
-console.log('ENV             : ' + ENV);
-console.log('BASE_URL        : ' + BASE_URL);
-console.log('BROWSER         : ' + BROWSER);
-console.log('BROWSER VERSION : ' + BROWSER_VERSION);
-console.log('WIDTH           : ' + WIDTH);
-console.log('HEIGHT          : ' + HEIGHT);
-console.log('OS              : ' + OS);
-console.log('OS VERSION      : ' + OS_VERSION);
-console.log('HEADLESS        : ' + HEADLESS);
-console.log('TEST SERVICE    : ' + SERVICE);
-console.log('SERVICE USER    : ' + SERVICE_USER);
-console.log('SERVICE KEY     : ' + SERVICE_KEY);
+console.log('ENV             : ' + config.ENV);
+console.log('BASE_URL        : ' + config.BASE_URL);
+console.log('BROWSER         : ' + config.BROWSER);
+console.log('BROWSER VERSION : ' + config.BROWSER_VERSION);
+console.log('WIDTH           : ' + config.WIDTH);
+console.log('HEIGHT          : ' + config.HEIGHT);
+console.log('OS              : ' + config.OS);
+console.log('OS VERSION      : ' + config.OS_VERSION);
+console.log('HEADLESS        : ' + config.HEADLESS);
+console.log('TEST SERVICE    : ' + config.SERVICE);
+console.log('SERVICE USER    : ' + config.SERVICE_USER);
+console.log('SERVICE KEY     : ' + config.SERVICE_KEY);
 console.log('-----------------');
 
 const wdioConfig = {
@@ -399,7 +379,7 @@ const wdioConfig = {
     // with `/`, the base url gets prepended, not including the path portion of your baseUrl.
     // If your `url` parameter starts without a scheme or `/` (like `some/path`), the base url
     // gets prepended directly.
-    baseUrl: BASE_URL,
+    baseUrl: config.BASE_URL,
     //
     // Default timeout for all waitFor* commands.
     waitforTimeout: 30000,
@@ -415,7 +395,7 @@ const wdioConfig = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-    services: [[SERVICE, serviceConfigs[SERVICE]]],
+    services: [[config.SERVICE, serviceConfigs[config.SERVICE]]],
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
@@ -589,15 +569,13 @@ const wdioConfig = {
     //}
 };
 
-wdioConfig.env = {
-    ENV, BASE_URL, SERVICE, BROWSER, BROWSER_VERSION, OS, OS_VERSION, WIDTH, HEIGHT, HEADLESS
-}
+wdioConfig.env = config;
 
 // Only set the service if it is an online service; setting the
 // user and key otherwise will trigger a warning or error.
-if (SERVICE === 'browserstack') {
-    wdioConfig.user = SERVICE_USER;
-    wdioConfig.key = SERVICE_KEY;
+if (config.SERVICE === 'browserstack') {
+    wdioConfig.user = config.SERVICE_USER;
+    wdioConfig.key = config.SERVICE_KEY;
 }
 
 exports.config = wdioConfig;

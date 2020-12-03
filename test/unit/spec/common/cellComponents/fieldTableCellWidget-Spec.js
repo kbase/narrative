@@ -4,108 +4,95 @@
 /*jslint white: true*/
 
 define([
-    'common/cellComponents/tabs/infoTab'
+    'common/cellComponents/fieldTableCellWidget',
+    'kb_common/html',
 ], function(
-    infoTabWidget
+    fieldCellWidget,
+    html
 ) {
     'use strict';
 
-    describe('The App Info Tab module', function() {
+    let fieldWidget,
+        node;
+
+    const t = html.tag,
+        div = t('div');
+
+    describe('The Field Table Cell Widget module', function() {
         it('loads', function() {
-            expect(infoTabWidget).not.toBe(null);
+            expect(fieldCellWidget).not.toBe(null);
         });
 
         it('has expected functions', function() {
-            expect(infoTabWidget.make).toBeDefined();
+            expect(fieldCellWidget.make).toBeDefined();
         });
 
     });
 
-    describe('The App Info Tab instance', function() {
-        const model = {
-            getItem: (item) => model[item],
-            'app': {'tag': 'Mock App'},
-            'app.spec': {
-                'full_info' : {
-                    'description': 'Details about this mock app'
-                },
-                'info': {
-                    'authors': ['Abraham', 'Martin', 'John'],
-                    'id': 0,
-                    'subtitle': 'A mock app for testing purposes',
-                    'ver': '1.0.1',
-                },
-                'parameters': [{
-                    'text_options': {
-                        'valid_ws_types': ['KBaseRNASeq.RNASeqSampleSet']},
-                    'ui_name': 'RNA sequence object <font color=red>*</font>',
-                }, {
-                    'ui_name': 'Adapters',
-                }],
-            },
-            'executionStats': {
-                'number_of_calls': 1729,
-                'total_exec_time': 9001,
-            },
+    describe('The Field Table Cell Widget instance', function() {
+        let fieldWidgetPromise,
+            mockInputControlFactory = {
+                make: function() {
+                    return {
+                        start: () => {},
+                        stop: () => {}
+                    };
+                }
+            };
+
+        let parameterSpec = {
+            ui: {
+                advanced: false,
+                class: 'parameter',
+                control: 'dynamic_dropdown',
+                description: 'Valid file extensions for FASTA: .fasta, .fna, .fa   Valid file extensions for FASTQ: .fastq, .fnq, .fq; Compressed files (containing files with vaild extentions): .zip, .gz, .bz2, .tar.gz, .tar.bz2',
+                hint: 'Short read file containing a paired end library in FASTA/FASTQ format',
+                label: 'Forward/Left FASTA/FASTQ File Path',
+                type: 'dynamic_dropdown'
+            }
         };
-        const appSpec = model.getItem('app.spec');
-        const mockInfoTab = infoTabWidget.make({model});
-        let node, infoTabPromise, infoTab;
+
+        const mockFieldWidget = fieldCellWidget.make({
+            inputControlFactory: mockInputControlFactory,
+            parameterSpec: parameterSpec
+        });
 
         beforeEach(async function () {
             node = document.createElement('div');
-            infoTabPromise = mockInfoTab.start({node});
-            infoTab = await infoTabPromise;
-            return infoTab; // to use infoTab for linter
+
+            fieldWidgetPromise = mockFieldWidget.start({node});
+            fieldWidget = await fieldWidgetPromise;
+            return fieldWidget;
         });
 
         it('has a factory which can be invoked', function() {
-            expect(mockInfoTab).not.toBe(null);
+            expect(mockFieldWidget).not.toBe(null);
         });
 
         it('has the required methods', function() {
-            expect(mockInfoTab.start).toBeDefined();
-            expect(mockInfoTab.stop).toBeDefined();
+            expect(mockFieldWidget.start).toBeDefined();
+            expect(mockFieldWidget.stop).toBeDefined();
         });
 
         it('has a method "start" which returns a Promise',
             function() {
-                expect(infoTabPromise instanceof Promise).toBeTrue();
+                expect(fieldWidgetPromise instanceof Promise).toBeTrue();
             }
         );
 
         it('has a method "stop" which returns a Promise',
             function() {
-                const result = mockInfoTab.stop();
+                const result = mockFieldWidget.stop();
                 expect(result instanceof Promise).toBeTrue();
             }
         );
 
-        it('returns the defined description', function() {
-            expect(infoTab.firstChild.textContent).toBe(
-                appSpec.full_info.description
-            );
+        it('has method "bus" which returns an object', function() {
+            expect(mockFieldWidget.bus).toBeDefined();
         });
 
-        it('returns an item for each parameter', function() {
-            const listItems = Array.from(infoTab.querySelectorAll('li li'));
-            expect(listItems.length).toBe(appSpec.parameters.length);
-        });
+        it('renders a table cell with a label and input', function() {
 
-        it('renders parameter with formatting correctly', function() {
-            const RNASeqFormat = infoTab.querySelectorAll(
-                'li li:nth-child(1) font'
-            );
-            expect(RNASeqFormat.length).toBeGreaterThan(0);
-        });
-
-        it('renders parameter with no formatting correctly', function() {
-            const AdaptersFormat = infoTab.querySelectorAll(
-                'li li:nth-child(2)'
-            )[0];
-            expect(AdaptersFormat.innerText).toBe(
-                appSpec.parameters[1].ui_name
-            );
         });
     });
 });

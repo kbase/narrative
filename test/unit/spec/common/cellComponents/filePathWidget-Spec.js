@@ -4,87 +4,83 @@
 /*jslint white: true*/
 
 define([
-    'common/cellComponents/filePathWidget'
+    'common/cellComponents/filePathWidget',
+    'common/runtime',
 ], function(
-    filePathWidget
+    FilePathWidget,
+    Runtime
 ) {
     'use strict';
 
     describe('The file path widget module', function() {
         it('loads', function() {
-            expect(filePathWidget).not.toBe(null);
+            expect(FilePathWidget).not.toBe(null);
         });
 
         it('has expected functions', function() {
-            expect(filePathWidget.make).toBeDefined();
+            expect(FilePathWidget.make).toBeDefined();
         });
 
     });
 
     describe('The file path widget instance', function() {
-        let bus;
-        const workspaceInfo = {id: '123234'},
-        cost initialParams = {
+        let paramsBus,
+            filePathWidget,
+            mockFilePathWidget,
+            filePathWidgetPromise,
+            runtime;
 
-        };
+        const workspaceId = {id: '56263'},
+            initialParams = {
+                fastq_fwd_staging_file_name: '',
+                fastq_rev_staging_file_name: '',
+                import_type: 'SRA',
+                insert_size_mean: null,
+                insert_size_std_dev: null,
+                interleaved: 0,
+                name: 'KBase_object_details_22020-10-14T232042188.json_reads',
+                read_orientation_outward: 0,
+                sequencing_tech: 'Illumina',
+                single_genome: 1,
+                sra_staging_file_name: 'KBase_object_details_22020-10-14T232042188.json'
+            };
 
         beforeEach(async function () {
-            node = document.createElement('div');
-            bus = runtime.bus().makeChannelBus({
-                description: 'An app params widget'
+            runtime = Runtime.make();
+            paramsBus = runtime.bus().makeChannelBus({
+                description: 'Test bus'
             });
-            infoTabPromise = mockInfoTab.start({node});
-            infoTab = await infoTabPromise;
-            return infoTab; // to use infoTab for linter
+            filePathWidgetPromise = mockFilePathWidget.start({
+                paramsBus: paramsBus,
+                workspaceId: workspaceId,
+                initialParams: initialParams
+            });
+            filePathWidget = await filePathWidgetPromise;
+            return filePathWidget; // to use filePathWidget for linter
         });
 
         it('has a factory which can be invoked', function() {
-            expect(mockInfoTab).not.toBe(null);
+            expect(mockFilePathWidget).not.toBe(null);
         });
 
         it('has the required methods', function() {
-            expect(mockInfoTab.start).toBeDefined();
-            expect(mockInfoTab.stop).toBeDefined();
+            expect(mockFilePathWidget.start).toBeDefined();
+            expect(mockFilePathWidget.stop).toBeDefined();
+            expect(mockFilePathWidget.bus).toBeDefined();
         });
 
         it('has a method "start" which returns a Promise',
             function() {
-                expect(infoTabPromise instanceof Promise).toBeTrue();
+                expect(filePathWidgetPromise instanceof Promise).toBeTrue();
             }
         );
 
         it('has a method "stop" which returns a Promise',
             function() {
-                const result = mockInfoTab.stop();
+                const result = mockFilePathWidget.stop();
                 expect(result instanceof Promise).toBeTrue();
             }
         );
 
-        // it('returns the defined description', function() {
-        //     expect(infoTab.firstChild.textContent).toBe(
-        //         appSpec.full_info.description
-        //     );
-        // });
-
-        // it('returns an item for each parameter', function() {
-        //     const listItems = Array.from(infoTab.querySelectorAll('li li'));
-        //     expect(listItems.length).toBe(appSpec.parameters.length);
-        // });
-
-        // it('renders parameter with formatting correctly', function() {
-        //     const RNASeqFormat = infoTab.querySelectorAll(
-        //         'li li:nth-child(1) font'
-        //     );
-        //     expect(RNASeqFormat.length).toBeGreaterThan(0);
-        // });
-
-        // it('renders parameter with no formatting correctly', function() {
-        //     const AdaptersFormat = infoTab.querySelectorAll(
-        //         'li li:nth-child(2)'
-        //     )[0];
-        //     expect(AdaptersFormat.innerText).toBe(
-        //         appSpec.parameters[1].ui_name
-        //     );
-        // });
     });
 });

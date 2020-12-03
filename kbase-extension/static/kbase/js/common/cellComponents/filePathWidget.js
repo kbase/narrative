@@ -47,7 +47,7 @@ define([
             events = Events.make();
 
         bus = runtime.bus().makeChannelBus({
-            description: 'An app params widget'
+            description: 'A file path widget'
         });
 
         function makeFieldWidget(appSpec, parameterSpec, value, closeParameters) {
@@ -487,9 +487,7 @@ define([
         return {
             start: start,
             stop: stop,
-            bus: function () {
-                return bus;
-            }
+            bus: bus
         };
     }
 

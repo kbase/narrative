@@ -131,7 +131,6 @@ define([
                 .then(function() {
                     console.log('REACHED 1');
                     if (inputControl.start) {
-                        console.log(inputControl.start());
                         return inputControl.start({
                             node: places.inputControl
                         })

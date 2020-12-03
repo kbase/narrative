@@ -34,9 +34,10 @@ define('narrativeMocks', [
             cell_type: cellType,
             renderMinMax: () => {},
             element: $cellContainer,
-            input: $('<div>').addClass('input'),
-            output: $('<div>').addClass('output')
+            input: $('<div>').addClass('input').append('<div>').addClass('input_area'),
+            output: $('<div>').addClass('output_wrapper').append('<div>').addClass('output'),
         };
+
         $cellContainer
             .append($toolbar)
             .append(mockCell.input)
@@ -44,6 +45,10 @@ define('narrativeMocks', [
         $('body').append($cellContainer);
         return mockCell;
     }
+
+    // inputArea = this.input.find('.input_area').get(0),
+    // outputArea = this.element.find('.output_wrapper'),
+    // viewInputArea = this.element.find('[data-subarea-type="${dataSubareaType}"]'),
 
     /**
      * Builds some mock cell metadata based on the kbaseCellType being mocked.
@@ -78,11 +83,21 @@ define('narrativeMocks', [
                     },
                     inputs: {}
                 };
-                meta.attributes.title = 'Import from Staging Area',
+                meta.attributes.title = 'Import from Staging Area';
                 meta.attributes.subtitle = 'Import files into your Narrative as data objects';
                 break;
             case 'app':
                 meta.appCell = {
+                    'user-settings': {
+                        showCodeInputArea: false
+                    },
+                };
+                break;
+            case 'code':
+                meta.codeCell = {
+                    'user-settings': {
+                        showCodeInputArea: false
+                    },
                 };
                 break;
             default:

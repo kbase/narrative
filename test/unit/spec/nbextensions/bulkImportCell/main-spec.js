@@ -1,5 +1,3 @@
-/* global describe it expect beforeEach spyOn afterEach beforeAll afterAll */
-
 define([
     'jquery',
     '../../../../../../narrative/nbextensions/bulkImportCell/main',

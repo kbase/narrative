@@ -70,6 +70,10 @@ define([
             });
         });
 
+        afterEach(() => {
+            $('body').empty();
+        });
+
         it('has a factory which can be invoked', function() {
             expect(filePathWidget).not.toBe(null);
         });
@@ -104,6 +108,8 @@ define([
                 appSpec: spec,
                 parameters: parameters,
             }).then(() => {
+                let preClickNumberOfRows = $('tr').length;
+                expect(preClickNumberOfRows).toEqual(1);
                 $('.kb-file-path__button--add_row btn btn__text').click();
                 let postClickNumberOfRows = $('tr').length;
                 expect(postClickNumberOfRows).toEqual(2);
@@ -116,6 +122,8 @@ define([
                 appSpec: spec,
                 parameters: parameters,
             }).then(() => {
+                let preClickNumberOfRows = $('tr').length;
+                expect(preClickNumberOfRows).toEqual(1);
                 $('.btn btn__text').click();
                 let postClickNumberOfRows = $('tr').length;
                 expect(postClickNumberOfRows).toEqual(0);

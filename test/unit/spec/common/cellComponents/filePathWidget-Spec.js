@@ -1,14 +1,23 @@
 /*global beforeEach */
 /*global define*/ // eslint-disable-line no-redeclare
 /*global describe, expect, it*/
+/*global beforeAll, afterAll*/
 /*jslint white: true*/
 
 define([
     'common/cellComponents/filePathWidget',
+    'jquery',
     'common/runtime',
+    'common/props',
+    'common/spec',
+    'json!../../../../data/testAppObj.json',
 ], function(
     FilePathWidget,
-    Runtime
+    $,
+    Runtime,
+    Props,
+    Spec,
+    TestAppObject
 ) {
     'use strict';
 
@@ -24,63 +33,94 @@ define([
     });
 
     describe('The file path widget instance', function() {
-        let paramsBus,
-            filePathWidget,
-            mockFilePathWidget,
-            filePathWidgetPromise,
-            runtime;
-
-        const workspaceId = {id: '56263'},
-            initialParams = {
-                fastq_fwd_staging_file_name: '',
-                fastq_rev_staging_file_name: '',
-                import_type: 'SRA',
-                insert_size_mean: null,
-                insert_size_std_dev: null,
-                interleaved: 0,
-                name: 'KBase_object_details_22020-10-14T232042188.json_reads',
-                read_orientation_outward: 0,
-                sequencing_tech: 'Illumina',
-                single_genome: 1,
-                sra_staging_file_name: 'KBase_object_details_22020-10-14T232042188.json'
+        beforeAll(() => {
+            Jupyter.narrative = {
+                getAuthToken: () => 'fakeToken',
             };
+        });
 
-        beforeEach(async function () {
-            runtime = Runtime.make();
-            paramsBus = runtime.bus().makeChannelBus({
-                description: 'Test bus'
+        afterAll(() => {
+            Jupyter.narrative = null;
+        });
+
+        let filePathWidget, node, spec, parameters;
+
+        beforeEach(function () {
+            const bus = Runtime.make().bus();
+            node = document.createElement('div');
+            document.getElementsByTagName('body')[0].appendChild(node);
+
+            const model = Props.make({
+                data: TestAppObject,
+                onUpdate: (props) => {},
             });
-            filePathWidgetPromise = mockFilePathWidget.start({
-                paramsBus: paramsBus,
+
+            spec = Spec.make({
+                appSpec: model.getItem('app.spec'),
+            });
+
+            parameters = spec.getSpec().parameters;
+
+            const workspaceId = 54745;
+
+            filePathWidget = FilePathWidget.make({
+                bus: bus,
                 workspaceId: workspaceId,
-                initialParams: initialParams
+                initialParams: model.getItem('params'),
             });
-            filePathWidget = await filePathWidgetPromise;
-            return filePathWidget; // to use filePathWidget for linter
         });
 
         it('has a factory which can be invoked', function() {
-            expect(mockFilePathWidget).not.toBe(null);
+            expect(filePathWidget).not.toBe(null);
         });
 
         it('has the required methods', function() {
-            expect(mockFilePathWidget.start).toBeDefined();
-            expect(mockFilePathWidget.stop).toBeDefined();
-            expect(mockFilePathWidget.bus).toBeDefined();
+            expect(filePathWidget.start).toBeDefined();
+            expect(filePathWidget.stop).toBeDefined();
+            expect(filePathWidget.bus).toBeDefined();
         });
 
-        it('has a method "start" which returns a Promise',
-            function() {
-                expect(filePathWidgetPromise instanceof Promise).toBeTrue();
-            }
-        );
+        it('should start and render itself', () => {
+            return filePathWidget.start({
+                node: node,
+                appSpec: spec,
+                parameters: parameters,
+            }).then(() => {
+                expect(node.innerHTML).toContain('File Paths');
+                expect(node.innerHTML).toContain('kb-file-path__table');
+                expect(node.innerHTML).toContain('kb-file-path__table_row');
+                expect(node.innerHTML).toContain('kb-file-path__file_number');
+                expect(node.innerHTML).toContain('1');
+                expect(node.innerHTML).toContain('fastq_rev_staging_file_name');
+                expect(node.innerHTML).toContain('sra_staging_file_name');
+                expect(node.innerHTML).toContain('fa fa-trash-o fa-lg');
+                expect(node.innerHTML).toContain('Add Row');
+            });
+        });
 
-        it('has a method "stop" which returns a Promise',
-            function() {
-                const result = mockFilePathWidget.stop();
-                expect(result instanceof Promise).toBeTrue();
-            }
-        );
+        it('should add a row when Add Row button is clicked', () => {
+            return filePathWidget.start({
+                node: node,
+                appSpec: spec,
+                parameters: parameters,
+            }).then(() => {
+                $('.kb-file-path__button--add_row btn btn__text').click();
+                let postClickNumberOfRows = $('tr').length;
+                expect(postClickNumberOfRows).toEqual(2);
+            });
+        });
+
+        it('should delete a row when trashcan button is clicked', () => {
+            return filePathWidget.start({
+                node: node,
+                appSpec: spec,
+                parameters: parameters,
+            }).then(() => {
+                $('.btn btn__text').click();
+                let postClickNumberOfRows = $('tr').length;
+                expect(postClickNumberOfRows).toEqual(0);
+            });
+        });
 
     });
 });

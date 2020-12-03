@@ -1,30 +1,16 @@
 define([
-    'bluebird',
     'jquery',
     'uuid',
     'base/js/namespace',
     'common/utils',
-    'common/appUtils',
-    'common/props',
-    'common/cellUtils',
-    'common/pythonInterop',
-    'common/ui',
-    'common/jupyter',
     'kb_common/html',
     './widgets/codeCell',
     'custom/custom'
 ], function (
-    Promise,
     $,
     Uuid,
     Jupyter,
     utils,
-    AppUtils,
-    Props,
-    cellUtils,
-    PythonInterop,
-    UI,
-    jupyter,
     html,
     CodeCell
 ) {

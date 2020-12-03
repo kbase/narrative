@@ -46,10 +46,6 @@ define('narrativeMocks', [
         return mockCell;
     }
 
-    // inputArea = this.input.find('.input_area').get(0),
-    // outputArea = this.element.find('.output_wrapper'),
-    // viewInputArea = this.element.find('[data-subarea-type="${dataSubareaType}"]'),
-
     /**
      * Builds some mock cell metadata based on the kbaseCellType being mocked.
      * This cell type should be one of:
@@ -100,6 +96,14 @@ define('narrativeMocks', [
                     },
                 };
                 break;
+            case 'codeWithUserSettings':
+                meta.codeCell = {
+                    'userSettings': {
+                        showCodeInputArea: true
+                    },
+                };
+                break;
+
             default:
                 // if we don't know the cell type, return a blank metadata
                 meta = {};

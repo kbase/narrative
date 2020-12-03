@@ -1,15 +1,13 @@
 define([
     'jquery',
     '../../../../../../narrative/nbextensions/codeCell/main',
-    '../../../../../../narrative/nbextensions/codeCell/widgets/codeCell',
     'base/js/namespace',
-    'narrativeMocks'
+    'narrativeMocks',
 ], (
     $,
     Main,
-    codeCell,
     Jupyter,
-    Mocks
+    Mocks,
 ) => {
     'use strict';
 
@@ -95,6 +93,64 @@ define([
             setTimeout(() => {
                 expect(newCell.cellType).toBeUndefined();
                 expect(isCodeCell(newCell)).toBeFalsy();
+                done();
+            }, 100);
+        });
+
+        it('should convert userSettings into user-settings', (done) => {
+            const newCell = Mocks.buildMockCell('code', 'codeWithUserSettings');
+            expect(newCell.metadata.kbase.codeCell.userSettings.showCodeInputArea).toBe(true);
+            Jupyter.notebook.cells.push(newCell);
+
+            Main.load_ipython_extension();
+            $([Jupyter.events]).trigger('insertedAtIndex.Cell', {
+                type: 'code',
+                index: 1,
+                cell: newCell,
+                data: {
+                    type: 'code'
+                }
+            });
+            // there's no other triggers except to wait a moment
+            // for the cell to get turned into a bulk import cell
+            // and if it takes more than 100ms, it SHOULD fail.
+            setTimeout(() => {
+                expect(isCodeCell(newCell)).toBeTruthy();
+                expect(newCell.metadata.kbase.codeCell.userSettings).not.toBeDefined();
+                expect(newCell.metadata.kbase.codeCell).toEqual({
+                    'user-settings': {
+                        showCodeInputArea: true
+                    }
+                });
+                done();
+            }, 100);
+        });
+
+        it('when in doubt, use the old settings', (done) => {
+            const newCell = Mocks.buildMockCell('code', 'codeWithUserSettings');
+            newCell.metadata.kbase.codeCell['user-settings'] = { showCodeInputArea: false };
+            expect(newCell.metadata.kbase.codeCell.userSettings.showCodeInputArea).toBe(true);
+            expect(newCell.metadata.kbase.codeCell['user-settings'].showCodeInputArea).toBe(false);
+            Jupyter.notebook.cells.push(newCell);
+
+            Main.load_ipython_extension();
+            // expect(isCodeCell(newCell)).toBeTruthy();
+            $([Jupyter.events]).trigger('insertedAtIndex.Cell', {
+                type: 'code',
+                index: 1,
+                cell: newCell,
+                data: {
+                    type: 'code'
+                }
+            });
+            setTimeout(() => {
+                expect(isCodeCell(newCell)).toBeTruthy();
+                expect(newCell.metadata.kbase.codeCell.userSettings).not.toBeDefined();
+                expect(newCell.metadata.kbase.codeCell).toEqual({
+                    'user-settings': {
+                        showCodeInputArea: true
+                    }
+                });
                 done();
             }, 100);
         });

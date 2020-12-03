@@ -303,24 +303,11 @@ define([
         },
         load: {
             value: function() {
-                return this.narrativeService.callFunc('list_objects_with_sets', [{
-                    ws_name: this.config.workspaceName,
-                    types: [this.config.type],
-                    includeMetadata: 1
-                }])
-                    .spread(function(data) {
-                        this.availableData = data.data.map(function (item) {
-                            var info = item.object_info;
-                            var objectName = info[1];
-                            var objectMeta = info[10] || {};
-                            return {
-                                info: info,
-                                objectName: objectName,
-                                metadata: objectMeta
-                            };
-                        });
-                        this.availableDataCount = this.availableData.length;                        
-                    }.bind(this));
+                return common.listObjectsWithSets(this.narrativeService, this.config.workspaceName, this.config.type)
+                    .then((data) => {
+                        this.availableData = data;
+                        this.availableDataCount = this.availableData.length;
+                    });
             }
         }
     });

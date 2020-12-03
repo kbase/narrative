@@ -54,9 +54,31 @@ define([
         }
         return arg;
     }
+
+    function listObjectsWithSets(narrativeService, workspaceName, type) {
+        return narrativeService.callFunc('list_objects_with_sets', [{
+            ws_name: workspaceName,
+            types: [type],
+            includeMetadata: 1
+        }])
+            .then(([data]) => {
+                return data.data.map((item) => {
+                    var info = item.object_info;
+                    var objectName = info[1];
+                    var metadata = info[10] || {};
+                    return {
+                        info,
+                        objectName,
+                        metadata
+                    };
+                });
+            });
+    }
+
     return Object.freeze({
         compileTemplates,
         applyMetadataTemplates,
-        requireArg
+        requireArg,
+        listObjectsWithSets
     });
 });

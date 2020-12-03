@@ -10,7 +10,7 @@ if [ -z "$ENV" ]; then
 	exit 1
 fi
 if [ -z "$PORT" ]; then
-	$PORT=8888
+	PORT=8888
 fi
 echo "Starting Narrative for environment '${ENV}'"
 
@@ -21,7 +21,7 @@ if [ "${mount_local_dirs}" == "t" ]; then
 	docker run \
 		--dns=8.8.8.8 \
 		-e "CONFIG_ENV=${ENV}" \
-		-p ${PORT}:8888 \
+		-p ${PORT} \
 		--network=kbase-dev \
 		--name=narrative  \
 		--mount type=bind,src=${root}/${kbase_dir}/static/kbase,dst=${container_root}/${kbase_dir}/static/kbase \

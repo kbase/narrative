@@ -105,7 +105,7 @@ define([
                 initialize: true,
                 importData: importData
             });
-            let elem = cell.element.find('[data-element="category-panel"] [data-element="sra"]');
+            let elem = cell.element.find('[data-element="filetype-panel"] [data-element="sra"]');
             const before = elem[0].outerHTML;
             elem.click();
             expect(elem[0].outerHTML).not.toEqual(before);

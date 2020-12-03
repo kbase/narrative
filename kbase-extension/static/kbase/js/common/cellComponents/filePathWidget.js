@@ -1,9 +1,7 @@
 define([
     'bluebird',
     'jquery',
-    // CDN
     'common/html',
-    // LOCAL
     'common/ui',
     'common/events',
     'common/props',
@@ -28,6 +26,10 @@ define([
         span = tag('span'),
         button = tag('button'),
         div = tag('div'),
+        table = tag('table'),
+        tr = tag('tr'),
+        td = tag('td'),
+        icon = tag('icon'),
         cssBaseClass = 'kb-file-path',
         cssClassType = 'parameter';
 
@@ -39,10 +41,14 @@ define([
             container,
             ui,
             bus,
-            places = {},
             model = Props.make(),
             paramResolver = ParamResolver.make(),
-            widgets = [];
+            widgets = [],
+            events = Events.make();
+
+        bus = runtime.bus().makeChannelBus({
+            description: 'An app params widget'
+        });
 
         function makeFieldWidget(appSpec, parameterSpec, value, closeParameters) {
             return paramResolver.loadInputControl(parameterSpec)
@@ -206,8 +212,33 @@ define([
                 });
         }
 
+        function updateRowNumbers(filePathRows){
+            filePathRows.forEach(function(filePathRow, index){
+                $(filePathRow).find(`.${cssBaseClass}__file_number`).text(index + 1);
+            });
+        }
+
+        function addRow(){
+            $(`.${cssBaseClass}__table`).append(
+                tr({
+                    class: `${cssBaseClass}__table_row`,
+                    dataElement: `${cssClassType}-fields-row`,
+                })
+            );
+
+            let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+
+            filePathRows.forEach((filePathRow) => {
+                // Only render row if it does not have the file path widgets as children (aka an empty row)
+                if (filePathRow.childElementCount === 0){
+                    renderFilePathRow(filePathRow);
+                }
+            });
+
+            updateRowNumbers(filePathRows);
+        }
+
         function renderLayout() {
-            const events = Events.make();
             let formContent = [];
 
             formContent = formContent.concat([
@@ -215,11 +246,11 @@ define([
                     title: span(['File Paths']),
                     name: `${cssClassType}s-area`,
                     body: [
-                        tag('div')({
+                        table({
                             class: `${cssBaseClass}__table`,
                             dataElement: `${cssClassType}-fields`
                         }, [
-                            tag('div')({
+                            tr({
                                 class: `${cssBaseClass}__table_row`,
                                 dataElement: `${cssClassType}-fields-row`,
                             })
@@ -227,7 +258,10 @@ define([
                         button({
                             class: `${cssBaseClass}__button--add_row btn btn__text`,
                             type: 'button',
-                            id: events.addEvent({ type: 'click'})
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: addRow
+                            })
                         }, [
                             span({
                                 class: `${cssBaseClass}__button_icon--add_row fa fa-plus`,
@@ -244,10 +278,8 @@ define([
             }, [
                 formContent
             ]);
-            return {
-                content: content,
-                events: events
-            };
+
+            return content;
         }
 
         // MESSAGE HANDLERS
@@ -258,31 +290,27 @@ define([
                 bus: bus
             });
             let layout = renderLayout();
-            container.innerHTML = layout.content;
-            layout.events.attachEvents(container);
-
-            places = {
-                parameterFields: ui.getElement(`${cssClassType}-fields-row`)
-            };
+            container.innerHTML = layout;
+            events.attachEvents(container);
         }
 
         // EVENTS
-        function attachEvents() {
-            bus.on('reset-to-defaults', function () {
-                widgets.forEach(function (widget) {
-                    widget.bus.emit('reset-to-defaults');
-                });
-            });
+        // function attachEvents() {
+        //     bus.on('reset-to-defaults', function () {
+        //         widgets.forEach(function (widget) {
+        //             widget.bus.emit('reset-to-defaults');
+        //         });
+        //     });
 
-            runtime.bus().on('workspace-changed', function () {
-                // tell each input widget about this amazing event!
-                widgets.forEach(function (widget) {
-                    widget.bus.emit('workspace-changed');
-                });
-            });
-        }
+        //     runtime.bus().on('workspace-changed', function () {
+        //         // tell each input widget about this amazing event!
+        //         widgets.forEach(function (widget) {
+        //             widget.bus.emit('workspace-changed');
+        //         });
+        //     });
+        // }
 
-        function makeParamsLayout(params) {
+        function makeFilePathsLayout(params) {
             let view = {},
                 paramMap = {};
 
@@ -313,108 +341,121 @@ define([
             };
         }
 
-        // LIFECYCLE API
-        function renderParameters() {
-            // First get the app specs, which is stashed in the model,
-            // with the parameters returned.
-            // Separate out the params into the primary groups.
+        function findPathParams(params){
+            return params.layout.filter(function (id) {
+                const original = params.specs[id].original;
+
+                let isFilePathParam = false;
+
+                if (original) {
+
+                    //looking for file inputs via the dynamic_dropdown data source
+                    if (original.dynamic_dropdown_options) {
+                        isFilePathParam = original.dynamic_dropdown_options.data_source === 'ftp_staging';
+                    }
+
+                    //looking for output fields - these should go in file paths
+                    else if (original.text_options && original.text_options.is_output_name) {
+                        isFilePathParam = true;
+                    }
+                }
+
+                return isFilePathParam;
+
+            }).map(function (id) {
+                return params.specs[id];
+            });
+        }
+
+        function createFilePathWidget(appSpec, filePathParams, parameterId) {
+            const spec = filePathParams.paramMap[parameterId];
+            return Promise.try(() => {
+                makeFieldWidget(appSpec, spec, initialParams[spec.id], filePathParams.layout)
+                    .then((widget) => {
+                        widgets.push(widget);
+                        return widget.start({
+                            node: document.getElementById(filePathParams.view[spec.id].id)
+                        });
+                    });
+            }).catch((ex) => {
+                const errorDisplay = div({
+                    class: 'kb-field-widget__error_message--file-paths'
+                }, [
+                    ex.message
+                ]);
+                document.getElementById(filePathParams.view[spec.id].id).innerHTML = errorDisplay;
+
+                throw new Error('Error making input field widget', ex);
+            });
+
+        }
+
+        function deleteRow(e){
+            $(e.target).closest('tr').remove();
+            let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+            updateRowNumbers(filePathRows);
+        }
+
+
+        function renderFilePathRow(filePathRow) {
             const appSpec = model.getItem('appSpec');
 
-            return Promise.try(function () {
-                const params = model.getItem('parameters');
-                let filePathParams = makeParamsLayout(
-                    params.layout.filter(function (id) {
-                        const original = params.specs[id].original;
+            const params = model.getItem('parameters');
+            let filePathParams = makeFilePathsLayout(findPathParams(params));
 
-                        let isFilePathParam = false;
+            if (!filePathParams.layout.length) {
+                ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
+            } else {
+                filePathRow.innerHTML = div({
+                    class: `${cssBaseClass}__param_container row`,
+                }, [
+                    filePathParams.content
+                ]);
 
-                        if (original) {
+                $(filePathRow).prepend(
+                    td({
+                        class: `${cssBaseClass}__file_number`,
+                    })
+                );
 
-                            //looking for file inputs via the dynamic_dropdown data source
-                            if (original.dynamic_dropdown_options) {
-                                isFilePathParam = original.dynamic_dropdown_options.data_source === 'ftp_staging';
-                            }
-
-                            //looking for output fields - these should go in file paths
-                            else if (original.text_options && original.text_options.is_output_name) {
-                                isFilePathParam = true;
-                            }
-                        }
-
-                        return isFilePathParam;
-
-                    }).map(function (id) {
-                        return params.specs[id];
-                    }));
-
-                return Promise.resolve()
-                    .then(function () {
-                        if (!filePathParams.layout.length) {
-                            // TODO: should be own node
-                            ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
-                        } else {
-                            places.parameterFields.innerHTML = div({
-                                class: `${cssBaseClass}__param_container row`,
-                            }, [
-                                filePathParams.content
-                            ]);
-
-                            return Promise.all(filePathParams.layout.map(function (parameterId) {
-                                const spec = filePathParams.paramMap[parameterId];
-                                try {
-                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id], filePathParams.layout)
-                                        .then((widget) => {
-                                            widgets.push(widget);
-                                            return widget.start({
-                                                node: document.getElementById(filePathParams.view[spec.id].id)
-                                            });
-                                        });
-                                } catch (ex) {
-                                    console.error('Error making input field widget', ex);
-                                    const errorDisplay = div({
-                                        class: 'kb-field-widget__error_message--file-paths'
-                                    }, [
-                                        ex.message
-                                    ]);
-                                    document.getElementById(filePathParams.view[spec.id].id).innerHTML = errorDisplay;
+                $(filePathRow).append(
+                    td({}, [
+                        button({
+                            class: 'btn btn__text',
+                            type: 'button',
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function(e){
+                                    deleteRow(e);
                                 }
-                            }));
-                        }
-                    }).then(function() {
-                    //     TODO: commenting out for now as we need to figure out styling for the row number and trash icon. Should have a convo with design about how they want to handle given the current designs only show how to handle one or two file inputs, and in our current example we have 3 file inputs + 1 output
-                    //     $(places.parameterFields).prepend(
-                    //         span({
-                    //             class: `${cssBaseClass}__file_number`,
-                    //         }, [
-                    //             '1'
-                    //         ])
-                    //     );
-                    //     $(places.parameterFields).append(
-                    //         span({
-                    //             class: `${cssBaseClass}__icon_cell--trash`,
-                    //         }, [
-                    //             span({
-                    //                 class: `${cssBaseClass}__icon--trash fa fa-trash-o fa-lg`,
-                    //             })
-                    //         ])
-                    //     );
-                    });
-            });
+
+                            })
+                        },[
+                            icon({
+                                class: 'fa fa-trash-o fa-lg',
+                            })
+                        ])
+                    ])
+                );
+
+                Promise.all(filePathParams.layout.map((parameterId) => {
+                    createFilePathWidget(appSpec, filePathParams, parameterId);
+                })).then(
+                    events.attachEvents(container)
+                );
+
+            }
         }
 
         function start(arg) {
             return Promise.try(function () {
-                // send parent the ready message
-
-                doAttach(arg.node);
+                let container = arg.node;
+                doAttach(container);
 
                 model.setItem('appSpec', arg.appSpec);
                 model.setItem('parameters', arg.parameters);
 
                 paramsBus.on('parameter-changed', function (message) {
-                    // Also, tell each of our inputs that a param has changed.
-                    // TODO: use the new key address and subscription
-                    // mechanism to make this more efficient.
                     widgets.forEach(function (widget) {
                         widget.bus.send(message, {
                             key: {
@@ -422,23 +463,19 @@ define([
                                 parameter: message.parameter
                             }
                         });
-                        // bus.emit('parameter-changed', message);
                     });
                 });
 
 
-                return renderParameters()
-                    .then(function () {
-                        // do something after success
-                        attachEvents();
-                    })
-                    .catch(function (err) {
-                        // do something with the error.
-                        console.error('ERROR in start', err);
-                    });
+                let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+
+                filePathRows.forEach((filePathRow) => {
+                    renderFilePathRow(filePathRow);
+                });
+                updateRowNumbers(filePathRows);
+            }).catch((error) => {
+                throw new Error('Unable to start file path widget: ', error);
             });
-
-
         }
 
         function stop() {
@@ -446,13 +483,6 @@ define([
                 // really unhook things here.
             });
         }
-
-        // CONSTRUCTION
-
-        bus = runtime.bus().makeChannelBus({
-            description: 'An app params widget'
-        });
-
 
         return {
             start: start,

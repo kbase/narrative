@@ -30,7 +30,7 @@ define([
         it('should load and start properly with the right available functions', () => {
             let panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
-                categories: fileTypes,
+                fileTypes: fileTypes,
                 header: header,
                 toggleAction: () => {}
             });
@@ -53,7 +53,7 @@ define([
         it('should respond to an update state signal modifying elements', () => {
             let panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
-                categories: fileTypes,
+                fileTypes: fileTypes,
                 header: header,
                 toggleAction: () => {}
             });
@@ -102,11 +102,11 @@ define([
                 });
         });
 
-        it('should respond to clicking on an unselected category', () => {
+        it('should respond to clicking on an unselected file type', () => {
             const clickSpy = jasmine.createSpy('clickSpy');
             let panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
-                categories: fileTypes,
+                fileTypes: fileTypes,
                 header: header,
                 toggleAction: clickSpy
             });
@@ -128,7 +128,7 @@ define([
         it('should return a promise from a stop command', () => {
             let panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
-                categories: fileTypes,
+                fileTypes: fileTypes,
                 header: header,
                 toggleAction: () => {}
             });

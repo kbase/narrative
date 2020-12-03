@@ -48,7 +48,7 @@ define([
         });
     }
 
-    describe('Test the Auth API module', () => {
+    xdescribe('Test the Auth API module', () => {
         beforeEach(() => {
             token = TestUtil.getAuthToken();
             setToken(token);

@@ -191,7 +191,7 @@ define([
             model = Props.make({
                 data: TestAppObj,
                 onUpdate: function(props) {
-                    Utils.setMeta(this.cell, 'appCell', props.getRawObject());
+                    Utils.setMeta(this.cell, 'bulkImportCell', props.getRawObject());
                 }
             });
         if (options.initialize) {

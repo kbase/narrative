@@ -511,14 +511,14 @@ define([
          */
         function buildFileTypePanel(node) {
             let fileTypes = Object.keys(typesToFiles);
-            let categories = {};
+            let fileTypesDisplay = {};
             let fileTypeMapping = {};
             let uploaders = Config.get('uploaders');
             for (const uploader of uploaders.dropdown_order) {
                 fileTypeMapping[uploader.id] = uploader.name;
             }
             for (const fileType of fileTypes) {
-                categories[fileType] = {
+                fileTypesDisplay[fileType] = {
                     label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`
                 };
             }
@@ -528,7 +528,7 @@ define([
                     label: 'Data type',
                     icon: 'icon icon-genome'
                 },
-                categories: categories,
+                fileTypes: fileTypesDisplay,
                 toggleAction: toggleFileType
             });
             return fileTypePanel.start({

@@ -164,7 +164,7 @@ define([
             value: function(query) {
                 return Promise.try(() => {
                     if (this.searchState.currentQueryState) {
-                        return;
+                        return null;
                     }
 
                     // Prepare page number

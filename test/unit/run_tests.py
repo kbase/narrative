@@ -94,8 +94,10 @@ try:
         print("starting unit tests")
         try:
             resp_unit = subprocess.check_call(
-                ["npx", "grunt", "test"], stderr=subprocess.STDOUT, shell=False
-            )
+                ["npx", "grunt", "test"],
+                stderr=subprocess.STDOUT,
+                shell=False,
+            )  # nosec
         except subprocess.CalledProcessError as e:
             resp_unit = e.returncode
     if options.integration:
@@ -109,15 +111,11 @@ try:
         print("starting integration tests")
         try:
             resp_integration = subprocess.check_call(
-                [
-                    "npx",
-                    "wdio",
-                    "test/integration/wdio.conf.js",
-                ],
+                ["npx", "wdio", "test/integration/wdio.conf.js"],
                 stderr=subprocess.STDOUT,
                 env=env,
                 shell=False,
-            )
+            )  # nosec
         except subprocess.CalledProcessError as e:
             resp_integration = e.returncode
 except Exception as e:

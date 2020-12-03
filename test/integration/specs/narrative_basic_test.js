@@ -15,7 +15,7 @@ const allTestCases = {
             narrativeId: 78050
         }
     }
-}
+};
 
 const testCases = allTestCases[env];
 

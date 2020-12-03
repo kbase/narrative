@@ -23,9 +23,9 @@ define([
             };
         });
 
-        afterAll(() => {
-            Jupyter.narrative = null;
-        });
+        // afterAll(() => {
+        //     Jupyter.narrative = null;
+        // });
 
         it('should start and render itself', () => {
             const bus = Runtime.make().bus();

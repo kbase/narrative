@@ -13,7 +13,6 @@ define([
     'kb_common/html',
     'util/string',
     './widgets/outputCell',
-    'custom/custom'
 ], function(
     Promise,
     $,

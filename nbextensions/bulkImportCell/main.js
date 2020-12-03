@@ -18,19 +18,14 @@ define([
     'bluebird',
     'common/runtime',
     'common/error',
-    './bulkImportCell',
-    'kb_service/client/workspace',
-    'kb_service/utils',
-    'custom/custom'
+    './bulkImportCell'
 ], function(
     $,
     Jupyter,
     Promise,
     Runtime,
     Error,
-    BulkImportCell,
-    Workspace,
-    serviceUtils,
+    BulkImportCell
 ) {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';

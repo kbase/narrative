@@ -12,7 +12,6 @@ define([
     'common/jupyter',
     'kb_common/html',
     './widgets/dataCell',
-    'custom/custom'
 ], function(
     Promise,
     $,

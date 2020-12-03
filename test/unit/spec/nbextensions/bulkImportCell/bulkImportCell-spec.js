@@ -19,9 +19,9 @@ define([
             };
         });
 
-        afterAll(() => {
-            Jupyter.narrative = null;
-        });
+        // afterAll(() => {
+        //     Jupyter.narrative = null;
+        // });
 
         it('should construct a bulk import cell class', () => {
             const cell = Mocks.buildMockCell('code');

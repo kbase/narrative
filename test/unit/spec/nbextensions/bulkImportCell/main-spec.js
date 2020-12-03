@@ -22,9 +22,9 @@ define([
             };
         });
 
-        afterAll(() => {
-            Jupyter.narrative = null;
-        });
+        // afterAll(() => {
+        //     Jupyter.narrative = null;
+        // });
 
         beforeEach(() => {
             // mock the notebook for the main module

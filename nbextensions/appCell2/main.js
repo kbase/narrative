@@ -25,8 +25,7 @@ define([
     'kb_service/utils',
     'kb_service/client/workspace',
     './appCell',
-    'bootstrap',
-    'custom/custom'
+    'bootstrap'
 ], function(
     $,
     Jupyter,

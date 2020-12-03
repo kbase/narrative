@@ -34,7 +34,6 @@ define([
     'kb_service/client/workspace',
     './widgets/appInfoDialog',
     'bootstrap',
-    'custom/custom'
 ], function(
     $,
     Jupyter,

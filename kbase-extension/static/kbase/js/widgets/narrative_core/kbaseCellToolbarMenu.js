@@ -8,8 +8,7 @@ define([
     'common/utils',
     'util/bootstrapDialog',
     'kbase/js/widgets/appInfoPanel',
-    'narrativeConfig',
-    'custom/custom'
+    'narrativeConfig'
 ], function (
     $,
     html,

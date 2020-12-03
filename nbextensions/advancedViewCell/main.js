@@ -34,7 +34,6 @@ define([
     'kb_service/utils',
     'kb_service/client/workspace',
     'bootstrap',
-    'custom/custom'
 ], function(
     $,
     Promise,

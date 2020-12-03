@@ -18,18 +18,18 @@ const fs = require('fs');
  * @returns {Object} A config object with the following keys: OS, OS_VERSION, BROWSER, BROWSER_VERSION, SERVICE, WIDTH, HEIGHT
  */
 function importEnv() {
-    const isRemoteService = (process.env.SERVICE === 'browserstack');
-    const OS = process.env.OS || (isRemoteService ? 'Windows' : null);
-    const OS_VERSION = process.env.OS_VERSION || (isRemoteService ? '10' : null);
-    const BROWSER = process.env.BROWSER || 'chrome';
-    const BROWSER_VERSION = process.env.BROWSER_VERSION || (isRemoteService ? 'latest' : null);
-    const SERVICE = process.env.SERVICE || 'selenium-standalone';
-    const HEADLESS = process.env.HEADLESS || (isRemoteService ? 'f' : 't');
+    const e = process.env;
 
-    const WIDTH= process.env.WIDTH || 1366;
-    const HEIGHT= process.env.HEIGHT || 768;
+    const isRemoteService = (e.SERVICE === 'browserstack');
+    const OS = e.OS || (isRemoteService ? 'Windows' : null);
+    const OS_VERSION = e.OS_VERSION || (isRemoteService ? '10' : null);
+    const BROWSER = e.BROWSER || 'chrome';
+    const BROWSER_VERSION = e.BROWSER_VERSION || (isRemoteService ? 'latest' : null);
+    const SERVICE = e.SERVICE || 'selenium-standalone';
+    const HEADLESS = e.HEADLESS || (isRemoteService ? 'f' : 't');
+
     return {
-        OS, OS_VERSION, BROWSER, BROWSER_VERSION, HEADLESS, SERVICE, WIDTH, HEIGHT
+        OS, OS_VERSION, BROWSER, BROWSER_VERSION, HEADLESS, SERVICE
     };
 }
 
@@ -49,17 +49,6 @@ function processPreset(preset) {
 
     const e = process.env;
 
-    const [width, height] = (() => {
-        if (!process.env.PRESET_DIMENSIONS) {
-            return [1024, 768];
-        }
-        switch (process.env.PRESET_DIMENSIONS) {
-            case 'xga': return [1024, 768];
-            case 'hd': return [1920, 1080];
-            default: throw new Error(`Not a valid PRESET_DIMENSIONS: "${process.env.PRESET_DIMENSIONS}"`);
-        }
-    })();
-
     switch (preset) {
         case 'bs-win-chrome':
             return {
@@ -68,9 +57,7 @@ function processPreset(preset) {
                 BROWSER: 'chrome',
                 BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
                 HEADLESS: e.HEADLESS || 'f',
-                SERVICE: 'browserstack',
-                WIDTH: e.WIDTH || width,
-                HEIGHT: e.HEIGHT || height
+                SERVICE: 'browserstack'
             };
         case 'bs-win-firefox':
             return {
@@ -79,9 +66,7 @@ function processPreset(preset) {
                 BROWSER: 'firefox',
                 BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
                 HEADLESS: e.HEADLESS || 'f',
-                SERVICE: 'browserstack',
-                WIDTH: e.WIDTH || width,
-                HEIGHT: e.HEIGHT || height
+                SERVICE: 'browserstack'
             };
         case 'bs-mac-chrome':
             return {
@@ -90,9 +75,7 @@ function processPreset(preset) {
                 BROWSER: 'chrome',
                 BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
                 HEADLESS: e.HEADLESS || 'f',
-                SERVICE: 'browserstack',
-                WIDTH: e.WIDTH || width,
-                HEIGHT: e.HEIGHT || height
+                SERVICE: 'browserstack'
             };
         case 'bs-mac-firefox':
             return {
@@ -101,9 +84,7 @@ function processPreset(preset) {
                 BROWSER: 'firefox',
                 BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
                 HEADLESS: e.HEADLESS || 'f',
-                SERVICE: 'browserstack',
-                WIDTH: e.WIDTH || width,
-                HEIGHT: e.HEIGHT || height
+                SERVICE: 'browserstack'
             };
         case 'ss-firefox':
             // TODO: detect platform
@@ -113,9 +94,7 @@ function processPreset(preset) {
                 BROWSER: 'firefox',
                 BROWSER_VERSION: null, // will use the installed browser on this host
                 HEADLESS: e.HEADLESS || 't',
-                SERVICE: 'selenium-standalone',
-                WIDTH: e.WIDTH || width,
-                HEIGHT: e.HEIGHT || height
+                SERVICE: 'selenium-standalone'
             };
         case 'ss-chrome':
             // TODO: detect platform
@@ -125,9 +104,7 @@ function processPreset(preset) {
                 BROWSER: 'chrome',
                 BROWSER_VERSION: null, // will use the installed browser on this host
                 HEADLESS: e.HEADLESS || 't',
-                SERVICE: 'selenium-standalone',
-                WIDTH: e.WIDTH || width,
-                HEIGHT: e.HEIGHT || height
+                SERVICE: 'selenium-standalone'
             };
         case 'cd':
             // TODO: detect platform
@@ -137,9 +114,7 @@ function processPreset(preset) {
                 BROWSER: 'chrome',
                 BROWSER_VERSION: null, // will use the installed chrome on this host
                 HEADLESS: e.HEADLESS || 't',
-                SERVICE: 'chromedriver',
-                WIDTH: e.WIDTH || width,
-                HEIGHT: e.HEIGHT || height
+                SERVICE: 'chromedriver'
             };
         default: 
             throw new Error(`Sorry, "${preset}" is not a preset`);
@@ -147,19 +122,32 @@ function processPreset(preset) {
 }
 
 function makeConfig() {
-    const preset = process.env.PRESET || null;
+    const e = process.env;
+    const preset = e.PRESET || null;
     const presetConfig = processPreset(preset);
-    
+
+    const [width, height] = (() => {
+        if (!e.PRESET_DIMENSIONS) {
+            return [1024, 768];
+        }
+        switch (e.PRESET_DIMENSIONS) {
+            case 'xga': return [1024, 768];
+            case 'hd': return [1920, 1080];
+            default: throw new Error(`Not a valid PRESET_DIMENSIONS: "${e.PRESET_DIMENSIONS}"`);
+        }
+    })();
 
     return {
         ...presetConfig, 
+        WIDTH: e.WIDTH || width,
+        HEIGHT: e.HEIGHT || height,
         // Note that these service configs are only used for browserstack.
-        SERVICE_USER: process.env.SERVICE_USER || null,
-        SERVICE_KEY: process.env.SERVICE_KEY || null,
+        SERVICE_USER: e.SERVICE_USER || null,
+        SERVICE_KEY: e.SERVICE_KEY || null,
 
-        BASE_URL: process.env.BASE_URL || 'http://localhost:8888',
-        ENV: process.env.ENV || 'ci',
-        HEADLESS: process.env.HEADLESS || 't'
+        BASE_URL: e.BASE_URL || 'http://localhost:8888',
+        ENV: e.ENV || 'ci',
+        HEADLESS: e.HEADLESS || 't'
     };
 }
 

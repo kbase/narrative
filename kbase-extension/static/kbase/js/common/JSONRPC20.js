@@ -37,7 +37,7 @@ define([
                 signal: controller.signal,
                 cancel,
                 started: Date.now()
-            };
+            }; //NOPMD
         }
 
         callMethod({method, params, timeout}) {

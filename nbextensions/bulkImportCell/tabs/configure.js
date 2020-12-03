@@ -17,31 +17,22 @@ define([
 ) => {
     'use strict';
 
-    // const div = html.tag('div'),
-    //     span = html.tag('span'),
-    //     form = html.tag('form'),
-    //     cssCellType = 'kb-bulk-import-configure';
-
     /*
         Options:
             bus: message bus
-            workspaceInfo: workspace information
             model: cell metadata
             spec: app spec
     */
     function ConfigureWidget(options) {
-        const workspaceInfo = options.workspaceInfo,
-            model = options.model,
+        const model = options.model,
             spec = options.spec;
 
         let container = null,
-            // ui = null,
             runtime = Runtime.make();
 
         /**
          * args includes:
          *  - node - the DOM node to act as this widget's container
-         *  - workspaceInfo - workspace information used to intialize the parameter widget
          * @param {object} args
          */
         function start(args) {
@@ -78,7 +69,7 @@ define([
 
             const widget = ParamsWidget.make({
                 bus: paramBus,
-                workspaceInfo: workspaceInfo,
+                workspaceId: runtime.workspaceId(),
                 initialParams: model.getItem('params')
             });
 
@@ -167,7 +158,7 @@ define([
 
             const widget = FilePathWidget.make({
                 bus: paramBus,
-                workspaceInfo: workspaceInfo,
+                workspaceId: runtime.workspaceId(),
                 initialParams: model.getItem('params')
             });
 

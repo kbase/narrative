@@ -1,4 +1,4 @@
-/* global describe it expect beforeEach spyOn afterEach */
+/* global describe it expect beforeEach spyOn afterEach beforeAll afterAll */
 
 define([
     'jquery',
@@ -16,6 +16,16 @@ define([
     'use strict';
 
     describe('test the bulkImportCell entrypoint module', () => {
+        beforeAll(() => {
+            Jupyter.narrative = {
+                getAuthToken: () => 'fakeToken'
+            };
+        });
+
+        afterAll(() => {
+            Jupyter.narrative = null;
+        });
+
         beforeEach(() => {
             // mock the notebook for the main module
             const cell = Mocks.buildMockCell('code', 'app-bulk-import');

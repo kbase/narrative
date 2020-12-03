@@ -3,8 +3,9 @@
 */
 
 $component-border: rgb(196, 196, 196);
-$category-icon-color: rgb(3, 81, 125);
-$category-highlight-color: rgb(204, 229, 243);
+$filetype-icon-color: rgb(3, 81, 125);
+$filetype-highlight-color: rgb(204, 229, 243);
+$filetype-hover-color: #E7EFF8;
 $panel-separator-color: rgb(33, 150, 243);
 $button-outdated: rgb(247, 155, 34);
 
@@ -63,8 +64,8 @@ $button-outdated: rgb(247, 155, 34);
     }
   }
 
-  /* kb-bulk-import__category_panel */
-  &__category_panel {
+  /* kb-bulk-import__filetype_panel */
+  &__filetype_panel {
     width: 232px;
     border-right: 1px solid $component-border;
 
@@ -79,36 +80,37 @@ $button-outdated: rgb(247, 155, 34);
       }
     }
 
-    &__category {
-      /* .kb-bulk-import__category_panel__category_button */
+    &__filetype {
+      /* .kb-bulk-import__filetype_panel__filetype_button */
       &_button {
         display: flex;
         width: 100%;
         flex-direction: row;
         padding: 8px;
         border: 0 0 1px 0 solid $component-border;
+        border-bottom: 1px solid $component-border;
         background-color: inherit;
         font: normal 400 14px/1.6 $typeface-page-text;
         text-align: left;
 
         &:hover:not(&--selected) {
-          background-color: $category-highlight-color;
+          background-color: $filetype-hover-color;
           cursor: pointer;
         }
 
-      /* .kb-bulk-import__category_panel__category_button--selected */
+      /* .kb-bulk-import__filetype_panel__filetype_button--selected */
       &--selected {
-          background-color: $category-highlight-color;
+          background-color: $filetype-highlight-color;
         }
       }
 
-      /* .kb-bulk-import__category_panel__category_icon */
+      /* .kb-bulk-import__filetype_panel__filetype_icon */
       &_icon {
-        padding: 2px 8px 8px;
-        color: $category-icon-color;
+        padding: 2px 8px 0 8px;
+        color: $filetype-icon-color;
       }
 
-      /* .kb-bulk-import__category_panel__category_label */
+      /* .kb-bulk-import__filetype_panel__filetype_label */
       &_label {
         flex: 1;
       }
@@ -250,15 +252,8 @@ $button-outdated: rgb(247, 155, 34);
     flex: 1;
   }
 
-  /* .kb-file-path__icon--trash */
-  &__icon--trash {
-    color: rgb(67, 121, 177);
-    margin-top: 35px;
-    margin-left: 5px;
-  }
-
   &__button--add_row {
-
+    margin-left: 10px;
   }
 
   &__button_icon--add_row {
@@ -267,7 +262,7 @@ $button-outdated: rgb(247, 155, 34);
 
   &__file_number {
     font-weight: 700;
-    margin: 5px;
+    padding-right: 10px;
   }
 
 }

@@ -1,4 +1,4 @@
-/* global describe, it, expect, spyOn */
+/* global describe it expect spyOn beforeAll afterAll */
 define([
     '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
     'base/js/namespace',
@@ -13,6 +13,16 @@ define([
     'use strict';
 
     describe('test the bulk import cell module', () => {
+        beforeAll(() => {
+            Jupyter.narrative = {
+                getAuthToken: () => 'fakeToken'
+            };
+        });
+
+        afterAll(() => {
+            Jupyter.narrative = null;
+        });
+
         it('should construct a bulk import cell class', () => {
             const cell = Mocks.buildMockCell('code');
             expect(cell.getIcon).not.toBeDefined();
@@ -95,7 +105,7 @@ define([
                 initialize: true,
                 importData: importData
             });
-            let elem = cell.element.find('[data-element="category-panel"] [data-element="sra"]');
+            let elem = cell.element.find('[data-element="filetype-panel"] [data-element="sra"]');
             const before = elem[0].outerHTML;
             elem.click();
             expect(elem[0].outerHTML).not.toEqual(before);

@@ -28,7 +28,7 @@ define([
     Promise,
     Runtime,
     Error,
-    BulkImportCell, 
+    BulkImportCell,
     Workspace,
     serviceUtils,
 ) {
@@ -40,13 +40,12 @@ define([
      * This gets called on extension initialization. This iterates over all existing cells,
      * and if it's a bulk import cell, then we init the wrapping BulkImportCell class.
      */
-    function setupNotebook(workspaceInfo) {
+    function setupNotebook() {
         return Promise.all(Jupyter.notebook.get_cells().map((cell) => {
             if (BulkImportCell.isBulkImportCell(cell)) {
                 try {
                     BulkImportCell.make({
-                        cell,
-                        workspaceInfo
+                        cell
                     });
                 }
                 catch(error) {
@@ -63,18 +62,6 @@ define([
         }));
     }
 
-
-    function setupWorkspace(workspaceUrl) {
-        // TODO where to get config from generally?
-        var workspaceRef = { id: runtime.workspaceId() },
-            workspace = new Workspace(workspaceUrl, {
-                token: runtime.authToken()
-            });
-
-        return workspace.get_workspace_info(workspaceRef);
-
-    }
-
     /*
      * Called directly by Jupyter during the notebook startup process.
      * Called after the notebook is loaded and the dom structure is created.
@@ -82,8 +69,6 @@ define([
      * the bulk import cells.
      */
     function load_ipython_extension() {
-        let workspaceInfo;
-
         // Listen for interesting narrative jquery events...
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
@@ -94,13 +79,7 @@ define([
             runtime.bus().emit('workspace-changed');
         });
 
-        setupWorkspace(runtime.config('services.workspace.url'))
-            .then(function(wsInfo) {
-                workspaceInfo = serviceUtils.workspaceInfoToObject(wsInfo);
-            })
-            .then(function() {
-                return setupNotebook(workspaceInfo);
-            })
+        return setupNotebook()
             .then(() => {
                 $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
                     const cell = payload.cell,
@@ -118,8 +97,7 @@ define([
                         BulkImportCell.make({
                             cell,
                             importData,
-                            initialize: true,
-                            workspaceInfo
+                            initialize: true
                         });
                     }
                     catch(error) {

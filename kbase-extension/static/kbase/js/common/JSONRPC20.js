@@ -33,11 +33,11 @@ define([
             const cancel = () => {
                 window.clearTimeout(timeout);
             };
-            return {
+            return { //NOPMD
                 signal: controller.signal,
                 cancel,
                 started: Date.now()
-            }; //NOPMD
+            }; 
         }
 
         callMethod({method, params, timeout}) {

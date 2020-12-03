@@ -298,7 +298,7 @@ const allTestCases = {
     }
 };
 
-const testCases = allTestCases[browser.config.env.ENV];
+const testCases = allTestCases[browser.config.testParams.ENV];
 
 async function testField({container, id, label, value}) {
     const lineageLabel = await container.$(`[role="row"][data-test-id="${id}"] [data-test-id="label"]`);
@@ -476,10 +476,10 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
         await browser.keys('Enter');
 
         await browser.waitUntil(async () => {
-            const foundCount = await publicPanel.$('[data-test-id="found-count"]');
+            const foundCountElement = await publicPanel.$('[data-test-id="found-count"]');
             
-            if (await foundCount.isDisplayed()) {
-                const text = await foundCount.getText();
+            if (await foundCountElement.isDisplayed()) {
+                const text = await foundCountElement.getText();
                 return text === testCase.foundCount;
             } else {
                 return false;
@@ -502,9 +502,9 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
         // When using roles, we sometimes need to be very specific in our queries.
         // Maybe roles are not suitable for integration tests, then.
         for (const scrollRow of testCase.scrolls) {
-            const rows = await waitForRows(publicPanel, scrollRow);
-            const row = rows[scrollRow - 1];
-            await row.scrollIntoView();
+            const rowElements = await waitForRows(publicPanel, scrollRow);
+            const rowElement = rowElements[scrollRow - 1];
+            await rowElement.scrollIntoView();
         }
 
         // ensure we have all of the rows.

@@ -179,7 +179,7 @@ const serviceConfigs = {
     }
 };
 
-const config = makeConfig();
+const testParams = makeConfig();
 
 /**
  * Constructs a capabilities object for the current test configuration.
@@ -251,22 +251,22 @@ function makeCapabilities(config) {
     }
 }
 
-const CAPABILITIES = makeCapabilities(config);
+const CAPABILITIES = makeCapabilities(testParams);
 
 console.log('Test Settings');
 console.log('-----------------');
-console.log('ENV             : ' + config.ENV);
-console.log('BASE_URL        : ' + config.BASE_URL);
-console.log('BROWSER         : ' + config.BROWSER);
-console.log('BROWSER VERSION : ' + config.BROWSER_VERSION);
-console.log('WIDTH           : ' + config.WIDTH);
-console.log('HEIGHT          : ' + config.HEIGHT);
-console.log('OS              : ' + config.OS);
-console.log('OS VERSION      : ' + config.OS_VERSION);
-console.log('HEADLESS        : ' + config.HEADLESS);
-console.log('TEST SERVICE    : ' + config.SERVICE);
-console.log('SERVICE USER    : ' + config.SERVICE_USER);
-console.log('SERVICE KEY     : ' + config.SERVICE_KEY);
+console.log('ENV             : ' + testParams.ENV);
+console.log('BASE_URL        : ' + testParams.BASE_URL);
+console.log('BROWSER         : ' + testParams.BROWSER);
+console.log('BROWSER VERSION : ' + testParams.BROWSER_VERSION);
+console.log('WIDTH           : ' + testParams.WIDTH);
+console.log('HEIGHT          : ' + testParams.HEIGHT);
+console.log('OS              : ' + testParams.OS);
+console.log('OS VERSION      : ' + testParams.OS_VERSION);
+console.log('HEADLESS        : ' + testParams.HEADLESS);
+console.log('TEST SERVICE    : ' + testParams.SERVICE);
+console.log('SERVICE USER    : ' + testParams.SERVICE_USER);
+console.log('SERVICE KEY     : ' + testParams.SERVICE_KEY);
 console.log('-----------------');
 
 const wdioConfig = {
@@ -367,7 +367,7 @@ const wdioConfig = {
     // with `/`, the base url gets prepended, not including the path portion of your baseUrl.
     // If your `url` parameter starts without a scheme or `/` (like `some/path`), the base url
     // gets prepended directly.
-    baseUrl: config.BASE_URL,
+    baseUrl: testParams.BASE_URL,
     //
     // Default timeout for all waitFor* commands.
     waitforTimeout: 30000,
@@ -383,7 +383,7 @@ const wdioConfig = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-    services: [[config.SERVICE, serviceConfigs[config.SERVICE]]],
+    services: [[testParams.SERVICE, serviceConfigs[testParams.SERVICE]]],
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
@@ -557,13 +557,13 @@ const wdioConfig = {
     //}
 };
 
-wdioConfig.env = config;
+wdioConfig.testParams = testParams;
 
 // Only set the service if it is an online service; setting the
 // user and key otherwise will trigger a warning or error.
-if (config.SERVICE === 'browserstack') {
-    wdioConfig.user = config.SERVICE_USER;
-    wdioConfig.key = config.SERVICE_KEY;
+if (testParams.SERVICE === 'browserstack') {
+    wdioConfig.user = testParams.SERVICE_USER;
+    wdioConfig.key = testParams.SERVICE_KEY;
 }
 
 exports.config = wdioConfig;

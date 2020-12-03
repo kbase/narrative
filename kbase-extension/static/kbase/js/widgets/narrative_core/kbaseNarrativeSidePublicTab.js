@@ -528,16 +528,16 @@ define ([
             } else {
                 var dataSourceType = dataSourceTypes[dataSourceConfig.sourceType];
                
-                var urls = Object.keys(dataSourceType.serviceDependencies)
-                    .reduce(function (urls, key) {
+                const urls = Object.keys(dataSourceType.serviceDependencies)
+                    .reduce((accumUrls, key) => {
                         var configKey = dataSourceType.serviceDependencies[key];
-                        urls[key] = Config.url(configKey);
-                        return urls;
+                        accumUrls[key] = Config.url(configKey);
+                        return accumUrls;
                     }, {});
                 dataSource = Object.create(dataSourceType.baseObject)
                     .init({
                         config: dataSourceConfig,
-                        urls: urls,
+                        urls,
                         token: this.token,
                         pageSize: this.itemsPerPage
                     });

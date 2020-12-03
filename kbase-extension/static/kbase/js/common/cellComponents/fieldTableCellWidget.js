@@ -129,14 +129,11 @@ define([
         function start(arg) {
             return attach(arg.node)
                 .then(function() {
-                    console.log('REACHED 1');
                     if (inputControl.start) {
                         return inputControl.start({
                             node: places.inputControl
                         })
                             .then(function() {
-
-                                console.log('REACHED 2');
                                 // TODO: get rid of this pattern
                                 bus.emit('run', {
                                     node: places.inputControl
@@ -150,8 +147,6 @@ define([
             return Promise.try(function() {
                 return inputControl.stop()
                     .then(function() {
-
-                    console.log('REACHED 3')
                         if (parent && container) {
                             parent.removeChild(container);
                         }

@@ -1,5 +1,5 @@
 # Adapted from a Karma test startup script
-# developebd by the Jupyter team here;
+# developed by the Jupyter team here;
 # https://github.com/jupyter/jupyter-js-services/blob/master/test/run_test.py
 #
 # Also uses the flow where we assign a os process group id and shut down the
@@ -90,8 +90,10 @@ resp_unit = 0
 resp_integration = 0
 try:
     if options.unit:
-        nb_server = run_narrative()
         print("starting unit tests")
+        print("starting narrative")
+        nb_server = run_narrative()
+        print("narrative started")
         try:
             resp_unit = subprocess.check_call(
                 ["npx", "grunt", "test"],

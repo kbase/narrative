@@ -1,9 +1,3 @@
-/*global beforeEach */
-/*global define*/ // eslint-disable-line no-redeclare
-/*global describe, expect, it*/
-/*global beforeAll, afterAll*/
-/*jslint white: true*/
-
 define([
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',

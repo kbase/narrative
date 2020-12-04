@@ -1,9 +1,3 @@
-/*global beforeEach */
-/*global define*/ // eslint-disable-line no-redeclare
-/*global describe, expect, it*/
-/*global beforeAll, afterAll*/
-/*jslint white: true*/
-
 define([
     'common/cellComponents/filePathWidget',
     'jquery',
@@ -110,8 +104,7 @@ define([
             }).then(() => {
                 let preClickNumberOfRows = $('tr').length;
                 expect(preClickNumberOfRows).toEqual(1);
-                console.log($(node).find('.kb-file-path__button--add_row btn btn__text'));
-                $(node).find('.kb-file-path__button--add_row btn btn__text').click();
+                $('button')[1].click();
                 let postClickNumberOfRows = $('tr').length;
                 expect(postClickNumberOfRows).toEqual(2);
             });
@@ -125,7 +118,7 @@ define([
             }).then(() => {
                 let preClickNumberOfRows = $('tr').length;
                 expect(preClickNumberOfRows).toEqual(1);
-                $('.btn btn__text').click();
+                $('button')[0].click();
                 let postClickNumberOfRows = $('tr').length;
                 expect(postClickNumberOfRows).toEqual(0);
             });

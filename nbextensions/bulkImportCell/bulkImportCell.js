@@ -343,6 +343,9 @@ define([
             cell.metadata = meta;
             render()
                 .then(() => {
+                    cell.renderMinMax();
+                    // force toolbar refresh
+                    cell.metadata = cell.metadata;
                     updateState();
                     toggleTab(state.tab.selected);
                 });

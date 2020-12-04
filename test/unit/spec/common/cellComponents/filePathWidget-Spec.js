@@ -68,7 +68,7 @@ define([
             $('body').empty();
         });
 
-        it('has a factory which can be invoked', function() {
+        it('has a make function that returns an object', function() {
             expect(filePathWidget).not.toBe(null);
         });
 
@@ -84,15 +84,19 @@ define([
                 appSpec: spec,
                 parameters: parameters,
             }).then(() => {
-                expect(node.innerHTML).toContain('File Paths');
-                expect(node.innerHTML).toContain('kb-file-path__table');
-                expect(node.innerHTML).toContain('kb-file-path__table_row');
-                expect(node.innerHTML).toContain('kb-file-path__file_number');
-                expect(node.innerHTML).toContain('1');
-                expect(node.innerHTML).toContain('fastq_rev_staging_file_name');
-                expect(node.innerHTML).toContain('sra_staging_file_name');
-                expect(node.innerHTML).toContain('fa fa-trash-o fa-lg');
-                expect(node.innerHTML).toContain('Add Row');
+                const contents = [
+                    'File Paths',
+                    'kb-file-path__table',
+                    'kb-file-path__table_row',
+                    'kb-file-path__file_number',
+                    '1',
+                    'fastq_rev_staging_file_name',
+                    'fa fa-trash-o fa-lg',
+                    'Add Row'
+                ];
+                contents.forEach( (item) => {
+                    expect(node.innerHTML).toContain(item);
+                });
             });
         });
 

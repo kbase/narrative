@@ -70,6 +70,9 @@ async function openNarrative(workspaceId) {
     await loginButton.waitForDisplayed({
         timeout,
         timeoutMsg: `Timeout after waiting ${timeout}ms for login button to appear`
+    }); 
+    await browser.waitUntil(() => {
+        return loginButton.isClickable();
     });
     await loginButton.click();
     const userLabelElement = await $('[data-element="user-label"]');

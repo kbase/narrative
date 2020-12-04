@@ -89,12 +89,12 @@ async function openNarrative(workspaceId) {
         timeout,
         timeoutMsg: `Timeout after waiting ${timeout}ms for login button to appear`
     }); 
-    await browser.waitUntil(async () => {
-        const clickable = await loginButton.isClickable();
-        console.log('is it?', clickable);
-        return clickable;
-    });
-    console.log('DEBUG: clickable');
+    // await browser.waitUntil(async () => {
+    //     const clickable = await loginButton.isClickable();
+    //     console.log('is it?', clickable);
+    //     return clickable;
+    // });
+    console.log('DEBUG: skipping clickable test');
     await loginButton.click();
     console.log('DEBUG: clicked');
     const userLabelElement = await $('[data-element="user-label"]');

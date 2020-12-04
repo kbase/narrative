@@ -25,7 +25,7 @@ function importEnv() {
     const OS_VERSION = e.OS_VERSION || (isRemoteService ? '10' : null);
     const BROWSER = e.BROWSER || 'chrome';
     const BROWSER_VERSION = e.BROWSER_VERSION || (isRemoteService ? 'latest' : null);
-    const SERVICE = e.SERVICE || 'selenium-standalone';
+    const SERVICE = e.SERVICE || 'chromedriver';
     const HEADLESS = e.HEADLESS || (isRemoteService ? 'f' : 't');
 
     return {

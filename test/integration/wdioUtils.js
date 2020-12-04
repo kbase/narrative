@@ -81,6 +81,10 @@ async function openNarrative(workspaceId) {
         reverse: true
     });
     console.log('it has disappeared');
+
+    const $debug =  await $('#__EAP_DEBUG__');
+    const debugText = await $debug.getAttribute('data-debug-value');
+    console.log('DEBUG:', debugText);
     
 
     // Ensure logged in
@@ -90,6 +94,7 @@ async function openNarrative(workspaceId) {
         timeoutMsg: `Timeout after waiting ${timeout}ms for login button to appear`
     }); 
 
+    // DEBUG vvv
     const dialog = await $('.modal.fade.in[role="dialog"]');
     await dialog.waitForDisplayed({
         timeout,
@@ -112,6 +117,8 @@ async function openNarrative(workspaceId) {
     });
     const dialogBodyText = await dialogBody.getText();
     console.log('DIALOG', dialogBodyText);
+
+    // DEBUG ^^
 
     // await browser.waittUntil(async () => {
     //     const clickable = await loginButton.isClickable();

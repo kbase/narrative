@@ -67,7 +67,7 @@ define ([
 
     function showTokenInjectionDialog() {
         var $inputField = $('<input type="text" class="form-control">');
-        var $body = $('<div>')
+        var $body = $('<div data-test-id="dev-login">')
             .append('<div>You appear to be working on a local development environment of the Narrative Interface, but you don\'t have a valid auth token. You can paste one in below.</div>')
             .append('<div><b>You are operating in the ' + Config.get('environment') + ' environment.')
             .append($('<div>').append($inputField));
@@ -146,10 +146,11 @@ define ([
          * First timer - check for token existence very second.
          * trigger the logout behavior if it's not there.
          */
-        var lastCheckTime = new Date().getTime(),
-            browserSleepValidateTime = Config.get('auth_sleep_recheck_ms'),
-            validateOnCheck = false,
-            validationInProgress = false;
+        let lastCheckTime = new Date().getTime();
+        const browserSleepValidateTime = Config.get('auth_sleep_recheck_ms');
+        let validateOnCheck = false;
+        let validationInProgress = false;
+
         tokenCheckTimer = setInterval(function() {
             var token = authClient.getAuthToken();
             if (!token) {
@@ -183,20 +184,45 @@ define ([
             }
         }, 1000);
 
-        var currentTime = new Date().getTime();
+        const currentTime = new Date().getTime();
+
         if (currentTime >= tokenExpirationTime) {
             // already expired! logout!
             tokenTimeout();
         }
+
+        // adjust current time so it expires 
+        // currentTime = tokenExpirationTime + (1000 * 60 * 5) + 1;
+        // console.log('TOKEN EXPIRATION', tokenExpirationTime, currentTime, tokenExpirationTime - currentTime);
+
+        // trigger warning by setting the expiration  to now + 5 minutes + 10ms
+        // tokenExpirationTime = currentTime + (1000 * 60 * 5) + 10;
+
         var timeToWarning = tokenExpirationTime - currentTime - (1000 * 60 * 5);
+
+        // fake it to be 100ms until warning.
+        // timeToWarning  = 100;
+
+        // TODO: REMOVE WHEN DONE DEBUGGING vvv
+        const debug = `EXPIRING SOON ${timeToWarning}, ${tokenExpirationTime}, ${currentTime}, ${tokenExpirationTime - currentTime}`;
+        const $debug = $('<div id="__EAP_DEBUG__"></div>');
+        $debug.attr('data-debug-value', debug);
+        $(document.body).append($debug);
+        // TODO: REMOVE WHEN DONE DEBUGGING ^^^
+
         if (timeToWarning <= 0) {
-            timeToWarning = 0;
+            return;
         }
-        else {
-            tokenWarningTimer = setTimeout(function() {
-                showAboutToLogoutDialog(tokenExpirationTime);
-            }, timeToWarning);
-        }
+
+        // note that if token is expired according to the comparison above, we do not
+        // so the dialog.
+        
+        // The timer is always started, and will appear when "timeToWarning" elapses, which should be
+        // 5 minutes before the token actually expires, or if the 0 < timeToWarning < 5, it could be 
+        // sooner.
+        tokenWarningTimer = setTimeout(function() {
+            showAboutToLogoutDialog(tokenExpirationTime);
+        }, timeToWarning);
     }
 
     function clearTokenCheckTimers() {

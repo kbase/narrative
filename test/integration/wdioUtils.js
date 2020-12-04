@@ -89,7 +89,31 @@ async function openNarrative(workspaceId) {
         timeout,
         timeoutMsg: `Timeout after waiting ${timeout}ms for login button to appear`
     }); 
-    // await browser.waitUntil(async () => {
+
+    const dialog = await $('.modal.fade.in[role="dialog"]');
+    await dialog.waitForDisplayed({
+        timeout,
+        timeoutMsg: `Timeout after waiting ${timeout}ms for loading dialog to appear`
+    });
+    const dialogTitle = await dialog.$('.modal-title');
+    await browser.waitUntil(async () => {
+        const text = await dialogTitle.getText();
+        return (text && text.length > 0);
+    });
+    const dialogText = await dialogTitle.getText();
+    console.log('DIALOG', dialogText);
+
+    await browser.pause(1000);
+
+    const dialogBody = await dialog.$('.modal-body');
+    await browser.waitUntil(async () => {
+        const text = await dialogBody.getText();
+        return (text && text.length > 0);
+    });
+    const dialogBodyText = await dialogBody.getText();
+    console.log('DIALOG', dialogBodyText);
+
+    // await browser.waittUntil(async () => {
     //     const clickable = await loginButton.isClickable();
     //     console.log('is it?', clickable);
     //     return clickable;

@@ -422,7 +422,7 @@ define([
                     ),
                     td({}, [
                         button({
-                            class: 'btn btn__text',
+                            class: `${cssBaseClass}__button--delete btn btn__text`,
                             type: 'button',
                             id: events.addEvent({
                                 type: 'click',

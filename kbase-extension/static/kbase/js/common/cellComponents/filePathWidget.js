@@ -218,8 +218,8 @@ define([
             });
         }
 
-        function addRow(){
-            $(`.${cssBaseClass}__table`).append(
+        function addRow(e){
+            $(e.target).prev('table').append(
                 tr({
                     class: `${cssBaseClass}__table_row`,
                     dataElement: `${cssClassType}-fields-row`,
@@ -260,7 +260,9 @@ define([
                             type: 'button',
                             id: events.addEvent({
                                 type: 'click',
-                                handler: addRow
+                                handler: function(e){
+                                    addRow(e);
+                                }
                             })
                         }, [
                             span({

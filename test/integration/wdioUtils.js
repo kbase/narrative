@@ -51,6 +51,13 @@ async function sendString(stringToSend) {
     }
 }
 
+async function clickWhenReady(el) {
+    await browser.waitUntil(async () => {
+        return await el.isClickable();
+    });
+    await el.click();
+}
+
 /**
 * Navigates the wdio browser to a workspace as given by its id, and waits until the 
 * narrative container is visible.
@@ -73,19 +80,12 @@ async function openNarrative(workspaceId) {
     //     const loadingText = await loadingBlocker.getText();
     //     loadingText.getText().includes('Connecting to KBase services...');
     // });
-    console.log('have loading cover');
 
     await loadingBlocker.waitForDisplayed({
         timeout,
         timeoutMsg: `Timeout after waiting ${timeout}ms for loading blocker to disappear`,
         reverse: true
     });
-    console.log('it has disappeared');
-
-    const $debug =  await $('#__EAP_DEBUG__');
-    const debugText = await $debug.getAttribute('data-debug-value');
-    console.log('DEBUG:', debugText);
-    
 
     // Ensure logged in
     const loginButton = await $('#signin-button > div > button');
@@ -94,47 +94,15 @@ async function openNarrative(workspaceId) {
         timeoutMsg: `Timeout after waiting ${timeout}ms for login button to appear`
     }); 
 
-    // DEBUG vvv
-    const dialog = await $('.modal.fade.in[role="dialog"]');
-    await dialog.waitForDisplayed({
-        timeout,
-        timeoutMsg: `Timeout after waiting ${timeout}ms for loading dialog to appear`
-    });
-    const dialogTitle = await dialog.$('.modal-title');
-    await browser.waitUntil(async () => {
-        const text = await dialogTitle.getText();
-        return (text && text.length > 0);
-    });
-    const dialogText = await dialogTitle.getText();
-    console.log('DIALOG', dialogText);
+    await clickWhenReady(loginButton);
 
-    await browser.pause(1000);
-
-    const dialogBody = await dialog.$('.modal-body');
-    await browser.waitUntil(async () => {
-        const text = await dialogBody.getText();
-        return (text && text.length > 0);
-    });
-    const dialogBodyText = await dialogBody.getText();
-    console.log('DIALOG', dialogBodyText);
-
-    // DEBUG ^^
-
-    // await browser.waittUntil(async () => {
-    //     const clickable = await loginButton.isClickable();
-    //     console.log('is it?', clickable);
-    //     return clickable;
-    // });
-    console.log('DEBUG: skipping clickable test');
-    await loginButton.click();
-    console.log('DEBUG: clicked');
     const userLabelElement = await $('[data-element="user-label"]');
     await browser.waitUntil(async () => {
         const text = await userLabelElement.getText();
         return (text && text.length > 0);
     });
     const text = await userLabelElement.getText();
-    console.log(`Logged in with user ${text}`);
+    console.warn(`Logged in as user ${text}`);
     await loginButton.click();
     
     // Ensure narrative notebook has displayed
@@ -151,5 +119,6 @@ module.exports = {
     login,
     makeURL,
     sendString,
-    openNarrative
+    openNarrative,
+    clickWhenReady
 };

@@ -2,7 +2,7 @@
 /* eslint {strict: ['error', 'global']} */
 'use strict';
 
-const {login, openNarrative, sendString} = require('../wdioUtils.js');
+const {login, openNarrative, sendString, clickWhenReady} = require('../wdioUtils.js');
 
 // Ideally the test data should be the same, except for narrative id, in each env.
 // But currently CI and prod are indexed differently.
@@ -319,10 +319,7 @@ async function openPublicData() {
     // Open the data slideout
     const button = await $('[data-test-id="data-slideout-button"]');
     await button.waitForExist();
-    await browser.waitUntil(async () => {
-        return await button.isClickable();
-    });
-    await button.click();
+    await clickWhenReady(button);
 
     // Here we locate the public data tab, move the mouse cursor to it, and then
     // click on its container, which should open the public data panel.
@@ -337,10 +334,7 @@ async function openPublicData() {
     const publicTab = await panel.$('[data-test-id="tab-public"]');
     await publicTab.waitForExist();
 
-    await publicTab.waitUntil(async () => {
-        return await publicTab.isClickable();
-    });
-    await publicTab.click();
+    await clickWhenReady(publicTab);
 
     const publicPanel = await panel.$('[data-test-id="panel-public"]');
     await publicPanel.waitForExist();
@@ -426,10 +420,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
 
         // Select search input and input a search term
         const searchInput = await publicPanel.$('[data-test-id="search-input"]');
-        await browser.waitUntil(async () => {
-            return await searchInput.isClickable();
-        });
-        await searchInput.click();
+        await clickWhenReady(searchInput);
         await sendString(testCase.searchFor);
         await browser.keys('Enter');
 
@@ -469,10 +460,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
 
         // Select search input and input a search term
         const searchInput = await publicPanel.$('[data-test-id="search-input"]');
-        await browser.waitUntil(async () => {
-            return await searchInput.isClickable();
-        });
-        await searchInput.click();
+        await clickWhenReady(searchInput);
         await sendString(testCase.searchFor);
         await browser.keys('Enter');
 

@@ -110,7 +110,8 @@ define([
             }).then(() => {
                 let preClickNumberOfRows = $('tr').length;
                 expect(preClickNumberOfRows).toEqual(1);
-                $('.kb-file-path__button--add_row btn btn__text').click();
+                console.log($(node).find('.kb-file-path__button--add_row btn btn__text'));
+                $(node).find('.kb-file-path__button--add_row btn btn__text').click();
                 let postClickNumberOfRows = $('tr').length;
                 expect(postClickNumberOfRows).toEqual(2);
             });

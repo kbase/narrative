@@ -406,19 +406,18 @@ define([
             if (!filePathParams.layout.length) {
                 ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
             } else {
-                filePathRow.innerHTML = div({
-                    class: `${cssBaseClass}__param_container row`,
-                }, [
-                    filePathParams.content
-                ]);
 
-                $(filePathRow).prepend(
+                filePathRow.innerHTML = [
                     td({
                         class: `${cssBaseClass}__file_number`,
-                    })
-                );
-
-                $(filePathRow).append(
+                    }),
+                    td(
+                        div({
+                            class: `${cssBaseClass}__param_container row`,
+                        }, [
+                            filePathParams.content
+                        ])
+                    ),
                     td({}, [
                         button({
                             class: 'btn btn__text',
@@ -428,7 +427,6 @@ define([
                                 handler: function(e){
                                     deleteRow(e);
                                 }
-
                             })
                         },[
                             icon({
@@ -436,7 +434,7 @@ define([
                             })
                         ])
                     ])
-                );
+                ].join('');
 
                 Promise.all(filePathParams.layout.map((parameterId) => {
                     createFilePathWidget(appSpec, filePathParams, parameterId);

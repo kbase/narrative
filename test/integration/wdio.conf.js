@@ -167,9 +167,19 @@ const authToken = (() => {
 
 // Each wdio service supported requires an entry here, even
 // if it doesn't have any specific configuration.
+const drivers = {
+    chrome: {
+        version: '87.0.4280.20',
+    },
+    firefox: {
+        version: '0.28.0'
+    }
+};
+
 const serviceConfigs = {
     'selenium-standalone': {
-        logPath: 'selenium-standalone-logs'
+        logPath: 'selenium-standalone-logs',
+        drivers
     },
     chromedriver: {},
     browserstack: {

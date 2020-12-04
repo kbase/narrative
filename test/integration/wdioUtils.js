@@ -63,6 +63,26 @@ async function openNarrative(workspaceId) {
     // Go to the narrative!
     await browser.url(makeURL(`narrative/${workspaceId}`));
 
+    // should experience loading blocker for a few seconds.
+    const loadingBlocker = await $('#kb-loading-blocker');
+    await loadingBlocker.waitForDisplayed({
+        timeout,
+        timeoutMsg: `Timeout after waiting ${timeout}ms for loading blocker to appear`
+    }); 
+    // await browser.waitUntil(async () => {
+    //     const loadingText = await loadingBlocker.getText();
+    //     loadingText.getText().includes('Connecting to KBase services...');
+    // });
+    console.log('have loading cover');
+
+    await loadingBlocker.waitForDisplayed({
+        timeout,
+        timeoutMsg: `Timeout after waiting ${timeout}ms for loading blocker to disappear`,
+        reverse: true
+    });
+    console.log('it has disappeared');
+    
+
     // Ensure logged in
     const loginButton = await $('#signin-button > div > button');
     await loginButton.waitForDisplayed({

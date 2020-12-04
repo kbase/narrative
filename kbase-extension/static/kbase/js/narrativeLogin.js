@@ -1,4 +1,3 @@
-/*global define,window*/
 /*jslint white:true,browser:true*/
 /**
  * Uses the user's login information to initialize the IPython environment.
@@ -26,25 +25,28 @@ define ([
     BootstrapDialog
 ) {
     'use strict';
-    var baseUrl = JupyterUtils.get_body_data('baseUrl'),
-        authClient = Auth.make({url: Config.url('auth')}),
-        sessionInfo = null,
-        tokenCheckTimer = null,
-        tokenWarningTimer = null;
+    const baseUrl = JupyterUtils.get_body_data('baseUrl');
+    const authClient = Auth.make({url: Config.url('auth')});
+    let sessionInfo = null;
+    let tokenCheckTimer = null;
+    let tokenWarningTimer = null;
+
+    const TWO_WEEKS = 1000 * 60 * 60 * 24 * 14;
+    const FIVE_MINUTES = 1000 * 60 * 5;
 
     /* set the auth token by calling the kernel execute method on a function in
      * the magics module
      */
     function ipythonLogin(token) {
-        window.kb = new KBCacheClient(token);
+        window.kb = new window.KBCacheClient(token); // just as bad as global, but passes linting
         $.ajax({
             url: JupyterUtils.url_join_encode(baseUrl, 'login')
         }).then(
-            function(ret) {
+            function() {
                 // console.log(ret);
             }
         ).fail(
-            function(err) {
+            function() {
                 // console.err(err);
             }
         );
@@ -54,11 +56,11 @@ define ([
         $.ajax({
             url: JupyterUtils.url_join_encode(baseUrl, 'logout')
         }).then(
-            function(ret) {
+            function() {
                 // console.log(ret);
             }
         ).fail(
-            function(err) {
+            function() {
                 // console.err(err);
             }
         );
@@ -184,42 +186,33 @@ define ([
             }
         }, 1000);
 
-        const currentTime = new Date().getTime();
+        const currentTime = Date.now();
 
         if (currentTime >= tokenExpirationTime) {
             // already expired! logout!
             tokenTimeout();
+            return;
         }
 
-        // adjust current time so it expires 
-        // currentTime = tokenExpirationTime + (1000 * 60 * 5) + 1;
-        // console.log('TOKEN EXPIRATION', tokenExpirationTime, currentTime, tokenExpirationTime - currentTime);
+        // A warning will be displayed when the token has 5 minutes or 
+        // less until expiration.
+        var timeToWarning = tokenExpirationTime - currentTime - FIVE_MINUTES;
 
-        // trigger warning by setting the expiration  to now + 5 minutes + 10ms
-        // tokenExpirationTime = currentTime + (1000 * 60 * 5) + 10;
-
-        var timeToWarning = tokenExpirationTime - currentTime - (1000 * 60 * 5);
-
-        // fake it to be 100ms until warning.
-        // timeToWarning  = 100;
-
-        // TODO: REMOVE WHEN DONE DEBUGGING vvv
-        const debug = `EXPIRING SOON ${timeToWarning}, ${tokenExpirationTime}, ${currentTime}, ${tokenExpirationTime - currentTime}`;
-        const $debug = $('<div id="__EAP_DEBUG__"></div>');
-        $debug.attr('data-debug-value', debug);
-        $(document.body).append($debug);
-        // TODO: REMOVE WHEN DONE DEBUGGING ^^^
-
-        if (timeToWarning <= 0) {
-            return;
+        // This handles the usage of dev or service tokens, which should only 
+        // occur in tests (although I don't think anything prevents a dev from
+        // putting a dev token into their browser...)
+        // Necessary because setTimeout is signed 32bit, so overflows for 
+        // intervals over about 24 days (in ms).
+        if (timeToWarning > TWO_WEEKS) {
+            console.warn(`Limiting timeToWarning to ${TWO_WEEKS}, was ${timeToWarning}.`);
+            timeToWarning = TWO_WEEKS;
         }
 
         // note that if token is expired according to the comparison above, we do not
         // so the dialog.
         
         // The timer is always started, and will appear when "timeToWarning" elapses, which should be
-        // 5 minutes before the token actually expires, or if the 0 < timeToWarning < 5, it could be 
-        // sooner.
+        // 5 minutes before the token expires, or sooner if the token is expiring less than 5 minutes from now, 
         tokenWarningTimer = setTimeout(function() {
             showAboutToLogoutDialog(tokenExpirationTime);
         }, timeToWarning);
@@ -309,8 +302,8 @@ define ([
     }
 
     return {
-        init: init,
-        sessionInfo: sessionInfo,
-        getAuthToken: getAuthToken
+        init,
+        sessionInfo,
+        getAuthToken
     };
 });

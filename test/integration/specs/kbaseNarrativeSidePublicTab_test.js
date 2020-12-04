@@ -319,8 +319,8 @@ async function openPublicData() {
     // Open the data slideout
     const button = await $('[data-test-id="data-slideout-button"]');
     await button.waitForExist();
-    await browser.waitUntil(() => {
-        return button.isClickable();
+    await browser.waitUntil(async () => {
+        return await button.isClickable();
     });
     await button.click();
 
@@ -337,9 +337,8 @@ async function openPublicData() {
     const publicTab = await panel.$('[data-test-id="tab-public"]');
     await publicTab.waitForExist();
 
-    await publicTab.moveTo();
-    await publicTab.waitUntil(() => {
-        return publicTab.isClickable();
+    await publicTab.waitUntil(async () => {
+        return await publicTab.isClickable();
     });
     await publicTab.click();
 
@@ -356,7 +355,6 @@ async function openPublicData() {
 }
 
 describe('Test kbaseNarrativeSidePublicTab', () => {
-
     beforeEach(async () => {
         await browser.setTimeout({ 'implicit': 30000 });
         await browser.reloadSession();
@@ -377,6 +375,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
         expect(rows.length).toBeGreaterThanOrEqual(testCase.row);
         const row = rows[testCase.row - 1];
         expect(row).toBeDefined();
+
         const nameCell = await row.$('[role="cell"][data-test-id="name"]');
         expect(nameCell).toHaveText(testCase.name);
 
@@ -402,6 +401,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
         // Look at the row - it should already be in view.
         const row = rows[testCase.row - 1];
         await row.scrollIntoView();
+
         const nameCell = await row.$('[role="cell"][data-test-id="name"]');
         expect(nameCell).toHaveText(testCase.name);
 
@@ -417,16 +417,17 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, searches for a term, should find an expected row', async () => {
-        await login();
         const testCase = testCases.TEST_CASE3;
+
+        await login();
         await openNarrative(testCase.narrativeId);
 
         const publicPanel = await openPublicData();
 
         // Select search input and input a search term
         const searchInput = await publicPanel.$('[data-test-id="search-input"]');
-        await browser.waitUntil(() => {
-            return searchInput.isClickable();
+        await browser.waitUntil(async () => {
+            return await searchInput.isClickable();
         });
         await searchInput.click();
         await sendString(testCase.searchFor);
@@ -468,8 +469,8 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
 
         // Select search input and input a search term
         const searchInput = await publicPanel.$('[data-test-id="search-input"]');
-        await browser.waitUntil(() => {
-            return searchInput.isClickable();
+        await browser.waitUntil(async () => {
+            return await searchInput.isClickable();
         });
         await searchInput.click();
         await sendString(testCase.searchFor);

@@ -34,8 +34,6 @@ async function login() {
         value: TOKEN,
         samesite: 'Lax'
     }]);
-   
-    return;
 }
 
 /**
@@ -54,7 +52,7 @@ async function sendString(stringToSend) {
 }
 
 /**
-* Navigates the wdio browser to a workspace as given by it's id, and waits until the 
+* Navigates the wdio browser to a workspace as given by its id, and waits until the 
 * narrative container is visible.
 * @arg {number} The narrative's workspace id
 * @returns {Promise} The Promise value is ignored.
@@ -71,19 +69,23 @@ async function openNarrative(workspaceId) {
         timeout,
         timeoutMsg: `Timeout after waiting ${timeout}ms for login button to appear`
     }); 
-    await browser.waitUntil(() => {
-        return loginButton.isClickable();
+    await browser.waitUntil(async () => {
+        const clickable = await loginButton.isClickable();
+        console.log('is it?', clickable);
+        return clickable;
     });
+    console.log('DEBUG: clickable');
     await loginButton.click();
+    console.log('DEBUG: clicked');
     const userLabelElement = await $('[data-element="user-label"]');
     await browser.waitUntil(async () => {
         const text = await userLabelElement.getText();
-        return (text.length > 0);
+        return (text && text.length > 0);
     });
     const text = await userLabelElement.getText();
-    await loginButton.click();
     console.log(`Logged in with user ${text}`);
-
+    await loginButton.click();
+    
     // Ensure narrative notebook has displayed
     // TODO: more interesting waitUntil loop to signal the 
     // failure reason (useful for debugging tests?)

@@ -127,11 +127,9 @@ function makeConfig() {
     const presetConfig = processPreset(preset);
 
     const [width, height] = (() => {
-        if (!e.PRESET_DIMENSIONS) {
-            return [1024, 768];
-        }
-        switch (e.PRESET_DIMENSIONS) {
+        switch (e.PRESET_DIMENSIONS || 'sxga') {
             case 'xga': return [1024, 768];
+            case 'sxga': return [1280, 1024];
             case 'hd': return [1920, 1080];
             default: throw new Error(`Not a valid PRESET_DIMENSIONS: "${e.PRESET_DIMENSIONS}"`);
         }

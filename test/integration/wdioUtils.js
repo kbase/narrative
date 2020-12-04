@@ -34,6 +34,7 @@ async function login() {
         value: TOKEN,
         samesite: 'Lax'
     }]);
+   
     return;
 }
 
@@ -59,15 +60,36 @@ async function sendString(stringToSend) {
 * @returns {Promise} The Promise value is ignored.
 */
 async function openNarrative(workspaceId) {
-    await browser.url(makeURL(`narrative/${workspaceId}`));
-    const container = await $('#notebook-container');
     const timeout = 60000;
+
+    // Go to the narrative!
+    await browser.url(makeURL(`narrative/${workspaceId}`));
+
+    // Ensure logged in
+    const loginButton = await $('#signin-button > div > button');
+    await loginButton.waitForDisplayed({
+        timeout,
+        timeoutMsg: `Timeout after waiting ${timeout}ms for login button to appear`
+    });
+    await loginButton.click();
+    const userLabelElement = await $('[data-element="user-label"]');
+    await browser.waitUntil(async () => {
+        const text = await userLabelElement.getText();
+        return (text.length > 0);
+    });
+    const text = await userLabelElement.getText();
+    await loginButton.click();
+    console.log(`Logged in with user ${text}`);
+
+    // Ensure narrative notebook has displayed
+    // TODO: more interesting waitUntil loop to signal the 
+    // failure reason (useful for debugging tests?)
+    const container = await $('#notebook-container');
     await container.waitForDisplayed({
         timeout,
         timeoutMsg: `Timeout after waiting ${timeout}ms for narrative to appear`
     });
 }
-
 
 module.exports = {
     login,

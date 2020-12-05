@@ -63,7 +63,10 @@ define([
                         index: 1,
                         cell: newCell,
                         data: {
-                            type: 'app-bulk-import'
+                            type: 'app-bulk-import',
+                            typesToFiles: {
+                                'fileType': ['a_file']
+                            }
                         }
                     });
                     // there's no other triggers except to wait a moment
@@ -72,7 +75,7 @@ define([
                     setTimeout(() => {
                         expect(BulkImportCell.isBulkImportCell(newCell)).toBeTruthy();
                         done();
-                    }, 100);
+                    }, 1000);
                 });
         });
 

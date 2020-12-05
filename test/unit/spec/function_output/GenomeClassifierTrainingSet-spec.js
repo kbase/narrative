@@ -6,17 +6,15 @@
 define([
     'jquery',
     'GenomeClassifierTrainingSet',
-    'testUtil',
-    'common/runtime',
     'base/js/namespace',
-    'kbaseNarrative'
+    'kbaseNarrative',
+    'narrativeConfig'
 ], (
     $,
     GenomeClassifierTrainingSet,
-    TestUtil,
-    Runtime,
     Jupyter,
-    Narrative
+    Narrative,
+    Config
 ) => {
     'use strict';
     describe('Test the GenomeClassifierTrainingSet widget', () => {
@@ -64,7 +62,7 @@ define([
                 "number_of_classes":2,
                 "number_of_genomes":3
             };
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'application/json',

@@ -6,17 +6,15 @@
 define([
     'jquery',
     'kbaseAttributeMapping',
-    'testUtil',
-    'common/runtime',
     'base/js/namespace',
-    'kbaseNarrative'
+    'kbaseNarrative',
+    'narrativeConfig'
 ], (
     $,
     kbaseAttributeMapping,
-    TestUtil,
-    Runtime,
     Jupyter,
-    Narrative
+    Narrative,
+    Config
 ) => {
     'use strict';
     describe('Test the kbaseAttributeMapping widget', () => {
@@ -94,7 +92,7 @@ define([
               ]
             };
             // this code is more of less ignored, because two WS calls are made both can't be stubbed
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'application/json',
@@ -179,7 +177,7 @@ define([
               ]
             };
             // this code is more of less ignored, because two WS calls are made both can't be stubbed
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'application/json',

@@ -6,17 +6,15 @@
 define([
     'jquery',
     'widgets/function_output/kbaseDefaultObjectView',
-    'testUtil',
-    'common/runtime',
     'base/js/namespace',
-    'kbaseNarrative'
+    'kbaseNarrative',
+    'narrativeConfig'
 ], (
     $,
     KBaseDefaultObjectView,
-    TestUtil,
-    Runtime,
     Jupyter,
-    Narrative
+    Narrative,
+    Config
 ) => {
     'use strict';
     describe('Test the kbaseDefaultObjectView widget', () => {
@@ -66,7 +64,7 @@ define([
                 size = 1234567,
                 upa = String(ws) + '/' + String(oid) + '/' + String(ver);
 
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'application/json',
@@ -145,7 +143,7 @@ define([
                 size = 1234567,
                 upa = String(ws) + '/' + String(oid) + '/' + String(ver);
 
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'application/json',
@@ -211,7 +209,7 @@ define([
         });
 
         it('Should fail to load with an error message if there\'s a problem', (done) => {
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 500,
                 statusText: 'success',
                 contentType: 'application/json',

@@ -9,14 +9,16 @@ define([
     'testUtil',
     'common/runtime',
     'base/js/namespace',
-    'kbaseNarrative'
+    'kbaseNarrative',
+    'narrativeConfig'
 ], (
     $,
     GenomeCategorizer,
     TestUtil,
     Runtime,
     Jupyter,
-    Narrative
+    Narrative,
+    Config
 ) => {
     'use strict';
     describe('Test the GenomeCategorizer widget', () => {
@@ -79,7 +81,7 @@ define([
                 "number_of_genomes":3
             };
             // this code is more of less ignored, because two WS calls are made both can't be stubbed
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'application/json',

@@ -6,17 +6,15 @@
 define([
     'jquery',
     'kbaseAlignment',
-    'testUtil',
-    'common/runtime',
     'base/js/namespace',
-    'kbaseNarrative'
+    'kbaseNarrative',
+    'narrativeConfig'
 ], (
     $,
     kbaseAlignment,
-    TestUtil,
-    Runtime,
     Jupyter,
-    Narrative
+    Narrative,
+    Config
 ) => {
     'use strict';
     describe('Test the kbaseAlignment widget', () => {
@@ -61,7 +59,7 @@ define([
               "size": 37291951
             };
             // this code is more of less ignored, because two WS calls are made both can't be stubbed
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'application/json',

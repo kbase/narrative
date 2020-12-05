@@ -48,7 +48,7 @@ define([
         });
     }
 
-    xdescribe('Test the Auth API module', () => {
+    describe('Test the Auth API module', () => {
         beforeEach(() => {
             token = TestUtil.getAuthToken();
             setToken(token);
@@ -68,32 +68,28 @@ define([
             expect(auth).not.toBeNull();
         });
 
-        it('Should get auth token info', (done) => {
+        it('Should get auth token info', () => {
             TestUtil.pendingIfNoToken();
 
-            authClient.getTokenInfo(token)
+            return authClient.getTokenInfo(token)
                 .then((response) => {
                     expect(Object.keys(response)).toContain('expires');
-                    done();
                 })
                 .catch((error) => {
                     expect(error).toBeNull();
-                    done();
                 });
         });
 
-        it('Should fail to get auth token info from a fake token', (done) => {
+        it('Should fail to get auth token info from a fake token', () => {
             TestUtil.pendingIfNoToken();
 
             authClient.getTokenInfo('faketoken')
                 .then((response) => {
                     expect(response).toBeNull();
-                    done();
                 })
                 .catch((error) => {
                     expect(error).not.toBeNull();
                     expect(Object.keys(error)).toContain('error');
-                    done();
                 });
         });
 
@@ -112,118 +108,112 @@ define([
                 });
         });
 
-        it('Should fail to get profile with a missing token', (done) => {
+        it('Should fail to get profile with a missing token', () => {
             clearToken();
-            authClient.getCurrentProfile()
+            return authClient.getCurrentProfile()
                 .then(() => {
-                    done.fail('Should have failed!');
+                    fail('Should have failed!');
                 })
                 .catch(() => {
-                    done();
+                    // getting here means it passes
                 });
         });
 
-        it('Should fail to get profile with a bad token', (done) => {
+        it('Should fail to get profile with a bad token', () => {
             clearToken();
             setToken('someBadToken');
-            authClient.getCurrentProfile()
+            return authClient.getCurrentProfile()
                 .then(() => {
-                    done.fail('Should have failed!');
+                    fail('Should have failed!');
                 })
                 .catch(() => {
-                    done();
+                    // getting here means it passes
                 });
         });
 
-        it('Should return a list of users', (done) => {
+        it('Should return a list of users', () => {
             TestUtil.pendingIfNoToken();
 
             var badName = 'not_a_user_name';
-            authClient.getUserNames(token, ['wjriehl', badName])
+            return authClient.getUserNames(token, ['wjriehl', badName])
                 .then((names) => {
                     expect(names.wjriehl).toEqual('William Riehl');
                     expect(Object.keys(names)).not.toContain(badName);
-                    done();
                 })
                 .catch((error) => {
                     expect(error).toBeNull();
-                    done();
                 });
         });
 
-        it('Should fail to get users with a bad token', (done) => {
+        it('Should fail to get users with a bad token', () => {
             const token = 'someBadToken';
             clearToken();
             setToken(token);
-            authClient.getUserNames(token, ['wjriehl'])
+            return authClient.getUserNames(token, ['wjriehl'])
                 .then(() => {
-                    done.fail('Should have failed!');
+                    fail('Should have failed!');
                 })
                 .catch(() => {
-                    done();
+                    // getting here means it passes
                 });
         });
 
-        it('Should fail to get users with a missing token', (done) => {
+        it('Should fail to get users with a missing token', () => {
             clearToken();
-            authClient.getUserNames(null, ['wjriehl'])
+            return authClient.getUserNames(null, ['wjriehl'])
                 .then(() => {
-                    done.fail('Should have failed!');
+                    fail('Should have failed!');
                 })
                 .catch(() => {
-                    done();
+                    // getting here means it passes
                 });
         });
 
-        it('Should search for users', (done) => {
+        it('Should search for users', () => {
             TestUtil.pendingIfNoToken();
 
             var query = 'ie';
-            authClient.searchUserNames(token, query)
+            return authClient.searchUserNames(token, query)
                 .then((results) => {
                     expect(results).not.toBeNull();
-                    done();
                 })
                 .catch((error) => {
                     expect(error).toBeNull();
-                    done();
                 });
         });
 
-        it('Should search for users with extra options', (done) => {
+        it('Should search for users with extra options', () => {
             TestUtil.pendingIfNoToken();
 
             var query = 'ie';
             var options = [''];
-            authClient.searchUserNames(token, query, options)
+            return authClient.searchUserNames(token, query, options)
                 .then((results) => {
                     expect(results).not.toBeNull();
-                    done();
                 })
                 .catch((error) => {
                     expect(error).toBeNull();
-                    done();
                 });
         });
 
-        it('Should fail to search for users with a bad token', (done) => {
-            authClient.searchUserNames('someBadToken', 'ie', [''])
+        it('Should fail to search for users with a bad token', () => {
+            return authClient.searchUserNames('someBadToken', 'ie', [''])
                 .then(() => {
-                    done.fail('Should have failed!');
+                    fail('Should have failed!');
                 })
                 .catch(() => {
-                    done();
+                    // getting here means it passes
                 });
         });
 
-        it('Should fail to search for users with a missing token', (done) => {
+        it('Should fail to search for users with a missing token', () => {
             clearToken();
-            authClient.searchUserNames(null, 'ie', [''])
+            return authClient.searchUserNames(null, 'ie', [''])
                 .then(() => {
-                    done.fail('Should have failed!');
+                    fail('Should have failed!');
                 })
                 .catch(() => {
-                    done();
+                    // getting here means it passes
                 });
         });
 
@@ -234,8 +224,7 @@ define([
             expect(authClient.getAuthToken()).toEqual(newToken);
         });
 
-        it('Should validate an auth token on request', (done) => {
-            let doneCount = 0;
+        it('Should validate an auth token on request', () => {
             const trials = [{
                 token: null,
                 isValid: true  // should get it from cookie
@@ -243,19 +232,14 @@ define([
                 token: 'someRandomToken',
                 isValid: false
             }];
-            trials.forEach((trial) => {
+            return Promise.all(trials.map(trial => {
                 authClient.validateToken(trial.token)
                     .then((isValid) => {
                         expect(isValid).toBe(trial.isValid);
-                        doneCount++;
-                        if (doneCount === trials.length) {
-                            done();
-                        }
                     })
                     .catch(() => {
-                        done();
                     });
-            });
+            }))
         });
 
         it('Should clear auth token cookie on request', () => {

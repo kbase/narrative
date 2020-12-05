@@ -54,7 +54,7 @@ define([
     };
 
     function mockWorkSpaceService() {
-        jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+        jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
             status: 200,
             statusText: 'success',
             contentType: 'application/json',

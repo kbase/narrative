@@ -6,17 +6,15 @@
 define([
     'jquery',
     'kbaseNarrativeDownloadPanel',
-    'testUtil',
-    'common/runtime',
     'base/js/namespace',
-    'kbaseNarrative'
+    'kbaseNarrative',
+    'narrativeConfig'
 ], (
     $,
     kbaseNarrativeDownloadPanel,
-    TestUtil,
-    Runtime,
     Jupyter,
-    Narrative
+    Narrative,
+    Config
 ) => {
     describe('Test the kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
@@ -46,7 +44,7 @@ define([
                 size = 1234567,
                 upa = String(ws) + '/' + String(oid) + '/' + String(ver);
 
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'application/json',

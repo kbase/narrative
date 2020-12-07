@@ -361,6 +361,7 @@ define([
                 .then(() => {
                     cell.renderMinMax();
                     // force toolbar refresh
+                    // eslint-disable-next-line no-self-assign
                     cell.metadata = cell.metadata;
                     updateState();
                     runTab(state.tab.selected);
@@ -392,7 +393,7 @@ define([
             state.tab.selected = tab;
             if (tabWidget !== null) {
                 tabWidget.stop();
-                var widgetNode = ui.getElement('widget');
+                const widgetNode = ui.getElement('widget');
                 if (widgetNode.firstChild) {
                     widgetNode.removeChild(widgetNode.firstChild);
                 }
@@ -430,6 +431,12 @@ define([
          * This toggles which file type should be shown. This sets the
          * fileType state, then updates the rest of the cell state to modify
          * which set of tabs should be active.
+         *
+         * Should:
+         * 1. Shut change state to what tab should be shown
+         * 2. Tabs should actually be a kind of matrix? Not just "configure" but
+         *    "configure", "file_type"
+         * 3.
          * @param {string} fileType - the file type that should be shown
          */
         function toggleFileType(fileType) {

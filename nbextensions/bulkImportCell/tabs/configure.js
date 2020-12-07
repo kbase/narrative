@@ -62,7 +62,9 @@ define([
         /*
             node: container node to build the widget into
 
-            This is more or less copied over from the way that the appCell handles building the widget. This model assumes one instance of the params widget per cell, so may need some adjustment as we make the bulk import work with multiple data types
+            This is more or less copied over from the way that the appCell handles building the widget.
+            This model assumes one instance of the params widget per cell, so may need some adjustment as
+            we make the bulk import work with multiple data types
         */
         function buildParamsWidget(node) {
             const paramBus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });

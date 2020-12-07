@@ -35,7 +35,10 @@ define([
          * Used only if we're in Batch mode.
          */
         function batchLayout() {
-            var list = div({ class: 'col-md-3 batch-mode-col', dataElement: 'kb-job-list-wrapper' }, [
+            var list = div({
+                class: 'col-md-6 batch-mode-col',
+                dataElement: 'kb-job-list-wrapper'
+            }, [
                 ui.buildPanel({
                     title: 'Job Batch',
                     name: 'subjobs',
@@ -45,7 +48,10 @@ define([
                 })
             ]);
 
-            var jobStatus = div({ class: 'col-md-9 batch-mode-col',  dataElement: 'kb-job-status-wrapper' },[
+            var jobStatus = div({
+                class: 'col-md-6 batch-mode-col',
+                dataElement: 'kb-job-status-wrapper'
+            },[
                 ui.buildCollapsiblePanel({
                     title: 'Job Log',
                     name: 'job-log-section-toggle',
@@ -100,12 +106,12 @@ define([
                 });
 
                 function startDetails(arg) {
-                    var selectedJobId = arg.jobId ? arg.jobId : model.getItem('exec.jobState.job_id');
-                    config.clickedId = selectedJobId;
+                    var _selectedJobId = arg.jobId ? arg.jobId : model.getItem('exec.jobState.job_id');
+                    config.clickedId = _selectedJobId;
                     return Promise.all([
                         widgets.log.start({
                             node: ui.getElement('log.body'),
-                            jobId: selectedJobId,
+                            jobId: _selectedJobId,
                             parentJobId: model.getItem('exec.jobState.job_id')
                         })
                     ]);

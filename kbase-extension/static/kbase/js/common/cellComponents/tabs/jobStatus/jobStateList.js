@@ -2,67 +2,89 @@ define([
     'bluebird',
     'common/runtime',
     'common/ui',
-    'common/format',
     'kb_common/html',
     './jobStateListRow'
 ], function(
     Promise,
     Runtime,
     UI,
-    format,
     html,
     JobStateListRow
 ) {
     'use strict';
 
-    var t = html.tag,
-        div = t('div'),
-        p = t('p'),
-        span = t('span'),
+    const t = html.tag,
         table = t('table'),
+        thead = t('thead'),
         tr = t('tr'),
-        td = t('td'),
         th = t('th'),
-        tbody = t('tbody');
+        tbody = t('tbody'),
+        cssBaseClass = 'kb-job-state',
+        selectedJobCssClass = 'job-selected';
 
 
     function renderTable() {
-        return table({class: 'table'}, [
-            tbody()
+        return table({
+            class: `table ${cssBaseClass}__table`
+        }, [
+            thead({
+                class: `${cssBaseClass}__table_head`,
+            },
+            [
+                tr({
+                    class: `${cssBaseClass}__table_head_row`,
+                },
+                [
+                    th({
+                        class: `${cssBaseClass}__table_head_cell--object`
+                    }, ['Object']),
+                    th({
+                        class: `${cssBaseClass}__table_head_cell--status`
+                    }, ['Status']),
+                    th({
+                        class: `${cssBaseClass}__table_head_cell--action`
+                    }, ['Action']),
+                ])
+            ]),
+            tbody({
+                class: `${cssBaseClass}__table_body`,
+            })
         ]);
     }
 
     function factory(config) {
-        var container, ui, listeners = [],
-            runtime = Runtime.make(),
-            widgets = {},
+        let runtime = Runtime.make(),
             model = config.model,
+            widgets = {},
+            container,
             parentJobId,
             parentListener;
 
         function createTableRow(id) {
-            var table = container.getElementsByTagName('tbody')[0];
-            var newRow = document.createElement('tr');
+            let jobTable = container.getElementsByTagName('tbody')[0],
+                newRow = document.createElement('tr');
             newRow.setAttribute('data-element-job-id', id);
             newRow.classList.add('job-info');
-            table.appendChild(newRow);
+            newRow.classList.add(`${cssBaseClass}__row`);
+            jobTable.appendChild(newRow);
             return newRow;
         }
 
         function start(arg) {
             return Promise.try(function() {
                 container = arg.node;
+                container.classList.add(`${cssBaseClass}__container`);
                 container.classList.add('batch-mode-list');
-                ui = UI.make({ node: container });
+                UI.make({ node: container });
                 container.innerHTML = renderTable();
                 parentJobId = arg.parentJobId;
 
                 return Promise.try(() => {
                     createJobStateWidget('parent', parentJobId, model.getItem('exec.jobState.status'), arg.clickFunction, true);
-                    container.getElementsByTagName('tr')[0].classList.add('job-selected'); // start with the parent selected
+                    container.getElementsByTagName('tr')[0].classList.add(selectedJobCssClass); // start with the parent selected
 
-                    for (var i=0; i<Math.max(arg.batchSize, arg.childJobs.length); i++) {
-                        var jobId = null,
+                    for (let i=0; i<Math.max(arg.batchSize, arg.childJobs.length); i++) {
+                        let jobId = null,
                             initialState = null;
                         if (i < arg.childJobs.length) {
                             jobId = arg.childJobs[i].job_id;
@@ -71,7 +93,7 @@ define([
                         createJobStateWidget(i, jobId, initialState, arg.clickFunction);  // can make null ones. these need to be updated.
                     }
                 })
-                .then(() => { startParentListener() });
+                    .then(() => { startParentListener(); });
             });
         }
 
@@ -92,6 +114,15 @@ define([
          * @param {Object} message
          */
         function handleJobStatusUpdate(message) {
+            if (message.jobState.batch_size && message.jobState.child_jobs.length === 0) {
+                if (message.jobState.job_output.result[0].batch_results) {
+                    message.jobState.child_jobs = Object.keys(message.jobState.job_output.result[0].batch_results)
+                        .map((item) => {
+                            return message.jobState.job_output.result[0].batch_results[item].final_job_state;
+                        });
+                }
+            }
+
             if (message.jobState.child_jobs) {
                 message.jobState.child_jobs.forEach((state, idx) => {
                     widgets[idx].updateState(state);
@@ -105,7 +136,7 @@ define([
          * on each state lookup, with new ones added to the end of the list. This also adds
          * to the bottom of the job state list table.
          *
-         * Each job state widget knows which child job index it's in, so it can look up its
+         * Each job state widget knows which child job index its in, so it can look up its
          * state as well.
          * @param {int} jobIndex
          * @param {string} jobId
@@ -120,15 +151,15 @@ define([
                 jobId: jobId,
                 initialState: initialState,
                 isParentJob: isParentJob ? true : false,
-                clickFunction: function(jobRow, jobId, isParentJob) {
-                    Array.from(container.getElementsByClassName('job-selected')).forEach((elem) => {
-                        elem.classList.remove('job-selected');
+                clickFunction: function(jobRow, _jobId, _isParentJob) {
+                    Array.from(container.getElementsByClassName(selectedJobCssClass)).forEach((elem) => {
+                        elem.classList.remove(selectedJobCssClass);
                     });
-                    if (jobId) {
-                        jobRow.classList.add('job-selected');
+                    if (_jobId) {
+                        jobRow.classList.add(selectedJobCssClass);
                         clickFunction({
-                            jobId: jobId,
-                            isParentJob: isParentJob,
+                            jobId: _jobId,
+                            isParentJob: _isParentJob,
                             jobIndex: jobIndex
                         });
                     }

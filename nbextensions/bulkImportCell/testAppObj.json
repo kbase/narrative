@@ -232,28 +232,6 @@
             "advanced": 0,
             "allow_multiple": 0,
             "default_values": [
-              ""
-            ],
-            "description": "SRA staing file path",
-            "disabled": 0,
-            "dynamic_dropdown_options": {
-              "data_source": "ftp_staging",
-              "multiselection": 0,
-              "query_on_empty_input": 1,
-              "result_array_index": 0,
-              "service_params": null
-            },
-            "field_type": "dynamic_dropdown",
-            "id": "sra_staging_file_name",
-            "optional": 1,
-            "short_hint": "SRA staing file path",
-            "ui_class": "parameter",
-            "ui_name": "SRA File Path"
-          },
-          {
-            "advanced": 0,
-            "allow_multiple": 0,
-            "default_values": [
               "Illumina"
             ],
             "description": "The name of the sequencing technology used to create the reads file",

@@ -437,7 +437,164 @@
       "authstrat": "kbaseworkspace",
       "batch_size": 7,
       "cell_id": "13395335-1f3d-4e0c-80f7-44b634968da0",
-      "child_jobs": [],
+      "child_jobs": [
+        {
+          "authstrat": "kbaseworkspace",
+          "child_jobs": [],
+          "created": 1607109169000,
+          "exec_start_time": 1607109169000,
+          "finish_time": 1607109486097,
+          "finished": 1607109486097,
+          "job_id": "5fca8a3168dcf051ac8c79e3",
+          "job_input": {
+            "app_id": "MEGAHIT",
+            "method": "MEGAHIT.run_megahit",
+            "narrative_cell_info": {},
+            "params": [
+              {
+                "k_list": [],
+                "k_max": null,
+                "k_min": null,
+                "k_step": null,
+                "megahit_parameter_preset": null,
+                "min_contig_len": 500,
+                "min_count": null,
+                "output_contigset_name": "reads_test3_contigs",
+                "read_library_ref": "57373/6/1",
+                "workspace_name": "ialarmedalien:narrative_1607108970427"
+              }
+            ],
+            "parent_job_id": "5fca8a1bd257f9f38c9862a0",
+            "requirements": {
+              "clientgroup": "njs",
+              "cpu": 2,
+              "disk": 100,
+              "memory": 23000
+            },
+            "service_ver": "cc91ddfe376f907aa56cfb3dd1b1b21cae8885a6",
+            "source_ws_objects": []
+          },
+          "job_output": {},
+          "job_state": "created",
+          "queued": 1607109169066,
+          "scheduler_id": "23204",
+          "scheduler_type": "condor",
+          "status": "created",
+          "updated": 1607109486235,
+          "user": "ialarmedalien"
+        },
+        {
+          "authstrat": "kbaseworkspace",
+          "child_jobs": [],
+          "created": 1607109169000,
+          "exec_start_time": 1607109169000,
+          "finish_time": 1607109486663,
+          "finished": 1607109486663,
+          "job_id": "5fca8a31d257f9f38c9862a1",
+          "job_input": {
+            "app_id": "MEGAHIT",
+            "method": "MEGAHIT.run_megahit",
+            "narrative_cell_info": {},
+            "params": [
+              {
+                "k_list": [],
+                "k_max": null,
+                "k_min": null,
+                "k_step": null,
+                "megahit_parameter_preset": null,
+                "min_contig_len": 500,
+                "min_count": null,
+                "output_contigset_name": "reads_test2_contigs",
+                "read_library_ref": "57373/4/1",
+                "workspace_name": "ialarmedalien:narrative_1607108970427"
+              }
+            ],
+            "parent_job_id": "5fca8a1bd257f9f38c9862a0",
+            "requirements": {
+              "clientgroup": "njs",
+              "cpu": 2,
+              "disk": 100,
+              "memory": 23000
+            },
+            "service_ver": "cc91ddfe376f907aa56cfb3dd1b1b21cae8885a6",
+            "source_ws_objects": []
+          },
+          "job_output": {
+            "id": "5fca8a31d257f9f38c9862a1",
+            "result": [
+              {
+                "report_name": "kb_megahit_report_33c8f76d-0aaa-4b27-a0f9-4569b69fef3e",
+                "report_ref": "57373/16/1"
+              }
+            ],
+            "version": "1.1"
+          },
+          "job_state": "completed",
+          "queued": 1607109169578,
+          "result": [
+            {
+              "report_name": "kb_megahit_report_33c8f76d-0aaa-4b27-a0f9-4569b69fef3e",
+              "report_ref": "57373/16/1"
+            }
+          ],
+          "running": 1607109187944,
+          "scheduler_id": "23205",
+          "scheduler_type": "condor",
+          "status": "completed",
+          "updated": 1607109486818,
+          "user": "ialarmedalien"
+        },
+        {
+          "authstrat": "kbaseworkspace",
+          "child_jobs": [],
+          "job_id": "5fca8a32b254b87cbf066b09",
+          "job_state": "queued",
+          "result": [],
+          "status": "queued",
+          "updated": 1607109525035,
+          "user": "ialarmedalien"
+        },
+        {
+          "authstrat": "kbaseworkspace",
+          "child_jobs": [],
+          "job_id": "5fca8a32b254b87cbf066b01",
+          "job_state": "running",
+          "result": [],
+          "status": "running",
+          "updated": 1607109525035,
+          "user": "ialarmedalien"
+        },
+        {
+          "authstrat": "kbaseworkspace",
+          "child_jobs": [],
+          "job_id": "5fca8a32b254b87cbf066b02",
+          "job_state": "error",
+          "result": [],
+          "status": "error",
+          "updated": 1607109525035,
+          "user": "ialarmedalien"
+        },
+        {
+          "authstrat": "kbaseworkspace",
+          "child_jobs": [],
+          "job_id": "5fca8a32b254b87cbf066b03",
+          "job_state": "terminated",
+          "result": [],
+          "status": "terminated",
+          "updated": 1607109525035,
+          "user": "ialarmedalien"
+        },
+        {
+          "authstrat": "kbaseworkspace",
+          "child_jobs": [],
+          "job_id": "5fca8a32b254b87cbf066b04",
+          "job_state": "estimating",
+          "result": [],
+          "status": "estimating",
+          "updated": 1607109525035,
+          "user": "ialarmedalien"
+        }
+      ],
       "created": 1607109147000,
       "finished": 1607109627617,
       "job_id": "5fca8a1bd257f9f38c9862a0",

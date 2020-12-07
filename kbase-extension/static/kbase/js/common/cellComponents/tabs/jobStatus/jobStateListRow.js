@@ -20,6 +20,7 @@ define([
                 label = 'success';
                 icon = 'fa fa-check';
                 break;
+            case 'created':
             case 'queued':
                 label = jobState;
                 icon = 'fa fa-angle-double-right';
@@ -37,6 +38,7 @@ define([
                 label = 'does not exist';
                 icon = 'fa fa-question';
                 break;
+            case 'estimating':
             default:
                 label = jobState;
                 icon = 'fa fa-question';

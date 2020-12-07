@@ -133,7 +133,7 @@ define([
             throw new Error('No files were selected to upload!');
         }
 
-        let kbaseNode = null, // the DOM element used as the container for everything in this cell
+        let kbaseNode = null,  // the DOM element used as the container for everything in this cell
             cellBus = null,
             ui = null,
             tabWidget = null,  // the widget currently in view
@@ -375,7 +375,6 @@ define([
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
             fileTypePanel.updateState(state.fileType);
-            console.log(state);
         }
 
         /**

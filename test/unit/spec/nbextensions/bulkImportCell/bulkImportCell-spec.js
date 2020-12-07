@@ -13,7 +13,7 @@ define([
     'use strict';
     const fakeInputs = {
         'dataType': ['some_file']
-    }
+    };
 
     describe('test the bulk import cell module', () => {
         beforeAll(() => {

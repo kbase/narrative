@@ -7,62 +7,81 @@ define([
 ) {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         td = t('td'),
-        th = t('th'),
-        span = t('span');
+        span = t('span'),
+        cssBaseClass = 'kb-job-state';
 
     function niceState(jobState) {
-        var label, icon, color;
+        let label, icon;
         switch (jobState) {
             case 'completed':
                 label = 'success';
                 icon = 'fa fa-check';
-                color = 'green';
                 break;
             case 'queued':
                 label = jobState;
                 icon = 'fa fa-angle-double-right';
-                color = 'green';
                 break;
             case 'running':
                 label = jobState;
                 icon = 'fa fa-spinner';
-                color = 'green';
                 break;
             case 'error':
-                label = jobState;
-                icon = 'fa fa-times';
-                color = 'red';
-                break;
             case 'terminated':
                 label = jobState;
                 icon = 'fa fa-times';
-                color = 'orange';
                 break;
             case 'does_not_exist':
                 label = 'does not exist';
                 icon = 'fa fa-question';
-                color = 'orange';
                 break;
             default:
                 label = jobState;
                 icon = 'fa fa-question';
-                color = 'black';
         }
 
         return td({
-            style: {
-                color: color,
-                fontWeight: 'bold'
-            },
+            class: `${cssBaseClass}__cell--status`,
         }, [
             span({
-                class: icon
+                class: `${icon} ${cssBaseClass}__icon--${jobState}`
             }),
             ' ' + label
         ]);
+    }
+
+    function getAction(jobState) {
+        let label;
+        switch (jobState) {
+            case 'completed':
+                label = 'Go to results';
+                break;
+            case 'queued':
+                label = 'Cancel';
+                break;
+            case 'running':
+                label = 'Cancel';
+                break;
+            case 'error':
+                label = 'Retry';
+                break;
+            case 'terminated':
+                label = 'Retry';
+                break;
+            case 'does_not_exist':
+                label = 'does not exist';
+                break;
+            default:
+                label = jobState;
+        }
+        return td({
+            class: `${cssBaseClass}__cell--action`,
+        }, [
+            label
+        ]);
+
     }
 
     function factory() {
@@ -75,7 +94,16 @@ define([
         function updateRowStatus(jobStatus) {
             jobStatus = jobStatus ? jobStatus : 'Job still pending.';
             var jobIdDiv = '';
-            container.innerHTML = th({}, [div(isParentJob ? name.toUpperCase() : name), jobIdDiv]) + niceState(jobStatus);
+            container.innerHTML = td({
+                class: `${cssBaseClass}__cell--object`,
+            }, [
+                div(
+                    isParentJob ? name.toUpperCase() : name
+                ),
+                jobIdDiv
+            ])
+            + niceState(jobStatus)
+            + getAction(jobStatus);
         }
 
         function start(arg) {

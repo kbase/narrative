@@ -98,8 +98,8 @@ async function openNarrative(workspaceId) {
 
     const userLabelElement = await $('[data-element="user-label"]');
     await browser.waitUntil(async () => {
-        const text = await userLabelElement.getText();
-        return (text && text.length > 0);
+        const userLabelText = await userLabelElement.getText();
+        return (userLabelText && userLabelText.length > 0);
     });
     const text = await userLabelElement.getText();
     console.warn(`Logged in as user ${text}`);

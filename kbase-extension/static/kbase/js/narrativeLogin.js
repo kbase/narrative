@@ -216,7 +216,7 @@ define ([
             if (timeUntilExpiration > ABOUT_TO_LOGOUT_MINIMUM && timeUntilExpiration <= ABOUT_TO_LOGOUT_THRESHOLD) {
                 if (!hasViewedAboutToLogout) {
                     hasViewedAboutToLogout = true;
-                    showAboutToLogoutDialog(tokenExpirationTime);
+                    showAboutToLogoutDialog();
                 }
             }
 

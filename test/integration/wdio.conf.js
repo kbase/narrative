@@ -17,21 +17,21 @@ const fs = require('fs');
  * The defaults correspond to the originally implied settings used by chromedriver, other than Windows.
  * @returns {Object} A config object with the following keys: OS, OS_VERSION, BROWSER, BROWSER_VERSION, SERVICE, WIDTH, HEIGHT
  */
-function importEnv() {
-    const e = process.env;
+// function importEnv() {
+//     const e = process.env;
 
-    const isRemoteService = (e.SERVICE === 'browserstack');
-    const OS = e.OS || (isRemoteService ? 'Windows' : null);
-    const OS_VERSION = e.OS_VERSION || (isRemoteService ? '10' : null);
-    const BROWSER = e.BROWSER || 'chrome';
-    const BROWSER_VERSION = e.BROWSER_VERSION || (isRemoteService ? 'latest' : null);
-    const SERVICE = e.SERVICE || 'chromedriver';
-    const HEADLESS = e.HEADLESS || (isRemoteService ? 'f' : 't');
+//     const isRemoteService = (e.SERVICE === 'browserstack');
+//     const OS = e.OS || (isRemoteService ? 'Windows' : null);
+//     const OS_VERSION = e.OS_VERSION || (isRemoteService ? '10' : null);
+//     const BROWSER = e.BROWSER || 'chrome';
+//     const BROWSER_VERSION = e.BROWSER_VERSION || (isRemoteService ? 'latest' : null);
+//     const SERVICE = e.SERVICE || 'chromedriver';
+//     const HEADLESS = e.HEADLESS || (isRemoteService ? 'f' : 't');
 
-    return {
-        OS, OS_VERSION, BROWSER, BROWSER_VERSION, HEADLESS, SERVICE
-    };
-}
+//     return {
+//         OS, OS_VERSION, BROWSER, BROWSER_VERSION, HEADLESS, SERVICE
+//     };
+// }
 
 /**
  * Given a preset key, return set set of common configuration keys for a given service, os, and browser
@@ -43,9 +43,9 @@ function importEnv() {
  * @returns {Object} A config object with the following keys: OS, OS_VERSION, BROWSER, BROWSER_VERSION, SERVICE, WIDTH, HEIGHT
  */
 function processPreset(preset) {
-    if (preset === null) {
-        return importEnv();
-    }
+    // if (preset === 'none') {
+    //     return importEnv();
+    // }
 
     const e = process.env;
 
@@ -123,7 +123,7 @@ function processPreset(preset) {
 
 function makeConfig() {
     const e = process.env;
-    const preset = e.PRESET || null;
+    const preset = e.PRESET || 'cd';
     const presetConfig = processPreset(preset);
 
     const [width, height] = (() => {
@@ -165,19 +165,22 @@ const authToken = (() => {
 
 // Each wdio service supported requires an entry here, even
 // if it doesn't have any specific configuration.
-const drivers = {
-    chrome: {
-        version: '87.0.4280.20',
-    },
-    firefox: {
-        version: '0.28.0'
-    }
-};
+// TODO: Add test parameters for drivers. 
+// Default behavior is to use the latest available, which should 
+// normally be what we want.
+// const drivers = {
+//     chrome: {
+//         version: '87.0.4280.20',
+//     },
+//     firefox: {
+//         version: '0.28.0'
+//     }
+// };
 
 const serviceConfigs = {
     'selenium-standalone': {
-        logPath: 'selenium-standalone-logs',
-        drivers
+        logPath: 'selenium-standalone-logs'
+        // drivers
     },
     chromedriver: {},
     browserstack: {

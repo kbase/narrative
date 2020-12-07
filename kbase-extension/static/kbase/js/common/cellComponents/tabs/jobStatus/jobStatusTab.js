@@ -52,7 +52,7 @@ define([
                 class: 'col-md-6 batch-mode-col',
                 dataElement: 'kb-job-status-wrapper'
             },[
-                ui.buildCollapsiblePanel({
+                ui.buildPanel({
                     title: 'Job Log',
                     name: 'job-log-section-toggle',
                     hidden: false,

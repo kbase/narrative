@@ -13,7 +13,7 @@ define([
         span = t('span'),
         cssBaseClass = 'kb-job-state';
 
-    function niceState(jobState) {
+    function createStateCell(jobState) {
         let label, icon;
         switch (jobState) {
             case 'completed':
@@ -54,7 +54,7 @@ define([
         ]);
     }
 
-    function getAction(jobState) {
+    function createActionCell(jobState) {
         let label;
         switch (jobState) {
             case 'completed':
@@ -83,7 +83,18 @@ define([
         }, [
             label
         ]);
+    }
 
+    function createLogLinkCell(jobState) {
+        return td({
+            class: `${cssBaseClass}__cell--log-view`,
+        }, [
+            span({
+                class: `${cssBaseClass}__log_link--${jobState}`
+            }, [
+                'View logs'
+            ])
+        ]);
     }
 
     function factory() {
@@ -104,8 +115,9 @@ define([
                 ),
                 jobIdDiv
             ])
-            + niceState(jobStatus)
-            + getAction(jobStatus);
+            + createStateCell(jobStatus)
+            + createActionCell(jobStatus)
+            + createLogLinkCell(jobStatus);
         }
 
         function start(arg) {

@@ -44,6 +44,9 @@ define([
                     th({
                         class: `${cssBaseClass}__table_head_cell--action`
                     }, ['Action']),
+                    th({
+                        class: `${cssBaseClass}__table_head_cell--log-view`
+                    }, ['Logs']),
                 ])
             ]),
             tbody({

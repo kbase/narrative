@@ -236,6 +236,9 @@ $button-outdated: rgb(247, 155, 34);
 
 .kb-file-path {
   /* .kb-file-path-table-row */
+  &__table {
+    width: 100%
+  }
   &__table_row {
     font: normal 400 14px/18px $typeface-page-text;
   }
@@ -252,6 +255,10 @@ $button-outdated: rgb(247, 155, 34);
     flex: 1;
   }
 
+  &__button--delete {
+    padding-top: 20px;
+  }
+
   &__button--add_row {
     margin-left: 10px;
   }
@@ -262,7 +269,7 @@ $button-outdated: rgb(247, 155, 34);
 
   &__file_number {
     font-weight: 700;
-    padding-right: 10px;
+    padding: 20px 10px 0 0;
   }
 
 }

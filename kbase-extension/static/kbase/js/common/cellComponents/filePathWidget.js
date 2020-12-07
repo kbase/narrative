@@ -47,7 +47,7 @@ define([
             events = Events.make();
 
         bus = runtime.bus().makeChannelBus({
-            description: 'An app params widget'
+            description: 'A file path widget'
         });
 
         function makeFieldWidget(appSpec, parameterSpec, value, closeParameters) {
@@ -218,8 +218,8 @@ define([
             });
         }
 
-        function addRow(){
-            $(`.${cssBaseClass}__table`).append(
+        function addRow(e){
+            $(e.target).prev('table').append(
                 tr({
                     class: `${cssBaseClass}__table_row`,
                     dataElement: `${cssClassType}-fields-row`,
@@ -260,7 +260,9 @@ define([
                             type: 'button',
                             id: events.addEvent({
                                 type: 'click',
-                                handler: addRow
+                                handler: function(e){
+                                    addRow(e);
+                                }
                             })
                         }, [
                             span({
@@ -406,29 +408,27 @@ define([
             if (!filePathParams.layout.length) {
                 ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
             } else {
-                filePathRow.innerHTML = div({
-                    class: `${cssBaseClass}__param_container row`,
-                }, [
-                    filePathParams.content
-                ]);
 
-                $(filePathRow).prepend(
+                filePathRow.innerHTML = [
                     td({
                         class: `${cssBaseClass}__file_number`,
-                    })
-                );
-
-                $(filePathRow).append(
+                    }),
+                    td(
+                        div({
+                            class: `${cssBaseClass}__param_container row`,
+                        }, [
+                            filePathParams.content
+                        ])
+                    ),
                     td({}, [
                         button({
-                            class: 'btn btn__text',
+                            class: `${cssBaseClass}__button--delete btn btn__text`,
                             type: 'button',
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function(e){
                                     deleteRow(e);
                                 }
-
                             })
                         },[
                             icon({
@@ -436,7 +436,7 @@ define([
                             })
                         ])
                     ])
-                );
+                ].join('');
 
                 Promise.all(filePathParams.layout.map((parameterId) => {
                     createFilePathWidget(appSpec, filePathParams, parameterId);
@@ -487,9 +487,7 @@ define([
         return {
             start: start,
             stop: stop,
-            bus: function () {
-                return bus;
-            }
+            bus: bus
         };
     }
 

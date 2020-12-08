@@ -13,6 +13,7 @@ define([
     './cellTabs',
     './cellControlPanel',
     'common/cellComponents/tabs/infoTab',
+    'common/cellComponents/tabs/jobStatus/jobStatusTab',
     './tabs/configure',
     './fileTypePanel',
     'json!./testAppObj.json'
@@ -31,6 +32,7 @@ define([
     CellTabs,
     CellControlPanel,
     InfoTabWidget,
+    JobStatusTabWidget,
     ConfigureWidget,
     FileTypePanel,
     TestAppObj
@@ -131,9 +133,9 @@ define([
                         label: 'Info',
                         widget: InfoTabWidget,
                     },
-                    logs: {
+                    jobStatus: {
                         label: 'Job Status',
-                        widget: DefaultWidget()
+                        widget: JobStatusTabWidget
                     },
                     results: {
                         label: 'Result',
@@ -381,7 +383,8 @@ define([
                 workspaceInfo: workspaceInfo,
                 cell: cell,
                 model: model,
-                spec: spec
+                spec: spec,
+                jobId: undefined
             });
 
             let node = document.createElement('div');
@@ -444,8 +447,8 @@ define([
                             enabled: true,
                             visible: true
                         },
-                        logs: {
-                            enabled: false,
+                        jobStatus: {
+                            enabled: true,
                             visible: true
                         },
                         results: {

@@ -1,14 +1,12 @@
-/*global describe, it, expect*/
-/*global beforeEach, beforeAll, afterAll*/
-/*jslint white: true*/
-
 define([
+    'jquery',
+    'base/js/namespace',
     'common/cellComponents/paramsWidget',
     'common/runtime',
     'common/props',
     'common/spec',
     'json!../../../../data/testAppObj.json',
-], (ParamsWidget, Runtime, Props, Spec, TestAppObject) => {
+], ($, Jupyter, ParamsWidget, Runtime, Props, Spec, TestAppObject) => {
     'use strict';
 
     describe('The Parameter module', () => {
@@ -32,61 +30,116 @@ define([
             Jupyter.narrative = null;
         });
 
-        let paramsWidget, node, spec, parameters;
+        let paramsWidget, node, parameters, bus;
 
-        beforeEach(() => {
-            const bus = Runtime.make().bus();
+        beforeEach(async () => {
+            bus = Runtime.make().bus();
             node = document.createElement('div');
             document.getElementsByTagName('body')[0].appendChild(node);
 
+            //NOTE: this test module loads the Import FASTQ/SRA as reads from staging app spec
             const model = Props.make({
                 data: TestAppObject,
-                onUpdate: (props) => {},
+                onUpdate: () => {},
             });
 
-            spec = Spec.make({
+            const spec = Spec.make({
                 appSpec: model.getItem('app.spec'),
             });
 
             parameters = spec.getSpec().parameters;
-
             const workspaceId = 54745;
+            const initialParams = model.getItem('params');
 
             paramsWidget = ParamsWidget.make({
                 bus: bus,
                 workspaceId: workspaceId,
-                initialParams: model.getItem('params'),
+                initialParams: initialParams,
+            });
+
+            await paramsWidget.start({
+                node: node,
+                appSpec: spec,
+                parameters: parameters,
             });
         });
 
-        it('should start and render itself', () => {
-            return paramsWidget
-                .start({
-                    node: node,
-                    appSpec: spec,
-                    parameters: parameters,
-                })
-                .then(() => {
-                    expect(node.innerHTML).toContain('Parameters');
+        afterEach(async () => {
+            await paramsWidget.stop();
+        });
 
-                    //we should have the option to show advanced
-                    expect(node.innerHTML).toContain('show advanced');
-                });
+        it('should render the correct parameters', () => {
+            //Regular (non-advanced) params
+            const paramContainers = $('div.kb-field-cell__param_container');
+
+            paramContainers.each(function () {
+                //each param container should have ONE label
+                const label = $(this).find('label.kb-field-cell__cell_label');
+                expect(label).toBeDefined();
+                expect(label.length).toBe(1);
+
+                //each label should also have a title
+                const title = label.attr('title');
+                expect(title).toBeDefined();
+
+                //each param container should have ONE input control
+                const inputControl = $(this).find('div.kb-field-cell__input_control');
+                expect(inputControl).toBeDefined();
+                expect(inputControl.length).toBe(1);
+            });
+        });
+
+        it('should render with advanced parameters hidden', () => {
+            //get all advanced params using the spec
+            let advancedParams = [];
+            for (const [, entry] of Object.entries(parameters.specs)) {
+                if (entry.ui.advanced) {
+                    advancedParams.push(entry.id);
+                }
+            }
+
+            //search for these on the rendered page, make sure they are there and have the correct class
+            advancedParams.forEach((param) => {
+                const renderedAdvancedParam = $('div[data-advanced-parameter="' + param + '"]');
+                expect(renderedAdvancedParam).toBeDefined();
+                const hidden = renderedAdvancedParam.hasClass(
+                    'kb-app-params__fields--parameters__hidden_field'
+                );
+
+                expect(hidden).toBeTrue();
+            });
+        });
+
+        it('clicking show advanced parameters has the expected effect', () => {
+            //click the button!
+            $('button[data-button="advanced-parameters-toggler"]').click();
+
+            //get all advanced params using the spec
+            let advancedParams = [];
+            for (const [, entry] of Object.entries(parameters.specs)) {
+                if (entry.ui.advanced) {
+                    advancedParams.push(entry.id);
+                }
+            }
+
+            //search for these on the rendered page, make sure they are there and have the correct class
+            advancedParams.forEach((param) => {
+                const renderedAdvancedParam = $('div[data-advanced-parameter="' + param + '"]');
+                expect(renderedAdvancedParam).toBeDefined();
+                const hidden = renderedAdvancedParam.hasClass(
+                    'kb-app-params__fields--parameters__hidden_field'
+                );
+
+                console.log('what is hidden? ', hidden, ' param: ', param);
+
+                // expect(hidden).toBeFalse();
+            });
         });
 
         it('should stop itself and empty the node it was in', () => {
-            return paramsWidget
-                .start({
-                    node: node,
-                    appSpec: spec,
-                    parameters: parameters,
-                })
-                .then(() => {
-                    return paramsWidget.stop();
-                })
-                .then(() => {
-                    expect(node.innerHTML).toEqual('');
-                });
+            paramsWidget.stop().then(() => {
+                expect(node.innerHTML).toEqual('');
+            });
         });
     });
 });

@@ -36,7 +36,7 @@ build-travis-narrative:
 	jupyter notebook --version
 
 test: test-backend test-frontend
-	@echo "done running backend and frontend test scripts"n
+	@echo "done running backend and frontend test scripts"
 
 # test-backend should use nose, or the like, to test our
 # Python extensions to the IPython notebook.

@@ -30,14 +30,13 @@ define([
             Jupyter.narrative = null;
         });
 
-        let paramsWidget, node, parameters, bus;
+        let paramsWidget, node, parameters;
 
         beforeEach(async () => {
-            bus = Runtime.make().bus();
+            const bus = Runtime.make().bus();
             node = document.createElement('div');
             document.getElementsByTagName('body')[0].appendChild(node);
 
-            //NOTE: this test module loads the Import FASTQ/SRA as reads from staging app spec
             const model = Props.make({
                 data: TestAppObject,
                 onUpdate: () => {},
@@ -64,8 +63,15 @@ define([
             });
         });
 
-        afterEach(async () => {
-            await paramsWidget.stop();
+        afterEach(() => {
+            paramsWidget.stop().then(() => {
+                node.remove();
+                node = null;
+                paramsWidget = null;
+                parameters = null;
+                window.kbaseRuntime = null;
+                $('body').empty();
+            });
         });
 
         it('should render the correct parameters', () => {
@@ -107,32 +113,6 @@ define([
                 );
 
                 expect(hidden).toBeTrue();
-            });
-        });
-
-        it('clicking show advanced parameters has the expected effect', () => {
-            //click the button!
-            $('button[data-button="advanced-parameters-toggler"]').click();
-
-            //get all advanced params using the spec
-            let advancedParams = [];
-            for (const [, entry] of Object.entries(parameters.specs)) {
-                if (entry.ui.advanced) {
-                    advancedParams.push(entry.id);
-                }
-            }
-
-            //search for these on the rendered page, make sure they are there and have the correct class
-            advancedParams.forEach((param) => {
-                const renderedAdvancedParam = $('div[data-advanced-parameter="' + param + '"]');
-                expect(renderedAdvancedParam).toBeDefined();
-                const hidden = renderedAdvancedParam.hasClass(
-                    'kb-app-params__fields--parameters__hidden_field'
-                );
-
-                console.log('what is hidden? ', hidden, ' param: ', param);
-
-                // expect(hidden).toBeFalse();
             });
         });
 

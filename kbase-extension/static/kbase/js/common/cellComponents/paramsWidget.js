@@ -245,22 +245,25 @@ define([
             return fieldWidget;
         }
 
-        function renderAdvanced() {
+        function showHideAdvanced() {
             const areaElement = 'parameters-area',
                 areaSelector = '[data-element="' + areaElement + '"]',
                 advancedInputs = container.querySelectorAll(
                     areaSelector + ' [data-advanced-parameter]'
                 );
 
-            if (!advancedInputs.length) {
-                ui.setContent([areaElement, 'advanced-hidden-message'], '');
-                return;
-            }
-
             //remove or add the hidden field class
             for (const [, entry] of Object.entries(advancedInputs)) {
                 entry.classList.toggle('kb-app-params__fields--parameters__hidden_field');
             }
+
+            return advancedInputs;
+        }
+
+        function renderAdvanced() {
+            //remove or add the hidden field class
+            const areaElement = 'parameters-area',
+                advancedInputs = showHideAdvanced();
 
             // Also update the count in the paramters.
             const events = Events.make({ node: container });
@@ -269,32 +272,36 @@ define([
                 label,
                 message = String(advancedInputs.length) + ' advanced parameter';
 
-            if (advancedInputs.length > 1) {
-                message += 's';
-            }
-
-            if (settings.showAdvanced) {
-                message += ' showing';
-                label = 'hide advanced';
+            if (!advancedInputs.length) {
+                ui.setContent([areaElement, 'advanced-hidden-message'], '');
             } else {
-                label = 'show advacned';
-                message += ' hidden';
+                if (advancedInputs.length > 1) {
+                    message += 's';
+                }
+
+                if (settings.showAdvanced) {
+                    message += ' showing';
+                    label = 'hide advanced';
+                } else {
+                    label = 'show advanced';
+                    message += ' hidden';
+                }
+
+                showAdvancedButton = ui.buildButton({
+                    label: label,
+                    type: 'link',
+                    name: 'advanced-parameters-toggler',
+                    event: {
+                        type: 'toggle-advanced',
+                    },
+                    events: events,
+                });
+
+                ui.setContent(
+                    [areaElement, 'advanced-hidden-message'],
+                    '(' + message + ') ' + showAdvancedButton
+                );
             }
-
-            showAdvancedButton = ui.buildButton({
-                label: label,
-                type: 'link',
-                name: 'advanced-parameters-toggler',
-                event: {
-                    type: 'toggle-advanced',
-                },
-                events: events,
-            });
-
-            ui.setContent(
-                [areaElement, 'advanced-hidden-message'],
-                '(' + message + ') ' + showAdvancedButton
-            );
 
             events.attachEvents();
         }
@@ -355,7 +362,7 @@ define([
 
             bus.on('toggle-advanced', function () {
                 settings.showAdvanced = !settings.showAdvanced;
-                renderAdvanced();
+                showHideAdvanced();
             });
 
             runtime.bus().on('workspace-changed', function () {

@@ -265,50 +265,36 @@ define([
             // Also update the count in the paramters.
             const events = Events.make({ node: container });
 
-            let message, showAdvancedButton;
+            let showAdvancedButton,
+                label,
+                message = String(advancedInputs.length) + ' advanced parameter';
+
+            if (advancedInputs.length > 1) {
+                message += 's';
+            }
 
             if (settings.showAdvanced) {
-                if (advancedInputs.length > 1) {
-                    message = String(advancedInputs.length) + ' advanced parameters showing';
-                } else {
-                    message = String(advancedInputs.length) + ' advanced parameter showing';
-                }
-
-                showAdvancedButton = ui.buildButton({
-                    label: 'hide advanced',
-                    type: 'link',
-                    name: 'advanced-parameters-toggler',
-                    event: {
-                        type: 'toggle-advanced',
-                    },
-                    events: events,
-                });
-
-                ui.setContent(
-                    [areaElement, 'advanced-hidden-message'],
-                    '(' + message + ') ' + showAdvancedButton
-                );
+                message += ' showing';
+                label = 'hide advanced';
             } else {
-                if (advancedInputs.length > 1) {
-                    message = String(advancedInputs.length) + ' advanced parameters hidden';
-                } else {
-                    message = String(advancedInputs.length) + ' advanced parameter hidden';
-                }
-                showAdvancedButton = ui.buildButton({
-                    label: 'show advanced',
-                    type: 'link',
-                    name: 'advanced-parameters-toggler',
-                    event: {
-                        type: 'toggle-advanced',
-                    },
-                    events: events,
-                });
-
-                ui.setContent(
-                    [areaElement, 'advanced-hidden-message'],
-                    '(' + message + ') ' + showAdvancedButton
-                );
+                label = 'show advacned';
+                message += ' hidden';
             }
+
+            showAdvancedButton = ui.buildButton({
+                label: label,
+                type: 'link',
+                name: 'advanced-parameters-toggler',
+                event: {
+                    type: 'toggle-advanced',
+                },
+                events: events,
+            });
+
+            ui.setContent(
+                [areaElement, 'advanced-hidden-message'],
+                '(' + message + ') ' + showAdvancedButton
+            );
 
             events.attachEvents();
         }

@@ -25,7 +25,8 @@ define([
     */
     function ConfigureWidget(options) {
         const model = options.model,
-            spec = options.spec;
+            spec = options.spec,
+            fileType = options.fileType;
 
         let container = null,
             runtime = Runtime.make();

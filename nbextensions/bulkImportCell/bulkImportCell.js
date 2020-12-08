@@ -100,7 +100,6 @@ define([
      *    {
      *      'fastq_reads': ['file1.fq', 'file2.fq']
      *    }
-     *  - workspaceInfo - Object with all workspace details we need to initialize widgets
      */
     function BulkImportCell(options) {
         if (options.cell.cell_type !== 'code') {
@@ -112,8 +111,7 @@ define([
             busEventManager = BusEventManager.make({
                 bus: runtime.bus()
             }),
-            typesToFiles = setupFileData(options.importData) || cell.metadata.kbase.bulkImportCell.inputs,
-            workspaceInfo = options.workspaceInfo;
+            typesToFiles = setupFileData(options.importData) || cell.metadata.kbase.bulkImportCell.inputs;
 
         /**
          * If importData exists, and has the right structure, use it.
@@ -211,9 +209,9 @@ define([
             controlPanel,
             fileTypePanel,
             model = Props.make({
-                data: TestAppObj,
+                data: Utils.getMeta(cell, 'bulkImportCell'), //TestAppObj,
                 onUpdate: function(props) {
-                    Utils.setMeta(this.cell, 'bulkImportCell', props.getRawObject());
+                    Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
                 }
             });
         if (options.initialize) {
@@ -364,7 +362,7 @@ define([
                     // eslint-disable-next-line no-self-assign
                     cell.metadata = cell.metadata;
                     updateState();
-                    runTab(state.tab.selected);
+                    runTab(state.tab.selected, state.fileType.selected);
                 });
         }
 
@@ -383,14 +381,24 @@ define([
          * 1. if there's a tab showing, stop() it and detach it
          * 2. update the tabs state to be selected
          * @param {string} tab id of the tab to display
+         * @param {string} fileType id of the filetype we're swapping to
          */
-        function toggleTab(tab) {
+        function toggleTab(tab, fileType) {
             // if we're toggling the currently selected tab off,
             // then it should be turned off.
-            if (tab === state.tab.selected && tab !== null) {
+            if (tab === state.tab.selected && tab !== null && !fileType) {
                 tab = null;
             }
             state.tab.selected = tab;
+            stopWidget();
+
+            if (tab !== null) {
+                runTab(tab, fileType);
+            }
+            cellTabs.setState(state.tab);
+        }
+
+        function stopWidget() {
             if (tabWidget !== null) {
                 tabWidget.stop();
                 const widgetNode = ui.getElement('widget');
@@ -398,11 +406,6 @@ define([
                     widgetNode.removeChild(widgetNode.firstChild);
                 }
             }
-
-            if (tab !== null) {
-                runTab(tab);
-            }
-            cellTabs.setState(state.tab);
         }
 
         /**
@@ -410,14 +413,15 @@ define([
          * This doesn't change any state, just runs what it's told to,
          * and returns the widget's start() Promise.
          * @param {string} tab
+         * @param {string} fileType
          */
-        function runTab(tab) {
+        function runTab(tab, fileType) {
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: cellBus,
-                workspaceInfo: workspaceInfo,
-                cell: cell,
-                model: model,
-                spec: spec
+                cell,
+                model,
+                spec,
+                fileType
             });
 
             let node = document.createElement('div');
@@ -440,7 +444,15 @@ define([
          * @param {string} fileType - the file type that should be shown
          */
         function toggleFileType(fileType) {
+            if (state.fileType.selected === fileType) {
+                return;  // do nothing if we're toggling to the same fileType
+            }
             state.fileType.selected = fileType;
+            // stop existing tab widget
+            // restart it with the new filetype
+            toggleTab(state.tab.selected, fileType);
+
+
             updateState();
         }
 

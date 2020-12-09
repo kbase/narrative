@@ -19,40 +19,92 @@ define([
         tr = t('tr'),
         th = t('th'),
         tbody = t('tbody'),
+        div = t('div'),
+        span = t('span'),
+        icon = t('icon'),
+        button = t('button'),
         cssBaseClass = 'kb-job-state',
         selectedJobCssClass = 'job-selected';
 
+    let jobsIndexStart,
+        jobsIndexEnd,
+        totalJobsCount;
+
+
 
     function renderTable() {
-        return table({
-            class: `table ${cssBaseClass}__table`
-        }, [
-            thead({
-                class: `${cssBaseClass}__table_head`,
-            },
-            [
-                tr({
-                    class: `${cssBaseClass}__table_head_row`,
+        jobsIndexStart = 1;
+        jobsIndexEnd = 7;
+        totalJobsCount = 7;
+
+        return [
+            table({
+                class: `table ${cssBaseClass}__table`
+            }, [
+                thead({
+                    class: `${cssBaseClass}__table_head`,
                 },
                 [
-                    th({
-                        class: `${cssBaseClass}__table_head_cell--object`
-                    }, ['Object']),
-                    th({
-                        class: `${cssBaseClass}__table_head_cell--status`
-                    }, ['Status']),
-                    th({
-                        class: `${cssBaseClass}__table_head_cell--action`
-                    }, ['Action']),
-                    th({
-                        class: `${cssBaseClass}__table_head_cell--log-view`
-                    }, ['Logs']),
-                ])
+                    tr({
+                        class: `${cssBaseClass}__table_head_row`,
+                    },
+                    [
+                        th({
+                            class: `${cssBaseClass}__table_head_cell--object`
+                        }, [
+                            'Object',
+                            icon({
+                                class: 'fa fa-sort'
+                            })
+                        ]),
+                        th({
+                            class: `${cssBaseClass}__table_head_cell--status`
+                        }, [
+                            'Status',
+                            icon({
+                                class: 'fa fa-sort'
+                            })
+                        ]),
+                        th({
+                            class: `${cssBaseClass}__table_head_cell--log-view`
+                        }, [
+                            'Cancel/Retry All',
+                            icon({
+                                class: 'fa fa-caret-down kb-pointer'
+                            })
+                        ]),
+                    ])
+                ]),
+                tbody({
+                    class: `${cssBaseClass}__table_body`,
+                })
             ]),
-            tbody({
-                class: `${cssBaseClass}__table_body`,
-            })
-        ]);
+            div({}[
+                span({
+                    class: `${cssBaseClass}__table_footer`,
+                },[
+                    `Showing ${jobsIndexStart} to ${jobsIndexEnd} `,
+                    icon({
+                        class: 'fa fa-caret-down kb-pointer'
+                    }),
+                    ` of ${totalJobsCount} entries`,
+
+                ]),
+                span({
+                    class: `${cssBaseClass}__table_footer`,
+                },[
+                    button({}[
+                        'Previous'
+                    ]),
+                    button({}[
+                        '1'
+                    ]),
+                    button({}[
+                        'Next'
+                    ]),
+                ])
+            ])
+        ].join('');
     }
 
     function factory(config) {

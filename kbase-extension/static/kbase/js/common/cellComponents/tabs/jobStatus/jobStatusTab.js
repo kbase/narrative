@@ -40,7 +40,6 @@ define([
                 dataElement: 'kb-job-list-wrapper'
             }, [
                 ui.buildPanel({
-                    title: 'Job Batch',
                     name: 'subjobs',
                     classes: [
                         'kb-panel-light'

@@ -14,85 +14,44 @@ define([
         cssBaseClass = 'kb-job-state';
 
     function createStateCell(jobState) {
-        let label, icon;
+        let label;
         switch (jobState) {
             case 'completed':
-                label = 'success';
-                icon = 'fa fa-check';
+                label = 'Success';
                 break;
             case 'created':
+            case 'estimating':
             case 'queued':
-                label = jobState;
-                icon = 'fa fa-angle-double-right';
+                label = 'Queued';
                 break;
             case 'running':
-                label = jobState;
-                icon = 'fa fa-spinner';
+                label = 'Running';
                 break;
             case 'error':
+                label = 'Failed';
+                break;
             case 'terminated':
-                label = jobState;
-                icon = 'fa fa-times';
+                label = 'Cancelled';
                 break;
             case 'does_not_exist':
-                label = 'does not exist';
-                icon = 'fa fa-question';
+                label = 'Does not exist';
                 break;
-            case 'estimating':
-            default:
-                label = jobState;
-                icon = 'fa fa-question';
         }
 
-        return td({
-            class: `${cssBaseClass}__cell--status`,
-        }, [
+        return td({}, [
             span({
-                class: `${icon} ${cssBaseClass}__icon--${jobState}`
+                class: `fa fa-circle ${cssBaseClass}__icon--${jobState}`
             }),
             ' ' + label
         ]);
     }
 
-    function createActionCell(jobState) {
-        let label;
-        switch (jobState) {
-            case 'completed':
-                label = 'Go to results';
-                break;
-            case 'queued':
-                label = 'Cancel';
-                break;
-            case 'running':
-                label = 'Cancel';
-                break;
-            case 'error':
-                label = 'Retry';
-                break;
-            case 'terminated':
-                label = 'Retry';
-                break;
-            case 'does_not_exist':
-                label = 'does not exist';
-                break;
-            default:
-                label = jobState;
-        }
-        return td({
-            class: `${cssBaseClass}__cell--action`,
-        }, [
-            label
-        ]);
-    }
-
     function createLogLinkCell(jobState) {
-        return td({
-            class: `${cssBaseClass}__cell--log-view`,
-        }, [
+        return td({}, [
             span({
                 class: `${cssBaseClass}__log_link--${jobState}`
             }, [
-                'View logs'
+                'Show log'
             ])
         ]);
     }
@@ -116,7 +75,6 @@ define([
                 jobIdDiv
             ])
             + createStateCell(jobStatus)
-            + createActionCell(jobStatus)
             + createLogLinkCell(jobStatus);
         }
 

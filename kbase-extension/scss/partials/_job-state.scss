@@ -1,40 +1,22 @@
 .kb-job-state {
-  &__cell {
-    /* .kb-job-state__cell--action */
-    &--action {}
-
-    /* .kb-job-state__cell--object */
-    &--object {}
-
-    /* .kb-job-state__cell--status */
-    &--status {
-      font-weight: 700;
-      color: rgb(0, 0, 0);
-    }
-  }
-
   &__icon {
-    /*  .kb-job-state__icon--completed,
-        .kb-job-state__icon--queued,
-        .kb-job-state__icon--running
-    */
-    &--completed,
-    &--queued,
-    &--running {
-      color: rgb(0, 128, 0);
+    margin: 4px;
+
+    &--completed{
+      color: rgb(17, 133, 119);
     }
 
-    /*  .kb-job-state__icon--error */
-    &--error {
-      color: rgb(255, 0, 0);
-    }
-
-    /*  .kb-job-state__icon--does_not_exist,
-        .kb-job-state__icon--terminated
-    */
+    &--error,
     &--does_not_exist,
-    &--terminated {
-      color: rgb(255, 165, 0);
+    &--terminated  {
+      color: rgb(210,35,42);
+    }
+
+    &--queued,
+    &--created,
+    &--estimating,
+    &--running {
+      color: rgb(161,185,207);
     }
   }
 }

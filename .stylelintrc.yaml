@@ -50,3 +50,12 @@ rules:
           - transition
         deg:
           - background
+  value-keyword-case:
+    - lower
+    - ignoreKeywords: [
+        /^\$/
+      ]
+    - ignoreProperties: [
+        "/^font.*/",
+        url
+      ]

@@ -880,7 +880,6 @@ define([
             this.initSharePanel();
             this.initStaticNarrativesPanel();
             this.updateDocumentVersion()
-                .then(() => this.narrController.render())
                 .finally(() => this.sidePanel.render());
         });
         $([Jupyter.events]).on('kernel_connected.Kernel', () => {
@@ -948,7 +947,6 @@ define([
      */
     Narrative.prototype.saveNarrative = function () {
         this.stopVersionCheck = true;
-        this.narrController.saveAllCellStates();
         Jupyter.notebook.save_checkpoint();
         this.toggleDocumentVersionBtn(false);
     };

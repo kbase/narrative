@@ -38,21 +38,6 @@ define([
     return KBWidget({
         name: 'kbaseNarrativeWorkspace',
         version: '1.0.0',
-        options: {
-            loadingImage: Config.get('loading_gif'),
-            tableElem: null,
-            controlsElem: null,
-            ws_id: null,
-            methodStoreURL: Config.url('narrative_method_store')
-        },
-        ws_client: null,
-        ws_id: null,
-        defaultOutputWidget: 'kbaseDefaultNarrativeOutput',
-        defaultInputWidget: 'kbaseDefaultNarrativeInput',
-        errorWidget: 'kbaseNarrativeError',
-        connectable: {},
-
-        inputsRendered: false,
 
         init: function (options) {
             this._super(options);
@@ -91,12 +76,6 @@ define([
             // we may have additional modes (as has been discussed) -
             this.uiMode = this.narrativeIsReadOnly ? 'view' : 'edit';
             Jupyter.narrative.uiMode = this.uiMode;
-
-            this.first_readonly = true; // still trying for first check?
-            this.last_readonly_check = null; // avoid frequent checks
-            this.readonly_buttons = []; // list of buttons toggled
-            this.readonly_params = []; // list of params toggled
-            this.first_show_controls = true; // 1st panel show
 
             $(document).on('appClicked.Narrative', (event, method, tag, parameters) => {
                 if (this.uiMode === 'view') {

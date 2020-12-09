@@ -32,7 +32,7 @@ module.exports = function (config) {
         },
         files: [
             'kbase-extension/static/narrative_paths.js',
-            {pattern: 'test/unit/spec/**/*.js', included: false},
+            {pattern: 'test/unit/spec/narrative_core/kbaseNarrativeWorkspace-spec.js', included: false},
             {pattern: 'node_modules/jasmine-ajax/lib/mock-ajax.js', included: true},
             {pattern: 'kbase-extension/static/ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml', included: false, served: true},
             {pattern: 'kbase-extension/static/**/*.css', included: false, served: true},

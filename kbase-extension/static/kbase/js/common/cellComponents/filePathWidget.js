@@ -7,18 +7,8 @@ define([
     'common/props',
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
-    'common/runtime'
-], function (
-    Promise,
-    $,
-    html,
-    UI,
-    Events,
-    Props,
-    FieldWidget,
-    ParamResolver,
-    Runtime
-) {
+    'common/runtime',
+], function (Promise, $, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) {
     'use strict';
 
     const tag = html.tag,
@@ -47,190 +37,202 @@ define([
             events = Events.make();
 
         bus = runtime.bus().makeChannelBus({
-            description: 'A file path widget'
+            description: 'A file path widget',
         });
 
-        function makeFieldWidget(appSpec, parameterSpec, value, closeParameters) {
-            return paramResolver.loadInputControl(parameterSpec)
-                .then(function (inputWidget) {
-                    let fieldWidget = FieldWidget.make({
-                        inputControlFactory: inputWidget,
-                        showHint: true,
-                        useRowHighight: true,
-                        initialValue: value,
-                        appSpec: appSpec,
-                        parameterSpec: parameterSpec,
-                        workspaceId: workspaceId,
-                        referenceType: 'name',
-                        paramsChannelName: paramsBus.channelName,
-                        closeParameters: closeParameters
-                    });
+        function makeFieldWidget(inputWidget, appSpec, parameterSpec, value, closeParameters) {
+            let fieldWidget = FieldWidget.make({
+                inputControlFactory: inputWidget,
+                showHint: true,
+                useRowHighight: true,
+                initialValue: value,
+                appSpec: appSpec,
+                parameterSpec: parameterSpec,
+                workspaceId: workspaceId,
+                referenceType: 'name',
+                paramsChannelName: paramsBus.channelName,
+                closeParameters: closeParameters,
+            });
 
-                    // Forward all changed parameters to the controller. That is our main job!
-                    fieldWidget.bus.on('changed', function (message) {
-                        paramsBus.send({
+            // Forward all changed parameters to the controller. That is our main job!
+            fieldWidget.bus.on('changed', function (message) {
+                paramsBus.send(
+                    {
+                        parameter: parameterSpec.id,
+                        newValue: message.newValue,
+                        isError: message.isError,
+                    },
+                    {
+                        key: {
+                            type: 'parameter-changed',
                             parameter: parameterSpec.id,
-                            newValue: message.newValue,
-                            isError: message.isError
-                        }, {
-                            key: {
-                                type: 'parameter-changed',
-                                parameter: parameterSpec.id
-                            }
-                        });
-
-                        paramsBus.emit('parameter-changed', {
-                            parameter: parameterSpec.id,
-                            newValue: message.newValue,
-                            isError: message.isError
-                        });
-                    });
-
-                    fieldWidget.bus.on('touched', function () {
-                        paramsBus.emit('parameter-touched', {
-                            parameter: parameterSpec.id
-                        });
-                    });
-
-
-                    // An input widget may ask for the current model value at any time.
-                    fieldWidget.bus.on('sync', function () {
-                        paramsBus.emit('parameter-sync', {
-                            parameter: parameterSpec.id
-                        });
-                    });
-
-                    fieldWidget.bus.on('sync-params', function (message) {
-                        paramsBus.emit('sync-params', {
-                            parameters: message.parameters,
-                            replyToChannel: fieldWidget.bus.channelName
-                        });
-                    });
-
-                    fieldWidget.bus.on('set-param-state', function (message) {
-                        paramsBus.emit('set-param-state', {
-                            id: parameterSpec.id,
-                            state: message.state
-                        });
-                    });
-
-                    fieldWidget.bus.respond({
-                        key: {
-                            type: 'get-param-state'
                         },
-                        handle: function () {
-                            return paramsBus.request({ id: parameterSpec.id }, {
-                                key: {
-                                    type: 'get-param-state'
-                                }
-                            });
-                        }
-                    });
+                    }
+                );
 
-
-                    /*
-                   * Or in fact any parameter value at any time...
-                   */
-                    fieldWidget.bus.on('get-parameter-value', function (message) {
-                        paramsBus.request({
-                            parameter: message.parameter
-                        }, {
-                            key: 'get-parameter-value'
-                        })
-                            .then(function (response) {
-                                bus.emit('parameter-value', {
-                                    parameter: response.parameter
-                                });
-                            });
-                    });
-
-                    fieldWidget.bus.respond({
-                        key: {
-                            type: 'get-parameter'
-                        },
-                        handle: function (message) {
-                            if (message.parameterName) {
-                                return paramsBus.request(message, {
-                                    key: {
-                                        type: 'get-parameter'
-                                    }
-                                });
-                            }
-                            return null;
-                        }
-                    });
-
-                    fieldWidget.bus.respond({
-                        key: {
-                            type: 'get-parameters'
-                        },
-                        handle: (message) => {
-                            if (message.parameterNames) {
-                                return Promise.all(
-                                    message.parameterNames.map((paramName) => {
-                                        return paramsBus.request({
-                                            parameterName: paramName
-                                        }, {
-                                            key: {
-                                                type: 'get-parameter'
-                                            }
-                                        })
-                                            .then((result) => {
-                                                let returnVal = {};
-                                                returnVal[paramName] = result.value;
-                                                return returnVal;
-                                            });
-                                    })
-                                )
-                                    .then((results) => {
-                                        let combined = {};
-                                        results.forEach((res) => {
-                                            Object.keys(res).forEach((key) => {
-                                                combined[key] = res[key];
-                                            });
-                                        });
-                                        return combined;
-                                    });
-                            }
-                        }
-                    });
-
-                    // Just pass the update along to the input widget.
-                    paramsBus.listen({
-                        key: {
-                            type: 'update',
-                            parameter: parameterSpec.id
-                        },
-                        handle: function (message) {
-                            fieldWidget.bus.emit('update', {
-                                value: message.value
-                            });
-                        }
-                    });
-
-                    return fieldWidget;
+                paramsBus.emit('parameter-changed', {
+                    parameter: parameterSpec.id,
+                    newValue: message.newValue,
+                    isError: message.isError,
                 });
+            });
+
+            fieldWidget.bus.on('touched', function () {
+                paramsBus.emit('parameter-touched', {
+                    parameter: parameterSpec.id,
+                });
+            });
+
+            // An input widget may ask for the current model value at any time.
+            fieldWidget.bus.on('sync', function () {
+                paramsBus.emit('parameter-sync', {
+                    parameter: parameterSpec.id,
+                });
+            });
+
+            fieldWidget.bus.on('sync-params', function (message) {
+                paramsBus.emit('sync-params', {
+                    parameters: message.parameters,
+                    replyToChannel: fieldWidget.bus.channelName,
+                });
+            });
+
+            fieldWidget.bus.on('set-param-state', function (message) {
+                paramsBus.emit('set-param-state', {
+                    id: parameterSpec.id,
+                    state: message.state,
+                });
+            });
+
+            fieldWidget.bus.respond({
+                key: {
+                    type: 'get-param-state',
+                },
+                handle: function () {
+                    return paramsBus.request(
+                        { id: parameterSpec.id },
+                        {
+                            key: {
+                                type: 'get-param-state',
+                            },
+                        }
+                    );
+                },
+            });
+
+            /*
+             * Or in fact any parameter value at any time...
+             */
+            fieldWidget.bus.on('get-parameter-value', function (message) {
+                paramsBus
+                    .request(
+                        {
+                            parameter: message.parameter,
+                        },
+                        {
+                            key: 'get-parameter-value',
+                        }
+                    )
+                    .then(function (response) {
+                        bus.emit('parameter-value', {
+                            parameter: response.parameter,
+                        });
+                    });
+            });
+
+            fieldWidget.bus.respond({
+                key: {
+                    type: 'get-parameter',
+                },
+                handle: function (message) {
+                    if (message.parameterName) {
+                        return paramsBus.request(message, {
+                            key: {
+                                type: 'get-parameter',
+                            },
+                        });
+                    }
+                    return null;
+                },
+            });
+
+            fieldWidget.bus.respond({
+                key: {
+                    type: 'get-parameters',
+                },
+                handle: (message) => {
+                    if (message.parameterNames) {
+                        return Promise.all(
+                            message.parameterNames.map((paramName) => {
+                                return paramsBus
+                                    .request(
+                                        {
+                                            parameterName: paramName,
+                                        },
+                                        {
+                                            key: {
+                                                type: 'get-parameter',
+                                            },
+                                        }
+                                    )
+                                    .then((result) => {
+                                        let returnVal = {};
+                                        returnVal[paramName] = result.value;
+                                        return returnVal;
+                                    });
+                            })
+                        ).then((results) => {
+                            let combined = {};
+                            results.forEach((res) => {
+                                Object.keys(res).forEach((key) => {
+                                    combined[key] = res[key];
+                                });
+                            });
+                            return combined;
+                        });
+                    }
+                },
+            });
+
+            // Just pass the update along to the input widget.
+            paramsBus.listen({
+                key: {
+                    type: 'update',
+                    parameter: parameterSpec.id,
+                },
+                handle: function (message) {
+                    fieldWidget.bus.emit('update', {
+                        value: message.value,
+                    });
+                },
+            });
+
+            return fieldWidget;
         }
 
-        function updateRowNumbers(filePathRows){
-            filePathRows.forEach(function(filePathRow, index){
-                $(filePathRow).find(`.${cssBaseClass}__file_number`).text(index + 1);
+        function updateRowNumbers(filePathRows) {
+            filePathRows.forEach(function (filePathRow, index) {
+                $(filePathRow)
+                    .find(`.${cssBaseClass}__file_number`)
+                    .text(index + 1);
             });
         }
 
-        function addRow(e){
-            $(e.target).prev('table').append(
-                tr({
-                    class: `${cssBaseClass}__table_row`,
-                    dataElement: `${cssClassType}-fields-row`,
-                })
-            );
+        function addRow(e) {
+            $(e.target)
+                .prev('table')
+                .append(
+                    tr({
+                        class: `${cssBaseClass}__table_row`,
+                        dataElement: `${cssClassType}-fields-row`,
+                    })
+                );
 
             let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
 
             filePathRows.forEach((filePathRow) => {
                 // Only render row if it does not have the file path widgets as children (aka an empty row)
-                if (filePathRow.childElementCount === 0){
+                if (filePathRow.childElementCount === 0) {
                     renderFilePathRow(filePathRow);
                 }
             });
@@ -246,40 +248,47 @@ define([
                     title: span(['File Paths']),
                     name: `${cssClassType}s-area`,
                     body: [
-                        table({
-                            class: `${cssBaseClass}__table`,
-                            dataElement: `${cssClassType}-fields`
-                        }, [
-                            tr({
-                                class: `${cssBaseClass}__table_row`,
-                                dataElement: `${cssClassType}-fields-row`,
-                            })
-                        ]),
-                        button({
-                            class: `${cssBaseClass}__button--add_row btn btn__text`,
-                            type: 'button',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: function(e){
-                                    addRow(e);
-                                }
-                            })
-                        }, [
-                            span({
-                                class: `${cssBaseClass}__button_icon--add_row fa fa-plus`,
-                            }),
-                            'Add Row'
-                        ])
+                        table(
+                            {
+                                class: `${cssBaseClass}__table`,
+                                dataElement: `${cssClassType}-fields`,
+                            },
+                            [
+                                tr({
+                                    class: `${cssBaseClass}__table_row`,
+                                    dataElement: `${cssClassType}-fields-row`,
+                                }),
+                            ]
+                        ),
+                        button(
+                            {
+                                class: `${cssBaseClass}__button--add_row btn btn__text`,
+                                type: 'button',
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function (e) {
+                                        addRow(e);
+                                    },
+                                }),
+                            },
+                            [
+                                span({
+                                    class: `${cssBaseClass}__button_icon--add_row fa fa-plus`,
+                                }),
+                                'Add Row',
+                            ]
+                        ),
                     ],
-                    classes: ['kb-panel-light']
-                })
+                    classes: ['kb-panel-light'],
+                }),
             ]);
 
-            const content = form({
-                dataElement: `${cssClassType}-widget-form`
-            }, [
-                formContent
-            ]);
+            const content = form(
+                {
+                    dataElement: `${cssClassType}-widget-form`,
+                },
+                [formContent]
+            );
 
             return content;
         }
@@ -289,7 +298,7 @@ define([
             container = node;
             ui = UI.make({
                 node: container,
-                bus: bus
+                bus: bus,
             });
             let layout = renderLayout();
             container.innerHTML = layout;
@@ -321,83 +330,95 @@ define([
                 return param.id;
             });
 
-            const layout = orderedParams.map((parameterId) => {
-                let id = html.genId();
-                view[parameterId] = {
-                    id: id
-                };
+            const layout = orderedParams
+                .map((parameterId) => {
+                    let id = html.genId();
+                    view[parameterId] = {
+                        id: id,
+                    };
 
-                return tag('div')({
-                    class: `${cssBaseClass}__table_cell--file-path_id`,
-                    id: id,
-                    dataParameter: parameterId,
-                });
-            }).join('\n');
+                    return tag('div')({
+                        class: `${cssBaseClass}__table_cell--file-path_id`,
+                        id: id,
+                        dataParameter: parameterId,
+                    });
+                })
+                .join('\n');
 
             return {
                 content: layout,
                 layout: orderedParams,
                 params: params,
                 view: view,
-                paramMap: paramMap
+                paramMap: paramMap,
             };
         }
 
-        function findPathParams(params){
-            return params.layout.filter(function (id) {
-                const original = params.specs[id].original;
+        function findPathParams(params) {
+            return params.layout
+                .filter(function (id) {
+                    const original = params.specs[id].original;
 
-                let isFilePathParam = false;
+                    let isFilePathParam = false;
 
-                if (original) {
+                    if (original) {
+                        //looking for file inputs via the dynamic_dropdown data source
+                        if (original.dynamic_dropdown_options) {
+                            isFilePathParam =
+                                original.dynamic_dropdown_options.data_source === 'ftp_staging';
+                        }
 
-                    //looking for file inputs via the dynamic_dropdown data source
-                    if (original.dynamic_dropdown_options) {
-                        isFilePathParam = original.dynamic_dropdown_options.data_source === 'ftp_staging';
+                        //looking for output fields - these should go in file paths
+                        else if (original.text_options && original.text_options.is_output_name) {
+                            isFilePathParam = true;
+                        }
                     }
 
-                    //looking for output fields - these should go in file paths
-                    else if (original.text_options && original.text_options.is_output_name) {
-                        isFilePathParam = true;
-                    }
-                }
-
-                return isFilePathParam;
-
-            }).map(function (id) {
-                return params.specs[id];
-            });
+                    return isFilePathParam;
+                })
+                .map(function (id) {
+                    return params.specs[id];
+                });
         }
 
         function createFilePathWidget(appSpec, filePathParams, parameterId) {
             const spec = filePathParams.paramMap[parameterId];
-            return Promise.try(() => {
-                makeFieldWidget(appSpec, spec, initialParams[spec.id], filePathParams.layout)
-                    .then((widget) => {
-                        widgets.push(widget);
-                        return widget.start({
-                            node: document.getElementById(filePathParams.view[spec.id].id)
-                        });
+            return paramResolver
+                .loadInputControl(spec)
+                .then((inputWidget) => {
+                    const widget = makeFieldWidget(
+                        inputWidget,
+                        appSpec,
+                        spec,
+                        initialParams[spec.id],
+                        filePathParams.layout
+                    );
+
+                    widgets.push(widget);
+                    return widget.start({
+                        node: document.getElementById(filePathParams.view[spec.id].id),
                     });
-            }).catch((ex) => {
-                const errorDisplay = div({
-                    class: 'kb-field-widget__error_message--file-paths'
-                }, [
-                    ex.message
-                ]);
-                document.getElementById(filePathParams.view[spec.id].id).innerHTML = errorDisplay;
+                })
+                .catch((ex) => {
+                    const errorDisplay = div(
+                        {
+                            class: 'kb-field-widget__error_message--file-paths',
+                        },
+                        [ex.message]
+                    );
+                    document.getElementById(
+                        filePathParams.view[spec.id].id
+                    ).innerHTML = errorDisplay;
 
-                throw new Error('Error making input field widget', ex);
-            });
-
+                    throw new Error('Error making input field widget', ex);
+                });
         }
 
-        function deleteRow(e){
+        function deleteRow(e) {
             $(e.target).closest('tr').remove();
             let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
             updateRowNumbers(filePathRows);
         }
-
 
         function renderFilePathRow(filePathRow) {
             const appSpec = model.getItem('appSpec');
@@ -408,42 +429,46 @@ define([
             if (!filePathParams.layout.length) {
                 ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
             } else {
-
                 filePathRow.innerHTML = [
                     td({
                         class: `${cssBaseClass}__file_number`,
                     }),
                     td(
-                        div({
-                            class: `${cssBaseClass}__param_container row`,
-                        }, [
-                            filePathParams.content
-                        ])
+                        div(
+                            {
+                                class: `${cssBaseClass}__param_container row`,
+                            },
+                            [filePathParams.content]
+                        )
                     ),
                     td({}, [
-                        button({
-                            class: `${cssBaseClass}__button--delete btn btn__text`,
-                            type: 'button',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: function(e){
-                                    deleteRow(e);
-                                }
-                            })
-                        },[
-                            icon({
-                                class: 'fa fa-trash-o fa-lg',
-                            })
-                        ])
-                    ])
+                        button(
+                            {
+                                class: `${cssBaseClass}__button--delete btn btn__text`,
+                                type: 'button',
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function (e) {
+                                        deleteRow(e);
+                                    },
+                                }),
+                            },
+                            [
+                                icon({
+                                    class: 'fa fa-trash-o fa-lg',
+                                }),
+                            ]
+                        ),
+                    ]),
                 ].join('');
 
-                Promise.all(filePathParams.layout.map((parameterId) => {
-                    createFilePathWidget(appSpec, filePathParams, parameterId);
-                })).then(
-                    events.attachEvents(container)
-                );
-
+                Promise.all(
+                    filePathParams.layout.map(async (parameterId) => {
+                        await createFilePathWidget(appSpec, filePathParams, parameterId);
+                    })
+                ).then(() => {
+                    events.attachEvents(container);
+                });
             }
         }
 
@@ -460,12 +485,11 @@ define([
                         widget.bus.send(message, {
                             key: {
                                 type: 'parameter-changed',
-                                parameter: message.parameter
-                            }
+                                parameter: message.parameter,
+                            },
                         });
                     });
                 });
-
 
                 let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
 
@@ -487,13 +511,13 @@ define([
         return {
             start: start,
             stop: stop,
-            bus: bus
+            bus: bus,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

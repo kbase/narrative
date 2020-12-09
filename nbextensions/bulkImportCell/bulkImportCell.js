@@ -14,6 +14,7 @@ define([
     './cellTabs',
     './cellControlPanel',
     'common/cellComponents/tabs/infoTab',
+    'common/cellComponents/tabs/jobStatus/jobStatusTab',
     './tabs/configure',
     './fileTypePanel',
     './bulkImportCellStates',
@@ -34,6 +35,7 @@ define([
     CellTabs,
     CellControlPanel,
     InfoTabWidget,
+    JobStatusTabWidget,
     ConfigureWidget,
     FileTypePanel,
     States,
@@ -151,9 +153,9 @@ define([
                         label: 'Info',
                         widget: InfoTabWidget,
                     },
-                    logs: {
+                    jobStatus: {
                         label: 'Job Status',
-                        widget: DefaultWidget()
+                        widget: JobStatusTabWidget
                     },
                     results: {
                         label: 'Result',
@@ -209,7 +211,7 @@ define([
             controlPanel,
             fileTypePanel,
             model = Props.make({
-                data: Utils.getMeta(cell, 'bulkImportCell'), //TestAppObj,
+                data: TestAppObj, //Utils.getMeta(cell, 'bulkImportCell'),
                 onUpdate: function(props) {
                     Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
                 }
@@ -421,7 +423,8 @@ define([
                 cell,
                 model,
                 spec,
-                fileType
+                fileType,
+                jobId: undefined
             });
 
             let node = document.createElement('div');

@@ -21,7 +21,7 @@ define([], () => {
                             enabled: true,
                             visible: true
                         },
-                        logs: {
+                        jobStatus: {
                             enabled: false,
                             visible: true
                         },

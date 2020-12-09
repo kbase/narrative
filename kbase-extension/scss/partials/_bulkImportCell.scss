@@ -5,7 +5,7 @@
 $component-border: rgb(196, 196, 196);
 $filetype-icon-color: rgb(3, 81, 125);
 $filetype-highlight-color: rgb(204, 229, 243);
-$filetype-hover-color: #E7EFF8;
+$filetype-hover-color: rgb(231, 239, 248);
 $panel-separator-color: rgb(33, 150, 243);
 $button-outdated: rgb(247, 155, 34);
 
@@ -211,12 +211,12 @@ $button-outdated: rgb(247, 155, 34);
 .kb-app-params__fields--parameters {
   /* kb-app-params__fields--parameters__hidden_field */
   &__hidden_field {
-    display: none
+    display: none;
   }
 }
 
 .kb-field-widget__error_message--parameters {
-  border: 1px red solid;
+  border: 1px solid use_color("error");
 }
 
 .kb-field-cell {
@@ -237,7 +237,7 @@ $button-outdated: rgb(247, 155, 34);
 .kb-file-path {
   /* .kb-file-path-table-row */
   &__table {
-    width: 100%
+    width: 100%;
   }
   &__table_row {
     font: normal 400 14px/18px $typeface-page-text;
@@ -256,7 +256,7 @@ $button-outdated: rgb(247, 155, 34);
   }
 
   &__button--delete {
-    padding-top: 20px;
+    margin-top: 20px;
   }
 
   &__button--add_row {
@@ -271,5 +271,4 @@ $button-outdated: rgb(247, 155, 34);
     font-weight: 700;
     padding: 20px 10px 0 0;
   }
-
 }

@@ -1,10 +1,23 @@
 /*jslint white: true*/
 define([
-    'kbaseNarrativeWorkspace'
-], (Widget) => {
+    'kbaseNarrativeWorkspace',
+    'jquery'
+], (kbaseNarrativeWorkspace, $) => {
     'use strict';
     describe('Test the kbaseNarrativeWorkspace widget', () => {
-        it('should load', () => {
+        let $node;
+        beforeEach(() => {
+            jasmine.Ajax.install();
+            $node = $('div');
+            $('body').append($node);
+        });
+
+        afterEach(() => {
+            jasmine.Ajax.uninstall();
+            $node.detach();
+        });
+
+        it('should attach to a node and do stuff', () => {
 
         });
     });

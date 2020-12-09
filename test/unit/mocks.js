@@ -119,6 +119,7 @@ define('narrativeMocks', [
      *  - deleteCallback: function to be called when `delete_cell` is called.
      *  - fullyLoaded: boolean, if true, then treat the notebook as fully loaded
      *  - cells: a list of mocked cells (see buildMockCell)
+     *  - readOnly: boolean, true if the Narrative should be read-only
      */
     function buildMockNotebook(options) {
         options = options || {};
@@ -128,7 +129,8 @@ define('narrativeMocks', [
             find_cell_index: () => 1,
             get_cells: () => cells,
             _fully_loaded: options.fullyLoaded,
-            cells: cells
+            cells: cells,
+            writable: !options.readOnly
         };
     }
 

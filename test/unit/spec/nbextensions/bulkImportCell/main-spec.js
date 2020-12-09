@@ -75,7 +75,7 @@ define([
                     setTimeout(() => {
                         expect(BulkImportCell.isBulkImportCell(newCell)).toBeTruthy();
                         done();
-                    }, 1000);
+                    }, 100);
                 });
         });
 

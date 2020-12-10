@@ -849,10 +849,7 @@ define([
             this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), {
                 autorender: false,
             });
-            this.narrController = new KBaseNarrativeWorkspace(
-                $('#notebook_panel'),
-                { ws_id: this.getWorkspaceName() }
-            );
+            this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'));
 
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
@@ -880,7 +877,6 @@ define([
             this.initSharePanel();
             this.initStaticNarrativesPanel();
             this.updateDocumentVersion()
-                .then(() => this.narrController.render())
                 .finally(() => this.sidePanel.render());
         });
         $([Jupyter.events]).on('kernel_connected.Kernel', () => {
@@ -948,7 +944,6 @@ define([
      */
     Narrative.prototype.saveNarrative = function () {
         this.stopVersionCheck = true;
-        this.narrController.saveAllCellStates();
         Jupyter.notebook.save_checkpoint();
         this.toggleDocumentVersionBtn(false);
     };

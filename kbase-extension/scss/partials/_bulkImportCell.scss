@@ -98,15 +98,15 @@ $button-outdated: rgb(247, 155, 34);
           cursor: pointer;
         }
 
-      /* .kb-bulk-import__filetype_panel__filetype_button--selected */
-      &--selected {
+        /* .kb-bulk-import__filetype_panel__filetype_button--selected */
+        &--selected {
           background-color: $filetype-highlight-color;
         }
       }
 
       /* .kb-bulk-import__filetype_panel__filetype_icon */
       &_icon {
-        padding: 2px 8px 0 8px;
+        padding: 2px 8px 0;
         color: $filetype-icon-color;
       }
 
@@ -229,8 +229,8 @@ $button-outdated: rgb(247, 155, 34);
   }
 
   &__cell_label {
-    margin-bottom: 0;
     padding-top: 8px;
+    margin-bottom: 0;
   }
 }
 
@@ -239,6 +239,7 @@ $button-outdated: rgb(247, 155, 34);
   &__table {
     width: 100%;
   }
+
   &__table_row {
     font: normal 400 14px/18px $typeface-page-text;
   }
@@ -250,9 +251,9 @@ $button-outdated: rgb(247, 155, 34);
   }
 
   &__table_cell--file-path_id {
-    padding: 4px;
     min-width: 30rem;
     flex: 1;
+    padding: 4px;
   }
 
   &__button--delete {
@@ -268,7 +269,7 @@ $button-outdated: rgb(247, 155, 34);
   }
 
   &__file_number {
-    font-weight: 700;
     padding: 20px 10px 0 0;
+    font-weight: 700;
   }
 }

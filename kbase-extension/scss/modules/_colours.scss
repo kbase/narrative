@@ -2,38 +2,47 @@
 
 // KBase colours (generated from the KBase logo)
 $kbase-palette: (
-  // Hex: #F78E1E HSL: 31 93% 54%
-  "microbe_orange": rgb(247, 142, 30),
+  // microbe orange
+  //  Hex: #F78E1E HSL: 31 93% 54%
+  "orange": rgb(247, 142, 30),
 
+  // golden yellow
   // Hex: #FFD200 HSL: 49 100% 50%
-  "golden_yellow": rgb(255, 210, 0),
+  "yellow": rgb(255, 210, 0),
 
+  // grass green
   // Hex: #5E9732 HSL: 94 50% 39%
-  "grass_green": rgb(94, 151, 50),
+  "green": rgb(94, 151, 50),
 
+  // spring green
   // Hex: #C1CD23 HSL: 64 71% 47%
-  "spring_green": rgb(193, 205, 35),
+  "grellow": rgb(193, 205, 35),
 
+  // freshwater_blue
   // Hex: #037AC0 HSL: 202 97% 38%
-  "freshwater_blue": rgb(3, 122, 192),
+  "blue": rgb(3, 122, 192),
 
   // Hex: #72CCD2 HSL: 184 52% 64%
   "ocean_blue": rgb(114, 204, 210),
 
+  // cyanobacteria_teal
   // Hex: #009688 HSL: 174 100% 29%
-  "cyanobacteria_teal": rgb(0, 150, 136),
+  "teal": rgb(0, 150, 136),
 
+  // lupine purple
   // Hex: #66489D HSL: 261 37% 45%
-  "lupine_purple": rgb(102, 72, 157),
+  "purple": rgb(102, 72, 157),
 
   // Hex: #C7DBEE HSL: 209 53% 86%
   "frost_blue": rgb(199, 219, 238),
 
+  // rainier_cherry_red
   // Hex: #D2232A HSL: 358 71% 48%
-  "rainier_cherry_red": rgb(209, 35, 41),
+  "red": rgb(209, 35, 41),
 
+  // graphite grey
   // Hex: #9D9389 HSL: 30, 9%, 58%
-  "graphite_grey": rgb(157, 147, 137),
+  "grey": rgb(157, 147, 137),
 );
 
 // colours
@@ -43,14 +52,16 @@ $palette: (
 
   "black": rgb(0, 0, 0),
 
+  "ink": rgb(23, 20, 18),
+
+  "neutral": rgb(106, 97, 88),
+
   "base-lightest": rgb(242, 239, 235),
   "base-lighter": rgb(222, 213, 203),
   "base-light": rgb(157, 147, 137),
   "base": rgb(106, 97, 88),
   "base-dark": rgb(84, 76, 69),
   "base-darkest": rgb(62, 56, 50),
-
-  "ink": rgb(23, 20, 18),
 
   "primary-lighter": rgb(204, 229, 243),
   "primary-light": rgb(102, 177, 219),
@@ -113,7 +124,6 @@ $palette: (
 );
 
 // use a colour from the palettes above
-
 @function use_color($key) {
   @if map-has-key($kbase-palette, $key) {
     @return map-get($kbase-palette, $key);

@@ -23,12 +23,12 @@ define('narrativeMocks', [
      * @param {string} kbaseCellType if present, mock up an extended cell by adding some
      *      base metadata.
      */
-    function buildMockCell(cellType, kbaseCellType) {
+    function buildMockCell(cellType, kbaseCellType, data) {
         const $cellContainer = $(document.createElement('div'));
         const $icon = $('<div>').attr('data-element', 'icon');
         const $toolbar = $('<div>').addClass('celltoolbar');
         $toolbar.append($icon);
-        const metadata = kbaseCellType ? buildMockExtensionCellMetadata(kbaseCellType) : {};
+        const metadata = kbaseCellType ? buildMockExtensionCellMetadata(kbaseCellType, data) : {};
         const mockCell = {
             metadata: {kbase: metadata},
             cell_type: cellType,
@@ -36,6 +36,9 @@ define('narrativeMocks', [
             element: $cellContainer,
             input: $('<div>').addClass('input').append('<div>').addClass('input_area'),
             output: $('<div>').addClass('output_wrapper').append('<div>').addClass('output'),
+            celltoolbar: {
+                rebuild: () => {}
+            }
         };
 
         $cellContainer
@@ -60,7 +63,7 @@ define('narrativeMocks', [
      * }
      * @param {string} kbaseCellType
      */
-    function buildMockExtensionCellMetadata(kbaseCellType) {
+    function buildMockExtensionCellMetadata(kbaseCellType, data) {
         let meta = {
             type: kbaseCellType,
             attributes: {
@@ -69,7 +72,8 @@ define('narrativeMocks', [
                 created: (new Date()).toUTCString(),
                 title: '',
                 subtitle: ''
-            }
+            },
+            data: data
         };
         switch(kbaseCellType) {
             case 'app-bulk-import':
@@ -119,17 +123,45 @@ define('narrativeMocks', [
      *  - deleteCallback: function to be called when `delete_cell` is called.
      *  - fullyLoaded: boolean, if true, then treat the notebook as fully loaded
      *  - cells: a list of mocked cells (see buildMockCell)
+     *  - readOnly: boolean, true if the Narrative should be read-only
      */
     function buildMockNotebook(options) {
         options = options || {};
         const cells = options.cells || [];
-        return {
+
+        function insertCell(type, index, data) {
+            let cell = buildMockCell(type, '', data);
+            if (index <= 0) {
+                index = 0;
+            }
+            cells.splice(index, 0, cell);
+            return cell;
+        }
+
+        let mockNotebook = {
             delete_cell: () => options.deleteCallback ? options.deleteCallback() : null,
             find_cell_index: () => 1,
             get_cells: () => cells,
+            get_cell: (index) => {
+                if (cells.length === 0) {
+                    return null;
+                }
+                if (index <= 0) {
+                    return cells[0];
+                }
+                else if (index >= cells.length) {
+                    return null;
+                }
+                return cells[index];
+            },
             _fully_loaded: options.fullyLoaded,
-            cells: cells
+            cells: cells,
+            writable: !options.readOnly,
+            insert_cell_above: (type, index, data) => insertCell(type, index-1, data),
+            insert_cell_below: (type, index, data) => insertCell(type, index+1, data),
         };
+
+        return mockNotebook;
     }
 
     return {

@@ -74,7 +74,7 @@ define([
             this.state = this.options.state;
             this.outputWidgetInfo = this.options.outputWidgetInfo;
             this.widgets = {};
-            this.widgets.jobViewer = JobViewer.make({});
+            this.widgets.jobViewer = JobViewer.make();
 
             // expects:
             // name, id, version for appInfo

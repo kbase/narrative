@@ -8,3 +8,9 @@ $typeface-fixed-width: OxygenMono, SFMono-Regular, Consolas, "Liberation Mono", 
 $typeface-font-awesome: FontAwesome;
 $typeface-kbase-icons: kbase-icons;
 $typeface-glyphicons: "Glyphicons Halflings";
+
+@mixin zero-box {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}

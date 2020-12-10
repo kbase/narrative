@@ -98,7 +98,7 @@ define([
                     console.warn('ignoring attempt to create viewer cell in view-only mode');
                     return;
                 }
-                this.createViewerCell(data.nearCellIdx, data, data.widget);
+                this.buildViewerCell(data.nearCellIdx, data, data.widget);
             });
 
             this.initReadOnlyElements();
@@ -257,7 +257,7 @@ define([
         buildAppCodeCell: function (spec, tag, parameters) {
             if (!spec || !spec.info) {
                 console.error('ERROR build method code cell: ', spec, tag);
-                alert('Sorry, could not find this method');
+                alert('Unable to build a new App Cell - could not find the correct app spec!');
                 return;
             }
 
@@ -497,11 +497,11 @@ define([
         /**
          * @method deleteCell
          * @private
-         * The new delete cell
-         * Delete cell needs to honor the new cells, but since we are using the
-         * new nb extension mechanism, and may have arbitrary cell types, we
-         * just look to see if it is indeed a kbase cell, and if so we punt
-         * to it.
+         * Delete cell needs to honor the KBase cell extensions, but since we are using the
+         * new nb extension mechanism, and may have arbitrary cell types, we just look to
+         * see if it is indeed a kbase cell, and if so we send a bus command out to it.
+         *
+         * If not, then we show a popup dialog that prompts the user to really delete or not.
          */
         deleteCell: function (index) {
             if (index === undefined || index === null) {
@@ -526,9 +526,6 @@ define([
                     })
                     .then(function (confirmed) {
                         if (confirmed) {
-                            if (kbaseCellType && !cellId) {
-                                console.warn('KBase cell without cell id, DELETING ANYWAY!', cell.metadata);
-                            }
                             Jupyter.notebook.delete_cell(index);
                         }
                     });
@@ -545,16 +542,26 @@ define([
             });
         },
 
-        createViewerCell: function (cellIndex, data) {
-            var placement = data.placement || 'below';
+        /**
+         *
+         * @param {int} cellIndex - the index of the cell to insert the new viewer cell near
+         * @param {object} data - a data structure describing the viewer cell. Should have keys:
+         *  - placement (optional) - either 'above' or 'below',
+         *  - info: an Object Info array (see Workspace docs)
+         */
+        buildViewerCell: function (cellIndex, data) {
+            let placement = data.placement;
+            if (['above', 'below'].indexOf(placement) === -1) {
+                placement = 'below';
+            }
             var cellData = {
                 type: 'data',
                 objectInfo: data.info
             };
             if (placement === 'above') {
-                Jupyter.notebook.insert_cell_above('code', cellIndex, cellData);
+                return Jupyter.notebook.insert_cell_above('code', cellIndex, cellData);
             } else {
-                Jupyter.notebook.insert_cell_below('code', cellIndex, cellData);
+                return Jupyter.notebook.insert_cell_below('code', cellIndex, cellData);
             }
         }
     });

@@ -36,6 +36,9 @@ define('narrativeMocks', [
             element: $cellContainer,
             input: $('<div>').addClass('input').append('<div>').addClass('input_area'),
             output: $('<div>').addClass('output_wrapper').append('<div>').addClass('output'),
+            celltoolbar: {
+                rebuild: () => {}
+            }
         };
 
         $cellContainer
@@ -124,14 +127,40 @@ define('narrativeMocks', [
     function buildMockNotebook(options) {
         options = options || {};
         const cells = options.cells || [];
-        return {
+
+        function insertCell(type, index) {
+            let cell = buildMockCell(type);
+            if (index <= 0) {
+                index = 0;
+            }
+            cells.splice(index, 0, cell);
+            return cell;
+        }
+
+        let mockNotebook = {
             delete_cell: () => options.deleteCallback ? options.deleteCallback() : null,
             find_cell_index: () => 1,
             get_cells: () => cells,
+            get_cell: (index) => {
+                if (cells.length === 0) {
+                    return null;
+                }
+                if (index <= 0) {
+                    return cells[0];
+                }
+                else if (index >= cells.length) {
+                    return null;
+                }
+                return cells[index];
+            },
             _fully_loaded: options.fullyLoaded,
             cells: cells,
-            writable: !options.readOnly
+            writable: !options.readOnly,
+            insert_cell_above: (type, index, data) => insertCell(type, index-1, data),
+            insert_cell_below: (type, index, data) => insertCell(type, index+1, data),
         };
+
+        return mockNotebook;
     }
 
     return {

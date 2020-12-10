@@ -1,231 +1,300 @@
 /*
-Sebastian Le Bras - April 2020
+Sebastian Le Bras, David Lyon - April 2020
 */
-define ([
+define([
     'kbwidget',
-    'bootstrap',
     'jquery',
-    'kbase-client-api',
     'widgets/dynamicTable',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
-    'kbase-generic-client-api',
     'narrativeConfig',
-    'bluebird'
-], function(
-	KBWidget,
-	bootstrap,
-	$,
-    kbase_client_api,
+    'kb_common/jsonRpc/dynamicServiceClient',
+    'kb_service/client/workspace',
+], function (
+    KBWidget,
+    $,
     DynamicTable,
-	kbaseAuthenticatedWidget,
+    kbaseAuthenticatedWidget,
     kbaseTabs,
-    GenericClient,
     Config,
-    Promise
+    DynamicServiceClient,
+    Workspace
 ) {
     'use strict';
 
-    return KBWidget({
+    const kbaseSampleSetView = KBWidget({
         name: 'kbaseSampleSetView',
         parent: kbaseAuthenticatedWidget,
         version: '1.0.0',
         options: {
             pageLimit: 10,
-            default_blank_value: ""
+            default_blank_value: ''
         },
 
         init: function (options) {
             this._super(options);
 
-            // var self = this;
             this.obj_ref = this.options.upas.id;
-            this.link_ref = this.obj_ref;
 
-            if(options._obj_info) {
-                this.ss_info = options._obj_info;
-                this.obj_ref = this.ss_info['ws_id'] + '/' + this.ss_info['id'] + '/' + this.ss_info['version'];
-                this.link_ref = this.ss_info['ws_id'] + '/' + this.ss_info['name'] + '/' + this.ss_info['version'];
-            }
+            // Connect to services
+            this.attachClients();
 
-            this.client = new GenericClient(Config.url('service_wizard'), {token: this.authToken()});
-            this.ws = new Workspace(Config.url('workspace'),{'token': this.authToken()});
-
-            this.$elem.append($('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">')));
-
-            // 1) get stats, and show the panel
-            var basicInfoCalls = [];
-            basicInfoCalls.push(
-                Promise.resolve(this.ws.get_objects2({objects: [{'ref': this.obj_ref}]}))
-                    .then((obj) => {
-                        this.ss_obj_data = obj['data'][0]['data']
-                        this.ss_obj_info = obj['data'][0]['info']
-                        this.link_ref = this.ss_obj_info[6] + '/' + this.ss_obj_info[0] + '/' + this.ss_obj_info[4];
-                    }));
-
-            Promise.all(basicInfoCalls)
-                .then(() => {
-                    this.renderBasicTable();
-                })
-                .catch((err) => {
-                    console.error('an error occurred! ' + err);
-                    this.$elem.empty();
-                    this.$elem.append('An unexpected error occured: \nPlease contact KBase <a href="https://www.kbase.us/support/">here<a>');
-                });
+            // Render
+            this.render();
 
             return this;
         },
 
-        renderBasicTable: function() {
-            var self = this;
-            var $container = this.$elem;
-            $container.empty();
+        loggedInCallback: function () {
+            this.attachClients();
+            this.render();
+        },
 
-            var $tabPane = $('<div>');
-            $container.append($tabPane);
+        attachClients: function () {
+            this.workspace = new Workspace(Config.url('workspace'), { 'token': this.authToken() });
+            this.services = {
+                SetAPI: new DynamicServiceClient({
+                    module: 'SetAPI',
+                    url: Config.url('service_wizard'),
+                    token: this.authToken(),
+                    version: 'dev'
+                })
+            };
+        },
 
+        render: function () {
 
-            // Build the overview table
-            var $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>');
+            // Init DOM
+            this.$elem.empty();
 
-            function get_table_row(key, value) {
-                return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
-            }
+            const $summaryTab = $('<div>').css('margin-top', '15px');
+            this.renderSummary($summaryTab);
 
-            $overviewTable.append(get_table_row('KBase Object Name',
-                '<a href="/#dataview/'+self.link_ref + '" target="_blank">' + self.ss_obj_info[1] +'</a>' ));
-                // leave out version for now, because that is not passed into data widgets
-                //'<a href="/#dataview/'+self.link_ref + '" target="_blank">' + self.ss_obj_info[1] + ' (v'+self.ss_obj_info[4]+')'+'</a>' ));
-            $overviewTable.append(get_table_row('Saved by', String(self.ss_obj_info[5])));
-            $overviewTable.append(get_table_row('Number of Samples', self.ss_obj_data['samples'].length ));
-            $overviewTable.append(get_table_row('Description', self.ss_obj_data['description']));
+            const $samplesTab = $('<div>');
+            this.renderSamples($samplesTab);
 
-            self.metadata_headers = [{
-                id: "sample_version",
-                text: "version",
-                isSortable: true
-            }]; // version not in metadata, but included in visualization.
-            // get the metadata_keys
-            self.client.sync_call('SampleService.get_sample', [{
-                id: self.ss_obj_data['samples'][0]['id']
-            }]).then(function(sample){
-                if (sample.length > 0 && 'node_tree' in sample[0] && sample[0]['node_tree'].length > 0){
-                    var node_tree = sample[0]['node_tree'][0]
-                    Object.keys(node_tree['meta_controlled']).concat(Object.keys(node_tree['meta_user'])).forEach( function(metakey){
-                        self.metadata_headers.push({
-                            id: metakey.split(" ").join('_'),
-                            text: metakey,
-                            isSortable: true
-                        })
-                    })
-                } else {
-                    console.error('Error: Could not load the first sample for metadata headers: ' + err);
-                }
-            })
-            // Build the tabs
-            var $tabs = new kbaseTabs($tabPane, {
-                tabPosition : 'top',
-                canDelete : false, //whether or not the tab can be removed.
-                tabs : [
+            const $tabPane = $('<div>').appendTo(this.$elem);
+            new kbaseTabs($tabPane, {
+                tabPosition: 'top',
+                canDelete: false, //whether or not the tab can be removed.
+                tabs: [
                     {
-                        tab : 'Summary',   //name of the tab
-                        content : $('<div>').css('margin-top','15px').append($overviewTable),
-                        show : true,
+                        tab: 'Summary',   //name of the tab
+                        content: $summaryTab,
+                        show: true,
                     }, {
-                        tab : 'Samples',
-                        showContentCallback: function() {
-                            return self.addSamplesList();
-                        }
+                        tab: 'Samples',
+                        content: $samplesTab
                     },
                 ],
             });
         },
 
 
-        addSamplesList: function() {
-            var self = this;
-            var $content = $('<div>');
-            new DynamicTable($content, {
-                headers: [{
-                    id: 'name',
-                    text: 'Sample Name',
-                    isSortable: true
-                }, {
-                    id: 'sample_id',
-                    text: 'Sample ID',
-                    isSortable: false
-                }].concat(self.metadata_headers),
-                searchPlaceholder: 'Search samples',
-                updateFunction: function(pageNum, query, sortColId, sortColDir) {
-                    var rows = [];
-                    var sample_slice = self.ss_obj_data['samples'].slice(
-                        pageNum * self.options.pageLimit, (pageNum + 1) * self.options.pageLimit
-                    );
-                    var sample_queries = [];
-                    var sample_data = [];
-                    sample_slice.forEach(function (sample_info) {
-                        var sample_query_params = {
-                            id: sample_info['id']
-                        }
-                        if ("version" in sample_info){
-                            sample_query_params['version'] = sample_info['version']
-                        }
-                        sample_queries.push(
-                            Promise.resolve(self.client.sync_call('SampleService.get_sample', [sample_query_params])).then(function(sample){
-                                let samp_data = {};
-                                samp_data['version'] = String(sample[0]['version'])
-                                for (let i = 0; i < sample[0]['node_tree'].length; i++){
-                                    for (const meta_key in sample[0]['node_tree'][i]['meta_controlled']){
-                                        samp_data[meta_key] = self.unpack_metadata_to_string(
-                                            sample[0]['node_tree'][i]['meta_controlled'][meta_key]
-                                        );
-                                    }
-                                    for (const meta_key in sample[0]['node_tree'][i]['meta_user']){
-                                        samp_data[meta_key] = self.unpack_metadata_to_string(
-                                            sample[0]['node_tree'][i]['meta_user'][meta_key]
-                                        );
-                                    }
-                                }
-                                sample_data.push(samp_data)
-                            })
-                        )
-                        var row = [sample_info['name'], sample_info['id']];
-                        rows.push(row);
+        renderSummary: async function ($container) {
+            const $spinner = buildSpinner();
+            try {
+                // Clear and render spinner
+                $container.empty();
+                $spinner.appendTo($container);
+
+                // Await data
+                const { objRef, objName, savedBy, numSamples, desc } = await this.loadSummary();
+
+                // Build table
+                const $overviewTable = $('<table>')
+                    .addClass('table table-striped table-bordered table-hover')
+                    .css({
+                        'margin-left': 'auto',
+                        'margin-right': 'auto'
                     });
-                    return Promise.all(sample_queries).then(function(){
-                        for (let j = 0; j < rows.length; j++){
-                            var row = rows[j];
-                            for (const meta_idx in self.metadata_headers){
-                                var meta_header = self.metadata_headers[meta_idx]
-                                var row_str = self.options.default_blank_value;
-                                if (meta_header.text in sample_data[j]){
-                                    row_str = sample_data[j][meta_header.text]
-                                }
-                                row.push(row_str);
-                            }
-                            rows[j] = row
-                        }
-                        return {
-                            rows: rows,
-                            start: pageNum * self.options.pageLimit,
-                            query: query,
-                            total: self.ss_obj_data['samples'].length
-                        }
-                    })
-                },
-                style: {'margin-top': '5px'}
-            });
-            return $content;
-        },
 
-        unpack_metadata_to_string: function(metadata){
-            var metastr = String(metadata['value']);
-            if ('units' in metadata){
-                metastr += " " + String(metadata['units']);
+                // Build rows
+                const rows = [
+                    ['KBase Object Name', `<a href="/#dataview/${objRef}" target="_blank">${objName}</a>`],
+                    ['Saved by', savedBy],
+                    ['Number of Samples', numSamples],
+                    ['Description', desc]
+                ];
+                rows.forEach(([key, value]) => {
+                    $overviewTable.append($(`<tr><td>${key}</td><td>${value}</td></tr>`));
+                });
+
+                // Attach table to the container
+                $container.append($overviewTable);
+
+            } catch (err) {
+                console.error('an error occurred! ' + err);
+                $container.append(buildError(err));
+            } finally {
+                $spinner.remove();
             }
-            return metastr
         },
 
+        renderSamples: async function ($container) {
+            const $spinner = buildSpinner();
+            try {
+                // Clear and render spinner
+                $container.empty();
+                $spinner.appendTo($container);
+
+                // Await data
+                const headers = await this.loadHeaders();
+
+                // Build and attach to container
+                const $samplesTable = $('<div>');
+                new DynamicTable($samplesTable, {
+                    headers: headers,
+                    searchPlaceholder: 'Search samples',
+                    updateFunction: this.loadSampleRows.bind(this, headers),
+                    style: { 'margin-top': '10px' }
+                });
+                $container.append($samplesTable);
+
+            } catch (err) {
+                console.error('an error occurred! ' + err);
+                $container.append(buildError(err));
+            } finally {
+                $spinner.remove();
+            }
+        },
+
+        loadSummary: async function () {
+            const obj = await this.workspace.get_objects2({ objects: [{ 'ref': this.obj_ref }] });
+            const ss_obj_data = obj['data'][0]['data'];
+            const ss_obj_info = obj['data'][0]['info'];
+
+            return {
+                objRef: ss_obj_info[6] + '/' + ss_obj_info[0] + '/' + ss_obj_info[4],
+                objName: ss_obj_info[1],
+                savedBy: String(ss_obj_info[5]),
+                numSamples: ss_obj_data['samples'].length,
+                desc: ss_obj_data['description']
+            };
+        },
+
+        loadHeaders: async function () {
+            const fixedHeaders = [{
+                id: 'kbase_sample_id',
+                text: 'Sample ID',
+                isSortable: false
+            }, {
+                id: 'name',
+                text: 'Sample Name',
+                isSortable: true
+            }, {
+                id: 'sample_version',
+                text: 'version',
+                isSortable: true
+            }];
+
+            // pull unique list of other header strings from samples
+            const obj = await this.services.SetAPI.callFunc('sample_set_to_samples_info', [{
+                ref: this.obj_ref
+            }]);
+
+            const allFields = [];
+            const ignoredFields = ['sample_version', 'kbase_sample_id', 'is_public', 'copied', 'name'];
+            obj[0]['samples'].forEach(sample => {
+                Object.keys(sample)
+                    .filter(field => ignoredFields.indexOf(field) === -1 && allFields.indexOf(field) === -1)
+                    .forEach(field => allFields.push(field));
+            });
+
+            const allHeaders = fixedHeaders.concat(
+                allFields.map(field => ({
+                    id: field,
+                    text: formatFieldName(field),
+                    isSortable: true
+                }))
+            );
+
+            return allHeaders;
+        },
+
+        loadSampleRows: async function (headers, pageNum, query, sortColId, sortColDir) {
+            var page_start = pageNum * this.options.pageLimit;
+            var page_limit = this.options.pageLimit;
+            var sorting = null;
+            if (sortColId !== null) {
+                sorting = [[sortColId, sortColDir]];
+            }
+
+            const [obj] = await this.services.SetAPI.callFunc('sample_set_to_samples_info', [{
+                ref: this.obj_ref,
+                start: page_start,
+                limit: page_limit,
+                query: query,
+                sort_by: sorting
+            }]);
+
+            const colFormat = {
+                '__default': text=>text,
+                'kbase_sample_id': text=>`<a href="/#samples/view/${text}">${text}</a>`
+            };
+
+            // Build table rows
+            const rows = [];
+            obj['samples'].forEach(sample => {
+                // Count number of replicates in the sample, some values are static, so just look at arrays.
+                const numReplicates = Math.max(
+                    ...Object.values(sample).map(val => Array.isArray(val) ? val.length : 1)
+                );
+                // Create one row per replicate
+                for (let i = 0; i < numReplicates; i++) {
+                    const replicate_data = {};
+                    Object.keys(sample).forEach(key => {
+                        // check if this value varries across replicates
+                        const value_varies = Array.isArray(sample[key]);
+                        replicate_data[key] = value_varies ? sample[key][i] : sample[key];
+                    });
+                    const row = headers.map(({ id:headerId }) => {
+                        const format = colFormat[headerId] || colFormat['__default'];
+                        return format(replicate_data[headerId]);
+                    });
+                    rows.push(row);
+                }
+            });
+
+            return {
+                rows: rows,
+                start: page_start,
+                query: query,
+                total: obj['num_found']
+            };
+        }
     });
 
+    function buildSpinner() {
+        return $('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+    }
+
+    function formatFieldName(fieldName) {
+        return fieldName.split('_').join(' ');
+    }
+
+    function buildError(err) {
+        var errorMessage;
+        if (typeof err === 'string') {
+            errorMessage = err;
+        } else if (err.error) {
+            errorMessage = JSON.stringify(err.error);
+            if (err.error.message) {
+                errorMessage = err.error.message;
+                if (err.error.error) {
+                    errorMessage += '<br><b>Trace</b>:' + err.error.error;
+                }
+            } else {
+                errorMessage = JSON.stringify(err.error);
+            }
+        } else {
+            errorMessage = err.message;
+        }
+        return $('<div>')
+            .addClass('alert alert-danger')
+            .append(errorMessage)
+            .append('<div><br/>You may contact the KBase team <a href="https://www.kbase.us/support/">here</a> with the information above.</div>');
+    }
+
+    return kbaseSampleSetView;
 });

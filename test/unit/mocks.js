@@ -23,12 +23,12 @@ define('narrativeMocks', [
      * @param {string} kbaseCellType if present, mock up an extended cell by adding some
      *      base metadata.
      */
-    function buildMockCell(cellType, kbaseCellType) {
+    function buildMockCell(cellType, kbaseCellType, data) {
         const $cellContainer = $(document.createElement('div'));
         const $icon = $('<div>').attr('data-element', 'icon');
         const $toolbar = $('<div>').addClass('celltoolbar');
         $toolbar.append($icon);
-        const metadata = kbaseCellType ? buildMockExtensionCellMetadata(kbaseCellType) : {};
+        const metadata = kbaseCellType ? buildMockExtensionCellMetadata(kbaseCellType, data) : {};
         const mockCell = {
             metadata: {kbase: metadata},
             cell_type: cellType,
@@ -63,7 +63,7 @@ define('narrativeMocks', [
      * }
      * @param {string} kbaseCellType
      */
-    function buildMockExtensionCellMetadata(kbaseCellType) {
+    function buildMockExtensionCellMetadata(kbaseCellType, data) {
         let meta = {
             type: kbaseCellType,
             attributes: {
@@ -72,7 +72,8 @@ define('narrativeMocks', [
                 created: (new Date()).toUTCString(),
                 title: '',
                 subtitle: ''
-            }
+            },
+            data: data
         };
         switch(kbaseCellType) {
             case 'app-bulk-import':
@@ -128,8 +129,8 @@ define('narrativeMocks', [
         options = options || {};
         const cells = options.cells || [];
 
-        function insertCell(type, index) {
-            let cell = buildMockCell(type);
+        function insertCell(type, index, data) {
+            let cell = buildMockCell(type, '', data);
             if (index <= 0) {
                 index = 0;
             }
@@ -156,8 +157,8 @@ define('narrativeMocks', [
             _fully_loaded: options.fullyLoaded,
             cells: cells,
             writable: !options.readOnly,
-            insert_cell_above: (type, index, data) => insertCell(type, index-1),
-            insert_cell_below: (type, index, data) => insertCell(type, index+1),
+            insert_cell_above: (type, index, data) => insertCell(type, index-1, data),
+            insert_cell_below: (type, index, data) => insertCell(type, index+1, data),
         };
 
         return mockNotebook;

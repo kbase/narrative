@@ -134,6 +134,35 @@ define([
             expect(widget.uiMode).toEqual('view');
         });
 
+        it('should control the toggle read/write mode', (done) => {
+            Jupyter.CellToolbar = {
+                rebuild_all: () => {}
+            };
+            // included in the main templates, mocked here
+            $('body').append('<button id="kb-view-mode">');
+            let widget = new KBaseNarrativeWorkspace($node);
+            expect(widget.narrativeIsReadOnly).toBeFalsy();
+            expect(widget.uiMode).toEqual('edit');
+
+            // use these to count how many messages get sent
+            // we expect to see them twice, so when they're both = 2, then
+            // we're done.
+            let caughtReadOnlyMsg = 0;
+            let runtime = Runtime.make();
+            let currentViewState = widget.uiMode;
+            runtime.bus().on('read-only-changed', () => {
+                caughtReadOnlyMsg++;
+                if (caughtReadOnlyMsg < 2) {
+                    // the view state should've been toggled
+                    expect(currentViewState).not.toEqual(widget.uiMode);
+                    $('#kb-view-mode').click();
+                } else {
+                    done();
+                }
+            });
+            $('#kb-view-mode').click();
+        });
+
         it('should delete KBase extension cells by direct call by bus command', (done) => {
             let cell = Mocks.buildMockCell('code', 'app');
             Jupyter.notebook.cells[0] = cell;  // manually mock out the notebook state

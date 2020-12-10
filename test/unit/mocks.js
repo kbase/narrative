@@ -156,8 +156,8 @@ define('narrativeMocks', [
             _fully_loaded: options.fullyLoaded,
             cells: cells,
             writable: !options.readOnly,
-            insert_cell_above: (type, index, data) => insertCell(type, index-1, data),
-            insert_cell_below: (type, index, data) => insertCell(type, index+1, data),
+            insert_cell_above: (type, index, data) => insertCell(type, index-1),
+            insert_cell_below: (type, index, data) => insertCell(type, index+1),
         };
 
         return mockNotebook;

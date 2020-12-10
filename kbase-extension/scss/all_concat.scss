@@ -3,13 +3,13 @@
 // Modules
 @import "modules/variables";
 @import "modules/fonts";
-
+@import "modules/colours";
+@import "modules/typography";
 // overrides of specific jupyter notebook formatting bits
 @import "partials/custom";
 
 // basic formatting
 @import "partials/stylesheet";
-
 @import "partials/narrative";
 @import "partials/icons";
 @import "partials/landingPages";
@@ -28,3 +28,4 @@
 @import "partials/editorCell";
 @import "partials/bulkImportCell";
 @import "partials/job-state";
+@import "partials/kb-icon";

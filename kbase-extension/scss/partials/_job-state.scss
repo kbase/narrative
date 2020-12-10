@@ -9,7 +9,8 @@
     /* .kb-job-state__cell--status */
     &--status {
       font-weight: 700;
-      color: rgb(0, 0, 0);
+      color: use_color("black");
+
     }
   }
 
@@ -21,12 +22,12 @@
     &--completed,
     &--queued,
     &--running {
-      color: rgb(0, 128, 0);
+      color: use_color("success");
     }
 
     /*  .kb-job-state__icon--error */
     &--error {
-      color: rgb(255, 0, 0);
+      color: use_color("error");
     }
 
     /*  .kb-job-state__icon--does_not_exist,
@@ -34,7 +35,7 @@
     */
     &--does_not_exist,
     &--terminated {
-      color: rgb(255, 165, 0);
+      color: use_color("warning");
     }
   }
 }

@@ -1,0 +1,50 @@
+/* large icons */
+$icon-size-default: 56px;
+$icon-padding: 3px;
+$icon-size-image: $icon-size-default - 2*$icon-padding;
+
+.kb-icon {
+  /* kb-icon__container */
+  &__container {
+    /* kb-icon__container--image */
+    &--image {
+      display: block;
+    }
+  }
+
+  &__icon {}
+
+  &__icon_background {
+    /*  .kb-icon__icon_background--app,
+        .kb-icon__icon_background--app-toolbar
+    */
+    &--app,
+    &--app-toolbar {
+      color: use_color("icon-app");
+    }
+
+    /*  .kb-icon__icon_background--generic,
+        .kb-icon__icon_background--generic-toolbar
+    */
+    &--generic,
+    &--generic-toolbar {
+      color: use_color("icon-generic");
+    }
+
+    /*  .kb-icon__icon_background--type,
+        .kb-icon__icon_background--type-toolbar
+    */
+    &--type,
+    &--type-toolbar {
+      color: use_color("icon-type");
+    }
+  }
+
+  &__img {
+    &--image {
+      max-width: $icon-size-image;
+      max-height: $icon-size-image;
+      margin: $icon-padding;
+    }
+  }
+}

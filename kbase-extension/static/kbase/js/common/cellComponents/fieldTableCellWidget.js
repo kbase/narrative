@@ -5,16 +5,8 @@ define([
     'common/events',
     'common/runtime',
     'widgets/appWidgets2/errorControl',
-    'css!google-code-prettify/prettify.css'
-], function(
-    Promise,
-    PR,
-    html,
-    Events,
-    Runtime,
-    ErrorControlFactory
-) {
-
+    'css!google-code-prettify/prettify.css',
+], function (Promise, PR, html, Events, Runtime, ErrorControlFactory) {
     'use strict';
 
     const t = html.tag,
@@ -26,7 +18,7 @@ define([
     function factory(config) {
         var runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({
-                description: 'Field bus'
+                description: 'Field bus',
             }),
             places,
             parent,
@@ -53,7 +45,7 @@ define([
         } catch (ex) {
             console.error('Error creating input control', ex);
             inputControl = ErrorControlFactory.make({
-                message: ex.message
+                message: ex.message,
             }).make();
         }
 
@@ -63,90 +55,106 @@ define([
                 inputControl: html.genId(),
             };
 
-            var content = td({
-                class: `${cssBaseClass}__tableCell`,
-                id: ids.fieldPanel,
-                dataElement: 'field-panel'
-            }, [
-                label({
-                    class: `${cssBaseClass}__cell_label`,
-                    title: spec.ui.label || spec.ui.id,
-                    for: ids.inputControl,
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: function() {
-                            places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
-                        }
-                    })
-                }, [
-                    spec.ui.label || spec.ui.id
-                ]),
-                div({
-                    class: `${cssBaseClass}__input_control`,
-                    id: ids.inputControl,
-                    dataElement: 'input-control'
-                })
-            ]);
+            var content = td(
+                {
+                    class: `${cssBaseClass}__tableCell`,
+                    id: ids.fieldPanel,
+                    dataElement: 'field-panel',
+                },
+                [
+                    label(
+                        {
+                            class: `${cssBaseClass}__cell_label`,
+                            title: spec.ui.label || spec.ui.id,
+                            for: ids.inputControl,
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    places.infoPanel
+                                        .querySelector('[data-element="big-tip"]')
+                                        .classList.toggle('hidden');
+                                },
+                            }),
+                        },
+                        [spec.ui.label || spec.ui.id]
+                    ),
+                    div({
+                        class: `${cssBaseClass}__input_control`,
+                        id: ids.inputControl,
+                        dataElement: 'input-control',
+                    }),
+                ]
+            );
 
             return {
                 content: content,
-                places: ids
+                places: ids,
             };
         }
 
         // LIFECYCLE
 
         function attach(node) {
-            return Promise.try(function() {
-                parent = node;
-                let containerDiv = document.createElement('div');
-                containerDiv.classList.add(`${cssBaseClass}__param_container`);
+            parent = node;
+            let containerDiv = document.createElement('div');
+            containerDiv.classList.add(`${cssBaseClass}__param_container`);
 
-                container = parent.appendChild(containerDiv);
-                var events = Events.make({
-                    node: container
-                });
-
-                var rendered = render(events);
-                container.innerHTML = rendered.content;
-                events.attachEvents();
-                // TODO: use the pattern in which the render returns an object,
-                // which includes events and other functions to be run after
-                // content is added to the dom.
-                PR.prettyPrint(null, container);
-
-                places = {
-                    field: document.getElementById(fieldId),
-                    message: document.getElementById(rendered.places.message),
-                    inputControl: document.getElementById(rendered.places.inputControl)
-                };
-                if (inputControl.attach) {
-                    return inputControl.attach(places.inputControl);
-                }
+            container = parent.appendChild(containerDiv);
+            var events = Events.make({
+                node: container,
             });
+
+            var rendered = render(events);
+            container.innerHTML = rendered.content;
+            events.attachEvents();
+            // TODO: use the pattern in which the render returns an object,
+            // which includes events and other functions to be run after
+            // content is added to the dom.
+            PR.prettyPrint(null, container);
+
+            places = {
+                field: document.getElementById(fieldId),
+                message: document.getElementById(rendered.places.message),
+                inputControl: document.getElementById(rendered.places.inputControl),
+            };
+
+            //TODO: why do this? it seems recursive? could we even call attach in this case? it's not a public method
+            // if (inputControl.attach) {
+            //     return inputControl.attach(places.inputControl);
+            // }
         }
 
         function start(arg) {
-            return attach(arg.node)
-                .then(function() {
-                    if (inputControl.start) {
-                        return inputControl.start({
-                            node: places.inputControl
-                        })
-                            .then(function() {
-                                // TODO: get rid of this pattern
-                                bus.emit('run', {
-                                    node: places.inputControl
-                                });
-                            });
-                    }
+            attach(arg.node);
+
+            return inputControl
+                .start({
+                    node: places.inputControl,
+                })
+                .then(function () {
+                    // TODO: get rid of this pattern
+                    bus.emit('run', {
+                        node: places.inputControl,
+                    });
+                })
+                .catch((err) => {
+                    console.error('error starting field table cell widget: ', err);
                 });
         }
 
         function stop() {
-            return Promise.try(function() {
-                return inputControl.stop()
-                    .then(function() {
+            return Promise.try(function () {
+                return inputControl
+                    .stop()
+                    .then(() => {
+                        if (parent && container) {
+                            parent.removeChild(container);
+                        }
+                        bus.stop();
+                        return null;
+                    })
+                    .catch((err) => {
+                        console.error('error stopping field table cell widget: ', err);
                         if (parent && container) {
                             parent.removeChild(container);
                         }
@@ -159,13 +167,13 @@ define([
         return {
             start: start,
             stop: stop,
-            bus: bus
+            bus: bus,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

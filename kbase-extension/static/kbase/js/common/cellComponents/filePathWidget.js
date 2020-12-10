@@ -406,6 +406,7 @@ define([
                         },
                         [ex.message]
                     );
+
                     document.getElementById(
                         filePathParams.view[spec.id].id
                     ).innerHTML = errorDisplay;
@@ -462,7 +463,7 @@ define([
                     ]),
                 ].join('');
 
-                Promise.all(
+                return Promise.all(
                     filePathParams.layout.map(async (parameterId) => {
                         await createFilePathWidget(appSpec, filePathParams, parameterId);
                     })
@@ -474,8 +475,7 @@ define([
 
         function start(arg) {
             return Promise.try(function () {
-                let container = arg.node;
-                doAttach(container);
+                doAttach(arg.node);
 
                 model.setItem('appSpec', arg.appSpec);
                 model.setItem('parameters', arg.parameters);
@@ -493,10 +493,13 @@ define([
 
                 let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
 
-                filePathRows.forEach((filePathRow) => {
-                    renderFilePathRow(filePathRow);
+                return Promise.all(
+                    filePathRows.map(async (filePathRow) => {
+                        await renderFilePathRow(filePathRow);
+                    })
+                ).then(() => {
+                    updateRowNumbers(filePathRows);
                 });
-                updateRowNumbers(filePathRows);
             }).catch((error) => {
                 throw new Error('Unable to start file path widget: ', error);
             });

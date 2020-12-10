@@ -500,36 +500,33 @@ define([
         }
 
         function start(arg) {
-            return Promise.try(function () {
-                // send parent the ready message
+            // send parent the ready message
+            doAttach(arg.node);
 
-                doAttach(arg.node);
+            model.setItem('appSpec', arg.appSpec);
+            model.setItem('parameters', arg.parameters);
 
-                model.setItem('appSpec', arg.appSpec);
-                model.setItem('parameters', arg.parameters);
-
-                bus.on('parameter-changed', function (message) {
-                    // Also, tell each of our inputs that a param has changed.
-                    widgets.forEach(function (widget) {
-                        widget.bus.send(message, {
-                            key: {
-                                type: 'parameter-changed',
-                                parameter: message.parameter,
-                            },
-                        });
+            bus.on('parameter-changed', function (message) {
+                // Also, tell each of our inputs that a param has changed.
+                widgets.forEach(function (widget) {
+                    widget.bus.send(message, {
+                        key: {
+                            type: 'parameter-changed',
+                            parameter: message.parameter,
+                        },
                     });
                 });
-
-                return renderParameters()
-                    .then(function () {
-                        // do something after success
-                        attachEvents();
-                    })
-                    .catch(function (err) {
-                        // do somethig with the error.
-                        console.error('ERROR in start', err);
-                    });
             });
+
+            return renderParameters()
+                .then(function () {
+                    // do something after success
+                    attachEvents();
+                })
+                .catch(function (err) {
+                    // do somethig with the error.
+                    console.error('ERROR in start', err);
+                });
         }
 
         function stop() {

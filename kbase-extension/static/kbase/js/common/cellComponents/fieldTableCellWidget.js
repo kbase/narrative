@@ -95,50 +95,51 @@ define([
         // LIFECYCLE
 
         function attach(node) {
-            return Promise.try(function () {
-                parent = node;
-                let containerDiv = document.createElement('div');
-                containerDiv.classList.add(`${cssBaseClass}__param_container`);
+            parent = node;
+            let containerDiv = document.createElement('div');
+            containerDiv.classList.add(`${cssBaseClass}__param_container`);
 
-                container = parent.appendChild(containerDiv);
-                var events = Events.make({
-                    node: container,
-                });
-
-                var rendered = render(events);
-                container.innerHTML = rendered.content;
-                events.attachEvents();
-                // TODO: use the pattern in which the render returns an object,
-                // which includes events and other functions to be run after
-                // content is added to the dom.
-                PR.prettyPrint(null, container);
-
-                places = {
-                    field: document.getElementById(fieldId),
-                    message: document.getElementById(rendered.places.message),
-                    inputControl: document.getElementById(rendered.places.inputControl),
-                };
-                if (inputControl.attach) {
-                    return inputControl.attach(places.inputControl);
-                }
+            container = parent.appendChild(containerDiv);
+            var events = Events.make({
+                node: container,
             });
+
+            var rendered = render(events);
+            container.innerHTML = rendered.content;
+            events.attachEvents();
+            // TODO: use the pattern in which the render returns an object,
+            // which includes events and other functions to be run after
+            // content is added to the dom.
+            PR.prettyPrint(null, container);
+
+            places = {
+                field: document.getElementById(fieldId),
+                message: document.getElementById(rendered.places.message),
+                inputControl: document.getElementById(rendered.places.inputControl),
+            };
+
+            //TODO: why do this? it seems recursive? could we even call attach in this case? it's not a public method
+            // if (inputControl.attach) {
+            //     return inputControl.attach(places.inputControl);
+            // }
         }
 
         function start(arg) {
-            return attach(arg.node).then(function () {
-                if (inputControl.start) {
-                    return inputControl
-                        .start({
-                            node: places.inputControl,
-                        })
-                        .then(function () {
-                            // TODO: get rid of this pattern
-                            bus.emit('run', {
-                                node: places.inputControl,
-                            });
-                        });
-                }
-            });
+            attach(arg.node);
+
+            return inputControl
+                .start({
+                    node: places.inputControl,
+                })
+                .then(function () {
+                    // TODO: get rid of this pattern
+                    bus.emit('run', {
+                        node: places.inputControl,
+                    });
+                })
+                .catch((err) => {
+                    console.error('error starting field table cell widget: ', err);
+                });
         }
 
         function stop() {

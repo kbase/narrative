@@ -13,27 +13,6 @@ const fs = require('fs');
 // For testing services
 
 /**
- * Imports presetable config keys, using sensible defaults.
- * The defaults correspond to the originally implied settings used by chromedriver, other than Windows.
- * @returns {Object} A config object with the following keys: OS, OS_VERSION, BROWSER, BROWSER_VERSION, SERVICE, WIDTH, HEIGHT
- */
-// function importEnv() {
-//     const e = process.env;
-
-//     const isRemoteService = (e.SERVICE === 'browserstack');
-//     const OS = e.OS || (isRemoteService ? 'Windows' : null);
-//     const OS_VERSION = e.OS_VERSION || (isRemoteService ? '10' : null);
-//     const BROWSER = e.BROWSER || 'chrome';
-//     const BROWSER_VERSION = e.BROWSER_VERSION || (isRemoteService ? 'latest' : null);
-//     const SERVICE = e.SERVICE || 'chromedriver';
-//     const HEADLESS = e.HEADLESS || (isRemoteService ? 'f' : 't');
-
-//     return {
-//         OS, OS_VERSION, BROWSER, BROWSER_VERSION, HEADLESS, SERVICE
-//     };
-// }
-
-/**
  * Given a preset key, return set set of common configuration keys for a given service, os, and browser
  * This is useful because testing services support a limited number of browser dimensions, which differs
  * between operating systems.
@@ -43,10 +22,6 @@ const fs = require('fs');
  * @returns {Object} A config object with the following keys: OS, OS_VERSION, BROWSER, BROWSER_VERSION, SERVICE, WIDTH, HEIGHT
  */
 function processPreset(preset) {
-    // if (preset === 'none') {
-    //     return importEnv();
-    // }
-
     const e = process.env;
 
     switch (preset) {
@@ -165,9 +140,34 @@ const authToken = (() => {
 
 // Each wdio service supported requires an entry here, even
 // if it doesn't have any specific configuration.
-// TODO: Add test parameters for drivers. 
-// Default behavior is to use the latest available, which should 
-// normally be what we want.
+// TODO: The relation between selenium-standalone test drivers, as shown 
+// in the example below, and the installed browser is tricky.
+//
+// For testing services, we can supply the browser version for supported 
+// browsers. But for local or github based tests, the tests use whichever
+// browser version is installed.
+//
+// It seems to be fine to have a newer driver for an older browser
+// (although warnings may be printed when running tests), but it can be
+// an error for a newer browse and older driver. This can happen if
+// the selenium-standalone drivers are out of date, but the host is not.
+// 
+// One way to keep this deterministic is to pin the drivers, as show in the 
+// example below (and the commented out "drivers" setting in the service configs),
+// and at the same time pin the browser version in the host.
+//
+// The host browser can be pinned across testing environments by installing
+// the required browsers via npm. E.g. puppeteer installs a local chrome binary, which
+// can be specified as the Chrome binary. I could not find a similar method
+// for installing Firefox, so gave up on that effort. 
+// 
+// The default behavior is to use the latest available, which should 
+// normally be what we want. However, this ability in selenium-standalone is 
+// relatively recent, and not yet implemented for Firefox (12/12/2020).
+// 
+// Thus, we should keep the selenium-standalone dependency up to date to ensure
+// the most recent version of Firefox is supported.
+// 
 // const drivers = {
 //     chrome: {
 //         version: '87.0.4280.20',

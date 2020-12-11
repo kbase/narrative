@@ -19,16 +19,18 @@
 ## For the impatient
 
 - build local narrative
-  - ensure you have virtualenv installed on your host machine
-  - clone the narrative repo
-    - `git clone https://github.com/kbase/narrative`
-  - in the narrative repo dir, make a Python virtual environment
-    - `cd narrative`
-    - `virtualenv venv`
-  - activate the virtual environment
-    - `source ./venv/bin/activate`
-  - build the narrative locally
-    - `make install`
+  - see [local install](./install/local_install.md) for complete instructions
+  - or, briefly, and without explanation:
+    - ensure you have virtualenv installed on your host machine
+    - clone the narrative repo
+        - `git clone https://github.com/kbase/narrative`
+    - in the narrative repo dir, make a Python virtual environment
+        - `cd narrative`
+        - `virtualenv venv`
+    - activate the virtual environment
+        - `source ./venv/bin/activate`
+    - build the narrative locally
+        - `make install`
 - obtain a kbase login (or dev) CI token
   - log into `https://ci.kbase.us`
   - in the browser console issue

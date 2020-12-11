@@ -1,10 +1,13 @@
 define([
+    'jquery',
     'bluebird',
     'common/runtime',
     'common/ui',
     'kb_common/html',
-    './jobStateListRow'
+    './jobStateListRow',
+    'jquery-dataTables'
 ], function(
+    $,
     Promise,
     Runtime,
     UI,
@@ -21,90 +24,56 @@ define([
         tbody = t('tbody'),
         div = t('div'),
         span = t('span'),
-        icon = t('icon'),
+        i = t('i'),
         button = t('button'),
-        cssBaseClass = 'kb-job-state',
-        selectedJobCssClass = 'job-selected';
+        cssBaseClass = 'kb-job-status';
 
-    let jobsIndexStart,
-        jobsIndexEnd,
-        totalJobsCount;
-
-
-
-    function renderTable() {
-        jobsIndexStart = 1;
-        jobsIndexEnd = 7;
-        totalJobsCount = 7;
-
-        return [
-            table({
-                class: `table ${cssBaseClass}__table`
-            }, [
-                thead({
-                    class: `${cssBaseClass}__table_head`,
+    function createTable() {
+        return table({
+            class: `${cssBaseClass}__table`
+        }, [
+            thead({
+                class: `${cssBaseClass}__table_head panel-heading`,
+            },
+            [
+                tr({
+                    class: `${cssBaseClass}__table_head_row`,
                 },
                 [
-                    tr({
-                        class: `${cssBaseClass}__table_head_row`,
-                    },
-                    [
-                        th({
-                            class: `${cssBaseClass}__table_head_cell--object`
-                        }, [
-                            'Object',
-                            icon({
-                                class: 'fa fa-sort'
-                            })
-                        ]),
-                        th({
-                            class: `${cssBaseClass}__table_head_cell--status`
-                        }, [
-                            'Status',
-                            icon({
-                                class: 'fa fa-sort'
-                            })
-                        ]),
-                        th({
-                            class: `${cssBaseClass}__table_head_cell--log-view`
-                        }, [
-                            'Cancel/Retry All',
-                            icon({
-                                class: 'fa fa-caret-down kb-pointer'
-                            })
-                        ]),
+                    th({
+                        class: `${cssBaseClass}__table_head_cell--object col-sm-6`
+                    }, [
+                        'Object'
+                    ]),
+                    th({
+                        class: `${cssBaseClass}__table_head_cell--status col-sm-2`
+                    }, [
+                        'Status'
+                    ]),
+                    th({
+                        class: `${cssBaseClass}__table_head_cell--log-view col-sm-4`
+                    }, [
+                        'Cancel/Retry All',
+                        i({
+                            class: `fa fa-caret-down kb-pointer ${cssBaseClass}__icon`
+                        }),
                     ])
-                ]),
-                tbody({
-                    class: `${cssBaseClass}__table_body`,
-                })
-            ]),
-            div({}[
-                span({
-                    class: `${cssBaseClass}__table_footer`,
-                },[
-                    `Showing ${jobsIndexStart} to ${jobsIndexEnd} `,
-                    icon({
-                        class: 'fa fa-caret-down kb-pointer'
-                    }),
-                    ` of ${totalJobsCount} entries`,
-
-                ]),
-                span({
-                    class: `${cssBaseClass}__table_footer`,
-                },[
-                    button({}[
-                        'Previous'
-                    ]),
-                    button({}[
-                        '1'
-                    ]),
-                    button({}[
-                        'Next'
-                    ]),
                 ])
-            ])
-        ].join('');
+            ]),
+            tbody({
+                class: `${cssBaseClass}__table_body`,
+            })
+
+        ]);
+    }
+
+    function renderTable(container){
+        container.find('table').dataTable({
+            'searching': false,
+            'pageLength': 50,
+            'lengthChange': false
+        });
+
     }
 
     function factory(config) {
@@ -112,11 +81,10 @@ define([
             model = config.model,
             widgets = {},
             container,
-            parentJobId,
             parentListener;
 
         function createTableRow(id) {
-            let jobTable = container.getElementsByTagName('tbody')[0],
+            let jobTable = container.find('tbody')[0],
                 newRow = document.createElement('tr');
             newRow.setAttribute('data-element-job-id', id);
             newRow.classList.add('job-info');
@@ -127,17 +95,12 @@ define([
 
         function start(arg) {
             return Promise.try(function() {
-                container = arg.node;
-                container.classList.add(`${cssBaseClass}__container`);
-                container.classList.add('batch-mode-list');
+                container = $(arg.node);
+                container.addClass([`${cssBaseClass}__container`, 'batch-mode-list']);
                 UI.make({ node: container });
-                container.innerHTML = renderTable();
-                parentJobId = arg.parentJobId;
+                container.append($(createTable()));
 
                 return Promise.try(() => {
-                    createJobStateWidget('parent', parentJobId, model.getItem('exec.jobState.status'), arg.clickFunction, true);
-                    container.getElementsByTagName('tr')[0].classList.add(selectedJobCssClass); // start with the parent selected
-
                     for (let i=0; i<Math.max(arg.batchSize, arg.childJobs.length); i++) {
                         let jobId = null,
                             initialState = null;
@@ -145,44 +108,12 @@ define([
                             jobId = arg.childJobs[i].job_id;
                             initialState = arg.childJobs[i].status;
                         }
-                        createJobStateWidget(i, jobId, initialState, arg.clickFunction);  // can make null ones. these need to be updated.
+                        createJobStateWidget(i, jobId, initialState);  // can make null ones. these need to be updated.
                     }
-                })
-                    .then(() => { startParentListener(); });
-            });
-        }
-
-        function startParentListener() {
-            parentListener = runtime.bus().listen({
-                channel: {
-                    jobId: parentJobId
-                },
-                key: {
-                    type: 'job-status'
-                },
-                handle: handleJobStatusUpdate
-            });
-        }
-
-        /**
-         * Pass the job state to all row widgets, if it exists.
-         * @param {Object} message
-         */
-        function handleJobStatusUpdate(message) {
-            if (message.jobState.batch_size && message.jobState.child_jobs.length === 0) {
-                if (message.jobState.job_output.result[0].batch_results) {
-                    message.jobState.child_jobs = Object.keys(message.jobState.job_output.result[0].batch_results)
-                        .map((item) => {
-                            return message.jobState.job_output.result[0].batch_results[item].final_job_state;
-                        });
-                }
-            }
-
-            if (message.jobState.child_jobs) {
-                message.jobState.child_jobs.forEach((state, idx) => {
-                    widgets[idx].updateState(state);
+                }).then(() => {
+                    renderTable(container);
                 });
-            }
+            });
         }
 
         /**
@@ -196,29 +127,16 @@ define([
          * @param {int} jobIndex
          * @param {string} jobId
          */
-        function createJobStateWidget(jobIndex, jobId, initialState, clickFunction, isParentJob) {
+        function createJobStateWidget(jobIndex, jobId, initialState) {
             widgets[jobIndex] = JobStateListRow.make({
                 model: model
             });
             widgets[jobIndex].start({
                 node: createTableRow(jobIndex),
-                name: isParentJob ? 'Parent Job' : 'Child Job ' + (jobIndex+1),
                 jobId: jobId,
                 initialState: initialState,
-                isParentJob: isParentJob ? true : false,
-                clickFunction: function(jobRow, _jobId, _isParentJob) {
-                    Array.from(container.getElementsByClassName(selectedJobCssClass)).forEach((elem) => {
-                        elem.classList.remove(selectedJobCssClass);
-                    });
-                    if (_jobId) {
-                        jobRow.classList.add(selectedJobCssClass);
-                        clickFunction({
-                            jobId: _jobId,
-                            isParentJob: _isParentJob,
-                            jobIndex: jobIndex
-                        });
-                    }
-                }
+                // This should be taken from child job info for the params....
+                name: config.name + '_' + jobIndex,
             });
         }
 

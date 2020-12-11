@@ -11,7 +11,7 @@ define([
         div = t('div'),
         td = t('td'),
         span = t('span'),
-        cssBaseClass = 'kb-job-state';
+        cssBaseClass = 'kb-job-status';
 
     function createStateCell(jobState) {
         let label;
@@ -38,7 +38,9 @@ define([
                 break;
         }
 
-        return td({}, [
+        return td({
+            class: `${cssBaseClass}__cell`
+        }, [
             span({
                 class: `fa fa-circle ${cssBaseClass}__icon--${jobState}`
             }),
@@ -46,10 +48,35 @@ define([
         ]);
     }
 
-    function createLogLinkCell(jobState) {
-        return td({}, [
+    function createActionCell(jobState){
+        let label;
+        switch (jobState) {
+            case 'completed':
+                label = 'Go to Results';
+                break;
+            case 'created':
+            case 'estimating':
+            case 'queued':
+            case 'running':
+                label = 'Cancel';
+                break;
+            case 'error':
+            case 'does_not_exist':
+            case 'terminated':
+                label = 'Retry';
+                break;
+        }
+
+        return td({
+            class: `${cssBaseClass}__cell`
+        }, [
             span({
-                class: `${cssBaseClass}__log_link--${jobState}`
+                class: `${cssBaseClass}__action--${jobState}`
+            }, [
+                label
+            ]),
+            span({
+                class: `${cssBaseClass}__log_link--${jobState} pull-right`
             }, [
                 'Show log'
             ])
@@ -58,39 +85,26 @@ define([
 
     function factory() {
         var container,
-            name,
-            jobId,
-            clickFunction,
-            isParentJob;
+            name;
 
         function updateRowStatus(jobStatus) {
-            jobStatus = jobStatus ? jobStatus : 'Job still pending.';
             var jobIdDiv = '';
             container.innerHTML = td({
-                class: `${cssBaseClass}__cell--object`,
+                class: `${cssBaseClass}__cell`
             }, [
                 div(
-                    isParentJob ? name.toUpperCase() : name
+                    name
                 ),
                 jobIdDiv
             ])
             + createStateCell(jobStatus)
-            + createLogLinkCell(jobStatus);
+            + createActionCell(jobStatus);
         }
 
         function start(arg) {
             return Promise.try(function() {
-                container = arg.node;               // this is the row (tr) that this renders
-                container.onclick = () => {
-                    if (jobId) {
-                        clickFunction(container, jobId, isParentJob);
-                    }
-                };
-
-                jobId = arg.jobId;                  // id of child job
+                container = arg.node;
                 name = arg.name;
-                isParentJob = arg.isParentJob;
-                clickFunction = arg.clickFunction;  // called on click (after some ui junk)
                 updateRowStatus(arg.initialState);
             });
         }
@@ -98,18 +112,9 @@ define([
         function stop() {
         }
 
-        function updateState(newState) {
-            if (!jobId) {
-                jobId = newState.job_id;
-            }
-            let status = newState.status ? newState.status : null;
-            updateRowStatus(status);
-        }
-
         return {
             start: start,
-            stop: stop,
-            updateState: updateState
+            stop: stop
         };
     }
 

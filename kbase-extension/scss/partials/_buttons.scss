@@ -42,3 +42,31 @@
     width: 80px;
   }
 }
+
+.kb-button-group {
+  font-family: Oxygen;
+  font-style: normal;
+  font-size: 14px;
+  line-height: 18px;
+  height: 30px;
+
+  text-align: center;
+  border: 1px solid #DED5CB;
+  padding: 0 10px 0 10px;
+
+  color: #026DAA;
+  background: #FFFFFF;
+
+  &:active{
+    color: #FFFFFF;
+    background: #026DAA;
+  }
+
+  &:hover{
+
+  }
+
+  &:disable{
+    color: #333;
+  }
+}

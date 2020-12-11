@@ -1,0 +1,61 @@
+.kb-job-status {
+  box-shadow: none;
+
+  &__icon {
+    margin: 4px;
+
+    &--completed{
+      color: rgb(17, 133, 119);
+    }
+
+    &--error,
+    &--does_not_exist,
+    &--terminated  {
+      color: rgb(210,35,42);
+    }
+
+    &--queued,
+    &--created,
+    &--estimating,
+    &--running {
+      color: rgb(161,185,207);
+    }
+  }
+// panel-heading border none
+  &__table {
+    font-family: Oxygen;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 20px;
+
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 18px;
+    padding: 0;
+
+    &_body {
+      border-bottom: 2px solid #C4C4C4;
+      border-top: 2px solid #C4C4C4;
+    }
+// padding on status cell for 40 right
+    &_head {
+      font-weight: 700px;
+    }
+
+    &_footer {
+      font-size: 14px;
+      line-height: 18px;
+    }
+  }
+
+  &__row{
+
+  }
+
+  &__cell{
+    border: none;
+    padding: 10px 0 10px 0;
+  }
+
+}

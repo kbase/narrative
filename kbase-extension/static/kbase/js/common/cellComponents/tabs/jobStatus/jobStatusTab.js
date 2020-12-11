@@ -42,7 +42,8 @@ define([
                 ui.buildPanel({
                     name: 'subjobs',
                     classes: [
-                        'kb-panel-light'
+                        'kb-panel-light',
+                        'kb-job-status'
                     ]
                 })
             ]);
@@ -121,7 +122,10 @@ define([
                         childJobs: model.getItem('exec.jobState.child_jobs'),
                         clickFunction: startDetails,
                         parentJobId: model.getItem('exec.jobState.job_id'),
-                        batchSize: model.getItem('exec.jobState.batch_size')
+                        batchSize: model.getItem('exec.jobState.batch_size'),
+                        // TODO this should be included in each of the child jobs information. This is a hack for now
+                        // Need to talk to boris
+                        name: model.getItem('params.name'),
                     })
                 ]);
             });

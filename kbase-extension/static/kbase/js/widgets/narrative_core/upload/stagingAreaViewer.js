@@ -402,7 +402,7 @@ define([
                     const rowFileName = data[2];
                     //use the name to look up all the data we have
                     let rowFileData = getFileFromName(rowFileName);
-                    
+
                     //find the initial singly mapped datatype from the staging service
                     let suggestedTypes = $(data[5]).find('optgroup[label="Suggested Types"]');
                     let suggestedType = null;
@@ -516,12 +516,12 @@ define([
 
                     //find the element
                     let importDropdown = $('td:eq(5)', row).find('select');
-                    
+
                     /*
                             when a user selects a data type from the import as dropdown
                             enable the checkbox for that row (so user can import)
                             make sure the "select all" checkbox is also enabled
-    
+
                             accepts dataType: string (the identifier of what the data type is e.g. sra_reads)
                         */
                     function enableCheckboxes(dataType) {
@@ -583,9 +583,9 @@ define([
                         }
 
                     }
-                    
 
-                    
+
+
 
                     //set the behavior on the import dropdown when a user selects a type
                     importDropdown
@@ -638,10 +638,10 @@ define([
                 }.bind(stagingAreaViewer)
             });
 
-            /* 
+            /*
                 Used to manage the select all checkbox in the header
-                has to be outside of the main DataTable call 
-                so that we can get entire table data 
+                has to be outside of the main DataTable call
+                so that we can get entire table data
                 not just what is drawn in the current dom
                 aka dealing with pagination
             */

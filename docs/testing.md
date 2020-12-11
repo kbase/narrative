@@ -115,6 +115,8 @@ describe('Simple test runner', () => {
 
 When running these locally, these require an auth token in either the `KBASE_TEST_TOKEN` environment variable, or in the file referenced by `test/testConfig.json` (see the [Add Credentials for Tests - JavaScript](#javascript) section above).
 
+For more details see the [integration testing](./integration-testing.md) document.
+
 ### Manual Testing and Debugging
 
 #### ***Python***

@@ -174,7 +174,7 @@ define([
             // note how many times we've clicked on the data browser slideout button.
             var numDataBrowserClicks = 0;
 
-            this.$slideoutBtn = $('<button>')
+            this.$slideoutBtn = $('<button data-test-id="data-slideout-button">')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
                     title: 'Hide / Show data browser',
@@ -352,37 +352,47 @@ define([
         },
 
         buildTabs: function (tabs, isOuter) {
-            var $header = $('<div style="background-color: #2196F3">');
-            var $body = $('<div>');
+            const $header = $('<div style="background-color: #2196F3" role="tablist">');
+            const $body = $('<div>');
 
-            for (var i = 0; i < tabs.length; i++) {
-                var tab = tabs[i];
+            for (let i = 0; i < tabs.length; i++) {
+                const tab = tabs[i];
                 $header.append($('<div>')
                     .addClass('kb-side-header')
+                    .attr('role', 'tab')
+                    .attr('data-test-id', `tab-${tab.id}`)
                     .css('width', (100 / tabs.length) + '%')
+                    .click((e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // TODO: turn off active tab.
+                        const $tab = $(e.target);
+                        if ($tab.hasClass('active')) {
+                            return;
+                        }
+
+                        // deactivate active tab
+                        $header.find('div').removeClass('active');
+
+                        // Make this one active
+                        $tab.addClass('active');
+
+                        // Deactivate tab panel.
+                        $body.find('div.kb-side-tab').removeClass('active');
+
+                        // Activate this one.
+                        $body.find('div:nth-child(' + (i + 1) + ').kb-side-tab').addClass('active');
+
+                        if (isOuter) {
+                            this.hideOverlay();
+                        }
+                        this.updateSlideoutRendering(i);
+                    })
                     .append(tab.tabName));
                 $body.append($('<div>')
                     .addClass('kb-side-tab')
                     .append(tab.content));
             }
-
-            $header.find('div').click($.proxy(function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                var $headerDiv = $(event.currentTarget);
-
-                if (!$headerDiv.hasClass('active')) {
-                    var idx = $headerDiv.index();
-                    $header.find('div').removeClass('active');
-                    $headerDiv.addClass('active');
-                    $body.find('div.kb-side-tab').removeClass('active');
-                    $body.find('div:nth-child(' + (idx + 1) + ').kb-side-tab').addClass('active');
-                    if (isOuter)
-                        this.hideOverlay();
-
-                    this.updateSlideoutRendering(idx);
-                }
-            }, this));
 
             $header.find('div:first-child').addClass('active');
             $body.find('div:first-child.kb-side-tab').addClass('active');
@@ -425,19 +435,19 @@ define([
             // tab panels
             let minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
-                publicPanel = $('<div class="kb-import-content kb-import-public">'),
+                publicPanel = $('<div class="kb-import-content kb-import-public" data-test-id="panel-public">'),
                 examplePanel = $('<div class="kb-import-content">'),
                 stagingPanel = $('<div class="kb-import-content">');
 
             let tabList = [
-                {tabName: '<small>My Data</small>', content: minePanel},
-                {tabName: '<small>Shared With Me</small>', content: sharedPanel},
-                {tabName: '<small>Public</small>', content: publicPanel},
-                {tabName: '<small>Example</small>', content: examplePanel},
+                {id: 'mydata', tabName: '<small>My Data</small>', content: minePanel},
+                {id: 'sharedwithme', tabName: '<small>Shared With Me</small>', content: sharedPanel},
+                {id: 'public', tabName: '<small>Public</small>', content: publicPanel},
+                {id: 'example', tabName: '<small>Example</small>', content: examplePanel},
             ];
 
             if (Config.get('features').stagingDataViewer) {
-                tabList.push({tabName: '<small>Import<small>', content: stagingPanel});
+                tabList.push({id: 'import', tabName: '<small>Import<small>', content: stagingPanel});
             }
 
             // add tabs
@@ -446,6 +456,7 @@ define([
             var body = $('<div>');
             var footer = $('<div>');
             body.addClass('kb-side-panel');
+            body.attr('data-test-id', 'data-slideout-panel');
             body.append($tabs.header, $tabs.body);
 
             // add footer status container and buttons

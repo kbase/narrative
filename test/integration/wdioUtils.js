@@ -76,11 +76,8 @@ async function openNarrative(workspaceId) {
         timeout,
         timeoutMsg: `Timeout after waiting ${timeout}ms for loading blocker to appear`
     }); 
-    // await browser.waitUntil(async () => {
-    //     const loadingText = await loadingBlocker.getText();
-    //     loadingText.getText().includes('Connecting to KBase services...');
-    // });
 
+    // And then the loading blocker should disappear!
     await loadingBlocker.waitForDisplayed({
         timeout,
         timeoutMsg: `Timeout after waiting ${timeout}ms for loading blocker to disappear`,

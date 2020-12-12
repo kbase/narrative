@@ -11,6 +11,8 @@ define([
         div = t('div'),
         td = t('td'),
         span = t('span'),
+        button = t('button'),
+        a = t('a'),
         cssBaseClass = 'kb-job-status';
 
     function createStateCell(jobState) {
@@ -68,15 +70,16 @@ define([
         }
 
         return td({
-            class: `${cssBaseClass}__cell`
+            class: `${cssBaseClass}__cell_container`
         }, [
-            span({
-                class: `${cssBaseClass}__action--${jobState}`
+            a({
+                class: `${cssBaseClass}__cell_action--${jobState}`
             }, [
                 label
             ]),
-            span({
-                class: `${cssBaseClass}__log_link--${jobState} pull-right`
+            a({
+                class: `${cssBaseClass}__cell_log_btn`,
+                role: 'button'
             }, [
                 'Show log'
             ])
@@ -84,10 +87,9 @@ define([
     }
 
     function factory() {
-        var container,
-            name;
+        var container;
 
-        function updateRowStatus(jobStatus) {
+        function updateRowStatus(jobStatus, name) {
             var jobIdDiv = '';
             container.innerHTML = td({
                 class: `${cssBaseClass}__cell`
@@ -104,8 +106,7 @@ define([
         function start(arg) {
             return Promise.try(function() {
                 container = arg.node;
-                name = arg.name;
-                updateRowStatus(arg.initialState);
+                updateRowStatus(arg.initialState, arg.name);
             });
         }
 

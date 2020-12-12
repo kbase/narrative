@@ -22,15 +22,12 @@ define([
         tr = t('tr'),
         th = t('th'),
         tbody = t('tbody'),
-        div = t('div'),
-        span = t('span'),
         i = t('i'),
-        button = t('button'),
         cssBaseClass = 'kb-job-status';
 
     function createTable() {
         return table({
-            class: `${cssBaseClass}__table`
+            class: `${cssBaseClass}__table container`
         }, [
             thead({
                 class: `${cssBaseClass}__table_head panel-heading`,
@@ -57,7 +54,7 @@ define([
                         i({
                             class: `fa fa-caret-down kb-pointer ${cssBaseClass}__icon`
                         }),
-                    ])
+                    ]),
                 ])
             ]),
             tbody({
@@ -67,11 +64,17 @@ define([
         ]);
     }
 
+    // Convert the table to a datatable object to get functionality
     function renderTable(container){
         container.find('table').dataTable({
-            'searching': false,
-            'pageLength': 50,
-            'lengthChange': false
+            searching: false,
+            pageLength: 50,
+            lengthChange: false,
+            columnDefs: [{
+                targets: 2,
+                orderable: false
+
+            }]
         });
 
     }
@@ -136,7 +139,7 @@ define([
                 jobId: jobId,
                 initialState: initialState,
                 // This should be taken from child job info for the params....
-                name: config.name + '_' + jobIndex,
+                name: 'Brca1Reads.fastq_reads_' + jobIndex,
             });
         }
 

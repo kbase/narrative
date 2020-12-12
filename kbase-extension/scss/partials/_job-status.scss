@@ -1,6 +1,16 @@
 .kb-job-status {
   box-shadow: none;
 
+  &__row {
+    &:hover {
+      background: #F2EFEB;
+    }
+
+    &:active {
+      background: #CCE5F3;
+    }
+  }
+
   &__icon {
     margin: 4px;
 
@@ -28,6 +38,7 @@
     font-weight: normal;
     font-size: 16px;
     line-height: 20px;
+    white-space: nowrap;
 
     width: 100%;
     max-width: 100%;
@@ -38,9 +49,19 @@
       border-bottom: 2px solid #C4C4C4;
       border-top: 2px solid #C4C4C4;
     }
+
 // padding on status cell for 40 right
     &_head {
       font-weight: 700px;
+      &_row {
+        .sorting::after,
+        .sorting_asc::after,
+        .sorting_desc::after {
+          position: relative;
+          margin-left: 4px;
+        }
+      }
+
     }
 
     &_footer {
@@ -49,13 +70,34 @@
     }
   }
 
-  &__row{
-
-  }
-
-  &__cell{
+  &__cell {
     border: none;
-    padding: 10px 0 10px 0;
+    padding: 10px 5px 10px 5px;
+
+    &_container {
+      display: flex;
+      align-items: center;
+      margin: 10px 5px 10px 5px;
+      justify-content: space-between;
+    }
+
+    &_log_btn {
+      border: none;
+      background: none;
+
+      &:active {
+        border: none;
+      }
+    }
+
+    &_action{
+      &--created,
+      &--estimating,
+      &--queued,
+      &--running {
+        color: #D2232A;
+      }
+    }
   }
 
 }

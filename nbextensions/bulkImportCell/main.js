@@ -85,11 +85,11 @@ define([
                         return;
                     }
                     const importData = setupData.typesToFiles || {};
-
                     try {
                         BulkImportCell.make({
                             cell,
                             importData,
+                            specs: setupData.specs,
                             initialize: true
                         });
                     }

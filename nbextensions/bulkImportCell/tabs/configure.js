@@ -69,18 +69,20 @@ define([
         */
         function buildParamsWidget(node) {
             const paramBus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
+            // This is the key in the model that maps to the list of params for the current app.
+            const paramKey = `params.${fileType}`;
 
             const widget = ParamsWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
-                initialParams: model.getItem('params')
+                initialParams: model.getItem(paramKey)
             });
 
             paramBus.on('sync-params', function(message) {
                 message.parameters.forEach(function(paramId) {
                     paramBus.send({
                         parameter: paramId,
-                        value: model.getItem(['params', message.parameter])
+                        value: model.getItem([paramKey, message.parameter])
                     }, {
                         key: {
                             type: 'update',
@@ -91,7 +93,7 @@ define([
             });
 
             paramBus.on('parameter-sync', function(message) {
-                var value = model.getItem(['params', message.parameter]);
+                var value = model.getItem([paramKey, message.parameter]);
                 paramBus.send({
                     value: value
                 }, {
@@ -124,7 +126,7 @@ define([
                 },
                 handle: function(message) {
                     return {
-                        value: model.getItem(['params', message.parameterName])
+                        value: model.getItem([paramKey, message.parameterName])
                     };
                 }
             });
@@ -158,18 +160,20 @@ define([
 
         function buildFilePathWidget(node) {
             const paramBus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
+            // This is the key in the model that maps to the list of params for the current app.
+            const paramKey = `params.${fileType}`;
 
             const widget = FilePathWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
-                initialParams: model.getItem('params')
+                initialParams: model.getItem(paramKey)
             });
 
             paramBus.on('sync-params', function(message) {
                 message.parameters.forEach(function(paramId) {
                     paramBus.send({
                         parameter: paramId,
-                        value: model.getItem(['params', message.parameter])
+                        value: model.getItem([paramKey, message.parameter])
                     }, {
                         key: {
                             type: 'update',
@@ -180,7 +184,7 @@ define([
             });
 
             paramBus.on('parameter-sync', function(message) {
-                var value = model.getItem(['params', message.parameter]);
+                var value = model.getItem([paramKey, message.parameter]);
                 paramBus.send({
                     value: value
                 }, {
@@ -213,7 +217,7 @@ define([
                 },
                 handle: function(message) {
                     return {
-                        value: model.getItem(['params', message.parameterName])
+                        value: model.getItem([paramKey, message.parameterName])
                     };
                 }
             });

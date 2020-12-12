@@ -402,7 +402,7 @@ define([
                     const rowFileName = data[2];
                     //use the name to look up all the data we have
                     let rowFileData = getFileFromName(rowFileName);
-                    
+
                     //find the initial singly mapped datatype from the staging service
                     let suggestedTypes = $(data[5]).find('optgroup[label="Suggested Types"]');
                     let suggestedType = null;
@@ -516,12 +516,12 @@ define([
 
                     //find the element
                     let importDropdown = $('td:eq(5)', row).find('select');
-                    
+
                     /*
                             when a user selects a data type from the import as dropdown
                             enable the checkbox for that row (so user can import)
                             make sure the "select all" checkbox is also enabled
-    
+
                             accepts dataType: string (the identifier of what the data type is e.g. sra_reads)
                         */
                     function enableCheckboxes(dataType) {
@@ -583,9 +583,6 @@ define([
                         }
 
                     }
-                    
-
-                    
 
                     //set the behavior on the import dropdown when a user selects a type
                     importDropdown
@@ -856,11 +853,22 @@ define([
          * the 10 FASTQ files, and 2 more cells are generated for each genome.
          *
          * If no files are selected by their checkbox, then no new cells will be created.
+         *
+         * Creating a new bulk import cell returns a Promise, so this returns a Promise.
          */
         initBulkImport: function () {
             const stagingAreaViewer = this;
 
-            // keys = types, values = list of files to be uploaded as that type
+            /*
+             * We're building up a structure like this to send to the
+             * bulk import cell initializer:
+             * {
+             *   fileType: {
+             *     appId: string,
+             *     files: list of files
+             *   }
+             * }
+             */
             const bulkMapping = {};
             // get all of the selected checkbox file names and import type
             $('input.kb-staging-table-body__checkbox-input:checked')
@@ -869,18 +877,24 @@ define([
                     const importFile = $(this).attr('data-file-name');
                     if (stagingAreaViewer.bulkImportTypes.includes(importType)) {
                         if (!(importType in bulkMapping)) {
-                            bulkMapping[importType] = [];
+                            bulkMapping[importType] = {
+                                appId: stagingAreaViewer.uploaders.app_info[importType].app_id,
+                                files: []
+                            };
                         }
-                        bulkMapping[importType].push(importFile);
+                        bulkMapping[importType].files.push(importFile);
                     }
                     else {
                         stagingAreaViewer.initImportApp(importType, importFile);
                     }
                 });
-            if (Object.keys(bulkMapping).length) {
-                Jupyter.narrative.insertBulkImportCell(bulkMapping);
-            }
             Jupyter.narrative.hideOverlay();
+            if (Object.keys(bulkMapping).length) {
+                return Jupyter.narrative.insertBulkImportCell(bulkMapping);
+            }
+            else {
+                return Promise.resolve();
+            }
         },
 
         /**

@@ -1,19 +1,26 @@
 define([
     'bluebird',
-    'kb_common/html'
+    'kb_common/html',
+    'common/events',
+    'jquery'
 ], function(
     Promise,
-    html
+    html,
+    Events,
+    $
 ) {
     'use strict';
+
+    var container;
 
     const t = html.tag,
         div = t('div'),
         td = t('td'),
         span = t('span'),
-        button = t('button'),
         a = t('a'),
-        cssBaseClass = 'kb-job-status';
+        i = t('i'),
+        cssBaseClass = 'kb-job-status',
+        events = Events.make();
 
     function createStateCell(jobState) {
         let label;
@@ -50,6 +57,15 @@ define([
         ]);
     }
 
+    function selectRow(e) {
+        $('.kb-job-status__row').removeClass('active');
+        $(e.target).closest('tr').addClass('active');
+    }
+
+    function unselectRow(e) {
+        $(e.target).closest('tr').addClass('active');
+    }
+
     function createActionCell(jobState){
         let label;
         switch (jobState) {
@@ -78,16 +94,36 @@ define([
                 label
             ]),
             a({
-                class: `${cssBaseClass}__cell_log_btn`,
-                role: 'button'
+                class: `${cssBaseClass}__cell_log_btn show_log`,
+                role: 'button',
+                id: events.addEvent({
+                    type: 'click',
+                    handler: function (e) {
+                        selectRow(e);
+                    },
+                })
             }, [
                 'Show log'
-            ])
+            ]),
+            a({
+                class: `${cssBaseClass}__cell_log_btn selected_log`,
+                role: 'button',
+                id: events.addEvent({
+                    type: 'click',
+                    handler: function (e) {
+                        unselectRow(e);
+                    },
+                })
+            }, [
+                'Showing log',
+                i({
+                    class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`
+                })
+            ]),
         ]);
     }
 
     function factory() {
-        var container;
 
         function updateRowStatus(jobStatus, name) {
             var jobIdDiv = '';
@@ -107,6 +143,7 @@ define([
             return Promise.try(function() {
                 container = arg.node;
                 updateRowStatus(arg.initialState, arg.name);
+                events.attachEvents(container);
             });
         }
 

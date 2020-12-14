@@ -2,12 +2,28 @@
   box-shadow: none;
 
   &__row {
-    &:hover {
-      background: #F2EFEB;
+    .show_log {
+      display: none;
     }
 
-    &:active {
+    .selected_log {
+      display: none;
+    }
+
+    &:hover {
+      background: #F2EFEB;
+
+      .show_log {
+        display: inline;
+      }
+    }
+
+    .active {
       background: #CCE5F3;
+
+      .selected_log {
+        display: inline;
+      }
     }
   }
 
@@ -84,10 +100,8 @@
     &_log_btn {
       border: none;
       background: none;
-
-      &:active {
-        border: none;
-      }
+      color: black;
+      display: none;
     }
 
     &_action{

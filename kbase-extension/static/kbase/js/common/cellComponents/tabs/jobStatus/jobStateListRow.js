@@ -58,12 +58,23 @@ define([
     }
 
     function selectRow(e) {
-        $('.kb-job-status__row').removeClass('active');
-        $(e.target).closest('tr').addClass('active');
+        let $currentRow = $(e.target).closest('tr');
+        let $allRows = $('.kb-job-status__row');
+
+        // unselect previously selected row
+        $allRows.removeClass(`${cssBaseClass}__row_selected`);
+        $allRows.find('.selected_log').css('display', 'none');
+
+        // add clasees to selected row
+        $currentRow.addClass(`${cssBaseClass}__row_selected`);
+        $currentRow.find('.selected_log').css('display', 'inline');
     }
 
     function unselectRow(e) {
-        $(e.target).closest('tr').addClass('active');
+        let $currentRow = $(e.target).closest('tr');
+
+        $(e.target).closest('tr').removeClass(`${cssBaseClass}__row_selected`);
+        $currentRow.find('.selected_log').css('display', 'none');
     }
 
     function createActionCell(jobState){

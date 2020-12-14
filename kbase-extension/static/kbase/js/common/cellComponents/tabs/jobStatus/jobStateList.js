@@ -38,7 +38,7 @@ define([
                 },
                 [
                     th({
-                        class: `${cssBaseClass}__table_head_cell--object col-sm-6`
+                        class: `${cssBaseClass}__table_head_cell--object col-sm-5`
                     }, [
                         'Object'
                     ]),
@@ -48,7 +48,7 @@ define([
                         'Status'
                     ]),
                     th({
-                        class: `${cssBaseClass}__table_head_cell--log-view col-sm-4`
+                        class: `${cssBaseClass}__table_head_cell--log-view col-sm-5`
                     }, [
                         'Cancel/Retry All',
                         i({

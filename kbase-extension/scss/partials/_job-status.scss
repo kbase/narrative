@@ -18,11 +18,15 @@
       }
     }
 
-    .active {
+    &_selected {
       background: #CCE5F3;
 
-      .selected_log {
-        display: inline;
+      &:hover {
+        background: #CCE5F3;
+
+        .show_log {
+          display: none;
+        }
       }
     }
   }

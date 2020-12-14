@@ -2,14 +2,12 @@ define([
     'bluebird',
     'kb_common/html',
     'common/ui',
-    'common/runtime',
     'util/jobLogViewer',
     './jobStateList'
 ], function (
     Promise,
     html,
     UI,
-    Runtime,
     LogViewer,
     JobStateList
 ) {
@@ -19,14 +17,9 @@ define([
         div = t('div');
 
     function factory(config) {
-        // The top level node used by this widget.
-        let container;
-
-        // The handy UI module interface to this container.
-        let ui;
-
-        // A cheap widget collection.
-        let widgets = {},
+        let container,
+            ui,
+            widgets = {},
             model = config.model;
 
         function renderLayout() {
@@ -35,7 +28,7 @@ define([
                 dataElement: 'kb-job-list-wrapper'
             }, [
                 ui.buildPanel({
-                    name: 'subjobs',
+                    name: 'jobs',
                     classes: [
                         'kb-panel-light',
                         'kb-job-status'
@@ -67,10 +60,6 @@ define([
             return div({}, [list, jobStatus]);
         }
 
-        function getSelectedJobId() {
-            return config.clickedId;
-        }
-
         function startJobStatus() {
             return Promise.try(function() {
                 container.innerHTML = renderLayout();
@@ -86,8 +75,7 @@ define([
                 return Promise.all([
                     widgets.stateList.start({
                         node: ui.getElement('subjobs.body'),
-                        childJobs: model.getItem('exec.jobState.child_jobs'),
-                        parentJobId: model.getItem('exec.jobState.job_id')
+                        childJobs: model.getItem('exec.jobState.child_jobs')
                     })
                 ]);
             });
@@ -114,8 +102,7 @@ define([
 
         return {
             start: start,
-            stop: stop,
-            getSelectedJobId: getSelectedJobId
+            stop: stop
         };
     }
 

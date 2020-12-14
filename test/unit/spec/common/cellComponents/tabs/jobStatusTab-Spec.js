@@ -1,12 +1,10 @@
 define([
     'base/js/namespace',
-    'common/cellComponents/tabs/jobStatusTab',
+    'common/cellComponents/tabs/jobStatus/jobStatusTab',
     'jquery',
-    'common/runtime',
     'common/props',
-    'common/spec',
-    'json!../../../../data/testAppObj.json',
-], function (Jupyter, jobStatusTab, $, Runtime, Props, Spec, TestAppObject) {
+    'json!../../../../../data/testAppObj.json',
+], function (Jupyter, jobStatusTab, $, Props, TestAppObject) {
     'use strict';
 
     describe('The job status tab module', function () {
@@ -30,10 +28,9 @@ define([
             Jupyter.narrative = null;
         });
 
-        let jobStatusTab, node, spec, parameters;
+        let jobStatusTab, node;
 
         beforeEach(function () {
-            const bus = Runtime.make().bus();
             node = document.createElement('div');
             document.getElementsByTagName('body')[0].appendChild(node);
 
@@ -42,20 +39,8 @@ define([
                 onUpdate: () => {},
             });
 
-            spec = Spec.make({
-                appSpec: model.getItem('app.spec'),
-            });
-
-            parameters = spec.getSpec().parameters;
-
-            const workspaceId = 54745;
-
             jobStatusTab = jobStatusTab.make({
-                bus: bus,
-                model: model,
-                workspaceId: workspaceId,
-                initialParams: model.getItem('params'),
-                jobId: undefined
+                model: model
             });
         });
 
@@ -72,62 +57,21 @@ define([
         it('has the required methods', function () {
             expect(jobStatusTab.start).toBeDefined();
             expect(jobStatusTab.stop).toBeDefined();
-            expect(jobStatusTab.bus).toBeDefined();
         });
 
-        it('should start and render itself', () => {
+        it('should start and the job status and job log panel', () => {
             return jobStatusTab
                 .start({
-                    node: node,
-                    appSpec: spec,
-                    parameters: parameters,
+                    node: node
                 })
                 .then(() => {
                     const contents = [
-                        'job statuss',
-                        'kb-file-path__table',
-                        'kb-file-path__table_row',
-                        'kb-file-path__file_number',
-                        '1',
-                        'fastq_rev_staging_file_name',
-                        'fa fa-trash-o fa-lg',
-                        'Add Row',
+                        'jobs',
+                        'job-log-section-toggle'
                     ];
                     contents.forEach((item) => {
                         expect(node.innerHTML).toContain(item);
                     });
-                });
-        });
-
-        it('should add a row when Add Row button is clicked', () => {
-            return jobStatusTab
-                .start({
-                    node: node,
-                    appSpec: spec,
-                    parameters: parameters,
-                })
-                .then(() => {
-                    let preClickNumberOfRows = $('tr').length;
-                    expect(preClickNumberOfRows).toEqual(1);
-                    $('button')[1].click();
-                    let postClickNumberOfRows = $('tr').length;
-                    expect(postClickNumberOfRows).toEqual(2);
-                });
-        });
-
-        it('should delete a row when trashcan button is clicked', () => {
-            return jobStatusTab
-                .start({
-                    node: node,
-                    appSpec: spec,
-                    parameters: parameters,
-                })
-                .then(() => {
-                    let preClickNumberOfRows = $('tr').length;
-                    expect(preClickNumberOfRows).toEqual(1);
-                    $('button')[0].click();
-                    let postClickNumberOfRows = $('tr').length;
-                    expect(postClickNumberOfRows).toEqual(0);
                 });
         });
     });

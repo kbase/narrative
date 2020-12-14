@@ -355,7 +355,6 @@ define([
             let meta = cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             cell.metadata = meta;
-
             render().then(() => {
                 cell.renderMinMax();
                 // force toolbar refresh

@@ -81,18 +81,18 @@ define([
         let label;
         switch (jobState) {
             case 'completed':
-                label = 'Go to Results';
+                label = 'GO TO RESULTS';
                 break;
             case 'created':
             case 'estimating':
             case 'queued':
             case 'running':
-                label = 'Cancel';
+                label = 'CANCEL';
                 break;
             case 'error':
             case 'does_not_exist':
             case 'terminated':
-                label = 'Retry';
+                label = 'RETRY';
                 break;
         }
 
@@ -114,7 +114,10 @@ define([
                     },
                 })
             }, [
-                'Show log'
+                'Show log',
+                i({
+                    class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`
+                })
             ]),
             a({
                 class: `${cssBaseClass}__cell_log_btn selected_log`,

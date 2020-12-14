@@ -56,7 +56,6 @@
     font-family: Oxygen;
     font-style: normal;
     font-weight: normal;
-    font-size: 16px;
     line-height: 20px;
     white-space: nowrap;
 
@@ -77,8 +76,10 @@
         .sorting::after,
         .sorting_asc::after,
         .sorting_desc::after {
-          position: relative;
-          margin-left: 4px;
+          left: 5px !important;
+          bottom: 0 !important;
+          position: relative !important;
+          display: inline-block !important;
         }
       }
 
@@ -106,6 +107,10 @@
       background: none;
       color: black;
       display: none;
+
+        &:hover {
+          text-decoration: none;
+        }
     }
 
     &_action{

@@ -7,8 +7,26 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
     'use strict';
 
     function ResultsTab(config) {
-        const model = config.model;
+        const model = config.model,
+            workspaceClient = config.workspaceClient;
         let container = null;
+
+        function loadReportData(params) {
+            workspaceClient
+                .get_objects2({
+                    objects: [
+                        {
+                            ref: params.report_ref,
+                        },
+                    ],
+                })
+                .then((data) => {
+                    console.log('got object data: ', data);
+                })
+                .catch((err) => {
+                    console.error('error looking up object data: ', err);
+                });
+        }
 
         function buildOutputWidget(arg) {
             const outputWidget = OutputWidget.make();
@@ -36,6 +54,11 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
                 //TODO: not entirely certian this is the right data to send to each widget, or if there should be any other checks here. Will need to confirm by digging deeper into the resultsViewer widget, line 76
                 const jobState = model.getItem('exec.jobState');
                 const result = model.getItem('exec.outputWidgetInfo');
+
+                loadReportData(result.params);
+
+                //TODO: check first that we have objects created to display
+                //report.objects_created && report.objects_created.length
 
                 //then build output object and report widgets
                 let objectNode = document.createElement('div');

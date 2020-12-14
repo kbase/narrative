@@ -117,7 +117,7 @@ define([
             cellBus = null,
             ui = null,
             tabWidget = null, // the widget currently in view
-            workspaceInfo = getWorkspaceInfo(),
+            workspaceClient = getWorkspaceClient(),
             state = getInitialState(),
             tabSet = {
                 selectedTab: 'configure',
@@ -364,9 +364,9 @@ define([
             });
         }
 
-        function getWorkspaceInfo() {
+        function getWorkspaceClient() {
             const worskpaceURL = runtime.config('services.workspace.url');
-            const authToken = runtime.authToken;
+            const authToken = runtime.authToken();
             const workspace = new Workspace(worskpaceURL, { token: authToken });
 
             return workspace;
@@ -403,7 +403,7 @@ define([
                 model: model,
                 spec: spec,
                 jobId: undefined,
-                workspaceInfo: workspaceInfo,
+                workspaceClient: workspaceClient,
             });
 
             let node = document.createElement('div');

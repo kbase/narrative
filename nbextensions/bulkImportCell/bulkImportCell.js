@@ -10,6 +10,7 @@ define([
     'common/spec',
     'base/js/namespace',
     'kb_common/html',
+    'kb_service/client/workspace',
     './cellTabs',
     './cellControlPanel',
     './fileTypePanel',
@@ -30,6 +31,7 @@ define([
     Spec,
     Jupyter,
     html,
+    Workspace,
     CellTabs,
     CellControlPanel,
     FileTypePanel,
@@ -98,7 +100,6 @@ define([
      *    {
      *      'fastq_reads': ['file1.fq', 'file2.fq']
      *    }
-     *  - workspaceInfo - Object with all workspace details we need to initialize widgets
      */
     function BulkImportCell(options) {
         if (options.cell.cell_type !== 'code') {
@@ -110,13 +111,13 @@ define([
             busEventManager = BusEventManager.make({
                 bus: runtime.bus(),
             }),
-            typesToFiles = options.importData,
-            workspaceInfo = options.workspaceInfo;
+            typesToFiles = options.importData;
 
         let kbaseNode = null, // the DOM element used as the container for everything in this cell
             cellBus = null,
             ui = null,
             tabWidget = null, // the widget currently in view
+            workspaceInfo = getWorkspaceInfo(),
             state = getInitialState(),
             tabSet = {
                 selectedTab: 'configure',
@@ -354,6 +355,7 @@ define([
             let meta = cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             cell.metadata = meta;
+
             render().then(() => {
                 cell.renderMinMax();
                 // force toolbar refresh
@@ -361,6 +363,14 @@ define([
                 updateState();
                 toggleTab(state.tab.selected);
             });
+        }
+
+        function getWorkspaceInfo() {
+            const worskpaceURL = runtime.config('services.workspace.url');
+            const authToken = runtime.authToken;
+            const workspace = new Workspace(worskpaceURL, { token: authToken });
+
+            return workspace;
         }
 
         /**
@@ -390,11 +400,11 @@ define([
 
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: cellBus,
-                workspaceInfo: workspaceInfo,
                 cell: cell,
                 model: model,
                 spec: spec,
                 jobId: undefined,
+                workspaceInfo: workspaceInfo,
             });
 
             let node = document.createElement('div');

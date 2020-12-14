@@ -1,7 +1,6 @@
 define([
     'jquery',
     'bluebird',
-    'common/runtime',
     'common/ui',
     'kb_common/html',
     './jobStateListRow',
@@ -9,7 +8,6 @@ define([
 ], function(
     $,
     Promise,
-    Runtime,
     UI,
     html,
     JobStateListRow
@@ -80,11 +78,9 @@ define([
     }
 
     function factory(config) {
-        let runtime = Runtime.make(),
-            model = config.model,
+        let model = config.model,
             widgets = {},
-            container,
-            parentListener;
+            container;
 
         function createTableRow(id) {
             let jobTable = container.find('tbody')[0],
@@ -104,15 +100,9 @@ define([
                 container.append($(createTable()));
 
                 return Promise.try(() => {
-                    for (let i=0; i<Math.max(arg.batchSize, arg.childJobs.length); i++) {
-                        let jobId = null,
-                            initialState = null;
-                        if (i < arg.childJobs.length) {
-                            jobId = arg.childJobs[i].job_id;
-                            initialState = arg.childJobs[i].status;
-                        }
-                        createJobStateWidget(i, jobId, initialState);  // can make null ones. these need to be updated.
-                    }
+                    arg.childJobs.forEach((childJob, index) => {
+                        createJobStateWidget(index, childJob.job_id, childJob.status);
+                    });
                 }).then(() => {
                     renderTable(container);
                 });
@@ -144,9 +134,6 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
-                runtime.bus().removeListener(parentListener);
-            });
         }
 
         return {

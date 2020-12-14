@@ -27,14 +27,9 @@ define([
 
         // A cheap widget collection.
         let widgets = {},
-            queueListener,
-            model = config.model,
-            selectedJobId = config.jobId;
+            model = config.model;
 
-        /**
-         * Used only if we're in Batch mode.
-         */
-        function batchLayout() {
+        function renderLayout() {
             var list = div({
                 class: 'col-md-6 batch-mode-col',
                 dataElement: 'kb-job-list-wrapper'
@@ -72,21 +67,13 @@ define([
             return div({}, [list, jobStatus]);
         }
 
-        function queueLayout() {
-            return div({
-                dataElement: 'kb-job-status-wrapper'
-            }, [
-                'This job is currently queued for execution and will start running soon.'
-            ]);
-        }
-
         function getSelectedJobId() {
             return config.clickedId;
         }
 
-        function startBatch() {
+        function startJobStatus() {
             return Promise.try(function() {
-                container.innerHTML = batchLayout();
+                container.innerHTML = renderLayout();
 
                 //display widgets
                 widgets.log = LogViewer.make();
@@ -96,72 +83,23 @@ define([
                     model: model
                 });
 
-                let childJobs = model.getItem('exec.jobState.child_jobs');
-                if (childJobs.length > 0) {
-                    selectedJobId = childJobs.job_id;
-                }
-                startDetails({
-                    jobId: selectedJobId,
-                    isParentJob: true
-                });
-
-                function startDetails(arg) {
-                    var _selectedJobId = arg.jobId ? arg.jobId : model.getItem('exec.jobState.job_id');
-                    config.clickedId = _selectedJobId;
-                    return Promise.all([
-                        widgets.log.start({
-                            node: ui.getElement('log.body'),
-                            jobId: _selectedJobId,
-                            parentJobId: model.getItem('exec.jobState.job_id')
-                        })
-                    ]);
-                }
                 return Promise.all([
                     widgets.stateList.start({
                         node: ui.getElement('subjobs.body'),
                         childJobs: model.getItem('exec.jobState.child_jobs'),
-                        clickFunction: startDetails,
-                        parentJobId: model.getItem('exec.jobState.job_id'),
-                        batchSize: model.getItem('exec.jobState.batch_size')
+                        parentJobId: model.getItem('exec.jobState.job_id')
                     })
                 ]);
             });
         }
 
-        /**
-         * Can start in 2 modes.
-         * 1. If the app is running, or has ever been running (so, )
-         * @param {object} arg
-         *  - node - the node to attach this tab to
-         *  -
-         */
         function start(arg) {
             container = arg.node.appendChild(document.createElement('div'));
             ui = UI.make({
                 node: container
             });
 
-            if (model.getItem('exec.jobState.status') === 'queued') {
-                container.innerHTML = queueLayout();
-                queueListener = Runtime.make().bus().listen({
-                    channel: {
-                        jobId: model.getItem('exec.jobState.job_id')
-                    },
-                    key: {
-                        type: 'job-status'
-                    },
-                    handle: (message) => {
-                        if (message.jobState.status !== 'queued') {
-                            container.innerHTML = '';
-                            Runtime.make().bus().removeListener(queueListener);
-                            startBatch();
-                        }
-                    }
-                });
-            }
-            else {
-                startBatch();
-            }
+            startJobStatus();
         }
 
         function stop() {

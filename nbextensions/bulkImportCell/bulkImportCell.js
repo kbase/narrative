@@ -114,6 +114,8 @@ define([
      *          files: ['file1.fq', 'file2.fq']
      *      }
      *    }
+     *  - specs - object - keys = app ids, values = app specs as described by the Narrative Method
+     *    Store service.
      */
     function BulkImportCell(options) {
         if (options.cell.cell_type !== 'code') {
@@ -125,7 +127,7 @@ define([
             busEventManager = BusEventManager.make({
                 bus: runtime.bus(),
             }),
-            typesToFiles = setupFileData(options.importData) || cell.metadata.kbase.bulkImportCell.inputs;
+            typesToFiles = setupFileData(options.importData);
 
         /**
          * If importData exists, and has the right structure, use it.
@@ -499,11 +501,8 @@ define([
          * fileType state, then updates the rest of the cell state to modify
          * which set of tabs should be active.
          *
-         * Should:
-         * 1. Change state to which tab should be shown.
-         * 2. Tabs should actually be a kind of matrix? Not just "configure" but
-         *    "configure", "file_type"
-         * 3.
+         * Toggling the filetype also toggles the active tab to ensure it
+         * has the selected file type.
          * @param {string} fileType - the file type that should be shown
          */
         function toggleFileType(fileType) {

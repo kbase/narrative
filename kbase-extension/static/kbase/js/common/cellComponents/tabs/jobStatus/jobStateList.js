@@ -124,6 +124,7 @@ define([
             widgets[jobIndex] = JobStateListRow.make({
                 model: model
             });
+
             widgets[jobIndex].start({
                 node: createTableRow(jobIndex),
                 jobId: jobId,

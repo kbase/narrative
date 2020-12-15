@@ -59,6 +59,7 @@ define([
 
     function selectRow(e) {
         let $currentRow = $(e.target).closest('tr');
+
         let $allRows = $('.kb-job-status__row');
 
         // unselect previously selected row
@@ -158,6 +159,8 @@ define([
                 container = arg.node;
                 updateRowStatus(arg.initialState, arg.name);
                 events.attachEvents(container);
+            }).catch((err) => {
+                throw new Error ('Unable to start Job State List Row widget: ', err);
             });
         }
 

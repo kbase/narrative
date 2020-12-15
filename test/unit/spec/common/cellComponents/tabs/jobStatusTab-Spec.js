@@ -53,7 +53,7 @@ define([
         });
 
         it('should start and the job status and job log panel', () => {
-            mockJobStatusTab .start({node: node});
+            mockJobStatusTab.start({node: node});
 
             const contents = [
                 'jobs',

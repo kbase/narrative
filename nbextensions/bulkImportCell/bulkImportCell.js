@@ -80,8 +80,18 @@ define([
      *   cell: myJupyterCell,
      *   initialize: true (if creating a new one from scratch),
      *   importData: {
-     *     'file_type': ['array', 'of', 'files'],
-     *     'file_type_2': ['array', 'of', 'files']
+     *     file_type: {
+     *          files: ['array', 'of', 'files'],
+     *          appId: 'importAppId'
+     *     },
+     *     file_type_2: {
+     *          files: ['array', 'of', 'files'],
+     *          appId: 'importAppId2'
+     *     }
+     *   },
+     *   specs: {
+     *      importAppId: { app spec },
+     *      importAppId2: { app spec }
      *   }
      * })
      * @param {object} options - these are the options passed to the factory, with the following

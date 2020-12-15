@@ -1257,13 +1257,13 @@ define([
      * {
      *   fileType: {
      *     appId: string,
-     *     files: list of files
+     *     files: array of files
      *   }
      * }
      * This returns a Promise that resolves into the cell that was created.
      * @param {object} bulkInput keys = type ids, values = an object with properties
      *  - appId - the app id to use for that file type (to be used in fetching the spec)
-     *  - files - list of files to import with that file type
+     *  - files - array of files to import with that file type
      */
     Narrative.prototype.insertBulkImportCell = function (bulkInput) {
         const cellType = 'app-bulk-import';

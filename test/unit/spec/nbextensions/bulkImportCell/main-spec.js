@@ -3,13 +3,15 @@ define([
     '../../../../../../narrative/nbextensions/bulkImportCell/main',
     '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
     'base/js/namespace',
-    'narrativeMocks'
+    'narrativeMocks',
+    'json!/test/data/NarrativeTest.test_simple_inputs.spec.json'
 ], (
     $,
     Main,
     BulkImportCell,
     Jupyter,
-    Mocks
+    Mocks,
+    TestAppSpec
 ) => {
     'use strict';
 
@@ -65,7 +67,13 @@ define([
                         data: {
                             type: 'app-bulk-import',
                             typesToFiles: {
-                                'fileType': ['a_file']
+                                fileType: {
+                                    files: ['a_file'],
+                                    appId: 'someApp'
+                                }
+                            },
+                            specs: {
+                                someApp: TestAppSpec
                             }
                         }
                     });

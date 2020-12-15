@@ -1,18 +1,25 @@
-/* global describe it expect spyOn beforeAll afterAll */
 define([
     '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
     'base/js/namespace',
     'common/runtime',
-    'narrativeMocks'
+    'narrativeMocks',
+    'json!/test/data/NarrativeTest.test_simple_inputs.spec.json'
 ], (
     BulkImportCell,
     Jupyter,
     Runtime,
-    Mocks
+    Mocks,
+    TestAppSpec
 ) => {
     'use strict';
     const fakeInputs = {
-        'dataType': ['some_file']
+        dataType: {
+            files: ['some_file'],
+            appId: 'someApp'
+        }
+    };
+    const fakeSpecs = {
+        someApp: TestAppSpec
     };
 
     describe('test the bulk import cell module', () => {
@@ -30,7 +37,12 @@ define([
             const cell = Mocks.buildMockCell('code');
             expect(cell.getIcon).not.toBeDefined();
             expect(cell.renderIcon).not.toBeDefined();
-            const cellWidget = BulkImportCell.make({cell, importData: fakeInputs, initialize: true});
+            const cellWidget = BulkImportCell.make({
+                cell,
+                importData: fakeInputs,
+                specs: fakeSpecs,
+                initialize: true
+            });
             expect(cellWidget).toBeDefined();
             ['getIcon', 'renderIcon', 'maximize', 'minimize'].forEach( (method) => {
                 expect(cell[method]).toBeDefined();
@@ -45,7 +57,12 @@ define([
 
         it('should have a cell that can render its icon', () => {
             const cell = Mocks.buildMockCell('code');
-            const cellWidget = BulkImportCell.make({cell, importData: fakeInputs, initialize: true});
+            const cellWidget = BulkImportCell.make({
+                cell,
+                importData: fakeInputs,
+                specs: fakeSpecs,
+                initialize: true
+            });
             expect(cell).toBe(cellWidget.cell);
             expect(cell.getIcon()).toContain('fa-stack');
             cell.renderIcon();
@@ -60,20 +77,35 @@ define([
         it('can tell whether a cell is bulk import cell with a static function', () => {
             const codeCell = Mocks.buildMockCell('code');
             expect(BulkImportCell.isBulkImportCell(codeCell)).toBeFalsy();
-            BulkImportCell.make({cell: codeCell, importData: fakeInputs, initialize: true});
+            BulkImportCell.make({
+                cell: codeCell,
+                importData: fakeInputs,
+                specs: fakeSpecs,
+                initialize: true
+            });
             expect(BulkImportCell.isBulkImportCell(codeCell)).toBeTruthy();
         });
 
         it('should fail to set up a cell that is not a bulk import cell (has been initialized)', () => {
             const cell = Mocks.buildMockCell('code');
-            expect(() => BulkImportCell({cell, importData: fakeInputs, initialize: false})).toThrow();
+            expect(() => BulkImportCell({
+                cell,
+                importData: fakeInputs,
+                specs: fakeSpecs,
+                initialize: false
+            })).toThrow();
         });
 
         it('should be able to delete its cell', () => {
             const cell = Mocks.buildMockCell('code');
             Jupyter.notebook = Mocks.buildMockNotebook();
             spyOn(Jupyter.notebook, 'delete_cell');
-            const cellWidget = BulkImportCell.make({cell, importData: fakeInputs, initialize: true});
+            const cellWidget = BulkImportCell.make({
+                cell,
+                importData: fakeInputs,
+                specs: fakeSpecs,
+                initialize: true
+            });
 
             cellWidget.deleteCell();
             expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
@@ -86,7 +118,12 @@ define([
                 deleteCallback: () => done()
             });
             spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
-            BulkImportCell.make({cell, importData: fakeInputs, initialize: true});
+            BulkImportCell.make({
+                cell,
+                importData: fakeInputs,
+                specs: fakeSpecs,
+                initialize: true
+            });
             runtime.bus().send({}, {
                 channel: {
                     cell: cell.metadata.kbase.attributes.id
@@ -100,12 +137,19 @@ define([
         it('should toggle the active file type', () => {
             const cell = Mocks.buildMockCell('code');
             const importData = {
-                fastq: ['file1', 'file2', 'file3'],
-                sra: ['file4', 'file5']
+                fastq: {
+                    files: ['file1', 'file2', 'file3'],
+                    appId: 'someApp'
+                },
+                sra: {
+                    files: ['file4', 'file5'],
+                    appId: 'someApp'
+                }
             };
             BulkImportCell.make({
                 cell,
                 initialize: true,
+                specs: fakeSpecs,
                 importData
             });
             let elem = cell.element.find('[data-element="filetype-panel"] [data-element="sra"]');

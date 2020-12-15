@@ -28,51 +28,41 @@ define([
             Jupyter.narrative = null;
         });
 
-        let jobStatusTab, node;
+        let node, mockJobStatusTab;
 
         beforeEach(function () {
             node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(node);
 
             const model = Props.make({
                 data: TestAppObject,
                 onUpdate: () => {},
             });
 
-            jobStatusTab = jobStatusTab.make({
+            mockJobStatusTab = jobStatusTab.make({
                 model: model
             });
         });
 
-        afterEach(() => {
-            $('body').empty();
-            jobStatusTab = null;
-            node = null;
-        });
-
         it('has a make function that returns an object', function () {
-            expect(jobStatusTab).not.toBe(null);
+            expect(mockJobStatusTab).not.toBe(null);
         });
 
         it('has the required methods', function () {
-            expect(jobStatusTab.start).toBeDefined();
-            expect(jobStatusTab.stop).toBeDefined();
+            expect(mockJobStatusTab.start).toBeDefined();
+            expect(mockJobStatusTab.stop).toBeDefined();
         });
 
         it('should start and the job status and job log panel', () => {
-            return jobStatusTab
-                .start({
-                    node: node
-                })
-                .then(() => {
-                    const contents = [
-                        'jobs',
-                        'job-log-section-toggle'
-                    ];
-                    contents.forEach((item) => {
-                        expect(node.innerHTML).toContain(item);
-                    });
-                });
+            mockJobStatusTab .start({node: node});
+
+            const contents = [
+                'jobs',
+                'job-log-section-toggle'
+            ];
+            contents.forEach((item) => {
+                expect(node.innerHTML).toContain(item);
+            });
+
         });
     });
 });

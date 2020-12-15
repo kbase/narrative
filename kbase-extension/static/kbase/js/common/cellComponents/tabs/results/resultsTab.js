@@ -12,16 +12,22 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
         let container = null;
 
         function loadReportData(params) {
-            workspaceClient
-                .get_objects2({
+            //TODO: is this the right endpoint to call? we should have access to get_object_info3 but for some reason it's not showing up on the workspaceClient
+
+            //also need to figure out how to fake out the data we expect so i can get some results here to play around with
+
+            //finally not sure if this method or call makes sense here, i was assuming we would get all report data and then hand it off to the requisite widgets. however if we are only retrieving object info here we can just do that as part of buildOutputWidget
+            return workspaceClient
+                .get_object_info_new({
                     objects: [
                         {
                             ref: params.report_ref,
                         },
                     ],
                 })
-                .then((data) => {
-                    console.log('got object data: ', data);
+                .then((result) => {
+                    console.log('data: ', result);
+                    return result;
                 })
                 .catch((err) => {
                     console.error('error looking up object data: ', err);
@@ -51,34 +57,32 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
                 container = arg.node;
                 let events = Events.make();
 
-                //TODO: not entirely certian this is the right data to send to each widget, or if there should be any other checks here. Will need to confirm by digging deeper into the resultsViewer widget, line 76
-                const jobState = model.getItem('exec.jobState');
                 const result = model.getItem('exec.outputWidgetInfo');
 
-                loadReportData(result.params);
+                loadReportData(result.params).then((data) => {
+                    //TODO: check first that we have objects created to display
+                    //report.objects_created && report.objects_created.length
 
-                //TODO: check first that we have objects created to display
-                //report.objects_created && report.objects_created.length
+                    //then build output object and report widgets
+                    let objectNode = document.createElement('div');
+                    container.appendChild(objectNode);
 
-                //then build output object and report widgets
-                let objectNode = document.createElement('div');
-                container.appendChild(objectNode);
+                    let reportNode = document.createElement('div');
+                    container.appendChild(reportNode);
 
-                let reportNode = document.createElement('div');
-                container.appendChild(reportNode);
+                    buildOutputWidget({
+                        node: objectNode,
+                        data: data,
+                    }).then(() => {
+                        events.attachEvents(container);
+                    });
 
-                buildOutputWidget({
-                    node: objectNode,
-                    data: jobState.job_output.result,
-                }).then(() => {
-                    events.attachEvents(container);
-                });
-
-                buildReportWidget({
-                    node: reportNode,
-                    data: result.params,
-                }).then(() => {
-                    events.attachEvents(container);
+                    buildReportWidget({
+                        node: reportNode,
+                        data: data,
+                    }).then(() => {
+                        events.attachEvents(container);
+                    });
                 });
             });
         }

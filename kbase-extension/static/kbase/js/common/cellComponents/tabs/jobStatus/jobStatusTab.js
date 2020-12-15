@@ -74,7 +74,7 @@ define([
 
                 return Promise.all([
                     widgets.stateList.start({
-                        node: ui.getElement('subjobs.body'),
+                        node: ui.getElement('jobs.body'),
                         childJobs: model.getItem('exec.jobState.child_jobs')
                     })
                 ]);

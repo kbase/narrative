@@ -51,10 +51,6 @@ define([
             })
         ])
             .then(([appSpecs, appFullInfos]) => {
-                console.log("APP FULL INFOS");
-                console.log(appFullInfos);
-                console.log("APP SPECS");
-                console.log(appSpecs);
                 appFullInfos.forEach((info, idx) => {
                     appSpecs[idx].full_info = info;
                 });

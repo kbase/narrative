@@ -18,8 +18,7 @@ define([
     'common/cellComponents/tabs/infoTab',
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     './bulkImportCellStates',
-    'common/cellComponents/tabs/results/resultsTab',
-    'json!./testAppObj.json',
+    'common/cellComponents/tabs/results/resultsTab'
 ], (
     Uuid,
     Config,
@@ -40,8 +39,7 @@ define([
     InfoTabWidget,
     JobStatusTabWidget,
     States,
-    ResultsWidget,
-    TestAppObj
+    ResultsWidget
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';

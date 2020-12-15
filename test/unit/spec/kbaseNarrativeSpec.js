@@ -169,28 +169,34 @@ define ([
             // mock requests to narrative method store for app spec information
             jasmine.Ajax.stubRequest(
                 Config.url('narrative_method_store'),
-                /.*get_method_full_info.*/
+                /get_method_full_info/
             ).andReturn({
                 status: 200,
                 statusText: 'HTTP/1.1 200 OK',
                 contentType: 'application/json',
-                responseText: JSON.stringify([{
-                    id: appId
-                }])
+                responseText: JSON.stringify({
+                    version: '1.1',
+                    result: [[{
+                        id: appId
+                    }]]
+                })
             });
             jasmine.Ajax.stubRequest(
                 Config.url('narrative_method_store'),
-                /.*get_method_spec.*/
+                /get_method_spec/
             ).andReturn({
                 status: 200,
                 statusText: 'HTTP/1.1 200 OK',
                 contentType: 'application/json',
-                responseText: JSON.stringify([{
-                    info: {
-                        id: appId
-                    },
-                    parameters: []
-                }])
+                responseText: JSON.stringify({
+                    version: '1.1',
+                    result: [[{
+                        info: {
+                            id: appId
+                        },
+                        parameters: []
+                    }]]
+                })
             });
             spyOn(narr, 'insertAndSelectCell');
             return narr.insertBulkImportCell({
@@ -201,10 +207,6 @@ define ([
             })
                 .then(() => {
                     expect(narr.insertAndSelectCell).toHaveBeenCalled();
-                })
-                .catch(err => {
-                    console.error('WOT IN TARNATION');
-                    console.error(err);
                 });
         });
     });

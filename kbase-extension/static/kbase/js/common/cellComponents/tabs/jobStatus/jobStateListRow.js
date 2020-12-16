@@ -98,41 +98,47 @@ define([
         return td({
             class: `${cssBaseClass}__cell_container`
         }, [
-            a({
-                class: `${cssBaseClass}__cell_action--${jobState}`
-            }, [
-                label
+            span({},[
+                a({
+                    class: `${cssBaseClass}__cell_action--${jobState}`
+                }, [
+                    label
+                ]),
             ]),
-            a({
-                class: `${cssBaseClass}__cell_log_btn show_log`,
-                role: 'button',
-                id: events.addEvent({
-                    type: 'click',
-                    handler: function (e) {
-                        selectRow(e);
-                    },
-                })
-            }, [
-                'Show log',
-                i({
-                    class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`
-                })
-            ]),
-            a({
-                class: `${cssBaseClass}__cell_log_btn selected_log`,
-                role: 'button',
-                id: events.addEvent({
-                    type: 'click',
-                    handler: function (e) {
-                        selectRow(e);
-                    },
-                })
-            }, [
-                'Showing log',
-                i({
-                    class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`
-                })
-            ]),
+            span({
+                class: `${cssBaseClass}__cell_container_btn`
+            },[
+                a({
+                    class: `${cssBaseClass}__cell_log_btn show_log`,
+                    role: 'button',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: function (e) {
+                            selectRow(e);
+                        },
+                    })
+                }, [
+                    'Show log',
+                    i({
+                        class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`
+                    })
+                ]),
+                a({
+                    class: `${cssBaseClass}__cell_log_btn selected_log`,
+                    role: 'button',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: function (e) {
+                            selectRow(e);
+                        },
+                    })
+                }, [
+                    'Showing log',
+                    i({
+                        class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`
+                    })
+                ]),
+            ])
         ]);
     }
 

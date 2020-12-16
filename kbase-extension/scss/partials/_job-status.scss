@@ -2,6 +2,8 @@
   box-shadow: none;
 
   &__row {
+    min-height: 40px;
+
     .show_log {
       display: none;
     }
@@ -56,13 +58,12 @@
     font-family: Oxygen;
     font-style: normal;
     font-weight: normal;
-    line-height: 20px;
+    line-height: 40px;
     white-space: nowrap;
 
     width: 100%;
-    max-width: 100%;
     margin-bottom: 18px;
-    padding: 0;
+    padding: 0px;
 
     &_body {
       border-bottom: 2px solid #C4C4C4;
@@ -71,6 +72,8 @@
 
     &_head {
       font-weight: 700px;
+      line-height: 20px;
+
       &_row {
         .sorting::after,
         .sorting_asc::after,
@@ -92,21 +95,23 @@
 
   &__cell {
     border: none;
-    padding: 10px 5px 10px 5px;
+    padding-left: 5px;
 
     &_container {
       display: flex;
       align-items: center;
-      margin: 10px 5px 10px 5px;
       justify-content: space-between;
+
+      &_btn {
+        min-width: 92px;
+      }
     }
 
     &_log_btn {
       border: none;
       background: none;
       color: black;
-      display: none;
-
+      min-width: 90px;
         &:hover {
           text-decoration: none;
         }

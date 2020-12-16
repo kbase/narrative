@@ -22,7 +22,7 @@ define([], () => {
                             visible: true
                         },
                         jobStatus: {
-                            enabled: false,
+                            enabled: true,
                             visible: true
                         },
                         results: {

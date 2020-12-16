@@ -121,17 +121,22 @@ define([
          * @param {string} jobId
          */
         function createJobStateWidget(jobIndex, jobId, initialState) {
-            widgets[jobIndex] = JobStateListRow.make({
-                model: model
+            return Promise.try(() => {
+                widgets[jobIndex] = JobStateListRow.make({
+                    model: model
+                });
+
+                widgets[jobIndex].start({
+                    node: createTableRow(jobIndex),
+                    jobId: jobId,
+                    initialState: initialState,
+                    // This should be taken from child job info for the params....
+                    name: 'Brca1Reads.fastq_reads_' + jobIndex,
+                });
+            }).catch((err) => {
+                throw new Error('Unable to create job state widget: ', err);
             });
 
-            widgets[jobIndex].start({
-                node: createTableRow(jobIndex),
-                jobId: jobId,
-                initialState: initialState,
-                // This should be taken from child job info for the params....
-                name: 'Brca1Reads.fastq_reads_' + jobIndex,
-            });
         }
 
         function stop() {

@@ -11,7 +11,7 @@ define([
 ) {
     'use strict';
 
-    var container;
+    let container;
 
     const t = html.tag,
         div = t('div'),
@@ -62,20 +62,18 @@ define([
 
         let $allRows = $('.kb-job-status__row');
 
-        // unselect previously selected row
-        $allRows.removeClass(`${cssBaseClass}__row_selected`);
-        $allRows.find('.selected_log').css('display', 'none');
+        if($currentRow.hasClass(`${cssBaseClass}__row_selected`)) {
+            $currentRow.removeClass(`${cssBaseClass}__row_selected`);
+            $currentRow.find('.selected_log').css('display', 'none');
+        } else {
+            // unselect previously selected row
+            $allRows.removeClass(`${cssBaseClass}__row_selected`);
+            $allRows.find('.selected_log').css('display', 'none');
 
-        // add clasees to selected row
-        $currentRow.addClass(`${cssBaseClass}__row_selected`);
-        $currentRow.find('.selected_log').css('display', 'inline');
-    }
-
-    function unselectRow(e) {
-        let $currentRow = $(e.target).closest('tr');
-
-        $(e.target).closest('tr').removeClass(`${cssBaseClass}__row_selected`);
-        $currentRow.find('.selected_log').css('display', 'none');
+            // add clasees to selected row
+            $currentRow.addClass(`${cssBaseClass}__row_selected`);
+            $currentRow.find('.selected_log').css('display', 'inline');
+        }
     }
 
     function createActionCell(jobState){
@@ -126,7 +124,7 @@ define([
                 id: events.addEvent({
                     type: 'click',
                     handler: function (e) {
-                        unselectRow(e);
+                        selectRow(e);
                     },
                 })
             }, [

@@ -246,8 +246,14 @@ $button-outdated: rgb(247, 155, 34);
 
   /* .kb-file-path__param_container */
   &__param_container {
+    flex: 1;
     display: flex;
     flex-wrap: wrap;
+
+    .input-group .select2-container {
+      display: table;
+      table-layout: fixed;
+    }
   }
 
   &__table_cell--file-path_id {
@@ -273,3 +279,5 @@ $button-outdated: rgb(247, 155, 34);
     font-weight: 700;
   }
 }
+
+

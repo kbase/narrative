@@ -13,7 +13,7 @@
     }
 
     &:hover {
-      background: #F2EFEB;
+      background: use-color('disabled-light');
 
       .show_log {
         display: inline;
@@ -21,10 +21,10 @@
     }
 
     &_selected {
-      background: #CCE5F3;
+      background: use-color('primary-lighter');
 
       &:hover {
-        background: #CCE5F3;
+        background: use-color('primary-lighter');
 
         .show_log {
           display: none;
@@ -37,20 +37,20 @@
     margin: 4px;
 
     &--completed{
-      color: rgb(17, 133, 119);
+      color: use-color('secondary-dark');
     }
 
     &--error,
     &--does_not_exist,
     &--terminated  {
-      color: rgb(210,35,42);
+      color: use-color('error');
     }
 
     &--queued,
     &--created,
     &--estimating,
     &--running {
-      color: rgb(161,185,207);
+      color: use-color('info');
     }
   }
 // panel-heading border none
@@ -66,8 +66,8 @@
     padding: 0px;
 
     &_body {
-      border-bottom: 2px solid #C4C4C4;
-      border-top: 2px solid #C4C4C4;
+      border-bottom: 2px solid rgb(196,196,196);
+      border-top: 2px solid rgb(196,196,196);
     }
 
     &_head {
@@ -103,14 +103,14 @@
       justify-content: space-between;
 
       &_btn {
-        min-width: 92px;
+        min-width: 93px;
       }
     }
 
     &_log_btn {
       border: none;
       background: none;
-      color: black;
+      color: use-color('black');
       min-width: 90px;
         &:hover {
           text-decoration: none;
@@ -122,7 +122,7 @@
       &--estimating,
       &--queued,
       &--running {
-        color: #D2232A;
+        color: use-color('error');
       }
     }
   }

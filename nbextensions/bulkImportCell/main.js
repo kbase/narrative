@@ -18,19 +18,14 @@ define([
     'bluebird',
     'common/runtime',
     'common/error',
-    './bulkImportCell',
-    'kb_service/client/workspace',
-    'kb_service/utils',
-    'custom/custom'
+    './bulkImportCell'
 ], function(
     $,
     Jupyter,
     Promise,
     Runtime,
     Error,
-    BulkImportCell,
-    Workspace,
-    serviceUtils,
+    BulkImportCell
 ) {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
@@ -44,9 +39,7 @@ define([
         return Promise.all(Jupyter.notebook.get_cells().map((cell) => {
             if (BulkImportCell.isBulkImportCell(cell)) {
                 try {
-                    BulkImportCell.make({
-                        cell
-                    });
+                    BulkImportCell.make({ cell });
                 }
                 catch(error) {
                     // If we have an error here, there is a serious problem setting up the cell and it is not usable.
@@ -92,11 +85,11 @@ define([
                         return;
                     }
                     const importData = setupData.typesToFiles || {};
-
                     try {
                         BulkImportCell.make({
                             cell,
                             importData,
+                            specs: setupData.specs,
                             initialize: true
                         });
                     }

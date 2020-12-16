@@ -40,6 +40,19 @@ define([
             state,
             container;
 
+        /**
+         * State should have the following structure:
+         * {
+         *    selected: string (or null) - id of tab to activate. If null, no tab is activated
+         *    tabs: {
+         *      tabId: {
+         *        enable: boolean - if true, tab is clickable, otherwise should be disabled
+         *        visible: boolean - if true, tab is visible
+         *      }
+         *    }
+         * }
+         * @param {object} newState
+         */
         function setState(newState) {
             state = newState;
             for (const tabId of Object.keys(state.tabs)) {
@@ -50,7 +63,9 @@ define([
                 }
                 ui.deactivateButton(tabId);
             }
-            ui.activateButton(state.selected);
+            if (state.selected) {
+                ui.activateButton(state.selected);
+            }
         }
 
         function renderLayout() {

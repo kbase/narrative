@@ -1,8 +1,3 @@
-/*global define*/
-/*global describe, it, expect, spyOn, beforeEach, afterEach*/
-/*global jasmine*/
-/*jslint white: true*/
-
 define ([
     'jquery',
     'narrativeConfig',
@@ -97,6 +92,7 @@ define ([
         afterEach(() => {
             jasmine.Ajax.uninstall();
             Jupyter.notebook = null;
+            Jupyter.narrative = null;
         });
 
         it('Should instantiate', () => {
@@ -161,10 +157,57 @@ define ([
         });
 
         it('Should create a new bulk import cell on request', () => {
-            const narr = new Narrative();
+            let narr = new Narrative();
+            Jupyter.narrative = narr;
+            const appId = 'SomeModule/some_import_app';
+            // a hacked up mock to avoid wrestling with asynchronous triggers.
+            narr.sidePanel = {
+                $methodsWidget: {
+                    currentTag: 'release'
+                }
+            };
+            // mock requests to narrative method store for app spec information
+            jasmine.Ajax.stubRequest(
+                Config.url('narrative_method_store'),
+                /get_method_full_info/
+            ).andReturn({
+                status: 200,
+                statusText: 'HTTP/1.1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify({
+                    version: '1.1',
+                    result: [[{
+                        id: appId
+                    }]]
+                })
+            });
+            jasmine.Ajax.stubRequest(
+                Config.url('narrative_method_store'),
+                /get_method_spec/
+            ).andReturn({
+                status: 200,
+                statusText: 'HTTP/1.1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify({
+                    version: '1.1',
+                    result: [[{
+                        info: {
+                            id: appId
+                        },
+                        parameters: []
+                    }]]
+                })
+            });
             spyOn(narr, 'insertAndSelectCell');
-            narr.insertBulkImportCell({});
-            expect(narr.insertAndSelectCell).toHaveBeenCalled();
+            return narr.insertBulkImportCell({
+                someFile: {
+                    files: ['a_file'],
+                    appId: appId
+                }
+            })
+                .then(() => {
+                    expect(narr.insertAndSelectCell).toHaveBeenCalled();
+                });
         });
     });
 });

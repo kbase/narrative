@@ -1,5 +1,6 @@
 define([
     'uuid',
+    'narrativeConfig',
     'common/appUtils',
     'common/utils',
     'common/runtime',
@@ -16,10 +17,11 @@ define([
     './tabs/configure',
     'common/cellComponents/tabs/infoTab',
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
-    'common/cellComponents/tabs/results/resultsTab',
-    'json!./testAppObj.json',
+    './bulkImportCellStates',
+    'common/cellComponents/tabs/results/resultsTab'
 ], (
     Uuid,
+    Config,
     AppUtils,
     Utils,
     Runtime,
@@ -36,8 +38,8 @@ define([
     ConfigureWidget,
     InfoTabWidget,
     JobStatusTabWidget,
-    ResultsWidget,
-    TestAppObj
+    States,
+    ResultsWidget
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
@@ -78,8 +80,18 @@ define([
      *   cell: myJupyterCell,
      *   initialize: true (if creating a new one from scratch),
      *   importData: {
-     *     'file_type': ['array', 'of', 'files'],
-     *     'file_type_2': ['array', 'of', 'files']
+     *     file_type: {
+     *          files: ['array', 'of', 'files'],
+     *          appId: 'importAppId'
+     *     },
+     *     file_type_2: {
+     *          files: ['array', 'of', 'files'],
+     *          appId: 'importAppId2'
+     *     }
+     *   },
+     *   specs: {
+     *      importAppId: { app spec },
+     *      importAppId2: { app spec }
      *   }
      * })
      * @param {object} options - these are the options passed to the factory, with the following
@@ -92,13 +104,18 @@ define([
      *
      *    If initialize is falsy, no changes are made to the structure, even if importData is
      *    present and contains new data.
-     *  - importData - object - keys = data type strings, values = arrays of file paths
-     *    to import
+     *  - importData - object - keys = data type strings, values = structure with these keys:
+     *      - appId - the app spec id for that importer
+     *      - files - the array of files of that type to import using the proper app
      *    e.g.:
      *    {
-     *      'fastq_reads': ['file1.fq', 'file2.fq']
+     *      fastq_reads: {
+     *          appId: 'SomeImportModule/some_importer_app,
+     *          files: ['file1.fq', 'file2.fq']
+     *      }
      *    }
-     *  - workspaceInfo - Object with all workspace details we need to initialize widgets
+     *  - specs - object - keys = app ids, values = app specs as described by the Narrative Method
+     *    Store service.
      */
     function BulkImportCell(options) {
         if (options.cell.cell_type !== 'code') {
@@ -110,10 +127,27 @@ define([
             busEventManager = BusEventManager.make({
                 bus: runtime.bus(),
             }),
-            typesToFiles = options.importData,
-            workspaceInfo = options.workspaceInfo;
+            typesToFiles = setupFileData(options.importData);
 
-        let kbaseNode = null, // the DOM element used as the container for everything in this cell
+        /**
+         * If importData exists, and has the right structure, use it.
+         * //TODO decide on right structure, should we test for knowledge about each file type?
+         * If not, and there's input data in the metadata, use that.
+         * If not, and there's nothing? throw an error.
+         * @param {object} importData
+         */
+        function setupFileData(importData) {
+            if (importData && Object.keys(importData).length) {
+                return importData;
+            }
+            const metaInputs = Utils.getCellMeta(cell, 'kbase.bulkImportCell.inputs');
+            if (metaInputs && Object.keys(metaInputs).length) {
+                return metaInputs;
+            }
+            throw new Error('No files were selected to upload!');
+        }
+
+        let kbaseNode = null,  // the DOM element used as the container for everything in this cell
             cellBus = null,
             ui = null,
             tabWidget = null, // the widget currently in view
@@ -189,19 +223,23 @@ define([
             // widgets this cell owns
             cellTabs,
             controlPanel,
-            fileTypePanel,
-            model = Props.make({
-                data: TestAppObj,
-                onUpdate: function (props) {
-                    Utils.setMeta(this.cell, 'bulkImportCell', props.getRawObject());
-                },
-            });
+            fileTypePanel;
         if (options.initialize) {
-            initialize(typesToFiles);
+            initialize(options.specs);
         }
+        let model = Props.make({
+            data: Utils.getMeta(cell, 'bulkImportCell'),
+            onUpdate: function(props) {
+                Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
+            }
+        });
 
-        let spec = Spec.make({
-            appSpec: model.getItem('app.spec'),
+        let specs = {};
+        let rawSpecs = model.getItem('app.specs');
+        Object.keys(rawSpecs).forEach((appId) => {
+            specs[appId] = Spec.make({
+                appSpec: rawSpecs[appId]
+            });
         });
 
         setupCell();
@@ -209,14 +247,34 @@ define([
         /**
          * Does the initial pass on newly created cells to initialize its metadata and get it
          * set up for a new life as a Bulk Import Cell.
-         *
-         * @param {object} typesToFiles keys = data type strings, values = arrays of file paths
-         * to import
-         * e.g.: {
-         *     'fastq_reads': ['file1.fq', 'file2.fq']
-         * }
+         * @param {object} appSpecs - a mapping from app id -> app specs as defined by the
+         *  Narrative Method Store service
          */
-        function initialize(_typesToFiles) {
+        function initialize(appSpecs) {
+            /* Initialize the parameters section.
+             * This is broken down per-app, and here we use the file type
+             * as the key.
+             * So we need to filter through the parameters section of each spec,
+             * generate the parameter ids, and make a structure like:
+             * {
+             *   fileType1: {
+             *      param1: '' or default from spec,
+             *      param2: '' or default from spec,
+             *      ...etc.
+             *   },
+             *   fileType2: {...}
+             * }
+             *
+             */
+            const initialParams = {};
+            Object.keys(typesToFiles).forEach((fileType) => {
+                const spec = appSpecs[typesToFiles[fileType].appId];
+                initialParams[fileType] = {};
+                spec.parameters.forEach((param) => {
+                    // let initValue = param.default_values[0];
+                    initialParams[fileType][param.id] = param.default_values[0];
+                });
+            });
             const meta = {
                 kbase: {
                     attributes: {
@@ -231,9 +289,14 @@ define([
                         'user-settings': {
                             showCodeInputArea: false,
                         },
-                        inputs: _typesToFiles,
-                    },
-                },
+                        inputs: typesToFiles,
+                        params: initialParams,
+                        app: {
+                            specs: appSpecs,
+                            tag: 'release'
+                        }
+                    }
+                }
             };
             cell.metadata = meta;
         }
@@ -347,7 +410,6 @@ define([
 
             // set up the message bus and bind various commands
             setupMessageBus();
-
             setupDomNode();
 
             // finalize by updating the lastLoaded attribute, which triggers a toolbar re-render
@@ -364,7 +426,8 @@ define([
         }
 
         /**
-         * Passes the updated state to various widgets
+         * Passes the updated state to various widgets, and serialize it in
+         * the cell metadata, where appropriate.
          */
         function updateState() {
             cellTabs.setState(state.tab);
@@ -377,24 +440,51 @@ define([
          * 1. if there's a tab showing, stop() it and detach it
          * 2. update the tabs state to be selected
          * @param {string} tab id of the tab to display
+         * @param {string} fileType id of the filetype we're swapping to
          */
-        function toggleTab(tab) {
+        function toggleTab(tab, fileType) {
+            // if we're toggling the currently selected tab off,
+            // then it should be turned off.
+            if (tab === state.tab.selected && tab !== null && !fileType) {
+                tab = null;
+            }
             state.tab.selected = tab;
+            stopWidget();
+
+            if (tab !== null) {
+                if (!fileType) {
+                    fileType = state.fileType.selected;
+                }
+                runTab(tab, fileType);
+            }
+            cellTabs.setState(state.tab);
+        }
+
+        function stopWidget() {
             if (tabWidget !== null) {
                 tabWidget.stop();
-                var widgetNode = ui.getElement('widget');
+                const widgetNode = ui.getElement('widget');
                 if (widgetNode.firstChild) {
                     widgetNode.removeChild(widgetNode.firstChild);
                 }
             }
+        }
 
+        /**
+         * Initializes a tab and runs its associated widget.
+         * This doesn't change any state, just runs what it's told to,
+         * and returns the widget's start() Promise.
+         * @param {string} tab
+         * @param {string} fileType
+         */
+        function runTab(tab, fileType) {
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: cellBus,
-                workspaceInfo: workspaceInfo,
-                cell: cell,
-                model: model,
-                spec: spec,
-                jobId: undefined,
+                cell,
+                model,
+                spec: specs[typesToFiles[state.fileType.selected].appId],
+                fileType,
+                jobId: undefined
             });
 
             let node = document.createElement('div');
@@ -402,6 +492,7 @@ define([
 
             return tabWidget.start({
                 node: node,
+                currentApp: typesToFiles[state.fileType.selected].appId
             });
         }
 
@@ -409,10 +500,19 @@ define([
          * This toggles which file type should be shown. This sets the
          * fileType state, then updates the rest of the cell state to modify
          * which set of tabs should be active.
+         *
+         * Toggling the filetype also toggles the active tab to ensure it
+         * has the selected file type.
          * @param {string} fileType - the file type that should be shown
          */
         function toggleFileType(fileType) {
+            if (state.fileType.selected === fileType) {
+                return;  // do nothing if we're toggling to the same fileType
+            }
             state.fileType.selected = fileType;
+            // stop existing tab widget
+            // restart it with the new filetype
+            toggleTab(state.tab.selected, fileType);
             updateState();
         }
 
@@ -435,48 +535,19 @@ define([
          * Returns a structured initial state of the cell.
          */
         function getInitialState() {
-            return {
-                fileType: {
-                    selected: 'fastq',
-                    completed: {
-                        fastq: false,
-                        sra: true,
-                    },
-                },
-                tab: {
-                    selected: 'configure',
-                    tabs: {
-                        configure: {
-                            enabled: true,
-                            visible: true,
-                        },
-                        viewConfigure: {
-                            enabled: false,
-                            visible: false,
-                        },
-                        info: {
-                            enabled: true,
-                            visible: true,
-                        },
-                        jobStatus: {
-                            enabled: true,
-                            visible: true,
-                        },
-                        results: {
-                            enabled: true,
-                            visible: true,
-                        },
-                        error: {
-                            enabled: false,
-                            visible: false,
-                        },
-                    },
-                },
-                action: {
-                    name: 'runApp',
-                    disabled: true,
-                },
+            // load current state from state list
+            // modify to handle file types panel
+            let state = States[0].ui;
+            let fileTypeState = {
+                completed: {}
             };
+            for (const fileType of Object.keys(typesToFiles)) {
+                fileTypeState.completed[fileType] = false;
+            }
+            fileTypeState.selected = Object.keys(typesToFiles)[0];
+
+            state.fileType = fileTypeState;
+            return state;
         }
 
         /**
@@ -521,21 +592,25 @@ define([
          * @param {DOMElement} node - the node that should be used for the left column
          */
         function buildFileTypePanel(node) {
+            let fileTypesDisplay = {};
+            let fileTypeMapping = {};
+            let uploaders = Config.get('uploaders');
+            for (const uploader of uploaders.dropdown_order) {
+                fileTypeMapping[uploader.id] = uploader.name;
+            }
+            for (const fileType of Object.keys(typesToFiles)) {
+                fileTypesDisplay[fileType] = {
+                    label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`
+                };
+            }
             fileTypePanel = FileTypePanel.make({
                 bus: cellBus,
                 header: {
                     label: 'Data type',
                     icon: 'icon icon-genome',
                 },
-                fileTypes: {
-                    fastq: {
-                        label: 'FASTQ Reads (Non-Interleaved)',
-                    },
-                    sra: {
-                        label: 'SRA Reads',
-                    },
-                },
-                toggleAction: toggleFileType,
+                fileTypes: fileTypesDisplay,
+                toggleAction: toggleFileType
             });
             return fileTypePanel.start({
                 node: node,

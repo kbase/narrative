@@ -52,7 +52,10 @@ define([
         const model = config.model;
 
         function start(arg) {
-            const appSpec = model.getItem('app.spec');
+            let appSpec = model.getItem('app.spec');    // for plain app cell
+            if (!appSpec && arg.currentApp) {
+                appSpec = model.getItem(`app.specs.${arg.currentApp}`); // for bulk cells
+            }
             const appRef = [
                 appSpec.info.id,
                 model.getItem('app').tag

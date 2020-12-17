@@ -240,8 +240,8 @@ define([
                 Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
             }
         });
-
         let state = getInitialState();
+
         let specs = {};
         let rawSpecs = model.getItem('app.specs');
         Object.keys(rawSpecs).forEach((appId) => {
@@ -279,7 +279,6 @@ define([
                 const spec = appSpecs[typesToFiles[fileType].appId];
                 initialParams[fileType] = {};
                 spec.parameters.forEach((param) => {
-                    // let initValue = param.default_values[0];
                     initialParams[fileType][param.id] = param.default_values[0];
                 });
             });
@@ -303,7 +302,10 @@ define([
                             specs: appSpecs,
                             tag: 'release'
                         },
-                        state: 'editingIncomplete'
+                        state: {
+                            state: 'editingIncomplete',
+                            selectedTab: 'configure'
+                        }
                     }
                 }
             };
@@ -467,6 +469,7 @@ define([
                 }
                 runTab(tab, fileType);
             }
+            model.setItem('state.selectedTab', tab);
             cellTabs.setState(state.tab);
         }
 
@@ -554,11 +557,12 @@ define([
             // load current state from state list
             // modify to handle file types panel
             const defaultState = 'editingIncomplete';
-            let currentState = model.getItem('state');
+            let currentState = model.getItem('state.state');
             if (!currentState || !(currentState in States)) {
                 currentState = defaultState;
             }
             let state = States[currentState].ui;
+            state.tab.selected = model.getItem('state.selectedTab', 'configure');
             // TODO: inspect the parameters to see which file types are
             // completely filled out, maybe store that in the metadata
             // on completion?

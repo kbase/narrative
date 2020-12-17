@@ -27,7 +27,6 @@ define([], () => {
         editingIncomplete: {
             ui: {
                 tab: {
-                    selected: 'configure',
                     tabs: {
                         configure: {
                             enabled: true,
@@ -67,7 +66,6 @@ define([], () => {
         editingComplete: {
             ui: {
                 tab: {
-                    selected: 'configure',
                     tabs: {
                         configure: {
                             enabled: true,
@@ -105,7 +103,6 @@ define([], () => {
         launching: {
             ui: {
                 tab: {
-                    selected: 'configure',
                     tabs: {
                         configure: {
                             enabled: false,
@@ -144,7 +141,6 @@ define([], () => {
         queued: {
             ui: {
                 tab: {
-                    selected: 'configure',
                     tabs: {
                         configure: {
                             enabled: false,
@@ -183,7 +179,6 @@ define([], () => {
         running: {
             ui: {
                 tab: {
-                    selected: 'configure',
                     tabs: {
                         configure: {
                             enabled: false,
@@ -222,7 +217,6 @@ define([], () => {
         appPartialComplete: {
             ui: {
                 tab: {
-                    selected: 'configure',
                     tabs: {
                         configure: {
                             enabled: false,
@@ -261,7 +255,6 @@ define([], () => {
         appComplete: {
             ui: {
                 tab: {
-                    selected: 'configure',
                     tabs: {
                         configure: {
                             enabled: false,
@@ -300,7 +293,6 @@ define([], () => {
         appCanceled: {
             ui: {
                 tab: {
-                    selected: 'configure',
                     tabs: {
                         configure: {
                             enabled: false,
@@ -338,7 +330,6 @@ define([], () => {
         appError: {
             ui: {
                 tab: {
-                    selected: 'configure',
                     tabs: {
                         configure: {
                             enabled: false,
@@ -372,12 +363,10 @@ define([], () => {
                 }
             }
         },
-
         // something tragic and unrecoverable has happened
         generalError: {
             ui: {
                 tab: {
-                    selected: 'configure',
                     tabs: {
                         configure: {
                             enabled: false,

@@ -53,6 +53,10 @@ define([
             }
             expect(cell.metadata.kbase.type).toBe('app-bulk-import');
             expect(cell.metadata.kbase.bulkImportCell).toBeDefined();
+            expect(cell.metadata.kbase.bulkImportCell.state).toEqual({
+                state: 'editingIncomplete',
+                selectedTab: 'configure'
+            });
         });
 
         it('should have a cell that can render its icon', () => {

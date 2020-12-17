@@ -419,6 +419,7 @@ define([
             render().then(() => {
                 cell.renderMinMax();
                 // force toolbar refresh
+                // eslint-disable-next-line no-self-assign
                 cell.metadata = cell.metadata;
                 updateState();
                 toggleTab(state.tab.selected);

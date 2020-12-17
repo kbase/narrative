@@ -48,7 +48,7 @@ define([
                     th({
                         class: `${cssBaseClass}__table_head_cell col-sm-5`
                     }, [
-                        'Cancel/Retry All',
+                        'CANCEL/RETRY ALL',
                         i({
                             class: `fa fa-caret-down kb-pointer ${cssBaseClass}__icon`
                         }),
@@ -72,7 +72,13 @@ define([
                 targets: 2,
                 orderable: false
 
-            }]
+            }],
+            fnDrawCallback: function() {
+                // Hide pagination controls if length is less than 51
+                if (container.find('table tr').length < 51) {
+                    $('.dataTables_paginate').hide();
+                }
+            }
         });
 
     }

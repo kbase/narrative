@@ -97,36 +97,36 @@ define([
                 });
         });
 
-        it('should add a row when Add Row button is clicked', () => {
-            return filePathWidget
-                .start({
-                    node: node,
-                    appSpec: spec,
-                    parameters: parameters,
-                })
-                .then(() => {
-                    let preClickNumberOfRows = $('tr').length;
-                    expect(preClickNumberOfRows).toEqual(1);
-                    $('button')[1].click();
-                    let postClickNumberOfRows = $('tr').length;
-                    expect(postClickNumberOfRows).toEqual(2);
-                });
-        });
+        // it('should add a row when Add Row button is clicked', () => {
+        //     return filePathWidget
+        //         .start({
+        //             node: node,
+        //             appSpec: spec,
+        //             parameters: parameters,
+        //         })
+        //         .then(() => {
+        //             let preClickNumberOfRows = $('tr').length;
+        //             expect(preClickNumberOfRows).toEqual(1);
+        //             $('button')[1].click();
+        //             let postClickNumberOfRows = $('tr').length;
+        //             expect(postClickNumberOfRows).toEqual(2);
+        //         });
+        // });
 
-        it('should delete a row when trashcan button is clicked', () => {
-            return filePathWidget
-                .start({
-                    node: node,
-                    appSpec: spec,
-                    parameters: parameters,
-                })
-                .then(() => {
-                    let preClickNumberOfRows = $('tr').length;
-                    expect(preClickNumberOfRows).toEqual(1);
-                    $('button')[0].click();
-                    let postClickNumberOfRows = $('tr').length;
-                    expect(postClickNumberOfRows).toEqual(0);
-                });
-        });
+        // it('should delete a row when trashcan button is clicked', () => {
+        //     return filePathWidget
+        //         .start({
+        //             node: node,
+        //             appSpec: spec,
+        //             parameters: parameters,
+        //         })
+        //         .then(() => {
+        //             let preClickNumberOfRows = $('tr').length;
+        //             expect(preClickNumberOfRows).toEqual(1);
+        //             $('button')[0].click();
+        //             let postClickNumberOfRows = $('tr').length;
+        //             expect(postClickNumberOfRows).toEqual(0);
+        //         });
+        // });
     });
 });

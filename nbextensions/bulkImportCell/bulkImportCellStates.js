@@ -1,3 +1,25 @@
+/**
+ * This has the list of available states for the bulk import cell. They should all be referenced
+ * by their state id:
+ *
+ * editingIncomplete - the initial state, a user can edit the app configuration, but not run the
+ *      cell yet
+ * editingComplete - transition to this when the cell is ready to run. A user can still change
+ *      the configuration, this just means it's ready to go.
+ * launching - a user clicked "run" and is waiting on a response from the server. This should be
+ *      cancelable.
+ * queued - the jobs have launched, but all are either in the queue, or otherwise have no state
+ *      that's worth looking at
+ * running - the jobs are running and have a job state / logs to look at
+ * appPartialComplete - at least one job is finished with results to look at
+ * appComplete - all of the jobs are complete
+ * appCanceled - the cell has canceled its running. Any jobs that have finished can still be looked
+ *      at, and logs are still available
+ * appError - some unrecoverable error has happened during the app run
+ * generalError - not sure how this might get reached, but some horrible error has rendered the
+ *      cell unusable. Maybe some mangled data, maybe some mangled internal information.
+ */
+
 define([], () => {
     'use strict';
     const states = {
@@ -19,12 +41,14 @@ define([], () => {
                             enabled: true,
                             visible: true
                         },
+                        // TODO: temporarily enable job status on startup
                         jobStatus: {
                             enabled: true,
                             visible: true
                         },
+                        // TODO: temporarily enable results view on startup
                         results: {
-                            enabled: false,
+                            enabled: true,
                             visible: true
                         },
                         error: {
@@ -227,7 +251,7 @@ define([], () => {
                     }
                 },
                 action: {
-                    name: 'runApp',
+                    name: 'cancel',
                     disabled: false
                 }
             }

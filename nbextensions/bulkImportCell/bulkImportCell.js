@@ -158,7 +158,7 @@ define([
         let kbaseNode = null,  // the DOM element used as the container for everything in this cell
             cellBus = null,
             ui = null,
-            tabWidget = null, // the widget currently in view
+            tabWidget = null,  // the widget currently in view
             tabSet = {
                 selected: 'configure',
                 tabs: {
@@ -543,7 +543,12 @@ define([
         }
 
         /**
-         * Returns a structured initial state of the cell.
+         * Returns a structured initial view state of the cell. This includes
+         * the availability / visibility of the various UI elements.
+         *
+         * This needs to be run after setting up the data model. It uses
+         * that to get the initial state, but defaults to the "editingIncomplete"
+         * state if that's not available.
          */
         function getInitialState() {
             // load current state from state list
@@ -554,6 +559,9 @@ define([
                 currentState = defaultState;
             }
             let state = States[currentState].ui;
+            // TODO: inspect the parameters to see which file types are
+            // completely filled out, maybe store that in the metadata
+            // on completion?
             let fileTypeState = {
                 completed: {}
             };

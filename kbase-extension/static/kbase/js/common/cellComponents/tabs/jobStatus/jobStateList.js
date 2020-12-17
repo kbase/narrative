@@ -1,12 +1,13 @@
 define([
+    'jquery',
     'bluebird',
-    'common/runtime',
     'common/ui',
     'kb_common/html',
-    './jobStateListRow'
+    './jobStateListRow',
+    'jquery-dataTables'
 ], function(
+    $,
     Promise,
-    Runtime,
     UI,
     html,
     JobStateListRow
@@ -19,16 +20,15 @@ define([
         tr = t('tr'),
         th = t('th'),
         tbody = t('tbody'),
-        cssBaseClass = 'kb-job-state',
-        selectedJobCssClass = 'job-selected';
+        i = t('i'),
+        cssBaseClass = 'kb-job-status';
 
-
-    function renderTable() {
+    function createTable() {
         return table({
-            class: `table ${cssBaseClass}__table`
+            class: `${cssBaseClass}__table container`
         }, [
             thead({
-                class: `${cssBaseClass}__table_head`,
+                class: `${cssBaseClass}__table_head panel-heading`,
             },
             [
                 tr({
@@ -36,35 +36,54 @@ define([
                 },
                 [
                     th({
-                        class: `${cssBaseClass}__table_head_cell--object`
-                    }, ['Object']),
+                        class: `${cssBaseClass}__table_head_cell col-sm-5`
+                    }, [
+                        'Object'
+                    ]),
                     th({
-                        class: `${cssBaseClass}__table_head_cell--status`
-                    }, ['Status']),
+                        class: `${cssBaseClass}__table_head_cell col-sm-2`
+                    }, [
+                        'Status'
+                    ]),
                     th({
-                        class: `${cssBaseClass}__table_head_cell--action`
-                    }, ['Action']),
-                    th({
-                        class: `${cssBaseClass}__table_head_cell--log-view`
-                    }, ['Logs']),
+                        class: `${cssBaseClass}__table_head_cell col-sm-5`
+                    }, [
+                        'Cancel/Retry All',
+                        i({
+                            class: `fa fa-caret-down kb-pointer ${cssBaseClass}__icon`
+                        }),
+                    ]),
                 ])
             ]),
             tbody({
                 class: `${cssBaseClass}__table_body`,
             })
+
         ]);
     }
 
+    // Convert the table to a datatable object to get functionality
+    function renderTable(container){
+        container.find('table').dataTable({
+            searching: false,
+            pageLength: 50,
+            lengthChange: false,
+            columnDefs: [{
+                targets: 2,
+                orderable: false
+
+            }]
+        });
+
+    }
+
     function factory(config) {
-        let runtime = Runtime.make(),
-            model = config.model,
+        let model = config.model,
             widgets = {},
-            container,
-            parentJobId,
-            parentListener;
+            container;
 
         function createTableRow(id) {
-            let jobTable = container.getElementsByTagName('tbody')[0],
+            let jobTable = container.find('tbody')[0],
                 newRow = document.createElement('tr');
             newRow.setAttribute('data-element-job-id', id);
             newRow.classList.add('job-info');
@@ -75,62 +94,19 @@ define([
 
         function start(arg) {
             return Promise.try(function() {
-                container = arg.node;
-                container.classList.add(`${cssBaseClass}__container`);
-                container.classList.add('batch-mode-list');
+                container = $(arg.node);
+                container.addClass([`${cssBaseClass}__container`, 'batch-mode-list']);
                 UI.make({ node: container });
-                container.innerHTML = renderTable();
-                parentJobId = arg.parentJobId;
+                container.append($(createTable()));
 
                 return Promise.try(() => {
-                    createJobStateWidget('parent', parentJobId, model.getItem('exec.jobState.status'), arg.clickFunction, true);
-                    container.getElementsByTagName('tr')[0].classList.add(selectedJobCssClass); // start with the parent selected
-
-                    for (let i=0; i<Math.max(arg.batchSize, arg.childJobs.length); i++) {
-                        let jobId = null,
-                            initialState = null;
-                        if (i < arg.childJobs.length) {
-                            jobId = arg.childJobs[i].job_id;
-                            initialState = arg.childJobs[i].status;
-                        }
-                        createJobStateWidget(i, jobId, initialState, arg.clickFunction);  // can make null ones. these need to be updated.
-                    }
-                })
-                    .then(() => { startParentListener(); });
-            });
-        }
-
-        function startParentListener() {
-            parentListener = runtime.bus().listen({
-                channel: {
-                    jobId: parentJobId
-                },
-                key: {
-                    type: 'job-status'
-                },
-                handle: handleJobStatusUpdate
-            });
-        }
-
-        /**
-         * Pass the job state to all row widgets, if it exists.
-         * @param {Object} message
-         */
-        function handleJobStatusUpdate(message) {
-            if (message.jobState.batch_size && message.jobState.child_jobs.length === 0) {
-                if (message.jobState.job_output.result[0].batch_results) {
-                    message.jobState.child_jobs = Object.keys(message.jobState.job_output.result[0].batch_results)
-                        .map((item) => {
-                            return message.jobState.job_output.result[0].batch_results[item].final_job_state;
-                        });
-                }
-            }
-
-            if (message.jobState.child_jobs) {
-                message.jobState.child_jobs.forEach((state, idx) => {
-                    widgets[idx].updateState(state);
+                    arg.childJobs.forEach((childJob, index) => {
+                        createJobStateWidget(index, childJob.job_id, childJob.status);
+                    });
+                }).then(() => {
+                    renderTable(container);
                 });
-            }
+            });
         }
 
         /**
@@ -144,36 +120,26 @@ define([
          * @param {int} jobIndex
          * @param {string} jobId
          */
-        function createJobStateWidget(jobIndex, jobId, initialState, clickFunction, isParentJob) {
-            widgets[jobIndex] = JobStateListRow.make({
-                model: model
+        function createJobStateWidget(jobIndex, jobId, initialState) {
+            return Promise.try(() => {
+                widgets[jobIndex] = JobStateListRow.make({
+                    model: model
+                });
+
+                widgets[jobIndex].start({
+                    node: createTableRow(jobIndex),
+                    jobId: jobId,
+                    initialState: initialState,
+                    // This should be taken from child job info for the params....
+                    name: 'Brca1Reads.fastq_reads_' + jobIndex,
+                });
+            }).catch((err) => {
+                throw new Error('Unable to create job state widget: ', err);
             });
-            widgets[jobIndex].start({
-                node: createTableRow(jobIndex),
-                name: isParentJob ? 'Parent Job' : 'Child Job ' + (jobIndex+1),
-                jobId: jobId,
-                initialState: initialState,
-                isParentJob: isParentJob ? true : false,
-                clickFunction: function(jobRow, _jobId, _isParentJob) {
-                    Array.from(container.getElementsByClassName(selectedJobCssClass)).forEach((elem) => {
-                        elem.classList.remove(selectedJobCssClass);
-                    });
-                    if (_jobId) {
-                        jobRow.classList.add(selectedJobCssClass);
-                        clickFunction({
-                            jobId: _jobId,
-                            isParentJob: _isParentJob,
-                            jobIndex: jobIndex
-                        });
-                    }
-                }
-            });
+
         }
 
         function stop() {
-            return Promise.try(function() {
-                runtime.bus().removeListener(parentListener);
-            });
         }
 
         return {

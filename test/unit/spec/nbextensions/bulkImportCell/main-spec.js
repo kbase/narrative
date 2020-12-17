@@ -3,13 +3,15 @@ define([
     '../../../../../../narrative/nbextensions/bulkImportCell/main',
     '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
     'base/js/namespace',
-    'narrativeMocks'
+    'narrativeMocks',
+    'json!/test/data/NarrativeTest.test_simple_inputs.spec.json'
 ], (
     $,
     Main,
     BulkImportCell,
     Jupyter,
-    Mocks
+    Mocks,
+    TestAppSpec
 ) => {
     'use strict';
 
@@ -63,7 +65,16 @@ define([
                         index: 1,
                         cell: newCell,
                         data: {
-                            type: 'app-bulk-import'
+                            type: 'app-bulk-import',
+                            typesToFiles: {
+                                fileType: {
+                                    files: ['a_file'],
+                                    appId: 'someApp'
+                                }
+                            },
+                            specs: {
+                                someApp: TestAppSpec
+                            }
                         }
                     });
                     // there's no other triggers except to wait a moment

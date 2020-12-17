@@ -1,0 +1,127 @@
+.kb-job-status {
+  box-shadow: none;
+
+  &__row {
+    min-height: 40px;
+
+    .show_log {
+      display: none;
+    }
+
+    .selected_log {
+      display: none;
+    }
+
+    &:hover {
+      background: use-color('disabled-light');
+
+      .show_log {
+        display: inline;
+      }
+    }
+
+    &_selected {
+      background: use-color('primary-lighter');
+
+      &:hover {
+        background: use-color('primary-lighter');
+
+        .show_log {
+          display: none;
+        }
+      }
+    }
+  }
+
+  &__icon {
+    margin: 4px;
+
+    &--completed{
+      color: use-color('secondary-dark');
+    }
+
+    &--error,
+    &--does_not_exist,
+    &--terminated  {
+      color: use-color('error');
+    }
+
+    &--queued,
+    &--created,
+    &--estimating,
+    &--running {
+      color: use-color('info');
+    }
+  }
+// panel-heading border none
+  &__table {
+    white-space: nowrap;
+    font: normal 400 14px/40px $typeface-page-text;
+
+    width: 100%;
+    margin-bottom: 18px;
+    padding: 0px;
+
+    &_body {
+      border-bottom: 2px solid rgb(196,196,196);
+      border-top: 2px solid rgb(196,196,196);
+    }
+
+    &_head {
+      font-weight: 700px;
+      line-height: 20px;
+
+      &_row {
+        .sorting::after,
+        .sorting_asc::after,
+        .sorting_desc::after {
+          left: 5px !important;
+          bottom: 0 !important;
+          position: relative !important;
+          display: inline-block !important;
+        }
+      }
+
+    }
+
+    &_footer {
+      font-size: 14px;
+      line-height: 18px;
+    }
+  }
+
+  &__cell {
+    border: none;
+    padding-left: 5px;
+
+    &_container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      &_btn {
+        min-width: 93px;
+      }
+    }
+
+    &_log_btn {
+      border: none;
+      background: none;
+      color: use-color('black');
+      min-width: 90px;
+        &:hover {
+          text-decoration: none;
+        }
+    }
+
+    &_action{
+      &--created,
+      &--estimating,
+      &--queued,
+      &--running {
+        color: use-color('error');
+      }
+    }
+  }
+
+}

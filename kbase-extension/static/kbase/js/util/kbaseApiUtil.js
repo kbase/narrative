@@ -4,18 +4,16 @@
 
 define([
     'bluebird',
-    'kbase-client-api',
-    'kbase-generic-client-api',
+    'kb_service/client/narrativeMethodStore',
     'narrativeConfig',
     'base/js/namespace'
 ], function (
     Promise,
-    KBaseClient,
-    GenericClient,
+    NarrativeMethodStore,
     Config,
     Jupyter
 ) {
-
+    'use strict';
     function getAppSpec (id, tag) {
         return getAppSpecs([id], tag).then(function(result) {
             return Promise.try(function() {
@@ -27,21 +25,37 @@ define([
     function getAppVersionTag () {
         var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
         if (!tag) {
-            tag = "release";
+            tag = 'release';
         }
         return tag;
     }
 
-    /*
-     * Expects idList to be a list of app ids
-     * If tag is not present, it uses the currently configured tag
+    /**
+     * Returns a Promise that resolves into a list of app specs in the same order as the
+     * ids in idList. These get augmented with the "full_info" key that has the results of
+     * "get_method_full_info" from the Narrative Method Store service.
+     * @param {Array} idList - a list of app ids
+     * @param {String} tag - a tag, one of 'release', 'beta', 'dev'
      */
     function getAppSpecs (idList, tag) {
         if (!tag) {
             tag = getAppVersionTag();
         }
         var nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
-        return Promise.resolve(nms.get_method_spec({ids: idList, tag: tag}));
+        return Promise.all([
+            nms.get_method_spec({
+                ids: idList, tag: tag
+            }),
+            nms.get_method_full_info({
+                ids: idList, tag: tag
+            })
+        ])
+            .then(([appSpecs, appFullInfos]) => {
+                appFullInfos.forEach((info, idx) => {
+                    appSpecs[idx].full_info = info;
+                });
+                return appSpecs;
+            });
     }
 
     /**

@@ -18,7 +18,8 @@ define([
     'common/cellComponents/tabs/infoTab',
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     './bulkImportCellStates',
-    'common/cellComponents/tabs/results/resultsTab'
+    'common/cellComponents/tabs/results/resultsTab',
+    'json!./testAppObj.json',
 ], (
     Uuid,
     Config,
@@ -39,13 +40,20 @@ define([
     InfoTabWidget,
     JobStatusTabWidget,
     States,
-    ResultsWidget
+    ResultsWidget,
+    TestAppObj
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
 
     const div = html.tag('div'),
         cssCellType = 'kb-bulk-import';
+
+    // TODO: remove once jobs are hooked up to cell
+    let testDataModel = Props.make({
+        data: TestAppObj,
+        onUpdate: () => {},
+    });
 
     function DefaultWidget() {
         function make() {
@@ -482,7 +490,8 @@ define([
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: cellBus,
                 cell,
-                model,
+                // TODO: Remove once jobs are hooked up
+                model: 'jobStatus' === tab ? testDataModel: model,
                 spec: specs[typesToFiles[state.fileType.selected].appId],
                 fileType,
                 jobId: undefined

@@ -1,157 +1,179 @@
 define([
     'bluebird',
-    'kb_common/html'
+    'kb_common/html',
+    'common/events',
+    'jquery'
 ], function(
     Promise,
-    html
+    html,
+    Events,
+    $
 ) {
     'use strict';
+
+    let container;
 
     const t = html.tag,
         div = t('div'),
         td = t('td'),
         span = t('span'),
-        cssBaseClass = 'kb-job-state';
+        a = t('a'),
+        i = t('i'),
+        cssBaseClass = 'kb-job-status',
+        events = Events.make();
 
     function createStateCell(jobState) {
-        let label, icon;
+        let label;
         switch (jobState) {
             case 'completed':
-                label = 'success';
-                icon = 'fa fa-check';
+                label = 'Success';
                 break;
             case 'created':
+            case 'estimating':
             case 'queued':
-                label = jobState;
-                icon = 'fa fa-angle-double-right';
+                label = 'Queued';
                 break;
             case 'running':
-                label = jobState;
-                icon = 'fa fa-spinner';
+                label = 'Running';
                 break;
             case 'error':
+                label = 'Failed';
+                break;
             case 'terminated':
-                label = jobState;
-                icon = 'fa fa-times';
+                label = 'Cancelled';
                 break;
             case 'does_not_exist':
-                label = 'does not exist';
-                icon = 'fa fa-question';
+                label = 'Does not exist';
                 break;
-            case 'estimating':
-            default:
-                label = jobState;
-                icon = 'fa fa-question';
         }
 
         return td({
-            class: `${cssBaseClass}__cell--status`,
+            class: `${cssBaseClass}__cell`
         }, [
             span({
-                class: `${icon} ${cssBaseClass}__icon--${jobState}`
+                class: `fa fa-circle ${cssBaseClass}__icon--${jobState}`
             }),
             ' ' + label
         ]);
     }
 
-    function createActionCell(jobState) {
+    function selectRow(e) {
+        let $currentRow = $(e.target).closest('tr');
+
+        let $allRows = $('.kb-job-status__row');
+
+        if($currentRow.hasClass(`${cssBaseClass}__row_selected`)) {
+            $currentRow.removeClass(`${cssBaseClass}__row_selected`);
+            $currentRow.find('.selected_log').css('display', 'none');
+        } else {
+            // unselect previously selected row
+            $allRows.removeClass(`${cssBaseClass}__row_selected`);
+            $allRows.find('.selected_log').css('display', 'none');
+
+            // add clasees to selected row
+            $currentRow.addClass(`${cssBaseClass}__row_selected`);
+            $currentRow.find('.selected_log').css('display', 'inline');
+        }
+    }
+
+    function createActionCell(jobState){
         let label;
         switch (jobState) {
             case 'completed':
-                label = 'Go to results';
+                label = 'GO TO RESULTS';
                 break;
+            case 'created':
+            case 'estimating':
             case 'queued':
-                label = 'Cancel';
-                break;
             case 'running':
-                label = 'Cancel';
+                label = 'CANCEL';
                 break;
             case 'error':
-                label = 'Retry';
-                break;
-            case 'terminated':
-                label = 'Retry';
-                break;
             case 'does_not_exist':
-                label = 'does not exist';
+            case 'terminated':
+                label = 'RETRY';
                 break;
-            default:
-                label = jobState;
         }
-        return td({
-            class: `${cssBaseClass}__cell--action`,
-        }, [
-            label
-        ]);
-    }
 
-    function createLogLinkCell(jobState) {
         return td({
-            class: `${cssBaseClass}__cell--log-view`,
+            class: `${cssBaseClass}__cell_container`
         }, [
+            span({},[
+                a({
+                    class: `${cssBaseClass}__cell_action--${jobState}`
+                }, [
+                    label
+                ]),
+            ]),
             span({
-                class: `${cssBaseClass}__log_link--${jobState}`
-            }, [
-                'View logs'
+                class: `${cssBaseClass}__cell_container_btn`
+            },[
+                a({
+                    class: `${cssBaseClass}__cell_log_btn show_log`,
+                    role: 'button',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: function (e) {
+                            selectRow(e);
+                        },
+                    })
+                }, [
+                    'Show log',
+                    i({
+                        class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`
+                    })
+                ]),
+                a({
+                    class: `${cssBaseClass}__cell_log_btn selected_log`,
+                    role: 'button',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: function (e) {
+                            selectRow(e);
+                        },
+                    })
+                }, [
+                    'Showing log',
+                    i({
+                        class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`
+                    })
+                ]),
             ])
         ]);
     }
 
     function factory() {
-        var container,
-            name,
-            jobId,
-            clickFunction,
-            isParentJob;
 
-        function updateRowStatus(jobStatus) {
-            jobStatus = jobStatus ? jobStatus : 'Job still pending.';
+        function updateRowStatus(jobStatus, name) {
             var jobIdDiv = '';
             container.innerHTML = td({
-                class: `${cssBaseClass}__cell--object`,
+                class: `${cssBaseClass}__cell`
             }, [
                 div(
-                    isParentJob ? name.toUpperCase() : name
+                    name
                 ),
                 jobIdDiv
             ])
             + createStateCell(jobStatus)
-            + createActionCell(jobStatus)
-            + createLogLinkCell(jobStatus);
+            + createActionCell(jobStatus);
         }
 
         function start(arg) {
             return Promise.try(function() {
-                container = arg.node;               // this is the row (tr) that this renders
-                container.onclick = () => {
-                    if (jobId) {
-                        clickFunction(container, jobId, isParentJob);
-                    }
-                };
-
-                jobId = arg.jobId;                  // id of child job
-                name = arg.name;
-                isParentJob = arg.isParentJob;
-                clickFunction = arg.clickFunction;  // called on click (after some ui junk)
-                updateRowStatus(arg.initialState);
+                container = arg.node;
+                updateRowStatus(arg.initialState, arg.name);
+                events.attachEvents(container);
+            }).catch((err) => {
+                throw new Error ('Unable to start Job State List Row widget: ', err);
             });
         }
 
         function stop() {
         }
 
-        function updateState(newState) {
-            if (!jobId) {
-                jobId = newState.job_id;
-            }
-            let status = newState.status ? newState.status : null;
-            updateRowStatus(status);
-        }
-
         return {
             start: start,
-            stop: stop,
-            updateState: updateState
+            stop: stop
         };
     }
 

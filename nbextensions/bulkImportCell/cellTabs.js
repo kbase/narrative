@@ -23,7 +23,7 @@ define([
      * - toggleAction - a function that should be run when toggling tabs, takes
      *     the tab name as a single parameter
      * - tabs: also an object:
-     *   - selectedTab - string, one of the keys under "tabs"
+     *   - selected - string, one of the keys under "tabs"
      *   - tabs - an object where each key is a tab key, and has a display label:
      *     {
      *        configure: {

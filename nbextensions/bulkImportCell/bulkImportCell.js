@@ -159,9 +159,8 @@ define([
             cellBus = null,
             ui = null,
             tabWidget = null, // the widget currently in view
-            state = getInitialState(),
             tabSet = {
-                selectedTab: 'configure',
+                selected: 'configure',
                 tabs: {
                     configure: {
                         label: 'Configure',
@@ -242,6 +241,7 @@ define([
             }
         });
 
+        let state = getInitialState();
         let specs = {};
         let rawSpecs = model.getItem('app.specs');
         Object.keys(rawSpecs).forEach((appId) => {
@@ -302,7 +302,8 @@ define([
                         app: {
                             specs: appSpecs,
                             tag: 'release'
-                        }
+                        },
+                        state: 'editingIncomplete'
                     }
                 }
             };
@@ -430,7 +431,7 @@ define([
                 // eslint-disable-next-line no-self-assign
                 cell.metadata = cell.metadata;
                 updateState();
-                toggleTab(state.tab.selected);
+                toggleTab(state.tab.selected, state.fileType.selected);
             });
         }
 
@@ -547,7 +548,12 @@ define([
         function getInitialState() {
             // load current state from state list
             // modify to handle file types panel
-            let state = States[0].ui;
+            const defaultState = 'editingIncomplete';
+            let currentState = model.getItem('state');
+            if (!currentState || !(currentState in States)) {
+                currentState = defaultState;
+            }
+            let state = States[currentState].ui;
             let fileTypeState = {
                 completed: {}
             };

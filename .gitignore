@@ -74,6 +74,9 @@ coverage.xml
 *,cover
 .hypothesis/
 
+# Integration test logs
+/selenium-standalone-logs/
+
 # Translations
 *.mo
 *.pot

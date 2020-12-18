@@ -16,7 +16,7 @@ The following changes are required:
 - start the container:
 
     ```bash
-    ENV={ci/next/prod} PORT=<some port number> make run-dev-image
+    ENV={ci/next/prod} [PORT=<some port number>] make run-dev-image
     ```
 
     where:
@@ -33,17 +33,61 @@ The following changes are required:
 
 ## Integration Tests
 
-Integration tests with Narrative running within a container are essentially the same as running on localhost, but since you will already have the Narrative running, the invocation is a little simpler, and we can directly call it:
+Integration tests with Narrative running within a container are essentially the same as running on localhost, we just need an extra option:
 
 ```bash
-KBASE_TEST_TOKEN=YOUR_TOKEN_HERE BASE_URL=https://ci.kbase.us/ yarn wdio test/integration/wdio.conf.js
+KBASE_TEST_TOKEN=YOUR_TOKEN_HERE BASE_URL=https://ci.kbase.us make test-integration
 ```
 
-or
+E.g.
+```bash
+SERVICE=selenium-standalone BROWSER=chrome HEADLESS=f BASE_URL=https://ci.kbase.us KBASE_TEST_TOKEN=TOKEN_HERE make test-integration
+```
+
+The `BASE_URL` option will override the default test runner behavior, which is to launch a local narrative instance.
+
+This will launch the integration test  runner against the CI environment, using chrome browser, and using the chromedriver testing service.
+
+This may all be overridden.
+
+### Additional Options
+
+The default test configuration may be overridden with the usage of environment variables:
+
+- `ENV` indicates the deployment environment, either `ci`, `next`, `narrative-dev`, or `prod`. Additional  values may be used, but if they are not supported in all the tests, the tests will fail. Defaults to `ci`.
+- `SERVICE` indicates the testing service. Currently supported services are `chromedriver` and `selenium-standalone`; defaults to `chromedriver`.
+- `SERVICE_USER` for a remote service this provides the user account id
+- `SERVICE_KEY` for a remote service this indicates the authorization key for using the account
+- `BROWSER` indicates the browser to test against; `chrome` and `firefox` are supported; defaults to `chrome`
+- `HEADLESS` indicates that the browser should be run in headless mode; may be `t` or `f`; defaults to `t`
+
+
+### Testing Scenarios
+
+#### default local test
+
+This is the default, documented integration test method:
 
 ```bash
-KBASE_TEST_TOKEN=YOUR_TOKEN_HERE BASE_URL=https://ci.kbase.us/ npx wdio test/integration/wdio.conf.js
+make test-integration
 ```
+
+- by default the default environment is `ci`, the default browser is `chrome`, and the default testing service is `chromedriver`.
+- Note that this requires a local build, which you should have already conducted.
+- starts up a narrative server on your host, in python
+- if testing is interrupted, the port may be retained by the process, you should be prepared to run ` lsof -i -n -P | grep 32323 ` where `32323` is the default port
+  - the symptom for this will be an error message when attempting to run the tests.
+
+All of the testing options may be used
+
+#### ci local container
+
+#### narrative-dev local container
+
+
+#### next local container
+
+#### prod local container
 
 ## Notes
 

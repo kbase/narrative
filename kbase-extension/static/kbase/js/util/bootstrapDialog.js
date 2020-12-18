@@ -1,10 +1,8 @@
-/*global define*/
 /*jslint white: true*/
 define ([
-    'bootstrap',
-    'jquery'
+    'jquery',
+    'bootstrap'
 ], function (
-    bootstrap,
     $
 ) {
     'use strict';
@@ -55,8 +53,8 @@ define ([
         }
         if (options.closeButton === true) {
             var $closeButton = $('<button type="button" class="close" data-dismiss="modal" aria-label="Close">')
-                              .append($('<span aria-hidden="true">')
-                                      .append('&times;'));
+                .append($('<span aria-hidden="true">')
+                    .append('&times;'));
             this.$header.append($closeButton);
         }
         if (options.title) {
@@ -72,8 +70,8 @@ define ([
         this.$modal.append(
             this.$dialog.append(
                 this.$dialogContent.append(this.$header.append(this.$headerTitle))
-                                   .append(this.$dialogBody)
-                                   .append(this.$footer)));
+                    .append(this.$dialogBody)
+                    .append(this.$footer)));
     };
 
     BootstrapDialog.prototype.setBody = function ($body) {
@@ -128,6 +126,14 @@ define ([
 
     BootstrapDialog.prototype.hide = function() {
         this.$modal.modal('hide');
+    };
+
+    BootstrapDialog.prototype.onHidden = function(handler) {
+        this.$modal.on('hidden.bs.modal', handler);
+    };
+
+    BootstrapDialog.prototype.onHide = function(handler) {
+        this.$modal.on('hide.bs.modal', handler);
     };
 
     BootstrapDialog.prototype.getElement = function() {

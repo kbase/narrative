@@ -45,7 +45,7 @@
         "string.prototype.endswith": "1.0.0",
         "string.prototype.startswith": "1.0.0",
         "wdio-chromedriver-service": "^6.0.4",
-        "webdriverio": "^6.10.5"
+        "webdriverio": "^6.10.11"
     },
     "scripts": {
         "bower": "bower install",

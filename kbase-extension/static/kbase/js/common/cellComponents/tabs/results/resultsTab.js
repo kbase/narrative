@@ -6,58 +6,94 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
 ) => {
     'use strict';
 
+    /**
+     *
+     * @param {object} config each tab for a cell needs the following:
+     * - model - a Props object containing the data model for the cell
+     * - workspaceClient - a workspace client authenticated to the current user
+     */
     function ResultsTab(config) {
-        const model = config.model;
+        const model = config.model,
+            workspaceClient = config.workspaceClient;
         let container = null;
 
-        function buildOutputWidget(arg) {
+        /**
+         * This should know how to examine the model for report info. Not sure how to do that yet,
+         * but we can make some assumptions.
+         * 1. There will be a list of outputs for each data type.
+         * 2. That will be processed and put in place by whatever controlling cell. (as of 12/17/20,
+         *    this is focused on the bulk processing / import cells, so start there).
+         * 3. Those outputs will include a list of report object ids for each data type.
+         * 4. At this point, this function should just return the list of report object UPAs /
+         *    references. To minimize service calls and data transfer, the individual components
+         *    should just fetch the data they need.
+         *    That means the "created objects" view should just fetch down that path and collate them
+         *    all, and the report view should know how to fetch and render an individual report on
+         *    request.
+         * @returns {Array} an array of report ids.
+         */
+        function getReportRefs() {
+            const jobStates = model.getItem('exec.jobState.child_jobs');
+            const reportRefs = [];
+            jobStates.forEach((job) => {
+                if ('result' in job && job.result.length > 0) {
+                    job.result.forEach(result => {
+                        if ('report_ref' in result) {
+                            reportRefs.push(result.report_ref);
+                        }
+                    });
+                }
+            });
+            return reportRefs;
+        }
+
+        /**
+         *
+         * @param {*} arg
+         */
+        function buildOutputWidget(node, reports) {
             const outputWidget = OutputWidget.make();
 
             return outputWidget.start({
-                node: arg.node,
-                data: arg.data,
+                node,
+                reports,
+                workspaceClient
             });
         }
 
-        function buildReportWidget(arg) {
+        function buildReportWidget(node, reports) {
             const reportWidget = ReportWidget.make();
 
             return reportWidget.start({
-                node: arg.node,
-                data: arg.data,
+                node,
+                reports,
+                workspaceClient
             });
         }
 
+        /**
+         *
+         * @param {object} arg startup arguments
+         */
         function start(arg) {
-            return Promise.try(() => {
-                container = arg.node;
-                let events = Events.make();
+            container = arg.node;
+            let events = Events.make();
 
-                //TODO: not entirely certian this is the right data to send to each widget, or if there should be any other checks here. Will need to confirm by digging deeper into the resultsViewer widget, line 76
-                const jobState = model.getItem('exec.jobState');
-                const result = model.getItem('exec.outputWidgetInfo');
+            const reports = getReportRefs();
 
-                //then build output object and report widgets
-                let objectNode = document.createElement('div');
-                container.appendChild(objectNode);
+            let objectNode = document.createElement('div');
+            container.appendChild(objectNode);
 
-                let reportNode = document.createElement('div');
-                container.appendChild(reportNode);
+            let reportNode = document.createElement('div');
+            container.appendChild(reportNode);
 
-                buildOutputWidget({
-                    node: objectNode,
-                    data: jobState.job_output.result,
-                }).then(() => {
+            return Promise.all([
+                buildOutputWidget(objectNode, reports),
+                buildReportWidget(reportNode, reports)
+            ])
+                .then(() => {
                     events.attachEvents(container);
                 });
-
-                buildReportWidget({
-                    node: reportNode,
-                    data: result.params,
-                }).then(() => {
-                    events.attachEvents(container);
-                });
-            });
         }
 
         function stop() {

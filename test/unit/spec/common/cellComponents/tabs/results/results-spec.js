@@ -2,11 +2,15 @@ define([
     'common/cellComponents/tabs/results/resultsTab',
     'base/js/namespace',
     'common/props',
-    'json!../../../../../data/testAppObj.json',
+    'json!/test/data/testAppObj.json',
 ], (ResultsTab, Jupyter, Props, TestAppObject) => {
     'use strict';
 
     describe('test the bulk import cell results tab', () => {
+        const workspaceClient = {
+            get_objects2: () => Promise.resolve({data: []}),
+            get_object_info_new: () => Promise.resolve([])
+        };
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
@@ -27,7 +31,7 @@ define([
                 onUpdate: () => {},
             });
 
-            const results = ResultsTab.make({ model });
+            const results = ResultsTab.make({ model, workspaceClient });
             return results
                 .start({
                     node: node,
@@ -47,7 +51,7 @@ define([
                 onUpdate: () => {},
             });
 
-            const results = ResultsTab.make({ model });
+            const results = ResultsTab.make({ model, workspaceClient });
             return results
                 .start({
                     node: node,

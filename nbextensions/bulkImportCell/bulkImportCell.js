@@ -11,6 +11,7 @@ define([
     'common/spec',
     'base/js/namespace',
     'kb_common/html',
+    'kb_service/client/workspace',
     './cellTabs',
     './cellControlPanel',
     './fileTypePanel',
@@ -33,6 +34,7 @@ define([
     Spec,
     Jupyter,
     html,
+    Workspace,
     CellTabs,
     CellControlPanel,
     FileTypePanel,
@@ -158,7 +160,9 @@ define([
         let kbaseNode = null,  // the DOM element used as the container for everything in this cell
             cellBus = null,
             ui = null,
-            tabWidget = null,  // the widget currently in view
+            tabWidget = null, // the widget currently in view
+            workspaceClient = getWorkspaceClient(),
+            state = getInitialState(),
             tabSet = {
                 selected: 'configure',
                 tabs: {
@@ -437,6 +441,13 @@ define([
             });
         }
 
+        function getWorkspaceClient() {
+            return new Workspace(
+                runtime.config('services.workspace.url'),
+                { token: runtime.authToken() }
+            );
+        }
+
         /**
          * Passes the updated state to various widgets, and serialize it in
          * the cell metadata, where appropriate.
@@ -491,14 +502,19 @@ define([
          * @param {string} fileType
          */
         function runTab(tab, fileType) {
+            let tabModel = model;
+            // TODO: Remove once jobs and results are hooked up
+            if (tab === 'jobStatus' || tab === 'results') {
+                tabModel = testDataModel;
+            }
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: cellBus,
                 cell,
-                // TODO: Remove once jobs are hooked up
-                model: 'jobStatus' === tab ? testDataModel: model,
+                model: tabModel,
                 spec: specs[typesToFiles[state.fileType.selected].appId],
                 fileType,
-                jobId: undefined
+                jobId: undefined,
+                workspaceClient: workspaceClient
             });
 
             let node = document.createElement('div');

@@ -105,10 +105,10 @@ define([
                     parameters: parameters,
                 })
                 .then(() => {
-                    let preClickNumberOfRows = $('tr').length;
+                    let preClickNumberOfRows = $(node).find('tr').length;
                     expect(preClickNumberOfRows).toEqual(1);
-                    $('button')[1].click();
-                    let postClickNumberOfRows = $('tr').length;
+                    $(node).find('.kb-file-path__button--add_row').click();
+                    let postClickNumberOfRows = $(node).find('tr').length;
                     expect(postClickNumberOfRows).toEqual(2);
                 });
         });
@@ -121,10 +121,10 @@ define([
                     parameters: parameters,
                 })
                 .then(() => {
-                    let preClickNumberOfRows = $('tr').length;
+                    let preClickNumberOfRows = $(node).find('tr').length;
                     expect(preClickNumberOfRows).toEqual(1);
-                    $('button')[0].click();
-                    let postClickNumberOfRows = $('tr').length;
+                    $(node).find('.kb-file-path__button--delete').click();
+                    let postClickNumberOfRows = $(node).find('tr').length;
                     expect(postClickNumberOfRows).toEqual(0);
                 });
         });

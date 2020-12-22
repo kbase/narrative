@@ -434,14 +434,16 @@ define([
                     td({
                         class: `${cssBaseClass}__file_number`,
                     }),
-                    td(
+                    td({
+                        class: `${cssBaseClass}__params`
+                    },[
                         div(
                             {
                                 class: `${cssBaseClass}__param_container row`,
                             },
                             [filePathParams.content]
                         )
-                    ),
+                    ]),
                     td({}, [
                         button(
                             {

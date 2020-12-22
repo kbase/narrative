@@ -24,7 +24,7 @@
       background: use-color('primary-lighter');
 
       &:hover {
-        background: use-color('primary-lighter');
+        background: use-color('base-lightest');
 
         .show_log {
           display: none;
@@ -100,7 +100,8 @@
       justify-content: space-between;
 
       &_btn {
-        min-width: 93px;
+        min-width: 98px;
+        margin-left: 5px;
       }
     }
 

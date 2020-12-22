@@ -236,6 +236,8 @@ $button-outdated: rgb(247, 155, 34);
 
 .kb-file-path {
   /* .kb-file-path-table-row */
+
+
   &__table {
     width: 100%;
   }
@@ -250,7 +252,7 @@ $button-outdated: rgb(247, 155, 34);
     display: flex;
     flex-wrap: wrap;
 
-    .input-group .select2-container {
+   .input-group .select2-container {
       display: table;
       table-layout: fixed;
     }
@@ -268,6 +270,7 @@ $button-outdated: rgb(247, 155, 34);
 
   &__button--add_row {
     margin-left: 10px;
+    margin-bottom: 5px;
   }
 
   &__button_icon--add_row {
@@ -277,6 +280,10 @@ $button-outdated: rgb(247, 155, 34);
   &__file_number {
     padding: 20px 10px 0 0;
     font-weight: 700;
+  }
+
+  &__params {
+    width: 95%;
   }
 }
 

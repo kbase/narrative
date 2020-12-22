@@ -26,7 +26,7 @@ define([], () => {
                             visible: true
                         },
                         results: {
-                            enabled: false,
+                            enabled: true,
                             visible: true
                         },
                         error: {

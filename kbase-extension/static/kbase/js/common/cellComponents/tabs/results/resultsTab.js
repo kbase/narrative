@@ -6,85 +6,97 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
 ) => {
     'use strict';
 
+    /**
+     *
+     * @param {object} config each tab for a cell needs the following:
+     * - model - a Props object containing the data model for the cell
+     * - workspaceClient - a workspace client authenticated to the current user
+     */
     function ResultsTab(config) {
         const model = config.model,
             workspaceClient = config.workspaceClient;
         let container = null;
 
-        function loadReportData(params) {
-            //TODO: is this the right endpoint to call? we should have access to get_object_info3 but for some reason it's not showing up on the workspaceClient
-
-            //also need to figure out how to fake out the data we expect so i can get some results here to play around with
-
-            //finally not sure if this method or call makes sense here, i was assuming we would get all report data and then hand it off to the requisite widgets. however if we are only retrieving object info here we can just do that as part of buildOutputWidget
-            return workspaceClient
-                .get_object_info_new({
-                    objects: [
-                        {
-                            ref: params.report_ref,
-                        },
-                    ],
-                })
-                .then((result) => {
-                    console.log('data: ', result);
-                    return result;
-                })
-                .catch((err) => {
-                    console.error('error looking up object data: ', err);
-                });
+        /**
+         * This should know how to examine the model for report info. Not sure how to do that yet,
+         * but we can make some assumptions.
+         * 1. There will be a list of outputs for each data type.
+         * 2. That will be processed and put in place by whatever controlling cell. (as of 12/17/20,
+         *    this is focused on the bulk processing / import cells, so start there).
+         * 3. Those outputs will include a list of report object ids for each data type.
+         * 4. At this point, this function should just return the list of report object UPAs /
+         *    references. To minimize service calls and data transfer, the individual components
+         *    should just fetch the data they need.
+         *    That means the "created objects" view should just fetch down that path and collate them
+         *    all, and the report view should know how to fetch and render an individual report on
+         *    request.
+         * @returns {Array} an array of report ids.
+         */
+        function getReportRefs() {
+            const jobStates = model.getItem('exec.jobState.child_jobs');
+            const reportRefs = [];
+            jobStates.forEach((job) => {
+                if ('result' in job && job.result.length > 0) {
+                    job.result.forEach(result => {
+                        if ('report_ref' in result) {
+                            reportRefs.push(result.report_ref);
+                        }
+                    });
+                }
+            });
+            return reportRefs;
         }
 
-        function buildOutputWidget(arg) {
+        /**
+         *
+         * @param {*} arg
+         */
+        function buildOutputWidget(node, reports) {
             const outputWidget = OutputWidget.make();
 
             return outputWidget.start({
-                node: arg.node,
-                data: arg.data,
+                node,
+                reports,
+                workspaceClient
             });
         }
 
-        function buildReportWidget(arg) {
+        function buildReportWidget(node, reports) {
             const reportWidget = ReportWidget.make();
 
             return reportWidget.start({
-                node: arg.node,
-                data: arg.data,
+                node,
+                reports,
+                workspaceClient
             });
         }
 
+        /**
+         *
+         * @param {object} arg startup arguments
+         */
         function start(arg) {
-            return Promise.try(() => {
-                container = arg.node;
-                let events = Events.make();
+            container = arg.node;
+            let events = Events.make();
 
-                const result = model.getItem('exec.outputWidgetInfo');
+            const reports = getReportRefs();
+            //TODO: check first that we have objects created to display
+            //report.objects_created && report.objects_created.length
 
-                loadReportData(result.params).then((data) => {
-                    //TODO: check first that we have objects created to display
-                    //report.objects_created && report.objects_created.length
+            //then build output object and report widgets
+            let objectNode = document.createElement('div');
+            container.appendChild(objectNode);
 
-                    //then build output object and report widgets
-                    let objectNode = document.createElement('div');
-                    container.appendChild(objectNode);
+            let reportNode = document.createElement('div');
+            container.appendChild(reportNode);
 
-                    let reportNode = document.createElement('div');
-                    container.appendChild(reportNode);
-
-                    buildOutputWidget({
-                        node: objectNode,
-                        data: data,
-                    }).then(() => {
-                        events.attachEvents(container);
-                    });
-
-                    buildReportWidget({
-                        node: reportNode,
-                        data: data,
-                    }).then(() => {
-                        events.attachEvents(container);
-                    });
+            return Promise.all([
+                buildOutputWidget(objectNode, reports),
+                buildReportWidget(reportNode, reports)
+            ])
+                .then(() => {
+                    events.attachEvents(container);
                 });
-            });
         }
 
         function stop() {

@@ -439,9 +439,7 @@ define([
         function getWorkspaceClient() {
             const worskpaceURL = runtime.config('services.workspace.url');
             const authToken = runtime.authToken();
-            const workspace = new Workspace(worskpaceURL, { token: authToken });
-
-            return workspace;
+            return new Workspace(worskpaceURL, { token: authToken });
         }
 
         /**
@@ -497,14 +495,19 @@ define([
          * @param {string} fileType
          */
         function runTab(tab, fileType) {
+            let tabModel = model;
+            // TODO: Remove once jobs and results are hooked up
+            if (tab === 'jobStatus' || tab === 'results') {
+                tabModel = testDataModel;
+            }
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: cellBus,
                 cell,
-                // TODO: Remove once jobs are hooked up
-                model: 'jobStatus' === tab ? testDataModel: model,
+                model: tabModel,
                 spec: specs[typesToFiles[state.fileType.selected].appId],
                 fileType,
-                jobId: undefined
+                jobId: undefined,
+                workspaceClient: workspaceClient
             });
 
             let node = document.createElement('div');

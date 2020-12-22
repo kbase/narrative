@@ -162,7 +162,6 @@ define([
             ui = null,
             tabWidget = null, // the widget currently in view
             workspaceClient = getWorkspaceClient(),
-            state = getInitialState(),
             tabSet = {
                 selected: 'configure',
                 tabs: {

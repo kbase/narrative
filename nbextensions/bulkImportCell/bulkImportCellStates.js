@@ -22,40 +22,41 @@
 
 define([], () => {
     'use strict';
+
+    /**
+     * Returns a view state for the tabs.
+     * @param {Array} enabled the tabs in this array are enabled
+     * @param {Array} visible the tabs in this array are visible
+     */
+    function tabState(enabled, visible) {
+        // can't just use the same default object, it has to be generated each time,
+        // as JS does assign by reference.
+        const defaultView = () => ({ enabled: false, visible: false });
+
+        const state = {
+            tabs: {
+            }
+        };
+        ['configure', 'viewConfigure', 'info', 'jobStatus', 'results', 'error'].forEach(tabId => {
+            state.tabs[tabId] = defaultView();
+        });
+        enabled.forEach(enabledTab => {
+            state.tabs[enabledTab].enabled = true;
+        });
+        visible.forEach(visibleTab => {
+            state.tabs[visibleTab].visible = true;
+        });
+        return state;
+    }
+
     const states = {
         // for when the cell is in configuration mode, hasn't been run, has no jobs, no results
         editingIncomplete: {
             ui: {
-                tab: {
-                    tabs: {
-                        configure: {
-                            enabled: true,
-                            visible: true,
-                        },
-                        viewConfigure: {
-                            enabled: false,
-                            visible: false
-                        },
-                        info: {
-                            enabled: true,
-                            visible: true
-                        },
-                        // TODO: temporarily enable job status on startup
-                        jobStatus: {
-                            enabled: true,
-                            visible: true
-                        },
-                        // TODO: temporarily enable results view on startup
-                        results: {
-                            enabled: true,
-                            visible: true
-                        },
-                        error: {
-                            enabled: false,
-                            visible: false
-                        }
-                    }
-                },
+                tab: tabState(
+                    ['configure', 'info', 'jobStatus', 'results'],
+                    ['configure', 'info', 'jobStatus', 'results']
+                ),
                 action: {
                     name: 'runApp',
                     disabled: true
@@ -65,34 +66,10 @@ define([], () => {
         // when the cell is in configuration mode, ready to run, but hasn't been started yet
         editingComplete: {
             ui: {
-                tab: {
-                    tabs: {
-                        configure: {
-                            enabled: true,
-                            visible: true,
-                        },
-                        viewConfigure: {
-                            enabled: false,
-                            visible: false
-                        },
-                        info: {
-                            enabled: true,
-                            visible: true
-                        },
-                        jobStatus: {
-                            enabled: false,
-                            visible: true
-                        },
-                        results: {
-                            enabled: false,
-                            visible: true
-                        },
-                        error: {
-                            enabled: false,
-                            visible: false
-                        }
-                    }
-                },
+                tab: tabState(
+                    ['configure', 'info'],
+                    ['configure', 'info', 'jobStatus', 'results']
+                ),
                 action: {
                     name: 'runApp',
                     disabled: false
@@ -102,34 +79,10 @@ define([], () => {
         // the user has clicked "run" and is waiting on the run to start
         launching: {
             ui: {
-                tab: {
-                    tabs: {
-                        configure: {
-                            enabled: false,
-                            visible: false,
-                        },
-                        viewConfigure: {
-                            enabled: true,
-                            visible: true
-                        },
-                        info: {
-                            enabled: true,
-                            visible: true
-                        },
-                        jobStatus: {
-                            enabled: false,
-                            visible: true
-                        },
-                        results: {
-                            enabled: false,
-                            visible: true
-                        },
-                        error: {
-                            enabled: false,
-                            visible: false
-                        }
-                    }
-                },
+                tab: tabState(
+                    ['viewConfigure', 'info'],
+                    ['viewConfigure', 'info', 'jobStatus', 'results']
+                ),
                 action: {
                     name: 'cancel',
                     disabled: false
@@ -140,34 +93,10 @@ define([], () => {
         // the main app is queued, no child apps have started yet
         queued: {
             ui: {
-                tab: {
-                    tabs: {
-                        configure: {
-                            enabled: false,
-                            visible: false,
-                        },
-                        viewConfigure: {
-                            enabled: true,
-                            visible: true
-                        },
-                        info: {
-                            enabled: true,
-                            visible: true
-                        },
-                        jobStatus: {
-                            enabled: true,
-                            visible: true
-                        },
-                        results: {
-                            enabled: false,
-                            visible: true
-                        },
-                        error: {
-                            enabled: false,
-                            visible: false
-                        }
-                    }
-                },
+                tab: tabState(
+                    ['viewConfigure', 'info', 'jobStatus'],
+                    ['viewConfigure', 'info', 'jobStatus', 'results']
+                ),
                 action: {
                     name: 'cancel',
                     disabled: false
@@ -178,34 +107,10 @@ define([], () => {
         // apps are running, none are complete yet
         running: {
             ui: {
-                tab: {
-                    tabs: {
-                        configure: {
-                            enabled: false,
-                            visible: false,
-                        },
-                        viewConfigure: {
-                            enabled: true,
-                            visible: true
-                        },
-                        info: {
-                            enabled: true,
-                            visible: true
-                        },
-                        jobStatus: {
-                            enabled: true,
-                            visible: true
-                        },
-                        results: {
-                            enabled: false,
-                            visible: true
-                        },
-                        error: {
-                            enabled: false,
-                            visible: false
-                        }
-                    }
-                },
+                tab: tabState(
+                    ['viewConfigure', 'info', 'jobStatus'],
+                    ['viewConfigure', 'info', 'jobStatus', 'results']
+                ),
                 action: {
                     name: 'cancel',
                     disabled: false
@@ -216,34 +121,10 @@ define([], () => {
         // at least one child job is complete
         appPartialComplete: {
             ui: {
-                tab: {
-                    tabs: {
-                        configure: {
-                            enabled: false,
-                            visible: false,
-                        },
-                        viewConfigure: {
-                            enabled: true,
-                            visible: true
-                        },
-                        info: {
-                            enabled: true,
-                            visible: true
-                        },
-                        jobStatus: {
-                            enabled: true,
-                            visible: true
-                        },
-                        results: {
-                            enabled: true,
-                            visible: true
-                        },
-                        error: {
-                            enabled: false,
-                            visible: false
-                        }
-                    }
-                },
+                tab: tabState(
+                    ['viewConfigure', 'info', 'jobStatus', 'results'],
+                    ['viewConfigure', 'info', 'jobStatus', 'results']
+                ),
                 action: {
                     name: 'cancel',
                     disabled: false
@@ -254,34 +135,10 @@ define([], () => {
         // all child jobs are complete
         appComplete: {
             ui: {
-                tab: {
-                    tabs: {
-                        configure: {
-                            enabled: false,
-                            visible: false,
-                        },
-                        viewConfigure: {
-                            enabled: true,
-                            visible: true
-                        },
-                        info: {
-                            enabled: true,
-                            visible: true
-                        },
-                        jobStatus: {
-                            enabled: true,
-                            visible: true
-                        },
-                        results: {
-                            enabled: true,
-                            visible: true
-                        },
-                        error: {
-                            enabled: false,
-                            visible: false
-                        }
-                    }
-                },
+                tab: tabState(
+                    ['viewConfigure', 'info', 'jobStatus', 'results'],
+                    ['viewConfigure', 'info', 'jobStatus', 'results']
+                ),
                 action: {
                     name: 'reRunApp',
                     disabled: false
@@ -292,34 +149,10 @@ define([], () => {
         // user canceled the run, and hasn't done anything else yet
         appCanceled: {
             ui: {
-                tab: {
-                    tabs: {
-                        configure: {
-                            enabled: false,
-                            visible: false,
-                        },
-                        viewConfigure: {
-                            enabled: true,
-                            visible: true
-                        },
-                        info: {
-                            enabled: true,
-                            visible: true
-                        },
-                        jobStatus: {
-                            enabled: true,
-                            visible: true
-                        },
-                        results: {
-                            enabled: true,
-                            visible: true
-                        },
-                        error: {
-                            enabled: false,
-                            visible: false
-                        }
-                    }
-                },
+                tab: tabState(
+                    ['viewConfigure', 'info', 'jobStatus', 'results'],
+                    ['viewConfigure', 'info', 'jobStatus', 'results']
+                ),
                 action: {
                     name: 'resetApp',
                     disabled: false
@@ -329,34 +162,10 @@ define([], () => {
         // unrecoverable error(s) occurred during the app run
         appError: {
             ui: {
-                tab: {
-                    tabs: {
-                        configure: {
-                            enabled: false,
-                            visible: false,
-                        },
-                        viewConfigure: {
-                            enabled: true,
-                            visible: true,
-                        },
-                        info: {
-                            enabled: true,
-                            visible: true
-                        },
-                        jobStatus: {
-                            enabled: true,
-                            visible: true
-                        },
-                        results: {
-                            enabled: true,
-                            visible: true
-                        },
-                        error: {
-                            enabled: true,
-                            visible: true
-                        }
-                    }
-                },
+                tab: tabState(
+                    ['viewConfigure', 'info', 'jobStatus', 'results', 'error'],
+                    ['viewConfigure', 'info', 'jobStatus', 'results', 'error']
+                ),
                 action: {
                     name: 'reRunApp',
                     disabled: false
@@ -366,34 +175,10 @@ define([], () => {
         // something tragic and unrecoverable has happened
         generalError: {
             ui: {
-                tab: {
-                    tabs: {
-                        configure: {
-                            enabled: false,
-                            visible: false,
-                        },
-                        viewConfigure: {
-                            enabled: true,
-                            visible: true
-                        },
-                        info: {
-                            enabled: true,
-                            visible: true
-                        },
-                        jobStatus: {
-                            enabled: true,
-                            visible: true
-                        },
-                        results: {
-                            enabled: true,
-                            visible: true
-                        },
-                        error: {
-                            enabled: true,
-                            visible: true
-                        }
-                    }
-                },
+                tab: tabState(
+                    ['viewConfigure', 'info', 'jobStatus', 'results', 'error'],
+                    ['viewConfigure', 'info', 'jobStatus', 'results', 'error']
+                ),
                 action: {
                     name: 'runApp',
                     disabled: false

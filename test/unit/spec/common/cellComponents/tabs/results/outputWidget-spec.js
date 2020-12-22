@@ -102,9 +102,5 @@ define([
                 });
         });
 
-        it('should show an error message if an error happened while fetching data', () => {
-
-        });
-
     });
 });

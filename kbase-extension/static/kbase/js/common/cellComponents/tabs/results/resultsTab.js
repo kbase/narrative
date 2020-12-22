@@ -80,10 +80,7 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
             let events = Events.make();
 
             const reports = getReportRefs();
-            //TODO: check first that we have objects created to display
-            //report.objects_created && report.objects_created.length
 
-            //then build output object and report widgets
             let objectNode = document.createElement('div');
             container.appendChild(objectNode);
 

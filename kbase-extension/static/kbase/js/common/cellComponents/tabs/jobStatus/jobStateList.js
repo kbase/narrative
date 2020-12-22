@@ -48,7 +48,7 @@ define([
                     th({
                         class: `${cssBaseClass}__table_head_cell col-sm-5`
                     }, [
-                        'Cancel/Retry All',
+                        'CANCEL/RETRY ALL',
                         i({
                             class: `fa fa-caret-down kb-pointer ${cssBaseClass}__icon`
                         }),
@@ -63,7 +63,7 @@ define([
     }
 
     // Convert the table to a datatable object to get functionality
-    function renderTable(container){
+    function renderTable(container, numberOfChildJobs){
         container.find('table').dataTable({
             searching: false,
             pageLength: 50,
@@ -72,7 +72,13 @@ define([
                 targets: 2,
                 orderable: false
 
-            }]
+            }],
+            fnDrawCallback: function() {
+                // Hide pagination controls if length is less than 51
+                if (numberOfChildJobs < 51) {
+                    $('.dataTables_paginate').hide();
+                }
+            }
         });
 
     }
@@ -99,12 +105,14 @@ define([
                 UI.make({ node: container });
                 container.append($(createTable()));
 
+                let numberOfChildJobs = arg.childJobs.length;
+
                 return Promise.try(() => {
                     arg.childJobs.forEach((childJob, index) => {
                         createJobStateWidget(index, childJob.job_id, childJob.status);
                     });
                 }).then(() => {
-                    renderTable(container);
+                    renderTable(container, numberOfChildJobs);
                 });
             });
         }

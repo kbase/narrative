@@ -157,7 +157,6 @@ define(['bluebird', 'common/html', 'common/ui'], function (
             // send parent the ready message
             return doAttach(arg)
                 .catch((err) => {
-                    // do somethig with the error.
                     console.error('Error while starting the created objects view', err);
                 });
         }

@@ -437,9 +437,10 @@ define([
         }
 
         function getWorkspaceClient() {
-            const worskpaceURL = runtime.config('services.workspace.url');
-            const authToken = runtime.authToken();
-            return new Workspace(worskpaceURL, { token: authToken });
+            return new Workspace(
+                runtime.config('services.workspace.url'),
+                { token: runtime.authToken() }
+            );
         }
 
         /**

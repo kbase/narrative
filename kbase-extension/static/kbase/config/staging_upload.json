@@ -9,6 +9,14 @@
             "name": "SRA Reads"
         },
         {
+            "id": "fastq_reads_interleaved",
+            "name": "FASTQ Reads Interleaved"
+        },
+        {
+            "id": "fastq_reads_noninterleaved",
+            "name": "FASTQ Reads NonInterleaved"
+        },
+        {
             "id": "genbank_genome",
             "name": "GenBank Genome"
         },
@@ -66,15 +74,6 @@
             "app_input_param": "fastq_fwd_staging_file_name",
             "app_input_param_type": "string",
             "app_static_params": {"import_type": "FASTQ/FASTA"},
-            "app_output_param": "name",
-            "app_output_suffix": "_reads",
-            "multiselect": false
-        },
-        "sra_reads": {
-            "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
-            "app_input_param": "sra_staging_file_name",
-            "app_input_param_type": "string",
-            "app_static_params": {"import_type": "SRA"},
             "app_output_param": "name",
             "app_output_suffix": "_reads",
             "multiselect": false
@@ -179,7 +178,7 @@
             "multiselect": false
         },
         "fastq_reads_interleaved": {
-            "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
+            "app_id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
             "app_input_param": "fastq_fwd_staging_file_name",
             "app_input_param_type": "string",
             "app_static_params": {"import_type": "FASTQ/FASTA"},
@@ -188,7 +187,7 @@
             "multiselect": false
         },
         "fastq_reads_noninterleaved": {
-            "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
+            "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
             "app_input_param": "fastq_fwd_staging_file_name",
             "app_input_param_type": "string",
             "app_static_params": {"import_type": "FASTQ/FASTA"},

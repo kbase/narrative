@@ -9,12 +9,12 @@
             "name": "SRA Reads"
         },
         {
-            "id": "sra_reads",
-            "name": "SRA Reads Interleaved"
+            "id": "fastq_reads_interleaved",
+            "name": "FASTQ Reads Interleaved"
         },
         {
-            "id": "sra_reads",
-            "name": "SRA Reads NonInterleaved"
+            "id": "fastq_reads_noninterleaved",
+            "name": "FASTQ Reads NonInterleaved"
         },
         {
             "id": "genbank_genome",

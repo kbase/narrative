@@ -69,7 +69,7 @@
             "app_output_suffix": "_reads",
             "multiselect": false
         },
-        "fastq_reads": {fastq_reads_interleaved
+        "fastq_reads": {
             "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
             "app_input_param": "fastq_fwd_staging_file_name",
             "app_input_param_type": "string",

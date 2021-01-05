@@ -300,7 +300,17 @@ console.log("h7", Handlebars, text_template);
                         var id = subdata[k]; // default id is just the value
                         // if the selection_id is set, and the object is an object of somekind, then use that value
                         if(selection_id && typeof id === 'object') {
-                            id = subdata[k][selection_id];
+                            if (selection_id instanceof Array){
+                                for (var j=0; j<selection_id.length; j++){
+                                    id = subdata[k][selection_id[j]];
+                                    if (id) {
+                                        break;
+                                    }
+                                }
+                            }
+                            else {
+                                id = subdata[k][selection_id];
+                            }
                         }
                         var autofill = {
                             id: id,
@@ -319,11 +329,30 @@ console.log("h7", Handlebars, text_template);
                             var id = key;
                             // if the selection id is set, and it is an object, then use that field instead
                             if(selection_id && typeof subdata[key] === 'object') {
-                                id = subdata[key][selection_id];
+                                if (selection_id instanceof Array){
+                                    for (var j=0; j<selection_id.length; j++){
+                                        id = subdata[k][selection_id[j]];
+                                        if (id) {
+                                            break;
+                                        }
+                                    }
+                                }
+                                else {
+                                    id = subdata[key][selection_id];
+                                }
+
                             // else if the selection id is set, and the value is string or number
                             } else if(selection_id && 
                                 (typeof subdata[key] === 'string' || typeof subdata[key] === 'number')) {
                                 // and selection id==='value', then use the value instead of the key as the id
+                                if(selection_id instanceof Array){
+                                    for (var j=0; j<selection_id.length; j++){
+                                        if(selection_id[j]==="value"){
+                                            id = subdata[key];
+                                            break;
+                                        }
+                                    }
+                                }
                                 if(selection_id==='value') {
                                     id = subdata[key];
                                 }

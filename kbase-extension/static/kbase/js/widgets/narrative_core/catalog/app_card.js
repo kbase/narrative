@@ -1,4 +1,4 @@
-define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, bootstrap, Promise, $) {
+define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], (KBWidget, bootstrap, Promise, $) => {
     'use strict';
 
     // favorites callback should accept:
@@ -40,13 +40,13 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
         }
 
         this.show = function () {
-            for (var k = 0; k < this.$divs.length; k++) {
+            for (let k = 0; k < this.$divs.length; k++) {
                 this.$divs[k].show();
             }
         };
 
         this.hide = function () {
-            for (var k = 0; k < this.$divs.length; k++) {
+            for (let k = 0; k < this.$divs.length; k++) {
                 this.$divs[k].hide();
             }
         };
@@ -55,7 +55,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
         this.getNewCardDiv = function () {
             this.cardsAdded += 1;
             if (this.$divs.length < this.cardsAdded) {
-                var $newCard = this._renderAppCard();
+                const $newCard = this._renderAppCard();
                 this.$divs.push($newCard);
                 return $newCard;
             } else {
@@ -81,7 +81,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
         /* timestamp => the time at which this was favorited, optional */
         this.turnOnStar = function (timestamp) {
             this.onStar = true;
-            for (var k = 0; k < this.$divs.length; k++) {
+            for (let k = 0; k < this.$divs.length; k++) {
                 this.$divs[k]
                     .find('.kbcb-star')
                     .removeClass('kbcb-star-nonfavorite')
@@ -93,7 +93,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
         };
         this.turnOffStar = function () {
             this.onStar = false;
-            for (var k = 0; k < this.$divs.length; k++) {
+            for (let k = 0; k < this.$divs.length; k++) {
                 this.$divs[k]
                     .find('.kbcb-star')
                     .removeClass('kbcb-star-favorite')
@@ -110,7 +110,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
 
         this.deactivateStar = function () {
             this.deactivatedStar = true;
-            for (var k = 0; k < this.$divs.length; k++) {
+            for (let k = 0; k < this.$divs.length; k++) {
                 this.$divs[k]
                     .find('.kbcb-star')
                     .removeClass('kbcb-star-favorite')
@@ -118,7 +118,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
             }
         };
 
-        this.getStarCount = function (count) {
+        this.getStarCount = function () {
             if (this.starCount) return this.starCount;
             return 0;
         };
@@ -129,11 +129,11 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
                 this.starCount = null;
             }
             if (this.starCount) {
-                for (var k = 0; k < this.$divs.length; k++) {
+                for (let k = 0; k < this.$divs.length; k++) {
                     this.$divs[k].find('.kbcb-star-count').html(count);
                 }
             } else {
-                for (var k = 0; k < this.$divs.length; k++) {
+                for (let k = 0; k < this.$divs.length; k++) {
                     this.$divs[k].find('.kbcb-star-count').empty();
                 }
             }
@@ -144,7 +144,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
         this.setRunCount = function (runs) {
             this.runCount = runs;
             if (this.runCount) {
-                for (var k = 0; k < this.$divs.length; k++) {
+                for (let k = 0; k < this.$divs.length; k++) {
                     this.$divs[k]
                         .find('.kbcb-runs')
                         .empty()
@@ -166,17 +166,14 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
 
         /* rendering methods that are shared in multiple places */
         this._renderAppCard = function () {
-            var info = this.info;
-            var type = this.type;
-            var tag = this.tag;
-            var nms_base_url = this.nms_base_url;
+            const self = this;
 
             // Main Container
-            var $appDiv = $('<div>').addClass('kbcb-app-card kbcb-hover container');
+            const $appDiv = $('<div>').addClass('kbcb-app-card kbcb-hover container');
 
             // HEADER - contains logo, title, module link, authors
-            var $topDiv = $('<div>').addClass('row kbcb-app-card-header');
-            var $logoSpan = $('<div>').addClass('col-xs-3 kbcb-app-card-logo');
+            const $topDiv = $('<div>').addClass('row kbcb-app-card-header');
+            const $logoSpan = $('<div>').addClass('col-xs-3 kbcb-app-card-logo');
 
             if (type === 'method') {
                 $logoSpan.append(
@@ -201,7 +198,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
                 }
             }
 
-            var $titleSpan = $('<div>').addClass('col-xs-9 kbcb-app-card-title-panel');
+            const $titleSpan = $('<div>').addClass('col-xs-9 kbcb-app-card-title-panel');
 
             $titleSpan.append($('<div>').addClass('kbcb-app-card-title').append(info.name));
             if (info['module_name']) {
@@ -215,7 +212,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
                                     '" target="_blank">'
                             )
                                 .append(info.module_name)
-                                .on('click', function (event) {
+                                .on('click', (event) => {
                                     // have to stop propagation so we don't go to the app page first
                                     event.stopPropagation();
                                 })
@@ -225,8 +222,8 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
 
             if (type === 'method') {
                 if (info.authors.length > 0) {
-                    var $authorDiv = $('<div>').addClass('kbcb-app-card-authors').append('by ');
-                    for (var k = 0; k < info.authors.length; k++) {
+                    const $authorDiv = $('<div>').addClass('kbcb-app-card-authors').append('by ');
+                    for (let k = 0; k < info.authors.length; k++) {
                         if (k >= 1) {
                             $authorDiv.append(', ');
                         }
@@ -237,7 +234,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
                         $authorDiv.append(
                             $('<a href="/#people/' + info.authors[k] + '" target="_blank">')
                                 .append(info.authors[k])
-                                .on('click', function (event) {
+                                .on('click', (event) => {
                                     // have to stop propagation so we don't go to the app page first
                                     event.stopPropagation();
                                 })
@@ -250,22 +247,21 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
             $appDiv.append($topDiv.append($logoSpan).append($titleSpan));
 
             // SUBTITLE - on mouseover of info, show subtitle information
-            var $subtitle = $('<div>')
+            const $subtitle = $('<div>')
                 .addClass('kbcb-app-card-subtitle')
                 .append(info.subtitle)
                 .hide();
             $appDiv.append($subtitle);
 
             // FOOTER - stars, number of runs, and info mouseover area
-            var $footer = $('<div>').addClass('clearfix kbcb-app-card-footer');
+            const $footer = $('<div>').addClass('clearfix kbcb-app-card-footer');
 
             if (type === 'method') {
-                var $starDiv = $('<div>').addClass('col-xs-3').css('text-align', 'left');
-                var $star = $('<span>').addClass('kbcb-star').append('<i class="fa fa-star"></i>');
-                var self = this;
+                const $starDiv = $('<div>').addClass('col-xs-3').css('text-align', 'left');
+                const $star = $('<span>').addClass('kbcb-star').append('<i class="fa fa-star"></i>');
                 if (self.isLoggedIn) {
                     $star.addClass('kbcb-star-nonfavorite');
-                    $star.on('click', function (event) {
+                    $star.on('click', (event) => {
                         event.stopPropagation();
                         if (!self.deactivatedStar && self.favoritesCallback) {
                             self.favoritesCallback(self.info, self.callbackParams);
@@ -278,7 +274,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
                         delay: { show: 400, hide: 40 },
                     });
                 }
-                var $starCount = $('<span>').addClass('kbcb-star-count');
+                const $starCount = $('<span>').addClass('kbcb-star-count');
                 if (this.starCount) {
                     $starCount.html(this.starCount);
                 }
@@ -291,8 +287,8 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
             }
 
             if (this.isSdk) {
-                var nRuns = Math.floor(Math.random() * 10000);
-                var $nRuns = $('<div>').addClass('col-xs-3').css('text-align', 'left');
+                const nRuns = Math.floor(Math.random() * 10000);
+                const $nRuns = $('<div>').addClass('col-xs-3').css('text-align', 'left');
                 $nRuns.append($('<span>').addClass('kbcb-runs'));
                 if (this.nRuns) {
                     $nRuns
@@ -310,7 +306,7 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
                 $footer.append($('<div>').addClass('col-xs-3'));
             }
 
-            var moreLink = info.id;
+            let moreLink = info.id;
             if (type === 'method') {
                 if (info.module_name) {
                     // module name right now is encoded in the ID
@@ -337,20 +333,20 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
                     .append($('<a href="' + moreLink + '" target="_blank">').append('more...'))
             );
 
-            var $moreInfoDiv = $('<div>')
+            const $moreInfoDiv = $('<div>')
                 .addClass('col-xs-1')
                 .addClass('kbcb-info')
                 .css('text-align', 'right');
             $moreInfoDiv
-                .on('mouseenter', function () {
+                .on('mouseenter', () => {
                     $topDiv.hide();
                     $subtitle.fadeIn('fast');
                 })
-                .on('mouseleave', function () {
+                .on('mouseleave', () => {
                     $subtitle.hide();
                     $topDiv.fadeIn('fast');
                 })
-                .on('click', function (event) {
+                .on('click', (event) => {
                     // do this the JS way because wrapping just in <a> messes up the styles!
                     event.stopPropagation();
                     window.open(moreLink);
@@ -358,16 +354,14 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], function (KBWidget, boot
             $moreInfoDiv.append($('<span>').append('<i class="fa fa-info"></i>'));
             $footer.append($moreInfoDiv);
             $appDiv.append($footer);
-
-            var self = this;
-            $appDiv.on('click', function () {
+            $appDiv.on('click', () => {
                 if (self.clickedCallback) {
                     self.clickedCallback(self);
                 }
             });
 
             // put it all in a container so we can control margins
-            var $appCardContainer = $('<div>').addClass('kbcb-app-card-container');
+            const $appCardContainer = $('<div>').addClass('kbcb-app-card-container');
             return $appCardContainer.append($appDiv);
         };
     }

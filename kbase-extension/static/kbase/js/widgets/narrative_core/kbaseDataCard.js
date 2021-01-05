@@ -36,7 +36,7 @@ define([
     'jquery',
     'api/dataProvider',
     'bootstrap',
-], function (Icon, Promise, BootstrapDialog, TimeFormat, kbaseCardLayout, Config, $, DataProvider) {
+], (Icon, Promise, BootstrapDialog, TimeFormat, kbaseCardLayout, Config, $, DataProvider) => {
     'use strict';
     function KbaseDataCard(entry) {
         const objectInfo = entry.object_info;
@@ -46,17 +46,17 @@ define([
         }
 
         //params
-        var name = entry.name ? entry.name : objectInfo[1],
+        const name = entry.name ? entry.name : objectInfo[1],
             version = entry.version ? entry.version : 'v' + objectInfo[4],
             date = entry.date ? entry.date : TimeFormat.getTimeStampStr(objectInfo[3]),
             editBy = entry.editedBy ? entry.editedBy : ' by ' + objectInfo[5];
 
         // in order - entry.viewType > entry.type > parsing it out of the objectInfo type string.
-        var objectType = entry.type ? entry.type : objectInfo[2].split('.')[1].split('-')[0],
+        const objectType = entry.type ? entry.type : objectInfo[2].split('.')[1].split('-')[0],
             viewType = entry.viewType || entry.type || objectType;
 
         //shorten name if applicable
-        var $name = $('<span>').addClass('kb-data-list-name');
+        const $name = $('<span>').addClass('kb-data-list-name');
         if (maxNameLength && name && name.length > maxNameLength) {
             $name.append(name.substring(0, maxNameLength - 3) + '...');
             $name.tooltip({
@@ -71,15 +71,15 @@ define([
             $name.append(name);
         }
 
-        var $logo = $('<div>');
+        const $logo = $('<div>');
         Icon.buildDataIcon($logo, objectType, entry.is_set, 0);
 
-        var $version = $('<span>').addClass('kb-data-list-version').append(version),
+        const $version = $('<span>').addClass('kb-data-list-version').append(version),
             $type = $('<div>').addClass('kb-data-list-type').append(viewType),
             $date = $('<span>').addClass('kb-data-list-date').append(date);
 
         //no default
-        var $byUser = $('<span>').addClass('kb-data-list-edit-by').append(editBy),
+        const $byUser = $('<span>').addClass('kb-data-list-edit-by').append(editBy),
             $narrative = $('<div>').addClass('kb-data-list-narrative').append(entry.narrative),
             $title = $('<div>').append($name),
             $subcontent = $('<div>').addClass('narrative-data-list-subcontent');
@@ -87,10 +87,10 @@ define([
         $title.append($version);
         $subcontent.append($type).append($narrative).append($date).append($byUser);
         $byUser.click(
-            function (objectInfo, e) {
+            ((objectInfo, e) => {
                 e.stopPropagation();
                 window.open('/#people/' + objectInfo[5]);
-            }.bind(null, objectInfo)
+            }).bind(null, objectInfo)
         );
 
         /**
@@ -99,7 +99,7 @@ define([
          * click event.
          * @param {event} e - the click event that gets passed to this function on click
          */
-        var actionButtonClick = function (e) {
+        const actionButtonClick = function (e) {
             if (!entry.copyFunction) {
                 return;
             }
@@ -118,10 +118,10 @@ define([
              */
 
             function doObjectCopy() {
-                var className = '.' + objectInfo[1].split('.').join('\\.');
-                var btns = $(className);
-                var thisHolder = e.currentTarget;
-                var $thisBtn = $($(thisHolder).children()[0]);
+                const className = '.' + objectInfo[1].split('.').join('\\.');
+                const btns = $(className);
+                const thisHolder = e.currentTarget;
+                const $thisBtn = $($(thisHolder).children()[0]);
                 $(thisHolder).html('<img src="' + Config.get('loading_gif') + '">');
                 entry
                     .copyFunction()
@@ -133,7 +133,7 @@ define([
                         $(document).trigger('updateDataList.Narrative');
                     })
                     .catch((error) => {
-                        var $importError = $('<div>').css({ color: '#F44336', width: '500px' });
+                        const $importError = $('<div>').css({ color: '#F44336', width: '500px' });
                         if (error.error && error.error.message) {
                             if (error.error.message.indexOf('may not write to workspace') >= 0) {
                                 $importError.append(
@@ -155,7 +155,7 @@ define([
             }
 
             function showCopyWarningDialog() {
-                var dialog = new BootstrapDialog({
+                const dialog = new BootstrapDialog({
                     title: 'An item with this name already exists in this Narrative.',
                     body: 'Do you want to overwrite the existing copy?',
                     buttons: [
@@ -184,7 +184,7 @@ define([
                 }
             });
         };
-        var layout = {
+        const layout = {
             actionButtonText: entry.actionButtonText,
             actionButtonClick: actionButtonClick,
             logo: $logo,
@@ -194,7 +194,7 @@ define([
             onOpen: entry.onOpen,
         };
 
-        var $card = new kbaseCardLayout(layout);
+        const $card = new kbaseCardLayout(layout);
         $card
             .find('.narrative-card-action-button')
             .addClass(() => objectInfo[1].split('.').join('.'))

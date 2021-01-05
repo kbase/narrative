@@ -162,9 +162,8 @@ define([
      * @param {string} type The shortened type of object to fetch the icon for. E.g. "Genome" not
      * "KBaseGenomes.Genome-2.1"
      * @param {boolean} stacked If true, creates a stacked effect of multiple 'icons'.
-     * @param {int} indent -- deprecated
      */
-    function buildDataIcon($logo, type, stacked, indent) {
+    function buildDataIcon($logo, type, stacked) {
         const iconStr = makeDataIcon(type, stacked);
         $logo.append(iconStr);
         return $logo;
@@ -188,12 +187,10 @@ define([
      * @returns {string} Color code
      */
     function logoColorLookup(type) {
-        let color;
         // fall back to primitive hack that just guesses
         let code = 0;
         for (let i = 0; i < type.length; code += type.charCodeAt(i++));
-        color = iconSpec.colors[code % iconSpec.colors.length];
-        return color;
+        return iconSpec.colors[code % iconSpec.colors.length];
     }
 
     function makeAppIcon(appSpec = {}, isToolbarIcon = false) {
@@ -227,14 +224,14 @@ define([
     function makeTypeIcon(typeId, isToolbarIcon) {
         const typeName = parseTypeName(typeId),
             iconType = isToolbarIcon ? 'type-toolbar' : 'type';
-        let color, iconDef, icon;
+        let color, iconDef;
 
         if (typeName) {
             color = iconSpec.color_mapping[typeName] || logoColorLookup(typeName);
             iconDef = iconSpec.data[typeName];
         }
 
-        icon = iconDef ? iconDef[0] : iconSpec.data.DEFAULT[0];
+        const icon = iconDef ? iconDef[0] : iconSpec.data.DEFAULT[0];
 
         return _makeIcon(iconType, icon, 'square', color);
     }

@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white: true*/
 /**
  * A few string utility functions. These are kinda unrelated, but used in several places.
  *
@@ -59,8 +57,8 @@ define([
      * @param {string} displayName - optional, the display name to use. If given, then an auth call isn't made.
      */
     function displayRealName(username, $target, displayName) {
-        let safeUser = StringUtil.escape(username),
-            usernameLink =
+        const safeUser = StringUtil.escape(username);
+        let usernameLink =
                 '<a href="' + profilePageUrl + safeUser + '" target="_blank">' + safeUser + '</a>';
         if (displayName) {
             return new Promise((resolve) => {
@@ -110,8 +108,8 @@ define([
             .append($caption);
         if (caption) setText(caption);
 
-        function setText(caption) {
-            $caption.text(caption);
+        function setText(_caption) {
+            $caption.text(_caption);
         }
 
         return {

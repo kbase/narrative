@@ -74,7 +74,6 @@ define(['bluebird', 'common/html', 'common/ui'], function (
                     });
                     return Object.values(createdObjects);
                 });
-
         }
 
         /**
@@ -107,6 +106,9 @@ define(['bluebird', 'common/html', 'common/ui'], function (
                         })
                     ]);
                     return objectTable;
+                })
+                .catch(() => {
+                    return div('Unable to fetch created objects!');
                 });
         }
 

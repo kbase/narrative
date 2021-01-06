@@ -4,13 +4,7 @@ define([
     'common/props',
     'common/runtime',
     'narrativeConfig',
-], function (
-    _,
-    html,
-    Props,
-    Runtime,
-    NarrativeConfig
-) {
+], (_, html, Props, Runtime, NarrativeConfig) => {
     'use strict';
 
     const iconSpec = NarrativeConfig.get('icons'),
@@ -33,14 +27,17 @@ define([
      */
     function _makeIconFromUrl(iconUrl) {
         const iconType = 'image';
-        return span({
-            class: `${cssBaseName}__container--${iconType}`,
-        }, [
-            img({
-                src: iconUrl,
-                class: `${cssBaseName}__img--${iconType}`,
-            })
-        ]);
+        return span(
+            {
+                class: `${cssBaseName}__container--${iconType}`,
+            },
+            [
+                img({
+                    src: iconUrl,
+                    class: `${cssBaseName}__img--${iconType}`,
+                }),
+            ]
+        );
     }
 
     /**
@@ -59,7 +56,9 @@ define([
         // circle first, as the bottom layer, then also add a border
         // to the top one.
         const layers = [],
-            cmax = function(x) { return x > 255 ? 255 : x; },
+            cmax = function (x) {
+                return x > 255 ? 255 : x;
+            },
             cstep = 20, // color-step for overlapped circles
             num_stacked_circles = 1; // up to 2
         let parsed_color, r, g, b;
@@ -79,12 +78,17 @@ define([
             b = parsed_color[3];
         }
         // Add circles with lighter colors
-        for (let i=num_stacked_circles; i > 0; i--) {
-            let stacked_color = color
-                ? 'rgb(' + cmax(r + i * cstep)  + ',' +
-                    cmax(g + i * cstep) + ',' + cmax(b + i * cstep) + ')'
+        for (let i = num_stacked_circles; i > 0; i--) {
+            const stacked_color = color
+                ? 'rgb(' +
+                  cmax(r + i * cstep) +
+                  ',' +
+                  cmax(g + i * cstep) +
+                  ',' +
+                  cmax(b + i * cstep) +
+                  ')'
                 : '';
-            let style = color ? { color: stacked_color } : {};
+            const style = color ? { color: stacked_color } : {};
             layers.push(
                 span({
                     class: `${cssBaseName}__stack--l${i} fa fa-stack-2x fa-${shape}`,
@@ -113,22 +117,24 @@ define([
      */
 
     function _makeIcon(iconType, iconClass, shape = 'square', color = null, stacked = false) {
-
-        const style = color ? {color: color} : {};
+        const style = color ? { color: color } : {};
         const layers = stacked ? _makeStackLayers(shape, color) : [];
         iconClass = iconClass.replace('icon ', '');
 
-        return span({
-            class: `${cssBaseName}__container--${iconType} fa-stack`,
-        }, layers.concat(
-            span({
-                class: `${cssBaseName}__icon_background--${iconType} fa fa-${shape} fa-stack-2x`,
-                style: style,
-            }),
-            span({
-                class: `${cssBaseName}__icon--${iconType} fa fa-inverse fa-stack-1x ${iconClass}`,
-            })
-        ));
+        return span(
+            {
+                class: `${cssBaseName}__container--${iconType} fa-stack`,
+            },
+            layers.concat(
+                span({
+                    class: `${cssBaseName}__icon_background--${iconType} fa fa-${shape} fa-stack-2x`,
+                    style: style,
+                }),
+                span({
+                    class: `${cssBaseName}__icon--${iconType} fa fa-inverse fa-stack-1x ${iconClass}`,
+                })
+            )
+        );
     }
 
     /**
@@ -144,9 +150,7 @@ define([
             color = _.has(iconSpec.color_mapping, type)
                 ? iconSpec.color_mapping[type]
                 : logoColorLookup(type),
-            icon = _.has(iconSpec.data, type)
-                ? iconSpec.data[type]
-                : iconSpec.data.DEFAULT;
+            icon = _.has(iconSpec.data, type) ? iconSpec.data[type] : iconSpec.data.DEFAULT;
         return _makeIcon(iconType, icon[0], 'circle', color, stacked);
     }
 
@@ -158,9 +162,8 @@ define([
      * @param {string} type The shortened type of object to fetch the icon for. E.g. "Genome" not
      * "KBaseGenomes.Genome-2.1"
      * @param {boolean} stacked If true, creates a stacked effect of multiple 'icons'.
-     * @param {int} indent -- deprecated
      */
-    function buildDataIcon($logo, type, stacked, indent) {
+    function buildDataIcon($logo, type, stacked) {
         const iconStr = makeDataIcon(type, stacked);
         $logo.append(iconStr);
         return $logo;
@@ -183,13 +186,11 @@ define([
      * @param {string} type String that gets "hashed" into a color.
      * @returns {string} Color code
      */
-    function logoColorLookup (type) {
-        let color;
+    function logoColorLookup(type) {
         // fall back to primitive hack that just guesses
         let code = 0;
         for (let i = 0; i < type.length; code += type.charCodeAt(i++));
-        color = iconSpec.colors[code % iconSpec.colors.length];
-        return color;
+        return iconSpec.colors[code % iconSpec.colors.length];
     }
 
     function makeAppIcon(appSpec = {}, isToolbarIcon = false) {
@@ -223,16 +224,14 @@ define([
     function makeTypeIcon(typeId, isToolbarIcon) {
         const typeName = parseTypeName(typeId),
             iconType = isToolbarIcon ? 'type-toolbar' : 'type';
-        let color,
-            iconDef,
-            icon;
+        let color, iconDef;
 
         if (typeName) {
             color = iconSpec.color_mapping[typeName] || logoColorLookup(typeName);
             iconDef = iconSpec.data[typeName];
         }
 
-        icon = iconDef ? iconDef[0] : iconSpec.data.DEFAULT[0];
+        const icon = iconDef ? iconDef[0] : iconSpec.data.DEFAULT[0];
 
         return _makeIcon(iconType, icon, 'square', color);
     }

@@ -1,69 +1,69 @@
-define([
-    'util/icon',
-    'narrativeConfig',
-    'jquery',
-], function(
-    Icon,
-    narrativeConfig,
-    $
-) {
+define(['util/icon', 'narrativeConfig', 'jquery'], (Icon, narrativeConfig, $) => {
     'use strict';
 
-    const specWithIcon = {info:{icon:{url:'path/to/icon.png'}}},
-        specNoIcon = {info:{icon:{}}},
+    const specWithIcon = { info: { icon: { url: 'path/to/icon.png' } } },
+        specNoIcon = { info: { icon: {} } },
         iconSpec = narrativeConfig.get('icons'),
         defaultIcon = iconSpec.data.DEFAULT[0],
         exampleIcon = 'Assembly',
         makeIconTests = {
             App: [
-                {   // app has an icon specified
+                {
+                    // app has an icon specified
                     args: [specWithIcon],
                     result: {
                         iconUrl: 'path/to/icon.png',
-                    }
+                    },
                 },
-                {   // no icon -- uses app default fa-cube
+                {
+                    // no icon -- uses app default fa-cube
                     args: [specNoIcon],
                     result: {
                         iconTypeClass: 'fa-cube',
-                    }
+                    },
                 },
-                {   // no spec -- uses app default fa-cube
+                {
+                    // no spec -- uses app default fa-cube
                     args: [],
                     result: {
                         iconTypeClass: 'fa-cube',
-                    }
-                }
+                    },
+                },
             ],
             Generic: [
-                {   // default colour
+                {
+                    // default colour
                     args: ['cross'],
                     result: {
                         iconTypeClass: 'fa-cross',
-                    }
+                    },
                 },
-                {   // custom colour
+                {
+                    // custom colour
                     args: ['cross', 'pink'],
                     result: {
                         style: 'color: pink',
                         iconTypeClass: 'fa-cross',
-                    }
+                    },
                 },
-                {   // no arg supplied - uses app default fa-cube
+                {
+                    // no arg supplied - uses app default fa-cube
                     args: [],
                     result: {
                         iconTypeClass: 'fa-cube',
-                    }
-                }
+                    },
+                },
             ],
             Type: [
-                {   // default icon
+                {
+                    // default icon
                     args: ['DEFAULT'],
                     result: {
                         iconTypeClass: defaultIcon,
                     },
                 },
-                {   // custom colour and custom icon
+                {
+                    // custom colour and custom icon
                     // would be better if it weren't hardcoded, but never mind...
                     args: [`KBase.${exampleIcon}-v2.75`],
                     result: {
@@ -71,24 +71,25 @@ define([
                         iconTypeClass: iconSpec.data[exampleIcon][0],
                     },
                 },
-                {   // made-up icon name => uses default icon
+                {
+                    // made-up icon name => uses default icon
                     args: ['Mary Poppins'],
                     result: {
                         iconTypeClass: defaultIcon,
                     },
                 },
-            ]
+            ],
         },
         methods = Object.keys(makeIconTests).sort(),
         types = ['', 'Toolbar'],
-        cssBaseName = Icon.cssBaseName;
+        {cssBaseName} = Icon;
 
     describe('The Icon util module', () => {
-        it('Is alive!', function() {
+        it('Is alive!', () => {
             expect(Icon).toBeTruthy();
         });
         const otherMethods = ['makeDataIcon', 'overwriteDataIcon'];
-        otherMethods.forEach( (method) => {
+        otherMethods.forEach((method) => {
             it(`has the method ${method}`, () => {
                 expect(Icon[method]).toBeDefined();
             });
@@ -101,43 +102,44 @@ define([
                 });
             });
         });
-        it('has a css class base name', function() {
+        it('has a css class base name', () => {
             expect(Icon.cssBaseName).toBeTruthy();
         });
     });
 
-    const tests = [{
-        desc: 'can create an icon using FontAwesome',
-        args: ['FeatureClusters', false],
-        result: {
-            iconType: 'data',
-            iconTypeClassList: ['fa'].concat(iconSpec.data['FeatureClusters']),
-            style: 'color: ' + iconSpec.color_mapping['FeatureClusters'],
-        }
-    },
-    {
-        desc: 'can create a stacked icon',
-        args: ['FeatureClusters', true],
-        result: {
-            iconType: 'data-stack',
-            iconTypeClassList: ['fa'].concat(iconSpec.data['FeatureClusters']),
-            // precalculated
-            style: 'color: rgb(194,254,20)',
-        }
-    },
-    {
-        desc: 'can use a custom kbase icon',
-        args: ['GenomeAnnotation', false],
-        result: {
-            iconType: 'data',
-            iconTypeClassList: ['fa', 'icon-genome'],
-            style: 'color: ' + iconSpec.color_mapping['GenomeAnnotation'],
-        }
-    }];
+    const tests = [
+        {
+            desc: 'can create an icon using FontAwesome',
+            args: ['FeatureClusters', false],
+            result: {
+                iconType: 'data',
+                iconTypeClassList: ['fa'].concat(iconSpec.data['FeatureClusters']),
+                style: 'color: ' + iconSpec.color_mapping['FeatureClusters'],
+            },
+        },
+        {
+            desc: 'can create a stacked icon',
+            args: ['FeatureClusters', true],
+            result: {
+                iconType: 'data-stack',
+                iconTypeClassList: ['fa'].concat(iconSpec.data['FeatureClusters']),
+                // precalculated
+                style: 'color: rgb(194,254,20)',
+            },
+        },
+        {
+            desc: 'can use a custom kbase icon',
+            args: ['GenomeAnnotation', false],
+            result: {
+                iconType: 'data',
+                iconTypeClassList: ['fa', 'icon-genome'],
+                style: 'color: ' + iconSpec.color_mapping['GenomeAnnotation'],
+            },
+        },
+    ];
 
     describe('The Icon util method makeDataIcon', () => {
-        let container,
-            $jqueryContainer;
+        let container, $jqueryContainer;
 
         tests.forEach((test) => {
             beforeEach(() => {
@@ -146,7 +148,6 @@ define([
             });
 
             it('can build an icon with args: ' + test.args.join(', '), () => {
-
                 container.innerHTML = Icon.makeDataIcon(...test.args);
 
                 // create the other icon container
@@ -155,11 +156,8 @@ define([
                 const parent = container.childNodes[0],
                     $parent = $jqueryContainer[0].childNodes[0],
                     isStacked = test.args[1],
-                    iconType = test.result.iconType,
-                    parentClassList = [
-                        `${cssBaseName}__container--${iconType}`,
-                        'fa-stack'
-                    ];
+                    {iconType} = test.result,
+                    parentClassList = [`${cssBaseName}__container--${iconType}`, 'fa-stack'];
 
                 parentClassList.forEach((cssClass) => {
                     expect(parent).toHaveClass(cssClass);
@@ -184,18 +182,8 @@ define([
                             'fa-inverse',
                             'fa-stack-1x',
                         ].concat(test.result.iconTypeClassList),
-                        outline: [
-                            'fa',
-                            'fa-circle',
-                            'fa-stack-2x',
-                            `${cssBaseName}__outline--l1`,
-                        ],
-                        stack: [
-                            'fa',
-                            'fa-circle',
-                            'fa-stack-2x',
-                            `${cssBaseName}__stack--l1`,
-                        ]
+                        outline: ['fa', 'fa-circle', 'fa-stack-2x', `${cssBaseName}__outline--l1`],
+                        stack: ['fa', 'fa-circle', 'fa-stack-2x', `${cssBaseName}__stack--l1`],
                     };
 
                 classList.bg.forEach((cssClass) => {
@@ -221,8 +209,7 @@ define([
                         expect(bgNode.getAttribute('style')).not.toBe(test.result.style);
                         expect(bgNode.getAttribute('style')).toContain('color: ');
                     }
-                }
-                else {
+                } else {
                     expect(bgNode.getAttribute('style')).toBe(test.result.style);
                 }
             });
@@ -239,11 +226,10 @@ define([
                 container = document.createElement('div');
             });
 
-            describe(`The Icon method ${methodName}`, function() {
+            describe(`The Icon method ${methodName}`, () => {
                 const methodTests = makeIconTests[method];
                 methodTests.forEach((test) => {
                     it('can build an icon with args: ' + test.args.join(', '), () => {
-
                         container.innerHTML = Icon[methodName](...test.args);
                         const parent = container.childNodes[0];
 
@@ -253,7 +239,9 @@ define([
                             expect(parent.childNodes.length).toBe(1);
                             const child = parent.childNodes[0];
                             expect(child).toHaveClass(`${cssBaseName}__img--image`);
-                            expect(child.getAttribute('src')).toEqual(jasmine.stringMatching(test.result.iconUrl));
+                            expect(child.getAttribute('src')).toEqual(
+                                jasmine.stringMatching(test.result.iconUrl)
+                            );
                             return;
                         }
 
@@ -298,8 +286,7 @@ define([
 
                         if (test.result.style) {
                             expect(bgNode.getAttribute('style')).toBe(test.result.style);
-                        }
-                        else {
+                        } else {
                             expect(bgNode.getAttribute('style')).toBe('');
                         }
                     });

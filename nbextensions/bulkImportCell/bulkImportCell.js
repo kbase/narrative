@@ -162,9 +162,8 @@ define([
             ui = null,
             tabWidget = null, // the widget currently in view
             workspaceClient = getWorkspaceClient(),
-            state = getInitialState(),
             tabSet = {
-                selectedTab: 'configure',
+                selected: 'configure',
                 tabs: {
                     configure: {
                         label: 'Configure',
@@ -244,6 +243,7 @@ define([
                 Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
             }
         });
+        let state = getInitialState();
 
         let specs = {};
         let rawSpecs = model.getItem('app.specs');
@@ -282,7 +282,6 @@ define([
                 const spec = appSpecs[typesToFiles[fileType].appId];
                 initialParams[fileType] = {};
                 spec.parameters.forEach((param) => {
-                    // let initValue = param.default_values[0];
                     initialParams[fileType][param.id] = param.default_values[0];
                 });
             });
@@ -305,6 +304,10 @@ define([
                         app: {
                             specs: appSpecs,
                             tag: 'release'
+                        },
+                        state: {
+                            state: 'editingIncomplete',
+                            selectedTab: 'configure'
                         }
                     }
                 }
@@ -430,9 +433,10 @@ define([
             render().then(() => {
                 cell.renderMinMax();
                 // force toolbar refresh
+                // eslint-disable-next-line no-self-assign
                 cell.metadata = cell.metadata;
                 updateState();
-                toggleTab(state.tab.selected);
+                toggleTab(state.tab.selected, state.fileType.selected);
             });
         }
 
@@ -475,6 +479,7 @@ define([
                 }
                 runTab(tab, fileType);
             }
+            model.setItem('state.selectedTab', tab);
             cellTabs.setState(state.tab);
         }
 
@@ -556,12 +561,26 @@ define([
         }
 
         /**
-         * Returns a structured initial state of the cell.
+         * Returns a structured initial view state of the cell. This includes
+         * the availability / visibility of the various UI elements.
+         *
+         * This needs to be run after setting up the data model. It uses
+         * that to get the initial state, but defaults to the "editingIncomplete"
+         * state if that's not available.
          */
         function getInitialState() {
             // load current state from state list
             // modify to handle file types panel
-            let state = States[0].ui;
+            const defaultState = 'editingIncomplete';
+            let currentState = model.getItem('state.state');
+            if (!currentState || !(currentState in States)) {
+                currentState = defaultState;
+            }
+            let state = States[currentState].ui;
+            state.tab.selected = model.getItem('state.selectedTab', 'configure');
+            // TODO: inspect the parameters to see which file types are
+            // completely filled out, maybe store that in the metadata
+            // on completion?
             let fileTypeState = {
                 completed: {}
             };

@@ -1,5 +1,3 @@
-/*global define,console*/
-/*jslint white:true,browser:true*/
 /*
  * KBase Editor Cell Extension
  *
@@ -28,7 +26,7 @@ define([
     'common/utils',
     'common/clock',
     'common/dom',
-    'common/appUtils',
+    'util/icon',
     'common/jupyter',
     'kb_service/utils',
     'kb_service/client/workspace',
@@ -46,7 +44,7 @@ define([
     utils,
     Clock,
     Dom,
-    AppUtils,
+    Icon,
     jupyter,
     serviceUtils,
     Workspace
@@ -147,16 +145,12 @@ define([
             var inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
             if (inputPrompt) {
-                inputPrompt.innerHTML = div({
-                    style: { textAlign: 'center' }
-                }, [
-                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'))
-                ]);
+                inputPrompt.innerHTML = this.getIcon();
             }
         };
 
         cell.getIcon = function() {
-            return AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'));
+            return Icon.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'));
         };
 
         cell.toggleCodeInputArea = function() {

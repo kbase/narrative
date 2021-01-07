@@ -1,10 +1,11 @@
 /**
  * Should get fed data to view.
  */
-define(['bluebird', 'common/html', 'common/ui'], function (
+define(['bluebird', 'common/html', 'common/ui', 'common/appUtils'], function (
     Promise,
     html,
-    UI
+    UI,
+    AppUtils
 ) {
     'use strict';
 

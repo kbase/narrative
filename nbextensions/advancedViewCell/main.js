@@ -1,5 +1,3 @@
-/*global define,console*/
-/*jslint white:true,browser:true*/
 /*
  * KBase View Cell Extension
  *
@@ -24,11 +22,9 @@ define([
     'base/js/namespace',
     './widgets/advancedViewCellWidget',
     'common/runtime',
-    'common/parameterSpec',
     'common/utils',
     'common/dom',
-    'common/props',
-    'common/appUtils',
+    'util/icon',
     'common/jupyter',
     'common/spec',
     'kb_service/utils',
@@ -43,11 +39,9 @@ define([
     Jupyter,
     ViewCellWidget,
     Runtime,
-    ParameterSpec,
     utils,
     Dom,
-    Props,
-    AppUtils,
+    Icon,
     jupyter,
     Spec,
     serviceUtils,
@@ -66,40 +60,40 @@ define([
      */
     function upgradeToViewCell(cell, appSpec, appTag) {
         return Promise.try(function() {
-                // Create base app cell
-                var meta = cell.metadata;
-                meta.kbase = {
-                    type: 'advancedView',
-                    attributes: {
-                        id: new Uuid(4).format(),
-                        status: 'new',
-                        created: (new Date()).toUTCString(),
-                        icon: 'bar-chart'
+            // Create base app cell
+            var meta = cell.metadata;
+            meta.kbase = {
+                type: 'advancedView',
+                attributes: {
+                    id: new Uuid(4).format(),
+                    status: 'new',
+                    created: (new Date()).toUTCString(),
+                    icon: 'bar-chart'
+                },
+                cellState: {
+                    icon: 'bar-chart'
+                },
+                viewCell: {
+                    app: {
+                        id: appSpec.info.id,
+                        gitCommitHash: appSpec.info.git_commit_hash,
+                        version: appSpec.info.ver,
+                        tag: appTag,
+                        spec: appSpec
                     },
-                    cellState: {
-                        icon: 'bar-chart'
-                    },
-                    viewCell: {
-                        app: {
-                            id: appSpec.info.id,
-                            gitCommitHash: appSpec.info.git_commit_hash,
-                            version: appSpec.info.ver,
-                            tag: appTag,
-                            spec: appSpec
-                        },
-                        state: {
-                            edit: 'editing',
-                            params: null,
-                            code: null,
-                            request: null,
-                            result: null
-                        },
+                    state: {
+                        edit: 'editing',
                         params: null,
-                        outputWidgetState: null
-                    }
-                };
-                cell.metadata = meta;
-            })
+                        code: null,
+                        request: null,
+                        result: null
+                    },
+                    params: null,
+                    outputWidgetState: null
+                }
+            };
+            cell.metadata = meta;
+        })
             .then(function() {
                 // Add the params
                 var spec = Spec.make({
@@ -149,16 +143,11 @@ define([
             var inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
             if (inputPrompt) {
-                inputPrompt.innerHTML = div({
-                    style: { textAlign: 'center' }
-                }, [
-                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'))
-                ]);
+                inputPrompt.innerHTML = this.getIcon();
             }
         };
         cell.getIcon = function() {
-            var icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'));
-            return icon;
+            return Icon.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'));
         };
     }
 
@@ -335,5 +324,6 @@ define([
     };
 }, function(err) {
     // TODO: use the error reporting mechanism from the app cell
+    'use strict';
     console.error('ERROR loading viewCell main', err);
 });

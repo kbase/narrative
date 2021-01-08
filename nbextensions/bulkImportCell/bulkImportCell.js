@@ -1,7 +1,7 @@
 define([
     'uuid',
     'narrativeConfig',
-    'common/appUtils',
+    'util/icon',
     'common/utils',
     'common/runtime',
     'common/busEventManager',
@@ -20,11 +20,11 @@ define([
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     './bulkImportCellStates',
     'common/cellComponents/tabs/results/resultsTab',
-    'json!./testAppObj.json',
+    './testAppObj.js',
 ], (
     Uuid,
     Config,
-    AppUtils,
+    Icon,
     Utils,
     Runtime,
     BusEventManager,
@@ -363,7 +363,7 @@ define([
 
             // returns a DOM node with an icon to be rendered elsewhere
             cell.getIcon = function () {
-                return AppUtils.makeGenericIcon('upload', '#bf6c97');
+                return Icon.makeToolbarGenericIcon('upload', '#bf6c97');
             };
 
             // this renders the cell's icon in its toolbar

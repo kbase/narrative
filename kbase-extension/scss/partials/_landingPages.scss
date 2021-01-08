@@ -322,7 +322,7 @@ table {
 .sidebar-header,
 .view-header {
   color: rgb(137 137 137);
-  font-family: $typeface-display;
+  font-family: $typeface-display-legacy;
   font-weight: 400;
   letter-spacing: 0;
 }
@@ -350,7 +350,7 @@ table {
   border: 1px solid rgb(219 219 219);
   background-color: rgb(242 242 242);
   color: rgb(109 168 207);
-  font: 14px $typeface-display;
+  font: 14px $typeface-display-legacy;
   text-align: left;
 }
 
@@ -359,7 +359,7 @@ table {
 
   li {
     margin-bottom: 10px;
-    font-family: $typeface-display;
+    font-family: $typeface-display-legacy;
     list-style: none;
     text-align: left;
   }
@@ -371,7 +371,7 @@ table {
 
 .navbar-nav {
   color: rgb(109 168 207);
-  font-family: $typeface-display;
+  font-family: $typeface-display-legacy;
 
   > {
     li {

@@ -4,7 +4,7 @@ define([
     'uuid',
     'base/js/namespace',
     'common/utils',
-    'common/appUtils',
+    'util/icon',
     'common/props',
     'common/cellUtils',
     'common/pythonInterop',
@@ -19,7 +19,7 @@ define([
     Uuid,
     Jupyter,
     utils,
-    AppUtils,
+    Icon,
     Props,
     cellUtils,
     PythonInterop,
@@ -64,22 +64,14 @@ define([
          * narrative configuration.
          */
         cell.renderIcon = function() {
-            var inputPrompt = this.element[0].querySelector('[data-element="icon"]'),
-                type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type');
-
+            var inputPrompt = this.element[0].querySelector('[data-element="icon"]');
             if (inputPrompt) {
-                inputPrompt.innerHTML = div({
-                    style: { textAlign: 'center' }
-                }, [
-                    AppUtils.makeTypeIcon(type)
-                ]);
+                inputPrompt.innerHTML = this.getIcon();
             }
         };
 
         cell.getIcon = function() {
-            var type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type'),
-                icon = AppUtils.makeToolbarTypeIcon(type);
-            return icon;
+            return Icon.makeToolbarTypeIcon(Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type'));
         };
 
         cell.toggleCodeInputArea = function() {

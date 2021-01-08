@@ -1,5 +1,3 @@
-@import url(//fonts.googleapis.com/css?family=Roboto);
-
 .btn__text {
   height: 34px;
   box-sizing: border-box;
@@ -2793,11 +2791,11 @@ button.kb-data-obj {
 }
 
 /* card layout */
-
 .narrative-card-logo {
   display: flex;
   width: 50px;
   margin-right: 2px;
+  font-size: 14px;
 }
 
 .narrative-card-row-main {
@@ -2837,7 +2835,7 @@ button.kb-data-obj {
   width: calc(100% - 6px);
   height: 80%;
   justify-content: center;
-  padding: 0;
+  padding: 10px 0;
 
   > span {
     margin-right: 5px;
@@ -3023,47 +3021,6 @@ button.kb-data-obj {
   font-weight: 700;
   text-align: center;
   text-shadow: -1px 0 rgb(119 119 119), 0 1px rgb(119 119 119), 1px 0 rgb(119 119 119), 0 -1px rgb(119 119 119);
-}
-
-/* For shifting over logos that are stacked on
- * top of eachother */
-
-.kb-data-list-logo-shifted1 {
-  margin-top: 1px;
-  margin-left: 1px;
-}
-
-.kb-data-list-logo-shiftedx1 {
-  margin-top: 6px;
-  margin-left: 8px;
-}
-
-.kb-data-list-logo-shifted2 {
-  margin-top: 7px;
-  margin-left: 9px;
-}
-
-.kb-data-list-logo-shiftedx2 {
-  margin-top: 12px;
-  margin-left: 16px;
-}
-
-.kb-data-list-logo-font1 {
-  font-size: 1.7em !important;
-}
-
-.kb-data-list-logo-font2 {
-  font-size: 1.5em !important;
-}
-
-/*  Nested item indent (crude!!) */
-
-.kb-data-list-level1 {
-  margin-left: 25px;
-}
-
-.kb-data-list-level2 {
-  margin-left: 50px;
 }
 
 .kb-data-list-info {
@@ -3304,7 +3261,7 @@ button.kb-data-obj {
 }
 
 .kbcb-app-card-title-panel {
-  padding: 10px 5px 5px;
+  padding: 10px 5px 5px 10px;
 }
 
 .kbcb-app-card-title {
@@ -3335,7 +3292,7 @@ button.kb-data-obj {
 .kbcb-app-card-logo {
   padding: 0;
   margin: 0;
-  font-size: 0.9em;
+  font-size: 14px;
 }
 
 .kbcb-star-default {

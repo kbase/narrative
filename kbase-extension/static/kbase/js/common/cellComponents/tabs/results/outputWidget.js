@@ -1,11 +1,11 @@
 /**
  * Should get fed data to view.
  */
-define(['bluebird', 'common/html', 'common/ui', 'common/appUtils'], function (
+define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], function (
     Promise,
     html,
     UI,
-    AppUtils
+    APIUtil
 ) {
     'use strict';
 
@@ -99,9 +99,10 @@ define(['bluebird', 'common/html', 'common/ui', 'common/appUtils'], function (
                             th('Description')
                         ]),
                         ...data.map(obj => {
+                            const parsedType = APIUtil.parseWorkspaceType(obj.type);
                             return tr([
                                 td(obj.name),
-                                td(obj.type),
+                                td(parsedType.type),
                                 td(obj.description)
                             ]);
                         })

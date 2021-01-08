@@ -1,26 +1,26 @@
 
 body {
-  background-color: rgb(255 255 255);
-  color: rgb(51 51 51);
+  background-color: use-color('white');
+  color: use-color('ink');
 
-  /* jupyter notebook body font size is 13px, so this is 17.875 => 18px (!) */
-  font: 1.375em $typeface-page-text;
+  /* default body font size: 14px */
+  font: 1.4em $typeface-page-text;
 }
 
 h1 {
   color: rgb(35 35 35);
-  font: 400 1.75em/2em $typeface-display;
+  font: 400 1.75em/2em $typeface-display-legacy;
   letter-spacing: 0;
 }
 
 h2 {
   color: rgb(137 137 137);
-  font: normal 400 1.5em/1.75em $typeface-display;
+  font: normal 400 1.5em/1.75em $typeface-display-legacy;
   letter-spacing: 0;
 }
 
 h3 {
-  font: normal 400 1.15em/1.25em $typeface-display;
+  font: normal 400 1.15em/1.25em $typeface-display-legacy;
   letter-spacing: 0;
 }
 

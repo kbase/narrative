@@ -61,13 +61,23 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], function (
             ui = UI.make({
                 node: container,
             });
+            // this is the main layout div. don't do anything yet.
+            container.innerHTML = div({
+                dataElement: 'created-objects',
+                class: 'kb-created-objects'
+            });
 
             return fetchReportData(arg.reports, arg.workspaceClient)
                 .then((reportData) => {
-                    let layout = renderLayout();
-
-                    container.innerHTML = layout.content;
-                    layout.events.attachEvents(container);
+                    ui.setContent('created-objects',
+                        ui.buildCollapsiblePanel({
+                            title: 'Reports',
+                            name: 'created-objects-toggle',
+                            hidden: false,
+                            type: 'default',
+                            classes: ['kb-panel-container'],
+                            body: reportData,
+                        }));
                 });
         }
 

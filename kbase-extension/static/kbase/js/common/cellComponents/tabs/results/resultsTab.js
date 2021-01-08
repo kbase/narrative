@@ -100,11 +100,11 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
             ])
                 .then(() => {
                     events.attachEvents(container);
-                    container.removeChild(spinnerNode);
                     reportNode.classList.remove('hidden');
+                    objectNode.classList.remove('hidden');
                 })
                 .finally(() => {
-                    objectNode.classList.remove('hidden');
+                    container.removeChild(spinnerNode);
                 });
         }
 

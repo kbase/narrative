@@ -83,7 +83,7 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
 
             let spinnerNode = document.createElement('div');
             spinnerNode.classList.add('kb-loading-spinner');
-            spinnerNode.innerHTML = '<span class="fa fa-spinner fa-spin fa-2x"/>';
+            spinnerNode.innerHTML = '<i class="fa fa-spinner fa-spin fa-2x"/>';
             container.appendChild(spinnerNode);
 
             let objectNode = document.createElement('div');

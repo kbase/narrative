@@ -20,7 +20,7 @@ define([
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     './bulkImportCellStates',
     'common/cellComponents/tabs/results/resultsTab',
-    'json!./testAppObj.json',
+    './testAppObj.js',
 ], (
     Uuid,
     Config,

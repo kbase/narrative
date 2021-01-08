@@ -1,5 +1,6 @@
-define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
+define(['bluebird', 'common/UI', 'common/events', './outputWidget', './reportWidget'], (
     Promise,
+    UI,
     Events,
     OutputWidget,
     ReportWidget
@@ -83,7 +84,7 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
 
             let spinnerNode = document.createElement('div');
             spinnerNode.classList.add('kb-loading-spinner');
-            spinnerNode.innerHTML = '<i class="fa fa-spinner fa-spin fa-2x"/>';
+            spinnerNode.innerHTML = UI.loading({size: '2x'});
             container.appendChild(spinnerNode);
 
             let objectNode = document.createElement('div');

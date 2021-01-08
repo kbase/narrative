@@ -131,7 +131,6 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], function (
                 node: container,
             });
             // this is the main layout div. don't do anything yet.
-            // TODO: maybe include a loading spinner so it can look busy?
             container.innerHTML = div({
                 dataElement: 'created-objects',
                 class: 'kb-created-objects'

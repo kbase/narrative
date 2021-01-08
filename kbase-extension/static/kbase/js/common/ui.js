@@ -5,7 +5,6 @@ define([
     'kb_common/html',
     'base/js/namespace',
     './runtime',
-    './events',
     'google-code-prettify/prettify',
     'css!google-code-prettify/prettify.css',
     'bootstrap'
@@ -15,11 +14,10 @@ define([
     html,
     Jupyter,
     Runtime,
-    Events,
     PR
 ) {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         span = t('span'),
@@ -271,6 +269,36 @@ define([
                 });
             });
         });
+    }
+
+    /**
+     * Creates a spinning icon as a span. Returns the HTML as a string.
+     * @param {Object} arg should have keys:
+     *  - message - string - an optional message to add to the spinner
+     *  - size - string - an optional Font Awesome 4 size modifier (2x, 3x, etc)
+     *  - color - string - an optional CSS color value
+     */
+    function loading(arg) {
+        arg = arg || {};
+        let prompt;
+        if (arg.message) {
+            prompt = arg.message + '... &nbsp &nbsp';
+        }
+        let sizeClass;
+        if (arg.size) {
+            sizeClass = 'fa-' + arg.size;
+        }
+        let style = {};
+        if (arg.color) {
+            style.color = arg.color;
+        }
+        return span([
+            prompt,
+            i({
+                class: ['fa', 'fa-spinner', 'fa-pulse', sizeClass, 'fa-fw', 'margin-bottom'].join(' '),
+                style: style
+            })
+        ]);
     }
 
 
@@ -1239,33 +1267,10 @@ define([
             });
         }
 
-        function loading(arg) {
-            var prompt;
-            if (arg.message) {
-                prompt = arg.message + '... &nbsp &nbsp';
-            }
-            var sizeClass;
-            if (arg.size) {
-                sizeClass = 'fa-' + arg.size;
-            }
-            var style = {};
-            if (arg.color) {
-                style.color = arg.color;
-            }
-            return span([
-                prompt,
-                i({
-                    class: ['fa', 'fa-spinner', 'fa-pulse', sizeClass, 'fa-fw', 'margin-bottom'].join(' '),
-                    style: style
-                })
-            ]);
-        }
-
         return Object.freeze({
             getElement: getElement,
             getElements: getElements,
             getButton: getButton,
-            // setButton: setButton,
             getNode: getNode,
             makeButton: makeButton,
             buildButton: buildButton,
@@ -1321,6 +1326,7 @@ define([
         na: na,
         showInfoDialog: showInfoDialog,
         showDialog: showDialog,
-        showErrorDialog: showErrorDialog
+        showErrorDialog: showErrorDialog,
+        loading: loading
     };
 });

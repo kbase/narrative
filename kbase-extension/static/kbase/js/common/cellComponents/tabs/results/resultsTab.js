@@ -1,4 +1,4 @@
-define(['bluebird', 'common/UI', 'common/events', './outputWidget', './reportWidget'], (
+define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWidget'], (
     Promise,
     UI,
     Events,

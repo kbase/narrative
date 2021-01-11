@@ -1,5 +1,6 @@
-define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
+define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWidget'], (
     Promise,
+    UI,
     Events,
     OutputWidget,
     ReportWidget
@@ -37,7 +38,7 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
             const reportRefs = [];
             jobStates.forEach((job) => {
                 if ('result' in job && job.result.length > 0) {
-                    job.result.forEach(result => {
+                    job.result.forEach((result) => {
                         if ('report_ref' in result) {
                             reportRefs.push(result.report_ref);
                         }
@@ -57,7 +58,7 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
             return outputWidget.start({
                 node,
                 reports,
-                workspaceClient
+                workspaceClient,
             });
         }
 
@@ -67,7 +68,7 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
             return reportWidget.start({
                 node,
                 reports,
-                workspaceClient
+                workspaceClient,
             });
         }
 
@@ -81,18 +82,30 @@ define(['bluebird', 'common/events', './outputWidget', './reportWidget'], (
 
             const reports = getReportRefs();
 
+            let spinnerNode = document.createElement('div');
+            spinnerNode.classList.add('kb-loading-spinner');
+            spinnerNode.innerHTML = UI.loading({size: '2x'});
+            container.appendChild(spinnerNode);
+
             let objectNode = document.createElement('div');
             container.appendChild(objectNode);
+            objectNode.classList.add('hidden');
 
             let reportNode = document.createElement('div');
             container.appendChild(reportNode);
+            reportNode.classList.add('hidden');
 
             return Promise.all([
                 buildOutputWidget(objectNode, reports),
-                buildReportWidget(reportNode, reports)
+                buildReportWidget(reportNode, reports),
             ])
                 .then(() => {
                     events.attachEvents(container);
+                    reportNode.classList.remove('hidden');
+                    objectNode.classList.remove('hidden');
+                })
+                .finally(() => {
+                    container.removeChild(spinnerNode);
                 });
         }
 

@@ -5,21 +5,12 @@ define([
     'kb_common/html',
     'base/js/namespace',
     './runtime',
-    './events',
     'google-code-prettify/prettify',
     'css!google-code-prettify/prettify.css',
-    'bootstrap'
-], function (
-    $,
-    Promise,
-    html,
-    Jupyter,
-    Runtime,
-    Events,
-    PR
-) {
+    'bootstrap',
+], function ($, Promise, html, Jupyter, Runtime, PR) {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         span = t('span'),
@@ -49,19 +40,31 @@ define([
             div({ class: 'modal-dialog' }, [
                 div({ class: 'modal-content' }, [
                     div({ class: 'modal-header' + extraClass }, [
-                        button({ type: 'button', class: 'close', dataDismiss: 'modal', ariaLabel: okLabel }, [
-                            span({ ariaHidden: 'true' }, '&times;')
-                        ]),
-                        span({ class: 'modal-title' }, title)
+                        button(
+                            {
+                                type: 'button',
+                                class: 'close',
+                                dataDismiss: 'modal',
+                                ariaLabel: okLabel,
+                            },
+                            [span({ ariaHidden: 'true' }, '&times;')]
+                        ),
+                        span({ class: 'modal-title' }, title),
                     ]),
-                    div({ class: 'modal-body' }, [
-                        content
-                    ]),
+                    div({ class: 'modal-body' }, [content]),
                     div({ class: 'modal-footer' }, [
-                        button({ type: 'button', class: 'btn btn-default', dataDismiss: 'modal', dataElement: 'ok' }, okLabel)
-                    ])
-                ])
-            ])
+                        button(
+                            {
+                                type: 'button',
+                                class: 'btn btn-default',
+                                dataDismiss: 'modal',
+                                dataElement: 'ok',
+                            },
+                            okLabel
+                        ),
+                    ]),
+                ]),
+            ]),
         ]);
     }
 
@@ -69,7 +72,9 @@ define([
         var dialog = renderInfoDialog(arg.title, arg.body, arg.okLabel || 'OK'),
             dialogId = html.genId(),
             confirmNode = document.createElement('div'),
-            kbaseNode, modalNode, modalDialogNode;
+            kbaseNode,
+            modalNode,
+            modalDialogNode;
 
         confirmNode.id = dialogId;
         confirmNode.innerHTML = dialog;
@@ -95,10 +100,12 @@ define([
         modalDialogNode = modalNode.querySelector('.modal');
         $(modalDialogNode).modal('show');
         return new Promise(function (resolve) {
-            modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', function () {
-                confirmNode.parentElement.removeChild(confirmNode);
-                resolve(false);
-            });
+            modalDialogNode
+                .querySelector('[data-element="ok"]')
+                .addEventListener('click', function () {
+                    confirmNode.parentElement.removeChild(confirmNode);
+                    resolve(false);
+                });
             modalDialogNode.addEventListener('hide.bs.modal', function () {
                 resolve(false);
             });
@@ -106,30 +113,18 @@ define([
     }
 
     function buildError(error) {
-        return table({
-            class: 'table table-striped'
-        }, [
-            tr([
-                th('Name'),
-                td(error.name)
-            ]),
-            tr([
-                th('Code'),
-                td(error.code)
-            ]),
-            tr([
-                th('Message'),
-                td(error.message)
-            ]),
-            tr([
-                th('Detail'),
-                td(error.detail)
-            ]),
-            tr([
-                th('Reference'),
-                td(error.reference)
-            ])
-        ]);
+        return table(
+            {
+                class: 'table table-striped',
+            },
+            [
+                tr([th('Name'), td(error.name)]),
+                tr([th('Code'), td(error.code)]),
+                tr([th('Message'), td(error.message)]),
+                tr([th('Detail'), td(error.detail)]),
+                tr([th('Reference'), td(error.reference)]),
+            ]
+        );
     }
 
     function showErrorDialog(arg) {
@@ -138,7 +133,9 @@ define([
         var dialog = renderInfoDialog(arg.title, body, 'OK', 'danger'),
             dialogId = html.genId(),
             confirmNode = document.createElement('div'),
-            kbaseNode, modalNode, modalDialogNode;
+            kbaseNode,
+            modalNode,
+            modalDialogNode;
 
         confirmNode.id = dialogId;
         confirmNode.innerHTML = dialog;
@@ -164,10 +161,12 @@ define([
         modalDialogNode = modalNode.querySelector('.modal');
         $(modalDialogNode).modal('show');
         return new Promise(function (resolve) {
-            modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', function () {
-                confirmNode.parentElement.removeChild(confirmNode);
-                resolve(false);
-            });
+            modalDialogNode
+                .querySelector('[data-element="ok"]')
+                .addEventListener('click', function () {
+                    confirmNode.parentElement.removeChild(confirmNode);
+                    resolve(false);
+                });
             modalDialogNode.addEventListener('hide.bs.modal', function () {
                 resolve(false);
             });
@@ -183,39 +182,62 @@ define([
             div({ class: 'modal-dialog', style: style }, [
                 div({ class: 'modal-content' }, [
                     div({ class: 'modal-header' }, [
-                        button({ type: 'button', class: 'close', dataDismiss: 'modal', ariaLabel: cancelLabel }, [
-                            span({ ariaHidden: 'true' }, '&times;')
-                        ]),
-                        span({ class: 'modal-title kb-title' }, title)
+                        button(
+                            {
+                                type: 'button',
+                                class: 'close',
+                                dataDismiss: 'modal',
+                                ariaLabel: cancelLabel,
+                            },
+                            [span({ ariaHidden: 'true' }, '&times;')]
+                        ),
+                        span({ class: 'modal-title kb-title' }, title),
                     ]),
-                    div({ class: 'modal-body' }, [
-                        content
-                    ]),
-                    div({ class: 'modal-footer' }, buttons.map(function (btn) {
-                        return button({
-                            type: 'button',
-                            class: 'btn btn-' + (btn.type || 'default'),
-                            dataElement: btn.action
-                        }, btn.label);
-                    }).concat([
-                        button({
-                            type: 'button',
-                            class: 'btn btn-default',
-                            dataDismiss: 'modal',
-                            dataElement: 'cancel'
-                        }, cancelLabel)
-                    ]))
-                ])
-            ])
+                    div({ class: 'modal-body' }, [content]),
+                    div(
+                        { class: 'modal-footer' },
+                        buttons
+                            .map(function (btn) {
+                                return button(
+                                    {
+                                        type: 'button',
+                                        class: 'btn btn-' + (btn.type || 'default'),
+                                        dataElement: btn.action,
+                                    },
+                                    btn.label
+                                );
+                            })
+                            .concat([
+                                button(
+                                    {
+                                        type: 'button',
+                                        class: 'btn btn-default',
+                                        dataDismiss: 'modal',
+                                        dataElement: 'cancel',
+                                    },
+                                    cancelLabel
+                                ),
+                            ])
+                    ),
+                ]),
+            ]),
         ]);
     }
 
     function showDialog(args) {
         args.buttons = args.buttons || [];
-        var dialog = renderDialog(args.title, args.body, args.cancelLabel || 'Cancel', args.buttons, args.options),
+        var dialog = renderDialog(
+                args.title,
+                args.body,
+                args.cancelLabel || 'Cancel',
+                args.buttons,
+                args.options
+            ),
             dialogId = html.genId(),
             confirmNode = document.createElement('div'),
-            kbaseNode, modalNode, modalDialogNode;
+            kbaseNode,
+            modalNode,
+            modalDialogNode;
 
         confirmNode.id = dialogId;
         confirmNode.innerHTML = dialog;
@@ -241,38 +263,73 @@ define([
         modalDialogNode = modalNode.querySelector('.modal');
         $(modalDialogNode).modal('show');
         return new Promise(function (resolve, reject) {
-            modalDialogNode.querySelector('[data-element="cancel"]').addEventListener('click', function (e) {
-                confirmNode.parentElement.removeChild(confirmNode);
-                resolve({
-                    action: 'cancel'
+            modalDialogNode
+                .querySelector('[data-element="cancel"]')
+                .addEventListener('click', function (e) {
+                    confirmNode.parentElement.removeChild(confirmNode);
+                    resolve({
+                        action: 'cancel',
+                    });
                 });
-            });
             args.buttons.forEach(function (btn) {
-                modalDialogNode.querySelector('[data-element="' + btn.action + '"]').addEventListener('click', function (e) {
-                    try {
-                        var result = btn.handler(e);
-                        if (result) {
-                            $(modalDialogNode).modal('hide');
-                            confirmNode.parentElement.removeChild(confirmNode);
-                            resolve({
-                                action: btn.action,
-                                result: result
-                            });
+                modalDialogNode
+                    .querySelector('[data-element="' + btn.action + '"]')
+                    .addEventListener('click', function (e) {
+                        try {
+                            var result = btn.handler(e);
+                            if (result) {
+                                $(modalDialogNode).modal('hide');
+                                confirmNode.parentElement.removeChild(confirmNode);
+                                resolve({
+                                    action: btn.action,
+                                    result: result,
+                                });
+                            }
+                        } catch (ex) {
+                            reject(ex);
                         }
-                    } catch (ex) {
-                        reject(ex);
-                    }
-                });
+                    });
             });
 
             modalDialogNode.addEventListener('hide.bs.modal', function (e) {
                 resolve({
-                    action: 'cancel'
+                    action: 'cancel',
                 });
             });
         });
     }
 
+    /**
+     * Creates a spinning icon as a span. Returns the HTML as a string.
+     * @param {Object} arg should have keys:
+     *  - message - string - an optional message to add to the spinner
+     *  - size - string - an optional Font Awesome 4 size modifier (2x, 3x, etc)
+     *  - color - string - an optional CSS color value
+     */
+    function loading(arg) {
+        arg = arg || {};
+        let prompt;
+        if (arg.message) {
+            prompt = arg.message + '... &nbsp &nbsp';
+        }
+        let sizeClass;
+        if (arg.size) {
+            sizeClass = 'fa-' + arg.size;
+        }
+        let style = {};
+        if (arg.color) {
+            style.color = arg.color;
+        }
+        return span([
+            prompt,
+            i({
+                class: ['fa', 'fa-spinner', 'fa-pulse', sizeClass, 'fa-fw', 'margin-bottom'].join(
+                    ' '
+                ),
+                style: style,
+            }),
+        ]);
+    }
 
     function factory(config) {
         var container = config.node,
@@ -289,9 +346,11 @@ define([
             if (names.length === 0) {
                 return container;
             }
-            var selector = names.map(function (name) {
-                return '[data-element="' + name + '"]';
-            }).join(' ');
+            var selector = names
+                .map(function (name) {
+                    return '[data-element="' + name + '"]';
+                })
+                .join(' ');
 
             return container.querySelector(selector);
         }
@@ -304,9 +363,11 @@ define([
             if (typeof names === 'string') {
                 names = names.split('.');
             }
-            var selector = names.map(function (name) {
-                return '[data-element="' + name + '"]';
-            }).join(' ');
+            var selector = names
+                .map(function (name) {
+                    return '[data-element="' + name + '"]';
+                })
+                .join(' ');
 
             return qsa(container, selector);
         }
@@ -337,9 +398,11 @@ define([
             if (typeof names === 'string') {
                 names = [names];
             }
-            var selector = names.map(function (dataSelector) {
-                return '[data-' + dataSelector.type + '="' + dataSelector.name + '"]';
-            }).join(' ');
+            var selector = names
+                .map(function (dataSelector) {
+                    return '[data-' + dataSelector.type + '="' + dataSelector.name + '"]';
+                })
+                .join(' ');
 
             return container.querySelector(selector);
         }
@@ -351,12 +414,16 @@ define([
          * concatenated
          */
         function findNode(nodePath) {
-            var selector = nodePath.map(function (pathElement) {
-                return Object.keys(pathElement).map(function (dataKey) {
-                    var dataValue = pathElement[dataKey];
-                    return '[data-' + dataKey + '="' + dataValue + '"]';
-                }).join('');
-            }).join(' ');
+            var selector = nodePath
+                .map(function (pathElement) {
+                    return Object.keys(pathElement)
+                        .map(function (dataKey) {
+                            var dataValue = pathElement[dataKey];
+                            return '[data-' + dataKey + '="' + dataValue + '"]';
+                        })
+                        .join('');
+                })
+                .join(' ');
 
             return container.querySelector(selector);
         }
@@ -368,26 +435,40 @@ define([
         function renderConfirmDialog(arg) {
             var yesLabel = arg.yesLabel || 'Yes',
                 noLabel = arg.noLabel || 'No';
-            var dialog =
-                div({ class: 'modal fade', tabindex: '-1', role: 'dialog' }, [
-                    div({ class: 'modal-dialog' }, [
-                        div({ class: 'modal-content' }, [
-                            div({ class: 'modal-header' }, [
-                                button({ type: 'button', class: 'close', dataDismiss: 'modal', ariaLabel: noLabel }, [
-                                    span({ ariaHidden: 'true' }, '&times;')
-                                ]),
-                                span({ class: 'modal-title' }, arg.title)
-                            ]),
-                            div({ class: 'modal-body' }, [
-                                arg.body
-                            ]),
-                            div({ class: 'modal-footer' }, [
-                                button({ type: 'button', class: 'btn btn-default', dataDismiss: 'modal', dataElement: 'no' }, noLabel),
-                                button({ type: 'button', class: 'btn btn-primary', dataElement: 'yes' }, yesLabel)
-                            ])
-                        ])
-                    ])
-                ]);
+            var dialog = div({ class: 'modal fade', tabindex: '-1', role: 'dialog' }, [
+                div({ class: 'modal-dialog' }, [
+                    div({ class: 'modal-content' }, [
+                        div({ class: 'modal-header' }, [
+                            button(
+                                {
+                                    type: 'button',
+                                    class: 'close',
+                                    dataDismiss: 'modal',
+                                    ariaLabel: noLabel,
+                                },
+                                [span({ ariaHidden: 'true' }, '&times;')]
+                            ),
+                            span({ class: 'modal-title' }, arg.title),
+                        ]),
+                        div({ class: 'modal-body' }, [arg.body]),
+                        div({ class: 'modal-footer' }, [
+                            button(
+                                {
+                                    type: 'button',
+                                    class: 'btn btn-default',
+                                    dataDismiss: 'modal',
+                                    dataElement: 'no',
+                                },
+                                noLabel
+                            ),
+                            button(
+                                { type: 'button', class: 'btn btn-primary', dataElement: 'yes' },
+                                yesLabel
+                            ),
+                        ]),
+                    ]),
+                ]),
+            ]);
             return dialog;
         }
 
@@ -395,7 +476,9 @@ define([
             var dialog = renderConfirmDialog(arg),
                 dialogId = html.genId(),
                 confirmNode = document.createElement('div'),
-                kbaseNode, modalNode, modalDialogNode;
+                kbaseNode,
+                modalNode,
+                modalDialogNode;
 
             confirmNode.id = dialogId;
             confirmNode.innerHTML = dialog;
@@ -422,11 +505,13 @@ define([
 
             $(modalDialogNode).modal('show');
             return new Promise(function (resolve) {
-                modalDialogNode.querySelector('[data-element="yes"]').addEventListener('click', function () {
-                    $(modalDialogNode).modal('hide');
-                    confirmNode.parentElement.removeChild(confirmNode);
-                    resolve(true);
-                });
+                modalDialogNode
+                    .querySelector('[data-element="yes"]')
+                    .addEventListener('click', function () {
+                        $(modalDialogNode).modal('hide');
+                        confirmNode.parentElement.removeChild(confirmNode);
+                        resolve(true);
+                    });
                 modalDialogNode.addEventListener('keyup', function (e) {
                     if (e.keyCode === 13) {
                         $(modalDialogNode).modal('hide');
@@ -434,10 +519,12 @@ define([
                         resolve(true);
                     }
                 });
-                modalDialogNode.querySelector('[data-element="no"]').addEventListener('click', function () {
-                    confirmNode.parentElement.removeChild(confirmNode);
-                    resolve(false);
-                });
+                modalDialogNode
+                    .querySelector('[data-element="no"]')
+                    .addEventListener('click', function () {
+                        confirmNode.parentElement.removeChild(confirmNode);
+                        resolve(false);
+                    });
                 modalDialogNode.addEventListener('hide.bs.modal', function () {
                     resolve(false);
                 });
@@ -448,28 +535,34 @@ define([
             return events.addEvent({
                 type: 'click',
                 handler: function (e) {
-                    bus.send({
-                        event: e,
-                        button: e.target,
-                        data: data
-                    }, {
-                        key: {
-                            type: eventName
+                    bus.send(
+                        {
+                            event: e,
+                            button: e.target,
+                            data: data,
+                        },
+                        {
+                            key: {
+                                type: eventName,
+                            },
                         }
-                    });
-                }
+                    );
+                },
             });
         }
 
         function makeButton(label, name, options) {
             var klass = options.type || 'default',
                 events = options.events;
-            return button({
-                type: 'button',
-                class: ['btn', 'btn-' + klass].join(' '),
-                dataButton: name,
-                id: addButtonClickEvent(events, name)
-            }, label);
+            return button(
+                {
+                    type: 'button',
+                    class: ['btn', 'btn-' + klass].join(' '),
+                    dataButton: name,
+                    id: addButtonClickEvent(events, name),
+                },
+                label
+            );
         }
 
         function buildButton(arg) {
@@ -478,7 +571,7 @@ define([
                 events = arg.events,
                 icon,
                 title = arg.title || arg.tip || arg.label,
-                attribs;;
+                attribs;
 
             if (arg.icon) {
                 if (!arg.icon.classes) {
@@ -504,7 +597,7 @@ define([
                 title: title,
                 dataButton: arg.name,
                 id: addButtonClickEvent(events, arg.event.type || arg.name, arg.event.data),
-                style: arg.style
+                style: arg.style,
             };
 
             if (arg.features) {
@@ -513,7 +606,10 @@ define([
                 });
             }
 
-            return button(attribs, [icon, span({ style: { verticalAlign: 'middle' } }, arg.label)].join('&nbsp;'));
+            return button(
+                attribs,
+                [icon, span({ style: { verticalAlign: 'middle' } }, arg.label)].join('&nbsp;')
+            );
         }
 
         function enableButton(name) {
@@ -568,12 +664,10 @@ define([
 
         function makePanel(title, elementName) {
             return div({ class: 'panel panel-primary' }, [
-                div({ class: 'panel-heading' }, [
-                    div({ class: 'panel-title' }, title)
-                ]),
+                div({ class: 'panel-heading' }, [div({ class: 'panel-title' }, title)]),
                 div({ class: 'panel-body' }, [
-                    div({ dataElement: elementName, class: 'container-fluid' })
-                ])
+                    div({ dataElement: elementName, class: 'container-fluid' }),
+                ]),
             ]);
         }
 
@@ -590,24 +684,31 @@ define([
             if (args.icon) {
                 icon = [' ', buildIcon(args.icon)];
             }
-            return div({
-                class: classes.join(' '),
-                dataElement: args.name
-            }, [
-                (function () {
-                    if (args.title) {
-                        return div({ class: 'panel-heading' }, [
-                            div({ class: 'panel-title', dataElement: 'title' }, [args.title, icon])
-                        ]);
-                    }
-                }()),
-                div({
-                    class: 'panel-body',
-                    dataElement: 'body'
-                }, [
-                    args.body
-                ])
-            ]);
+            return div(
+                {
+                    class: classes.join(' '),
+                    dataElement: args.name,
+                },
+                [
+                    (function () {
+                        if (args.title) {
+                            return div({ class: 'panel-heading' }, [
+                                div({ class: 'panel-title', dataElement: 'title' }, [
+                                    args.title,
+                                    icon,
+                                ]),
+                            ]);
+                        }
+                    })(),
+                    div(
+                        {
+                            class: 'panel-body',
+                            dataElement: 'body',
+                        },
+                        [args.body]
+                    ),
+                ]
+            );
         }
 
         function makeCollapsiblePanel(title, elementName) {
@@ -615,20 +716,25 @@ define([
 
             return div({ class: 'panel panel-default' }, [
                 div({ class: 'panel-heading' }, [
-                    div({ class: 'panel-title' }, span({
-                            class: 'collapsed',
-                            dataToggle: 'collapse',
-                            dataTarget: '#' + collapseId,
-                            style: { cursor: 'pointer' }
-                        },
-                        title
-                    ))
+                    div(
+                        { class: 'panel-title' },
+                        span(
+                            {
+                                class: 'collapsed',
+                                dataToggle: 'collapse',
+                                dataTarget: '#' + collapseId,
+                                style: { cursor: 'pointer' },
+                            },
+                            title
+                        )
+                    ),
                 ]),
-                div({ id: collapseId, class: 'panel-collapse collapse' },
+                div(
+                    { id: collapseId, class: 'panel-collapse collapse' },
                     div({ class: 'panel-body' }, [
-                        div({ dataElement: elementName, class: 'container-fluid' })
+                        div({ dataElement: elementName, class: 'container-fluid' }),
                     ])
-                )
+                ),
             ]);
         }
 
@@ -656,26 +762,34 @@ define([
             if (args.icon) {
                 icon = [' ', buildIcon(args.icon)];
             }
-            return div({
-                id: panelId,
-                class: classes.join(' '),
-                dataElement: args.name
-            }, [
-                div({ class: 'panel-heading' }, [
-                    div({ class: 'panel-title' }, span({
-                        dataElement: 'title',
-                        class: toggleClasses.join(' '),
-                        dataToggle: 'collapse',
-                        dataTarget: '#' + collapseId,
-                        style: { cursor: 'pointer' }
-                    }, [args.title, icon]))
-                ]),
-                div({ id: collapseId, class: collapseClasses.join(' ') },
-                    div({ class: 'panel-body', dataElement: 'body' }, [
-                        args.body
-                    ])
-                )
-            ]);
+            return div(
+                {
+                    id: panelId,
+                    class: classes.join(' '),
+                    dataElement: args.name,
+                },
+                [
+                    div({ class: 'panel-heading' }, [
+                        div(
+                            { class: 'panel-title' },
+                            span(
+                                {
+                                    dataElement: 'title',
+                                    class: toggleClasses.join(' '),
+                                    dataToggle: 'collapse',
+                                    dataTarget: '#' + collapseId,
+                                    style: { cursor: 'pointer' },
+                                },
+                                [args.title, icon]
+                            )
+                        ),
+                    ]),
+                    div(
+                        { id: collapseId, class: collapseClasses.join(' ') },
+                        div({ class: 'panel-body', dataElement: 'body' }, [args.body])
+                    ),
+                ]
+            );
         }
 
         function collapsePanel(path) {
@@ -701,13 +815,19 @@ define([
         }
 
         function buildButtonToolbar(arg) {
-            return div({
-                class: ['btn-toolbar'].concat(arg.classes || [])
-            }, [
-                div({
-                    class: 'btn-group'
-                }, arg.buttons)
-            ]);
+            return div(
+                {
+                    class: ['btn-toolbar'].concat(arg.classes || []),
+                },
+                [
+                    div(
+                        {
+                            class: 'btn-group',
+                        },
+                        arg.buttons
+                    ),
+                ]
+            );
         }
 
         function createNode(markup) {
@@ -833,13 +953,14 @@ define([
             return span({
                 dataElement: 'icon',
                 style: style,
-                class: klasses.join(' ')
+                class: klasses.join(' '),
             });
         }
 
         function reverse(arr) {
             var newArray = [],
-                i, len = arr.length;
+                i,
+                len = arr.length;
             for (i = len - 1; i >= 0; i -= 1) {
                 newArray.push(arr[i]);
             }
@@ -853,10 +974,12 @@ define([
             }
 
             // Update tab label
-            var tabTab = findNode([{
-                element: 'tab',
-                name: tabName
-            }]);
+            var tabTab = findNode([
+                {
+                    element: 'tab',
+                    name: tabName,
+                },
+            ]);
 
             // Update tab label
             if (updates.label) {
@@ -888,9 +1011,7 @@ define([
 
             // switch to tab
             if (updates.select) {
-
             }
-
         }
 
         function buildTabs(arg) {
@@ -898,9 +1019,10 @@ define([
                 tabsAttribs = {},
                 tabClasses = ['nav', 'nav-tabs'],
                 tabStyle = {},
-                activeIndex, tabTabs,
+                activeIndex,
+                tabTabs,
                 tabs = arg.tabs.filter(function (tab) {
-                    return (tab ? true : false);
+                    return tab ? true : false;
                 }),
                 events = [],
                 content,
@@ -932,7 +1054,7 @@ define([
                             id: tab.tabId,
                             jquery: true,
                             type: event.type + '.bs.tab',
-                            handler: event.handler
+                            handler: event.handler,
                         });
                     });
                 }
@@ -950,10 +1072,11 @@ define([
                 }
             }
             content = div(tabsAttribs, [
-                ul({ class: tabClasses.join(' '), role: 'tablist' },
+                ul(
+                    { class: tabClasses.join(' '), role: 'tablist' },
                     tabTabs.map(function (tab, index) {
                         var tabAttribs = {
-                                role: 'presentation'
+                                role: 'presentation',
                             },
                             linkAttribs = {
                                 href: '#' + tab.panelId,
@@ -962,9 +1085,10 @@ define([
                                 role: 'tab',
                                 id: tab.tabId,
                                 dataPanelId: tab.panelId,
-                                dataToggle: 'tab'
+                                dataToggle: 'tab',
                             },
-                            icon, label = span({ dataElement: 'label' }, tab.label);
+                            icon,
+                            label = span({ dataElement: 'label' }, tab.label);
                         if (tab.icon) {
                             icon = buildIcon({ name: tab.icon });
                         } else {
@@ -981,14 +1105,16 @@ define([
                         }
                         tabAttribs.style = tabStyle;
                         return li(tabAttribs, a(linkAttribs, [icon, label].join(' ')));
-                    })),
-                div({ class: 'tab-content' },
+                    })
+                ),
+                div(
+                    { class: 'tab-content' },
                     tabs.map(function (tab, index) {
                         var attribs = {
                             role: 'tabpanel',
                             class: panelClasses.join(' '),
                             id: tab.panelId,
-                            style: arg.style || {}
+                            style: arg.style || {},
                         };
                         if (tab.name) {
                             attribs.dataName = tab.name;
@@ -997,12 +1123,13 @@ define([
                             attribs.class += ' active';
                         }
                         return div(attribs, tab.content);
-                    }))
+                    })
+                ),
             ]);
             return {
                 content: content,
                 events: events,
-                map: tabMap
+                map: tabMap,
             };
         }
 
@@ -1016,12 +1143,15 @@ define([
                 function render(obj) {
                     var specText = JSON.stringify(obj, false, indent),
                         fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    return pre({
-                        class: 'prettyprint lang-json',
-                        style: {
-                            fontSize: String(fontSize * 100) + '%'
-                        }
-                    }, fixedText);
+                    return pre(
+                        {
+                            class: 'prettyprint lang-json',
+                            style: {
+                                fontSize: String(fontSize * 100) + '%',
+                            },
+                        },
+                        fixedText
+                    );
                 }
 
                 function start(arg) {
@@ -1037,21 +1167,27 @@ define([
 
                 return {
                     start: start,
-                    stop: stop
+                    stop: stop,
                 };
             }
             return {
                 make: function (config) {
                     return factory(config);
-                }
+                },
             };
         }
 
         function buildGridTable(arg) {
             return arg.table.map(function (row) {
-                return div({ class: 'row', style: arg.row.style }, arg.cols.map(function (col, index) {
-                    return div({ class: 'col-md-' + String(col.width), style: col.style }, row[index]);
-                }));
+                return div(
+                    { class: 'row', style: arg.row.style },
+                    arg.cols.map(function (col, index) {
+                        return div(
+                            { class: 'col-md-' + String(col.width), style: col.style },
+                            row[index]
+                        );
+                    })
+                );
             });
         }
 
@@ -1083,18 +1219,18 @@ define([
                             var attribValue = value[attribKey];
                             // console.log('attrib?', attribKey, attribValue);
                             switch (attribKey) {
-                            case 'hidden':
-                                // console.log('HIDING?', attribKey, node, attribValue);
-                                if (attribValue) {
-                                    node.classList.add('hidden');
-                                } else {
-                                    node.classList.remove('hidden');
-                                }
-                                break;
-                            case 'style':
-                                Object.keys(attribValue).forEach(function (key) {
-                                    node.style[camelToHyphen(key)] = attribValue[key];
-                                });
+                                case 'hidden':
+                                    // console.log('HIDING?', attribKey, node, attribValue);
+                                    if (attribValue) {
+                                        node.classList.add('hidden');
+                                    } else {
+                                        node.classList.remove('hidden');
+                                    }
+                                    break;
+                                case 'style':
+                                    Object.keys(attribValue).forEach(function (key) {
+                                        node.style[camelToHyphen(key)] = attribValue[key];
+                                    });
                             }
                         });
                     } else {
@@ -1106,33 +1242,36 @@ define([
 
         function buildPresentableJson(data) {
             switch (typeof data) {
-            case 'string':
-                return data;
-            case 'number':
-                return String(data);
-            case 'boolean':
-                return String(data);
-            case 'object':
-                if (data === null) {
-                    return 'NULL';
-                }
-                if (data instanceof Array) {
-                    return table({ class: 'table table-striped' },
-                        data.map(function (datum, index) {
-                            return tr([
-                                th(String(index)),
-                                td(buildPresentableJson(datum))
-                            ]);
-                        }).join('\n')
+                case 'string':
+                    return data;
+                case 'number':
+                    return String(data);
+                case 'boolean':
+                    return String(data);
+                case 'object':
+                    if (data === null) {
+                        return 'NULL';
+                    }
+                    if (data instanceof Array) {
+                        return table(
+                            { class: 'table table-striped' },
+                            data
+                                .map(function (datum, index) {
+                                    return tr([th(String(index)), td(buildPresentableJson(datum))]);
+                                })
+                                .join('\n')
+                        );
+                    }
+                    return table(
+                        { class: 'table table-striped' },
+                        Object.keys(data)
+                            .map(function (key) {
+                                return tr([th(key), td(buildPresentableJson(data[key]))]);
+                            })
+                            .join('\n')
                     );
-                }
-                return table({ class: 'table table-striped' },
-                    Object.keys(data).map(function (key) {
-                        return tr([th(key), td(buildPresentableJson(data[key]))]);
-                    }).join('\n')
-                );
-            default:
-                return 'Not representable: ' + (typeof data);
+                default:
+                    return 'Not representable: ' + typeof data;
             }
         }
 
@@ -1141,31 +1280,29 @@ define([
                 buildPanel({
                     title: 'Message',
                     body: err.message,
-                    classes: [
-                        'kb-panel-light'
-                    ]
+                    classes: ['kb-panel-light'],
                 }),
-                err.fileName ? buildPanel({
-                    title: 'File',
-                    body: err.fileName,
-                    classes: [
-                        'kb-panel-light'
-                    ]
-                }) : '',
-                err.lineNumber ? buildPanel({
-                    title: 'Line number',
-                    body: err.lineNumber,
-                    classes: [
-                        'kb-panel-light'
-                    ]
-                }) : '',
-                err.columnNumber ? buildPanel({
-                    title: 'Column number',
-                    body: err.columnNumber,
-                    classes: [
-                        'kb-panel-light'
-                    ]
-                }) : ''
+                err.fileName
+                    ? buildPanel({
+                          title: 'File',
+                          body: err.fileName,
+                          classes: ['kb-panel-light'],
+                      })
+                    : '',
+                err.lineNumber
+                    ? buildPanel({
+                          title: 'Line number',
+                          body: err.lineNumber,
+                          classes: ['kb-panel-light'],
+                      })
+                    : '',
+                err.columnNumber
+                    ? buildPanel({
+                          title: 'Column number',
+                          body: err.columnNumber,
+                          classes: ['kb-panel-light'],
+                      })
+                    : '',
             ]);
         }
 
@@ -1180,92 +1317,75 @@ define([
 
         function buildErrorStacktrace(err) {
             return div([
-                ol({}, err.stack.split(/\n/)
-                    .map(function (item) {
-                        return li({
-                            style: {
-                                marginTop: '6px'
-                            }
-                        }, [
-                            htmlEncode(item)
-                        ]);
-                    }))
+                ol(
+                    {},
+                    err.stack.split(/\n/).map(function (item) {
+                        return li(
+                            {
+                                style: {
+                                    marginTop: '6px',
+                                },
+                            },
+                            [htmlEncode(item)]
+                        );
+                    })
+                ),
             ]);
         }
 
         function buildErrorTabs(arg) {
             return html.makeTabs({
-                tabs: [{
+                tabs: [
+                    {
                         label: 'Summary',
                         name: 'summary',
-                        content: div({
-                            style: {
-                                marginTop: '10px'
-                            }
-                        }, [
-                            arg.preamble,
-                            p(arg.error.message)
-                        ])
+                        content: div(
+                            {
+                                style: {
+                                    marginTop: '10px',
+                                },
+                            },
+                            [arg.preamble, p(arg.error.message)]
+                        ),
                     },
                     {
                         label: 'Details',
                         name: 'details',
-                        content: div({
-                            style: {
-                                marginTop: '10px'
-                            }
-                        }, [
-                            buildError(arg.error)
-                        ])
+                        content: div(
+                            {
+                                style: {
+                                    marginTop: '10px',
+                                },
+                            },
+                            [buildError(arg.error)]
+                        ),
                     },
                     {
                         label: 'Stack Trace',
                         name: 'stacktrace',
-                        content: div({
-                            style: {
-                                marginTop: '10px'
-                            }
-                        }, [
-                            buildPanel({
-                                title: 'Javascript Stack Trace',
-                                body: buildErrorStacktrace(arg.error),
-                                classes: [
-                                    'kb-panel-light'
-                                ]
-                            })
-                        ])
-                    }
-                ]
+                        content: div(
+                            {
+                                style: {
+                                    marginTop: '10px',
+                                },
+                            },
+                            [
+                                buildPanel({
+                                    title: 'Javascript Stack Trace',
+                                    body: buildErrorStacktrace(arg.error),
+                                    classes: ['kb-panel-light'],
+                                }),
+                            ]
+                        ),
+                    },
+                ],
             });
-        }
-
-        function loading(arg) {
-            var prompt;
-            if (arg.message) {
-                prompt = arg.message + '... &nbsp &nbsp';
-            }
-            var sizeClass;
-            if (arg.size) {
-                sizeClass = 'fa-' + arg.size;
-            }
-            var style = {};
-            if (arg.color) {
-                style.color = arg.color;
-            }
-            return span([
-                prompt,
-                i({
-                    class: ['fa', 'fa-spinner', 'fa-pulse', sizeClass, 'fa-fw', 'margin-bottom'].join(' '),
-                    style: style
-                })
-            ]);
         }
 
         return Object.freeze({
             getElement: getElement,
             getElements: getElements,
             getButton: getButton,
-            // setButton: setButton,
             getNode: getNode,
             makeButton: makeButton,
             buildButton: buildButton,
@@ -1309,7 +1429,7 @@ define([
             buildPresentableJson: buildPresentableJson,
             buildErrorTabs: buildErrorTabs,
             htmlEncode: htmlEncode,
-            loading: loading
+            loading: loading,
         });
     }
 
@@ -1321,6 +1441,7 @@ define([
         na: na,
         showInfoDialog: showInfoDialog,
         showDialog: showDialog,
-        showErrorDialog: showErrorDialog
+        showErrorDialog: showErrorDialog,
+        loading: loading,
     };
 });

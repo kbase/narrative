@@ -28,27 +28,6 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], function (
             return workspaceClient.get_object_info_new({objects: reportLookupParam});
         }
 
-        function renderLayout() {
-            const events = Events.make();
-
-            const content = ui.buildCollapsiblePanel({
-                title: 'Report',
-                name: 'report-section-toggle',
-                hidden: false,
-                type: 'default',
-                classes: ['kb-panel-container'],
-                body: div,
-            });
-
-            const reportContainer = div({ dataElement: 'report-widget' }, [content]);
-            const reportPanel = div({ dataElement: 'html-panel' }, [reportContainer]);
-
-            return {
-                content: reportPanel,
-                events: events,
-            };
-        }
-
         /**
          *
          * @param {object} arg

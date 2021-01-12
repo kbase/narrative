@@ -25,16 +25,16 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
         });
 
         it('Should be created', () => {
-            let viewer = JobLogViewer.make();
+            const viewer = JobLogViewer.make();
             expect(viewer.start).toEqual(jasmine.any(Function));
             expect(viewer.stop).toEqual(jasmine.any(Function));
             expect(viewer.detach).toEqual(jasmine.any(Function));
         });
 
         it('Should fail to start without a node', () => {
-            let viewer = JobLogViewer.make();
+            const viewer = JobLogViewer.make();
             const jobId = 'fakejob';
-            let arg = {
+            const arg = {
                 jobId: jobId,
             };
             expect(() => {
@@ -43,8 +43,8 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
         });
 
         it('Should fail to start without a jobId', () => {
-            let viewer = JobLogViewer.make();
-            let arg = {
+            const viewer = JobLogViewer.make();
+            const arg = {
                 node: hostNode,
             };
             expect(() => {
@@ -53,8 +53,8 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
         });
 
         it('Should start as expected with inputs, and be stoppable and detachable', () => {
-            let viewer = JobLogViewer.make();
-            let arg = {
+            const viewer = JobLogViewer.make();
+            const arg = {
                 node: hostNode,
                 jobId: 'someFakeJob',
             };
@@ -65,7 +65,7 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
         });
 
         it('Should send a bus messages requesting job status information at startup', (done) => {
-            let viewer = JobLogViewer.make();
+            const viewer = JobLogViewer.make();
             const jobId = 'testJob1';
             const arg = {
                 node: hostNode,
@@ -80,7 +80,7 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
         });
 
         it('Should react to job status messages', (done) => {
-            let viewer = JobLogViewer.make();
+            const viewer = JobLogViewer.make();
             const jobId = 'testJobStatusMsg';
             const arg = {
                 node: hostNode,
@@ -111,14 +111,14 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
         });
 
         it('Should start with all buttons disabled', () => {
-            let viewer = JobLogViewer.make();
+            const viewer = JobLogViewer.make();
             const jobId = 'testBtnState';
             const arg = {
                 node: hostNode,
                 jobId: jobId,
             };
             viewer.start(arg);
-            let btns = hostNode.querySelectorAll('div[data-element="header"] button');
+            const btns = hostNode.querySelectorAll('div[data-element="header"] button');
             btns.forEach((btn) => {
                 expect(btn.classList.contains('disabled')).toBeTruthy();
             });
@@ -126,7 +126,7 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
         });
 
         it('Should render on job-logs messages immediately on startup', (done) => {
-            let viewer = JobLogViewer.make();
+            const viewer = JobLogViewer.make();
             const jobId = 'testJobLogMsgResp';
             const arg = {
                 node: hostNode,
@@ -192,10 +192,14 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
                     const panel = hostNode.querySelector('[data-element="log-panel"]');
                     expect(panel.children.length).toEqual(2);
                     const logLine = panel.children[0];
-                    expect(logLine.classList.toLocaleString()).toContain(`${cssBaseClass}__line_container`);
+                    expect(logLine.classList.toLocaleString()).toContain(
+                        `${cssBaseClass}__line_container`
+                    );
                     expect(logLine.innerHTML).toContain('line 1 - log');
                     const errorLine = panel.children[1];
-                    expect(errorLine.classList.toLocaleString()).toContain(`${cssBaseClass}__line_container--error`);
+                    expect(errorLine.classList.toLocaleString()).toContain(
+                        `${cssBaseClass}__line_container--error`
+                    );
                     expect(errorLine.innerHTML).toContain('line 2 - error');
                     viewer.detach();
                     done();
@@ -205,7 +209,7 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
         });
 
         it('Should render a queued message for queued jobs', (done) => {
-            let viewer = JobLogViewer.make();
+            const viewer = JobLogViewer.make();
             const jobId = 'testJobQueued',
                 arg = {
                     node: hostNode,

@@ -4,20 +4,20 @@ define([
     'jquery',
     'common/props',
     'json!../../../../../data/testAppObj.json',
-], function (Jupyter, jobStatusTab, $, Props, TestAppObject) {
+], (Jupyter, jobStatusTab, $, Props, TestAppObject) => {
     'use strict';
 
-    describe('The job status tab module', function () {
-        it('loads', function () {
+    describe('The job status tab module', () => {
+        it('loads', () => {
             expect(jobStatusTab).not.toBe(null);
         });
 
-        it('has expected functions', function () {
+        it('has expected functions', () => {
             expect(jobStatusTab.make).toBeDefined();
         });
     });
 
-    describe('The job status tab instance', function () {
+    describe('The job status tab instance', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
@@ -30,7 +30,7 @@ define([
 
         let node, mockJobStatusTab;
 
-        beforeEach(function () {
+        beforeEach(() => {
             node = document.createElement('div');
 
             const model = Props.make({
@@ -39,30 +39,26 @@ define([
             });
 
             mockJobStatusTab = jobStatusTab.make({
-                model: model
+                model: model,
             });
         });
 
-        it('has a make function that returns an object', function () {
+        it('has a make function that returns an object', () => {
             expect(mockJobStatusTab).not.toBe(null);
         });
 
-        it('has the required methods', function () {
+        it('has the required methods', () => {
             expect(mockJobStatusTab.start).toBeDefined();
             expect(mockJobStatusTab.stop).toBeDefined();
         });
 
         it('should start and the job status and job log panel', () => {
-            mockJobStatusTab.start({node: node});
+            mockJobStatusTab.start({ node: node });
 
-            const contents = [
-                'jobs',
-                'job-log-section-toggle'
-            ];
+            const contents = ['jobs', 'job-log-section-toggle'];
             contents.forEach((item) => {
                 expect(node.innerHTML).toContain(item);
             });
-
         });
     });
 });

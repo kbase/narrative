@@ -4,20 +4,20 @@ define([
     'jquery',
     'common/props',
     'json!../../../../../data/testAppObj.json',
-], function (Jupyter, jobStateListRow, $, Props, TestAppObject) {
+], (Jupyter, jobStateListRow, $, Props, TestAppObject) => {
     'use strict';
 
-    describe('The job status tab module', function () {
-        it('loads', function () {
+    describe('The job status tab module', () => {
+        it('loads', () => {
             expect(jobStateListRow).not.toBe(null);
         });
 
-        it('has expected functions', function () {
+        it('has expected functions', () => {
             expect(jobStateListRow.make).toBeDefined();
         });
     });
 
-    describe('The job status tab instance', function () {
+    describe('The job status tab instance', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
@@ -28,9 +28,9 @@ define([
             Jupyter.narrative = null;
         });
 
-        let node, model,mockJobStateListRow;
+        let node, model, mockJobStateListRow;
 
-        beforeEach(function () {
+        beforeEach(() => {
             node = document.createElement('tr');
 
             model = Props.make({
@@ -39,15 +39,15 @@ define([
             });
 
             mockJobStateListRow = jobStateListRow.make({
-                model: model
+                model: model,
             });
         });
 
-        it('has a make function that returns an object', function () {
+        it('has a make function that returns an object', () => {
             expect(mockJobStateListRow).not.toBe(null);
         });
 
-        it('has the required methods', function () {
+        it('has the required methods', () => {
             expect(mockJobStateListRow.start).toBeDefined();
             expect(mockJobStateListRow.stop).toBeDefined();
         });
@@ -56,7 +56,7 @@ define([
             mockJobStateListRow.start({
                 node: node,
                 initialState: 'created',
-                name: 'testObject'
+                name: 'testObject',
             });
 
             const classContents = [
@@ -65,7 +65,7 @@ define([
                 '.selected_log',
                 '.kb-job-status__icon',
                 '.kb-job-status__icon--created',
-                '.kb-job-status__cell_action--created'
+                '.kb-job-status__cell_action--created',
             ];
             classContents.forEach((item) => {
                 expect($(node).find(item).length).toBeGreaterThan(0);

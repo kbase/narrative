@@ -20,7 +20,7 @@ define([
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     './bulkImportCellStates',
     'common/cellComponents/tabs/results/resultsTab',
-    './testAppObj.js',
+    './testAppObj',
 ], (
     Uuid,
     Config,
@@ -52,7 +52,7 @@ define([
         cssCellType = 'kb-bulk-import';
 
     // TODO: remove once jobs are hooked up to cell
-    let testDataModel = Props.make({
+    const testDataModel = Props.make({
         data: TestAppObj,
         onUpdate: () => {},
     });
@@ -160,8 +160,8 @@ define([
         let kbaseNode = null,  // the DOM element used as the container for everything in this cell
             cellBus = null,
             ui = null,
-            tabWidget = null, // the widget currently in view
-            workspaceClient = getWorkspaceClient(),
+            tabWidget = null; // the widget currently in view
+        const workspaceClient = getWorkspaceClient(),
             tabSet = {
                 selected: 'configure',
                 tabs: {
@@ -229,25 +229,25 @@ define([
                         label: 'Offline',
                     },
                 },
-            },
+            };
             // widgets this cell owns
-            cellTabs,
+        let cellTabs,
             controlPanel,
             fileTypePanel;
         if (options.initialize) {
             initialize(options.specs);
         }
-        let model = Props.make({
+        const model = Props.make({
             data: Utils.getMeta(cell, 'bulkImportCell'),
             onUpdate: function(props) {
                 Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
             }
-        });
-        let state = getInitialState();
+        }),
+            state = getInitialState(),
+            specs = {},
+            rawSpecs = model.getItem('app.specs');
 
-        let specs = {};
-        let rawSpecs = model.getItem('app.specs');
-        Object.keys(rawSpecs).forEach((appId) => {
+            Object.keys(rawSpecs).forEach((appId) => {
             specs[appId] = Spec.make({
                 appSpec: rawSpecs[appId]
             });
@@ -427,7 +427,7 @@ define([
             setupDomNode();
 
             // finalize by updating the lastLoaded attribute, which triggers a toolbar re-render
-            let meta = cell.metadata;
+            const meta = cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             cell.metadata = meta;
             render().then(() => {
@@ -516,7 +516,7 @@ define([
                 workspaceClient: workspaceClient
             });
 
-            let node = document.createElement('div');
+            const node = document.createElement('div');
             ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
 
             return tabWidget.start({
@@ -576,12 +576,12 @@ define([
             if (!currentState || !(currentState in States)) {
                 currentState = defaultState;
             }
-            let state = States[currentState].ui;
-            state.tab.selected = model.getItem('state.selectedTab', 'configure');
+            const uiState = States[currentState].ui;
+            uiState.tab.selected = model.getItem('state.selectedTab', 'configure');
             // TODO: inspect the parameters to see which file types are
             // completely filled out, maybe store that in the metadata
             // on completion?
-            let fileTypeState = {
+            const fileTypeState = {
                 completed: {}
             };
             for (const fileType of Object.keys(typesToFiles)) {
@@ -589,8 +589,8 @@ define([
             }
             fileTypeState.selected = Object.keys(typesToFiles)[0];
 
-            state.fileType = fileTypeState;
-            return state;
+            uiState.fileType = fileTypeState;
+            return uiState;
         }
 
         /**
@@ -635,9 +635,9 @@ define([
          * @param {DOMElement} node - the node that should be used for the left column
          */
         function buildFileTypePanel(node) {
-            let fileTypesDisplay = {};
-            let fileTypeMapping = {};
-            let uploaders = Config.get('uploaders');
+            const fileTypesDisplay = {},
+                fileTypeMapping = {},
+                uploaders = Config.get('uploaders');
             for (const uploader of uploaders.dropdown_order) {
                 fileTypeMapping[uploader.id] = uploader.name;
             }

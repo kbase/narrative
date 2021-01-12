@@ -10,7 +10,7 @@ e.g. https://kbase-jira.atlassian.net/browse/DATAUP-X
 
 # Testing Instructions
 * Details for how to test the PR:
-- [ ] Tests pass in locally and in GitHub Actions
+- [ ] Tests pass locally and in GitHub Actions
 - [ ] Changes available by spinning up a local narrative and navigating to _X_ to see _Y_
 
 # Dev Checklist:

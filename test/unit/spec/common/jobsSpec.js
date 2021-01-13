@@ -1,6 +1,8 @@
 define([
     'common/jobs'
 ], (Jobs) => {
+    'use strict';
+
     describe('Test Jobs module', () => {
         it('Should be loaded with the right functions', () => {
             expect(Jobs).toBeDefined();

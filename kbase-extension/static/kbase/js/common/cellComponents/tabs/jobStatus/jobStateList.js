@@ -4,14 +4,8 @@ define([
     'common/ui',
     'kb_common/html',
     './jobStateListRow',
-    'jquery-dataTables'
-], function(
-    $,
-    Promise,
-    UI,
-    html,
-    JobStateListRow
-) {
+    'jquery-dataTables',
+], ($, Promise, UI, html, JobStateListRow) => {
     'use strict';
 
     const t = html.tag,
@@ -24,72 +18,83 @@ define([
         cssBaseClass = 'kb-job-status';
 
     function createTable() {
-        return table({
-            class: `${cssBaseClass}__table container`
-        }, [
-            thead({
-                class: `${cssBaseClass}__table_head panel-heading`,
+        return table(
+            {
+                class: `${cssBaseClass}__table container`,
             },
             [
-                tr({
-                    class: `${cssBaseClass}__table_head_row`,
-                },
-                [
-                    th({
-                        class: `${cssBaseClass}__table_head_cell col-sm-5`
-                    }, [
-                        'Object'
-                    ]),
-                    th({
-                        class: `${cssBaseClass}__table_head_cell col-sm-2`
-                    }, [
-                        'Status'
-                    ]),
-                    th({
-                        class: `${cssBaseClass}__table_head_cell col-sm-5`
-                    }, [
-                        'CANCEL/RETRY ALL',
-                        i({
-                            class: `fa fa-caret-down kb-pointer ${cssBaseClass}__icon`
-                        }),
-                    ]),
-                ])
-            ]),
-            tbody({
-                class: `${cssBaseClass}__table_body`,
-            })
-
-        ]);
+                thead(
+                    {
+                        class: `${cssBaseClass}__table_head panel-heading`,
+                    },
+                    [
+                        tr(
+                            {
+                                class: `${cssBaseClass}__table_head_row`,
+                            },
+                            [
+                                th(
+                                    {
+                                        class: `${cssBaseClass}__table_head_cell col-sm-5`,
+                                    },
+                                    ['Object']
+                                ),
+                                th(
+                                    {
+                                        class: `${cssBaseClass}__table_head_cell col-sm-2`,
+                                    },
+                                    ['Status']
+                                ),
+                                th(
+                                    {
+                                        class: `${cssBaseClass}__table_head_cell col-sm-5`,
+                                    },
+                                    [
+                                        'CANCEL/RETRY ALL',
+                                        i({
+                                            class: `fa fa-caret-down kb-pointer ${cssBaseClass}__icon`,
+                                        }),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+                tbody({
+                    class: `${cssBaseClass}__table_body`,
+                }),
+            ]
+        );
     }
 
     // Convert the table to a datatable object to get functionality
-    function renderTable(container, numberOfChildJobs){
-        container.find('table').dataTable({
+    function renderTable($container, numberOfChildJobs) {
+        $container.find('table').dataTable({
             searching: false,
             pageLength: 50,
             lengthChange: false,
-            columnDefs: [{
-                targets: 2,
-                orderable: false
-
-            }],
-            fnDrawCallback: function() {
+            columnDefs: [
+                {
+                    targets: 2,
+                    orderable: false,
+                },
+            ],
+            fnDrawCallback: function () {
                 // Hide pagination controls if length is less than 51
                 if (numberOfChildJobs < 51) {
                     $('.dataTables_paginate').hide();
                 }
-            }
+            },
         });
-
     }
 
     function factory(config) {
-        let model = config.model,
-            widgets = {},
-            container;
+        const { model } = config,
+            widgets = {};
+        let $container;
 
         function createTableRow(id) {
-            let jobTable = container.find('tbody')[0],
+            const jobTable = $container.find('tbody')[0],
                 newRow = document.createElement('tr');
             newRow.setAttribute('data-element-job-id', id);
             newRow.classList.add('job-info');
@@ -99,20 +104,20 @@ define([
         }
 
         function start(arg) {
-            return Promise.try(function() {
-                container = $(arg.node);
-                container.addClass([`${cssBaseClass}__container`, 'batch-mode-list']);
-                UI.make({ node: container });
-                container.append($(createTable()));
+            return Promise.try(() => {
+                $container = $(arg.node);
+                $container.addClass([`${cssBaseClass}__container`, 'batch-mode-list']);
+                UI.make({ node: $container });
+                $container.append($(createTable()));
 
-                let numberOfChildJobs = arg.childJobs.length;
+                const numberOfChildJobs = arg.childJobs.length;
 
                 return Promise.try(() => {
                     arg.childJobs.forEach((childJob, index) => {
                         createJobStateWidget(index, childJob.job_id, childJob.status);
                     });
                 }).then(() => {
-                    renderTable(container, numberOfChildJobs);
+                    renderTable($container, numberOfChildJobs);
                 });
             });
         }
@@ -131,7 +136,7 @@ define([
         function createJobStateWidget(jobIndex, jobId, initialState) {
             return Promise.try(() => {
                 widgets[jobIndex] = JobStateListRow.make({
-                    model: model
+                    model: model,
                 });
 
                 widgets[jobIndex].start({
@@ -144,22 +149,19 @@ define([
             }).catch((err) => {
                 throw new Error('Unable to create job state widget: ', err);
             });
-
         }
 
-        function stop() {
-        }
+        function stop() {}
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
-
 });

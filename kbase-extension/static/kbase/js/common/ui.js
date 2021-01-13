@@ -8,7 +8,7 @@ define([
     'google-code-prettify/prettify',
     'css!google-code-prettify/prettify.css',
     'bootstrap',
-], function ($, Promise, html, Jupyter, Runtime, PR) {
+], ($, Promise, html, Jupyter, Runtime, PR) => {
     'use strict';
     const t = html.tag,
         div = t('div'),
@@ -31,8 +31,17 @@ define([
         return span({ style: { fontStyle: 'italic', color: 'orange' } }, 'NA');
     }
 
+    function htmlEncode(str) {
+        return str
+            .replace(/&/, '&amp;')
+            .replace(/'/, '&#039;')
+            .replace(/"/, '&quot;')
+            .replace(/</, '&lt;')
+            .replace(/>/, '&gt;');
+    }
+
     function renderInfoDialog(title, content, okLabel, type) {
-        var extraClass = '';
+        let extraClass = '';
         if (type) {
             extraClass = ' bg-' + type;
         }
@@ -69,12 +78,10 @@ define([
     }
 
     function showInfoDialog(arg) {
-        var dialog = renderInfoDialog(arg.title, arg.body, arg.okLabel || 'OK'),
+        const dialog = renderInfoDialog(arg.title, arg.body, arg.okLabel || 'OK'),
             dialogId = html.genId(),
-            confirmNode = document.createElement('div'),
-            kbaseNode,
-            modalNode,
-            modalDialogNode;
+            confirmNode = document.createElement('div');
+        let kbaseNode, modalNode;
 
         confirmNode.id = dialogId;
         confirmNode.innerHTML = dialog;
@@ -97,16 +104,14 @@ define([
 
         modalNode.appendChild(confirmNode);
 
-        modalDialogNode = modalNode.querySelector('.modal');
+        const modalDialogNode = modalNode.querySelector('.modal');
         $(modalDialogNode).modal('show');
-        return new Promise(function (resolve) {
-            modalDialogNode
-                .querySelector('[data-element="ok"]')
-                .addEventListener('click', function () {
-                    confirmNode.parentElement.removeChild(confirmNode);
-                    resolve(false);
-                });
-            modalDialogNode.addEventListener('hide.bs.modal', function () {
+        return new Promise((resolve) => {
+            modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', () => {
+                confirmNode.parentElement.removeChild(confirmNode);
+                resolve(false);
+            });
+            modalDialogNode.addEventListener('hide.bs.modal', () => {
                 resolve(false);
             });
         });
@@ -128,14 +133,11 @@ define([
     }
 
     function showErrorDialog(arg) {
-        var body = buildError(arg.error);
-
-        var dialog = renderInfoDialog(arg.title, body, 'OK', 'danger'),
+        const body = buildError(arg.error),
+            dialog = renderInfoDialog(arg.title, body, 'OK', 'danger'),
             dialogId = html.genId(),
-            confirmNode = document.createElement('div'),
-            kbaseNode,
-            modalNode,
-            modalDialogNode;
+            confirmNode = document.createElement('div');
+        let kbaseNode, modalNode;
 
         confirmNode.id = dialogId;
         confirmNode.innerHTML = dialog;
@@ -158,23 +160,21 @@ define([
 
         modalNode.appendChild(confirmNode);
 
-        modalDialogNode = modalNode.querySelector('.modal');
+        const modalDialogNode = modalNode.querySelector('.modal');
         $(modalDialogNode).modal('show');
-        return new Promise(function (resolve) {
-            modalDialogNode
-                .querySelector('[data-element="ok"]')
-                .addEventListener('click', function () {
-                    confirmNode.parentElement.removeChild(confirmNode);
-                    resolve(false);
-                });
-            modalDialogNode.addEventListener('hide.bs.modal', function () {
+        return new Promise((resolve) => {
+            modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', () => {
+                confirmNode.parentElement.removeChild(confirmNode);
+                resolve(false);
+            });
+            modalDialogNode.addEventListener('hide.bs.modal', () => {
                 resolve(false);
             });
         });
     }
 
     function renderDialog(title, content, cancelLabel, buttons, options) {
-        var style = {};
+        const style = {};
         if (options && options.width) {
             style.width = options.width;
         }
@@ -197,7 +197,7 @@ define([
                     div(
                         { class: 'modal-footer' },
                         buttons
-                            .map(function (btn) {
+                            .map((btn) => {
                                 return button(
                                     {
                                         type: 'button',
@@ -226,7 +226,7 @@ define([
 
     function showDialog(args) {
         args.buttons = args.buttons || [];
-        var dialog = renderDialog(
+        const dialog = renderDialog(
                 args.title,
                 args.body,
                 args.cancelLabel || 'Cancel',
@@ -234,10 +234,8 @@ define([
                 args.options
             ),
             dialogId = html.genId(),
-            confirmNode = document.createElement('div'),
-            kbaseNode,
-            modalNode,
-            modalDialogNode;
+            confirmNode = document.createElement('div');
+        let kbaseNode, modalNode;
 
         confirmNode.id = dialogId;
         confirmNode.innerHTML = dialog;
@@ -260,23 +258,23 @@ define([
 
         modalNode.appendChild(confirmNode);
 
-        modalDialogNode = modalNode.querySelector('.modal');
+        const modalDialogNode = modalNode.querySelector('.modal');
         $(modalDialogNode).modal('show');
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
             modalDialogNode
                 .querySelector('[data-element="cancel"]')
-                .addEventListener('click', function (e) {
+                .addEventListener('click', () => {
                     confirmNode.parentElement.removeChild(confirmNode);
                     resolve({
                         action: 'cancel',
                     });
                 });
-            args.buttons.forEach(function (btn) {
+            args.buttons.forEach((btn) => {
                 modalDialogNode
                     .querySelector('[data-element="' + btn.action + '"]')
-                    .addEventListener('click', function (e) {
+                    .addEventListener('click', (e) => {
                         try {
-                            var result = btn.handler(e);
+                            const result = btn.handler(e);
                             if (result) {
                                 $(modalDialogNode).modal('hide');
                                 confirmNode.parentElement.removeChild(confirmNode);
@@ -291,7 +289,7 @@ define([
                     });
             });
 
-            modalDialogNode.addEventListener('hide.bs.modal', function (e) {
+            modalDialogNode.addEventListener('hide.bs.modal', () => {
                 resolve({
                     action: 'cancel',
                 });
@@ -316,7 +314,7 @@ define([
         if (arg.size) {
             sizeClass = 'fa-' + arg.size;
         }
-        let style = {};
+        const style = {};
         if (arg.color) {
             style.color = arg.color;
         }
@@ -332,7 +330,7 @@ define([
     }
 
     function factory(config) {
-        var container = config.node,
+        const container = config.node,
             bus = config.bus,
             runtime = Runtime.make();
 
@@ -346,8 +344,8 @@ define([
             if (names.length === 0) {
                 return container;
             }
-            var selector = names
-                .map(function (name) {
+            const selector = names
+                .map((name) => {
                     return '[data-element="' + name + '"]';
                 })
                 .join(' ');
@@ -363,8 +361,8 @@ define([
             if (typeof names === 'string') {
                 names = names.split('.');
             }
-            var selector = names
-                .map(function (name) {
+            const selector = names
+                .map((name) => {
                     return '[data-element="' + name + '"]';
                 })
                 .join(' ');
@@ -378,7 +376,7 @@ define([
                 // TODO: support a path of elements up to the button.
                 throw new Error('Currently only a single string supported to get a button');
             }
-            var selector = '[data-button="' + name + '"]',
+            const selector = '[data-button="' + name + '"]',
                 buttonNode = container.querySelector(selector);
 
             if (!buttonNode) {
@@ -398,8 +396,8 @@ define([
             if (typeof names === 'string') {
                 names = [names];
             }
-            var selector = names
-                .map(function (dataSelector) {
+            const selector = names
+                .map((dataSelector) => {
                     return '[data-' + dataSelector.type + '="' + dataSelector.name + '"]';
                 })
                 .join(' ');
@@ -414,11 +412,11 @@ define([
          * concatenated
          */
         function findNode(nodePath) {
-            var selector = nodePath
-                .map(function (pathElement) {
+            const selector = nodePath
+                .map((pathElement) => {
                     return Object.keys(pathElement)
-                        .map(function (dataKey) {
-                            var dataValue = pathElement[dataKey];
+                        .map((dataKey) => {
+                            const dataValue = pathElement[dataKey];
                             return '[data-' + dataKey + '="' + dataValue + '"]';
                         })
                         .join('');
@@ -428,14 +426,14 @@ define([
             return container.querySelector(selector);
         }
 
-        function confirmDialog(prompt, yesLabel, noLabel) {
+        function confirmDialog(prompt) {
             return window.confirm(prompt);
         }
 
         function renderConfirmDialog(arg) {
-            var yesLabel = arg.yesLabel || 'Yes',
+            const yesLabel = arg.yesLabel || 'Yes',
                 noLabel = arg.noLabel || 'No';
-            var dialog = div({ class: 'modal fade', tabindex: '-1', role: 'dialog' }, [
+            const dialog = div({ class: 'modal fade', tabindex: '-1', role: 'dialog' }, [
                 div({ class: 'modal-dialog' }, [
                     div({ class: 'modal-content' }, [
                         div({ class: 'modal-header' }, [
@@ -473,12 +471,10 @@ define([
         }
 
         function showConfirmDialog(arg) {
-            var dialog = renderConfirmDialog(arg),
+            const dialog = renderConfirmDialog(arg),
                 dialogId = html.genId(),
-                confirmNode = document.createElement('div'),
-                kbaseNode,
-                modalNode,
-                modalDialogNode;
+                confirmNode = document.createElement('div');
+            let kbaseNode, modalNode;
 
             confirmNode.id = dialogId;
             confirmNode.innerHTML = dialog;
@@ -501,18 +497,18 @@ define([
 
             modalNode.appendChild(confirmNode);
 
-            modalDialogNode = modalNode.querySelector('.modal');
+            const modalDialogNode = modalNode.querySelector('.modal');
 
             $(modalDialogNode).modal('show');
-            return new Promise(function (resolve) {
+            return new Promise((resolve) => {
                 modalDialogNode
                     .querySelector('[data-element="yes"]')
-                    .addEventListener('click', function () {
+                    .addEventListener('click', () => {
                         $(modalDialogNode).modal('hide');
                         confirmNode.parentElement.removeChild(confirmNode);
                         resolve(true);
                     });
-                modalDialogNode.addEventListener('keyup', function (e) {
+                modalDialogNode.addEventListener('keyup', (e) => {
                     if (e.keyCode === 13) {
                         $(modalDialogNode).modal('hide');
                         confirmNode.parentElement.removeChild(confirmNode);
@@ -521,11 +517,11 @@ define([
                 });
                 modalDialogNode
                     .querySelector('[data-element="no"]')
-                    .addEventListener('click', function () {
+                    .addEventListener('click', () => {
                         confirmNode.parentElement.removeChild(confirmNode);
                         resolve(false);
                     });
-                modalDialogNode.addEventListener('hide.bs.modal', function () {
+                modalDialogNode.addEventListener('hide.bs.modal', () => {
                     resolve(false);
                 });
             });
@@ -552,7 +548,7 @@ define([
         }
 
         function makeButton(label, name, options) {
-            var klass = options.type || 'default',
+            const klass = options.type || 'default',
                 events = options.events;
             return button(
                 {
@@ -566,12 +562,11 @@ define([
         }
 
         function buildButton(arg) {
-            var klass = arg.type || 'default',
-                buttonClasses = ['btn', 'btn-' + klass],
+            const klass = arg.type || 'default',
                 events = arg.events,
-                icon,
-                title = arg.title || arg.tip || arg.label,
-                attribs;
+                title = arg.title || arg.tip || arg.label;
+            let buttonClasses = ['btn', 'btn-' + klass],
+                icon;
 
             if (arg.icon) {
                 if (!arg.icon.classes) {
@@ -591,7 +586,7 @@ define([
                 arg.event = {};
             }
 
-            attribs = {
+            const attribs = {
                 type: 'button',
                 class: buttonClasses.join(' '),
                 title: title,
@@ -601,7 +596,7 @@ define([
             };
 
             if (arg.features) {
-                arg.features.forEach(function (feature) {
+                arg.features.forEach((feature) => {
                     attribs['data-feature-' + feature] = true;
                 });
             }
@@ -613,17 +608,17 @@ define([
         }
 
         function enableButton(name) {
-            var button = getButton(name);
-            button.classList.remove('hidden');
-            button.classList.remove('disabled');
-            button.removeAttribute('disabled');
+            const _button = getButton(name);
+            _button.classList.remove('hidden');
+            _button.classList.remove('disabled');
+            _button.removeAttribute('disabled');
         }
 
         function disableButton(name) {
-            var button = getButton(name);
-            button.classList.remove('hidden');
-            button.classList.add('disabled');
-            button.setAttribute('disabled', true);
+            const _button = getButton(name);
+            _button.classList.remove('hidden');
+            _button.classList.add('disabled');
+            _button.setAttribute('disabled', true);
         }
 
         function activateButton(name) {
@@ -647,7 +642,7 @@ define([
         }
 
         function hideElement(name) {
-            var el = getElement(name);
+            const el = getElement(name);
             if (!el) {
                 return;
             }
@@ -655,7 +650,7 @@ define([
         }
 
         function showElement(name) {
-            var el = getElement(name);
+            const el = getElement(name);
             if (!el) {
                 return;
             }
@@ -672,8 +667,8 @@ define([
         }
 
         function buildPanel(args) {
-            var type = args.type || 'primary',
-                classes = ['panel', 'panel-' + type],
+            const type = args.type || 'primary';
+            let classes = ['panel', 'panel-' + type],
                 icon;
             if (args.hidden) {
                 classes.push('hidden');
@@ -712,7 +707,7 @@ define([
         }
 
         function makeCollapsiblePanel(title, elementName) {
-            var collapseId = html.genId();
+            const collapseId = html.genId();
 
             return div({ class: 'panel panel-default' }, [
                 div({ class: 'panel-heading' }, [
@@ -739,13 +734,13 @@ define([
         }
 
         function buildCollapsiblePanel(args) {
-            var panelId = args.id || html.genId(),
+            const panelId = args.id || html.genId(),
                 collapseId = html.genId(),
                 type = args.type || 'primary',
-                classes = ['panel', 'panel-' + type],
                 collapseClasses = ['panel-collapse collapse'],
-                toggleClasses = [],
-                icon;
+                toggleClasses = [];
+            let icon,
+                classes = ['panel', 'panel-' + type];
 
             if (args.hidden) {
                 classes.push('hidden');
@@ -793,22 +788,22 @@ define([
         }
 
         function collapsePanel(path) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (!node) {
                 return;
             }
-            var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
+            const collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
             $(collapseTarget).collapse('hide');
         }
 
         function expandPanel(path) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (!node) {
                 return;
             }
-            var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
+            const collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
             $(collapseTarget).collapse('show');
@@ -831,37 +826,37 @@ define([
         }
 
         function createNode(markup) {
-            var node = document.createElement('div');
+            const node = document.createElement('div');
             node.innerHTML = markup;
             return node.firstChild;
         }
 
         function setContent(path, content) {
-            var node = getElements(path);
-            node.forEach(function (node) {
-                node.innerHTML = content;
+            const node = getElements(path);
+            node.forEach((_node) => {
+                _node.innerHTML = content;
             });
         }
 
         function setText(path, text) {
-            var node = getElements(path);
-            node.forEach(function (node) {
-                node.innerText = text;
+            const node = getElements(path);
+            node.forEach((_node) => {
+                _node.innerText = text;
             });
         }
 
         function enableTooltips(path) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (!node) {
                 return;
             }
-            qsa(node, '[data-toggle="tooltip"]').forEach(function (node) {
-                $(node).tooltip();
+            qsa(node, '[data-toggle="tooltip"]').forEach((_node) => {
+                $(_node).tooltip();
             });
         }
 
         function addClass(path, klass) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (node) {
                 if (!node.classList.contains(klass)) {
                     node.classList.add(klass);
@@ -870,19 +865,18 @@ define([
         }
 
         function removeClass(path, klass) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (node) {
                 node.classList.remove(klass);
             }
         }
 
         function getUserSetting(settingKey, defaultValue) {
-            var settings = Jupyter.notebook.metadata.kbase.userSettings,
-                setting;
+            const settings = Jupyter.notebook.metadata.kbase.userSettings;
             if (!settings) {
                 return defaultValue;
             }
-            setting = settings[settingKey];
+            const setting = settings[settingKey];
             if (setting === undefined) {
                 return defaultValue;
             }
@@ -890,37 +884,43 @@ define([
         }
 
         function ifAdvanced(fun) {
-            var isAdvanced = getUserSetting('advanced', runtime.config('features.advanced'));
-            if (isAdvanced) {
+            const userIsAdvanced = getUserSetting('advanced', runtime.config('features.advanced'));
+            if (userIsAdvanced) {
                 return fun();
             }
         }
 
         function ifDeveloper(fun) {
-            var isDeveloper = getUserSetting('developer', runtime.config('features.developer'));
-            if (isDeveloper) {
+            const userIsDeveloper = getUserSetting(
+                'developer',
+                runtime.config('features.developer')
+            );
+            if (userIsDeveloper) {
                 return fun();
             }
         }
 
         function isAdvanced() {
-            var isAdvanced = getUserSetting('advanced', runtime.config('features.advanced'));
-            if (isAdvanced) {
+            const userIsAdvanced = getUserSetting('advanced', runtime.config('features.advanced'));
+            if (userIsAdvanced) {
                 return true;
             }
             return false;
         }
 
-        function isDeveloper(fun) {
-            var isDeveloper = getUserSetting('developer', runtime.config('features.developer'));
-            if (isDeveloper) {
+        function isDeveloper() {
+            const userIsDeveloper = getUserSetting(
+                'developer',
+                runtime.config('features.developer')
+            );
+            if (userIsDeveloper) {
                 return true;
             }
             return false;
         }
 
         function buildIcon(arg) {
-            var klasses = ['fa'],
+            const klasses = ['fa'],
                 style = { verticalAlign: 'middle' };
             klasses.push('fa-' + arg.name);
             if (arg.rotate) {
@@ -937,12 +937,12 @@ define([
                 }
             }
             if (arg.classes) {
-                arg.classes.forEach(function (klass) {
+                arg.classes.forEach((klass) => {
                     klasses.push(klass);
                 });
             }
             if (arg.style) {
-                Object.keys(arg.style).forEach(function (key) {
+                Object.keys(arg.style).forEach((key) => {
                     style[key] = arg.style[key];
                 });
             }
@@ -958,23 +958,22 @@ define([
         }
 
         function reverse(arr) {
-            var newArray = [],
-                i,
+            const newArray = [],
                 len = arr.length;
-            for (i = len - 1; i >= 0; i -= 1) {
-                newArray.push(arr[i]);
+            for (let x = len - 1; x >= 0; x -= 1) {
+                newArray.push(arr[x]);
             }
             return newArray;
         }
 
         function updateTab(tabId, tabName, updates) {
-            var node = document.getElementById(tabId);
+            const node = document.getElementById(tabId);
             if (!node) {
                 return;
             }
 
             // Update tab label
-            var tabTab = findNode([
+            const tabTab = findNode([
                 {
                     element: 'tab',
                     name: tabName,
@@ -983,7 +982,7 @@ define([
 
             // Update tab label
             if (updates.label) {
-                var labelNode = tabTab.querySelector('[data-element="label"]');
+                const labelNode = tabTab.querySelector('[data-element="label"]');
                 if (labelNode) {
                     labelNode.innerHTML = updates.label;
                 }
@@ -991,13 +990,13 @@ define([
 
             // update the tab icon
             if (updates.icon) {
-                var iconNode = tabTab.querySelector('[data-element="icon"]');
+                const iconNode = tabTab.querySelector('[data-element="icon"]');
                 if (iconNode) {
                     // remove any icons.
-                    var classList = iconNode.classList;
-                    for (var i = classList.length; classList > 0; classList -= 1) {
-                        if (classList.item[i].substring(0, 3) === 'fa-') {
-                            classList.remove(classList.item[i]);
+                    let classList = iconNode.classList;
+                    for (let x = classList.length; classList > 0; classList -= 1) {
+                        if (classList.item[x].substring(0, 3) === 'fa-') {
+                            classList.remove(classList.item[x]);
                         }
                     }
                     iconNode.classList.add('fa-' + updates.icon);
@@ -1010,25 +1009,24 @@ define([
             }
 
             // switch to tab
-            if (updates.select) {
-            }
+            // if (updates.select) {
+            // }
         }
 
         function buildTabs(arg) {
-            var tabsId = arg.id,
+            const tabsId = arg.id,
                 tabsAttribs = {},
                 tabClasses = ['nav', 'nav-tabs'],
                 tabStyle = {},
-                activeIndex,
-                tabTabs,
-                tabs = arg.tabs.filter(function (tab) {
+                tabs = arg.tabs.filter((tab) => {
                     return tab ? true : false;
                 }),
                 events = [],
-                content,
-                selectInitialTab = false,
                 tabMap = {},
                 panelClasses = ['tab-pane'];
+            let activeIndex,
+                tabTabs,
+                selectInitialTab = false;
 
             if (arg.fade) {
                 panelClasses.push('fade');
@@ -1042,14 +1040,14 @@ define([
                 tabsAttribs.id = tabsId;
             }
 
-            tabs.forEach(function (tab) {
+            tabs.forEach((tab) => {
                 tab.panelId = html.genId();
                 tab.tabId = html.genId();
                 if (tab.name) {
                     tabMap[tab.name] = tab.tabId;
                 }
                 if (tab.events) {
-                    tab.events.forEach(function (event) {
+                    tab.events.forEach((event) => {
                         events.push({
                             id: tab.tabId,
                             jquery: true,
@@ -1071,11 +1069,11 @@ define([
                     activeIndex = arg.initialTab;
                 }
             }
-            content = div(tabsAttribs, [
+            const content = div(tabsAttribs, [
                 ul(
                     { class: tabClasses.join(' '), role: 'tablist' },
-                    tabTabs.map(function (tab, index) {
-                        var tabAttribs = {
+                    tabTabs.map((tab, index) => {
+                        const tabAttribs = {
                                 role: 'presentation',
                             },
                             linkAttribs = {
@@ -1087,8 +1085,8 @@ define([
                                 dataPanelId: tab.panelId,
                                 dataToggle: 'tab',
                             },
-                            icon,
                             label = span({ dataElement: 'label' }, tab.label);
+                        let icon;
                         if (tab.icon) {
                             icon = buildIcon({ name: tab.icon });
                         } else {
@@ -1109,8 +1107,8 @@ define([
                 ),
                 div(
                     { class: 'tab-content' },
-                    tabs.map(function (tab, index) {
-                        var attribs = {
+                    tabs.map((tab, index) => {
+                        const attribs = {
                             role: 'tabpanel',
                             class: panelClasses.join(' '),
                             id: tab.panelId,
@@ -1135,13 +1133,13 @@ define([
 
         // TURN THIS INTO A MINI WIDGET!
         function jsonBlockWidget() {
-            function factory(cfg) {
-                var config = cfg || {},
-                    indent = config.indent || 3,
-                    fontSize = config.fontSize || 0.8;
+            function jsonBlockWidgetFactory(cfg) {
+                const jsonBlockWidgetConfig = cfg || {},
+                    indent = jsonBlockWidgetConfig.indent || 3,
+                    fontSize = jsonBlockWidgetConfig.fontSize || 0.8;
 
                 function render(obj) {
-                    var specText = JSON.stringify(obj, false, indent),
+                    const specText = JSON.stringify(obj, false, indent),
                         fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     return pre(
                         {
@@ -1155,7 +1153,7 @@ define([
                 }
 
                 function start(arg) {
-                    return Promise.try(function () {
+                    return Promise.try(() => {
                         arg.node.innerHTML = render(arg.obj);
                         PR.prettyPrint(null, arg.node);
                     });
@@ -1171,17 +1169,17 @@ define([
                 };
             }
             return {
-                make: function (config) {
-                    return factory(config);
+                make: function (args) {
+                    return jsonBlockWidgetFactory(args);
                 },
             };
         }
 
         function buildGridTable(arg) {
-            return arg.table.map(function (row) {
+            return arg.table.map((row) => {
                 return div(
                     { class: 'row', style: arg.row.style },
-                    arg.cols.map(function (col, index) {
+                    arg.cols.map((col, index) => {
                         return div(
                             { class: 'col-md-' + String(col.width), style: col.style },
                             row[index]
@@ -1192,7 +1190,7 @@ define([
         }
 
         function camelToHyphen(s) {
-            return s.replace(/[A-Z]/g, function (m) {
+            return s.replace(/[A-Z]/g, (m) => {
                 return '-' + m.toLowerCase();
             });
         }
@@ -1201,7 +1199,7 @@ define([
             if (!path) {
                 path = [];
             }
-            var node = getElement(path);
+            const node = getElement(path);
             if (!node) {
                 return;
             }
@@ -1212,11 +1210,11 @@ define([
             } else if (viewModel === null) {
                 setContent(path, '');
             } else {
-                Object.keys(viewModel).forEach(function (key) {
-                    var value = viewModel[key];
+                Object.keys(viewModel).forEach((key) => {
+                    const value = viewModel[key];
                     if (key === '_attrib') {
-                        Object.keys(value).forEach(function (attribKey) {
-                            var attribValue = value[attribKey];
+                        Object.keys(value).forEach((attribKey) => {
+                            const attribValue = value[attribKey];
                             // console.log('attrib?', attribKey, attribValue);
                             switch (attribKey) {
                                 case 'hidden':
@@ -1228,8 +1226,8 @@ define([
                                     }
                                     break;
                                 case 'style':
-                                    Object.keys(attribValue).forEach(function (key) {
-                                        node.style[camelToHyphen(key)] = attribValue[key];
+                                    Object.keys(attribValue).forEach((_key) => {
+                                        node.style[camelToHyphen(_key)] = attribValue[_key];
                                     });
                             }
                         });
@@ -1256,7 +1254,7 @@ define([
                         return table(
                             { class: 'table table-striped' },
                             data
-                                .map(function (datum, index) {
+                                .map((datum, index) => {
                                     return tr([th(String(index)), td(buildPresentableJson(datum))]);
                                 })
                                 .join('\n')
@@ -1265,7 +1263,7 @@ define([
                     return table(
                         { class: 'table table-striped' },
                         Object.keys(data)
-                            .map(function (key) {
+                            .map((key) => {
                                 return tr([th(key), td(buildPresentableJson(data[key]))]);
                             })
                             .join('\n')
@@ -1275,7 +1273,7 @@ define([
             }
         }
 
-        function buildError(err) {
+        function _buildError(err) {
             return div({}, [
                 buildPanel({
                     title: 'Message',
@@ -1306,20 +1304,11 @@ define([
             ]);
         }
 
-        function htmlEncode(str) {
-            return str
-                .replace(/&/, '&amp;')
-                .replace(/'/, '&#039;')
-                .replace(/"/, '&quot;')
-                .replace(/</, '&lt;')
-                .replace(/>/, '&gt;');
-        }
-
         function buildErrorStacktrace(err) {
             return div([
                 ol(
                     {},
-                    err.stack.split(/\n/).map(function (item) {
+                    err.stack.split(/\n/).map((item) => {
                         return li(
                             {
                                 style: {
@@ -1357,7 +1346,7 @@ define([
                                     marginTop: '10px',
                                 },
                             },
-                            [buildError(arg.error)]
+                            [_buildError(arg.error)]
                         ),
                     },
                     {
@@ -1443,5 +1432,6 @@ define([
         showDialog: showDialog,
         showErrorDialog: showErrorDialog,
         loading: loading,
+        htmlEncode: htmlEncode,
     };
 });

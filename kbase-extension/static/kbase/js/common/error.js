@@ -1,12 +1,5 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
-define([
-    'common/ui',
-    'kb_common/html',
-], function (UI, html) {
+define(['common/ui', 'kb_common/html'], (UI, html) => {
     'use strict';
-
 
     function KBError(arg) {
         this.type = arg.type;
@@ -34,7 +27,7 @@ define([
                 type: 'js-error',
                 name: err.name,
                 message: err.message,
-                original: err
+                original: err,
             });
         }
 
@@ -43,7 +36,7 @@ define([
                 return new KBError({
                     type: 'string-error',
                     message: err,
-                    original: err
+                    original: err,
                 });
             case 'object':
                 if (err.error) {
@@ -53,21 +46,21 @@ define([
                         name: err.error.name,
                         message: err.error.message,
                         detail: err.error.error,
-                        original: err
+                        original: err,
                     });
                 } else if (err.message) {
                     return new KBError({
                         type: 'js-error',
                         name: err.name,
                         message: err.message,
-                        original: err
+                        original: err,
                     });
                 } else {
                     return new KBError({
                         type: 'unknown-error',
                         name: 'Unknown',
                         message: 'An unknown error occurred',
-                        original: err
+                        original: err,
                     });
                 }
             default:
@@ -75,7 +68,7 @@ define([
                     type: 'unknown-error',
                     name: 'Unknown',
                     message: 'An unknown error occurred',
-                    original: err
+                    original: err,
                 });
         }
     }
@@ -93,35 +86,36 @@ define([
      * @param {Error} error the error object to be rendered in the error tab.
      */
     function reportCellError(title, preamble, error) {
-        const tag = html.tag,
+        const { tag } = html,
             div = tag('div'),
             p = tag('p');
 
         const ui = UI.make({
-            node: document.body
+            node: document.body,
         });
         ui.showInfoDialog({
             title: 'Error',
-            body: div({
-                class: 'error-dialog__body'
-            }, [
-                ui.buildPanel({
-                    title: title,
-                    type: 'danger',
-                    body: ui.buildErrorTabs({
-                        preamble: p(preamble),
-                        error: error
-                    })
-                })
-            ])
+            body: div(
+                {
+                    class: 'error-dialog__body',
+                },
+                [
+                    ui.buildPanel({
+                        title: title,
+                        type: 'danger',
+                        body: ui.buildErrorTabs({
+                            preamble: p(preamble),
+                            error: error,
+                        }),
+                    }),
+                ]
+            ),
         });
-
     }
-
 
     return {
         grokError: grokError,
         KBError: KBError,
-        reportCellError: reportCellError
+        reportCellError: reportCellError,
     };
 });

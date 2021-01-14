@@ -150,8 +150,10 @@ async function selectCell(container, cellIndex, title) {
 
     // Make sure not selected.
     // We do this by inspecting the border.
-    const borderStyle = await cell.getCSSProperty('border');
-    expect(borderStyle.value).toEqual(testData.common.unselectedBorder);
+    await browser.waitUntil(async () => {
+        const borderStyle = await cell.getCSSProperty('border');
+        return borderStyle.value === testData.common.unselectedBorder;
+    });
 
     // Click on title area to select cell.
     const titleArea = await cell.$('.title-container');
@@ -170,8 +172,11 @@ async function selectCellWithBody(container, cellIndex, body) {
 
     // Make sure not selected.
     // We do this by inspecting the border.
-    const borderStyle = await cell.getCSSProperty('border');
-    expect(borderStyle.value).toEqual(testData.common.unselectedBorder);
+    await browser.waitUntil(async () => {
+        const borderStyle = await cell.getCSSProperty('border');
+        return borderStyle.value === testData.common.unselectedBorder;
+    });
+
 
     // Click on title area to select cell.
     const bodyArea = await cell.$('.text_cell_render.rendered_html');

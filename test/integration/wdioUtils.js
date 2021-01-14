@@ -93,13 +93,15 @@ async function openNarrative(workspaceId) {
 
     await clickWhenReady(loginButton);
 
-    const userLabelElement = await $('[data-element="user-label"]');
+    const realnameElement = await $('[data-element="realname"]');
+    const usernameElement = await $('[data-element="username"]');
     await browser.waitUntil(async () => {
-        const userLabelText = await userLabelElement.getText();
-        return (userLabelText && userLabelText.length > 0);
+        const text = await realnameElement.getText();
+        return (text && text.length > 0);
     });
-    const text = await userLabelElement.getText();
-    console.warn(`Logged in as user ${text}`);
+    const realname = await realnameElement.getText();
+    const username = await usernameElement.getText();
+    console.warn(`Signed in as user "${realname}" (${username})`);
     await loginButton.click();
     
     // Ensure narrative notebook has displayed
@@ -110,6 +112,7 @@ async function openNarrative(workspaceId) {
         timeout,
         timeoutMsg: `Timeout after waiting ${timeout}ms for narrative to appear`
     });
+    return container;
 }
 
 module.exports = {

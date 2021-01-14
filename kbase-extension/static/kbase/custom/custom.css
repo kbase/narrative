@@ -315,13 +315,29 @@ div#notebook {
   color: #ccc;
 }
 
+.cell.unselected .btn-default:hover {
+    color: #000;
+  }
+
 .cell.unselected .kb-cell-toolbar .title-container {
   opacity: 0.5;
 }
 
-.cell.unselected .kb-cell-toolbar .buttons-container {
-  opacity: 0.2;
+.btn.btn-default.kb-btn-expander.-minimized {
+  color: rgba(255,137,0,1);
 }
+
+.cell.unselected .kb-btn-expander.-minimized {
+  color: rgba(255,137,0, 0.5);
+}
+
+.cell.unselected .kb-btn-expander.-minimized:hover {
+    color: rgba(255,137,0, 1);
+  }
+
+/* .cell.unselected .kb-cell-toolbar .buttons-container {
+  opacity: 0.2;
+} */
 
 .kb-btn-icon {
   display: inline-block;

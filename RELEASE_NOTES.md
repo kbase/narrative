@@ -6,6 +6,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 ### Version NEXT
 - SCT-2778 - convert data slideout, public tab, refseq data source to use searchapi2/rpc api rather than searchapi2/legacy.
 - enhance integration testing support to add service, host, browser, screen size support
+- SCT-2914 / PUBLIC-1493 - fix up/down cell movement behavior for unselected cells
 
 ### Version 4.3.1
 - Fixed problem where code cells could forget their toggled state after saving.

@@ -22,7 +22,7 @@ define([
 ) {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         a = t('a'),
         button = t('button'),
@@ -50,11 +50,13 @@ define([
             readOnly = Jupyter.narrative.readonly;
 
         function doMoveCellUp() {
-            Jupyter.notebook.move_cell_up();
+            const cellIndex = Jupyter.notebook.find_cell_index(cell);
+            Jupyter.notebook.move_cell_up(cellIndex);
         }
 
         function doMoveCellDown() {
-            Jupyter.notebook.move_cell_down();
+            const cellIndex = Jupyter.notebook.find_cell_index(cell);
+            Jupyter.notebook.move_cell_down(cellIndex);
         }
 
         function doDeleteCell() {
@@ -199,10 +201,8 @@ define([
         }
 
         function renderOptions(cell, events) {
-            var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
-                toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
-                dropdownId = html.genId(),
-                menuItems = [];
+            const dropdownId = html.genId();
+            const menuItems = [];
 
             if (cell.cell_type === 'code') {
                 menuItems.push({
@@ -403,12 +403,12 @@ define([
                         ])),
 
                         (function () {
-                            var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
+                            const toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
                                 toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
-                                color = (toggleMinMax === 'maximized' ? '#000' : 'rgba(255,137,0,1)');
+                                classModifier = (toggleMinMax === 'maximized' ? '-maximized' : '-minimized');
                             return button({
                                 type: 'button',
-                                class: 'btn btn-default btn-xs',
+                                class: `btn btn-default btn-xs kb-btn-expander ${classModifier}`,
                                 dataToggle: 'tooltip',
                                 dataPlacement: 'left',
                                 title: true,
@@ -418,10 +418,7 @@ define([
                                 id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
                             }, [
                                 span({
-                                    class: 'fa fa-' + toggleIcon + '-square-o fa-lg',
-                                    style: {
-                                        color: color
-                                    }
+                                    class: 'fa fa-' + toggleIcon + '-square-o fa-lg'
                                 })
                             ]);
                         }())

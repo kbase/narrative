@@ -82,10 +82,10 @@ define([
                             div({style: 'display:inline-block; width: 34px; vertical-align: top;'}, [
                                 span({class: 'fa fa-user', style: 'font-size: 150%; margin-right: 10px;'})
                             ]),
-                            div({style: 'display: inline-block', 'data-element': 'user-label'}, [
-                                displayName,
+                            div({style: 'display: inline-block'}, [
+                                span({'data-element': 'realname'}, displayName),
                                 br(),
-                                i({}, userName)
+                                i({'data-element': 'username'}, userName)
                             ])
                         ])
                     ]),

@@ -1,4 +1,4 @@
-/*global describe, it, browser, expect, afterEach, beforeEach*/
+/*global describe, it, browser, afterEach, beforeEach*/
 /* eslint {strict: ['error', 'global']} */
 'use strict';
 
@@ -122,7 +122,6 @@ async function waitForCell(notebookContainer, cellIndex){
         const cell = await notebookContainer.$(`.cell:nth-child(${cellIndex})`);
         return cell;
     });
-    // return await panel.$$('[role="table"][data-test-id="result"] > div > [role="row"]');
 }
 
 async function waitForCellWithTitle(container, cellIndex, title) {

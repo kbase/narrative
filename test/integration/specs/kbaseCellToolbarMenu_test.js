@@ -2,13 +2,21 @@
 /* eslint {strict: ['error', 'global']} */
 'use strict';
 
-const {login, openNarrative, sendString, clickWhenReady} = require('../wdioUtils.js');
+const {login, openNarrative, clickWhenReady} = require('../wdioUtils.js');
 
 /*
 Notes:
 
-The test narrative has 4 markdown cells, each collapsed. The initial collapsed
-state makes some tests easier, because they all have a title.
+The test narrative has 5 markdown cells. The first cell has summary text, the remaining 4 contain the text "Cell #".
+The first three cells are collapsed, the last two are expanded.
+
+Tests currently cover common cases of cell movement; additional cases can be added, e.g. try to move 
+past the end, or before the beginning, try moving the same cell multiple times, inspect the state
+of all cells after a movement.
+
+This test suite could be expanded to cover all usage of the cell toolbar (kbaseCellToolbarMenu.js), or they
+could be in separate files.
+
 */
 
 const testData = {
@@ -108,8 +116,6 @@ function mergeObjects(listOfObjects) {
     }
     return base;
 }
-
-
 
 async function waitForCell(notebookContainer, cellIndex){
     return await browser.waitUntil(async () => {

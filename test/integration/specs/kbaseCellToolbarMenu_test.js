@@ -27,23 +27,23 @@ const testData = {
     all: {
         TEST_CASE1: {
             cellIndex: 1,
-            title: "Narrative Cell Toolbar Testing"
+            title: 'Narrative Cell Toolbar Testing'
         },
         TEST_CASE2: {
             cellIndex: 2,
-            title: "Cell 1"
+            title: 'Cell 1'
         },
         TEST_CASE3: {
             cellIndex: 3,
-            title: "Cell 2"
+            title: 'Cell 2'
         },
         TEST_CASE4: {
             cellIndex: 3,
-            title: "Cell 2"
+            title: 'Cell 2'
         },
         TEST_CASE5: {
             cellIndex: 4,
-            body: "Cell 3"
+            body: 'Cell 3'
         }
     },
     ci: {
@@ -239,7 +239,7 @@ describe('Test kbaseCellToolbarMenu', () => {
         await waitForCellWithTitle(narrativeContainer, testCase.cellIndex - 1, testCase.title);
     });
 
-     // select cell
+    // select cell
     it('selects a minimized cell', async () => {
         const testCase = testCases.TEST_CASE4;
         await login();

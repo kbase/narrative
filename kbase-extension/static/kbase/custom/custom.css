@@ -25,7 +25,7 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 
 /* disable the standard notebook, bottom spacer */
 
-#notebook > .end_space {
+#notebook>.end_space {
   min-height: 0;
   height: 0;
 }
@@ -195,11 +195,11 @@ div#notebook {
   overflow: visible;
 }
 
-.notebook_app .celltoolbar > .button_container {
+.notebook_app .celltoolbar>.button_container {
   flex: 0 auto;
 }
 
-.notebook_app .celltoolbar > .button_container:nth-child(1) {
+.notebook_app .celltoolbar>.button_container:nth-child(1) {
   flex: auto;
 }
 
@@ -303,7 +303,7 @@ div#notebook {
   color: #d84315;
 }
 
-.cell > .inner_cell > .ctb_hideshow {
+.cell>.inner_cell>.ctb_hideshow {
   display: block;
 }
 
@@ -316,28 +316,24 @@ div#notebook {
 }
 
 .cell.unselected .btn-default:hover {
-    color: #000;
-  }
+  color: #000;
+}
 
 .cell.unselected .kb-cell-toolbar .title-container {
   opacity: 0.5;
 }
 
 .btn.btn-default.kb-btn-expander.-minimized {
-  color: rgba(255,137,0,1);
+  color: rgba(255, 137, 0, 1);
 }
 
 .cell.unselected .kb-btn-expander.-minimized {
-  color: rgba(255,137,0, 0.5);
+  color: rgba(255, 137, 0, 0.5);
 }
 
 .cell.unselected .kb-btn-expander.-minimized:hover {
-    color: rgba(255,137,0, 1);
-  }
-
-/* .cell.unselected .kb-cell-toolbar .buttons-container {
-  opacity: 0.2;
-} */
+  color: rgba(255, 137, 0, 1);
+}
 
 .kb-btn-icon {
   display: inline-block;

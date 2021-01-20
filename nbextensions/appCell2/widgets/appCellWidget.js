@@ -33,7 +33,7 @@ define([
     './tabs/status/logTab',
     './tabs/errorTab',
     'common/cellComponents/tabs/infoTab',
-    './runClock',
+    'common/runClock',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css',
 ], (

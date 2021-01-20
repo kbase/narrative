@@ -1,4 +1,4 @@
-define(['common/ui', 'kb_common/html'], (UI, html) => {
+define(['common/ui', 'common/html'], (UI, html) => {
     'use strict';
 
     function KBError(arg) {

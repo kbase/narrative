@@ -11,7 +11,7 @@ const {login, openNarrative, sendString, clickWhenReady} = require('../wdioUtils
 // Note that narrativetest is not yet set up in narrative-dev/prod.
 const allTestCases = {
     ci: {
-        TEST_CASE1: {
+        TEST_CASE_1: {
             narrativeId: 53983,
             row: 4,
             name: 'Acetobacter ascendens',
@@ -43,7 +43,7 @@ const allTestCases = {
                 }
             ]
         },
-        TEST_CASE2: {
+        TEST_CASE_2: {
             narrativeId: 53983,
             row: 10,
             scrollTo: true,
@@ -76,7 +76,7 @@ const allTestCases = {
                 }
             ]
         },
-        TEST_CASE3: {
+        TEST_CASE_3: {
             narrativeId: 53983,
             row: 1,
             scrollTo: false,
@@ -111,12 +111,12 @@ const allTestCases = {
                 }
             ]
         },
-        TEST_CASE4: {
+        TEST_CASE_4: {
             narrativeId: 53983,
             searchFor: 'foobar',
             foundCount: 'None'
         },
-        TEST_CASE5: {
+        TEST_CASE_5: {
             narrativeId: 53983,
             row: 30,
             scrollTo: true,
@@ -154,7 +154,7 @@ const allTestCases = {
         }
     },
     'narrative-dev':  {
-        TEST_CASE1: {
+        TEST_CASE_1: {
             narrativeId: 78050,
             row: 3,
             name: 'Absiella sp. AM09-45',
@@ -186,7 +186,7 @@ const allTestCases = {
                 }
             ]
         },
-        TEST_CASE2: {
+        TEST_CASE_2: {
             narrativeId: 78050,
             row: 10,
             scrollTo: true,
@@ -219,7 +219,7 @@ const allTestCases = {
                 }
             ]
         },
-        TEST_CASE3: {
+        TEST_CASE_3: {
             narrativeId: 78050,
             row: 1,
             scrollTo: false,
@@ -254,12 +254,12 @@ const allTestCases = {
                 }
             ]
         },
-        TEST_CASE4: {
+        TEST_CASE_4: {
             narrativeId: 78050,
             searchFor: 'foobar',
             foundCount: 'None'
         },
-        TEST_CASE5: {
+        TEST_CASE_5: {
             narrativeId: 78050,
             row: 30,
             scrollTo: true,
@@ -352,6 +352,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     beforeEach(async () => {
         await browser.setTimeout({ 'implicit': 30000 });
         await browser.reloadSession();
+        await login();
     });
 
     afterEach(async () => {
@@ -359,8 +360,8 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, should show default results', async () => {
-        const testCase = testCases.TEST_CASE1;
-        await login();
+        const testCase = testCases.TEST_CASE_1;
+        
         await openNarrative(testCase.narrativeId);
 
         const publicPanel = await openPublicData();
@@ -385,8 +386,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, should show default results, scroll to desired row', async () => {
-        const testCase = testCases.TEST_CASE2;
-        await login();
+        const testCase = testCases.TEST_CASE_2;
         await openNarrative(testCase.narrativeId);
 
         const publicPanel = await openPublicData();
@@ -411,9 +411,8 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, searches for a term, should find an expected row', async () => {
-        const testCase = testCases.TEST_CASE3;
+        const testCase = testCases.TEST_CASE_3;
 
-        await login();
         await openNarrative(testCase.narrativeId);
 
         const publicPanel = await openPublicData();
@@ -452,8 +451,8 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, searches for a term which should not be found', async () => {
-        await login();
-        const testCase = testCases.TEST_CASE4;
+        const testCase = testCases.TEST_CASE_4;
+
         await openNarrative(testCase.narrativeId);
 
         const publicPanel = await openPublicData();
@@ -480,8 +479,8 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, should show default results, scroll to desired row', async () => {
-        const testCase = testCases.TEST_CASE5;
-        await login();
+        const testCase = testCases.TEST_CASE_5;
+
         await openNarrative(testCase.narrativeId);
 
         // Open the data slideout

@@ -25,58 +25,58 @@ const testData = {
         selectedBorder: '1px 1px 1px 5px solid rgb(75, 184, 86)',
     },
     all: {
-        TEST_CASE1: {
+        TEST_CASE_1: {
             cellIndex: 1,
             title: 'Narrative Cell Toolbar Testing'
         },
-        TEST_CASE2: {
+        TEST_CASE_2: {
             cellIndex: 2,
             title: 'Cell 1'
         },
-        TEST_CASE3: {
+        TEST_CASE_3: {
             cellIndex: 3,
             title: 'Cell 2'
         },
-        TEST_CASE4: {
+        TEST_CASE_4: {
             cellIndex: 3,
             title: 'Cell 2'
         },
-        TEST_CASE5: {
+        TEST_CASE_5: {
             cellIndex: 4,
             body: 'Cell 3'
         }
     },
     ci: {
-        TEST_CASE1: {
+        TEST_CASE_1: {
             narrativeId: 58675,
         },
-        TEST_CASE2: {
+        TEST_CASE_2: {
             narrativeId: 58675,
         },
-        TEST_CASE3: {
+        TEST_CASE_3: {
             narrativeId: 58675,
         },
-        TEST_CASE4: {
+        TEST_CASE_4: {
             narrativeId: 58675,
         },
-        TEST_CASE5: {
+        TEST_CASE_5: {
             narrativeId: 58675,
         }
     },
     'narrative-dev': {
-        TEST_CASE1: {
+        TEST_CASE_1: {
             narrativeId: 80970,
         },
-        TEST_CASE2: {
+        TEST_CASE_2: {
             narrativeId: 80970,
         },
-        TEST_CASE3: {
+        TEST_CASE_3: {
             narrativeId: 80970,
         },
-        TEST_CASE4: {
+        TEST_CASE_4: {
             narrativeId: 80970,
         },
-        TEST_CASE5: {
+        TEST_CASE_5: {
             narrativeId: 80970,
         }
     }
@@ -193,6 +193,7 @@ describe('Test kbaseCellToolbarMenu', () => {
     beforeEach(async () => {
         await browser.setTimeout({ 'implicit': 30000 });
         await browser.reloadSession();
+        await login();
     });
 
     afterEach(async () => {
@@ -200,8 +201,7 @@ describe('Test kbaseCellToolbarMenu', () => {
     });
 
     it('moves a minimized selected cell down', async () => {
-        const testCase = testCases.TEST_CASE1;
-        await login();
+        const testCase = testCases.TEST_CASE_1;
         const narrativeContainer = await openNarrative(testCase.narrativeId);
 
         const cell = await waitForCellWithTitle(narrativeContainer, testCase.cellIndex, testCase.title);
@@ -213,8 +213,8 @@ describe('Test kbaseCellToolbarMenu', () => {
     });
 
     it('moves a minimized unselected cell down', async () => {
-        const testCase = testCases.TEST_CASE2;
-        await login();
+        const testCase = testCases.TEST_CASE_2;
+
         const narrativeContainer = await openNarrative(testCase.narrativeId);
 
         const cell = await waitForCellWithTitle(narrativeContainer, testCase.cellIndex, testCase.title);
@@ -226,8 +226,8 @@ describe('Test kbaseCellToolbarMenu', () => {
     });
 
     it('moves a minimized unselected cell up', async () => {
-        const testCase = testCases.TEST_CASE3;
-        await login();
+        const testCase = testCases.TEST_CASE_3;
+
         const narrativeContainer = await openNarrative(testCase.narrativeId);
 
         const cell = await waitForCellWithTitle(narrativeContainer, testCase.cellIndex, testCase.title);
@@ -240,16 +240,16 @@ describe('Test kbaseCellToolbarMenu', () => {
 
     // select cell
     it('selects a minimized cell', async () => {
-        const testCase = testCases.TEST_CASE4;
-        await login();
+        const testCase = testCases.TEST_CASE_4;
+
         const narrativeContainer = await openNarrative(testCase.narrativeId);
         await selectCell(narrativeContainer, testCase.cellIndex, testCase.title);
     });
 
     // select cell and move down
     it('selects a minimized cell and moves it down', async () => {
-        const testCase = testCases.TEST_CASE4;
-        await login();
+        const testCase = testCases.TEST_CASE_4;
+
         const narrativeContainer = await openNarrative(testCase.narrativeId);
         const cell = await selectCell(narrativeContainer, testCase.cellIndex, testCase.title);
         const downButton = await cell.$('[data-test="cell-move-down"]');
@@ -259,8 +259,8 @@ describe('Test kbaseCellToolbarMenu', () => {
 
     // select cell and move up
     it('selects a minimized cell and moves it up', async () => {
-        const testCase = testCases.TEST_CASE4;
-        await login();
+        const testCase = testCases.TEST_CASE_4;
+
         const narrativeContainer = await openNarrative(testCase.narrativeId);
         const cell = await selectCell(narrativeContainer, testCase.cellIndex, testCase.title);
         const upButton = await cell.$('[data-test="cell-move-up"]');
@@ -271,8 +271,8 @@ describe('Test kbaseCellToolbarMenu', () => {
     // Everything above, but cells are expanded.
 
     it('moves an expanded unselected cell down', async () => {
-        const testCase = testCases.TEST_CASE5;
-        await login();
+        const testCase = testCases.TEST_CASE_5;
+
         const narrativeContainer = await openNarrative(testCase.narrativeId);
 
         const cell = await waitForCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);
@@ -284,8 +284,8 @@ describe('Test kbaseCellToolbarMenu', () => {
     });
 
     it('moves an expanded unselected cell up', async () => {
-        const testCase = testCases.TEST_CASE5;
-        await login();
+        const testCase = testCases.TEST_CASE_5;
+
         const narrativeContainer = await openNarrative(testCase.narrativeId);
 
         const cell = await waitForCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);
@@ -297,16 +297,16 @@ describe('Test kbaseCellToolbarMenu', () => {
     });
 
     it('selects an expanded cell', async () => {
-        const testCase = testCases.TEST_CASE5;
-        await login();
+        const testCase = testCases.TEST_CASE_5;
+
         const narrativeContainer = await openNarrative(testCase.narrativeId);
         await selectCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);
     });
 
     // select cell and move down
     it('selects an expanded cell and moves it down', async () => {
-        const testCase = testCases.TEST_CASE5;
-        await login();
+        const testCase = testCases.TEST_CASE_5;
+
         const narrativeContainer = await openNarrative(testCase.narrativeId);
         const cell = await selectCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);
         const downButton = await cell.$('[data-test="cell-move-down"]');
@@ -316,8 +316,8 @@ describe('Test kbaseCellToolbarMenu', () => {
 
     // select cell and move up
     it('selects an expanded cell and moves it up', async () => {
-        const testCase = testCases.TEST_CASE5;
-        await login();
+        const testCase = testCases.TEST_CASE_5;
+
         const narrativeContainer = await openNarrative(testCase.narrativeId);
         const cell = await selectCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);
         const upButton = await cell.$('[data-test="cell-move-up"]');

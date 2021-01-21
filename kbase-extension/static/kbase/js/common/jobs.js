@@ -11,7 +11,12 @@ define([
 
     const t = html.tag,
         span = t('span'),
-        cssBaseClass = 'kb-job-state';
+        cssBaseClass = 'kb-job-state',
+        jobNotFound = [
+            'This job was not found, or may not have been registered with this Narrative.',
+            'You will not be able to inspect the job status or view the job log'
+        ],
+        jobStatusUnknown = ['Determining job state...'];
 
     /**
      * Convert a job state into a short string to present in the UI
@@ -89,36 +94,41 @@ define([
         }, label);
     }
 
-    function jobNotFound() {
-        return [
-            'This job was not found, or may not have been registered with this Narrative.',
-            'You will not be able to inspect the job status or view the job log'
-        ];
-    }
-
-    function jobStatusUnknown() {
-        return ['Determining job state...'];
-    }
 
     /**
+     * createJobStatusLines
+     * Record the current state of the job and its previous states, including time
+     * spent in those states.
+     *
+     * The job execution engine records timestamps for certain job states; in
+     * chronological order, these are:
+     *      - created
+     *      - queued
+     *      - running
+     *      - finished
+     *
+     * Go through job statuses in reverse order to get the most recent state,
+     * and work backwards from that to generate the previous states.
      *
      * @param {object}  jobState       - object representing the current job state
      * @param {boolean} includeHistory - whether to generate a single line status (false), or
      *                               to include the history (e.g. how long the job queued for)
+     *
      * @returns {array} jobLines       - an array of lines representing the current job status
      */
 
     function createJobStatusLines(jobState, includeHistory = false) {
         if (!isValidJobState(jobState)) {
+            // check whether EE2 sent { job_state: 'does_not_exist' }
             if (jobState && jobState.job_state && jobState.job_state === 'does_not_exist') {
-                return jobNotFound();
+                return jobNotFound;
             }
-            return jobStatusUnknown();
+            return jobStatusUnknown;
         }
 
         // valid job state objects should have an 'updated' timestamp.
         if (!jobState.updated) {
-            return jobStatusUnknown();
+            return jobStatusUnknown;
         }
 
         const jobLines = [];
@@ -178,6 +188,17 @@ define([
             }, format.niceDuration(jobState.finished - jobState.running));
     }
 
+    /**
+     * In successful job execution, there should be 'running' and 'finished'
+     * timestamps; the queue time is jobState.running - jobState.created.
+     *
+     * If the job was terminated before it left the queue, there will be no
+     * running timestamp, and we use jobState.finished (the termination timestamp)
+     * to calculate the queue time.
+     *
+     * @param {object} jobState
+     * @returns {string} queueString - HTML text description of queue time
+     */
     function queueTime (jobState) {
         const endTime = jobState.running || jobState.finished;
         if (endTime) {
@@ -215,13 +236,7 @@ define([
     function isValidJobState(jobState) {
         const requiredProperties = ['job_id', 'created'];
         if (jobState !== null && typeof jobState === 'object') {
-            let isValid = true;
-            requiredProperties.forEach((prop) => {
-                if (!(prop in jobState)) {
-                    isValid = false;
-                }
-            });
-            return isValid;
+            return requiredProperties.every(prop => prop in jobState);
         }
         return false;
     }

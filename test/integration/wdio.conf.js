@@ -277,7 +277,7 @@ console.log('OS VERSION      : ' + testParams.OS_VERSION);
 console.log('HEADLESS        : ' + testParams.HEADLESS);
 console.log('TEST SERVICE    : ' + testParams.SERVICE);
 console.log('SERVICE USER    : ' + testParams.SERVICE_USER);
-console.log('SERVICE KEY     : ' + testParams.SERVICE_KEY);
+console.log('SERVICE KEY     : ' + (testParams.SERVICE_KEY ? 'set but hidden' : ''));
 console.log('-----------------');
 
 const wdioConfig = {

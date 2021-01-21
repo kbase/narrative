@@ -2,7 +2,7 @@
 /* eslint {strict: ['error', 'global']} */
 'use strict';
 
-const {login, openNarrative, clickWhenReady} = require('../wdioUtils.js');
+const {login, openNarrative, clickWhenReady, getCaseData} = require('../wdioUtils.js');
 
 /*
 Notes:
@@ -24,7 +24,7 @@ const testData = {
         unselectedBorder: '1px 1px 1px 5px solid rgb(204, 204, 204)',
         selectedBorder: '1px 1px 1px 5px solid rgb(75, 184, 86)',
     },
-    all: {
+    cases: {
         TEST_CASE_1: {
             cellIndex: 1,
             title: 'Narrative Cell Toolbar Testing'
@@ -47,75 +47,36 @@ const testData = {
         }
     },
     ci: {
+        defaults: {
+            narrativeId: 58675
+        },
         TEST_CASE_1: {
-            narrativeId: 58675,
         },
         TEST_CASE_2: {
-            narrativeId: 58675,
         },
         TEST_CASE_3: {
-            narrativeId: 58675,
         },
         TEST_CASE_4: {
-            narrativeId: 58675,
         },
         TEST_CASE_5: {
-            narrativeId: 58675,
         }
     },
     'narrative-dev': {
+        defaults: {
+            narrativeId: 80970
+        },
         TEST_CASE_1: {
-            narrativeId: 80970,
         },
         TEST_CASE_2: {
-            narrativeId: 80970,
         },
         TEST_CASE_3: {
-            narrativeId: 80970,
         },
         TEST_CASE_4: {
-            narrativeId: 80970,
         },
         TEST_CASE_5: {
-            narrativeId: 80970,
         }
     }
 };
-
-const testCases = mergeObjects([testData[browser.config.testParams.ENV], testData.all]);
-
-function mergeObjects(listOfObjects) {
-    const simpleObjectPrototype = Object.getPrototypeOf({});
-
-    function isSimpleObject(obj) {
-        return Object.getPrototypeOf(obj) === simpleObjectPrototype;
-    }
-
-    function merge(obj1, obj2, keyStack) {
-        Object.keys(obj2).forEach(function (key) {
-            const obj1Value = obj1[key];
-            const obj2Value = obj2[key];
-            const obj1Type = typeof obj1Value;
-            // var obj2Type = typeof obj2Value;
-            if (obj1Type === 'undefined') {
-                obj1[key] = obj2[key];
-            } else if (isSimpleObject(obj1Value) && isSimpleObject(obj2Value)) {
-                keyStack.push(key);
-                merge(obj1Value, obj2Value, keyStack);
-                keyStack.pop();
-            } else {
-                console.error('UNMERGABLE', obj1Type, obj1Value);
-                throw new Error('Unmergable at ' + keyStack.join('.') + ':' + key);
-            }
-        });
-    }
-
-    const base = JSON.parse(JSON.stringify(listOfObjects[0]));
-    for (let i = 1; i < listOfObjects.length; i += 1) {
-        merge(base, listOfObjects[i], []);
-    }
-    return base;
-}
 
 async function waitForCell(notebookContainer, cellIndex){
     return await browser.waitUntil(async () => {
@@ -201,7 +162,7 @@ describe('Test kbaseCellToolbarMenu', () => {
     });
 
     it('moves a minimized selected cell down', async () => {
-        const testCase = testCases.TEST_CASE_1;
+        const testCase = getCaseData(testData, 'TEST_CASE_1');
         const narrativeContainer = await openNarrative(testCase.narrativeId);
 
         const cell = await waitForCellWithTitle(narrativeContainer, testCase.cellIndex, testCase.title);
@@ -213,7 +174,7 @@ describe('Test kbaseCellToolbarMenu', () => {
     });
 
     it('moves a minimized unselected cell down', async () => {
-        const testCase = testCases.TEST_CASE_2;
+        const testCase = getCaseData(testData, 'TEST_CASE_2');
 
         const narrativeContainer = await openNarrative(testCase.narrativeId);
 
@@ -226,7 +187,7 @@ describe('Test kbaseCellToolbarMenu', () => {
     });
 
     it('moves a minimized unselected cell up', async () => {
-        const testCase = testCases.TEST_CASE_3;
+        const testCase = getCaseData(testData, 'TEST_CASE_3');
 
         const narrativeContainer = await openNarrative(testCase.narrativeId);
 
@@ -240,7 +201,7 @@ describe('Test kbaseCellToolbarMenu', () => {
 
     // select cell
     it('selects a minimized cell', async () => {
-        const testCase = testCases.TEST_CASE_4;
+        const testCase = getCaseData(testData, 'TEST_CASE_4');
 
         const narrativeContainer = await openNarrative(testCase.narrativeId);
         await selectCell(narrativeContainer, testCase.cellIndex, testCase.title);
@@ -248,7 +209,7 @@ describe('Test kbaseCellToolbarMenu', () => {
 
     // select cell and move down
     it('selects a minimized cell and moves it down', async () => {
-        const testCase = testCases.TEST_CASE_4;
+        const testCase = getCaseData(testData, 'TEST_CASE_4');
 
         const narrativeContainer = await openNarrative(testCase.narrativeId);
         const cell = await selectCell(narrativeContainer, testCase.cellIndex, testCase.title);
@@ -259,7 +220,7 @@ describe('Test kbaseCellToolbarMenu', () => {
 
     // select cell and move up
     it('selects a minimized cell and moves it up', async () => {
-        const testCase = testCases.TEST_CASE_4;
+        const testCase = getCaseData(testData, 'TEST_CASE_4');
 
         const narrativeContainer = await openNarrative(testCase.narrativeId);
         const cell = await selectCell(narrativeContainer, testCase.cellIndex, testCase.title);
@@ -271,7 +232,7 @@ describe('Test kbaseCellToolbarMenu', () => {
     // Everything above, but cells are expanded.
 
     it('moves an expanded unselected cell down', async () => {
-        const testCase = testCases.TEST_CASE_5;
+        const testCase = getCaseData(testData, 'TEST_CASE_5');
 
         const narrativeContainer = await openNarrative(testCase.narrativeId);
 
@@ -284,7 +245,7 @@ describe('Test kbaseCellToolbarMenu', () => {
     });
 
     it('moves an expanded unselected cell up', async () => {
-        const testCase = testCases.TEST_CASE_5;
+        const testCase = getCaseData(testData, 'TEST_CASE_5');
 
         const narrativeContainer = await openNarrative(testCase.narrativeId);
 
@@ -297,7 +258,7 @@ describe('Test kbaseCellToolbarMenu', () => {
     });
 
     it('selects an expanded cell', async () => {
-        const testCase = testCases.TEST_CASE_5;
+        const testCase = getCaseData(testData, 'TEST_CASE_5');
 
         const narrativeContainer = await openNarrative(testCase.narrativeId);
         await selectCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);
@@ -305,7 +266,7 @@ describe('Test kbaseCellToolbarMenu', () => {
 
     // select cell and move down
     it('selects an expanded cell and moves it down', async () => {
-        const testCase = testCases.TEST_CASE_5;
+        const testCase = getCaseData(testData, 'TEST_CASE_5');
 
         const narrativeContainer = await openNarrative(testCase.narrativeId);
         const cell = await selectCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);
@@ -316,7 +277,7 @@ describe('Test kbaseCellToolbarMenu', () => {
 
     // select cell and move up
     it('selects an expanded cell and moves it up', async () => {
-        const testCase = testCases.TEST_CASE_5;
+        const testCase = getCaseData(testData, 'TEST_CASE_5');
 
         const narrativeContainer = await openNarrative(testCase.narrativeId);
         const cell = await selectCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);

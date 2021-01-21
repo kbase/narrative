@@ -115,10 +115,77 @@ async function openNarrative(workspaceId) {
     return container;
 }
 
+function mergeObjects(listOfObjects) {
+    const simpleObjectPrototype = Object.getPrototypeOf({});
+
+    function isSimpleObject(obj) {
+        if (typeof obj !== 'object') {
+            return false;
+        }
+        return Object.getPrototypeOf(obj) === simpleObjectPrototype;
+    }
+
+    function merge(targetObj, sourceObj) {
+        if (!isSimpleObject(targetObj)) {
+            throw new Error(`Can only merge simple objects, target is a "${typeof targetObj}"`);
+        } 
+        
+        // Copy target, so we don't stomp over original objects.
+        // Note that the source object is not copied, since we don't care if
+        // there is object sharing in the result, we just want to ensure that 
+        // we don't overwrite properties of shared objects.
+        targetObj = JSON.parse(JSON.stringify(targetObj));
+
+        Object.keys(sourceObj).forEach(function (key) {
+            if (isSimpleObject(targetObj[key]) && isSimpleObject(sourceObj[key])) {
+                targetObj[key] = merge(targetObj[key], sourceObj[key]);
+            } else {
+                targetObj[key] = sourceObj[key];
+            }
+        });
+        
+        return targetObj;
+    }
+
+    const objectsToMerge = listOfObjects.map((obj, index) => {
+        if (!isSimpleObject(obj)) {
+            throw new Error(`Can only merge simple objects, object #${index} is a "${typeof obj}"`);
+        } else {
+            return JSON.parse(JSON.stringify(obj));
+        }
+    });
+    let merged = objectsToMerge[0];
+    for (let i = 1; i < objectsToMerge.length; i += 1) {
+        merged = merge(merged, objectsToMerge[i]);
+    }
+    return merged;
+}
+
+function getCaseData(testData, caseLabel) {
+    const env = browser.config.testParams.ENV;
+
+    // Note, order is least specific to most specific, so that the more
+    // specific can override the least.
+
+    // Top level test cases provide defaults (non-env-specific) per-case
+    // test data.
+    const testCase = testData.cases[caseLabel];
+
+    // Each env can establish defaults (e.g. narrative id)
+    const envDefaults = testData[env].defaults;
+
+    // Each test case is defined per environment as well, as the 
+    // state of services will be different.
+    const envTestCase = testData[env][caseLabel];
+
+    return mergeObjects([testCase, envDefaults, envTestCase]);
+}
+
 module.exports = {
     login,
     makeURL,
     sendString,
     openNarrative,
-    clickWhenReady
+    clickWhenReady,
+    getCaseData
 };

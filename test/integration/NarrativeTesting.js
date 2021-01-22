@@ -15,10 +15,6 @@ function mergeObjects(listOfObjects) {
     }
 
     function merge(targetObj, sourceObj) {
-        if (!isSimpleObject(targetObj)) {
-            throw new Error(`Can only merge simple objects, target is a "${typeof targetObj}"`);
-        } 
-        
         // Copy target, so we don't stomp over original objects.
         // Note that the source object is not copied, since we don't care if
         // there is object sharing in the result, we just want to ensure that 
@@ -37,6 +33,9 @@ function mergeObjects(listOfObjects) {
     }
 
     const objectsToMerge = listOfObjects.map((obj, index) => {
+        if (typeof obj === 'undefined') {
+            return {};
+        }
         if (!isSimpleObject(obj)) {
             throw new Error(`Can only merge simple objects, object #${index} is a "${typeof obj}"`);
         } else {
@@ -55,7 +54,7 @@ class NarrativeTesting {
         this.testData = testData;
         this.caseLabel = caseLabel;
         this.timeout = timeout;
-        this.testCase = this.getCaseData();
+        this.caseData = this.getCaseData();
     }
 
     getCaseData() {
@@ -69,16 +68,16 @@ class NarrativeTesting {
 
         // Top level test cases provide defaults (non-env-specific) per-case
         // test data.
-        const testCase = this.testData.cases[this.caseLabel];
+        const caseData = this.testData.cases[this.caseLabel];
 
         // Each env can establish defaults (e.g. narrative id)
         const envDefaults = this.testData[env].defaults;
 
         // Each test case is defined per environment as well, as the 
         // state of services will be different.
-        const envTestCase = this.testData[env][this.caseLabel];
+        const envcaseData = this.testData[env][this.caseLabel];
 
-        return mergeObjects([testCase, envDefaults, envTestCase]);
+        return mergeObjects([caseData, envDefaults, envcaseData]);
     }
 
     /**
@@ -145,9 +144,7 @@ class NarrativeTesting {
         });
     }
 
-    async selectCell(container, cellIndex, title) {
-        const cell = await this.waitForCellWithTitle(container, cellIndex, title);
-
+    async selectCell(cell) {
         // Make sure not selected.
         // We do this by inspecting the border.
         await browser.waitUntil(async () => {
@@ -168,12 +165,13 @@ class NarrativeTesting {
     }
 
     async waitForCellWithText(container, cellIndex, selector, text) {
-        const cell = await this.waitForCell(container, cellIndex);
         await browser.waitUntil(async () => {
+            const cell = await this.waitForCell(container, cellIndex);
             const element = await cell.$(selector);
-            return text == await element.getText();
+            const cellText = await element.getText();
+            return text === cellText;
         });
-        return cell;
+        return await this.waitForCell(container, cellIndex);
     }
 
     async waitForCellWithTitle(container, cellIndex, titleText) {
@@ -182,29 +180,6 @@ class NarrativeTesting {
 
     async waitForCellWithBody(container, cellIndex, bodyText) {
         return await this.waitForCellWithText(container, cellIndex, '.text_cell_render.rendered_html', bodyText);
-    }
-
-    async selectCellWithText(container, cellIndex, selector, text) {
-        const cell = await this.waitForCellWithText(container, cellIndex, selector, text);
-
-        await browser.waitUntil(async () => {
-            const borderStyle = await cell.getCSSProperty('border');
-            return borderStyle.value === this.testData.common.unselectedBorder;
-        });
-
-        const bodyArea = await cell.$(selector);
-        await clickWhenReady(bodyArea);
-
-        await browser.waitUntil(async () => {
-            const borderStyle = await cell.getCSSProperty('border');
-            return borderStyle.value === this.testData.common.selectedBorder;
-        });
-
-        return cell;
-    }
-
-    async selectCellWithBody(container, cellIndex, body) {
-        return await this.selectCellWithText(container, cellIndex, '.text_cell_render.rendered_html', body);
     }
 }
 

@@ -4,6 +4,7 @@
 
 const { NarrativeTesting } = require('../NarrativeTesting.js');
 const { login, clickWhenReady } = require('../wdioUtils.js');
+const testData = require('./kbaseCellToolbarMenu_data.json');
 
 const TIMEOUT = 30000;
 
@@ -20,102 +21,6 @@ TODO: This test suite could be expanded to cover all usage of the cell toolbar (
 test cases can be could be in separate files.
 
 */
-
-const testData = {
-    common: {
-        unselectedBorder: '1px 1px 1px 5px solid rgb(204, 204, 204)',
-        selectedBorder: '1px 1px 1px 5px solid rgb(75, 184, 86)',
-        cells: [
-            {title: 'Narrative Cell Toolbar Testing'},
-            {title: 'Cell 1'},
-            {title: 'Cell 2'},
-            {body: 'Cell 3'},
-            {body: 'Cell 4'}
-        ]
-    },
-    cases: {
-        TEST_CASE_1: {
-            cellIndex: 1,
-            title: 'Narrative Cell Toolbar Testing',
-            expect: {
-                afterMove: {
-                    up: {
-                        cellOrder: [1, 2, 3, 4, 5]
-                    },
-                    down: {
-                        cellOrder: [2, 1, 3, 4, 5]
-                    }
-                }
-            }
-        },
-        TEST_CASE_2: {
-            cellIndex: 2,
-            title: 'Cell 1',
-            expect: {
-                afterMove: {
-                    up: {
-                        cellOrder: [2, 1, 3, 4, 5]
-                    },
-                    down: {
-                        cellOrder: [1, 3, 2, 4, 5]
-                    }
-                }
-            }
-        },
-        TEST_CASE_3: {
-            cellIndex: 3,
-            title: 'Cell 2',
-            expect: {
-                afterMove: {
-                    up: {
-                        cellOrder: [1, 3, 2, 4, 5]
-                    },
-                    down: {
-                        cellOrder: [1, 2, 4, 3, 5]
-                    }
-                }
-            }
-        },
-        TEST_CASE_4: {
-            cellIndex: 4,
-            body: 'Cell 3',
-            expect: {
-                afterMove: {
-                    up: {
-                        cellOrder: [1, 2, 4, 3, 5]
-                    },
-                    down: {
-                        cellOrder: [1, 2, 3, 5, 4]
-                    }
-                }
-            }
-        },
-        TEST_CASE_5: {
-            cellIndex: 5,
-            body: 'Cell 4',
-            expect: {
-                afterMove: {
-                    up: {
-                        cellOrder: [1, 2, 3, 5, 4]
-                    },
-                    down: {
-                        cellOrder: [1, 2, 3, 4, 5]
-                    }
-                }
-            }
-        }
-    },
-    ci: {
-        defaults: {
-            narrativeId: 58675
-        }
-    },
-    'narrative-dev': {
-        defaults: {
-            narrativeId: 80970
-        }
-    }
-};
 
 async function testCellMovement({caseLabel, selectCell, direction}) {
     const t = new NarrativeTesting({testData, timeout: TIMEOUT, caseLabel});

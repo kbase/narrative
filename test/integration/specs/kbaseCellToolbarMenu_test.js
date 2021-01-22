@@ -2,7 +2,14 @@
 /* eslint {strict: ['error', 'global']} */
 'use strict';
 
-const {login, openNarrative, clickWhenReady, getCaseData} = require('../wdioUtils.js');
+// const {
+//     login, openNarrative, clickWhenReady, getCaseData,
+//     waitForCellWithTitle, selectCell, waitForCellWithBody,
+// } = require('../wdioUtils.js');
+
+const { NarrativeTesting } = require('../NarrativeTesting.js');
+const { login, clickWhenReady } = require('../wdioUtils.js');
+
 
 /*
 Notes:
@@ -78,77 +85,7 @@ const testData = {
     }
 };
 
-async function waitForCell(notebookContainer, cellIndex){
-    return await browser.waitUntil(async () => {
-        const cell = await notebookContainer.$(`.cell:nth-child(${cellIndex})`);
-        return cell;
-    });
-}
-
-async function waitForCellWithTitle(container, cellIndex, title) {
-    const cell = await waitForCell(container, cellIndex);
-    await browser.waitUntil(async () => {
-        const titleElement = await cell.$('[data-element="title"]');
-        const text = await titleElement.getText();
-        return text === title;
-    });
-    return cell;
-}
-
-async function waitForCellWithBody(container, cellIndex, bodyText) {
-    const cell = await waitForCell(container, cellIndex);
-    await browser.waitUntil(async () => {
-        const element = await cell.$('.text_cell_render.rendered_html');
-        const text = await element.getText();
-        return text === bodyText;
-    });
-    return cell;
-}
-
-async function selectCell(container, cellIndex, title) {
-    const cell = await waitForCellWithTitle(container, cellIndex, title);
-
-    // Make sure not selected.
-    // We do this by inspecting the border.
-    await browser.waitUntil(async () => {
-        const borderStyle = await cell.getCSSProperty('border');
-        return borderStyle.value === testData.common.unselectedBorder;
-    });
-
-    // Click on title area to select cell.
-    const titleArea = await cell.$('.title-container');
-    await clickWhenReady(titleArea);
-
-    await browser.waitUntil(async () => {
-        const borderStyle = await cell.getCSSProperty('border');
-        return borderStyle.value === testData.common.selectedBorder;
-    });
-
-    return cell;
-}
-
-async function selectCellWithBody(container, cellIndex, body) {
-    const cell = await waitForCellWithBody(container, cellIndex, body);
-
-    // Make sure not selected.
-    // We do this by inspecting the border.
-    await browser.waitUntil(async () => {
-        const borderStyle = await cell.getCSSProperty('border');
-        return borderStyle.value === testData.common.unselectedBorder;
-    });
-
-
-    // Click on title area to select cell.
-    const bodyArea = await cell.$('.text_cell_render.rendered_html');
-    await clickWhenReady(bodyArea);
-
-    await browser.waitUntil(async () => {
-        const borderStyle = await cell.getCSSProperty('border');
-        return borderStyle.value === testData.common.selectedBorder;
-    });
-
-    return cell;
-}
+const TIMEOUT = 60000;
 
 describe('Test kbaseCellToolbarMenu', () => {
     beforeEach(async () => {
@@ -162,127 +99,127 @@ describe('Test kbaseCellToolbarMenu', () => {
     });
 
     it('moves a minimized selected cell down', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_1');
-        const narrativeContainer = await openNarrative(testCase.narrativeId);
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_1'});
+        const narrativeContainer = await t.openNarrative(t.testCase.narrativeId);
 
-        const cell = await waitForCellWithTitle(narrativeContainer, testCase.cellIndex, testCase.title);
+        const cell = await t.waitForCellWithTitle(narrativeContainer, t.testCase.cellIndex, t.testCase.title);
 
         // Find and click the move-down button
         const downButton = await cell.$('[data-test="cell-move-down"]');
         await clickWhenReady(downButton);
-        await waitForCellWithTitle(narrativeContainer, testCase.cellIndex + 1, testCase.title);
+        await t.waitForCellWithTitle(narrativeContainer, t.testCase.cellIndex + 1, t.testCase.title);
     });
 
     it('moves a minimized unselected cell down', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_2');
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_2'});
 
-        const narrativeContainer = await openNarrative(testCase.narrativeId);
+        const narrativeContainer = await t.openNarrative(t.testCase.narrativeId);
 
-        const cell = await waitForCellWithTitle(narrativeContainer, testCase.cellIndex, testCase.title);
+        const cell = await t.waitForCellWithTitle(narrativeContainer, t.testCase.cellIndex, t.testCase.title);
 
         // Find and click the move-down button
         const downButton = await cell.$('[data-test="cell-move-down"]');
         await clickWhenReady(downButton);
-        await waitForCellWithTitle(narrativeContainer, testCase.cellIndex + 1, testCase.title);
+        await t.waitForCellWithTitle(narrativeContainer, t.testCase.cellIndex + 1, t.testCase.title);
     });
 
     it('moves a minimized unselected cell up', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_3');
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_3'});
 
-        const narrativeContainer = await openNarrative(testCase.narrativeId);
+        const narrativeContainer = await t.openNarrative(t.testCase.narrativeId);
 
-        const cell = await waitForCellWithTitle(narrativeContainer, testCase.cellIndex, testCase.title);
+        const cell = await t.waitForCellWithTitle(narrativeContainer, t.testCase.cellIndex, t.testCase.title);
 
         // Find and click the move-ups button
         const upButton = await cell.$('[data-test="cell-move-up"]');
         await clickWhenReady(upButton);
-        await waitForCellWithTitle(narrativeContainer, testCase.cellIndex - 1, testCase.title);
+        await t.waitForCellWithTitle(narrativeContainer, t.testCase.cellIndex - 1, t.testCase.title);
     });
 
     // select cell
     it('selects a minimized cell', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_4');
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_4'});
 
-        const narrativeContainer = await openNarrative(testCase.narrativeId);
-        await selectCell(narrativeContainer, testCase.cellIndex, testCase.title);
+        const narrativeContainer = await t.openNarrative(t.testCase.narrativeId);
+        await t.selectCell(narrativeContainer, t.testCase.cellIndex, t.testCase.title);
     });
 
     // select cell and move down
     it('selects a minimized cell and moves it down', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_4');
+        const t = new NarrativeTesting({testData, timeout: TIMEOUT, caseLabel: 'TEST_CASE_4'});
 
-        const narrativeContainer = await openNarrative(testCase.narrativeId);
-        const cell = await selectCell(narrativeContainer, testCase.cellIndex, testCase.title);
+        const narrativeContainer = await t.openNarrative(t.testCase.narrativeId);
+        const cell = await t.selectCell(narrativeContainer, t.testCase.cellIndex, t.testCase.title);
         const downButton = await cell.$('[data-test="cell-move-down"]');
         await clickWhenReady(downButton);
-        await waitForCellWithTitle(narrativeContainer, testCase.cellIndex + 1, testCase.title);
+        await t.waitForCellWithTitle(narrativeContainer, t.testCase.cellIndex + 1, t.testCase.title);
     });
 
     // select cell and move up
     it('selects a minimized cell and moves it up', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_4');
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_4'});
 
-        const narrativeContainer = await openNarrative(testCase.narrativeId);
-        const cell = await selectCell(narrativeContainer, testCase.cellIndex, testCase.title);
+        const narrativeContainer = await t.openNarrative(t.testCase.narrativeId);
+        const cell = await t.selectCell(narrativeContainer, t.testCase.cellIndex, t.testCase.title);
         const upButton = await cell.$('[data-test="cell-move-up"]');
         await clickWhenReady(upButton);
-        await waitForCellWithTitle(narrativeContainer, testCase.cellIndex - 1, testCase.title);
+        await t.waitForCellWithTitle(narrativeContainer, t.testCase.cellIndex - 1, t.testCase.title);
     });
 
     // Everything above, but cells are expanded.
 
     it('moves an expanded unselected cell down', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_5');
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_5'});
 
-        const narrativeContainer = await openNarrative(testCase.narrativeId);
+        const narrativeContainer = await t.openNarrative(t.testCase.narrativeId);
 
-        const cell = await waitForCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);
+        const cell = await t.waitForCellWithBody(narrativeContainer, t.testCase.cellIndex, t.testCase.body);
 
         // Find and click the move-down button
         const downButton = await cell.$('[data-test="cell-move-down"]');
         await clickWhenReady(downButton);
-        await waitForCellWithBody(narrativeContainer, testCase.cellIndex + 1, testCase.body);
+        await t.waitForCellWithBody(narrativeContainer, t.testCase.cellIndex + 1, t.testCase.body);
     });
 
     it('moves an expanded unselected cell up', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_5');
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_5'});
 
-        const narrativeContainer = await openNarrative(testCase.narrativeId);
+        const narrativeContainer = await t.openNarrative(t.testCase.narrativeId);
 
-        const cell = await waitForCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);
+        const cell = await t.waitForCellWithBody(narrativeContainer, t.testCase.cellIndex, t.testCase.body);
 
         // Find and click the move-down button
         const button = await cell.$('[data-test="cell-move-up"]');
         await clickWhenReady(button);
-        await waitForCellWithBody(narrativeContainer, testCase.cellIndex - 1, testCase.body);
+        await t.waitForCellWithBody(narrativeContainer, t.testCase.cellIndex - 1, t.testCase.body);
     });
 
     it('selects an expanded cell', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_5');
+        const t = new NarrativeTesting({testData, timeout: TIMEOUT, caseLabel: 'TEST_CASE_5'});
 
-        const narrativeContainer = await openNarrative(testCase.narrativeId);
-        await selectCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);
+        const narrativeContainer = await t.openNarrative(t.testCase.narrativeId);
+        await t.selectCellWithBody(narrativeContainer, t.testCase.cellIndex, t.testCase.body);
     });
 
     // select cell and move down
     it('selects an expanded cell and moves it down', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_5');
+        const t = new NarrativeTesting({testData, timeout: TIMEOUT, caseLabel: 'TEST_CASE_5'});
 
-        const narrativeContainer = await openNarrative(testCase.narrativeId);
-        const cell = await selectCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);
+        const narrativeContainer = await t.openNarrative(t.testCase.narrativeId);
+        const cell = await t.selectCellWithBody(narrativeContainer, t.testCase.cellIndex, t.testCase.body);
         const downButton = await cell.$('[data-test="cell-move-down"]');
         await clickWhenReady(downButton);
-        await waitForCellWithBody(narrativeContainer, testCase.cellIndex + 1, testCase.body);
+        await t.waitForCellWithBody(narrativeContainer, t.testCase.cellIndex + 1, t.testCase.body);
     });
 
     // select cell and move up
     it('selects an expanded cell and moves it up', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_5');
+        const t = new NarrativeTesting({testData, timeout: TIMEOUT, caseLabel: 'TEST_CASE_5'});
 
-        const narrativeContainer = await openNarrative(testCase.narrativeId);
-        const cell = await selectCellWithBody(narrativeContainer, testCase.cellIndex, testCase.body);
+        const narrativeContainer = await t.openNarrative(t.testCase.narrativeId);
+        const cell = await t.selectCellWithBody(narrativeContainer, t.testCase.cellIndex, t.testCase.body);
         const upButton = await cell.$('[data-test="cell-move-up"]');
         await clickWhenReady(upButton);
-        await waitForCellWithBody(narrativeContainer, testCase.cellIndex - 1, testCase.body);
+        await t.waitForCellWithBody(narrativeContainer, t.testCase.cellIndex - 1, t.testCase.body);
     });
 });

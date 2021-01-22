@@ -2,7 +2,9 @@
 /* eslint {strict: ['error', 'global']} */
 'use strict';
 
-const {login, openNarrative, sendString, clickWhenReady, getCaseData} = require('../wdioUtils.js');
+const {login, openNarrative, sendString, clickWhenReady} = require('../wdioUtils.js');
+const { NarrativeTesting } = require('../NarrativeTesting.js');
+
 
 // Ideally the test data should be the same, except for narrative id, in each env.
 // But currently CI and prod are indexed differently.
@@ -366,22 +368,22 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, should show default results', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_1');
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_1'});
         
-        await openNarrative(testCase.narrativeId);
+        await openNarrative(t.testCase.narrativeId);
 
         const publicPanel = await openPublicData();
-        const rows = await waitForRows(publicPanel, testCase.row);
+        const rows = await waitForRows(publicPanel, t.testCase.row);
 
-        expect(rows.length).toBeGreaterThanOrEqual(testCase.row);
-        const row = rows[testCase.row - 1];
+        expect(rows.length).toBeGreaterThanOrEqual(t.testCase.row);
+        const row = rows[t.testCase.row - 1];
         expect(row).toBeDefined();
 
         const nameCell = await row.$('[role="cell"][data-test-id="name"]');
-        expect(nameCell).toHaveText(testCase.name);
+        expect(nameCell).toHaveText(t.testCase.name);
 
         // Confirm the metadata fields.
-        for (const {id, label, value} of testCase.metadata) {
+        for (const {id, label, value} of t.testCase.metadata) {
             await testField({
                 container: row, 
                 id, 
@@ -392,22 +394,22 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, should show default results, scroll to desired row', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_2');
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_2'});
 
-        await openNarrative(testCase.narrativeId);
+        await openNarrative(t.testCase.narrativeId);
 
         const publicPanel = await openPublicData();
-        const rows = await waitForRows(publicPanel, testCase.row);
+        const rows = await waitForRows(publicPanel, t.testCase.row);
 
         // Look at the row - it should already be in view.
-        const row = rows[testCase.row - 1];
+        const row = rows[t.testCase.row - 1];
         await row.scrollIntoView();
 
         const nameCell = await row.$('[role="cell"][data-test-id="name"]');
-        expect(nameCell).toHaveText(testCase.name);
+        expect(nameCell).toHaveText(t.testCase.name);
 
         // Confirm the metadata fields.
-        for (const {id, label, value} of testCase.metadata) {
+        for (const {id, label, value} of t.testCase.metadata) {
             await testField({
                 container: row, 
                 id, 
@@ -418,36 +420,36 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, searches for a term, should find an expected row', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_3');
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_3'});
 
-        await openNarrative(testCase.narrativeId);
+        await openNarrative(t.testCase.narrativeId);
 
         const publicPanel = await openPublicData();
 
         // Select search input and input a search term
         const searchInput = await publicPanel.$('[data-test-id="search-input"]');
         await clickWhenReady(searchInput);
-        await sendString(testCase.searchFor);
+        await sendString(t.testCase.searchFor);
         await browser.keys('Enter');
 
         const foundCount = await publicPanel.$('[data-test-id="found-count"]');
-        expect(foundCount).toHaveText(testCase.foundCount);
+        expect(foundCount).toHaveText(t.testCase.foundCount);
 
         // get rows
         // When using roles, we sometimes need to be very specific in our queries.
         // Maybe roles are not suitable for integration tests, then.
-        const rows = await waitForRows(publicPanel, testCase.row);
+        const rows = await waitForRows(publicPanel, t.testCase.row);
 
-        expect(rows.length).toBeGreaterThanOrEqual(testCase.row);
+        expect(rows.length).toBeGreaterThanOrEqual(t.testCase.row);
 
         // Look at the row - it should already be in view.
-        const row = rows[testCase.row - 1];
+        const row = rows[t.testCase.row - 1];
         await row.scrollIntoView();
         const nameCell = await row.$('[role="cell"][data-test-id="name"]');
-        expect(nameCell).toHaveText(testCase.name);
+        expect(nameCell).toHaveText(t.testCase.name);
 
         // Confirm the metadata fields.
-        for (const {id, label, value} of testCase.metadata) {
+        for (const {id, label, value} of t.testCase.metadata) {
             await testField({
                 container: row, 
                 id, 
@@ -458,16 +460,16 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, searches for a term which should not be found', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_4');
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_4'});
 
-        await openNarrative(testCase.narrativeId);
+        await openNarrative(t.testCase.narrativeId);
 
         const publicPanel = await openPublicData();
 
         // Select search input and input a search term
         const searchInput = await publicPanel.$('[data-test-id="search-input"]');
         await clickWhenReady(searchInput);
-        await sendString(testCase.searchFor);
+        await sendString(t.testCase.searchFor);
         await browser.keys('Enter');
 
         await browser.waitUntil(async () => {
@@ -475,20 +477,20 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
             
             if (await foundCountElement.isDisplayed()) {
                 const text = await foundCountElement.getText();
-                return text === testCase.foundCount;
+                return text === t.testCase.foundCount;
             } else {
                 return false;
             }
         });
         
         const foundCount = await publicPanel.$('[data-test-id="found-count"]');
-        expect(foundCount).toHaveText(testCase.foundCount);
+        expect(foundCount).toHaveText(t.testCase.foundCount);
     });
 
     it('opens the public data search tab, should show default results, scroll to desired row', async () => {
-        const testCase = getCaseData(testData, 'TEST_CASE_5');
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_5'});
 
-        await openNarrative(testCase.narrativeId);
+        await openNarrative(t.testCase.narrativeId);
 
         // Open the data slideout
         const publicPanel = await openPublicData();
@@ -496,21 +498,21 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
         // get rows
         // When using roles, we sometimes need to be very specific in our queries.
         // Maybe roles are not suitable for integration tests, then.
-        for (const scrollRow of testCase.scrolls) {
+        for (const scrollRow of t.testCase.scrolls) {
             const rowElements = await waitForRows(publicPanel, scrollRow);
             const rowElement = rowElements[scrollRow - 1];
             await rowElement.scrollIntoView();
         }
 
         // ensure we have all of the rows.
-        const rows = await waitForRows(publicPanel, testCase.row);
-        const row = rows[testCase.row - 1];
+        const rows = await waitForRows(publicPanel, t.testCase.row);
+        const row = rows[t.testCase.row - 1];
         await row.scrollIntoView();
         const nameCell = await row.$('[role="cell"][data-test-id="name"]');
-        expect(nameCell).toHaveText(testCase.name);
+        expect(nameCell).toHaveText(t.testCase.name);
 
         // Confirm the metadata fields.
-        for (const {id, label, value} of testCase.metadata) {
+        for (const {id, label, value} of t.testCase.metadata) {
             await testField({
                 container: row, 
                 id, 

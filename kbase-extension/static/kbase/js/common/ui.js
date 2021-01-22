@@ -2,7 +2,7 @@ define([
     // please use jquery with discretion.
     'jquery',
     'bluebird',
-    'kb_common/html',
+    'common/html',
     'base/js/namespace',
     './runtime',
     'google-code-prettify/prettify',
@@ -39,6 +39,320 @@ define([
             .replace(/</, '&lt;')
             .replace(/>/, '&gt;');
     }
+
+    /**
+     * Make a static (non-collapsing) bootstrap panel with default styling
+     * @param {string} title - panel title
+     * @param {string} elementName - name for the data element in the panel body
+     *
+     * @returns {string} HTML string to create the panel
+     */
+    function makePanel(title, elementName) {
+        return div({ class: 'panel panel-primary' }, [
+            div({ class: 'panel-heading' }, [div({ class: 'panel-title' }, title)]),
+            div({ class: 'panel-body' }, [
+                div({ dataElement: elementName, class: 'container-fluid' }),
+            ]),
+        ]);
+    }
+
+    /**
+     * Build a static (non-collapsing) bootstrap panel
+     * @param {object} args with keys
+     *      id      - id attribute for the panel (optional)
+     *      type    - the type of bootstrap panel (e.g. primary) (opt.)
+     *      classes - extra classes to apply to the panel container div (opt.)
+     *      hidden  - if present, the 'hidden' class is applied (opt)
+     *      icon    - args to buildIcon; the icon will appear next to the title (opt)
+     *      title   - panel title
+     *      name    - name of the dataElement in the top div of the panel
+     *      body    - panel contents
+     *
+     * @returns {string} HTML string to create the panel
+     */
+    function buildPanel(args) {
+        const type = args.type || 'primary';
+        let classes = ['panel', 'panel-' + type],
+            icon;
+        if (args.hidden) {
+            classes.push('hidden');
+        }
+        if (args.classes) {
+            classes = classes.concat(args.classes);
+        }
+        if (args.icon) {
+            icon = [' ', buildIcon(args.icon)];
+        }
+        return div(
+            {
+                class: classes.join(' '),
+                dataElement: args.name,
+            },
+            [
+                (function () {
+                    if (args.title) {
+                        return div({ class: 'panel-heading' }, [
+                            div({ class: 'panel-title', dataElement: 'title' }, [
+                                args.title,
+                                icon,
+                            ]),
+                        ]);
+                    }
+                })(),
+                div(
+                    {
+                        class: 'panel-body',
+                        dataElement: 'body',
+                    },
+                    [args.body]
+                ),
+            ]
+        );
+    }
+
+    /**
+     * Make a collapsible bootstrap panel with default styling
+     * @param {string} title - panel title
+     * @param {string} elementName - name for the data element in the panel body
+     *
+     * @returns {string} HTML string to create the panel
+     */
+    function makeCollapsiblePanel(title, elementName) {
+        const collapseId = html.genId();
+
+        return div({ class: 'panel panel-default' }, [
+            div({ class: 'panel-heading' }, [
+                div(
+                    { class: 'panel-title' },
+                    span(
+                        {
+                            class: 'collapsed',
+                            dataToggle: 'collapse',
+                            dataTarget: '#' + collapseId,
+                            style: { cursor: 'pointer' },
+                        },
+                        title
+                    )
+                ),
+            ]),
+            div(
+                { id: collapseId, class: 'panel-collapse collapse' },
+                div({ class: 'panel-body' }, [
+                    div({ dataElement: elementName, class: 'container-fluid' }),
+                ])
+            ),
+        ]);
+    }
+
+    /**
+     * Build a collapsible bootstrap panel
+     * @param {object} args with keys
+     *      id      - id attribute for the panel (optional)
+     *      type    - the type of bootstrap panel (e.g. primary) (opt.)
+     *      classes - extra classes to apply to the panel container div (opt.)
+     *      hidden  - if present, the 'hidden' class is applied (opt)
+     *      collapsed   - panel starts collapsed (opt)
+     *      icon    - args to buildIcon; the icon will appear next to the title (opt)
+     *      title   - panel title
+     *      name    - name of the dataElement in the top div of the panel
+     *      body    - panel contents
+     *
+     * @returns {string} HTML string to create the panel
+     */
+
+    function buildCollapsiblePanel(args) {
+        const panelId = args.id || html.genId(),
+            collapseId = html.genId(),
+            type = args.type || 'primary',
+            collapseClasses = ['panel-collapse collapse'],
+            toggleClasses = [];
+        let icon,
+            classes = ['panel', 'panel-' + type];
+
+        if (args.hidden) {
+            classes.push('hidden');
+            // style.display = 'none';
+        }
+        if (!args.collapsed) {
+            collapseClasses.push('in');
+        } else {
+            toggleClasses.push('collapsed');
+        }
+        if (args.classes) {
+            classes = classes.concat(args.classes);
+        }
+        if (args.icon) {
+            icon = [' ', buildIcon(args.icon)];
+        }
+        return div(
+            {
+                id: panelId,
+                class: classes.join(' '),
+                dataElement: args.name,
+            },
+            [
+                div({ class: 'panel-heading' }, [
+                    div(
+                        { class: 'panel-title' },
+                        span(
+                            {
+                                dataElement: 'title',
+                                class: toggleClasses.join(' '),
+                                dataToggle: 'collapse',
+                                dataTarget: '#' + collapseId,
+                                style: { cursor: 'pointer' },
+                            },
+                            [args.title, icon]
+                        )
+                    ),
+                ]),
+                div(
+                    { id: collapseId, class: collapseClasses.join(' ') },
+                    div({ class: 'panel-body', dataElement: 'body' }, [args.body])
+                ),
+            ]
+        );
+    }
+
+    function buildIcon(arg) {
+        const klasses = ['fa'],
+            style = { verticalAlign: 'middle' };
+        klasses.push('fa-' + arg.name);
+        if (arg.rotate) {
+            klasses.push('fa-rotate-' + String(arg.rotate));
+        }
+        if (arg.flip) {
+            klasses.push('fa-flip-' + arg.flip);
+        }
+        if (arg.size) {
+            if (typeof arg.size === 'number') {
+                klasses.push('fa-' + String(arg.size) + 'x');
+            } else {
+                klasses.push('fa-' + arg.size);
+            }
+        }
+        if (arg.classes) {
+            arg.classes.forEach((klass) => {
+                klasses.push(klass);
+            });
+        }
+        if (arg.style) {
+            Object.keys(arg.style).forEach((key) => {
+                style[key] = arg.style[key];
+            });
+        }
+        if (arg.color) {
+            style.color = arg.color;
+        }
+
+        return span({
+            dataElement: 'icon',
+            style: style,
+            class: klasses.join(' '),
+        });
+    }
+
+    function confirmDialog(prompt) {
+        return window.confirm(prompt);
+    }
+
+    function renderConfirmDialog(arg) {
+        const yesLabel = arg.yesLabel || 'Yes',
+            noLabel = arg.noLabel || 'No';
+        const dialog = div({ class: 'modal fade', tabindex: '-1', role: 'dialog' }, [
+            div({ class: 'modal-dialog' }, [
+                div({ class: 'modal-content' }, [
+                    div({ class: 'modal-header' }, [
+                        button(
+                            {
+                                type: 'button',
+                                class: 'close',
+                                dataDismiss: 'modal',
+                                ariaLabel: noLabel,
+                            },
+                            [span({ ariaHidden: 'true' }, '&times;')]
+                        ),
+                        span({ class: 'modal-title' }, arg.title),
+                    ]),
+                    div({ class: 'modal-body' }, [arg.body]),
+                    div({ class: 'modal-footer' }, [
+                        button(
+                            {
+                                type: 'button',
+                                class: 'btn btn-default',
+                                dataDismiss: 'modal',
+                                dataElement: 'no',
+                            },
+                            noLabel
+                        ),
+                        button(
+                            { type: 'button', class: 'btn btn-primary', dataElement: 'yes' },
+                            yesLabel
+                        ),
+                    ]),
+                ]),
+            ]),
+        ]);
+        return dialog;
+    }
+
+    function showConfirmDialog(arg) {
+        const dialog = renderConfirmDialog(arg),
+            dialogId = html.genId(),
+            confirmNode = document.createElement('div');
+        let kbaseNode, modalNode;
+
+        confirmNode.id = dialogId;
+        confirmNode.innerHTML = dialog;
+
+        // top level element for kbase usage
+        kbaseNode = document.querySelector('[data-element="kbase"]');
+        if (!kbaseNode) {
+            kbaseNode = document.createElement('div');
+            kbaseNode.setAttribute('data-element', 'kbase');
+            document.body.appendChild(kbaseNode);
+        }
+
+        // a node uponwhich to place Bootstrap modals.
+        modalNode = kbaseNode.querySelector('[data-element="modal"]');
+        if (!modalNode) {
+            modalNode = document.createElement('div');
+            modalNode.setAttribute('data-element', 'modal');
+            kbaseNode.appendChild(modalNode);
+        }
+
+        modalNode.appendChild(confirmNode);
+
+        const modalDialogNode = modalNode.querySelector('.modal');
+
+        $(modalDialogNode).modal('show');
+        return new Promise((resolve) => {
+            modalDialogNode
+                .querySelector('[data-element="yes"]')
+                .addEventListener('click', () => {
+                    $(modalDialogNode).modal('hide');
+                    confirmNode.parentElement.removeChild(confirmNode);
+                    resolve(true);
+                });
+            modalDialogNode.addEventListener('keyup', (e) => {
+                if (e.keyCode === 13) {
+                    $(modalDialogNode).modal('hide');
+                    confirmNode.parentElement.removeChild(confirmNode);
+                    resolve(true);
+                }
+            });
+            modalDialogNode
+                .querySelector('[data-element="no"]')
+                .addEventListener('click', () => {
+                    confirmNode.parentElement.removeChild(confirmNode);
+                    resolve(false);
+                });
+            modalDialogNode.addEventListener('hide.bs.modal', () => {
+                resolve(false);
+            });
+        });
+    }
+
 
     function renderInfoDialog(title, content, okLabel, type) {
         let extraClass = '';
@@ -300,28 +614,24 @@ define([
     /**
      * Creates a spinning icon as a span. Returns the HTML as a string.
      * @param {Object} arg should have keys:
-     *  - message - string - an optional message to add to the spinner
-     *  - size - string - an optional Font Awesome 4 size modifier (2x, 3x, etc)
-     *  - color - string - an optional CSS color value
+     *  - message {string} - an optional message to add to the spinner
+     *  - size    {string} - an optional Font Awesome 4 size modifier (2x, 3x, etc)
+     *  - color   {string} - an optional CSS color value
+     *  - class   {string} - optional extra class(es) to add to the spinner
      */
     function loading(arg) {
         arg = arg || {};
-        let prompt;
-        if (arg.message) {
-            prompt = arg.message + '... &nbsp &nbsp';
-        }
-        let sizeClass;
-        if (arg.size) {
-            sizeClass = 'fa-' + arg.size;
-        }
-        const style = {};
-        if (arg.color) {
-            style.color = arg.color;
-        }
+        const prompt = arg.message
+            ? `${arg.message}... &nbsp &nbsp`
+            : '';
+        const sizeClass = arg.size ? `fa-${arg.size}` : '';
+        const style = arg.color ? {color: arg.color} : '';
+        const extraClass = arg.class || '';
+
         return span([
             prompt,
             i({
-                class: ['fa', 'fa-spinner', 'fa-pulse', sizeClass, 'fa-fw', 'margin-bottom'].join(
+                class: ['fa', 'fa-spinner', 'fa-pulse', sizeClass, extraClass, 'fa-fw', 'margin-bottom'].join(
                     ' '
                 ),
                 style: style,
@@ -331,7 +641,7 @@ define([
 
     function factory(config) {
         const container = config.node,
-            bus = config.bus,
+            {bus} = config,
             runtime = Runtime.make();
 
         /*
@@ -426,106 +736,6 @@ define([
             return container.querySelector(selector);
         }
 
-        function confirmDialog(prompt) {
-            return window.confirm(prompt);
-        }
-
-        function renderConfirmDialog(arg) {
-            const yesLabel = arg.yesLabel || 'Yes',
-                noLabel = arg.noLabel || 'No';
-            const dialog = div({ class: 'modal fade', tabindex: '-1', role: 'dialog' }, [
-                div({ class: 'modal-dialog' }, [
-                    div({ class: 'modal-content' }, [
-                        div({ class: 'modal-header' }, [
-                            button(
-                                {
-                                    type: 'button',
-                                    class: 'close',
-                                    dataDismiss: 'modal',
-                                    ariaLabel: noLabel,
-                                },
-                                [span({ ariaHidden: 'true' }, '&times;')]
-                            ),
-                            span({ class: 'modal-title' }, arg.title),
-                        ]),
-                        div({ class: 'modal-body' }, [arg.body]),
-                        div({ class: 'modal-footer' }, [
-                            button(
-                                {
-                                    type: 'button',
-                                    class: 'btn btn-default',
-                                    dataDismiss: 'modal',
-                                    dataElement: 'no',
-                                },
-                                noLabel
-                            ),
-                            button(
-                                { type: 'button', class: 'btn btn-primary', dataElement: 'yes' },
-                                yesLabel
-                            ),
-                        ]),
-                    ]),
-                ]),
-            ]);
-            return dialog;
-        }
-
-        function showConfirmDialog(arg) {
-            const dialog = renderConfirmDialog(arg),
-                dialogId = html.genId(),
-                confirmNode = document.createElement('div');
-            let kbaseNode, modalNode;
-
-            confirmNode.id = dialogId;
-            confirmNode.innerHTML = dialog;
-
-            // top level element for kbase usage
-            kbaseNode = document.querySelector('[data-element="kbase"]');
-            if (!kbaseNode) {
-                kbaseNode = document.createElement('div');
-                kbaseNode.setAttribute('data-element', 'kbase');
-                document.body.appendChild(kbaseNode);
-            }
-
-            // a node uponwhich to place Bootstrap modals.
-            modalNode = kbaseNode.querySelector('[data-element="modal"]');
-            if (!modalNode) {
-                modalNode = document.createElement('div');
-                modalNode.setAttribute('data-element', 'modal');
-                kbaseNode.appendChild(modalNode);
-            }
-
-            modalNode.appendChild(confirmNode);
-
-            const modalDialogNode = modalNode.querySelector('.modal');
-
-            $(modalDialogNode).modal('show');
-            return new Promise((resolve) => {
-                modalDialogNode
-                    .querySelector('[data-element="yes"]')
-                    .addEventListener('click', () => {
-                        $(modalDialogNode).modal('hide');
-                        confirmNode.parentElement.removeChild(confirmNode);
-                        resolve(true);
-                    });
-                modalDialogNode.addEventListener('keyup', (e) => {
-                    if (e.keyCode === 13) {
-                        $(modalDialogNode).modal('hide');
-                        confirmNode.parentElement.removeChild(confirmNode);
-                        resolve(true);
-                    }
-                });
-                modalDialogNode
-                    .querySelector('[data-element="no"]')
-                    .addEventListener('click', () => {
-                        confirmNode.parentElement.removeChild(confirmNode);
-                        resolve(false);
-                    });
-                modalDialogNode.addEventListener('hide.bs.modal', () => {
-                    resolve(false);
-                });
-            });
-        }
 
         function addButtonClickEvent(events, eventName, data) {
             return events.addEvent({
@@ -549,7 +759,7 @@ define([
 
         function makeButton(label, name, options) {
             const klass = options.type || 'default',
-                events = options.events;
+                {events} = options;
             return button(
                 {
                     type: 'button',
@@ -563,7 +773,7 @@ define([
 
         function buildButton(arg) {
             const klass = arg.type || 'default',
-                events = arg.events,
+                {events} = arg,
                 title = arg.title || arg.tip || arg.label;
             let buttonClasses = ['btn', 'btn-' + klass],
                 icon;
@@ -655,136 +865,6 @@ define([
                 return;
             }
             el.classList.remove('hidden');
-        }
-
-        function makePanel(title, elementName) {
-            return div({ class: 'panel panel-primary' }, [
-                div({ class: 'panel-heading' }, [div({ class: 'panel-title' }, title)]),
-                div({ class: 'panel-body' }, [
-                    div({ dataElement: elementName, class: 'container-fluid' }),
-                ]),
-            ]);
-        }
-
-        function buildPanel(args) {
-            const type = args.type || 'primary';
-            let classes = ['panel', 'panel-' + type],
-                icon;
-            if (args.hidden) {
-                classes.push('hidden');
-            }
-            if (args.classes) {
-                classes = classes.concat(args.classes);
-            }
-            if (args.icon) {
-                icon = [' ', buildIcon(args.icon)];
-            }
-            return div(
-                {
-                    class: classes.join(' '),
-                    dataElement: args.name,
-                },
-                [
-                    (function () {
-                        if (args.title) {
-                            return div({ class: 'panel-heading' }, [
-                                div({ class: 'panel-title', dataElement: 'title' }, [
-                                    args.title,
-                                    icon,
-                                ]),
-                            ]);
-                        }
-                    })(),
-                    div(
-                        {
-                            class: 'panel-body',
-                            dataElement: 'body',
-                        },
-                        [args.body]
-                    ),
-                ]
-            );
-        }
-
-        function makeCollapsiblePanel(title, elementName) {
-            const collapseId = html.genId();
-
-            return div({ class: 'panel panel-default' }, [
-                div({ class: 'panel-heading' }, [
-                    div(
-                        { class: 'panel-title' },
-                        span(
-                            {
-                                class: 'collapsed',
-                                dataToggle: 'collapse',
-                                dataTarget: '#' + collapseId,
-                                style: { cursor: 'pointer' },
-                            },
-                            title
-                        )
-                    ),
-                ]),
-                div(
-                    { id: collapseId, class: 'panel-collapse collapse' },
-                    div({ class: 'panel-body' }, [
-                        div({ dataElement: elementName, class: 'container-fluid' }),
-                    ])
-                ),
-            ]);
-        }
-
-        function buildCollapsiblePanel(args) {
-            const panelId = args.id || html.genId(),
-                collapseId = html.genId(),
-                type = args.type || 'primary',
-                collapseClasses = ['panel-collapse collapse'],
-                toggleClasses = [];
-            let icon,
-                classes = ['panel', 'panel-' + type];
-
-            if (args.hidden) {
-                classes.push('hidden');
-                // style.display = 'none';
-            }
-            if (!args.collapsed) {
-                collapseClasses.push('in');
-            } else {
-                toggleClasses.push('collapsed');
-            }
-            if (args.classes) {
-                classes = classes.concat(args.classes);
-            }
-            if (args.icon) {
-                icon = [' ', buildIcon(args.icon)];
-            }
-            return div(
-                {
-                    id: panelId,
-                    class: classes.join(' '),
-                    dataElement: args.name,
-                },
-                [
-                    div({ class: 'panel-heading' }, [
-                        div(
-                            { class: 'panel-title' },
-                            span(
-                                {
-                                    dataElement: 'title',
-                                    class: toggleClasses.join(' '),
-                                    dataToggle: 'collapse',
-                                    dataTarget: '#' + collapseId,
-                                    style: { cursor: 'pointer' },
-                                },
-                                [args.title, icon]
-                            )
-                        ),
-                    ]),
-                    div(
-                        { id: collapseId, class: collapseClasses.join(' ') },
-                        div({ class: 'panel-body', dataElement: 'body' }, [args.body])
-                    ),
-                ]
-            );
         }
 
         function collapsePanel(path) {
@@ -919,53 +999,6 @@ define([
             return false;
         }
 
-        function buildIcon(arg) {
-            const klasses = ['fa'],
-                style = { verticalAlign: 'middle' };
-            klasses.push('fa-' + arg.name);
-            if (arg.rotate) {
-                klasses.push('fa-rotate-' + String(arg.rotate));
-            }
-            if (arg.flip) {
-                klasses.push('fa-flip-' + arg.flip);
-            }
-            if (arg.size) {
-                if (typeof arg.size === 'number') {
-                    klasses.push('fa-' + String(arg.size) + 'x');
-                } else {
-                    klasses.push('fa-' + arg.size);
-                }
-            }
-            if (arg.classes) {
-                arg.classes.forEach((klass) => {
-                    klasses.push(klass);
-                });
-            }
-            if (arg.style) {
-                Object.keys(arg.style).forEach((key) => {
-                    style[key] = arg.style[key];
-                });
-            }
-            if (arg.color) {
-                style.color = arg.color;
-            }
-
-            return span({
-                dataElement: 'icon',
-                style: style,
-                class: klasses.join(' '),
-            });
-        }
-
-        function reverse(arr) {
-            const newArray = [],
-                len = arr.length;
-            for (let x = len - 1; x >= 0; x -= 1) {
-                newArray.push(arr[x]);
-            }
-            return newArray;
-        }
-
         function updateTab(tabId, tabName, updates) {
             const node = document.getElementById(tabId);
             if (!node) {
@@ -993,7 +1026,7 @@ define([
                 const iconNode = tabTab.querySelector('[data-element="icon"]');
                 if (iconNode) {
                     // remove any icons.
-                    let classList = iconNode.classList;
+                    let {classList} = iconNode;
                     for (let x = classList.length; classList > 0; classList -= 1) {
                         if (classList.item[x].substring(0, 3) === 'fa-') {
                             classList.remove(classList.item[x]);
@@ -1058,7 +1091,7 @@ define([
                 }
             });
             if (arg.alignRight) {
-                tabTabs = reverse(tabs);
+                tabTabs = tabs.reverse();
                 tabStyle.float = 'right';
                 if (selectInitialTab) {
                     activeIndex = tabs.length - 1 - arg.initialTab;
@@ -1372,53 +1405,54 @@ define([
         }
 
         return Object.freeze({
+            activateButton: activateButton,
+            addClass: addClass,
+            buildButton: buildButton,
+            buildButtonToolbar: buildButtonToolbar,
+            buildCollapsiblePanel: buildCollapsiblePanel,
+            buildErrorTabs: buildErrorTabs,
+            buildGridTable: buildGridTable,
+            buildIcon: buildIcon,
+            buildPanel: buildPanel,
+            buildPresentableJson: buildPresentableJson,
+            buildTabs: buildTabs,
+            collapsePanel: collapsePanel,
+            confirmDialog: confirmDialog,
+            createNode: createNode,
+            deactivateButton: deactivateButton,
+            disableButton: disableButton,
+            enableButton: enableButton,
+            enableTooltips: enableTooltips,
+            expandPanel: expandPanel,
+            getButton: getButton,
             getElement: getElement,
             getElements: getElements,
-            getButton: getButton,
             getNode: getNode,
-            makeButton: makeButton,
-            buildButton: buildButton,
-            enableButton: enableButton,
-            disableButton: disableButton,
-            activateButton: activateButton,
-            deactivateButton: deactivateButton,
             hideButton: hideButton,
-            showButton: showButton,
-            setButtonLabel: setButtonLabel,
-            confirmDialog: confirmDialog,
             hideElement: hideElement,
-            showElement: showElement,
-            makePanel: makePanel,
-            buildPanel: buildPanel,
-            makeCollapsiblePanel: makeCollapsiblePanel,
-            buildCollapsiblePanel: buildCollapsiblePanel,
-            collapsePanel: collapsePanel,
-            expandPanel: expandPanel,
-            createNode: createNode,
-            setContent: setContent,
-            setText: setText,
-            na: na,
+            htmlEncode: htmlEncode,
             ifAdvanced: ifAdvanced,
             ifDeveloper: ifDeveloper,
             isAdvanced: isAdvanced,
             isDeveloper: isDeveloper,
-            showConfirmDialog: showConfirmDialog,
-            showInfoDialog: showInfoDialog,
-            showDialog: showDialog,
-            buildButtonToolbar: buildButtonToolbar,
-            buildIcon: buildIcon,
-            addClass: addClass,
-            removeClass: removeClass,
-            buildTabs: buildTabs,
             jsonBlockWidget: jsonBlockWidget(),
-            enableTooltips: enableTooltips,
-            updateTab: updateTab,
-            buildGridTable: buildGridTable,
-            updateFromViewModel: updateFromViewModel,
-            buildPresentableJson: buildPresentableJson,
-            buildErrorTabs: buildErrorTabs,
-            htmlEncode: htmlEncode,
             loading: loading,
+            makeButton: makeButton,
+            makeCollapsiblePanel: makeCollapsiblePanel,
+            makePanel: makePanel,
+            na: na,
+            removeClass: removeClass,
+            setButtonLabel: setButtonLabel,
+            setContent: setContent,
+            setText: setText,
+            showButton: showButton,
+            showConfirmDialog: showConfirmDialog,
+            showDialog: showDialog,
+            showElement: showElement,
+            showErrorDialog: showErrorDialog,
+            showInfoDialog: showInfoDialog,
+            updateFromViewModel: updateFromViewModel,
+            updateTab: updateTab,
         });
     }
 
@@ -1427,11 +1461,18 @@ define([
             return factory(config);
         },
         // "static" methods
+        buildCollapsiblePanel: buildCollapsiblePanel,
+        buildIcon: buildIcon,
+        buildPanel: buildPanel,
+        htmlEncode: htmlEncode,
+        confirmDialog: confirmDialog,
+        loading: loading,
+        makeCollapsiblePanel: makeCollapsiblePanel,
+        makePanel: makePanel,
         na: na,
-        showInfoDialog: showInfoDialog,
+        showConfirmDialog: showConfirmDialog,
         showDialog: showDialog,
         showErrorDialog: showErrorDialog,
-        loading: loading,
-        htmlEncode: htmlEncode,
+        showInfoDialog: showInfoDialog,
     };
 });

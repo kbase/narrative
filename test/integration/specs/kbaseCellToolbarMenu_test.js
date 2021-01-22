@@ -5,6 +5,8 @@
 const { NarrativeTesting } = require('../NarrativeTesting.js');
 const { login, clickWhenReady } = require('../wdioUtils.js');
 
+const TIMEOUT = 30000;
+
 /*
 Notes:
 
@@ -114,8 +116,6 @@ const testData = {
         }
     }
 };
-
-const TIMEOUT = 60000;
 
 async function testCellMovement({caseLabel, selectCell, direction}) {
     const t = new NarrativeTesting({testData, timeout: TIMEOUT, caseLabel});

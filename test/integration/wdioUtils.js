@@ -1,5 +1,5 @@
 /* eslint strict: ["error", "global"] */
-/*global browser, $*/
+/*global browser */
 
 'use strict';
 
@@ -58,63 +58,6 @@ async function clickWhenReady(el) {
     await el.click();
 }
 
-/**
-* Navigates the wdio browser to a workspace as given by its id, and waits until the 
-* narrative container is visible.
-* @arg {number} The narrative's workspace id
-* @returns {Promise} The Promise value is ignored.
-*/
-async function openNarrative(workspaceId) {
-    const timeout = 60000;
-
-    // Go to the narrative!
-    await browser.url(makeURL(`narrative/${workspaceId}`));
-
-    // should experience loading blocker for a few seconds.
-    const loadingBlocker = await $('#kb-loading-blocker');
-    await loadingBlocker.waitForDisplayed({
-        timeout,
-        timeoutMsg: `Timeout after waiting ${timeout}ms for loading blocker to appear`
-    }); 
-
-    // And then the loading blocker should disappear!
-    await loadingBlocker.waitForDisplayed({
-        timeout,
-        timeoutMsg: `Timeout after waiting ${timeout}ms for loading blocker to disappear`,
-        reverse: true
-    });
-
-    // Ensure logged in
-    const loginButton = await $('#signin-button > div > button');
-    await loginButton.waitForDisplayed({
-        timeout,
-        timeoutMsg: `Timeout after waiting ${timeout}ms for login button to appear`
-    }); 
-
-    await clickWhenReady(loginButton);
-
-    const realnameElement = await $('[data-element="realname"]');
-    const usernameElement = await $('[data-element="username"]');
-    await browser.waitUntil(async () => {
-        const text = await realnameElement.getText();
-        return (text && text.length > 0);
-    });
-    const realname = await realnameElement.getText();
-    const username = await usernameElement.getText();
-    console.warn(`Signed in as user "${realname}" (${username})`);
-    await loginButton.click();
-    
-    // Ensure narrative notebook has displayed
-    // TODO: more interesting waitUntil loop to signal the 
-    // failure reason (useful for debugging tests?)
-    const container = await $('#notebook-container');
-    await container.waitForDisplayed({
-        timeout,
-        timeoutMsg: `Timeout after waiting ${timeout}ms for narrative to appear`
-    });
-    return container;
-}
-
 function* range(start, end) {
     yield start;
     if (start === end) {
@@ -127,7 +70,6 @@ module.exports = {
     login,
     makeURL,
     sendString,
-    openNarrative,
     clickWhenReady,
     range
 };

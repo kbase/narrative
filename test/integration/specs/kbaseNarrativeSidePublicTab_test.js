@@ -2,9 +2,10 @@
 /* eslint {strict: ['error', 'global']} */
 'use strict';
 
-const {login, openNarrative, sendString, clickWhenReady} = require('../wdioUtils.js');
+const {login, sendString, clickWhenReady} = require('../wdioUtils.js');
 const { NarrativeTesting } = require('../NarrativeTesting.js');
 
+const TIMEOUT = 30000;
 
 // Ideally the test data should be the same, except for narrative id, in each env.
 // But currently CI and prod are indexed differently.
@@ -353,7 +354,7 @@ async function openPublicData() {
 
 describe('Test kbaseNarrativeSidePublicTab', () => {
     beforeEach(async () => {
-        await browser.setTimeout({ 'implicit': 30000 });
+        await browser.setTimeout({ 'implicit': TIMEOUT });
         await browser.reloadSession();
         await login();
     });
@@ -363,9 +364,9 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, should show default results', async () => {
-        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_1'});
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_1', timeout: TIMEOUT});
         
-        await openNarrative(t.caseData.narrativeId);
+        await t.openNarrative(t.caseData.narrativeId);
 
         const publicPanel = await openPublicData();
         const rows = await waitForRows(publicPanel, t.caseData.row);
@@ -389,9 +390,9 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, should show default results, scroll to desired row', async () => {
-        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_2'});
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_2', timeout: TIMEOUT});
 
-        await openNarrative(t.caseData.narrativeId);
+        await t.openNarrative(t.caseData.narrativeId);
 
         const publicPanel = await openPublicData();
         const rows = await waitForRows(publicPanel, t.caseData.row);
@@ -415,9 +416,9 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, searches for a term, should find an expected row', async () => {
-        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_3'});
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_3', timeout: TIMEOUT});
 
-        await openNarrative(t.caseData.narrativeId);
+        await t.openNarrative(t.caseData.narrativeId);
 
         const publicPanel = await openPublicData();
 
@@ -455,9 +456,9 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, searches for a term which should not be found', async () => {
-        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_4'});
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_4', timeout: TIMEOUT});
 
-        await openNarrative(t.caseData.narrativeId);
+        await t.openNarrative(t.caseData.narrativeId);
 
         const publicPanel = await openPublicData();
 
@@ -483,9 +484,9 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, should show default results, scroll to desired row', async () => {
-        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_5'});
+        const t = new NarrativeTesting({testData, caseLabel: 'TEST_CASE_5', timeout: TIMEOUT});
 
-        await openNarrative(t.caseData.narrativeId);
+        await t.openNarrative(t.caseData.narrativeId);
 
         // Open the data slideout
         const publicPanel = await openPublicData();

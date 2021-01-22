@@ -2,7 +2,7 @@
 /*global browser, $*/
 'use strict';
 
-const {makeURL, login, sendString, clickWhenReady} = require('./wdioUtils');
+const {makeURL, clickWhenReady} = require('./wdioUtils');
 
 function mergeObjects(listOfObjects) {
     const simpleObjectPrototype = Object.getPrototypeOf({});
@@ -184,9 +184,6 @@ class NarrativeTesting {
 }
 
 module.exports = {
-    login,
-    makeURL,
-    sendString,
-    clickWhenReady,
-    NarrativeTesting
+    NarrativeTesting,
+    mergeObjects
 };

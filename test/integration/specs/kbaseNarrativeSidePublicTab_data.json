@@ -127,22 +127,22 @@
                 {
                     "id": "kbase_id",
                     "label": "KBase ID",
-                    "value": "GCF_000804875.1"
+                    "value": "GCF_000695855.3"
                 },
                 {
                     "id": "refseq_id",
                     "label": "RefSeq ID",
-                    "value": "NZ_JSCS01000001"
+                    "value": "NZ_CP007535"
                 },
                 {
                     "id": "contigs",
                     "label": "Contigs",
-                    "value": "74"
+                    "value": "3"
                 },
                 {
                     "id": "features",
                     "label": "Features",
-                    "value": "3,862"
+                    "value": "3,739"
                 }
             ]
         }

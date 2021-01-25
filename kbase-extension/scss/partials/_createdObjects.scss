@@ -19,3 +19,30 @@
         }
     }
 }
+
+.kb-report {
+  &__toggle {
+    cursor: pointer;
+    text-decoration: none;
+    color: use_color("black");
+
+    &::before {
+      display: inline-block;
+      width: 0.5em;
+      margin-right: 4px;
+      margin-left: 0;
+      content: '\f0d7';
+      font: normal 400 90% $typeface-font-awesome;
+      line-height: 1;
+      vertical-align: baseline;
+    }
+
+    &.collapsed::before {
+      margin-right: 2px;
+      margin-left: 2px;
+      content: '\f0da'
+    }
+  }
+
+}
+

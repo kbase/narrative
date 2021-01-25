@@ -4,36 +4,29 @@
  */
 
 define([
-    'bootstrap',
     'jquery',
     'base/js/namespace',
-
     'kbwidget',
     'kbaseAuthenticatedWidget',
     'narrativeConfig',
-    'util/string',
+    'uuid',
     'kb_common/html',
     'kb_sdk_clients/genericClient',
     'kb_service/client/workspace',
-    'kb_service/utils',
     'common/ui',
     'common/iframe/hostMessages',
     'common/events',
-
-    'jquery-dataTables'
-], function(
-    bootstrap,
+    'jquery-dataTables',
+], function (
     $,
     Jupyter,
-
     KBWidget,
     kbaseAuthenticatedWidget,
     Config,
-    StringUtil,
+    UUID,
     html,
     GenericClient,
     Workspace,
-    ServiceUtils,
     UI,
     HostMessages,
     Events
@@ -52,12 +45,12 @@ define([
             showFiles: true,
             showHTML: true,
             inNarrative: true, // todo: toggles whether data links show in narrative or new page
-
+            report_ref: null,
             wsURL: Config.url('workspace'),
         },
         // workspace client
         ws: null,
-        init: function(options) {
+        init: function (options) {
             this._super(options);
 
             // Create a message pane
@@ -69,7 +62,7 @@ define([
 
             return this;
         },
-        loggedInCallback: function(event, auth) {
+        loggedInCallback: function (event, auth) {
             // Build a client
             this.ws = new Workspace(this.options.wsURL, auth);
 
@@ -77,7 +70,7 @@ define([
             this.loadAndRender();
             return this;
         },
-        loggedOutCallback: function(event, auth) {
+        loggedOutCallback: function () {
             this.isLoggedIn = false;
             return this;
         },
@@ -86,124 +79,129 @@ define([
         // this is an ugly hack. It'd be prettier to hand in just the shock node ID, but I don't have one of those yet.
         // Also, this is embedding the token into the html and the URL, both of which are potentially security concerns.
         // TODO: update to put the auth token into the url... should be working in CI already.
-        // TODO: NO HARDCODING OF URLS!!!
-        importExportLink: function(shock_url, name) {
-            var m = shock_url.match(/\/node\/(.+)$/);
+        importExportLink: function (shock_url, name) {
+            const m = shock_url.match(/\/node\/(.+)$/);
             if (m) {
-                var shock_id = m[1];
-                var query = {
+                const shock_id = m[1];
+                const query = {
                     id: shock_id,
                     wszip: 0,
-                    name: name
+                    name: name,
                 };
-                var queryString = Object.keys(query)
-                    .map(function(key) {
-                        return [key, query[key]]
-                            .map(encodeURIComponent)
-                            .join('=');
+                const queryString = Object.keys(query)
+                    .map(function (key) {
+                        return [key, query[key]].map(encodeURIComponent).join('=');
                     })
                     .join('&');
-                var url = Config.get('urls').data_import_export + '/download?' + queryString;
-                return url;
+                return Config.get('urls').data_import_export + '/download?' + queryString;
             }
         },
 
-        loadAndRender: function() {
-            var self = this;
-            self.loading(true);
+        loadAndRender: function () {
+            this.loading(true);
 
-            self.objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, this.options.report_ref);
+            this.objIdentity = this.buildObjectIdentity(
+                this.options.workspace_name,
+                this.options.report_name,
+                null,
+                this.options.report_ref
+            );
 
-            self.ws.get_objects([self.objIdentity])
-                .then(function(result) {
-                    self.reportData = result[0].data;
-                    return self.getLinks(self.reportData);
+            this.ws
+                .get_objects2({objects: [this.objIdentity]})
+                .then((result) => {
+                    this.reportData = result.data[0].data;
+                    return this.getLinks(this.reportData);
                 })
-                .then(function(links) {
-                    self.reportLinks = links;
-                    return self.render();
+                .then((links) => {
+                    this.reportLinks = links;
+                    return this.render();
                 })
-                .catch(function(err) {
-                    self.clientError(err);
+                .catch((err) => {
+                    this.clientError(err);
                 });
         },
 
-        wrapHtmlDoc: function(content) {
+        wrapHtmlDoc: function (content) {
             if (/<html/.test(content)) {
                 console.warn('Html document inserted into iframe');
                 return content;
             }
-            var t = html.tag,
+            const t = html.tag,
                 htmlTag = t('html'),
                 head = t('head'),
                 body = t('body');
             return htmlTag([
                 head(),
-                body({
-                    style: {
-                        margin: '0px',
-                        padding: '0px',
-                        overflow: 'auto'
-                    }
-                }, [
-                    content
-                ])
+                body(
+                    {
+                        style: {
+                            margin: '0px',
+                            padding: '0px',
+                            overflow: 'auto',
+                        },
+                    },
+                    [content]
+                ),
             ]);
         },
 
-        makeIframe: function(arg) {
-            var t = html.tag,
+        makeIframe: function (arg) {
+            const t = html.tag,
                 div = t('div'),
                 script = t('script'),
                 iframe = t('iframe');
 
-            var iframeId = 'frame_' + html.genId(),
+            const iframeId = 'frame_' + html.genId(),
                 iframeOrigin = document.location.origin,
                 iframeMessages = HostMessages.makeHost({
                     root: window,
-                    name: 'panel'
+                    name: 'panel',
                 });
 
             // The iframe content needs requirejs amd.
 
-            var narrativeBase = window.location.origin + '/narrative';
+            const narrativeBase = window.location.origin + '/narrative';
 
-            var requireConfig = {
+            const requireConfig = {
                     baseUrl: narrativeBase + '/static/',
                     paths: {
                         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
                         uuid: 'ext_components/pure-uuid/uuid',
                         messages: 'kbase/js/common/iframe/messages',
-                        heightNotifier: 'kbase/js/common/iframe/heightNotifier'
-                    }
+                        heightNotifier: 'kbase/js/common/iframe/heightNotifier',
+                    },
                 },
                 iframeScript = div([
                     script({
-                        src: narrativeBase + '/static/ext_components/requirejs/require.js'
+                        src: narrativeBase + '/static/ext_components/requirejs/require.js',
                     }),
-                    script(
-                        'require.config(' + JSON.stringify(requireConfig) + ');'
-                    ),
+                    script('require.config(' + JSON.stringify(requireConfig) + ');'),
                     script([
                         'require(["kbase/js/common/iframe/boot"], function (Boot) {',
                         '  var boot = Boot.make({iframeId: "' + iframeId + '"});',
                         '  boot.start();',
-                        '});'
-                    ])
+                        '});',
+                    ]),
                 ]),
                 // the main content wrapper inside the iframe
-                iframeContent = this.wrapHtmlDoc(div({
-                    id: iframeId,
-                    dataFrame: iframeId,
-                    style: {
-                        overflow: 'hidden'
-                    },
-                    dataParams: encodeURIComponent(JSON.stringify({
-                        parentHost: iframeOrigin,
-                        iframeId: iframeId,
-                        serviceId: iframeMessages.serviceId
-                    }))
-                }, arg.content + iframeScript)).replace(/"/g, '&quot;'),
+                iframeContent = this.wrapHtmlDoc(
+                    div({
+                        id: iframeId,
+                        dataFrame: iframeId,
+                        style: {
+                            overflow: 'hidden',
+                        },
+                        dataParams: encodeURIComponent(
+                            JSON.stringify({
+                                parentHost: iframeOrigin,
+                                iframeId: iframeId,
+                                serviceId: iframeMessages.serviceId,
+                            })
+                        ),
+                    }, arg.content + iframeScript
+                    )
+                ).replace(/"/g, '&quot;'),
                 width = arg.width || '100%',
                 maxHeight = arg.maxHeight || 'auto',
                 iframeHtml = iframe({
@@ -213,14 +211,14 @@ define([
                         height: 'auto',
                         maxHeight: maxHeight,
                         margin: 0,
-                        padding: 0
+                        padding: 0,
                     },
                     scrolling: 'no',
                     dataFrame: iframeId,
                     frameborder: '0',
                     id: iframeId,
                     // sandbox: 'allow-same-origin allow-scripts',
-                    srcdoc: iframeContent
+                    srcdoc: iframeContent,
                 });
 
             return {
@@ -228,19 +226,19 @@ define([
                 host: iframeOrigin,
                 id: iframeId,
                 content: iframeHtml,
-                messages: iframeMessages
+                messages: iframeMessages,
             };
         },
 
-        makeIframeSrcDataPlain: function(arg) {
-            var t = html.tag,
+        makeIframeSrcDataPlain: function (arg) {
+            const t = html.tag,
                 iframe = t('iframe');
 
-            var iframeId = 'frame_' + html.genId();
+            const iframeId = 'frame_' + html.genId();
 
             // The iframe content needs requirejs amd.
 
-            var width = arg.width || '100%',
+            const width = arg.width || '100%',
                 iframeContent = arg.content,
                 iframeHtml = iframe({
                     style: {
@@ -248,27 +246,27 @@ define([
                         width: width,
                         height: arg.height || 'auto',
                         margin: 0,
-                        padding: 0
+                        padding: 0,
                     },
                     dataFrame: iframeId,
                     frameborder: '0',
                     id: iframeId,
-                    src: 'data:text/html;charset=utf-8,' + encodeURIComponent(iframeContent)
+                    src: 'data:text/html;charset=utf-8,' + encodeURIComponent(iframeContent),
                 });
 
             return {
                 id: iframeId,
-                content: iframeHtml
+                content: iframeHtml,
             };
         },
 
-        makeIframeSrc: function(arg) {
-            var t = html.tag,
+        makeIframeSrc: function (arg) {
+            const t = html.tag,
                 iframe = t('iframe');
 
-            var iframeId = 'frame_' + html.genId();
+            const iframeId = 'frame_' + html.genId();
 
-            var width = arg.width || '100%',
+            const width = arg.width || '100%',
                 maxHeight = arg.maxHeight || 'auto',
                 iframeHtml = iframe({
                     style: {
@@ -277,21 +275,21 @@ define([
                         height: arg.height,
                         maxHeight: maxHeight,
                         margin: 0,
-                        padding: 0
+                        padding: 0,
                     },
                     dataFrame: iframeId,
                     frameborder: '0',
                     scrolling: 'yes',
-                    id: iframeId
+                    id: iframeId,
                 });
 
             return {
                 id: iframeId,
-                content: iframeHtml
+                content: iframeHtml,
             };
         },
 
-        escapeHtml: function(string) {
+        escapeHtml: function (string) {
             if (typeof string !== 'string') {
                 return;
             }
@@ -300,81 +298,90 @@ define([
                 '<': '&lt;',
                 '>': '&gt;',
                 '"': '&quot;',
-                "'": '&#39;',
+                '\'': '&#39;',
                 '/': '&#x2F;',
                 '`': '&#x60;',
-                '=': '&#x3D;'
+                '=': '&#x3D;',
             };
-            return String(string).replace(/[&<>"'`=\/]/g, function fromEntityMap(s) {
+            return String(string).replace(/[&<>"'`=/]/g, function fromEntityMap(s) {
                 return entityMap[s];
             });
         },
 
-        getLinks: function(report) {
+        /**
+         * Returns a Promise that resolves into a list of links to the hosted report
+         * @param {string} report
+         */
+        getLinks: function (report) {
             // NOTE: this returns a promise -- we must look up the html file set service url first.
-            var _this = this;
+            const _this = this;
 
-            var client = new GenericClient({
+            const client = new GenericClient({
                 url: Config.url('service_wizard'),
                 token: this.authToken(),
-                module: 'HTMLFileSetServ'
+                module: 'HTMLFileSetServ',
             });
-            return client.lookupModule()
-                .spread(function(serviceStatus) {
-                    var htmlServiceURL = serviceStatus.url;
-                    if (report.html_links && report.html_links.length) {
-                        return report.html_links.map(function(item, index) {
-                            return {
-                                name: item.name,
-                                // If label is not provided, name must be.
-                                label: _this.escapeHtml(item.label || item.name),
-                                url: [htmlServiceURL, 'api', 'v1', _this.objIdentity.ref, '$', index, item.name].join('/'),
-                                description: item.description
-                            };
-                        });
-                    } else {
-                        return [];
-                    }
-                });
+            return client.lookupModule().spread(function (serviceStatus) {
+                const htmlServiceURL = serviceStatus.url;
+                if (report.html_links && report.html_links.length) {
+                    return report.html_links.map(function (item, index) {
+                        return {
+                            name: item.name,
+                            // If label is not provided, name must be.
+                            label: _this.escapeHtml(item.label || item.name),
+                            url: [
+                                htmlServiceURL,
+                                'api',
+                                'v1',
+                                _this.objIdentity.ref,
+                                '$',
+                                index,
+                                item.name,
+                            ].join('/'),
+                            description: item.description,
+                        };
+                    });
+                } else {
+                    return [];
+                }
+            });
         },
 
-        makeIframeSrcUrl: function(arg) {
+        makeIframeSrcUrl: function (arg) {
             var t = html.tag,
                 iframe = t('iframe');
 
             var iframeId = 'frame_' + html.genId();
 
             var width = arg.width || '100%',
-                // maxHeight = arg.maxHeight || 'auto',
                 iframeHtml = iframe({
                     style: {
                         display: 'block',
                         width: width,
                         height: arg.height,
-                        // maxHeight: maxHeight,
                         margin: 0,
-                        padding: 0
+                        padding: 0,
                     },
                     dataFrame: iframeId,
                     frameborder: '0',
                     scrolling: 'yes',
                     id: iframeId,
-                    src: arg.src
+                    src: arg.src,
                 });
 
             return {
                 id: iframeId,
-                content: iframeHtml
+                content: iframeHtml,
             };
         },
 
-        setupHostComm: function(iframe, container) {
+        setupHostComm: function (iframe, container) {
             iframe.messages.start();
             var _this = this;
 
             iframe.messages.listen({
                 name: 'ready',
-                handler: function(message) {
+                handler: function (message) {
                     if (message.iframeId !== iframe.id) {
                         // We may receive this if a 'ready' was received
                         // from another cell. Perhaps there is a better
@@ -393,40 +400,45 @@ define([
                         name: message.iframeId,
                         host: iframe.host,
                         serviceId: message.address.from,
-                        window: container.querySelector('[data-frame="' + iframe.id + '"]').contentWindow
+                        window: container.querySelector('[data-frame="' + iframe.id + '"]')
+                            .contentWindow,
                     });
 
                     iframe.messages.send(message.from, {
-                        name: 'start'
+                        name: 'start',
                     });
-                }
+                },
             });
 
             iframe.messages.listen({
                 name: 'rendered',
-                handler: function(message) {
+                handler: function (message) {
                     var height = message.height,
-                        iframeNode = _this.$mainPanel[0].querySelector('[data-frame="' + iframe.id + '"]');
+                        iframeNode = _this.$mainPanel[0].querySelector(
+                            '[data-frame="' + iframe.id + '"]'
+                        );
 
                     iframeNode.style.height = height + 'px';
-                }
+                },
             });
 
             iframe.messages.listen({
                 name: 'clicked',
-                handler: function(message) {
+                handler: function (message) {
                     if (message.iframeId !== iframe.id) {
                         return;
                     }
-                    document.getElementById(message.iframeId).dispatchEvent(new Event('click', {
-                        bubbles: true,
-                        cancelable: true
-                    }));
-                }
+                    document.getElementById(message.iframeId).dispatchEvent(
+                        new Event('click', {
+                            bubbles: true,
+                            cancelable: true,
+                        })
+                    );
+                },
             });
         },
 
-        render: function() {
+        render: function () {
             var self = this;
             var _this = this;
             var t = html.tag,
@@ -435,22 +447,31 @@ define([
             var ui = UI.make({ node: self.$mainPanel.get(0) });
             var report = self.reportData;
             var events = Events.make({
-                node: self.$mainPanel.get(0)
+                node: self.$mainPanel.get(0),
             });
 
             // Handle warnings?
             if (report.warnings) {
                 if (report.warnings.length > 0) {
-                    var $warningPanel = $('<div style="max-height:100px;overflow-y:auto;margin:0px 5px 5px 10px;">');
+                    var $warningPanel = $(
+                        '<div style="max-height:100px;overflow-y:auto;margin:0px 5px 5px 10px;">'
+                    );
                     var warnings = report.warnings;
                     if (warnings.length >= 5) {
-                        $warningPanel.append($('<div>').css('margin', '5px').append('[' + warnings.length + 'Warnings]'));
+                        $warningPanel.append(
+                            $('<div>')
+                                .css('margin', '5px')
+                                .append('[' + warnings.length + 'Warnings]')
+                        );
                     }
                     for (var k = 0; k < warnings.length; k++) {
                         $warningPanel.append(
-                            $('<div>').css('margin', '0px 5px 5px 10px').append(
-                                $('<span>').addClass('label label-warning')
-                                .append(warnings[k])));
+                            $('<div>')
+                                .css('margin', '0px 5px 5px 10px')
+                                .append(
+                                    $('<span>').addClass('label label-warning').append(warnings[k])
+                                )
+                        );
                     }
                     self.$mainPanel.append($warningPanel);
                 }
@@ -461,119 +482,163 @@ define([
                 self.$mainPanel.append(someDiv);
                 if (report.objects_created) {
                     if (report.objects_created.length > 0) {
-
                         var objsCreated = report.objects_created;
 
                         var objIds = [];
                         for (var i = 0; i < objsCreated.length; i++) {
-                            objIds.push({ 'ref': objsCreated[i].ref });
+                            objIds.push({ ref: objsCreated[i].ref });
                         }
-                        self.ws.get_object_info_new({ 'objects': objIds })
-                            .then(
-                                function(objInfo) {
-                                    var pref = StringUtil.uuid();
-                                    var displayData = [];
-                                    var dataNameToInfo = {};
-                                    for (var k = 0; k < objInfo.length; k++) {
-                                        displayData.push({
-                                            'name': '<a href="#" style="cursor: pointer;" class="report_row_' + pref + '" data-objname="' + objInfo[k][1] + '">' + objInfo[k][1] + '</a>',
-                                            'type': objInfo[k][2].split('-')[0].split('.')[1],
-                                            'fullType': objInfo[k][2],
-                                            'description': objsCreated[k].description ? objsCreated[k].description : '',
-                                            'ws_info': objInfo[k]
-                                        });
-                                        dataNameToInfo[objInfo[k][1]] = objInfo[k];
-                                    }
+                        self.ws
+                            .get_object_info_new({ objects: objIds })
+                            .then(function (objInfo) {
+                                var pref = new UUID(4).format();
+                                var displayData = [];
+                                var dataNameToInfo = {};
+                                for (var k = 0; k < objInfo.length; k++) {
+                                    displayData.push({
+                                        name:
+                                            '<a href="#" style="cursor: pointer;" class="report_row_' +
+                                            pref +
+                                            '" data-objname="' +
+                                            objInfo[k][1] +
+                                            '">' +
+                                            objInfo[k][1] +
+                                            '</a>',
+                                        type: objInfo[k][2].split('-')[0].split('.')[1],
+                                        fullType: objInfo[k][2],
+                                        description: objsCreated[k].description
+                                            ? objsCreated[k].description
+                                            : '',
+                                        ws_info: objInfo[k],
+                                    });
+                                    dataNameToInfo[objInfo[k][1]] = objInfo[k];
+                                }
 
-                                    function reportRowEvents() {
-                                        $('.report_row_' + pref).unbind('click');
-                                        $('.report_row_' + pref).click(function(e) {
-                                            e.stopPropagation();
-                                            e.preventDefault();
-                                            var objName = [$(this).data('objname')];
-                                            Jupyter.narrative.addViewerCell(dataNameToInfo[objName]);
-                                        });
-                                    }
+                                function reportRowEvents() {
+                                    $('.report_row_' + pref).unbind('click');
+                                    $('.report_row_' + pref).click(function (e) {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                        var objName = [$(this).data('objname')];
+                                        Jupyter.narrative.addViewerCell(dataNameToInfo[objName]);
+                                    });
+                                }
 
-                                    var numPerPage = 5;
-                                    var objTableId = self.uuid();
+                                var numPerPage = 5;
+                                var objTableId = new UUID(4).format();
 
-                                    ui.setContent('created-objects',
-                                        ui.buildCollapsiblePanel({
-                                            title: 'Objects',
-                                            name: 'created-objects-toggle',
-                                            hidden: false,
-                                            type: 'default',
-                                            classes: ['kb-panel-container'],
-                                            body: '<div id = \'' + objTableId + '\' style = \'margin-top : 10px\'></div>',
-                                        })
+                                ui.setContent(
+                                    'created-objects',
+                                    ui.buildCollapsiblePanel({
+                                        title: 'Objects',
+                                        name: 'created-objects-toggle',
+                                        hidden: false,
+                                        type: 'default',
+                                        classes: ['kb-panel-container'],
+                                        body: `<div id="${objTableId}" style="margin-top: 10px"></div>`,
+                                    })
+                                );
+
+                                var $tblDiv = $('#' + objTableId);
+
+                                if (displayData.length <= numPerPage) {
+                                    var $objTable = $(
+                                        '<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">'
                                     );
 
-                                    var $tblDiv = $('#' + objTableId);
-
-                                    if (displayData.length <= numPerPage) {
-                                        var $objTable = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">');
-
-                                        displayData.sort(function(a, b) {
-                                            return a.name < b.name;
-                                        });
-                                        var color = '#555';
-                                        $objTable.append($('<tr>')
-                                            .append('<th style="width:30%;color:' + color + ';"><b>Created Object Name</b></th>')
-                                            .append('<th style="width:20%;color:' + color + ';"><b>Type</b></th>')
-                                            .append('<th style="color:' + color + ';"><b>Description</b></th>'));
-                                        for (var k = 0; k < displayData.length; k++) {
-                                            $objTable.append($('<tr>')
-                                                .append('<td style="width:30%;color:' + color + ';">' + displayData[k].name + '</td>')
-                                                .append('<td style="width:20%;color:' + color + ';">' + displayData[k].type + '</td>')
-                                                .append('<td style="color:' + color + ';">' + displayData[k].description + '</td>'));
-                                        }
-                                        $tblDiv.append($objTable);
-                                        reportRowEvents();
-                                    } else {
-                                        var $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
-                                            .addClass('table table-bordered table-striped');
-                                        $tblDiv.append($tbl);
-
-                                        var tblSettings = {
-                                            'paginationType': 'full_numbers',
-                                            'displayLength': numPerPage,
-                                            'dom': 'ft<ip>',
-                                            'sorting': [
-                                                [0, 'asc']
-                                            ],
-                                            'columns': [
-                                                { title: '<b>Created Object Name</b>', data: 'name', width: '30%' },
-                                                { title: '<b>Type</b>', data: 'type', width: '20%' },
-                                                { title: '<b>Description</b>', data: 'description' }
-                                            ],
-                                            'data': [],
-                                            'language': {
-                                                'search': 'Search: ',
-                                                'emptyTable': 'No created objects.'
-                                            }
-                                        };
-                                        var objTable = $tbl.dataTable(tblSettings);
-                                        objTable.fnAddData(displayData);
-                                        reportRowEvents();
-                                        objTable.on( 'draw.dt',  function() {reportRowEvents()});
-
+                                    displayData.sort(function (a, b) {
+                                        return a.name < b.name;
+                                    });
+                                    var color = '#555';
+                                    $objTable.append(
+                                        $('<tr>')
+                                            .append(
+                                                '<th style="width:30%;color:' +
+                                                    color +
+                                                    ';"><b>Created Object Name</b></th>'
+                                            )
+                                            .append(
+                                                '<th style="width:20%;color:' +
+                                                    color +
+                                                    ';"><b>Type</b></th>'
+                                            )
+                                            .append(
+                                                '<th style="color:' +
+                                                    color +
+                                                    ';"><b>Description</b></th>'
+                                            )
+                                    );
+                                    for (var k = 0; k < displayData.length; k++) {
+                                        $objTable.append(
+                                            $('<tr>')
+                                                .append(
+                                                    '<td style="width:30%;color:' +
+                                                        color +
+                                                        ';">' +
+                                                        displayData[k].name +
+                                                        '</td>'
+                                                )
+                                                .append(
+                                                    '<td style="width:20%;color:' +
+                                                        color +
+                                                        ';">' +
+                                                        displayData[k].type +
+                                                        '</td>'
+                                                )
+                                                .append(
+                                                    '<td style="color:' +
+                                                        color +
+                                                        ';">' +
+                                                        displayData[k].description +
+                                                        '</td>'
+                                                )
+                                        );
                                     }
+                                    $tblDiv.append($objTable);
+                                    reportRowEvents();
+                                } else {
+                                    var $tbl = $(
+                                        '<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">'
+                                    ).addClass('table table-bordered table-striped');
+                                    $tblDiv.append($tbl);
 
+                                    var tblSettings = {
+                                        paginationType: 'full_numbers',
+                                        displayLength: numPerPage,
+                                        dom: 'ft<ip>',
+                                        sorting: [[0, 'asc']],
+                                        columns: [
+                                            {
+                                                title: '<b>Created Object Name</b>',
+                                                data: 'name',
+                                                width: '30%',
+                                            },
+                                            { title: '<b>Type</b>', data: 'type', width: '20%' },
+                                            { title: '<b>Description</b>', data: 'description' },
+                                        ],
+                                        data: [],
+                                        language: {
+                                            search: 'Search: ',
+                                            emptyTable: 'No created objects.',
+                                        },
+                                    };
+                                    var objTable = $tbl.dataTable(tblSettings);
+                                    objTable.fnAddData(displayData);
+                                    reportRowEvents();
+                                    objTable.on('draw.dt', function () {
+                                        reportRowEvents();
+                                    });
                                 }
-                            )
-                            .catch(
-                                function(error) {
-                                    console.error(error);
-                                }
-                            );
+                            })
+                            .catch(function (error) {
+                                console.error(error);
+                            });
                     }
                 }
             }
 
             var showingReport = false;
             if (this.options.showReportText) {
-
                 // REPORT SECTION
 
                 /*
@@ -587,13 +652,15 @@ define([
                 if (report.direct_html && report.direct_html.length > 0) {
                     hasDirectHtml = true;
                 }
-                if (typeof report.direct_html_link_index === 'number' &&
-                    report.direct_html_link_index >= 0) {
+                if (
+                    typeof report.direct_html_link_index === 'number' &&
+                    report.direct_html_link_index >= 0
+                ) {
                     hasDirectHtmlIndex = true;
                 }
 
                 if (hasDirectHtml || hasDirectHtmlIndex) {
-                    (function() {
+                    (function () {
                         showingReport = true;
                         // an iframe to hold the contents of the report.
                         var iframe;
@@ -604,25 +671,37 @@ define([
                         if (hasDirectHtmlIndex) {
                             reportLink = _this.reportLinks[report.direct_html_link_index];
                             if (reportLink) {
-                                reportButton = div({
-                                    style: {
-                                        margin: '4px 4px 8px 0',
-                                        xborder: '1px silver solid'
-                                    }
-                                }, a({
-                                    href: reportLink.url,
-                                    target: '_blank',
-                                    class: 'btn btn-default'
-                                }, 'View report in separate window'));
+                                reportButton = div(
+                                    {
+                                        style: {
+                                            margin: '4px 4px 8px 0',
+                                            xborder: '1px silver solid',
+                                        },
+                                    },
+                                    a(
+                                        {
+                                            href: reportLink.url,
+                                            target: '_blank',
+                                            class: 'btn btn-default',
+                                        },
+                                        'View report in separate window'
+                                    )
+                                );
                                 iframe = _this.makeIframeSrcUrl({
                                     src: reportLink.url,
-                                    height: report.html_window_height ? report.html_window_height + 'px' : '500px'
+                                    height: report.html_window_height
+                                        ? report.html_window_height + 'px'
+                                        : '500px',
                                 });
                             } else {
                                 iframe = {
-                                    content: div({
-                                        class: 'alert alert-danger'
-                                    }, 'Report not found for index ' + report.direct_html_link_index)
+                                    content: div(
+                                        {
+                                            class: 'alert alert-danger',
+                                        },
+                                        'Report not found for index ' +
+                                            report.direct_html_link_index
+                                    ),
                                 };
                             }
                         } else {
@@ -632,8 +711,10 @@ define([
                                 console.warn('Html document inserted into iframe', report);
                                 iframe = _this.makeIframeSrcDataPlain({
                                     content: report.direct_html,
-                                    height: report.html_window_height ? report.html_window_height + 'px' : '500px',
-                                    events: events
+                                    height: report.html_window_height
+                                        ? report.html_window_height + 'px'
+                                        : '500px',
+                                    events: events,
                                 });
                             } else {
                                 // note that for direct_html, we set the max height. this content is expected
@@ -641,52 +722,55 @@ define([
                                 // to shrink, but if it is larger, we simply don't want it to be too tall.
                                 iframe = _this.makeIframe({
                                     content: report.direct_html,
-                                    maxHeight: report.html_window_height ? report.html_window_height + 'px' : '500px'
+                                    maxHeight: report.html_window_height
+                                        ? report.html_window_height + 'px'
+                                        : '500px',
                                 });
                             }
                         }
 
                         _this.$mainPanel.append(div({ dataElement: 'html-panel' }));
-                        ui.setContent('html-panel',
+                        ui.setContent(
+                            'html-panel',
                             ui.buildCollapsiblePanel({
                                 title: 'Report',
                                 name: 'report-section-toggle',
                                 hidden: false,
                                 type: 'default',
                                 classes: ['kb-panel-container'],
-                                body: div([
-                                    reportButton,
-                                    iframe.content
-                                ])
+                                body: div([reportButton, iframe.content]),
                             })
                         );
 
                         if (iframe.messages) {
                             _this.setupHostComm(iframe, _this.$mainPanel[0]);
                         }
-                    }());
+                    })();
                 }
 
                 // SUMMARY SECTION
 
                 if (report.text_message && report.text_message.length > 0) {
                     self.$mainPanel.append(div({ dataElement: 'summary-section' }));
-                    var reportSummary = div({
-                        style: {
-                            width: '100%',
-                            fontFamily: 'Monaco,monospace',
-                            fontSize: '9pt',
-                            color: '#555',
-                            whiteSpace: 'pre-wrap',
-                            overflow: 'auto',
-                            height: 'auto',
-                            maxHeight: report.summary_window_height ? report.summary_window_height + 'px' : '500px'
-                                //resize: 'vertical',
-                                //rows: self.options.report_window_line_height,
-                                //readonly: true
-                        }
-                    }, report.text_message);
-                    ui.setContent('summary-section',
+                    var reportSummary = div(
+                        {
+                            style: {
+                                width: '100%',
+                                fontFamily: 'Monaco,monospace',
+                                fontSize: '9pt',
+                                color: '#555',
+                                whiteSpace: 'pre-wrap',
+                                overflow: 'auto',
+                                height: 'auto',
+                                maxHeight: report.summary_window_height
+                                    ? report.summary_window_height + 'px'
+                                    : '500px',
+                            },
+                        },
+                        report.text_message
+                    );
+                    ui.setContent(
+                        'summary-section',
                         ui.buildCollapsiblePanel({
                             title: 'Summary',
                             name: 'summary-section-toggle',
@@ -694,7 +778,7 @@ define([
                             collapsed: showingReport ? true : false,
                             type: 'default',
                             classes: ['kb-panel-container'],
-                            body: reportSummary
+                            body: reportSummary,
                         })
                     );
                 }
@@ -705,16 +789,15 @@ define([
             if (self.options.showHTML) {
                 if (self.reportLinks && self.reportLinks.length) {
                     var $ul = $.jqElem('ul');
-                    self.reportLinks.forEach(function(reportLink) {
-                        var link_id = StringUtil.uuid();
-                        var $linkItem = $.jqElem('li')
-                            .append(
-                                $.jqElem('a')
+                    self.reportLinks.forEach(function (reportLink) {
+                        var link_id = new UUID(4).format();
+                        var $linkItem = $.jqElem('li').append(
+                            $.jqElem('a')
                                 .attr('href', reportLink.url)
                                 .attr('target', '_blank')
                                 .attr('id', link_id)
                                 .append(reportLink.label || reportLink.name)
-                            );
+                        );
                         if (reportLink.description) {
                             $linkItem.append('<br/>');
                             $linkItem.append(reportLink.description);
@@ -724,14 +807,15 @@ define([
 
                     self.$mainPanel.append(div({ dataElement: 'downloadable-html' }));
                     body = $.jqElem('div').append($ul).html();
-                    ui.setContent('downloadable-html',
+                    ui.setContent(
+                        'downloadable-html',
                         ui.buildCollapsiblePanel({
                             title: 'Links',
                             name: 'downloadable-html-toggle',
                             hidden: false,
                             type: 'default',
                             classes: ['kb-panel-container'],
-                            body: body
+                            body: body,
                         })
                     );
                 }
@@ -743,49 +827,47 @@ define([
                 if (report.file_links && report.file_links.length) {
                     self.$mainPanel.append(div({ dataElement: 'downloadable-files' }));
 
-                    var iframe_id = StringUtil.uuid();
+                    var iframe_id = new UUID(4).format();
 
                     var $ul = $.jqElem('ul');
-                    $.each(
-                        report.file_links,
-                        function(i, v) {
-                            var link_id = StringUtil.uuid();
-                            $ul.append(
-                                $.jqElem('li')
-                                .append(
-                                    $.jqElem('a')
+                    $.each(report.file_links, function (i, v) {
+                        var link_id = new UUID(4).format();
+                        $ul.append(
+                            $.jqElem('li').append(
+                                $.jqElem('a')
                                     .attr('id', link_id)
                                     .attr('href', '#')
                                     .append(v.name || v.URL)
                                     .prop('download', true)
                                     .attr('download', 'download')
-                                )
-                            );
+                            )
+                        );
 
-                            setTimeout(function() {
-                                $('#' + link_id).on('click', function(e) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    $('#' + iframe_id).attr('src', self.importExportLink(v.URL, v.name || 'download-' + i));
-                                });
-                            }, 1);
-                        }
-                    );
+                        setTimeout(function () {
+                            $('#' + link_id).on('click', function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                $('#' + iframe_id).attr(
+                                    'src',
+                                    self.importExportLink(v.URL, v.name || 'download-' + i)
+                                );
+                            });
+                        }, 1);
+                    });
 
-                    var $iframe = $.jqElem('iframe')
-                        .attr('id', iframe_id)
-                        .css('display', 'none');
+                    var $iframe = $.jqElem('iframe').attr('id', iframe_id).css('display', 'none');
 
                     var body = $.jqElem('div').append($ul).append($iframe).html();
 
-                    ui.setContent('downloadable-files',
+                    ui.setContent(
+                        'downloadable-files',
                         ui.buildCollapsiblePanel({
                             title: 'Files',
                             name: 'downloadable-files-toggle',
                             hidden: false,
                             type: 'default',
                             classes: ['kb-panel-container'],
-                            body: body
+                            body: body,
                         })
                     );
                 }
@@ -795,30 +877,36 @@ define([
 
             this.loading(false);
         },
-        loading: function(isLoading) {
+
+        loading: function (isLoading) {
             if (isLoading) {
                 this.showMessage('<i class="fa fa-spinner fa-spin"></i>');
             } else {
                 this.hideMessage();
             }
         },
-        showMessage: function(message) {
+
+        showMessage: function (message) {
             var span = $('<span/>').append(message);
             this.$messagePane.append(span);
             this.$messagePane.show();
         },
-        hideMessage: function() {
+
+        hideMessage: function () {
             this.$messagePane.hide();
             this.$messagePane.empty();
         },
-        clientError: function(error) {
+
+        clientError: function (error) {
             this.loading(false);
             var errString = 'Unknown error.';
             console.error(error);
-            if (typeof error === 'string')
+            if (typeof error === 'string') {
                 errString = error;
-            else if (error.error && error.error.message)
+            }
+            else if (error.error && error.error.message) {
                 errString = error.error.message;
+            }
             else if (error.error && error.error.error && typeof error.error.error === 'string') {
                 errString = error.error.error;
             }
@@ -830,26 +918,24 @@ define([
             this.$elem.empty();
             this.$elem.append($errorDiv);
         },
-        buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+        /**
+         * Converts from several possible inputs into a Workspace ObjectIdentity structure.
+         * @param {string | number} workspaceId - an identifier for the workspace, either a numerical id or a name string
+         * @param {string | number} objectId - an identifier for the object, either a numerical id or a name string
+         * @param {string | number} objectVer - a number for the object version
+         * @param {string} wsRef - expected to be a valid workspace reference - using this overrides the other options
+         */
+        buildObjectIdentity: function (workspaceId, objectId, objectVer, wsRef) {
+            const obj = {};
             if (wsRef) {
-                obj['ref'] = wsRef;
+                obj.ref = wsRef;
             } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj['wsid'] = workspaceID;
-                else
-                    obj['workspace'] = workspaceID;
-
-                // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj['objid'] = objectID;
-                else
-                    obj['name'] = objectID;
-
-                if (objectVer)
-                    obj['ver'] = objectVer;
+                obj.ref = `${workspaceId}/${objectId}`;
+                if (objectVer) {
+                    obj.ref += `/${objectVer}`;
+                }
             }
             return obj;
-        }
+        },
     });
 });

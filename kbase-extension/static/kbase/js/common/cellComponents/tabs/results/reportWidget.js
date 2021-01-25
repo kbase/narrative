@@ -1,38 +1,75 @@
 /**
  * This renders a list of KBase Report objects. Each one is expandable and loads up under a caret.
  */
-define(['bluebird', 'common/html', 'common/ui', 'common/events'], function (
+define([
+    'bluebird',
+    'jquery',
+    'common/html',
+    'common/ui',
+    'common/events',
+    'kbaseReportView'
+], (
     Promise,
+    $,
     html,
     UI,
-    Events
-) {
+    Events,
+    KBaseReportView
+) => {
     'use strict';
 
     let tag = html.tag,
-        div = tag('div');
+        div = tag('div'),
+        a = tag('a');
 
     function ReportWidget() {
         let container, ui;
 
-        function renderReport(data) {
-            return new Promise((resolve) => {
-                console.log('ready to render report with data: ', data);
-                resolve(true);
+        /**
+         *
+         * @param {Array} objectData - an Array of object data, each element is an Object with
+         *   these properties:
+         *   - ref - string, the object ref
+         *   - reportRef - string, the report object ref that this object is from
+         *   - description - string, object description
+         *   - name - string, the object name
+         *   - type - string, the type of workspace object (full form - Module.Type-Major.Minor)
+         * @param {Object} events - the events object
+         */
+        function renderReports(objectData, events) {
+            return objectData.map((objInfo) => {
+                return div([
+                    a({
+                        class: 'kb-report__toggle collapsed',
+                        dataToggle: 'collapse',
+                        ariaExpanded: false,
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: (e) => toggleReportView(e, objInfo)
+                        })
+                    }, objInfo.name)
+                ]);
             });
         }
 
-        function fetchReportData(reports, workspaceClient) {
-            const reportLookupParam = reports.map(report => ({ref: report}));
-
-            return workspaceClient.get_object_info_new({objects: reportLookupParam});
+        function toggleReportView(e, objInfo) {
+            const toggleHeader = e.target;
+            if (!toggleHeader.classList.contains('collapsed')) {
+                toggleHeader.parentElement.lastElementChild.remove();
+            }
+            else {
+                const reportContainer = document.createElement('div');
+                toggleHeader.parentElement.appendChild(reportContainer);
+                new KBaseReportView($(reportContainer), {report_ref: objInfo.reportRef});
+            }
+            toggleHeader.classList.toggle('collapsed');
         }
 
         /**
          *
          * @param {object} arg
          * - node - the DOM node to attach to
-         * - reports - an array of report references to render from
+         * - objectData - an array of report references to render from
          * - workspaceClient - a workspace client to use to fetch report info
          */
         function doAttach(arg) {
@@ -40,24 +77,24 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], function (
             ui = UI.make({
                 node: container,
             });
+            let events = Events.make();
             // this is the main layout div. don't do anything yet.
             container.innerHTML = div({
                 dataElement: 'created-objects',
                 class: 'kb-created-objects'
             });
 
-            return fetchReportData(arg.reports, arg.workspaceClient)
-                .then((reportData) => {
-                    ui.setContent('created-objects',
-                        ui.buildCollapsiblePanel({
-                            title: 'Reports',
-                            name: 'created-objects-toggle',
-                            hidden: false,
-                            type: 'default',
-                            classes: ['kb-panel-container'],
-                            body: reportData,
-                        }));
-                });
+            ui.setContent('created-objects',
+                ui.buildCollapsiblePanel({
+                    title: 'Reports',
+                    name: 'created-objects-toggle',
+                    hidden: false,
+                    type: 'default',
+                    classes: ['kb-panel-container'],
+                    body: renderReports(arg.objectData, events),
+                }));
+
+            events.attachEvents(container);
         }
 
         /**
@@ -69,7 +106,7 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], function (
          */
         function start(arg) {
             // send parent the ready message
-            return doAttach(arg)
+            return Promise.resolve(doAttach(arg))
                 .catch((err) => {
                     console.error('Error while starting the created objects view', err);
                 });

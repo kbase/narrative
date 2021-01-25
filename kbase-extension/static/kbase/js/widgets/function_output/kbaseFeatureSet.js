@@ -6,8 +6,8 @@ define ([
     'jquery',
     'narrativeConfig',
     'kbaseAuthenticatedWidget',
-    'kb_common/jsonRpc/genericClient',
-    'kb_common/jsonRpc/dynamicServiceClient',
+    'jsonrpc/DynamicServiceClient',
+    'jsonrpc/GenericClient',
 
     // for effect
     'jquery-dataTables',
@@ -19,8 +19,8 @@ define ([
     $,
     Config,
     kbaseAuthenticatedWidget,
-    GenericClient,
-    DynamicServiceClient
+    DynamicServiceClient,
+    GenericClient
 ) {
     'use strict';
     return KBWidget({
@@ -91,8 +91,8 @@ define ([
                     const fs = data[0].data;
                     if(fs.description) {
                         this.$mainPanel.append($('<div test-id="description">')
-                            .append('<i>Description</i> - ')
-                            .append(fs.description));
+                            .append('<i test-id="label">Description</i>: ')
+                            .append(`<span test-id="value">${fs.description}</value>`));
                     }
 
                     for (const fid in fs.elements) {
@@ -150,8 +150,10 @@ define ([
             //
             // "this.features" is an object whose keys are genome object references (gid), and
             // whose values are lists of feature ids (fid).
+            // 
             // For each pair of gid and fid we need to fetch the genome object information from the workspace
             // and the feature info from the genome search api.
+            // 
             // To keep this all sorted out, and in the original order, we do this as an array of promises for
             // each pair, and each pair itself is an array of the actual api calls which are themselves promises.
 
@@ -199,22 +201,41 @@ define ([
                     }));
                 })
                 .then((result) => {
+                    const unsupportedTypeAttributes = 'title="Features not yet fully supported for AnnotatedMetagenomeAssembly" style="font-style: italic; color: gray; cursor: help;"';
                     for (const [features, objectRef, objectType, objectInfo] of result) {
                         const objectName = objectInfo[1];
                         for (const feature of features) {
-                            this.featureTableData.push(
-                                {
-                                    fid: '<a href="/#dataview/'+objectRef+
-                                                            '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
-                                                            feature.feature_id+'</a>',
-                                    objectType,
-                                    gid: '<a href="/#dataview/'+objectRef+
-                                                        '" target="_blank">'+objectName+'</a>',
-                                    aliases: Object.keys(feature.aliases).join(', '),
-                                    type: feature.feature_type,
-                                    func: feature.function
-                                }
-                            );
+                            switch (objectType) {
+                                case 'AnnotatedMetagenomeAssembly':
+                                    this.featureTableData.push(
+                                        {
+                                            fid: '<a href="/#dataview/'+objectRef+
+                                                                    '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
+                                                                    feature.feature_id+'</a>',
+                                            objectType,
+                                            gid: '<a href="/#dataview/'+objectRef+
+                                                                '" target="_blank">'+objectName+'</a>',
+                                            aliases: `<span ${unsupportedTypeAttributes}>${Object.keys(feature.aliases).join(', ')}</a>`,
+                                            type: `<span ${unsupportedTypeAttributes}>${feature.feature_type}</a>`,
+                                            func: `<span ${unsupportedTypeAttributes}>${feature.function}</a>`
+                                        }
+                                    );
+                                    break;
+                                default:
+                                    this.featureTableData.push(
+                                        {
+                                            fid: '<a href="/#dataview/'+objectRef+
+                                                                    '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
+                                                                    feature.feature_id+'</a>',
+                                            objectType,
+                                            gid: '<a href="/#dataview/'+objectRef+
+                                                                '" target="_blank">'+objectName+'</a>',
+                                            aliases: Object.keys(feature.aliases).join(', '),
+                                            type: feature.feature_type,
+                                            func: feature.function
+                                        }
+                                    );
+                            }
                         }
                     }
                 })
@@ -295,7 +316,7 @@ define ([
                     {sTitle: 'Type', mData: 'type'},
                     {sTitle: 'Aliases', mData: 'aliases'},
                     {sTitle: 'Function', mData: 'func'},
-                    {sTitle: 'Container', mData: 'gid'},
+                    {sTitle: 'Container Object', mData: 'gid'},
                     {sTitle: 'Type', mData: 'objectType'},
                 ],
                 aaData: [],

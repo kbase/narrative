@@ -29,6 +29,7 @@ define([
             displayName = StringUtil.escape(config.displayName),
             token = config.token,
             gravatar = Gravatar.make(),
+            // TODO: must replace with a client imported from a module.
             profileClient = new UserProfile(NarrativeConfig.url('user_profile'), {token: token});
         
         let gravatarDefault = 'identicon';

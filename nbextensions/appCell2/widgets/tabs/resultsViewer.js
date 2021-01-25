@@ -64,13 +64,6 @@ define([
                 ]);
                 container.innerHTML = layout;
 
-                ui.setContent('summary.body', p([
-                    'Finished on ',
-                    finishDate.toLocaleDateString(),
-                    ' at ',
-                    finishDate.toLocaleTimeString()
-                ].join('')));
-
                 // If there's a "report_ref" key in the results, load and show the report.
                 // console.log('SHOWING RESULTS', result);
                 let result = model.getItem('exec.outputWidgetInfo');

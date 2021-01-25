@@ -20,8 +20,6 @@ define([
     'util/jobLogViewer',
     'text!kbase/templates/job_status/status_table.html',
     'text!kbase/templates/job_status/header.html',
-    'text!kbase/templates/job_status/log_panel.html',
-    'text!kbase/templates/job_status/log_line.html',
     'text!kbase/templates/job_status/new_objects.html',
     'bootstrap',
 ], (
@@ -46,8 +44,6 @@ define([
     JobLogViewer,
     JobStatusTableTemplate,
     HeaderTemplate,
-    LogPanelTemplate,
-    LogLineTemplate,
     NewObjectsTemplate,
     Alert
 ) => {

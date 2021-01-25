@@ -87,8 +87,7 @@ define(['common/ui', 'common/html'], (UI, html) => {
      */
     function reportCellError(title, preamble, error) {
         const { tag } = html,
-            div = tag('div'),
-            p = tag('p');
+            div = tag('div');
 
         const ui = UI.make({
             node: document.body,
@@ -97,14 +96,14 @@ define(['common/ui', 'common/html'], (UI, html) => {
             title: 'Error',
             body: div(
                 {
-                    class: 'error-dialog__body',
+                    class: 'kb-error-dialog__body',
                 },
                 [
                     ui.buildPanel({
                         title: title,
                         type: 'danger',
                         body: ui.buildErrorTabs({
-                            preamble: p(preamble),
+                            preamble: preamble,
                             error: error,
                         }),
                     }),

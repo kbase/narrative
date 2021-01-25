@@ -48,7 +48,7 @@ define([
                     // For now, just pop up an error dialog;
 
                     Error.reportCellError('Error starting bulk import cell',
-                        'There was an error starting the bulk import cell',
+                        'There was an error starting the bulk import cell:',
                         error);
                 }
             }
@@ -96,7 +96,7 @@ define([
                     catch(error) {
                         Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
                         Error.reportCellError('Error inserting bulk import cell',
-                            'Could not insert the App Cell due to errors.',
+                            'Could not insert the Bulk Import cell due to errors.',
                             error);
                     }
                 });

@@ -114,25 +114,6 @@
     background-color: rgb(245 245 245);
   }
 
-  .panel-title > [data-toggle=collapse] {
-    &::before {
-      display: inline-block;
-      width: 12px;
-      margin-right: 4px;
-      margin-left: 0;
-      color: rgb(192 192 192);
-      content: '\f078 ';
-      font: normal 400 90%/1 $typeface-font-awesome;
-      vertical-align: baseline;
-    }
-
-    &.collapsed::before {
-      margin-right: 2px;
-      margin-left: 2px;
-      content: '\f054 ';
-    }
-  }
-
   .advanced-parameter-showing {
     display: block;
   }

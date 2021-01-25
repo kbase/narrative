@@ -4,7 +4,31 @@
 */
 
 .kb-app-cell {
-  font-family: $typeface-page-text;
+
+  &__container {
+    font-family: $typeface-page-text;
+    display: flex;
+    align-items: stretch;
+  }
+
+  &__prompt {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  &__body {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    flex: 1;
+    width: 100%;
+  }
+
+  &__widget_container {
+    display: block;
+    width: 100%;
+  }
 
   .kb-app-warning {
     font-family: $typeface-page-text;
@@ -122,26 +146,6 @@
     background-color: rgb(245 245 245);
   }
 
-  .panel-title > [data-toggle=collapse] {
-    &::before {
-      display: inline-block;
-      width: 12px;
-      margin-right: 4px;
-      margin-left: 0;
-      color: rgb(192 192 192);
-      content: '\f078 ';
-      font: normal 400 90% $typeface-font-awesome;
-      line-height: 1;
-      vertical-align: baseline;
-    }
-
-    &.collapsed::before {
-      margin-right: 2px;
-      margin-left: 2px;
-      content: '\f054 ';
-    }
-  }
-
   .advanced-parameter-showing {
     display: block;
   }
@@ -225,26 +229,6 @@
   padding: 0 0 0 10px;
   border: 0;
   background: transparent;
-}
-
-.report-widget .panel-title > [data-toggle=collapse] {
-  &::before {
-    display: inline-block;
-    width: 12px;
-    margin-right: 4px;
-    margin-left: 0;
-    color: rgb(192 192 192);
-    content: '\f078 ';
-    font: normal 400 90% $typeface-font-awesome;
-    line-height: 1;
-    vertical-align: baseline;
-  }
-
-  &.collapsed::before {
-    margin-right: 2px;
-    margin-left: 2px;
-    content: '\f054 ';
-  }
 }
 
 /* tweaks to elemnts that should be dimmed when the cell is not selected */
@@ -461,3 +445,70 @@ Buttons
   font-size: 75%;
   font-style: italic;
 }
+
+// other bits and pieces
+
+$rcp-height: 50px;
+// run-control-panel
+.kb-rcp {
+
+  &__layout_div {
+    border: 1px solid silver;
+    height: $rcp-height;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+  }
+
+  &__toolbar {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: $rcp-height;
+    line-height: $rcp-height;
+  }
+
+  &__btn-toolbar {
+    display: inline-block;
+    line-height: $rcp-height;
+    padding-right: 1rem;
+    vertical-align: bottom;
+  }
+
+
+  &-status {
+    &__container {
+      width: 450px;
+      overflow: hidden;
+      font-size: 14px;
+      line-height: $rcp-height;
+      display: inline-block;
+      margin-top: 0;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    &__fsm_display {
+      display: inline-block;
+      font: 12px/1 $typeface-page-text;
+      position: absolute;
+      top: 0;
+      margin-top: -30px;
+      padding: 6px 10px;
+      background: use-color('white');
+    }
+  }
+}
+
+.kb-fsm {
+  &__key {
+    margin-left: 3px;
+  }
+
+  &__value {
+    margin: 0 3px;
+    padding: 2px;
+    background-color: use-color('neutral');
+    color: use-color('white');
+  }
+}
+

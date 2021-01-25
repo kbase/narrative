@@ -18,6 +18,10 @@
     font: normal 700 130% $typeface-page-text;
   }
 
+  &.bg-danger .modal-title {
+    color: use-color('error-darker');
+  }
+
   &.kb-modal-alert .modal-title {
     color: unset;
   }

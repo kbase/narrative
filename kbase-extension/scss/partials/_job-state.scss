@@ -1,4 +1,25 @@
 .kb-job-state {
+  &__summary {
+    color: use-color('ink');
+    font-weight: 700;
+
+    &--completed {
+      color: use-color('success');
+      font-weight: 700;
+    }
+
+    &--error,
+    &--does_not_exist {
+      color: use-color('error');
+      font-weight: 700;
+    }
+
+    &--terminated {
+      color: use-color('warning');
+      font-weight: 700;
+    }
+  }
+
   &__cell {
     /* .kb-job-state__cell--action */
     &--action {}
@@ -8,9 +29,8 @@
 
     /* .kb-job-state__cell--status */
     &--status {
+      color: use_color('black');
       font-weight: 700;
-      color: use_color("black");
-
     }
   }
 
@@ -22,12 +42,12 @@
     &--completed,
     &--queued,
     &--running {
-      color: use_color("success");
+      color: use_color('success');
     }
 
     /*  .kb-job-state__icon--error */
     &--error {
-      color: use_color("error");
+      color: use_color('error');
     }
 
     /*  .kb-job-state__icon--does_not_exist,
@@ -35,7 +55,7 @@
     */
     &--does_not_exist,
     &--terminated {
-      color: use_color("warning");
+      color: use_color('warning');
     }
   }
 }

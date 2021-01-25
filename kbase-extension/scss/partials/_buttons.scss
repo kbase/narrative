@@ -42,3 +42,15 @@
     width: 80px;
   }
 }
+
+.kb-button {
+  &__toolbar_icon {
+    &--outdated {
+      font-size: $font-size-base;
+      line-height: 1;
+      border: 0;
+      padding: 6px 0 0 0;
+      color: use-color('warning');
+    }
+  }
+}

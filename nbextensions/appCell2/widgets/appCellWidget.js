@@ -8,8 +8,7 @@ define([
     'common/events',
     'common/error',
     'common/jupyter',
-    'kb_common/html',
-    'kb_common/format',
+    'common/html',
     'common/props',
     'kb_service/client/catalog',
     'kb_service/client/narrativeMethodStore',
@@ -31,7 +30,7 @@ define([
     './appCellWidget-fsm',
     './tabs/resultsTab',
     './tabs/status/logTab',
-    './tabs/errorTab',
+    'common/errorDisplay',
     'common/cellComponents/tabs/infoTab',
     'common/runClock',
     'css!google-code-prettify/prettify.css',
@@ -47,7 +46,6 @@ define([
     ToErr,
     Narrative,
     html,
-    formatting,
     Props,
     Catalog,
     NarrativeMethodStore,
@@ -83,7 +81,8 @@ define([
         p = t('p'),
         blockquote = t('blockquote'),
         appStates = AppStates,
-        { toBoolean } = utils;
+        { toBoolean } = utils,
+        developerMode = false;
 
     function factory(config) {
         const { workspaceInfo } = config,
@@ -823,65 +822,44 @@ define([
             return;
         }
 
+        // view the FSM state in the UI for debugging purposes
         function showFsmBar() {
-            const currentState = fsm.getCurrentState(),
-                content = Object.keys(currentState.state)
-                    .map((key) => {
-                        return span([
-                            span({ style: { fontStyle: 'italic' } }, key),
-                            ' : ',
-                            span(
-                                {
-                                    style: {
-                                        padding: '4px',
-                                        fontWeight: 'noramal',
-                                        border: '1px silver solid',
-                                        backgroundColor: 'gray',
-                                        color: 'white',
-                                    },
-                                },
-                                currentState.state[key]
-                            ),
-                        ]);
-                    })
-                    .join('  ');
-
-            ui.setContent('fsm-display.content', content);
-        }
-
-        function showAboutApp() {
-            const appSpec = model.getItem('app.spec');
-            ui.setContent('about-app.name', appSpec.info.name);
-            ui.setContent('about-app.module', appSpec.info.namespace || ui.na());
-            ui.setContent('about-app.id', appSpec.info.id);
-            ui.setContent('about-app.summary', appSpec.info.subtitle);
-            ui.setContent('about-app.version', appSpec.info.ver);
-            ui.setContent('about-app.git-commit-hash', appSpec.info.git_commit_hash || ui.na());
-            ui.setContent(
-                'about-app.authors',
-                (function () {
-                    if (appSpec.info.authors && appSpec.info.authors.length > 0) {
-                        return appSpec.info.authors.join('<br>');
-                    }
-                    return ui.na();
-                })()
-            );
-            const appRef = [appSpec.info.id, model.getItem('app').tag].filter(toBoolean).join('/'),
-                link = a({ href: '/#appcatalog/app/' + appRef, target: '_blank' }, 'Catalog Page');
-            ui.setContent('about-app.catalog-link', link);
-        }
-
-        function showAppSpec() {
-            if (!model.getItem('app.spec')) {
+            if (!developerMode) {
                 return;
             }
-            const specText = JSON.stringify(model.getItem('app.spec'), false, 3),
-                fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
-                content = pre(
-                    { class: 'prettyprint lang-json', style: { fontSize: '80%' } },
-                    fixedText
-                );
-            ui.setContent('about-app.spec', content);
+            const currentState = fsm.getCurrentState(),
+                existingJob = model.getItem('exec.jobState');
+
+            let content = Object.keys(currentState.state)
+                .map((key) => {
+                    return span([
+                        span({
+                            class: 'kb-fsm__key',
+                        }, `${key}:`),
+                        span(
+                            {
+                                class: 'kb-fsm__value',
+                            },
+                            currentState.state[key]
+                        ),
+                    ]);
+                })
+                .join('  ');
+
+            if (existingJob && existingJob.job_id) {
+                content = span([
+                    span({
+                        class: 'kb-fsm__key',
+                    }, 'job ID:'),
+                    span({
+                            class: 'kb-fsm__value',
+                        },
+                        existingJob.job_id
+                    ),
+                ]) + content;
+            }
+            ui.getElement('fsm-display').classList.remove('hidden');
+            ui.setContent('fsm-display', content);
         }
 
         function doActionButton(data) {
@@ -951,7 +929,7 @@ define([
                 {
                     tabindex: '0',
                     type: 'button',
-                    class: 'btn hidden',
+                    class: 'btn hidden kb-button__toolbar_icon--outdated',
                     dataContainer: 'body',
                     container: 'body',
                     dataToggle: 'popover',
@@ -960,10 +938,6 @@ define([
                     dataElement: 'outdated',
                     role: 'button',
                     title: 'New version available',
-                    style: {
-                        color: '#f79b22',
-                        padding: '6px 0 0 0',
-                    },
                 },
                 span({
                     class: 'fa fa-exclamation-triangle fa-2x',
@@ -975,141 +949,82 @@ define([
         }
 
         function buildRunControlPanel(events) {
-            return div({ dataElement: 'run-control-panel' }, [
-                div(
-                    {
-                        style: {
-                            border: '1px silver solid',
-                            height: '50px',
-                            position: 'relative',
-                            display: 'flex',
-                            flexDirection: 'row',
+            const cssBaseClass = 'kb-rcp';
+            return div(
+                {
+                    class: cssBaseClass,
+                    dataElement: 'run-control-panel',
+                },
+                [
+                    div(
+                        {
+                            class: `${cssBaseClass}__layout_div`,
                         },
-                    },
-                    [
-                        div(
-                            {
-                                style: {
-                                    height: '50px',
-                                    overflow: 'hidden',
-                                    textAlign: 'left',
-                                    lineHeight: '50px',
-                                    verticalAlign: 'middle',
-                                    display: 'flex',
-                                    flexDirection: 'row',
+                        [
+                            // action button widget
+                            actionButtonWidget.buildLayout(events),
+                            // status stuff
+                            div(
+                                {
+                                    class: `${cssBaseClass}-status__fsm_display hidden`,
+                                    dataElement: 'fsm-display',
                                 },
-                            },
-                            [actionButtonWidget.buildLayout(events)]
-                        ),
-                        div(
-                            {
-                                dataElement: 'status',
-                                style: {
-                                    width: '450px',
-                                    height: '50px',
-                                    overflow: 'hidden',
+                            ),
+                            div({
+                                class: `${cssBaseClass}-status__container`,
+                                dataElement: 'execMessage'
+
+                            }),
+                            // toolbar buttons on the RHS
+                            div(
+                                {
+                                    class: `${cssBaseClass}__toolbar`,
+                                    dataElement: 'toolbar',
                                 },
-                            },
-                            [
-                                div(
-                                    {
-                                        style: {
-                                            height: '50px',
-                                            marginTop: '0px',
-                                            textAlign: 'left',
-                                            lineHeight: '50px',
-                                            verticalAlign: 'middle',
+                                [
+                                    div(
+                                        {
+                                            class: `${cssBaseClass}__btn-toolbar btn-toolbar`,
                                         },
-                                    },
-                                    [div([span({ dataElement: 'execMessage' })])]
-                                ),
-                            ]
-                        ),
-                        div(
-                            {
-                                dataElement: 'toolbar',
-                                style: {
-                                    position: 'absolute',
-                                    right: '0',
-                                    top: '0',
-                                    height: '50px',
-                                },
-                            },
-                            [
-                                div(
-                                    {
-                                        style: {
-                                            display: 'inline-block',
-                                            right: '0',
-                                            height: '50px',
-                                            lineHeight: '50px',
-                                            paddingRight: '15px',
-                                            verticalAlign: 'bottom',
-                                        },
-                                    },
-                                    [
-                                        div(
-                                            {
-                                                class: 'btn-toolbar',
-                                                style: {
-                                                    display: 'inline-block',
-                                                    verticalAlign: 'bottom',
-                                                },
-                                            },
-                                            buildRunControlPanelDisplayButtons(events)
-                                        ),
-                                    ]
-                                ),
-                            ]
-                        ),
-                    ]
-                ),
-                div(
-                    {
-                        dataElement: 'tab-pane',
-                    },
-                    [div({ dataElement: 'widget' })]
-                ),
-            ]);
+                                        buildRunControlPanelDisplayButtons(events)
+                                    ),
+                                ]
+                            ),
+                        ]
+                    ),
+                    div(
+                        {
+                            dataElement: 'tab-pane',
+                        },
+                        [div({ dataElement: 'widget' })]
+                    ),
+                ]);
         }
 
         function renderLayout() {
             const events = Events.make(),
                 content = div(
                     {
-                        class: 'kbase-extension kb-app-cell',
-                        style: { display: 'flex', alignItems: 'stretch' },
+                        class: 'kbase-extension kb-app-cell kb-app-cell__container',
                     },
                     [
                         div(
                             {
-                                class: 'prompt',
+                                class: 'kb-app-cell__prompt prompt',
                                 dataElement: 'prompt',
-                                style: {
-                                    display: 'flex',
-                                    alignItems: 'stretch',
-                                    flexDirection: 'column',
-                                },
                             },
                             [div({ dataElement: 'status' })]
                         ),
                         div(
                             {
-                                class: 'body',
+                                class: 'kb-app-cell__body body',
                                 dataElement: 'body',
-                                style: {
-                                    display: 'flex',
-                                    alignItems: 'stretch',
-                                    flexDirection: 'column',
-                                    flex: '1',
-                                    width: '100%',
-                                },
                             },
                             [
                                 div(
                                     {
+                                        class: 'kb-app-cell__widget_container',
                                         dataElement: 'widget',
-                                        style: { display: 'block', width: '100%' },
                                     },
                                     [
                                         div({ class: 'container-fluid' }, [
@@ -1187,30 +1102,30 @@ define([
                 initialState: {
                     mode: 'new',
                 },
-                onNewState: function (fsm) {
-                    model.setItem('fsm.currentState', fsm.getCurrentState().state);
+                onNewState: function (_fsm) {
+                    model.setItem('fsm.currentState', _fsm.getCurrentState().state);
                     // save the narrative!
                 },
             });
             // fsm events
             fsm.bus.on('disconnected', () => {
                 ui.setContent(
-                    'run-control-panel.status.execMessage',
+                    'run-control-panel.execMessage',
                     'Disconnected. Unable to communicate with server.'
                 );
             });
 
             fsm.bus.on('on-execute-requested', () => {
-                ui.setContent('run-control-panel.status.execMessage', 'Sending...');
+                ui.setContent('run-control-panel.execMessage', 'Sending...');
             });
             fsm.bus.on('exit-execute-requested', () => {
-                ui.setContent('run-control-panel.status.execMessage', '');
+                ui.setContent('run-control-panel.execMessage', '');
             });
             fsm.bus.on('on-launched', () => {
-                ui.setContent('run-control-panel.status.execMessage', 'Launching...');
+                ui.setContent('run-control-panel.execMessage', 'Launching...');
             });
             fsm.bus.on('exit-launched', () => {
-                ui.setContent('run-control-panel.status.execMessage', '');
+                ui.setContent('run-control-panel.execMessage', '');
             });
 
             fsm.bus.on('start-queueing', () => {
@@ -1336,15 +1251,6 @@ define([
                 );
             }
 
-            const indicatorNode = ui.getElement('run-control-panel.status.indicator');
-            const iconNode = ui.getElement('run-control-panel.status.indicator.icon');
-            if (iconNode) {
-                // clear the classes
-                indicatorNode.className = state.ui.appStatus.classes.join(' ');
-                iconNode.className = '';
-                iconNode.classList.add('fa', 'fa-' + state.ui.appStatus.icon.type, 'fa-3x');
-            }
-
             // Tab state
 
             // TODO: let user-selection override auto-selection of tab, unless
@@ -1462,7 +1368,7 @@ define([
 
             // TODO: evaluate the params again before we do this.
             fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
-            ui.setContent('run-control-panel.status.execMessage', '');
+            ui.setContent('run-control-panel.execMessage', '');
             clearOutput();
             renderUI();
         }
@@ -1711,9 +1617,8 @@ define([
         let jobListeners = [];
 
         function startListeningForJobMessages(jobId) {
-            let ev;
 
-            ev = runtime.bus().listen({
+            let ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId,
                 },
@@ -1836,39 +1741,14 @@ define([
             }
         }
 
-        // FSM state change events
-
-        function doStartRunning() {
+        function updateJobState() {
             const jobState = model.getItem('exec.jobState');
-            if (!jobState) {
-                console.warn('What, no job state?');
-                return;
-            }
+            ui.setContent('run-control-panel.execMessage', Jobs.createJobStatusLines(jobState));
+        }
 
-            const message = span([
-                ui.loading({ size: null, color: 'green' }),
-                ' Running - ',
-                span({ dataElement: 'clock' }),
-            ]);
-            ui.setContent('run-control-panel.status.execMessage', message);
-
-            widgets.runClock = RunClock.make({
-                prefix: 'started ',
-                suffix: ' ago',
-            });
-            const exec_start_time = jobState.running;
-
-            widgets.runClock
-                .start({
-                    node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                    startTime: exec_start_time,
-                })
-                .catch((err) => {
-                    ui.setContent(
-                        'run-control-panel.status.execMessage.clock',
-                        'ERROR:' + err.message
-                    );
-                });
+        // FSM state change events
+        function doStartRunning() {
+            updateJobState();
         }
 
         function doStopRunning() {
@@ -1878,34 +1758,7 @@ define([
         }
 
         function doStartQueueing() {
-            const jobState = model.getItem('exec.jobState');
-            if (!jobState) {
-                console.warn('What, no job state?');
-                return;
-            }
-
-            const message = span([
-                ui.loading({ color: 'green' }),
-                ' Waiting - in Queue ',
-                span({ dataElement: 'clock' }),
-            ]);
-            ui.setContent('run-control-panel.status.execMessage', message);
-
-            widgets.runClock = RunClock.make({
-                prefix: 'for ',
-            });
-            const creation_time = jobState.created;
-            widgets.runClock
-                .start({
-                    node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                    startTime: creation_time,
-                })
-                .catch((err) => {
-                    ui.setContent(
-                        'run-control-panel.status.execMessage.clock',
-                        'ERROR:' + err.message
-                    );
-                });
+            updateJobState();
         }
 
         function doStopQueueing() {
@@ -1918,93 +1771,13 @@ define([
             if (widgets.runClock) {
                 widgets.runClock.stop();
             }
-            ui.setContent('run-control-panel.status.execMessage', '');
-        }
-
-        function niceState(jobState) {
-            let label;
-            let color;
-            switch (jobState) {
-                case 'completed':
-                    label = 'success';
-                    color = 'green';
-                    break;
-                case 'error':
-                    label = 'error';
-                    color = 'red';
-                    break;
-                case 'terminated':
-                    label = 'cancellation';
-                    color = 'orange';
-                    break;
-                default:
-                    label = jobState;
-                    color = 'black';
-            }
-
-            return span(
-                {
-                    style: {
-                        color: color,
-                        fontWeight: 'bold',
-                    },
-                },
-                label
-            );
+            ui.setContent('run-control-panel.execMessage', '');
         }
 
         function doOnSuccess() {
-            // have we created output yet?
-            const jobState = model.getItem('exec.jobState'),
-                jobId = model.getItem('exec.jobState.job_id');
+            updateJobState();
 
-            // show either the clock, if < 24 hours, or the timestamp.
-            const message = span([
-                'Finished with ',
-                niceState(jobState.status),
-                ' ',
-                span({ dataElement: 'clock' }),
-            ]);
-            ui.setContent('run-control-panel.status.execMessage', message);
 
-            // Show time since this app cell run finished.
-            widgets.runClock = RunClock.make({
-                on: {
-                    tick: function (elapsed) {
-                        let clock;
-                        const day = 1000 * 60 * 60 * 24;
-                        if (elapsed > day) {
-                            const finish_time = jobState.finished;
-                            clock = span([' on ', format.niceTime(finish_time)]);
-                            return {
-                                content: clock,
-                                stop: true,
-                            };
-                        } else {
-                            clock = [
-                                config.prefix || '',
-                                format.niceDuration(elapsed),
-                                config.suffix || '',
-                            ].join('');
-                            return {
-                                content: clock + ' ago',
-                            };
-                        }
-                    },
-                },
-            });
-            const finish_time = jobState.finished;
-            widgets.runClock
-                .start({
-                    node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                    startTime: finish_time,
-                })
-                .catch((err) => {
-                    ui.setContent(
-                        'run-control-panel.status.execMessage.clock',
-                        'ERROR:' + err.message
-                    );
-                });
 
             // Output Cell Handling
 
@@ -2017,6 +1790,7 @@ define([
             }
 
             // If so, is the cell still there?
+            const jobId = model.getItem('exec.jobState.job_id');
             let outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']);
 
             // If the output cell is already recorded in the app cell, and it it is in the
@@ -2061,141 +1835,37 @@ define([
         }
 
         function doResumeSuccess() {
-            const jobState = model.getItem('exec.jobState');
-
-            // show either the clock, if < 24 hours, or the timestamp.
-            const message = span([
-                'Finished with ',
-                niceState(jobState.status),
-                ' ',
-                span({ dataElement: 'clock' }),
-            ]);
-            ui.setContent('run-control-panel.status.execMessage', message);
-
-            // Show time since this app cell run finished.
-            widgets.runClock = RunClock.make({
-                on: {
-                    tick: function (elapsed) {
-                        let clock;
-                        const day = 1000 * 60 * 60 * 24;
-                        if (elapsed > day) {
-                            const finish_time = jobState.finished;
-                            clock = span([' on ', format.niceTime(finish_time)]);
-                            return {
-                                content: clock,
-                                stop: true,
-                            };
-                        } else {
-                            clock = [
-                                config.prefix || '',
-                                format.niceDuration(elapsed),
-                                config.suffix || '',
-                            ].join('');
-                            return {
-                                content: clock + ' ago',
-                            };
-                        }
-                    },
-                },
-            });
-            const finish_time = jobState.finished;
-            widgets.runClock
-                .start({
-                    node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                    startTime: finish_time,
-                })
-                .catch((err) => {
-                    ui.setContent(
-                        'run-control-panel.status.execMessage.clock',
-                        'ERROR:' + err.message
-                    );
-                });
+            updateJobState();
         }
 
         function doOnError() {
-            const jobState = model.getItem('exec.jobState');
-            const finish_time = jobState.finished;
-            const message = span([
-                'Finished with ',
-                niceState(jobState.status),
-                ' on ',
-                format.niceTime(finish_time),
-                ' (',
-                span({ dataElement: 'clock' }),
-                ')',
-            ]);
-
-            ui.setContent('run-control-panel.status.execMessage', message);
-
-            // Show time since this app cell run finished.
-            widgets.runClock = RunClock.make({
-                suffix: ' ago',
-            });
-            widgets.runClock
-                .start({
-                    node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                    startTime: finish_time,
-                })
-                .catch((err) => {
-                    ui.setContent(
-                        'run-control-panel.status.execMessage.clock',
-                        'ERROR:' + err.message
-                    );
-                });
+            updateJobState();
         }
 
         function doExitError() {
             if (widgets.runClock) {
                 widgets.runClock.stop();
             }
-            ui.setContent('run-control-panel.status.execMessage', '');
+            ui.setContent('run-control-panel.execMessage', '');
         }
 
         function doOnCancelling() {
-            ui.setContent('run-control-panel.status.execMessage', 'Cancelling...');
+            ui.setContent('run-control-panel.execMessage', 'Cancelling...');
         }
 
         function doExitCancelling() {
-            ui.setContent('run-control-panel.status.execMessage', '');
+            ui.setContent('run-control-panel.execMessage', '');
         }
 
         function doOnCancelled() {
-            const jobState = model.getItem('exec.jobState');
-            const finish_time = jobState.finished;
-
-            const message = span([
-                span({ style: { color: 'orange' } }, 'Canceled'),
-                ' on ',
-                format.niceTime(finish_time),
-                ' (',
-                span({ dataElement: 'clock' }),
-                ')',
-            ]);
-
-            ui.setContent('run-control-panel.status.execMessage', message);
-
-            // Show time since this app cell run finished.
-            widgets.runClock = RunClock.make({
-                suffix: ' ago',
-            });
-            widgets.runClock
-                .start({
-                    node: ui.getElement('run-control-panel.status.execMessage.clock'),
-                    startTime: finish_time,
-                })
-                .catch((err) => {
-                    ui.setContent(
-                        'run-control-panel.status.execMessage.clock',
-                        'ERROR:' + err.message
-                    );
-                });
+            updateJobState();
         }
 
         function doExitCancelled() {
             if (widgets.runClock) {
                 widgets.runClock.stop();
             }
-            ui.setContent('run-control-panel.status.execMessage', '');
+            ui.setContent('run-control-panel.execMessage', '');
         }
 
         function doRemove() {
@@ -2609,8 +2279,6 @@ define([
                 })
                 .then(() => {
                     // this will not change, so we can just render it here.
-                    showAboutApp();
-                    showAppSpec();
                     PR.prettyPrint(null, container);
 
                     // if we start out in 'new' state, then we need to promote to

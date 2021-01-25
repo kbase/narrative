@@ -912,8 +912,8 @@ define([
         }
 
         function setContent(path, content) {
-            const node = getElements(path);
-            node.forEach((_node) => {
+            const nodes = getElements(path);
+            nodes.forEach((_node) => {
                 _node.innerHTML = content;
             });
         }
@@ -1307,7 +1307,7 @@ define([
         }
 
         function _buildError(err) {
-            return div({}, [
+            return [
                 buildPanel({
                     title: 'Message',
                     body: err.message,
@@ -1334,19 +1334,25 @@ define([
                           classes: ['kb-panel-light'],
                       })
                     : '',
-            ]);
+            ].join('\n');
         }
 
         function buildErrorStacktrace(err) {
-            return div([
+            return div(
+                {
+                    class: 'kb-error-dialog__stacktrace_container',
+                },
+                [
                 ol(
-                    {},
-                    err.stack.split(/\n/).map((item) => {
+                    {
+                        class: 'kb-error-dialog__stacktrace_lines',
+                    },
+                    err.stack.split(/\n/)
+                        .filter((item) => (item.length))
+                        .map((item) => {
                         return li(
                             {
-                                style: {
-                                    marginTop: '6px',
-                                },
+                                class: 'kb-error-dialog__stacktrace_single_line',
                             },
                             [htmlEncode(item)]
                         );
@@ -1362,23 +1368,24 @@ define([
                         label: 'Summary',
                         name: 'summary',
                         content: div(
-                            {
-                                style: {
-                                    marginTop: '10px',
+                            {},
+                            [
+                                p({
+                                    class: 'kb-error-dialog__err_preamble',
                                 },
-                            },
-                            [arg.preamble, p(arg.error.message)]
+                                arg.preamble),
+                                p({
+                                    class: 'kb-error-dialog__err_message',
+                                },
+                                arg.error.message),
+                            ]
                         ),
                     },
                     {
                         label: 'Details',
                         name: 'details',
                         content: div(
-                            {
-                                style: {
-                                    marginTop: '10px',
-                                },
-                            },
+                            {},
                             [_buildError(arg.error)]
                         ),
                     },
@@ -1386,11 +1393,7 @@ define([
                         label: 'Stack Trace',
                         name: 'stacktrace',
                         content: div(
-                            {
-                                style: {
-                                    marginTop: '10px',
-                                },
-                            },
+                            {},
                             [
                                 buildPanel({
                                     title: 'Javascript Stack Trace',

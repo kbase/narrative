@@ -1,0 +1,207 @@
+{
+    "common": {},
+    "cases": {
+        "CASE_1": {}
+    },
+    "envs": {
+        "ci": {
+            "CASE_1": {
+                "narrativeId": 58129,
+                "cells": [
+                    {
+                        "cell": 3,
+                        "description": "BLASTp_Search filtered",
+                        "rowCount": 6,
+                        "row": 3,
+                        "cols": [
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/51911\\/35\\/1\\?sub=Feature&subid=GKPPBJFO_03444$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "GKPPBJFO_03444"
+                            },
+                            {
+                                "text": "gene"
+                            },
+                            {
+                                "text": "rpoB, 2.7.7.6"
+                            },
+                            {
+                                "text": "DNA-directed RNA polymerase subunit beta"
+                            },
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/51911\\/35\\/1$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "Bin.003-Prokka.Genome"
+                            },
+                            {
+                                "text": "Genome"
+                            }
+                        ]
+                    },
+                    {
+                        "cell": 4,
+                        "description": "BLASTp_Search filtered",
+                        "rowCount": 7,
+                        "row": 4,
+                        "cols": [
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/58125\\/2\\/1\\?sub=Feature&subid=FLCBBPKP_13265$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "FLCBBPKP_13265"
+                            },
+                            {
+                                "text": "na"
+                            },
+                            {
+                                "text": "na"
+                            },
+                            {
+                                "text": "na"
+                            },
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/58125\\/2\\/1$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "Compost_HQ_Bins.AMA"
+                            },
+                            {
+                                "text": "AnnotatedMetagenomeAssembly"
+                            }
+                        ]
+                    },
+                    {
+                        "cell": 5,
+                        "description": "merged ama and genomeset feature sets",
+                        "rowCount": 10,
+                        "row": 4,
+                        "cols": [
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/58125\\/2\\/1\\?sub=Feature&subid=FLCBBPKP_13265$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "FLCBBPKP_13265"
+                            },
+                            {
+                                "text": "na"
+                            },
+                            {
+                                "text": "na"
+                            },
+                            {
+                                "text": "na"
+                            },
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/58125\\/2\\/1$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "Compost_HQ_Bins.AMA"
+                            },
+                            {
+                                "text": "AnnotatedMetagenomeAssembly"
+                            }
+                        ]
+                    },
+                    {
+                        "cell": 5,
+                        "description": "merged ama and genomeset feature sets",
+                        "rowCount": 10,
+                        "row": 9,
+                        "cols": [
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/51911\\/37\\/1\\?sub=Feature&subid=FMCNOMNJ_03799$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "FMCNOMNJ_03799"
+                            },
+                            {
+                                "text": "gene"
+                            },
+                            {
+                                "text": "rpoB, 2.7.7.6"
+                            },
+                            {
+                                "text": "DNA-directed RNA polymerase subunit beta"
+                            },
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/51911\\/37\\/1$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "Bin.062-Prokka.Genome"
+                            },
+                            {
+                                "text": "Genome"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+}

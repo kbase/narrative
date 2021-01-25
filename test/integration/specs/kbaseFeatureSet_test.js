@@ -1,105 +1,74 @@
-/*global describe, it, browser, expect, $, afterEach*/
-const {login, openNarrative} = require('../wdioUtils.js');
-
-const TEST_CASE1 = {
-    narrativeId: 56638,
-    cell: 6,
-    description: 'merged feature set',
-    rowCount: 6,
-    row: 6,
-    cols: [
-        {
-            selector: 'a',
-            attrs: [
-                {
-                    key: 'href',
-                    value: '/#dataview/56638/3/1?sub=Feature&subid=A4S02_RS00020'
-                },
-                {
-                    key: 'target',
-                    value: '_blank'
-                }
-            ],
-            text: 'A4S02_RS00020'
-        },
-        {
-            text: 'A4S02_00020, A4S02_RS00020, WP_082246712.1'
-        },
-        {
-            selector: 'a',
-            attrs: [
-                {
-                    key: 'href',
-                    value: '/#dataview/56638/3/1'
-                },
-                {
-                    key: 'target',
-                    value: '_blank'
-                }
-            ],
-            text: 'Acetobacter_ascendens'
-        },
-        {
-            text: 'gene'
-        },
-        {
-            text: 'IS5 family transposase'
-        }
-    ]
-};
+/*global describe, it, browser, expect, afterEach, beforeEach*/
+const {login} = require('../wdioUtils.js');
+const {NarrativeTesting} = require('../NarrativeTesting');
+const testData = require('./kbaseFeatureSet_data.json');
+const TIMEOUT = 30000;
 
 describe('Test kbaseFeatureSet', () => {
     'use strict';
+
+    beforeEach(async () => {
+        await browser.setTimeout({ 'implicit': 30000 });
+        await browser.reloadSession();
+        await login();
+    });
 
     afterEach(async () => {
         await browser.deleteCookies();
     });
 
-    async function narrativeContainer() {
-        const container = await $('#notebook-container');
-        return container;
-    }
-
-    async function narrativeCell(cellNumber) {
-        const container = await narrativeContainer();
-        const cells = await container.$$('.cell');
-        expect(cells.length).toBeGreaterThanOrEqual(cellNumber);
-        return cells[cellNumber - 1];
-    }
-
     // sync version
     it('opens a narrative which should have a sample set', async () => {
-        browser.setTimeout({ 'implicit': 30000 });
-        await login();
-        await openNarrative(TEST_CASE1.narrativeId);
-        const cell = await narrativeCell(TEST_CASE1.cell);
+        const t = new NarrativeTesting({testData, timeout: TIMEOUT, caseLabel: 'CASE_1'});
 
-        // Test description display.
-        const description = await cell.$('[test-id="description"]');
-        expect(description).toHaveText(TEST_CASE1.description);
+        const notebookContainer = await t.openNarrative(t.caseData.narrativeId);
 
-        // Test the 3rd row of the table.
-        const tableBody = await cell.$('[role="grid"] > tbody');
+        for (const cellCase of t.caseData.cells) {
+            const cell = await t.waitForCell(notebookContainer, cellCase.cell);
 
-        const rows = await tableBody.$$('[role="row"');
-        expect(rows.length).toEqual(TEST_CASE1.rowCount);
-        const cols = await rows[TEST_CASE1.row - 1].$$('td');
+            // Test description display.
+            const description = await cell.$('[test-id="description"] > [test-id="value"]');
+            await expect(description).toHaveText(cellCase.description);
 
-        expect(cols.length).toEqual(TEST_CASE1.cols.length);
+            // Test the 3rd row of the table.
+            const tableBody = await cell.$('[role="grid"] > tbody');
 
-        cols.forEach((el, index) => {
-            const colDef = TEST_CASE1.cols[index];
-            if (colDef.selector) {
-                el = el.$(colDef.selector);
-            }
-            if (colDef.attrs) {
-                for (const {key, value} of colDef.attrs) {
-                    expect(el).toHaveAttr(key, value);
+            const rows = await tableBody.$$('[role="row"');
+            await expect(rows.length).toEqual(cellCase.rowCount);
+            const cols = await rows[cellCase.row - 1].$$('td');
+
+            await expect(cols.length).toEqual(cellCase.cols.length);
+
+            for (let colIndex = 0; colIndex < cols.length; colIndex += 1) {
+                const colElement = cols[colIndex];
+                const colDef = cellCase.cols[colIndex];
+                const elementToInspect = await (async () => {
+                    if (colDef.selector) {
+                        return await colElement.$(colDef.selector);
+                    }
+                    return colElement;
+                })();
+                if (colDef.attrs) {
+                    for (const {key, value, regex} of colDef.attrs) {
+                        if (value) {
+                            await expect(elementToInspect).toHaveAttribute(key, value);
+                        } else if (regex) {
+                            const attributeValue = await elementToInspect.getAttribute(key);
+                            const compiledRegex = new RegExp(regex);
+                            await expect(compiledRegex.test(attributeValue)).toBeTruthy();
+                        } else {
+                            throw new Error('Either value or regex required for attrs');
+                        }
+                    }
+                }
+                if (colDef.text) {
+                    await expect(elementToInspect).toHaveText(colDef.text);
                 }
             }
-            if (colDef.text) {
-                expect(el).toHaveText(colDef.text);
-            }
-        });
+        }
+    });
+
+    it('does nothing important (but triggers lost sessions if there are async errors above)', async () => {
+        await expect(true).toEqual(true);
     });
 });

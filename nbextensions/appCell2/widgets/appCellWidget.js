@@ -19,10 +19,8 @@ define([
     'common/fsm',
     'common/cellUtils',
     'common/busEventManager',
-    'common/format',
     'common/spec',
     'common/semaphore',
-    'common/lang',
     'common/jobs',
     'common/cellComponents/actionButtons',
     'narrativeConfig',
@@ -32,7 +30,7 @@ define([
     './tabs/status/logTab',
     'common/errorDisplay',
     'common/cellComponents/tabs/infoTab',
-    'common/runClock',
+    'util/developerMode',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css',
 ], (
@@ -56,10 +54,8 @@ define([
     Fsm,
     cellUtils,
     BusEventManager,
-    format,
     Spec,
     Semaphore,
-    lang,
     Jobs,
     ActionButtons,
     Config,
@@ -69,7 +65,7 @@ define([
     logTabWidget,
     errorTabWidget,
     infoTabWidget,
-    RunClock
+    devMode,
 ) => {
     'use strict';
 
@@ -77,12 +73,11 @@ define([
         div = t('div'),
         span = t('span'),
         a = t('a'),
-        pre = t('pre'),
         p = t('p'),
         blockquote = t('blockquote'),
         appStates = AppStates,
         { toBoolean } = utils,
-        developerMode = false;
+        developerMode = devMode.mode;
 
     function factory(config) {
         const { workspaceInfo } = config,

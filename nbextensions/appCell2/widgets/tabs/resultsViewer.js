@@ -8,7 +8,7 @@ define([
     'kb_common/html',
     'util/display',
     'kbaseReportView'
-], function(
+], (
     Promise,
     $,
     UI,
@@ -18,17 +18,16 @@ define([
     html,
     DisplayUtil,
     KBaseReportView
-) {
+) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
-        p = t('p'),
         a = t('a'),
         span = t('span');
 
     function factory(config) {
-        var container,
-            model = config.model,
+        const {model} = config;
+        let container,
             ui,
             runtime,
             nms,
@@ -41,12 +40,11 @@ define([
             runtime = Runtime.make();
             nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'));
 
-            var jobState = arg.jobState;
+            const {jobState} = arg;
 
-            return Promise.try(function () {
-                var finishDate = new Date(jobState.finish_time);
+            return Promise.try(() => {
 
-                var layout = div({
+                const layout = div({
                     style: {
                         overflowX: 'auto',
                         maxWidth: 'inherit'
@@ -66,7 +64,7 @@ define([
 
                 // If there's a "report_ref" key in the results, load and show the report.
                 // console.log('SHOWING RESULTS', result);
-                let result = model.getItem('exec.outputWidgetInfo');
+                const result = model.getItem('exec.outputWidgetInfo');
                 if (arg.isParentJob && result && result.params && result.params.report_name) {
                     renderReportView(result.params);
                 }
@@ -84,11 +82,11 @@ define([
                     tag: model.getItem('app.tag')
                 });
             })
-                .then(function(appInfo) {
+                .then((appInfo) => {
                 // If there are suggested next apps (er, methods), they'll be listed
                 // by app id. Look them up!
-                    var suggestions = appInfo[0].suggestions || {};
-                    var tag = model.getItem('app.tag');
+                    const suggestions = appInfo[0].suggestions || {};
+                    const tag = model.getItem('app.tag');
                     if (suggestions.next_methods) {
                         return nms.get_method_spec({
                             ids: suggestions.next_methods,
@@ -96,7 +94,7 @@ define([
                         });
                     }
                 })
-                .then(function(nextApps) {
+                .then((nextApps) => {
                     renderNextApps(nextApps);
                 });
         }
@@ -105,7 +103,7 @@ define([
             if (reportRendered) {
                 return;
             }
-            let reportElem = ui.getElement('report-widget');
+            const reportElem = ui.getElement('report-widget');
             if (DisplayUtil.verticalInViewport(reportElem)) {
                 new KBaseReportView($(reportElem), reportParams);
                 reportRendered = true;
@@ -121,7 +119,7 @@ define([
             ui.setContent('report', div({dataElement: 'report-widget'}));
             lazyRenderReport();
             if (!reportRendered) {
-                let nbContainer = document.querySelector('#notebook-container');
+                const nbContainer = document.querySelector('#notebook-container');
                 nbContainer.addEventListener(
                     'scroll',
                     lazyRenderReport
@@ -131,19 +129,19 @@ define([
 
         function renderNextApps(apps) {
             apps = apps || [];
-            var events = Events.make();
-            var appList = div([
+            const events = Events.make();
+            let appList = div([
                 'No suggestions available! ',
                 a({ href:'https://www.kbase.us/support/', target: '_blank' }, 'Contact us'),
                 ' if you would like to add one.'
             ]);
             // filter out legacy apps with no module name
-            apps = apps.filter(function(app) {
+            apps = apps.filter((app) => {
                 return app.info.module_name;
             });
             // If there are no next apps to suggest, don't even show the Suggested Next Steps panel
             if (apps.length > 0) {
-                appList = apps.map(function(app, index) {
+                appList = apps.map((app) => {
                     return div([
                         a({
                             id: events.addEvent({
@@ -172,9 +170,7 @@ define([
         }
 
 
-        function stop(arg) {
-
-        }
+        function stop() {}
 
         return {
             start: start,

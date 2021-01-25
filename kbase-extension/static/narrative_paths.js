@@ -108,6 +108,7 @@ require.config({
         common: 'kbase/js/common',
         widgets: 'kbase/js/widgets',
         appWidgets: 'kbase/js/widgets/appWidgets2',
+        jsonrpc: 'kbase/js/jsonrpc',  
 
 
         /***

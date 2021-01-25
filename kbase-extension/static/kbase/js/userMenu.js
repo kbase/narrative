@@ -1,4 +1,4 @@
-/*global define,window*/
+/*global UserProfile*/
 /*jslint white:true,browser:true*/
 
 define([
@@ -23,28 +23,26 @@ define([
     'use strict';
 
     function factory(config) {
-        var target = config.target,
+        const target = config.target,
             email = config.email,
             userName = StringUtil.escape(config.userName),
             displayName = StringUtil.escape(config.displayName),
             token = config.token,
             gravatar = Gravatar.make(),
-            button = html.tag('button'),
-            div = html.tag('div'),
-            a = html.tag('a'),
-            span = html.tag('span'),
-            ul = html.tag('ul'),
-            li = html.tag('li'),
-            br = html.tag('br', {close: false}),
-            i = html.tag('i'),
-            img = html.tag('img'),
-            profileClient = new UserProfile(NarrativeConfig.url('user_profile'), {token: token}),
-            gravatarDefault = 'identicon';
+            profileClient = new UserProfile(NarrativeConfig.url('user_profile'), {token: token});
+        
+        let gravatarDefault = 'identicon';
 
-        var token = config.token;
-        if (!token) {
-            // fail elegantly
-        }
+        const t = html.tag;
+        const button = t('button');
+        const div = t('div');
+        const a = t('a');
+        const span = t('span');
+        const ul = t('ul');
+        const li = t('li');
+        const br = t('br', {close: false});
+        const i = t('i');
+        const img = html.tag('img');
 
         Promise.resolve(profileClient.get_user_profile([userName]))
             .then(function(profile) {
@@ -82,10 +80,10 @@ define([
                             div({style: 'display:inline-block; width: 34px; vertical-align: top;'}, [
                                 span({class: 'fa fa-user', style: 'font-size: 150%; margin-right: 10px;'})
                             ]),
-                            div({style: 'display: inline-block', 'data-element': 'user-label'}, [
-                                displayName,
+                            div({style: 'display: inline-block'}, [
+                                span({'data-element': 'realname'}, displayName),
                                 br(),
-                                i({}, userName)
+                                i({'data-element': 'username'}, userName)
                             ])
                         ])
                     ]),
@@ -104,22 +102,21 @@ define([
             target.find('#signout-button').click(logout);
         }
 
-        function renderError(error) {
-
+        function renderError() {
         }
 
         function logout() {
             var logoutBtn = $(a({type: 'button', class: 'btn btn-primary'}, ['Sign Out']))
-                            .click(function() {
-                                dialog.hide();
-                                // dialog.destroy();
-                                $(document).trigger('logout.kbase', true);
-                            });
+                .click(function() {
+                    dialog.hide();
+                    // dialog.destroy();
+                    $(document).trigger('logout.kbase', true);
+                });
             var cancelBtn = $(a({type: 'button', class: 'btn btn-default'}, ['Cancel']))
-                            .click(function() {
-                                dialog.hide();
-                                // dialog.destroy();
-                            });
+                .click(function() {
+                    dialog.hide();
+                    // dialog.destroy();
+                });
             var dialog = new BootstrapDialog({
                 title: 'Sign Out?',
                 body: 'Sign out of KBase? This will end your session. Any unsaved changes in any open Narrative will be lost.',
@@ -129,9 +126,9 @@ define([
         }
 
         return {
-            render: render,
-            renderError: renderError,
-            logout: logout
+            render,
+            renderError,
+            logout
         };
     }
 

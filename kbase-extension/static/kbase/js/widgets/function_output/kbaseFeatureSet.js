@@ -85,7 +85,7 @@ define ([
             this.features = {};
             this.loading(true);
             this.workspace.callFunc('get_objects', [[{
-                ref: this.options.workspaceName+'/'+this.options.featureset_name
+                ref: `${this.options.workspaceName}/${this.options.featureset_name}`
             }]])
                 .then(([data]) => {
                     const fs = data[0].data;
@@ -180,8 +180,8 @@ define ([
                                 switch (typeName) {
                                     case 'Genome':
                                         return this.search(objectRef, {'feature_id': features}, features.length)
-                                            .then((result) => {
-                                                return result.features;
+                                            .then(({features}) => {
+                                                return features;
                                             }); 
                                     case 'AnnotatedMetagenomeAssembly':
                                         return Promise.resolve(features.map((feature_id) => {
@@ -205,36 +205,29 @@ define ([
                     for (const [features, objectRef, objectType, objectInfo] of result) {
                         const objectName = objectInfo[1];
                         for (const feature of features) {
-                            switch (objectType) {
-                                case 'AnnotatedMetagenomeAssembly':
-                                    this.featureTableData.push(
-                                        {
-                                            fid: '<a href="/#dataview/'+objectRef+
-                                                                    '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
-                                                                    feature.feature_id+'</a>',
-                                            objectType,
-                                            gid: '<a href="/#dataview/'+objectRef+
-                                                                '" target="_blank">'+objectName+'</a>',
-                                            aliases: `<span ${unsupportedTypeAttributes}>${Object.keys(feature.aliases).join(', ')}</a>`,
-                                            type: `<span ${unsupportedTypeAttributes}>${feature.feature_type}</a>`,
-                                            func: `<span ${unsupportedTypeAttributes}>${feature.function}</a>`
-                                        }
-                                    );
-                                    break;
-                                default:
-                                    this.featureTableData.push(
-                                        {
-                                            fid: '<a href="/#dataview/'+objectRef+
-                                                                    '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
-                                                                    feature.feature_id+'</a>',
-                                            objectType,
-                                            gid: '<a href="/#dataview/'+objectRef+
-                                                                '" target="_blank">'+objectName+'</a>',
-                                            aliases: Object.keys(feature.aliases).join(', '),
-                                            type: feature.feature_type,
-                                            func: feature.function
-                                        }
-                                    );
+                            if (objectType === 'AnnotatedMetagenomeAssembly') {
+                                // This is a special case because AMAs are not fully supported yet.
+                                this.featureTableData.push(
+                                    {
+                                        fid: `<a href="/#dataview/${objectRef}?sub=Feature&subid=${feature.feature_id}" target="_blank">${feature.feature_id}</a>`,
+                                        objectType,
+                                        gid: `<a href="/#dataview/${objectRef}" target="_blank">${objectName}</a>`,
+                                        aliases: `<span ${unsupportedTypeAttributes}>${Object.keys(feature.aliases).join(', ')}</a>`,
+                                        type: `<span ${unsupportedTypeAttributes}>${feature.feature_type}</a>`,
+                                        func: `<span ${unsupportedTypeAttributes}>${feature.function}</a>`
+                                    }
+                                );
+                            } else {
+                                this.featureTableData.push(
+                                    {
+                                        fid: `<a href="/#dataview/${objectRef}?sub=Feature&subid=${feature.feature_id}" target="_blank">${feature.feature_id}</a>`,
+                                        objectType,
+                                        gid: `<a href="/#dataview/${objectRef}" target="_blank">${objectName}</a>`,
+                                        aliases: Object.keys(feature.aliases).join(', '),
+                                        type: feature.feature_type,
+                                        func: feature.function
+                                    }
+                                );
                             }
                         }
                     }
@@ -243,52 +236,6 @@ define ([
                     this.loading(false);
                     this.renderFeatureTable(); // just rerender each time
                 });
-
-            // return Promise.all(
-            //     Array.from(Object.entries(this.features)).map(([gid, features]) => {
-            //         const query = {'feature_id': features};
-            //         return Promise.all([
-            //             // the features 
-            //             this.search(gid, query, features.length),
-            //             // the genome object id
-            //             gid,
-            //             // The genome object info
-            //             this.workspace.callFunc('get_object_info3', [{
-            //                 objects: [{
-            //                     ref: gid
-            //                 }]
-            //             }])
-            //                 .then(([result]) => {
-            //                     // unpack from the results array.
-            //                     return result;
-            //                 })
-            //         ]);
-            //     })
-            // )
-            //     .then((results) => {
-                   
-
-            //         console.log('results', this.features, results);
-            //         for (const [result, gid, genomeObjectInfo] of results) {
-            //             const objectName = genomeObjectInfo.infos[0][1];
-            //             for (const feature of result.features) {
-            //                 this.featureTableData.push(
-            //                     {
-            //                         fid: '<a href="/#dataview/'+gid+
-            //                                 '?sub=Feature&subid='+feature.feature_id + '" target="_blank">'+
-            //                                 feature.feature_id+'</a>',
-            //                         gid: '<a href="/#dataview/'+gid+
-            //                             '" target="_blank">'+objectName+'</a>',
-            //                         ali: Object.keys(feature.aliases).join(', '),
-            //                         type: feature.feature_type,
-            //                         func: feature.function
-            //                     }
-            //                 );
-            //             }
-            //         }
-            //         this.loading(false);
-            //         this.renderFeatureTable(); // just rerender each time
-            //     });
         },
 
         $featureTableDiv : null,

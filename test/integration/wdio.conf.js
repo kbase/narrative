@@ -6,6 +6,8 @@
 const testConfig = require('../testConfig');
 const fs = require('fs');
 
+const CHROME_BINARY = require('puppeteer').executablePath();
+
 // const CHROME_BINARY = require('puppeteer').executablePath();
 // process.env.
 
@@ -215,7 +217,7 @@ function makeCapabilities(config) {
                     maxInstances: 1,
                     'goog:chromeOptions': {
                         args,
-                        // binary: CHROME_BINARY
+                        binary: CHROME_BINARY
                     }
                 };
             })();

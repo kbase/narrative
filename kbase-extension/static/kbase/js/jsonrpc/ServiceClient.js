@@ -3,13 +3,12 @@ define([
     './JSON-RPC_1.1'
 ], function (jsonRpc) {
     'use strict';
-    class DynamicServiceClient {
-        constructor({module, url, timeout, version, token}) {
+    class ServiceClient {
+        constructor({module, url, timeout, token}) {
             this.module = module;
-            this.token = token;
-            this.timeout = timeout;
             this.url = url;
-            this.version = version;
+            this.timeout = timeout;
+            this.token = token;
         
             if (!module) {
                 throw new Error('"module" is required, it was not provided');
@@ -27,16 +26,8 @@ define([
                 timeout: this.timeout,
                 authorization: this.token
             };
-
-            const serviceLookupParams = [{
-                module_name: this.module,
-                version: this.version || null
-            }];
-            return jsonRpc.request(this.url, 'ServiceWizard', 'get_service_status', serviceLookupParams, options)
-                .then(([{url}]) => {
-                    return jsonRpc.request(url, this.module, funcName, params, options);
-                });
+            return jsonRpc.request(this.url, this.module, funcName, params, options);
         }
     }
-    return DynamicServiceClient;
+    return ServiceClient;
 });

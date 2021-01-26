@@ -20,6 +20,16 @@ define([
             this.params = params;
             this.originalMessage = originalMessage;
         }
+        toJSON() {
+            return {
+                message: this.message,
+                url: this.url,
+                module: this.module,
+                func: this.func,
+                params: this.params,
+                originalMessage: this.originalMessage
+            };
+        }
     }
 
     /**
@@ -33,14 +43,22 @@ define([
     class JSONRPCMethodError extends JSONRPCError {
         constructor (message, {module, func, params, url, originalMessage, error}) {
             super(message, {module, func, params, url, originalMessage});
-            this.message = error.message;
-            this.detail = error.error;
-            this.type = error.name;
-            this.code = error.code;
+            this.error = error;
+        }
+        toJSON() {
+            return {
+                message: this.message,
+                url: this.url,
+                module: this.module,
+                func: this.func,
+                params: this.params,
+                originalMessage: this.originalMessage,
+                error: this.error
+            };
         }
     }
 
-    async function request(url, module, func, params, options) {
+    async function request(url, module, func, params, options = {}) {
         const rpc = {
             params,
             method: `${module}.${func}`,

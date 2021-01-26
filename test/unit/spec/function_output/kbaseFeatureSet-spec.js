@@ -1,11 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
+/*global describe, it*/
 /*jslint white: true*/
 define([
     'kbaseFeatureSet'
-], function(Widget) {
+], function() {
     'use strict';
     describe('Test the kbaseFeatureSet widget', function() {
         it('Should do things', function() {

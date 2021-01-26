@@ -7,7 +7,7 @@ define ([
     'narrativeConfig',
     'kbaseAuthenticatedWidget',
     'jsonrpc/DynamicServiceClient',
-    'jsonrpc/GenericClient',
+    'jsonrpc/ServiceClient',
 
     // for effect
     'jquery-dataTables',
@@ -20,9 +20,14 @@ define ([
     Config,
     kbaseAuthenticatedWidget,
     DynamicServiceClient,
-    GenericClient
+    ServiceClient
 ) {
     'use strict';
+
+    // TODO: should have a configurable global service call timeout.
+    // I think a minute is quite generous for now.
+    const TIMEOUT = 60000;
+
     return KBWidget({
         name: 'kbaseFeatureSet',
         parent : kbaseAuthenticatedWidget,
@@ -67,12 +72,14 @@ define ([
             this.genomeSearchAPI = new DynamicServiceClient({
                 module: 'GenomeSearchUtil',
                 url: Config.url('service_wizard'), 
-                token: this.token
+                token: this.token,
+                timeout: TIMEOUT
             });
-            this.workspace = new GenericClient({
+            this.workspace = new ServiceClient({
                 module: 'Workspace',
                 url: Config.url('workspace'), 
-                token: this.token
+                token: this.token,
+                timeout: TIMEOUT
             });
             this.$mainPanel.hide();
             this.$mainPanel.empty();

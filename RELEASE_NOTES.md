@@ -6,6 +6,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 ### Version NEXT
 - SCT-2778 - convert data slideout, public tab, refseq data source to use searchapi2/rpc api rather than searchapi2/legacy.
 - enhance integration testing support to add service, host, browser, screen size support
+- PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
 
 ### Version 4.3.1
 - Fixed problem where code cells could forget their toggled state after saving.

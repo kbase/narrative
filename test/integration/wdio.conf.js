@@ -6,6 +6,9 @@
 const testConfig = require('../testConfig');
 const fs = require('fs');
 
+const CHROME_BINARY = require('puppeteer').executablePath();
+// process.env.
+
 // Import environment variables used to control the tests.
 // Note that most have defaults, and many are only applicable 
 // to testing services
@@ -211,7 +214,8 @@ function makeCapabilities(config) {
                     acceptInsecureCerts: true,
                     maxInstances: 1,
                     'goog:chromeOptions': {
-                        args
+                        args,
+                        binary: CHROME_BINARY
                     }
                 };
             })();

@@ -1,12 +1,44 @@
 /*jslint white:true,browser:true*/
 define([
-    'uuid',
-    './exceptions'
+    'uuid'
 ], function (
-    Uuid, 
-    exceptions
+    Uuid
 ) {
     'use strict';
+
+    /* 
+    JSONRPC errors capture the calling information and some
+    error state. Subclasses capture more specific information about
+    more specific errors.
+    */
+    class JSONRPCError extends Error {
+        constructor (message, {module, func, params, url, originalMessage}) {
+            super(message);
+            this.url = url;
+            this.module = module;
+            this.func = func;
+            this.params = params;
+            this.originalMessage = originalMessage;
+        }
+    }
+
+    /**
+ * An error returned from a JSON-RPC 1.1. call
+ * @param {} module 
+ * @param {*} func 
+ * @param {*} params 
+ * @param {*} url 
+ * @param {*} error 
+ */
+    class JSONRPCMethodError extends JSONRPCError {
+        constructor (message, {module, func, params, url, originalMessage, error}) {
+            super(message, {module, func, params, url, originalMessage});
+            this.message = error.message;
+            this.detail = error.error;
+            this.type = error.name;
+            this.code = error.code;
+        }
+    }
 
     async function request(url, module, func, params, options) {
         const rpc = {
@@ -33,7 +65,7 @@ define([
                 body: JSON.stringify(rpc)
             });
         } catch (ex) {
-            throw new Error(`Error fetching JSON-RPC 1.1: ${ex.message}`);
+            throw new JSONRPCError('Error fetching JSON-RPC 1.1', {module, func, params, url, originalMessage: ex.mesage});
         }
 
         let data;
@@ -41,45 +73,23 @@ define([
             const textResponse = await response.text();
             data = JSON.parse(textResponse);
         } catch (ex) {
-            throw new Error(`Error parsing JSON-RPC 1.1 response: ${ex.message}`);
+            throw new JSONRPCError('Error parsing JSON-RPC 1.1 response', {module, func, params, url, originalMessage: ex.mesage});
         }
 
         if (data.result) {
             return data.result;
         }
         if (!data.error) {
-            throw new Error('Invalid JSON-RPC 1.1 response - no result or error');
-        }
-        // DANGER: This is highly dependent up on what is returned in
-        // the "error.error" property of ... the error object.
-        // It is assumed to be a newline separated list of strings
-        // the penultimate one of which is a simple string expressing
-        // the exception.
-        let maybeStackTrace,
-            maybeErrorName;
-                
-        if (data.error && data.error.error && typeof data.error.error === 'string') {                    
-            maybeStackTrace = data.error.error.split('\n');
-            
-            if (maybeStackTrace.length >= 2) {
-                maybeErrorName = maybeStackTrace[maybeStackTrace.length - 2];
-            }
+            throw new JSONRPCError('Invalid JSON-RPC 1.1 response - no result or error', {module, func, params, url});
         }
                 
-        switch (maybeErrorName) {
-            case 'AttributeError': 
-                throw new exceptions.AttributeError(module, func, data);
-            default:
-                throw new exceptions.JsonRpcError(module, func, params, url, data.error);
-        }
+        throw new JSONRPCMethodError('Error running JSON-RPC 1.1 method', {module, func, params, url, error: data.error});
 
-        //     // not json, oh well.                        
-        //     throw new exceptions.RequestError(err.xhr.status, err.xhr.statusText, url, err.xhr.responseText);
-
-        // });
     }
 
     return Object.freeze({
-        request
+        request,
+        JSONRPCError,
+        JSONRPCMethodError
     });
 });

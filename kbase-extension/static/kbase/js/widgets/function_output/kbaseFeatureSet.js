@@ -173,18 +173,18 @@ define ([
                         // console.log('object', info[1], typeModule, typeName, typeVersionMajor, typeVersionMinor);
 
                         const objectRef = [info[6], info[0], info[4]].join('/');
-                        const features = this.features[objectRef];
+                        const featuresToFind = this.features[objectRef];
 
                         return Promise.all([
                             (() => {
                                 switch (typeName) {
                                     case 'Genome':
-                                        return this.search(objectRef, {'feature_id': features}, features.length)
+                                        return this.search(objectRef, {'feature_id': featuresToFind}, featuresToFind.length)
                                             .then(({features}) => {
                                                 return features;
                                             }); 
                                     case 'AnnotatedMetagenomeAssembly':
-                                        return Promise.resolve(features.map((feature_id) => {
+                                        return Promise.resolve(featuresToFind.map((feature_id) => {
                                             return {
                                                 feature_id,
                                                 aliases: {na: 'na'},

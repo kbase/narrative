@@ -4,11 +4,11 @@ define([
     'jsonrpc/ServiceClient',
     'narrativeConfig',
     'testUtil',
-], function(
+], (
     ServiceClient,
     NarrativeConfig,
     // testUtil
-) {
+) => {
     'use strict';
     describe('Test ServiceClient', () => {
         it('Creates a minimal client, does not call it', () => {

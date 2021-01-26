@@ -4,11 +4,11 @@ define([
     'jsonrpc/DynamicServiceClient',
     'narrativeConfig',
     'testUtil',
-], function(
+], (
     DynamicServiceClient,
     NarrativeConfig,
     // testUtil
-) {
+) => {
     'use strict';
     describe('Test DynamicServiceClient', () => {
         it('Creates a minimal client, does not call it', () => {
@@ -22,6 +22,4 @@ define([
             expect(client).toBeDefined();
         });
     });
-
-
 });

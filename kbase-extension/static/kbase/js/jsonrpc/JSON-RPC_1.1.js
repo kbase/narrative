@@ -8,8 +8,9 @@ define([
 
     /* 
     JSONRPC errors capture the calling information and some
-    error state. Subclasses capture more specific information about
-    more specific errors.
+    error state. This or a sublcass should be used for all errors
+    encountered within the request function. Subclasses may capture
+    more specific information about specific errors.
     */
     class JSONRPCError extends Error {
         constructor (message, {module, func, params, url, originalMessage}) {
@@ -33,13 +34,8 @@ define([
     }
 
     /**
- * An error returned from a JSON-RPC 1.1. call
- * @param {} module 
- * @param {*} func 
- * @param {*} params 
- * @param {*} url 
- * @param {*} error 
- */
+     * An error returned from a JSON-RPC 1.1. method call
+     */
     class JSONRPCMethodError extends JSONRPCError {
         constructor (message, {module, func, params, url, originalMessage, error}) {
             super(message, {module, func, params, url, originalMessage});
@@ -102,7 +98,6 @@ define([
         }
                 
         throw new JSONRPCMethodError('Error running JSON-RPC 1.1 method', {module, func, params, url, error: data.error});
-
     }
 
     return Object.freeze({

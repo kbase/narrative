@@ -6,7 +6,7 @@
 const testConfig = require('../testConfig');
 const fs = require('fs');
 
-const CHROME_BINARY = require('puppeteer').executablePath();
+// const CHROME_BINARY = require('puppeteer').executablePath();
 // process.env.
 
 // Import environment variables used to control the tests.
@@ -215,7 +215,7 @@ function makeCapabilities(config) {
                     maxInstances: 1,
                     'goog:chromeOptions': {
                         args,
-                        binary: CHROME_BINARY
+                        // binary: CHROME_BINARY
                     }
                 };
             })();
@@ -281,7 +281,7 @@ console.log('OS VERSION      : ' + testParams.OS_VERSION);
 console.log('HEADLESS        : ' + testParams.HEADLESS);
 console.log('TEST SERVICE    : ' + testParams.SERVICE);
 console.log('SERVICE USER    : ' + testParams.SERVICE_USER);
-console.log('SERVICE KEY     : ' + testParams.SERVICE_KEY);
+console.log('SERVICE KEY     : ' + (testParams.SERVICE_KEY ? 'set but hidden' : null));
 console.log('-----------------');
 
 const wdioConfig = {

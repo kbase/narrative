@@ -1,14 +1,4 @@
-define([
-    'bluebird',
-    'kb_common/html',
-    'common/events',
-    'jquery'
-], function(
-    Promise,
-    html,
-    Events,
-    $
-) {
+define(['bluebird', 'kb_common/html', 'common/events', 'jquery'], (Promise, html, Events, $) => {
     'use strict';
 
     let container;
@@ -47,22 +37,25 @@ define([
                 break;
         }
 
-        return td({
-            class: `${cssBaseClass}__cell`
-        }, [
-            span({
-                class: `fa fa-circle ${cssBaseClass}__icon--${jobState}`
-            }),
-            ' ' + label
-        ]);
+        return td(
+            {
+                class: `${cssBaseClass}__cell`,
+            },
+            [
+                span({
+                    class: `fa fa-circle ${cssBaseClass}__icon--${jobState}`,
+                }),
+                ' ' + label,
+            ]
+        );
     }
 
     function selectRow(e) {
-        let $currentRow = $(e.target).closest('tr');
+        const $currentRow = $(e.target).closest('tr');
 
-        let $allRows = $('.kb-job-status__row');
+        const $allRows = $('.kb-job-status__row');
 
-        if($currentRow.hasClass(`${cssBaseClass}__row_selected`)) {
+        if ($currentRow.hasClass(`${cssBaseClass}__row_selected`)) {
             $currentRow.removeClass(`${cssBaseClass}__row_selected`);
             $currentRow.find('.selected_log').css('display', 'none');
         } else {
@@ -76,7 +69,7 @@ define([
         }
     }
 
-    function createActionCell(jobState){
+    function createActionCell(jobState) {
         let label;
         switch (jobState) {
             case 'completed':
@@ -95,92 +88,101 @@ define([
                 break;
         }
 
-        return td({
-            class: `${cssBaseClass}__cell_container`
-        }, [
-            span({},[
-                a({
-                    class: `${cssBaseClass}__cell_action--${jobState}`
-                }, [
-                    label
-                ]),
-            ]),
-            span({
-                class: `${cssBaseClass}__cell_container_btn`
-            },[
-                a({
-                    class: `${cssBaseClass}__cell_log_btn show_log`,
-                    role: 'button',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: function (e) {
-                            selectRow(e);
+        return td(
+            {
+                class: `${cssBaseClass}__cell_container`,
+            },
+            [
+                span({}, [
+                    a(
+                        {
+                            class: `${cssBaseClass}__cell_action--${jobState}`,
                         },
-                    })
-                }, [
-                    'Show log',
-                    i({
-                        class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`
-                    })
+                        [label]
+                    ),
                 ]),
-                a({
-                    class: `${cssBaseClass}__cell_log_btn selected_log`,
-                    role: 'button',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: function (e) {
-                            selectRow(e);
-                        },
-                    })
-                }, [
-                    'Showing log',
-                    i({
-                        class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`
-                    })
-                ]),
-            ])
-        ]);
+                span(
+                    {
+                        class: `${cssBaseClass}__cell_container_btn`,
+                    },
+                    [
+                        a(
+                            {
+                                class: `${cssBaseClass}__cell_log_btn show_log`,
+                                role: 'button',
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function (e) {
+                                        selectRow(e);
+                                    },
+                                }),
+                            },
+                            [
+                                'Show log',
+                                i({
+                                    class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`,
+                                }),
+                            ]
+                        ),
+                        a(
+                            {
+                                class: `${cssBaseClass}__cell_log_btn selected_log`,
+                                role: 'button',
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function (e) {
+                                        selectRow(e);
+                                    },
+                                }),
+                            },
+                            [
+                                'Showing log',
+                                i({
+                                    class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`,
+                                }),
+                            ]
+                        ),
+                    ]
+                ),
+            ]
+        );
     }
 
     function factory() {
-
         function updateRowStatus(jobStatus, name) {
-            var jobIdDiv = '';
-            container.innerHTML = td({
-                class: `${cssBaseClass}__cell`
-            }, [
-                div(
-                    name
-                ),
-                jobIdDiv
-            ])
-            + createStateCell(jobStatus)
-            + createActionCell(jobStatus);
+            const jobIdDiv = '';
+            container.innerHTML =
+                td(
+                    {
+                        class: `${cssBaseClass}__cell`,
+                    },
+                    [div(name), jobIdDiv]
+                ) +
+                createStateCell(jobStatus) +
+                createActionCell(jobStatus);
         }
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 container = arg.node;
                 updateRowStatus(arg.initialState, arg.name);
                 events.attachEvents(container);
             }).catch((err) => {
-                throw new Error ('Unable to start Job State List Row widget: ', err);
+                throw new Error('Unable to start Job State List Row widget: ', err);
             });
         }
 
-        function stop() {
-        }
+        function stop() {}
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function() {
+        make: function () {
             return factory();
-        }
+        },
     };
-
 });

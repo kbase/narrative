@@ -13,7 +13,7 @@ define([
     'common/events',
     'common/fsm',
     'kb_common/html',
-], function (Runtime, Props, UI, Events, Fsm, html) {
+], (Runtime, Props, UI, Events, Fsm, html) => {
     'use strict';
 
     const t = html.tag,
@@ -379,13 +379,36 @@ define([
      *
      */
     function factory() {
-        let runtime = Runtime.make(),
-            container,
+        // MAIN
+        /* The data model for this widget contains all lines currently being shown, along with the indices for
+         * the first and last lines known.
+         * It also tracks the total lines currently available for the app, if returned.
+         * Lines is a list of small objects. Each object
+         * lines - list, each is a small object with keys (these are all post-processed after fetching):
+         *      line - string, the line text
+         *      isError - boolean, true if that line denotes an error
+         *      ts - int timestamp
+         *      lineNumber - int, what line this is
+         * firstLine - int, the first line we're tracking (inclusive)
+         * lastLine - int, the last line we're tracking (inclusive)
+         * totalLines - int, the total number of lines available from the server as of the last message.
+         */
+        const model = Props.make({
+                data: {
+                    lines: [],
+                    firstLine: null,
+                    lastLine: null,
+                    totalLines: null,
+                },
+            }),
+            runtime = Runtime.make(),
+            loopFrequency = 5000,
+            listeners = [];
+
+        let container,
             jobId,
-            model,
             ui,
             fsm,
-            loopFrequency = 5000,
             looping = false,
             stopped = false,
             listeningForJob = false, // if true, this means we're listening for job updates
@@ -418,7 +441,7 @@ define([
             if (looping || stopped) {
                 return;
             }
-            var state = fsm.getCurrentState().state;
+            const { state } = fsm.getCurrentState();
             if (state.mode === 'active' && state.auto) {
                 looping = true;
                 fsm.newState({ mode: 'active', auto: true });
@@ -427,9 +450,6 @@ define([
                     clearTimeout(requestLoop);
                 }
                 requestLatestJobLog();
-                // runtime.bus().emit('request-latest-job-log', {
-                //     jobId: jobId,
-                // });
             }
         }
 
@@ -507,8 +527,8 @@ define([
          * toggle the viewer class to switch between standard and expanded versions
          */
         function toggleViewerSize() {
-            let logContentClassList = getLogPanel().classList,
-                inactiveClass;
+            const logContentClassList = getLogPanel().classList;
+            let inactiveClass;
             if (logContentClassList.contains(logContentStandardClass)) {
                 logContentClass = logContentExpandedClass;
                 inactiveClass = logContentStandardClass;
@@ -743,9 +763,9 @@ define([
         function handleJobStatusUpdate(message) {
             // if the job is finished, we don't want to reflect
             // this in the ui, and disable play/stop controls.
-            var jobStatus = message.jobState.status,
-                mode = fsm.getCurrentState().state.mode,
-                newState;
+            const jobStatus = message.jobState.status,
+                { mode } = fsm.getCurrentState().state;
+            let newState;
 
             switch (mode) {
                 case 'new':
@@ -882,63 +902,61 @@ define([
             fsm.newState({ mode: 'job-not-found' });
         }
 
-        var externalEventListeners = [];
+        function handleJobLogs(message) {
+            if (!awaitingLog) {
+                return;
+            }
+            ui.hideElement('spinner');
+            /* message has structure:
+             * {
+             *   jobId: string,
+             *   latest: bool,
+             *   logs: {
+             *      first: int (first line of the log batch), 0-indexed
+             *      job_id: string,
+             *      latest: bool,
+             *      max_lines: int (total logs available - if job is done, so is this),
+             *      lines: [{
+             *          is_error: 0 or 1,
+             *          line: string,
+             *          linepos: int, position in log. helpful!
+             *          ts: timestamp
+             *      }]
+             *   }
+             * }
+             */
+            awaitingLog = false;
+
+            if (message.logs.lines.length !== 0) {
+                const viewLines = message.logs.lines.map((line) => {
+                    return {
+                        text: line.line,
+                        isError: line.is_error === 1 ? true : false,
+                        lineNumber: line.linepos,
+                    };
+                });
+                model.setItem('lines', viewLines);
+                model.setItem('firstLine', message.logs.first + 1);
+                model.setItem('lastLine', message.logs.first + viewLines.length);
+                model.setItem('totalLines', message.logs.max_lines);
+                render();
+            }
+            if (looping) {
+                scheduleNextRequest();
+            }
+        }
 
         function startEventListeners() {
-            var ev;
-
-            ev = runtime.bus().listen({
+            let ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId,
                 },
                 key: {
                     type: 'job-logs',
                 },
-                handle: function (message) {
-                    if (!awaitingLog) {
-                        return;
-                    }
-                    ui.hideElement('spinner');
-                    /* message has structure:
-                     * {
-                     *   jobId: string,
-                     *   latest: bool,
-                     *   logs: {
-                     *      first: int (first line of the log batch), 0-indexed
-                     *      job_id: string,
-                     *      latest: bool,
-                     *      max_lines: int (total logs available - if job is done, so is this),
-                     *      lines: [{
-                     *          is_error: 0 or 1,
-                     *          line: string,
-                     *          linepos: int, position in log. helpful!
-                     *          ts: timestamp
-                     *      }]
-                     *   }
-                     * }
-                     */
-                    awaitingLog = false;
-
-                    if (message.logs.lines.length !== 0) {
-                        const viewLines = message.logs.lines.map(function (line) {
-                            return {
-                                text: line.line,
-                                isError: line.is_error === 1 ? true : false,
-                                lineNumber: line.linepos,
-                            };
-                        });
-                        model.setItem('lines', viewLines);
-                        model.setItem('firstLine', message.logs.first + 1);
-                        model.setItem('lastLine', message.logs.first + viewLines.length);
-                        model.setItem('totalLines', message.logs.max_lines);
-                        render();
-                    }
-                    if (looping) {
-                        scheduleNextRequest();
-                    }
-                },
+                handle: handleJobLogs,
             });
-            externalEventListeners.push(ev);
+            listeners.push(ev);
 
             // An error may encountered during the job fetch on the back end. It is
             // reported as a job-comm-error, but translated by the jobs panel as a job-log-deleted
@@ -958,7 +976,7 @@ define([
                     render();
                 },
             });
-            externalEventListeners.push(ev);
+            listeners.push(ev);
 
             ev = runtime.bus().listen({
                 channel: {
@@ -969,7 +987,7 @@ define([
                 },
                 handle: handleJobStatusUpdate,
             });
-            externalEventListeners.push(ev);
+            listeners.push(ev);
 
             ev = runtime.bus().listen({
                 channel: {
@@ -980,37 +998,33 @@ define([
                 },
                 handle: handleJobDoesNotExistUpdate,
             });
-            externalEventListeners.push(ev);
+            listeners.push(ev);
         }
 
         function stopEventListeners() {
-            if (externalEventListeners) {
-                externalEventListeners.forEach(function (ev) {
-                    runtime.bus().removeListener(ev);
-                });
-            }
+            runtime.bus().removeListeners(listeners);
         }
 
         // LIFECYCLE API
         function renderFSM() {
-            var state = fsm.getCurrentState();
+            const state = fsm.getCurrentState();
 
             // Button state
             if (state.ui.buttons) {
-                state.ui.buttons.enabled.forEach(function (_button) {
+                state.ui.buttons.enabled.forEach((_button) => {
                     ui.enableButton(_button);
                 });
-                state.ui.buttons.disabled.forEach(function (_button) {
+                state.ui.buttons.disabled.forEach((_button) => {
                     ui.disableButton(_button);
                 });
             }
 
             // Element state
             if (state.ui.elements) {
-                state.ui.elements.show.forEach(function (element) {
+                state.ui.elements.show.forEach((element) => {
                     ui.showElement(element);
                 });
-                state.ui.elements.hide.forEach(function (element) {
+                state.ui.elements.hide.forEach((element) => {
                     ui.hideElement(element);
                 });
             }
@@ -1045,26 +1059,26 @@ define([
                 },
             });
             fsm.start();
-            fsm.bus.on('on-active', function () {
+            fsm.bus.on('on-active', () => {
                 startAutoFetch();
             });
-            fsm.bus.on('exit-active', function () {
+            fsm.bus.on('exit-active', () => {
                 stopAutoFetch();
             });
-            fsm.bus.on('on-canceled', function () {
+            fsm.bus.on('on-canceled', () => {
                 requestLatestJobLog();
                 stopJobUpdates();
             });
-            fsm.bus.on('exit-canceled', function () {
+            fsm.bus.on('exit-canceled', () => {
                 //  nothing to do?
             });
-            fsm.bus.on('on-queued', function (message) {
+            fsm.bus.on('on-queued', (message) => {
                 doOnQueued(message);
             });
-            fsm.bus.on('exit-queued', function (message) {
+            fsm.bus.on('exit-queued', (message) => {
                 doExitQueued(message);
             });
-            fsm.bus.on('on-job-not-found', function (message) {
+            fsm.bus.on('on-job-not-found', (message) => {
                 doJobNotFound(message);
             });
         }
@@ -1092,7 +1106,7 @@ define([
          */
         function start(arg) {
             detach(); // if we're alive, remove ourselves before restarting
-            var hostNode = arg.node;
+            const hostNode = arg.node;
             if (!hostNode) {
                 throw new Error('Requires a node to start');
             }
@@ -1104,7 +1118,7 @@ define([
             container = hostNode.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
 
-            var layout = renderLayout();
+            const layout = renderLayout();
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
 
@@ -1138,31 +1152,7 @@ define([
             }
         }
 
-        // MAIN
-        /* The data model for this widget contains all lines currently being shown, along with the indices for
-         * the first and last lines known.
-         * It also tracks the total lines currently available for the app, if returned.
-         * Lines is a list of small objects. Each object
-         * lines - list, each is a small object with keys (these are all post-processed after fetching):
-         *      line - string, the line text
-         *      isError - boolean, true if that line denotes an error
-         *      ts - int timestamp
-         *      lineNumber - int, what line this is
-         * firstLine - int, the first line we're tracking (inclusive)
-         * lastLine - int, the last line we're tracking (inclusive)
-         * totalLines - int, the total number of lines available from the server as of the last message.
-         */
-        model = Props.make({
-            data: {
-                lines: [],
-                firstLine: null,
-                lastLine: null,
-                totalLines: null,
-            },
-        });
-
         // API
-
         return Object.freeze({
             start: start,
             stop: stop,

@@ -4,20 +4,20 @@ define([
     'jquery',
     'common/props',
     'json!../../../../../data/testAppObj.json',
-], function (Jupyter, jobStateList, $, Props, TestAppObject) {
+], (Jupyter, jobStateList, $, Props, TestAppObject) => {
     'use strict';
 
-    describe('The job status tab module', function () {
-        it('loads', function () {
+    describe('The job status tab module', () => {
+        it('loads', () => {
             expect(jobStateList).not.toBe(null);
         });
 
-        it('has expected functions', function () {
+        it('has expected functions', () => {
             expect(jobStateList.make).toBeDefined();
         });
     });
 
-    describe('The job status tab instance', function () {
+    describe('The job status tab instance', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
@@ -28,9 +28,9 @@ define([
             Jupyter.narrative = null;
         });
 
-        let node, model,mockJobStateList;
+        let node, model, mockJobStateList;
 
-        beforeEach(function () {
+        beforeEach(() => {
             node = document.createElement('div');
 
             model = Props.make({
@@ -39,15 +39,15 @@ define([
             });
 
             mockJobStateList = jobStateList.make({
-                model: model
+                model: model,
             });
         });
 
-        it('has a make function that returns an object', function () {
+        it('has a make function that returns an object', () => {
             expect(mockJobStateList).not.toBe(null);
         });
 
-        it('has the required methods', function () {
+        it('has the required methods', () => {
             expect(mockJobStateList.start).toBeDefined();
             expect(mockJobStateList.stop).toBeDefined();
         });
@@ -55,7 +55,7 @@ define([
         it('should start and return the correct elements', () => {
             mockJobStateList.start({
                 node: node,
-                childJobs: model.getItem('exec.jobState.child_jobs')
+                childJobs: model.getItem('exec.jobState.child_jobs'),
             });
 
             const classContents = [

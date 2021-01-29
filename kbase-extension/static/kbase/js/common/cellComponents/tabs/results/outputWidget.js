@@ -1,15 +1,15 @@
 /**
  * Should get fed data to view.
  */
-define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], function (
+define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
     Promise,
     html,
     UI,
     APIUtil
-) {
+) => {
     'use strict';
 
-    let tag = html.tag,
+    const tag = html.tag,
         div = tag('div'),
         tr = tag('tr'),
         th = tag('th'),
@@ -86,7 +86,7 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], function (
             if (objectData.length === 0) {
                 return emptyData;
             }
-            let objectTable = table({class: 'table table-bordered table-striped'}, [
+            const objectTable = table({class: 'table table-bordered table-striped'}, [
                 tr([
                     th('Created Object Name'),
                     th('Type'),

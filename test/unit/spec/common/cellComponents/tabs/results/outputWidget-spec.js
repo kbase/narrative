@@ -80,8 +80,10 @@ define([
             const widget = OutputWidget.make();
             return widget.start({node, reports: [], workspaceClient})
                 .then(() => {
-                    expect(node.innerHTML).toContain('Objects');
-                    expect(node.innerHTML).not.toContain('table');
+                    // should make an outer, classed node with nothing in it
+                    const objNode = node.querySelector('div.kb-created-objects');
+                    expect(objNode).toBeDefined();
+                    expect(objNode.innerHTML).toEqual('');
                 });
         });
 

@@ -30,7 +30,7 @@ install:
 # local venv.
 build-travis-narrative:
 	bash $(INSTALLER) && \
-	grunt minify && \
+	npx grunt minify && \
 	sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/" && \
 	sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json && \
 	jupyter notebook --version

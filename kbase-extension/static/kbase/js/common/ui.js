@@ -1368,7 +1368,6 @@ define([
                         label: 'Summary',
                         name: 'summary',
                         content: div(
-                            {},
                             [
                                 p({
                                     class: 'kb-error-dialog__err_preamble',
@@ -1385,7 +1384,6 @@ define([
                         label: 'Details',
                         name: 'details',
                         content: div(
-                            {},
                             [_buildError(arg.error)]
                         ),
                     },
@@ -1393,7 +1391,6 @@ define([
                         label: 'Stack Trace',
                         name: 'stacktrace',
                         content: div(
-                            {},
                             [
                                 buildPanel({
                                     title: 'Javascript Stack Trace',

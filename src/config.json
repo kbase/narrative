@@ -227,7 +227,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
-        "execution_engine2": "https://kbase.us/services/ee2",
+        "execution_engine2": "https://kbase.us/services/ee2-nr",
         "fba": "https://kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://kbase.us/services/kb-ftp-api/v0",

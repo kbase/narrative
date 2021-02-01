@@ -6,22 +6,279 @@
 const testConfig = require('../testConfig');
 const fs = require('fs');
 
-let baseUrl = 'http://localhost:8888';
-if (process.env.BASE_URL) {
-    baseUrl = process.env.BASE_URL;
+// Import environment variables used to control the tests.
+// Note that most have defaults, and many are only applicable 
+// to testing services
+
+// For testing services
+
+/**
+ * Given a preset key, return set set of common configuration keys for a given service, os, and browser
+ * This is useful because testing services support a limited number of browser dimensions, which differs
+ * between operating systems.
+ * Note that config keys other than those implied by the preset (service, os, browser) are overriden by the
+ * corresponding environment variables.
+ * @param {string} preset A preset config key; see the switch statement for available presets.
+ * @returns {Object} A config object with the following keys: OS, OS_VERSION, BROWSER, BROWSER_VERSION, SERVICE, WIDTH, HEIGHT
+ */
+function processPreset(preset) {
+    const e = process.env;
+
+    switch (preset) {
+        case 'bs-win-chrome':
+            return {
+                OS: 'Windows',
+                OS_VERSION: e.OS_VERSION || '10',
+                BROWSER: 'chrome',
+                BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
+                HEADLESS: e.HEADLESS || 'f',
+                SERVICE: 'browserstack'
+            };
+        case 'bs-win-firefox':
+            return {
+                OS: 'Windows',
+                OS_VERSION: e.OS_VERSION || '10',
+                BROWSER: 'firefox',
+                BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
+                HEADLESS: e.HEADLESS || 'f',
+                SERVICE: 'browserstack'
+            };
+        case 'bs-mac-chrome':
+            return {
+                OS: 'OS X',
+                OS_VERSION: e.OS_VERSION || 'Catalina',
+                BROWSER: 'chrome',
+                BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
+                HEADLESS: e.HEADLESS || 'f',
+                SERVICE: 'browserstack'
+            };
+        case 'bs-mac-firefox':
+            return {
+                OS: 'OS X',
+                OS_VERSION: e.OS_VERSION || 'Catalina',
+                BROWSER: 'firefox',
+                BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
+                HEADLESS: e.HEADLESS || 'f',
+                SERVICE: 'browserstack'
+            };
+        case 'ss-firefox':
+            // TODO: detect platform
+            return {
+                OS: null, // not used by selenium standalone -- it runs on the current host
+                OS_VERSION: null, 
+                BROWSER: 'firefox',
+                BROWSER_VERSION: null, // will use the installed browser on this host
+                HEADLESS: e.HEADLESS || 't',
+                SERVICE: 'selenium-standalone'
+            };
+        case 'ss-chrome':
+            // TODO: detect platform
+            return {
+                OS: null, // not used by selenium standalone -- it runs on the current host
+                OS_VERSION: null, 
+                BROWSER: 'chrome',
+                BROWSER_VERSION: null, // will use the installed browser on this host
+                HEADLESS: e.HEADLESS || 't',
+                SERVICE: 'selenium-standalone'
+            };
+        case 'cd':
+            // TODO: detect platform
+            return {
+                OS: null, // not used by chromedriver; it is run on the host, whatever it is
+                OS_VERSION: null, // TODO: detect os version.
+                BROWSER: 'chrome',
+                BROWSER_VERSION: null, // will use the installed chrome on this host
+                HEADLESS: e.HEADLESS || 't',
+                SERVICE: 'chromedriver'
+            };
+        default: 
+            throw new Error(`Sorry, "${preset}" is not a preset`);
+    }
 }
-let authToken = 'fakeToken';
-if (process.env.KBASE_TEST_TOKEN) {
-    authToken = process.env.KBASE_TEST_TOKEN;
-    console.log('loaded auth token from environment variable KBASE_TEST_TOKEN');
+
+function makeConfig() {
+    const e = process.env;
+    const preset = e.PRESET || 'cd';
+    const presetConfig = processPreset(preset);
+
+    const [width, height] = (() => {
+        switch (e.PRESET_DIMENSIONS || 'sxga') {
+            case 'xga': return [1024, 768];
+            case 'sxga': return [1280, 1024];
+            case 'hd': return [1920, 1080];
+            default: throw new Error(`Not a valid PRESET_DIMENSIONS: "${e.PRESET_DIMENSIONS}"`);
+        }
+    })();
+
+    return {
+        ...presetConfig, 
+        WIDTH: e.WIDTH || width,
+        HEIGHT: e.HEIGHT || height,
+        // Note that these service configs are only used for browserstack.
+        SERVICE_USER: e.SERVICE_USER || null,
+        SERVICE_KEY: e.SERVICE_KEY || null,
+
+        BASE_URL: e.BASE_URL || 'http://localhost:8888',
+        ENV: e.ENV || 'ci',
+        HEADLESS: e.HEADLESS || 't'
+    };
 }
-else if (testConfig && testConfig.token && testConfig.token.file && fs.existsSync(testConfig.token.file)) {
-    authToken = fs.readFileSync(testConfig.token.file, 'utf-8').trim();
-    console.log('loaded auth token from file ' + testConfig.token.file);
+
+const authToken = (() => {
+    if (process.env.KBASE_TEST_TOKEN) {
+        console.log('loading auth token from environment variable KBASE_TEST_TOKEN');
+        return process.env.KBASE_TEST_TOKEN;
+    } else if (testConfig && testConfig.token && testConfig.token.file && fs.existsSync(testConfig.token.file)) {
+        console.log('loading auth token from file ' + testConfig.token.file);
+        return fs.readFileSync(testConfig.token.file, 'utf-8').trim();
+        
+    } else {
+        console.warn('continuing without valid test token');
+        return 'fakeToken';
+    }
+})();
+
+// Each wdio service supported requires an entry here, even
+// if it doesn't have any specific configuration.
+// TODO: The relation between selenium-standalone test drivers, as shown 
+// in the example below, and the installed browser is tricky.
+//
+// For testing services, we can supply the browser version for supported 
+// browsers. But for local or github based tests, the tests use whichever
+// browser version is installed.
+//
+// It seems to be fine to have a newer driver for an older browser
+// (although warnings may be printed when running tests), but it can be
+// an error for a newer browse and older driver. This can happen if
+// the selenium-standalone drivers are out of date, but the host is not.
+// 
+// One way to keep this deterministic is to pin the drivers, as show in the 
+// example below (and the commented out "drivers" setting in the service configs),
+// and at the same time pin the browser version in the host.
+//
+// The host browser can be pinned across testing environments by installing
+// the required browsers via npm. E.g. puppeteer installs a local chrome binary, which
+// can be specified as the Chrome binary. I could not find a similar method
+// for installing Firefox, so gave up on that effort. 
+// 
+// The default behavior is to use the latest available, which should 
+// normally be what we want. However, this ability in selenium-standalone is 
+// relatively recent, and not yet implemented for Firefox (12/12/2020).
+// 
+// Thus, we should keep the selenium-standalone dependency up to date to ensure
+// the most recent version of Firefox is supported.
+// 
+// const drivers = {
+//     chrome: {
+//         version: '87.0.4280.20',
+//     },
+//     firefox: {
+//         version: '0.28.0'
+//     }
+// };
+
+const serviceConfigs = {
+    'selenium-standalone': {
+        logPath: 'selenium-standalone-logs'
+        // drivers
+    },
+    chromedriver: {},
+    browserstack: {
+        browserstackLocal: true,
+        opts: {
+        }
+    }
+};
+
+const testParams = makeConfig();
+
+/**
+ * Constructs a capabilities object for the current test configuration.
+ * @param {Object} config - test configuration as provided in the environment
+ * variables and defaults as set above.
+ * @returns {Object} a capabilities object suitable for the wdio configuration.
+ */
+function makeCapabilities(config) {
+    switch (config.SERVICE) {
+        case 'chromedriver': 
+            return (() => {
+                const args = ['--disable-gpu', '--no-sandbox', `window-size=${config.WIDTH},${config.HEIGHT}`];
+                if (config.HEADLESS === 't') {
+                    args.push('--headless');
+                }
+                return  {
+                    browserName: 'chrome',
+                    acceptInsecureCerts: true,
+                    maxInstances: 1,
+                    'goog:chromeOptions': {
+                        args
+                    }
+                };
+            })();
+        case 'selenium-standalone': 
+            switch (config.BROWSER) {
+                case 'chrome':
+                    return (() => {
+                        const args = ['--disable-gpu', '--no-sandbox', `window-size=${config.WIDTH},${config.HEIGHT}`];
+                        if (config.HEADLESS === 't') {
+                            args.push('--headless');
+                        }
+                        return  {
+                            browserName: 'chrome',
+                            acceptInsecureCerts: true,
+                            maxInstances: 1,
+                            'goog:chromeOptions': {
+                                args
+                            }
+                        };
+                    })();
+                case 'firefox':
+                    return (() => {
+                        const args = [`--width=${config.WIDTH}`, `--height=${config.HEIGHT}`];
+                        if (config.HEADLESS === 't') {
+                            args.push('--headless');
+                        }
+                        return {
+                            browserName: 'firefox',
+                            acceptInsecureCerts: true,
+                            maxInstances: 1,
+                            'moz:firefoxOptions': {
+                                args
+                            }
+                        };
+                    })();
+                default: 
+                    throw new Error(`Browser not supported "${config.BROWSER}"`);
+            }
+        case 'browserstack':
+            // see https://www.browserstack.com/docs/automate/selenium/select-browsers-and-devices
+            return {
+                os: `${config.OS}`,
+                os_version: `${config.OS_VERSION}`,
+                browser: `${config.BROWSER}`,
+                browser_version: `${config.BROWSER_VERSION}`,
+                resolution: `${config.WIDTH}x${config.HEIGHT}`
+            };
+    }
 }
-else {
-    console.log('continuing without valid test token');
-}
+
+const CAPABILITIES = makeCapabilities(testParams);
+
+console.log('Test Settings');
+console.log('-----------------');
+console.log('ENV             : ' + testParams.ENV);
+console.log('BASE_URL        : ' + testParams.BASE_URL);
+console.log('BROWSER         : ' + testParams.BROWSER);
+console.log('BROWSER VERSION : ' + testParams.BROWSER_VERSION);
+console.log('WIDTH           : ' + testParams.WIDTH);
+console.log('HEIGHT          : ' + testParams.HEIGHT);
+console.log('OS              : ' + testParams.OS);
+console.log('OS VERSION      : ' + testParams.OS_VERSION);
+console.log('HEADLESS        : ' + testParams.HEADLESS);
+console.log('TEST SERVICE    : ' + testParams.SERVICE);
+console.log('SERVICE USER    : ' + testParams.SERVICE_USER);
+console.log('SERVICE KEY     : ' + testParams.SERVICE_KEY);
+console.log('-----------------');
 
 const wdioConfig = {
     kbaseToken: authToken,
@@ -71,22 +328,25 @@ const wdioConfig = {
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
     // https://docs.saucelabs.com/reference/platforms-configurator
     //
-    capabilities: [{
-        // maxInstances can get overwritten per capability. So if you have an in-house Selenium
-        // grid with only 5 firefox instances available you can make sure that not more than
-        // 5 instances get started at a time.
-        maxInstances: 1,
-        'goog:chromeOptions': {
-            args: ['--disable-gpu', '--no-sandbox', 'headless']
-        },
-        //
-        browserName: 'chrome',
-        acceptInsecureCerts: true
-        // If outputDir is provided WebdriverIO can capture driver session logs
-        // it is possible to configure which logTypes to include/exclude.
-        // excludeDriverLogs: ['*'], // pass '*' to exclude all driver session logs
-        // excludeDriverLogs: ['bugreport', 'server'],
-    }],
+    // capabilities: [{
+    //     // maxInstances can get overwritten per capability. So if you have an in-house Selenium
+    //     // grid with only 5 firefox instances available you can make sure that not more than
+    //     // 5 instances get started at a time.
+    //     maxInstances: 1,
+    //     // 'goog:chromeOptions': {
+    //     //     args: ['--disable-gpu', '--no-sandbox', 'headless']
+    //     // },
+    //     //
+    //     browserName: 'chrome',
+    //     acceptInsecureCerts: true
+    //     // If outputDir is provided WebdriverIO can capture driver session logs
+    //     // it is possible to configure which logTypes to include/exclude.
+    //     // excludeDriverLogs: ['*'], // pass '*' to exclude all driver session logs
+    //     // excludeDriverLogs: ['bugreport', 'server'],
+    // }],
+    capabilities: [
+        CAPABILITIES
+    ],
     //
     // ===================
     // Test Configurations
@@ -118,10 +378,10 @@ const wdioConfig = {
     // with `/`, the base url gets prepended, not including the path portion of your baseUrl.
     // If your `url` parameter starts without a scheme or `/` (like `some/path`), the base url
     // gets prepended directly.
-    baseUrl: baseUrl,
+    baseUrl: testParams.BASE_URL,
     //
     // Default timeout for all waitFor* commands.
-    waitforTimeout: 10000,
+    waitforTimeout: 30000,
     //
     // Default timeout in milliseconds for request
     // if browser driver or grid doesn't send response
@@ -134,7 +394,7 @@ const wdioConfig = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-    services: ['chromedriver'],
+    services: [[testParams.SERVICE, serviceConfigs[testParams.SERVICE]]],
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
@@ -143,6 +403,18 @@ const wdioConfig = {
     // Make sure you have the wdio adapter package for the specific framework installed
     // before running any tests.
     framework: 'mocha',
+    jasmineNodeOpts: {
+        //
+        // Jasmine default timeout
+        defaultTimeoutInterval: 60000,
+        //
+        // The Jasmine framework allows interception of each assertion in order to log the state of the application
+        // or website depending on the result. For example, it is pretty handy to take a screenshot every time
+        // an assertion fails.
+        expectationResultHandler: function (/*passed, assertion*/) {
+            // do something
+        }
+    },
     //
     // The number of times to retry the entire specfile when it fails as a whole
     // specFileRetries: 1,
@@ -157,8 +429,6 @@ const wdioConfig = {
     // The only one supported by default is 'dot'
     // see also: https://webdriver.io/docs/dot-reporter.html
     reporters: ['spec'],
-
-
 
     //
     // Options to be passed to Mocha.
@@ -297,5 +567,14 @@ const wdioConfig = {
     //onReload: function(oldSessionId, newSessionId) {
     //}
 };
+
+wdioConfig.testParams = testParams;
+
+// Only set the service if it is an online service; setting the
+// user and key otherwise will trigger a warning or error.
+if (testParams.SERVICE === 'browserstack') {
+    wdioConfig.user = testParams.SERVICE_USER;
+    wdioConfig.key = testParams.SERVICE_KEY;
+}
 
 exports.config = wdioConfig;

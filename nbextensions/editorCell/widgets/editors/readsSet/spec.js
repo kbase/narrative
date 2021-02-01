@@ -1,4 +1,5 @@
 define([], function() {
+    'use strict';
     return {
         parameters: {
             layout: ['name', 'description', 'items'],

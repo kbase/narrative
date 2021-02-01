@@ -25,7 +25,6 @@ define([
     'kb_service/utils',
     'kb_service/client/workspace',
     './appCell',
-    'css!kbase/css/appCell.css',
     'bootstrap',
     'custom/custom'
 ], function(
@@ -214,6 +213,7 @@ define([
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load
     };
-}, function(err) {
+}, function (err) {
+    'use strict';
     console.error('ERROR loading appCell main', err);
 });

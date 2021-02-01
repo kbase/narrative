@@ -1,10 +1,10 @@
 # Configuration file for ipython-kernel.
 
-c = get_config()
+c = get_config()  # noqa: F821
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # IPKernelApp configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # IPython: an enhanced interactive Python shell.
 
@@ -62,7 +62,7 @@ c = get_config()
 # c.IPKernelApp.log_level = 30
 
 # lines of code to run at IPython startup.
-c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics' ]
+c.IPKernelApp.exec_lines = ["import biokbase.narrative.magics"]
 
 # Path to an extra config file to load.
 #
@@ -154,9 +154,9 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics' ]
 # set the iopub (PUB) port [default: random]
 # c.IPKernelApp.iopub_port = 0
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # IPythonKernel configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # IPythonKernel will inherit config from: Kernel
 
@@ -171,9 +171,9 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics' ]
 #
 # c.IPythonKernel._poll_interval = 0.05
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # ZMQInteractiveShell configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # A subclass of InteractiveShell for ZMQ.
 
@@ -303,9 +303,9 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics' ]
 # Automatically call the pdb debugger after every exception.
 # c.ZMQInteractiveShell.pdb = False
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # ProfileDir configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # An object to manage the profile directory and its resources.
 #
@@ -319,9 +319,9 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics' ]
 # `profile` option.
 # c.ProfileDir.location = u''
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Session configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # Object for handling serialization and sending of messages.
 #

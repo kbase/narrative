@@ -1,41 +1,56 @@
-<table id="kb-data-staging-table" class="table table-striped table-condensed" style="table-layout:fixed">
-    <thead>
+<table class="kb-staging-table table table-striped table-condensed">
+    <caption>Staging Area File List</caption>
+    <thead class="kb-staging-table-header">
         <tr>
-            <th style="width: 5%"></th>
-            <th style="width: 40%; overflow:hidden">Name</th>
-            <th style="width: 13%">Size</th>
-            <th style="width: 12%">Age</th>
-            <th style="width: 30%">Import As...</th>
+            <th class="kb-staging-table-header__checkbox" scope="col" aria-label="Selection Column">
+                <input class="kb-staging-table-header__checkbox-input" type="checkbox" id="staging_table_select_all" disabled=true role="checkbox" tabindex="0" aria-checked="false" aria-label="Select to import all files checkbox: disabled until at least one data type is selected">
+            </th>
+            <th class="kb-staging-table-header__file" scope="col" aria-label="File or Folder sort column"></th>
+            <th class="kb-staging-table-header__name" scope="col">Name</th>
+            <th class="kb-staging-table-header__size" scope="col">Size</th>
+            <th class="kb-staging-table-header__age" scope="col">Age</th>
+            <th class="kb-staging-table-header__import" scope="col">Import As...</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody class="kb-staging-table-body">
     {{#each files}}
-        <tr>
-            <td style="text-align:center">{{isFolder}}</td>
+        <tr scope="row">
+            <td>{{name}}</td>
+            <td class="kb-staging-table-body__expander">{{isFolder}}</td>
             <td>{{name}}</td>
             <td>{{size}}</td>
             <td>{{mtime}}</td>
-            <td>
+            <td role="option" class="kb-staging-table-body__import">
                 {{#if imported }}
-                <div class="pull-right" style="margin-left: -5px">
-                    <select id="import-type" style="width: 118px;">
+                <div>
+                    <select>
                         <option></option>
-                        {{#each ../uploaders}}
+                        {{#if mappings}}
+                        <optgroup label="Suggested Types">
+                            {{#each mappings as |mapping|}} -->
+                                <option value="{{id}}">{{title}}</option>
+                            {{/each}}
+                        </optgroup>
+                        <optgroup label="Other Types">
+                            {{#each ../uploaders}}
                             <option value="{{id}}">{{name}}</option>
-                        {{/each}}
+                            {{/each}}
+                        {{ else }}
+                            {{#each ../uploaders}}
+                                <option value="{{id}}">{{name}}</option>
+                            {{/each}}
+                        {{/if}}
+                    </optgroup>
                     </select>
-                    <button data-import="{{name}}" class="btn btn-xs btn-primary">
-                        <span><i class="fa fa-upload"></i></span>
+                    <button data-download="{{name}}" class="kb-staging-table-body__download btn btn-xs btn-primary" role="button" aria-label="Download Data">
+                        <span><i class="fa fa-download"></i></span>
                     </button>
-                    <button data-download="{{name}}" class="btn btn-xs btn-primary">
-                            <span><i class="fa fa-download"></i></span>
-                    </button>
-                    <button data-delete="{{name}}" class="btn btn-xs btn-danger">
+                    <button data-delete="{{name}}" class="kb-staging-table-body__delete btn btn-xs btn-danger" role="button" aria-label="Delete File">
                         <span><i class="fa fa-trash"></i></span>
                     </button>
                 </div>
                 {{ else }}
-                    <button data-delete="{{name}}" class="btn btn-xs btn-danger pull-right">
+                    <button data-delete="{{name}}" class="kb-staging-table-body__delete btn btn-xs btn-danger pull-right" role="button" aria-label="Delete Folder">
                         <span><i class="fa fa-trash"></i></span>
                     </button>
                 {{/if}}
@@ -44,6 +59,8 @@
     {{/each}}
     </tbody>
 </table>
-<div class='kb-data-staging-footer'>
+<div class='kb-staging-table-notice'>
     All files will be deleted after 90 days
+</div>
+<div class='kb-staging-table-import'>
 </div>

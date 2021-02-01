@@ -233,7 +233,7 @@ define([
                 var input = advancedInputs[i];
                 input.classList.remove(removeClass);
                 input.classList.add(addClass);
-                
+
                 var actualInput = input.querySelector('[data-element="input"]');
                 if (actualInput) {
                     $(actualInput).trigger('advanced-shown.kbase');

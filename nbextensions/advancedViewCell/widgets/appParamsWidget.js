@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -159,10 +156,10 @@ define([
                      */
                     fieldWidget.bus.on('get-parameter-value', function (message) {
                         paramsBus.request({
-                                parameter: message.parameter
-                            }, {
-                                key: 'get-parameter-value'
-                            })
+                            parameter: message.parameter
+                        }, {
+                            key: 'get-parameter-value'
+                        })
                             .then(function (message) {
                                 bus.emit('parameter-value', {
                                     parameter: message.parameter
@@ -283,7 +280,7 @@ define([
                     // }),
 
                     // div({
-                    //     dataElement: 'parameters-area',                        
+                    //     dataElement: 'parameters-area',
                     // }, [
                     //     div({
                     //         dataElement: 'parameter-fields'
@@ -390,22 +387,22 @@ define([
                         params.layout.filter(function (id) {
                             return (params.specs[id].ui.class === 'parameter');
                         })
-                        .map(function (id) {
-                            return params.specs[id];
-                        }));
+                            .map(function (id) {
+                                return params.specs[id];
+                            }));
 
                 return Promise.resolve()
-                    // .then(function () {
-                    //     if (inputParams.layout.length === 0) {
-                    //         ui.getElement('input-objects-area').classList.add('hidden');
-                    //     } else {
-                    //         places.inputFields.innerHTML = inputParams.content;
-                    //         return Promise.all(inputParams.layout.map(function (parameterId) {
-                    //             var spec = inputParams.paramMap[parameterId];
-                    //             try {
-                    //                 return makeFieldWidget(appSpec, spec, model.getItem(['params', spec.id]))
-                    //                     .then(function (widget) {
-                    //                         widgets.push(widget);
+                // .then(function () {
+                //     if (inputParams.layout.length === 0) {
+                //         ui.getElement('input-objects-area').classList.add('hidden');
+                //     } else {
+                //         places.inputFields.innerHTML = inputParams.content;
+                //         return Promise.all(inputParams.layout.map(function (parameterId) {
+                //             var spec = inputParams.paramMap[parameterId];
+                //             try {
+                //                 return makeFieldWidget(appSpec, spec, model.getItem(['params', spec.id]))
+                //                     .then(function (widget) {
+                //                         widgets.push(widget);
 
                     //                         return widget.start({
                     //                             node: document.getElementById(inputParams.view[parameterId].id)
@@ -420,7 +417,7 @@ define([
                     //             }
                     //         }));
                     //     }
-                    // })                   
+                    // })
                     .then(function () {
                         if (parameterParams.layout.length === 0) {
                             ui.getElement('parameters-area').classList.add('hidden');

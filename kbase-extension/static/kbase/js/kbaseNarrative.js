@@ -42,6 +42,7 @@ define([
     'kb_service/utils',
     'widgets/loadingWidget',
     'kb_service/client/workspace',
+    'util/kbaseApiUtil',
     'bootstrap',
 ], function (
     $,
@@ -74,7 +75,8 @@ define([
     Tour,
     ServiceUtils,
     LoadingWidget,
-    Workspace
+    Workspace,
+    APIUtil
 ) {
     'use strict';
 
@@ -849,10 +851,7 @@ define([
             this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), {
                 autorender: false,
             });
-            this.narrController = new KBaseNarrativeWorkspace(
-                $('#notebook_panel'),
-                { ws_id: this.getWorkspaceName() }
-            );
+            this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'));
 
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
@@ -880,7 +879,6 @@ define([
             this.initSharePanel();
             this.initStaticNarrativesPanel();
             this.updateDocumentVersion()
-                .then(() => this.narrController.render())
                 .finally(() => this.sidePanel.render());
         });
         $([Jupyter.events]).on('kernel_connected.Kernel', () => {
@@ -948,7 +946,6 @@ define([
      */
     Narrative.prototype.saveNarrative = function () {
         this.stopVersionCheck = true;
-        this.narrController.saveAllCellStates();
         Jupyter.notebook.save_checkpoint();
         this.toggleDocumentVersionBtn(false);
     };
@@ -1251,6 +1248,43 @@ define([
 
     Narrative.prototype.removeWidget = function (cellId) {
         delete this.kbaseWidgets[cellId];
+    };
+
+    /**
+     * This inserts a new bulk import cell below the currently selected cell.
+     * Its input is a map from object type to a the files to be uploaded and the app
+     * used to process them.
+     * {
+     *   fileType: {
+     *     appId: string,
+     *     files: array of files
+     *   }
+     * }
+     * This returns a Promise that resolves into the cell that was created.
+     * @param {object} bulkInput keys = type ids, values = an object with properties
+     *  - appId - the app id to use for that file type (to be used in fetching the spec)
+     *  - files - array of files to import with that file type
+     */
+    Narrative.prototype.insertBulkImportCell = function (bulkInput) {
+        const cellType = 'app-bulk-import';
+        const cellData = {
+            type: cellType,
+            typesToFiles: bulkInput ? bulkInput : {}
+        };
+        // get a unique array of app ids we need to look up
+        const appIds = [
+            ...new Set(Object.values(bulkInput)
+                .map((typeInfo) => typeInfo.appId))
+        ];
+        return APIUtil.getAppSpecs(appIds)
+            .then((appSpecs) => {
+                cellData.specs = appSpecs.reduce((allSpecs, spec) => {
+                    allSpecs[spec.info.id] = spec;
+                    return allSpecs;
+                }, {});
+                const cell = this.insertAndSelectCellBelow('code', null, cellData);
+                return cell;
+            });
     };
 
     return Narrative;

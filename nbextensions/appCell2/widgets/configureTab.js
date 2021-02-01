@@ -1,10 +1,8 @@
-/*global define*/
-/*jslint white:true,browser:true,nomen:true*/
-
 define([
     'bluebird',
     'common/runtime'
 ], function(Promise, runtime) {
+    'use strict';
 
     function loadParamsWidget(arg) {
         return new Promise(function(resolve, reject) {
@@ -82,23 +80,20 @@ define([
 
     function factory(config) {
         var container,
-            widget,
-            workspaceInfo;
+            widget;
 
         function start(arg) {
             container = arg.node;
-            workspaceInfo = arg.workspaceInfo;
 
             return loadParamsWidget({
-                    node: container,
-                    workspaceInfo: arg.workspaceInfo,
-                    appSpec: arg.appSpec,
-                    parameters: arg.parameters
+                node: container,
+                workspaceInfo: arg.workspaceInfo,
+                appSpec: arg.appSpec,
+                parameters: arg.parameters
 
-                })
-                .then(function(result) {
-                    widget = result;
-                });
+            }).then(function(result) {
+                widget = result;
+            });
 
         }
 

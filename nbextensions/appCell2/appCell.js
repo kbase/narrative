@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true,nomen:true */
-
 define([
     'bluebird',
     'uuid',
@@ -8,7 +5,7 @@ define([
     'common/runtime',
     'common/html',
     'common/dom',
-    'common/appUtils',
+    'util/icon',
     'common/jupyter',
     'common/ui',
     './widgets/appInfoDialog',
@@ -21,7 +18,7 @@ define([
     Runtime,
     html,
     Dom,
-    AppUtils,
+    Icon,
     jupyter,
     UI,
     appInfoDialog,
@@ -88,12 +85,12 @@ define([
                 viewInputArea.removeClass('hidden');
             };
             cell.getIcon = function() {
-                return AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
+                return Icon.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
             };
             cell.renderIcon = function() {
                 var iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
                 if (iconNode) {
-                    iconNode.innerHTML = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
+                    iconNode.innerHTML = this.getIcon();
                 }
             };
             cell.showInfo = function() {

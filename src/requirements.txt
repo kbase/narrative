@@ -2,7 +2,7 @@ bokeh==2.2.3
 chart_studio==1.1.0
 coverage==5.3
 decorator==4.4.2
-jinja2==2.11.2
+jinja2==2.11.3
 jsonschema==3.2.0
 markupsafe==1.1.1
 mock==4.0.2

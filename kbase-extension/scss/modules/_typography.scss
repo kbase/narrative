@@ -1,0 +1,35 @@
+@mixin font-h1 {
+  font: normal 700 42px $typeface-display-legacy;
+}
+
+@mixin font-h2 {
+  font: normal 700 34px $typeface-display-legacy;
+}
+
+@mixin font-h3 {
+  font: normal 400 24px $typeface-display-legacy;
+}
+
+@mixin font-h4 {
+  font: normal 700 16px $typeface-display-legacy;
+}
+
+@mixin font-h5 {
+  font: normal 700 15px $typeface-display-legacy;
+}
+
+@mixin font-h6 {
+  font: normal 400 13px $typeface-display-legacy;
+}
+
+@mixin font-body {
+  font: normal 400 16px $typeface-page-text;
+}
+
+@mixin font-legend-title {
+  font: normal 700 32px $typeface-display-legacy;
+}
+
+@mixin fixed-width {
+  font: normal 400 14px/1.6 $typeface-fixed-width;
+}

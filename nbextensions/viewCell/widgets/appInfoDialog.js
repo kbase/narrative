@@ -114,9 +114,9 @@ define([
             })
             .then(function(result) {
                 switch (result.action) {
-                case 'link':
-                    window.open(result.result.url, result.result.name);
-                    break;
+                    case 'link':
+                        window.open(result.result.url, result.result.name);
+                        break;
                 }
             })
             .catch(function(err) {

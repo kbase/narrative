@@ -1,0 +1,33 @@
+// SCSS file containing all css
+
+// Modules
+@import "modules/variables";
+@import "modules/fonts";
+@import "modules/colours";
+@import "modules/typography";
+// overrides of specific jupyter notebook formatting bits
+@import "partials/custom";
+
+// basic formatting
+@import "partials/stylesheet";
+@import "partials/narrative";
+@import "partials/icons";
+@import "partials/landingPages";
+@import "partials/editor";
+@import "partials/notify";
+@import "partials/methodCell";
+@import "partials/bootstrapHelper";
+@import "partials/buttons";
+@import "partials/contigBrowserStyles";
+@import "partials/jobLog";
+@import "partials/tour";
+@import "partials/batchMode";
+@import "partials/advancedViewCell";
+@import "partials/errorDisplay";
+@import "partials/appCell";
+@import "partials/editorCell";
+@import "partials/bulkImportCell";
+@import "partials/job-status";
+@import "partials/job-state";
+@import "partials/kb-icon";
+@import "partials/createdObjects";

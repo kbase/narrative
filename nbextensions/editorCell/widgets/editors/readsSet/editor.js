@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'require',
     'bluebird',
@@ -336,13 +333,13 @@ define([
         function fixApp(app) {
             switch (app.tag) {
                 case 'release':
-                    {
-                        return {
-                            id: app.id,
-                            tag: app.tag,
-                            version: app.version
-                        };
-                    }
+                {
+                    return {
+                        id: app.id,
+                        tag: app.tag,
+                        version: app.version
+                    };
+                }
                 case 'beta':
                 case 'dev':
                     return {
@@ -682,10 +679,10 @@ define([
                     });
 
                     return widget.start({
-                            node: controller.node,
-                            appSpec: env.appSpec,
-                            parameters: spec.getSpec()
-                        })
+                        node: controller.node,
+                        appSpec: env.appSpec,
+                        parameters: spec.getSpec()
+                    })
                         .then(function() {
                             resolve();
                             return null;
@@ -831,16 +828,16 @@ define([
             controller.status = 'unloading';
             controller.cancelled = true;
             return Promise.try(function() {
-                    // stop the widget if there is one.
-                    if (controller.widget) {
-                        controller.status = 'stopping';
-                        return controller.widget.stop()
-                            .then(function() {
-                                controller.status = 'stopped';
-                                controller.widget = null;
-                            });
-                    }
-                })
+                // stop the widget if there is one.
+                if (controller.widget) {
+                    controller.status = 'stopping';
+                    return controller.widget.stop()
+                        .then(function() {
+                            controller.status = 'stopped';
+                            controller.widget = null;
+                        });
+                }
+            })
                 .then(function() {
                     var editorNode = ui.getElement('editor.widget');
                     try {
@@ -868,16 +865,16 @@ define([
             controller.status = 'unloading';
             controller.cancelled = true;
             return Promise.try(function() {
-                    // stop the widget if there is one.
-                    if (controller.widget) {
-                        controller.status = 'stopping';
-                        return controller.widget.stop()
-                            .then(function() {
-                                controller.status = 'stopped';
-                                controller.widget = null;
-                            });
-                    }
-                })
+                // stop the widget if there is one.
+                if (controller.widget) {
+                    controller.status = 'stopping';
+                    return controller.widget.stop()
+                        .then(function() {
+                            controller.status = 'stopped';
+                            controller.widget = null;
+                        });
+                }
+            })
                 .then(function() {
                     var editorNode = ui.getElement('editor.widget');
                     try {
@@ -951,7 +948,7 @@ define([
                     return controller.widget.start({
                         node: controller.node,
                         message: 'Loading Reads Set'
-                    })
+                    });
                 })
                 .then(function() {
                     if (controller.cancelled) {
@@ -1046,10 +1043,10 @@ define([
                         renderUI();
                     });
                     widget.start({
-                            node: ui.getElement(['edit-object-selector', 'widget']),
-                            appSpec: env.appSpec,
-                            selectedSet: editorState.getItem('current.set.ref')
-                        })
+                        node: ui.getElement(['edit-object-selector', 'widget']),
+                        appSpec: env.appSpec,
+                        selectedSet: editorState.getItem('current.set.ref')
+                    })
                         .then(function() {
                             resolve();
                             return null;
@@ -1095,48 +1092,47 @@ define([
 
         function evaluateAppState() {
             return Promise.try(function() {
-                    var currentEditorSetInfo = editorState.getItem('current.set.info');
+                var currentEditorSetInfo = editorState.getItem('current.set.info');
 
-                    if (!currentEditorSetInfo) {
-                        // nothing being edited.
-                        fsm.updateState({
-                            mode: 'new'
-                        });
-                        return null;
-                    }
+                if (!currentEditorSetInfo) {
+                    // nothing being edited.
+                    fsm.updateState({
+                        mode: 'new'
+                    });
+                    return null;
+                }
 
-                    return validateModel()
-                        .then(function(result) {
-                            // we have a tree of validations, so we need to walk the tree to see if anything
-                            // does not validate.
-                            var messages = gatherValidationMessages(result);
+                return validateModel()
+                    .then(function(result) {
+                        // we have a tree of validations, so we need to walk the tree to see if anything
+                        // does not validate.
+                        var messages = gatherValidationMessages(result);
 
 
-                            if (messages.length === 0) {
-                                buildPython();
-                                // dumb, but gotta get it working...
-                                fsm.newState({
-                                    mode: 'editing',
-                                    params: 'complete',
-                                    data: 'changed'
-                                });
-                            } else {
-                                resetPython(cell);
-                                fsm.newState({
-                                    mode: 'editing',
-                                    params: 'incomplete',
-                                    data: 'changed'
-                                });
-                            }
-                        });
+                        if (messages.length === 0) {
+                            buildPython();
+                            // dumb, but gotta get it working...
+                            fsm.newState({
+                                mode: 'editing',
+                                params: 'complete',
+                                data: 'changed'
+                            });
+                        } else {
+                            resetPython(cell);
+                            fsm.newState({
+                                mode: 'editing',
+                                params: 'incomplete',
+                                data: 'changed'
+                            });
+                        }
+                    });
 
-                })
+            })
                 .then(function() {
                     renderUI();
                 })
                 .catch(function(err) {
-                    alert('internal error'),
-                        console.error('INTERNAL ERROR', err);
+                    console.error('INTERNAL ERROR', err);
                 });
         }
 
@@ -1266,7 +1262,7 @@ define([
                     spec = loadedSpec;
                     registerEvents();
                     showCodeInputArea();
-                    return syncAppSpec(arg.appId, arg.appTag)
+                    return syncAppSpec(arg.appId, arg.appTag);
                 })
                 .then(function() {
                     // Should not need to do this each time...
@@ -1357,5 +1353,6 @@ define([
         }
     };
 }, function(err) {
+    'use strict';
     console.error('ERROR loading editorCell editorCellWidget', err);
 });

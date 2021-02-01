@@ -73,7 +73,6 @@ define([
     'widgets/appWidgets2/view/textView',
     'widgets/appWidgets2/view/toggleButtonView',
     'widgets/appWidgets2/view/undefinedView',
-    'common/appUtils',
     'common/busEventManager',
     'common/cellUtils',
     'common/clock',
@@ -102,5 +101,6 @@ define([
     'common/ui',
     'common/unodep',
     'common/utils',
-    'common/validation'
+    'common/validation',
+    'util/icon',
 ], function () { return; });

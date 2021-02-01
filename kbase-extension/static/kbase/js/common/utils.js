@@ -111,7 +111,7 @@ define([
             prompt.css('visibility', 'hidden');
             return;
         }
-            
+
         if (tries > 0) {
             tries -= 1;
             window.setTimeout(function () {
@@ -121,7 +121,7 @@ define([
             console.warn('Could not hide the prompt, sorry');
         }
     }
-    
+
     function toBoolean(value) {
         if (value && value !== null) {
             return true;

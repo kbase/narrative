@@ -1,5 +1,3 @@
-/*global define,console*/
-/*jslint white:true,browser:true*/
 /*
  * KBase Editor Cell Extension
  *
@@ -28,12 +26,10 @@ define([
     'common/utils',
     'common/clock',
     'common/dom',
-    'common/appUtils',
+    'util/icon',
     'common/jupyter',
     'kb_service/utils',
     'kb_service/client/workspace',
-    'css!kbase/css/appCell.css',
-    'css!kbase/css/editorCell.css',
     'bootstrap',
     'custom/custom'
 ], function(
@@ -48,7 +44,7 @@ define([
     utils,
     Clock,
     Dom,
-    AppUtils,
+    Icon,
     jupyter,
     serviceUtils,
     Workspace
@@ -75,41 +71,41 @@ define([
      */
     function upgradeToEditorCell(cell, appSpec, appTag) {
         return Promise.try(function() {
-                var meta = cell.metadata;
-                meta.kbase = {
-                    type: 'editor',
-                    attributes: {
-                        id: new Uuid(4).format(),
-                        status: 'new',
-                        created: (new Date()).toUTCString(),
-                        icon: 'bar-chart'
+            var meta = cell.metadata;
+            meta.kbase = {
+                type: 'editor',
+                attributes: {
+                    id: new Uuid(4).format(),
+                    status: 'new',
+                    created: (new Date()).toUTCString(),
+                    icon: 'bar-chart'
+                },
+                cellState: {
+                    icon: 'bar-chart'
+                },
+                editorCell: {
+                    app: {
+                        id: appSpec.info.id,
+                        gitCommitHash: appSpec.info.git_commit_hash,
+                        version: appSpec.info.ver,
+                        tag: appTag,
+                        spec: appSpec
                     },
-                    cellState: {
-                        icon: 'bar-chart'
+                    editor: {
+                        type: appSpec.widgets.input
                     },
-                    editorCell: {
-                        app: {
-                            id: appSpec.info.id,
-                            gitCommitHash: appSpec.info.git_commit_hash,
-                            version: appSpec.info.ver,
-                            tag: appTag,
-                            spec: appSpec
-                        },
-                        editor: {
-                            type: appSpec.widgets.input
-                        },
-                        state: {
-                            edit: 'editing',
-                            params: null,
-                            code: null,
-                            request: null,
-                            result: null
-                        },
-                        params: null
-                    }
-                };
-                cell.metadata = meta;
-            })
+                    state: {
+                        edit: 'editing',
+                        params: null,
+                        code: null,
+                        request: null,
+                        result: null
+                    },
+                    params: null
+                }
+            };
+            cell.metadata = meta;
+        })
             .then(function() {
                 // Complete the cell setup.
                 return setupCell(cell);
@@ -149,16 +145,12 @@ define([
             var inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
             if (inputPrompt) {
-                inputPrompt.innerHTML = div({
-                    style: { textAlign: 'center' }
-                }, [
-                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'))
-                ]);
+                inputPrompt.innerHTML = this.getIcon();
             }
         };
 
         cell.getIcon = function() {
-            return AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'));
+            return Icon.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'));
         };
 
         cell.toggleCodeInputArea = function() {
@@ -287,11 +279,11 @@ define([
                     jupyter.disableKeyListenersForCell(cell);
 
                     return editor.start({
-                            node: kbaseNode,
-                            appId: appId,
-                            appTag: appTag,
-                            authToken: runtime.authToken()
-                        })
+                        node: kbaseNode,
+                        appId: appId,
+                        appTag: appTag,
+                        authToken: runtime.authToken()
+                    })
                         .then(function() {
                             // AppCellController.start();
                             cell.renderMinMax();
@@ -434,8 +426,9 @@ define([
     return {
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load
-            // These are kbase api calls
+        // These are kbase api calls
     };
 }, function(err) {
+    'use strict';
     console.log('ERROR loading editorCell main', err);
 });

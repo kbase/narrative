@@ -411,13 +411,13 @@ define([
 
             value = model.getItem(['user-settings', settingName], setting.defaultValue);
             switch (setting.type) {
-            case 'toggle':
-                if (value) {
-                    ui.showElement(setting.element);
-                } else {
-                    ui.hideElement(setting.element);
-                }
-                break;
+                case 'toggle':
+                    if (value) {
+                        ui.showElement(setting.element);
+                    } else {
+                        ui.hideElement(setting.element);
+                    }
+                    break;
             }
         }
 
@@ -615,21 +615,21 @@ define([
 
         function fixApp(app) {
             switch (app.tag) {
-            case 'release':
-                return {
-                    id: app.id,
-                    tag: app.tag,
-                    version: app.version
-                };
-            case 'beta':
-            case 'dev':
-                return {
-                    id: app.id,
-                    tag: app.tag,
-                    version: app.gitCommitHash
-                };
-            default:
-                throw new Error('Invalid tag for app ' + app.id);
+                case 'release':
+                    return {
+                        id: app.id,
+                        tag: app.tag,
+                        version: app.version
+                    };
+                case 'beta':
+                case 'dev':
+                    return {
+                        id: app.id,
+                        tag: app.tag,
+                        version: app.gitCommitHash
+                    };
+                default:
+                    throw new Error('Invalid tag for app ' + app.id);
             }
         }
 
@@ -1142,7 +1142,6 @@ define([
                     }
                 })
                 .catch(function(err) {
-                    alert('internal error'),
                     console.error('INTERNAL ERROR', err);
                 });
         }

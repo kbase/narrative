@@ -1,0 +1,290 @@
+/*
+  bulk import cell
+*/
+
+$component-border: rgb(196, 196, 196);
+$filetype-icon-color: rgb(3, 81, 125);
+$filetype-highlight-color: rgb(204, 229, 243);
+$filetype-hover-color: rgb(231, 239, 248);
+$panel-separator-color: rgb(33, 150, 243);
+$button-outdated: rgb(247, 155, 34);
+
+.kb-bulk-import {
+  &__base-node {
+    // everything lives under this
+  }
+
+  &__layout_container {
+    display: flex;
+    align-items: stretch;
+  }
+
+  /* kb-bulk-import__prompt */
+  &__prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* kb-bulk-import__prompt_status */
+  &__prompt_status {
+  }
+
+  /* kb-bulk-import__body */
+  &__body {
+    display: flex;
+    width: 100%;
+    flex: 1;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* kb-bulk-import__tab_pane */
+  &__tab_pane {
+    display: flex;
+    flex-direction: row;
+    align-content: stretch;
+    align-items: stretch;
+  }
+
+  /* kb-bulk-import__tab_pane_widget_container */
+  &__tab_pane_widget_container {
+    flex: 1;
+
+    /* kb-bulk-import__tab_pane_widget_container_tabs */
+    &_tabs {
+      border-bottom: 2px solid $panel-separator-color;
+      text-align: right;
+    }
+
+    /* kb-bulk-import__tab_pane_widget_container_widget */
+    &_widget {
+      padding: 4px;
+      margin: 15px;
+    }
+  }
+
+  /* kb-bulk-import__filetype_panel */
+  &__filetype_panel {
+    width: 232px;
+    border-right: 1px solid $component-border;
+
+    &__header {
+      padding: 8px;
+      border-bottom: 1px solid $component-border;
+      font: normal 700 16px/30px $typeface-page-text;
+
+      &_icon {
+        padding: 8px 6px 8px 8px;
+        color: rgb(0 0 0);
+      }
+    }
+
+    &__filetype {
+      /* .kb-bulk-import__filetype_panel__filetype_button */
+      &_button {
+        display: flex;
+        width: 100%;
+        flex-direction: row;
+        padding: 8px;
+        border: 0 0 1px 0 solid $component-border;
+        border-bottom: 1px solid $component-border;
+        background-color: inherit;
+        font: normal 400 14px/1.6 $typeface-page-text;
+        text-align: left;
+
+        &:hover:not(&--selected) {
+          background-color: $filetype-hover-color;
+          cursor: pointer;
+        }
+
+        /* .kb-bulk-import__filetype_panel__filetype_button--selected */
+        &--selected {
+          background-color: $filetype-highlight-color;
+        }
+      }
+
+      /* .kb-bulk-import__filetype_panel__filetype_icon */
+      &_icon {
+        padding: 2px 8px 0;
+        color: $filetype-icon-color;
+      }
+
+      /* .kb-bulk-import__filetype_panel__filetype_label */
+      &_label {
+        flex: 1;
+      }
+    }
+  }
+
+  /* kb-bulk-import__tab_pane_widget */
+  &__tab_pane_widget {
+  }
+
+  /* kb-bulk-import-configure */
+  &-configure {
+    &__advanced_hidden_message {
+      margin-left: 6px;
+      font-style: italic;
+    }
+  }
+
+  &-tabs {
+    /* kb-bulk-import-tabs__container */
+    &__container {
+      right: 0;
+      display: inline-block;
+      height: 50px;
+      padding-right: 15px;
+      line-height: 50px;
+      vertical-align: bottom;
+    }
+
+    /* kb-bulk-import-tabs__toolbar */
+    &__toolbar {
+      display: inline-block;
+      vertical-align: bottom;
+    }
+
+    /* kb-bulk-import-tabs__button */
+    &__button {
+      /* kb-bulk-import-tabs__button--outdated */
+      &--outdated {
+        padding: 6px 0 0;
+        color: $button-outdated;
+      }
+    }
+  }
+
+  /* cell control panel stuff */
+  &-control-panel {
+    /* kb-bulk-import-control-panel__container */
+    &__container {
+      border-bottom: 1px solid $component-border;
+    }
+
+    /* kb-bulk-import-control-panel__border */
+    &__border {
+      position: relative;
+      display: flex;
+      height: 50px;
+      flex-direction: row;
+    }
+
+    /* kb-bulk-import-control-panel__status_container */
+    &__status_container {
+      overflow: hidden;
+      width: 450px;
+      height: 50px;
+    }
+
+    /* kb-bulk-import-control-panel__message_box */
+    &__message_box {
+      /* kb-bulk-import-control-panel__message_box_holder */
+      &_holder {
+        height: 50px;
+        margin-top: 0;
+        line-height: 50px;
+        text-align: left;
+        vertical-align: middle;
+      }
+    }
+
+    /* kb-bulk-import-control-panel__exec_message */
+    &__exec_message {
+    }
+
+    /* kb-bulk-import-control-panel__tab_bar */
+    &__tab_bar {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 50px;
+    }
+  }
+}
+
+.kb-app-params__advanced-message--parameters {
+  margin-left: 6px;
+}
+
+.kb-app-params__fields--parameters {
+  /* kb-app-params__fields--parameters__hidden_field */
+  &__hidden_field {
+    display: none;
+  }
+}
+
+.kb-field-widget__error_message--parameters {
+  border: 1px solid use_color("error");
+}
+
+.kb-field-cell {
+  &__param_container {
+    margin: 3px;
+  }
+
+  &__input_control select {
+    margin-left: 0;
+  }
+
+  &__cell_label {
+    padding-top: 8px;
+    margin-bottom: 0;
+  }
+}
+
+.kb-file-path {
+  /* .kb-file-path-table-row */
+
+
+  &__table {
+    width: 100%;
+  }
+
+  &__table_row {
+    font: normal 400 14px/18px $typeface-page-text;
+  }
+
+  /* .kb-file-path__param_container */
+  &__param_container {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+
+   .input-group .select2-container {
+      display: table;
+      table-layout: fixed;
+    }
+  }
+
+  &__table_cell--file-path_id {
+    min-width: 30rem;
+    flex: 1;
+    padding: 4px;
+  }
+
+  &__button--delete {
+    margin-top: 20px;
+  }
+
+  &__button--add_row {
+    margin-left: 10px;
+    margin-bottom: 5px;
+  }
+
+  &__button_icon--add_row {
+    margin: 5px;
+  }
+
+  &__file_number {
+    padding: 20px 10px 0 0;
+    font-weight: 700;
+  }
+
+  &__params {
+    width: 95%;
+  }
+}
+
+

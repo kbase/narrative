@@ -227,7 +227,7 @@
         "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
         "data_import_export": "https://kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
-        "execution_engine2": "https://kbase.us/services/ee3",
+        "execution_engine2": "https://kbase.us/services/ee2-nr",
         "fba": "https://kbase.us/services/KBaseFBAModeling/",
         "ftp_api_root": "/data/bulk",
         "ftp_api_url": "https://kbase.us/services/kb-ftp-api/v0",
@@ -384,5 +384,5 @@
         "globus_upload_url": "https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a"
     },
     "use_local_widgets": true,
-    "version": "4.3.1"
+    "version": "4.3.2"
 }

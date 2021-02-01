@@ -5,8 +5,7 @@ define([
     'jquery',
     'bootstraptour',
     'handlebars',
-    'text!kbase/templates/tour/tour_panel.html',
-    'css!kbase/css/kbaseTour.css'
+    'text!kbase/templates/tour/tour_panel.html'
 ], function($, Tour, Handlebars, TourTmpl) {
     "use strict";
 

@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -150,10 +147,10 @@ define([
                      */
                     fieldWidget.bus.on('get-parameter-value', function(message) {
                         paramsBus.request({
-                                parameter: message.parameter
-                            }, {
-                                key: 'get-parameter-value'
-                            })
+                            parameter: message.parameter
+                        }, {
+                            key: 'get-parameter-value'
+                        })
                             .then(function(message) {
                                 bus.emit('parameter-value', {
                                     parameter: message.parameter
@@ -396,23 +393,23 @@ define([
                         params.layout.filter(function(id) {
                             return (params.specs[id].ui.class === 'input');
                         })
-                        .map(function(id) {
-                            return params.specs[id];
-                        })),
+                            .map(function(id) {
+                                return params.specs[id];
+                            })),
                     outputParams = makeParamsLayout(
                         params.layout.filter(function(id) {
                             return (params.specs[id].ui.class === 'output');
                         })
-                        .map(function(id) {
-                            return params.specs[id];
-                        })),
+                            .map(function(id) {
+                                return params.specs[id];
+                            })),
                     parameterParams = makeParamsLayout(
                         params.layout.filter(function(id) {
                             return (params.specs[id].ui.class === 'parameter');
                         })
-                        .map(function(id) {
-                            return params.specs[id];
-                        }));
+                            .map(function(id) {
+                                return params.specs[id];
+                            }));
 
                 return Promise.resolve()
                     .then(function() {
@@ -558,7 +555,7 @@ define([
                                 console.error('ERROR in start', err);
                             });
                     });
-                });
+            });
         }
 
         function stop() {

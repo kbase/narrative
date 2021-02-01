@@ -1,13 +1,10 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
     'uuid',
     'base/js/namespace',
     'common/utils',
-    'common/appUtils',
+    'util/icon',
     'common/props',
     'common/cellUtils',
     'common/pythonInterop',
@@ -22,7 +19,7 @@ define([
     Uuid,
     Jupyter,
     utils,
-    AppUtils,
+    Icon,
     Props,
     cellUtils,
     PythonInterop,
@@ -67,22 +64,14 @@ define([
          * narrative configuration.
          */
         cell.renderIcon = function() {
-            var inputPrompt = this.element[0].querySelector('[data-element="icon"]'),
-                type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type');
-
+            var inputPrompt = this.element[0].querySelector('[data-element="icon"]');
             if (inputPrompt) {
-                inputPrompt.innerHTML = div({
-                    style: { textAlign: 'center' }
-                }, [
-                    AppUtils.makeTypeIcon(type)
-                ]);
+                inputPrompt.innerHTML = this.getIcon();
             }
         };
 
         cell.getIcon = function() {
-            var type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type'),
-                icon = AppUtils.makeToolbarTypeIcon(type);
-            return icon;
+            return Icon.makeToolbarTypeIcon(Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type'));
         };
 
         cell.toggleCodeInputArea = function() {
@@ -246,7 +235,7 @@ define([
     };
 }, function(err) {
     'use strict';
-    // NB we should probably not be handling individual loading errors. If the 
+    // NB we should probably not be handling individual loading errors. If the
     // data cell couldn't load it is not recoverable -- the user should either reload the
     // narrative or the system is broken. This handling in particular will just hide the error.
     console.error('ERROR loading dataCell main', err);

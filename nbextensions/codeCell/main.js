@@ -100,14 +100,11 @@ define([
         // for kbase. Anything to be persistent should be on the metadata.
         cell.kbase = {};
 
-        // Code cell input area is always set to be open by default.
-
-        // import/job cells dont' show code input area, regular code cells do.
-        // TODO perhaps code cells should remember this?
+        // Code cell input area is always set to be open by default, but users
+        // can chose to override this and this choice should be remembered.
+        // import/job cells dont' show code input area as regular code cells do.
         if (utils.getCellMeta(cell, 'kbase.codeCell.jobInfo')) {
             utils.setCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea', false);
-        } else {
-            utils.setCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea', true);
         }
 
         var widget = CodeCell.make({

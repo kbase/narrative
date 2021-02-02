@@ -4,12 +4,11 @@ Test log proxy and kblogging
 import logging
 import os
 import signal
-import sys
 import time
 import unittest
 from biokbase.narrative.common import log_proxy as proxy
 
-__author__ = 'Dan Gunter <dkgunter@lbl.gov>'
+__author__ = "Dan Gunter <dkgunter@lbl.gov>"
 
 
 class MainTestCase(unittest.TestCase):
@@ -20,13 +19,13 @@ class MainTestCase(unittest.TestCase):
     meta = None
 
     def setUp(self):
-        self._config(['db: test', 'collection: kblog'])
+        self._config(["db: test", "collection: kblog"])
         if proxy.g_log is None:
             proxy.g_log = logging.getLogger(proxy.LOGGER_NAME)
 
     def _config(self, lines):
-        text = '\n'.join(lines)
-        with open(self.conf, 'w') as f:
+        text = "\n".join(lines)
+        with open(self.conf, "w") as f:
             f.write(text)
 
     def test_run_proxy(self):
@@ -53,25 +52,30 @@ class MainTestCase(unittest.TestCase):
         self._config([])
         self.assertRaises(ValueError, proxy.DBConfiguration, self.conf)
         # missing collection
-        self._config(['db: test'])
+        self._config(["db: test"])
         self.assertRaises(KeyError, proxy.DBConfiguration, self.conf)
         # bad db name
-        self._config(['db: 1test', 'collection: kblog'])
+        self._config(["db: 1test", "collection: kblog"])
         self.assertRaises(ValueError, proxy.DBConfiguration, self.conf)
         # bad db name
-        self._config(['db: test.er', 'collection: kblog'])
+        self._config(["db: test.er", "collection: kblog"])
         self.assertRaises(ValueError, proxy.DBConfiguration, self.conf)
         # too long
-        self._config(['db: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-                      'collection: bbbbbbbbbbbbbbbbbbcccccccccccccccccccccccc'
-                      'ddddddddddddddddddddddddddddddd'])
+        self._config(
+            [
+                "db: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "collection: bbbbbbbbbbbbbbbbbbcccccccccccccccccccccccc"
+                "ddddddddddddddddddddddddddddddd",
+            ]
+        )
         self.assertRaises(ValueError, proxy.DBConfiguration, self.conf)
         # bad collection
-        self._config(['db: test', 'collection: kb$log'])
+        self._config(["db: test", "collection: kb$log"])
         self.assertRaises(ValueError, proxy.DBConfiguration, self.conf)
         # user, no pass
-        self._config(['db: test', 'collection: kblog', 'user: joe'])
+        self._config(["db: test", "collection: kblog", "user: joe"])
         self.assertRaises(KeyError, proxy.DBConfiguration, self.conf)
+
 
 class LogRecordTest(unittest.TestCase):
     def setUp(self):
@@ -82,17 +86,18 @@ class LogRecordTest(unittest.TestCase):
         for input in {}, {"message": "hello"}:
             kbrec = proxy.DBRecord(input)
         kbrec = proxy.DBRecord({"message": "greeting;Hello=World"})
-        self.assertEqual(kbrec.record['event'], 'greeting')
-        self.assertEqual(kbrec.record['Hello'], 'World')
+        self.assertEqual(kbrec.record["event"], "greeting")
+        self.assertEqual(kbrec.record["Hello"], "World")
 
     def test_strict(self):
-        for inp in ({"xanthium": 12},
-                    {12: "xanthium"},
-                    {"message": "Hello=World;greeting"}):
-            kbrec = proxy.DBRecord(inp)
-            self.assertRaises(ValueError,
-                              proxy.DBRecord,
-                              inp, strict=True)
+        for inp in (
+            {"xanthium": 12},
+            {12: "xanthium"},
+            {"message": "Hello=World;greeting"},
+        ):
+            proxy.DBRecord(inp)
+            self.assertRaises(ValueError, proxy.DBRecord, inp, strict=True)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,19 @@
+---
+name: Tag Image For Deploy
+'on':
+  repository_dispatch
+jobs:
+  tag_environments:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out GitHub Repo
+      uses: actions/checkout@v2
+    - name: Tag Deploy Environments  
+      env:
+        DOCKER_ACTOR: jsfillman
+        DOCKER_TOKEN: ${{ secrets.GHCR_TOKEN  }}
+        IMAGE_TAG: ${{ github.event.client_payload.image_tag }}
+        SHA: ${{ github.event.pull_request.head.sha }}
+        TARGET: ${{ github.event.client_payload.target }}
+        DEV_PROD: ${{ github.event.client_payload.dev_prod }}
+      run: './.github/workflows/scripts/tag_environments.sh'

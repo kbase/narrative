@@ -18,15 +18,17 @@ def generate_app_cell(validated_spec=None, spec_tuple=None):
 
     if spec_tuple is not None and validated_spec is None:
         nms = clients.get("narrative_method_store")
-        validated = nms.validate_method({
-            "id": "some_test_app",
-            "spec_json": spec_tuple[0],
-            "display_yaml": spec_tuple[1]
-        })
-        if validated.get('is_valid', 0) == 1:
-            validated_spec = validated['method_spec']
-        elif "errors" in validated and validated['errors']:
-            raise Exception(validated['errors'])
+        validated = nms.validate_method(
+            {
+                "id": "some_test_app",
+                "spec_json": spec_tuple[0],
+                "display_yaml": spec_tuple[1],
+            }
+        )
+        if validated.get("is_valid", 0) == 1:
+            validated_spec = validated["method_spec"]
+        elif "errors" in validated and validated["errors"]:
+            raise Exception(validated["errors"])
 
     # Each of the values of the validated spec needs to be escaped for JS.
     # Specifically we turn " -> &quot; and ' -> &apos;
@@ -36,7 +38,9 @@ def generate_app_cell(validated_spec=None, spec_tuple=None):
 
     if "info" in validated_spec:
         for key in ["name", "subtitle", "tooltip"]:
-            validated_spec["info"][key] = _fix_quotes(validated_spec["info"].get(key, ""))
+            validated_spec["info"][key] = _fix_quotes(
+                validated_spec["info"].get(key, "")
+            )
 
     if "parameters" in validated_spec:
         for i in range(len(validated_spec["parameters"])):
@@ -60,6 +64,7 @@ def generate_app_cell(validated_spec=None, spec_tuple=None):
     js_code = Template(js_template).render(spec=json.dumps(validated_spec))
 
     return Javascript(data=js_code, lib=None, css=None)
+
 
 def _fix_quotes(s: str) -> str:
     return s.replace('"', "&quot;").replace("'", "&apos;")

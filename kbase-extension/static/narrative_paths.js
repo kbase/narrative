@@ -90,7 +90,6 @@ require.config({
         'Taxonomy-client-api': 'kbase/js/api/TaxonomyAPIClient',
         'RestAPIClient' : 'kbase/js/api/RestAPIClient',
         'StagingServiceClient' : 'kbase/js/api/StagingServiceClient',
-        'KBaseSearchEngineClient': 'kbase/js/api/KBaseSearchEngineClient',
 
         'njs-wrapper-client-api': 'kbase/js/api/NarrativeJobServiceWrapper',
         kbaseNarrativeJobStatus: 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',
@@ -147,7 +146,6 @@ require.config({
         'kbaseNarrativeParameterFileInput': 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterFileInput',
         'kbaseNarrativeParameterTextSubdataInput': 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextSubdataInput',
         'kbaseNarrativeError': 'kbase/js/widgets/function_output/kbaseNarrativeError',
-        'narrativeManager': 'kbase/js/api/NarrativeManager',
         'ipythonCellMenu': 'kbase/js/widgets/narrative_core/ipythonCellMenu',
 
 

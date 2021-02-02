@@ -11,7 +11,7 @@ from biokbase.narrative.common.util import kbase_env
 class NarrativeLoggerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.log_host = 'localhost'
+        self.log_host = "localhost"
         # self.log_port = 34567
         self.poll_interval = 0.5
         self.real_log_host = URLS.log_host
@@ -31,7 +31,10 @@ class NarrativeLoggerTestCase(unittest.TestCase):
         log_port = util.find_free_port()
         URLS.log_port = log_port
         self.log_recv, self.log_recv_thread = util.start_tcp_server(
-            self.log_host, log_port, self.poll_interval, bufferer=util.NarrativeMessageBufferer
+            self.log_host,
+            log_port,
+            self.poll_interval,
+            bufferer=util.NarrativeMessageBufferer,
         )
 
     @classmethod
@@ -85,8 +88,10 @@ class NarrativeLoggerTestCase(unittest.TestCase):
         try:
             logger = NarrativeLogger()
             logger.narrative_save("12345/67", 8)
-        except:
-            self.fail('Log writing threw an unexpected exception without a live socket!')
+        except BaseException:
+            self.fail(
+                "Log writing threw an unexpected exception without a live socket!"
+            )
 
     def assert_log_msg(self, msg, event, narrative, version):
         data = json.loads(msg)

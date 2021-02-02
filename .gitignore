@@ -22,6 +22,7 @@ my_narrative_venv/
 narrative_venv/
 new_narrative_env_2/
 js-coverage
+cover
 
 # From https://github.com/github/gitignore/blob/master/Python.gitignore
 
@@ -72,6 +73,9 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
+
+# Integration test logs
+/selenium-standalone-logs/
 
 # Translations
 *.mo

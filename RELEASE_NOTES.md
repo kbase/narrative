@@ -3,6 +3,29 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Version 4.3.2
+- SCT-2778 - convert data slideout, public tab, refseq data source to use searchapi2/rpc api rather than searchapi2/legacy.
+- Enhanced integration testing support to add service, host, browser, screen size support.
+- Changed the "Dashboard" link in hamburger menu to "Narratives" and use the new /narratives path.
+
+### Version 4.3.1
+- Fixed problem where code cells could forget their toggled state after saving.
+- Fixed setting up local authentication for developers.
+- DATAUP-69 - added a pull request template to the narrative repo.
+- DATAUP-120 - improve testing documentation
+- DATAUP-164, DATAUP-165 - add automatic linting configuration with flake8 and black for the Python layer.
+- DATAUP-176 - refactored the startup process to be more robust with respect to kernel activity.
+- DATAUP-178 - changed "Add Data" and "+" icon color in the data panel.
+- DATAUP-187 - repositioned Globus link in the staging area.
+- DATAUP-188, DATAUP-228 - adds text and refresh button to the staging area, and stabilized the trash can icon.
+- DATAUP-197 - fixed problem where canceling an app cell could cause it to freeze.
+- DATAUP-204 - made folder names clickable in the staging area.
+- DATAUP-210 - adds a "file too large" error to the staging area when a file is too large to upload.
+- DATAUP-213 - added a "clear all" button that removes all staging area errors.
+- DATAUP-246 - dramatic cleanup and refactor done globally throughout the Narrative stylesheets.
+- DATAUP-266 - fixed a problem where the staging area didn't automatically refresh when a file finishes uploading.
+- DATAUP-301 - fixed a problem where the staging area rendered twice in a row on page load.
+
 ### Version 4.3.0
 - SCT-2664 - Show the app cell status when in a collapsed state.
 - Added an "Info" tab to all app cells with app information.

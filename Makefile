@@ -30,12 +30,12 @@ install:
 # local venv.
 build-travis-narrative:
 	bash $(INSTALLER) && \
-	grunt minify && \
+	npx grunt minify && \
 	sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/" && \
 	sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json && \
 	jupyter notebook --version
 
-test: test-backend test-frontend-unit test-frontend-e2e
+test: test-backend test-frontend
 	@echo "done running backend and frontend test scripts"
 
 # test-backend should use nose, or the like, to test our
@@ -49,20 +49,20 @@ test-backend:
 	sh $(BACKEND_TEST_SCRIPT)
 	@echo "done"
 
+test-frontend:
+	python test/unit/run_tests.py -u -i
+
 # test-frontend-unit should use karma and jasmine to test
 # each of the Javascript components of the Narrative.
 # This is achieved through the grunt test invocation
 test-frontend-unit:
 	@echo "running frontend unit tests"
-	python test/unit/run_tests.py
+	python test/unit/run_tests.py -u
 	@echo "done"
 
-# test-frontend-e2e should use Selenium to perform an end-
-# to-end test of the front end components, with a running
-# Narrative system.
-test-frontend-e2e:
-	@echo "running frontend end-to-end tests"
-	cd $(FRONTEND_TEST_DIR)
+test-integration:
+	@echo "running integration tests"
+	python test/unit/run_tests.py -i
 	@echo "done"
 
 build-docs:

@@ -36,32 +36,17 @@ define([
 
         render: function() {
             const uploadConfig = Config.get('upload');
+            const globusUrlLinked = uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user;
             const $dropzoneElem = $(this.dropzoneTmpl({
                 userInfo: this.userInfo,
-                globusUrl: uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user
+                globusUrl: globusUrlLinked
             }));
 
-            // there are two anchor elements with same class name .globus_link.
+            // there are two anchor elements with same class name .globus_linked.
             // One link takes the user to globus site,
             // and the other link takes user to how to link globus account.
-            $dropzoneElem.find('a.globus_link').click(e => {
-                e.stopPropagation();
-                e.preventDefault();
-                if(e.target.href === uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user) {
-                    let stagingServiceClient = new StagingServiceClient({
-                        root: this.stagingUrl,
-                        token: Runtime.make().authToken()
-                    });
-                    var globusWindow = window.open('', 'dz-globus');
-                    globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
-                    stagingServiceClient.addAcl()
-                        .done(() => {
-                            window.open($(e.target).attr('href'), 'dz-globus');
-                            return true;
-                        });
-                } else {
-                    window.open(e.target.href, '_blank');
-                }
+            $dropzoneElem.find('globus_linked').click(function(e) {
+                this.uploadGlobusClickEvent(e, globusUrlLinked);
             });
             this.$elem.append($dropzoneElem);
             this.dropzone = new Dropzone($dropzoneElem.get(0), {
@@ -76,6 +61,7 @@ define([
                 parallelUploads: uploadConfig.parallel_uploads,
                 maxFilesize: uploadConfig.max_file_size,
                 timeout: uploadConfig.timeout,
+                userInfo: this.userInfo
             })
                 .on('totaluploadprogress', (progress) => {
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
@@ -83,20 +69,24 @@ define([
                 .on('addedfile', (file) => {
                     $dropzoneElem.find('#global-info').css({'display': 'inline'});
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
-                })
-                .on('success', (file, serverResponse) => {
-                    $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
-                    file.previewElement.querySelector('#status-message').textContent = 'Completed';
-                    file.previewElement.querySelector('.progress').style.display = 'none';
-                    file.previewElement.querySelector('#status-message').style.display = 'inline';
-                    $(file.previewElement.querySelector('.fa-ban')).removeClass('fa-ban').addClass('fa-check');
-                    $(file.previewElement.querySelector('.btn-danger')).removeClass('btn-danger').addClass('btn-success');
-                    if (this.dropzone.getQueuedFiles().length === 0 &&
-                        this.dropzone.getUploadingFiles().length === 0) {
-                        $($dropzoneElem.find('#total-progress')).fadeOut(1000, function() {
-                            $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
-                        });
+
+                    // If there is a button already in the area, it has to be removed,
+                    // and appened to the new document when additional errored files are added.
+                    if ($dropzoneElem.find('#clear-all-btn').length){
+                        this.deleteClearAllButton();
+                        $dropzoneElem.append(this.makeClearAllButton());
                     }
+
+                })
+                .on('success', (file) => {
+                    var $successElem = $(file.previewElement);
+                    $successElem.find('#upload_progress_and_cancel').hide();
+                    $successElem.find('#dz_file_row_1').css({'display': 'flex', 'align-items': 'center'});
+                    $successElem.find('#success_icon').css('display', 'flex');
+                    $successElem.find('#success_message').css('display', 'inline');
+                    $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
+
+                    this.removeProgressBar($dropzoneElem);
                     $(file.previewElement).fadeOut(1000, function() {
                         $(file.previewElement.querySelector('.btn')).trigger('click');
                     });
@@ -117,16 +107,118 @@ define([
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                 })
                 .on('reset', function() {
+                    $('#clear-all-btn-container').remove();
+                    $('#clear-all-btn').remove();
                     $dropzoneElem.find('#global-info').css({'display': 'none'});
-                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
                 })
-                .on('error', (err) => {
+                .on('error', (erroredFile) => {
+                    var $errorElem = $(erroredFile.previewElement);
+                    $errorElem.find('#upload_progress_and_cancel').hide();
+                    $errorElem.find('#dz_file_row_1').css({'display': 'flex', 'align-items': 'center'});
+                    $errorElem.css('color', '#DF0002');
+                    $errorElem.find('#error_icon').css('display', 'flex');
+                    this.removeProgressBar($dropzoneElem);
+
+                    // Set error message
                     let errorText = 'unable to upload file!';
-                    if (err && err.xhr && err.xhr.responseText) {
-                        errorText = err.xhr.responseText;
+                    var $errorMessage = $errorElem.find('#error_message');
+
+                    // I don't know how to determine if the file was too big other than looking at the preview message
+                    if ($errorMessage.html().search('File is too big') !== -1){
+                        errorText  = 'File size exceeds maximum of 20GB. Please ';
+                        $errorMessage.text('Error: ' + errorText);
+                        $errorMessage.append(this.makeGlobusErrorLink(globusUrlLinked));
+                    } else if (erroredFile && erroredFile.xhr && erroredFile.xhr.responseText) {
+                        errorText = erroredFile.xhr.responseText;
+                        $errorMessage.text('Error: ' + errorText);
+                    } else {
+                        $errorMessage.text('Error: ' + errorText);
                     }
-                    $dropzoneElem.find('.error.text-danger').text('Error: ' + errorText);
+
+                    // Check to see if there already a button in the dropzone area
+                    if (!$dropzoneElem.find('#clear-all-btn').length){
+                        $dropzoneElem.append(this.makeClearAllButton());
+                    }
                 });
+        },
+
+        uploadGlobusClickEvent: function(e, globusUrlLinked) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            if(e.target.href === globusUrlLinked) {
+                let stagingServiceClient = new StagingServiceClient({
+                    root: this.stagingUrl,
+                    token: Runtime.make().authToken()
+                });
+                var globusWindow = window.open('', 'dz-globus');
+                globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
+                stagingServiceClient.addAcl()
+                    .done(() => {
+                        window.open($(e.target).attr('href'), 'dz-globus');
+                        return true;
+                    });
+            } else {
+                window.open(e.target.href, '_blank');
+            }
+        },
+
+        makeClearAllButton: function() {
+            var $clearAllBtn = $('<button>')
+                .text('Clear All')
+                .addClass('btn__text clear-all-dropzone')
+                .attr('aria-label', 'clear all errored files from the dropzone')
+                .attr('id', 'clear-all-btn')
+                .click(function(){
+                    this.dropzone.removeAllFiles();
+                    this.deleteClearAllButton();
+                }.bind(this));
+
+            var $buttonContainer = $('<div>')
+                .attr('id', 'clear-all-btn-container')
+                .addClass('text-center')
+                .append($clearAllBtn);
+
+            return $buttonContainer;
+        },
+
+        deleteClearAllButton: function() {
+            $('#clear-all-btn-container').remove();
+            $('#clear-all-btn').remove();
+        },
+
+        makeGlobusErrorLink: function(globusUrlLinked) {
+            const url = 'https://docs.kbase.us/data/globus';
+
+            const $globusErrorLink = $('<a>')
+                .attr({
+                    'id': 'globus_error_link',
+                    'href': url,
+                    'aria-label': 'opens new window to kbase globus upload docs'
+                }).text('upload with Globus.')
+                .click(function(e) {
+                    this.uploadGlobusClickEvent(e, globusUrlLinked);
+                }.bind(this));
+
+            if (this.userInfo.globusLinked){
+                $globusErrorLink
+                    .attr({
+                        'href': globusUrlLinked,
+                        'aria-label': 'opens new window to upload via globus'
+                    });
+            }
+
+            return $globusErrorLink;
+        },
+
+        removeProgressBar: function($dropzoneElem) {
+            if (!this.dropzone.getQueuedFiles().length &&
+            !this.dropzone.getUploadingFiles().length) {
+                $($dropzoneElem.find('#total-progress')).fadeOut(1000, function() {
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
+                });
+            }
         },
 
         makeUploadMessage: function() {

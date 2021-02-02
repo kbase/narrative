@@ -19,64 +19,6 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
     function OutputWidget() {
         let container, ui;
 
-        // /**
-        //  *
-        //  * @param {Array} reports
-        //  * @param {Object} workspaceClient
-        //  * @returns a Promise resolving into a list of objects, with keys name, ref, description, and type:
-        //  */
-        // function fetchCreatedObjectData(reports, workspaceClient) {
-        //     // making a list of the following will just fetch the
-        //     // 'objects_created' lists from each report. Should be a more
-        //     // lightweight call.
-        //     const reportLookupParam = reports.map((ref) => {
-        //         return {
-        //             ref: ref,
-        //             included: ['objects_created']
-        //         };
-        //     });
-        //     /* when we do the lookup, data will get returned as:
-        //      * {
-        //      *    data: [{
-        //      *       data: {
-        //      *          objects_created: [{
-        //      *             description: str,
-        //      *             ref: str
-        //      *          }]
-        //      *       }
-        //      *    }]
-        //      * }
-        //      */
-        //     // key this off of the object id to make lookups easier once we
-        //     // fetch the names later.
-        //     let createdObjects = {};
-        //     let objectKeys = [];
-        //     return workspaceClient.get_objects2({objects: reportLookupParam})
-        //         .then((reportData) => {
-        //             reportData.data.forEach(report => {
-        //                 if ('objects_created' in report.data) {
-        //                     report.data.objects_created.forEach(obj => {
-        //                         createdObjects[obj.ref] = obj;
-        //                     });
-        //                 }
-        //             });
-        //             // we'll use this later to unpack object infos, and JS doesn't guarantee
-        //             // the same order.
-        //             objectKeys = Object.keys(createdObjects);
-        //             // turn the refs into an array: [{"ref": ref}]
-        //             const infoLookupParam = objectKeys.map(ref => ({'ref': ref}));
-        //             return workspaceClient.get_object_info_new({objects: infoLookupParam});
-        //         })
-        //         .then((objectInfo) => {
-        //             objectInfo.forEach((info, idx) => {
-        //                 const ref = objectKeys[idx];
-        //                 createdObjects[ref].name = info[1];
-        //                 createdObjects[ref].type = info[2];
-        //             });
-        //             return Object.values(createdObjects);
-        //         });
-        // }
-
         /**
          *
          * @param {Array} objectData an array of report object references
@@ -86,32 +28,23 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
             if (objectData.length === 0) {
                 return emptyData;
             }
-            const objectTable = table({class: 'table table-bordered table-striped'}, [
-                tr([
-                    th('Created Object Name'),
-                    th('Type'),
-                    th('Description')
-                ]),
-                ...objectData.map(obj => {
+            const objectTable = table({ class: 'table table-bordered table-striped' }, [
+                tr([th('Created Object Name'), th('Type'), th('Description')]),
+                ...objectData.map((obj) => {
                     const parsedType = APIUtil.parseWorkspaceType(obj.type);
-                    return tr([
-                        td(obj.name),
-                        td(parsedType.type),
-                        td(obj.description)
-                    ]);
-                })
+                    return tr([td(obj.name), td(parsedType.type), td(obj.description)]);
+                }),
             ]);
             return objectTable;
         }
 
         /**
          * 1. Make the main layout
-         * 2. Fetch the data, build the table as detached DOM elems
-         * 3. Put the layout in place
-         * 4. Add the ui.buildCollapsiblePanel thing, with the table in the body
+         * 2. Put the layout in place
+         * 3. Add the ui.buildCollapsiblePanel thing, with the table in the body
          * @param {object}
-         *  - node the DOM node to attach to
-         *  - objectData
+         *  - node - the DOM node to attach to
+         *  - objectData -
          *  - workspaceClient
          * @returns {Promise} resolves when the layout is complete
          */
@@ -123,10 +56,11 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
             // this is the main layout div. don't do anything yet.
             container.innerHTML = div({
                 dataElement: 'created-objects',
-                class: 'kb-created-objects'
+                class: 'kb-created-objects',
             });
             const renderedOutput = renderOutput(arg.objectData);
-            ui.setContent('created-objects',
+            ui.setContent(
+                'created-objects',
                 ui.buildCollapsiblePanel({
                     title: 'Objects',
                     name: 'created-objects-toggle',
@@ -134,11 +68,13 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
                     type: 'default',
                     classes: ['kb-panel-container'],
                     body: renderedOutput,
-                }));
+                })
+            );
         }
 
         /**
-         *
+         * Starts the widget. This gets fed its data to render directly, so this just
+         * wraps a Promise around the rendering process.
          * @param {object} arg
          * - node - the DOM node to build this under
          * - reports - a list of report ids to fetch the relevant info from
@@ -146,10 +82,9 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
          */
         function start(arg) {
             // send parent the ready message
-            return Promise.try(() => doAttach(arg))
-                .catch((err) => {
-                    console.error('Error while starting the created objects view', err);
-                });
+            return Promise.try(() => doAttach(arg)).catch((err) => {
+                console.error('Error while starting the created objects view', err);
+            });
         }
 
         function stop() {

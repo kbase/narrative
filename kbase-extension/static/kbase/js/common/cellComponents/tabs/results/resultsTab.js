@@ -109,7 +109,7 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
              */
             // key this off of the object id to make lookups easier once we
             // fetch the names later.
-            let createdObjects = {};
+            const createdObjects = {};
             let objectKeys = [];
             return workspaceClient.get_objects2({objects: reportLookupParam})
                 .then((reportData) => {

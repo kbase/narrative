@@ -154,29 +154,17 @@ define([
         },
         loadData: {
             value: function() {
-                return Promise.try(function () {
+                return Promise.try(() => {
                     if (this.availableData) {
                         return this.availableData;
                     }
-                    return this.narrativeService.callFunc('list_objects_with_sets', [{
-                        ws_name: this.config.workspaceName,
-                        types: [this.config.type],
-                        includeMetadata: 1
-                    }])
-                        .spread(function(data) {
-                            this.availableData = data.data.map(function (item) {
-                                var info = item.object_info;
-                                var objectName = info[1];
-                                var objectMeta = info[10] || {};
-                                return {
-                                    info: info,
-                                    objectName: objectName,
-                                    metadata: objectMeta
-                                };
-                            });
+
+                    return common.listObjectsWithSets(this.narrativeService, this.config.workspaceName, this.config.type)
+                        .then((data) => {
+                            this.availableData = data;
                             this.availableDataCount = this.availableData.length;
                             return this.availableData
-                                .sort(function (a, b) {
+                                .sort((a, b) => {
                                     var sortField = this.config.sort[0].field;
                                     var direction = this.config.sort[0].ascending ? 1 : -1;
                                     var aValue = Utils.getProp(a, sortField);
@@ -188,9 +176,9 @@ define([
                                     } else {
                                         return direction;
                                     }
-                                }.bind(this));
-                        }.bind(this));                        
-                }.bind(this));
+                                });
+                        });
+                });
             }
         },
         // TODO: look at this structure, fold into above.

@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'jquery',
@@ -16,7 +14,6 @@ define([
     'util/string',
     'kbase-generic-client-api',
     'common/props',
-    'KBaseSearchEngineClient',
     'select2',
     'bootstrap',
     'css!font-awesome'
@@ -64,10 +61,6 @@ define([
                 root: runtime.config('services.staging_api_url.url'),
                 token: runtime.authToken()
             }),
-            searchClient = new KBaseSearchEngine(
-                runtime.config('services.KBaseSearchEngine.url'),
-                {token: runtime.authToken()}
-            ),
             userId = runtime.userId(),
             eventListeners = [];
 
@@ -82,12 +75,12 @@ define([
         var flattenObject = function(ob) {
             var toReturn = {};
             for (var i in ob) {
-                if (!ob.hasOwnProperty(i)) continue;
+                if (!Object.prototype.hasOwnProperty.call(ob, i)) continue;
 
                 if ((typeof ob[i]) === 'object') {
                     var flatObject = flattenObject(ob[i]);
                     for (var x in flatObject) {
-                        if (!flatObject.hasOwnProperty(x)) continue;
+                        if (!Object.prototype.hasOwnProperty.call(flatObject, x)) continue;
                         toReturn[i + '.' + x] = flatObject[x];
                     }
                 } else {
@@ -188,9 +181,9 @@ define([
 
         function genericClientCall(call_params) {
             var swUrl = runtime.config('services.service_wizard.url'),
-            genericClient = new GenericClient(swUrl, {
-                token: runtime.authToken()
-            });
+                genericClient = new GenericClient(swUrl, {
+                    token: runtime.authToken()
+                });
             return genericClient.sync_call(dd_options.service_function,
                 call_params, null, null, dd_options.service_version || 'release');
         }
@@ -216,62 +209,47 @@ define([
                         return results;
                     });
             } else {
-                var call_params = JSON.stringify(dd_options.service_params).replace("{{dynamic_dropdown_input}}", searchTerm);
+                var call_params = JSON.stringify(dd_options.service_params).replace('{{dynamic_dropdown_input}}', searchTerm);
                 call_params =  JSON.parse(call_params);
-                if (dataSource === 'search') {
-                    if (Array.isArray(call_params)){
-                        call_params = call_params[0];
-                    }
-                    return Promise.resolve(searchClient.search_objects(call_params))
-                        .then(function (results) {
-                            results.objects.forEach(function(obj, index) {
-                                obj = flattenObject(obj);
-                                obj.id = obj.guid;
-                                obj.text = obj[dd_options.selection_id];
-                                results.objects[index] = obj;
-                            });
-                            return results.objects;
-                        });
-                } else {
-                    return Promise.resolve(genericClientCall(call_params))
-                        .then(function (results) {
-                            var index = dd_options.result_array_index;
-                            if (!index) {
-                                index = 0;
-                            }
-                            if (index >= results.length) {
-                                console.error(`Result array from ${dd_options.service_function} ` +
+                
+                return Promise.resolve(genericClientCall(call_params))
+                    .then(function (results) {
+                        var index = dd_options.result_array_index;
+                        if (!index) {
+                            index = 0;
+                        }
+                        if (index >= results.length) {
+                            console.error(`Result array from ${dd_options.service_function} ` +
                                     `has length ${results.length} but index ${index} ` +
                                     'was requested');
-                                return [];
-                            }
-                            results = results[index];
-                            var path = dd_options.path_to_selection_items;
-                            if (!path) {
-                                path = [];
-                            }
-                            results = Props.getDataItem(results, path);
-                            if (!Array.isArray(results)) {
-                                console.error('Selection items returned from ' +
+                            return [];
+                        }
+                        results = results[index];
+                        var path = dd_options.path_to_selection_items;
+                        if (!path) {
+                            path = [];
+                        }
+                        results = Props.getDataItem(results, path);
+                        if (!Array.isArray(results)) {
+                            console.error('Selection items returned from ' +
                                     `${dd_options.service_function} at path /${path.join('/')} ` +
                                     `in postion ${index} of the returned list are not an array`);
-                                return [];
-                            } else {
-                                results.forEach(function(obj, index) {
-                                    // could check here that each item is a map? YAGNI
-                                    obj = flattenObject(obj);
-                                    if (!"id" in obj) {
-                                        obj.id = index; // what the fuck
-                                    }
-                                    //this blows away any 'text' field
-                                    obj.text = obj[dd_options.selection_id];
-                                    results[index] = obj;
-                                });
-                                return results;
+                            return [];
+                        } else {
+                            results.forEach(function(obj, index) {
+                                // could check here that each item is a map? YAGNI
+                                obj = flattenObject(obj);
+                                if (!('id' in obj)) {
+                                    obj.id = index; // what the fuck
+                                }
+                                //this blows away any 'text' field
+                                obj.text = obj[dd_options.selection_id];
+                                results[index] = obj;
+                            });
+                            return results;
 
-                            }
-                        });
-                }
+                        }
+                    });
             }
         }
 
@@ -325,7 +303,7 @@ define([
                     ])
                 ]));
             } else {
-                var replacer = function (match, p1, offset, string) {return ret_obj[p1]};
+                var replacer = function (match, p1) {return ret_obj[p1];};
                 var formatted_string;
                 if (dd_options.description_template) {
                     // use slice to avoid modifying global description_template

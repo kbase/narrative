@@ -1,4 +1,3 @@
-/*global define,window*/
 /*jslint white:true,browser:true*/
 /**
  * Uses the user's login information to initialize the IPython environment.
@@ -26,25 +25,37 @@ define ([
     BootstrapDialog
 ) {
     'use strict';
-    var baseUrl = JupyterUtils.get_body_data('baseUrl'),
-        authClient = Auth.make({url: Config.url('auth')}),
-        sessionInfo = null,
-        tokenCheckTimer = null,
-        tokenWarningTimer = null;
+    const baseUrl = JupyterUtils.get_body_data('baseUrl');
+    const authClient = Auth.make({url: Config.url('auth')});
+    let sessionInfo = null;
+    let tokenCheckTimer = null;
+
+    // don't warn if less than 30 seconds to auto-logout
+    const ABOUT_TO_LOGOUT_MINIMUM = 1000 * 30;
+
+    // Do warn if les than 5 minutes to auto-logout
+    const ABOUT_TO_LOGOUT_THRESHOLD = 1000 * 60 * 5;
+
+    // How often to inspect the current browser auth token.
+    const TOKEN_MONITORING_INTERVAL = 1000;
+
+    // Delay after which to automatically logout the Narrative
+    // after the logging-out dialog is shown.
+    const AUTO_LOGOUT_DELAY = 1000 * 30;
 
     /* set the auth token by calling the kernel execute method on a function in
      * the magics module
      */
     function ipythonLogin(token) {
-        window.kb = new KBCacheClient(token);
+        window.kb = new window.KBCacheClient(token); // just as bad as global, but passes linting
         $.ajax({
             url: JupyterUtils.url_join_encode(baseUrl, 'login')
         }).then(
-            function(ret) {
+            function() {
                 // console.log(ret);
             }
         ).fail(
-            function(err) {
+            function() {
                 // console.err(err);
             }
         );
@@ -54,11 +65,11 @@ define ([
         $.ajax({
             url: JupyterUtils.url_join_encode(baseUrl, 'logout')
         }).then(
-            function(ret) {
+            function() {
                 // console.log(ret);
             }
         ).fail(
-            function(err) {
+            function() {
                 // console.err(err);
             }
         );
@@ -67,7 +78,7 @@ define ([
 
     function showTokenInjectionDialog() {
         var $inputField = $('<input type="text" class="form-control">');
-        var $body = $('<div>')
+        var $body = $('<div data-test-id="dev-login">')
             .append('<div>You appear to be working on a local development environment of the Narrative Interface, but you don\'t have a valid auth token. You can paste one in below.</div>')
             .append('<div><b>You are operating in the ' + Config.get('environment') + ' environment.')
             .append($('<div>').append($inputField));
@@ -92,41 +103,47 @@ define ([
     }
 
     function showNotLoggedInDialog() {
+        const message = `
+        <p>You are logged out (or your session has expired).</p>
+        <p>You will be redirected to the sign in page after closing this, or ${AUTO_LOGOUT_DELAY / 1000} seconds, 
+           whichever comes first.</p>
+        `;
         var dialog = new BootstrapDialog({
-            'title': 'Not Logged In',
-            'body': $('<div>').append('You are not logged in (or your session has expired), and you will be redirected to the sign in page shortly.'),
+            'title': 'Logged Out',
+            'body': $('<div>').append(message),
             'buttons': [
                 $('<a type="button" class="btn btn-default">')
                     .append('OK')
                     .click(function () {
                         dialog.hide();
-                        ipythonLogout();
                     })
             ]
         });
+        dialog.onHide(() => {
+            window.clearTimeout(autoLogoutTimer);
+            ipythonLogout();
+        });
         dialog.show();
+        const autoLogoutTimer = window.setTimeout(() => {
+            dialog.hide();
+            ipythonLogout();
+        }, AUTO_LOGOUT_DELAY);
     }
 
-    function showAboutToLogoutDialog(tokenExpirationTime) {
-        var dialog = new BootstrapDialog({
+    let aboutToLogoutDialog = null;
+    function showAboutToLogoutDialog() {
+        aboutToLogoutDialog = new BootstrapDialog({
             'title': 'Expiring session',
-            'body': $('<div>').append('Your authenticated KBase session will expire in approximately 5 minutes. To continue using KBase, we suggest you log out and back in.'),
+            'body': $('<div>').append('Your authenticated KBase session will expire in 5 minutes or less. To continue using KBase, we suggest you log out and back in.'),
             'buttons': [
                 $('<a type="button" class="btn btn-default">')
                     .append('OK')
                     .click(function () {
-                        var remainingTime = tokenExpirationTime - new Date().getTime();
-                        if (remainingTime < 0) {
-                            remainingTime = 0;
-                        }
-                        tokenWarningTimer = setTimeout(function() {
-                            tokenTimeout();
-                        });
-                        dialog.hide();
+                        aboutToLogoutDialog.hide();
                     })
             ]
         });
-        dialog.show();
+        aboutToLogoutDialog.show();
     }
 
     function initEvents() {
@@ -141,70 +158,100 @@ define ([
         });
     }
 
+    // When true, will cause the token check interval timer to return early.
+    // Should be set true when an async process is running inside the 
+    // interval function, and set false when that process is completed.
+    
+    let hasViewedAboutToLogout = false;
+
+    let tokenCheckEnabled = true;
+
+    function disableTokenCheck() {
+        tokenCheckEnabled = false;
+    }
+
+    function enableTokenCheck() {
+        tokenCheckEnabled = true;
+    }
+
+    function isTokenCheckEnabled() {
+        return tokenCheckEnabled;
+    }
+
     function initTokenTimer(tokenExpirationTime) {
         /**
          * First timer - check for token existence very second.
          * trigger the logout behavior if it's not there.
          */
-        var lastCheckTime = new Date().getTime(),
-            browserSleepValidateTime = Config.get('auth_sleep_recheck_ms'),
-            validateOnCheck = false,
-            validationInProgress = false;
+        let lastCheckTime = Date.now();
+        const browserSleepValidateTime = Config.get('auth_sleep_recheck_ms');
+
         tokenCheckTimer = setInterval(function() {
-            var token = authClient.getAuthToken();
+            if (!isTokenCheckEnabled()) {
+                return;
+            }
+            const token = authClient.getAuthToken();
             if (!token) {
+                disableTokenCheck();
                 tokenTimeout();
+                return;
             }
-            var lastCheckInterval = new Date().getTime() - lastCheckTime;
-            if (lastCheckInterval > browserSleepValidateTime) {
-                validateOnCheck = true;
+
+            const currentTime = Date.now();
+
+            // If the token is expired, force a logout and cookie expunging, even
+            // without checking with auth first.
+            let timeUntilExpiration = tokenExpirationTime - currentTime;
+            if (timeUntilExpiration <= 0) {
+                // already expired! logout!
+                disableTokenCheck();
+                tokenTimeout(true);
+                return;
             }
-            if (validateOnCheck && !validationInProgress) {
-                validationInProgress = true;
+
+            // Expiring within 5 minutes, but in more than 30 seconds? Show the dialog, but still
+            // continue with the possible token validation check.
+            // The reason for a minimal time is that a user will not have time to absorb and respond
+            // to the dialog in just a few seconds.
+            if (timeUntilExpiration > ABOUT_TO_LOGOUT_MINIMUM && timeUntilExpiration <= ABOUT_TO_LOGOUT_THRESHOLD) {
+                if (!hasViewedAboutToLogout) {
+                    hasViewedAboutToLogout = true;
+                    showAboutToLogoutDialog();
+                }
+            }
+
+            const lastCheckInterval = currentTime - lastCheckTime;
+            const validateOnCheck = lastCheckInterval > browserSleepValidateTime;
+            if (validateOnCheck) {
+                // ensure we don't enter this check a second time.
+                // hmm, this is really an edge case, but possible.
+                // in order to meet this condition, the validateToken() call would 
+                // need to take longer than browserSleepValidateTime which is currently
+                // hard coded in the config at 1 minute.
+                disableTokenCheck();
+                lastCheckTime = Date.now();
                 authClient.validateToken(token)
-                    .then(function(info) {
-                        validateOnCheck = false;
+                    .then((info) => {
                         if (info !== true) {
                             tokenTimeout(true);
-                            // console.warn('Auth is invalid! Logging out.');
-                        } else {
-                            // console.warn('Auth is still valid after ' + (lastCheckInterval/1000) + 's.');
                         }
                     })
-                    .catch(function(error) {
+                    .catch((error) => {
                         // This might happen while waiting for internet to reconnect.
                         console.error('Error while validating token after sleep. Trying again...');
                         console.error(error);
                     })
-                    .finally(function() {
-                        validationInProgress = false;
+                    .finally(() => {
+                        enableTokenCheck();
                     });
-                lastCheckTime = new Date().getTime();
+                
             }
-        }, 1000);
-
-        var currentTime = new Date().getTime();
-        if (currentTime >= tokenExpirationTime) {
-            // already expired! logout!
-            tokenTimeout();
-        }
-        var timeToWarning = tokenExpirationTime - currentTime - (1000 * 60 * 5);
-        if (timeToWarning <= 0) {
-            timeToWarning = 0;
-        }
-        else {
-            tokenWarningTimer = setTimeout(function() {
-                showAboutToLogoutDialog(tokenExpirationTime);
-            }, timeToWarning);
-        }
+        }, TOKEN_MONITORING_INTERVAL);
     }
 
     function clearTokenCheckTimers() {
         if (tokenCheckTimer) {
             clearInterval(tokenCheckTimer);
-        }
-        if (tokenWarningTimer) {
-            clearInterval(tokenWarningTimer);
         }
     }
 
@@ -217,14 +264,16 @@ define ([
      * 4. Redirect to the logout page, with an optional warning that the user's now logged out.
      */
     function tokenTimeout(showDialog) {
+        if (aboutToLogoutDialog) {
+            aboutToLogoutDialog.hide();
+        }
         clearTokenCheckTimers();
         authClient.clearAuthToken();
         authClient.revokeAuthToken(sessionInfo.token, sessionInfo.id);
         // show dialog - you're signed out!
         if (showDialog) {
             showNotLoggedInDialog();
-        }
-        else {
+        } else {
             ipythonLogout();
         }
     }
@@ -283,8 +332,8 @@ define ([
     }
 
     return {
-        init: init,
-        sessionInfo: sessionInfo,
-        getAuthToken: getAuthToken
+        init,
+        sessionInfo,
+        getAuthToken
     };
 });

@@ -15,7 +15,7 @@ define([
     'kb_common/html',
     'util/icon',
     'widgets/narrative_core/publicDataSources/workspaceDataSource',
-    'widgets/narrative_core/publicDataSources/searchDataSource',
+    'widgets/narrative_core/publicDataSources/search2DataSource',
     'yaml!kbase/config/publicDataSources.yaml',
 
     'bootstrap',
@@ -44,13 +44,13 @@ define([
         }
     }
     function formatItem(item) {
-        return [
-            '<span style="color: #AAA; font-weight: normal; font-style: italic">' +
-                item.label +
-                ':</span>',
-            '&nbsp;',
-            formatValue(item.value),
-        ].join('');
+        return `
+            <span role="row" data-test-id="${item.id}">
+            <span style="color: #AAA; font-weight: normal; font-style: italic" data-test-id="label" role="cell">${item.label}</span>: 
+            &nbsp;
+            <span data-test-id="value" role="cell">${formatValue(item.value)}</span>
+            </span>
+        `;
     }
 
     // metadata is represented as an array of simple objects with
@@ -58,7 +58,8 @@ define([
     // an array of the same.
     //
     function metadataToTable(metadata) {
-        const $table = $('<table>').css('font-size', '80%');
+        var $table = $('<table role="table">')
+            .css('font-size', '80%');
 
         metadata.forEach((item) => {
             let value;
@@ -72,62 +73,27 @@ define([
                 value = formatValue(item.value);
             }
 
-            const $row = $('<tr>')
+            $row = $(`<tr role="row" data-test-id="${item.id || item.label}">`)
                 .css('margin-bottom', '2px')
-                .append(
-                    $('<td>')
-                        .css('width', '7em')
-                        .css('font-weight', 'normal')
-                        .css('font-style', 'italic')
-                        .css('padding-right', '4px')
-                        .css('color', '#AAA')
-                        .css('vertical-align', 'top')
-                        .css('padding-bottom', '2px')
-                        .text(item.label)
-                )
-                .append(
-                    $('<td>')
-                        // .css('font-weight', 'bold')
-                        .css('vertical-align', 'top')
-                        .css('padding-bottom', '2px')
-                        .html(value)
-                );
+                .append($('<td role="cell" data-test-id="label">')
+                    .css('width', '7em')
+                    .css('font-weight', 'normal')
+                    .css('font-style', 'italic')
+                    .css('padding-right', '4px')
+                    .css('color', '#AAA')
+                    .css('vertical-align', 'top')
+                    .css('padding-bottom', '2px')
+                    .text(item.label))
+                .append($('<td role="cell" data-test-id="value">')
+                    // .css('font-weight', 'bold')
+                    .css('vertical-align', 'top')
+                    .css('padding-bottom', '2px')
+                    .html(value));
 
             $table.append($row);
         });
         return $table;
     }
-
-    // function metadataToRaggedTable(metadata) {
-    //     var $table = $('<div>')
-    //         .css('padding-bottom', '2px')
-    //         .css('font-size', '100%');
-
-    //     metadata.forEach(function (item) {
-    //         var $row;
-    //         var value;
-    //         if (item.value instanceof Array) {
-    //             value = item.value.map(function (item) {
-    //                 return formatItem(item);
-    //             }).join('&nbsp;&nbsp;&nbsp;');
-    //         } else {
-    //             value = formatValue(item.value);
-    //         }
-
-    //         $row = $('<div>')
-    //             .append($('<span>')
-    //                 .css('font-style', 'italic')
-    //                 .css('padding-right', '4px')
-    //                 .css('color', '#AAA')
-    //                 .text(item.label))
-    //             .append($('<span>')
-    //                 .css('font-weight', 'bold')
-    //                 .html(value));
-
-    //         $table.append($row);
-    //     });
-    //     return $table;
-    // }
 
     function renderTotals(found, total) {
         const $totals = $('<span>').addClass('kb-data-list-type');
@@ -135,13 +101,13 @@ define([
             $totals.append($('<span>None available</span>'));
         } else if (found === 0) {
             $totals
-                .append($('<span>').css('font-weight', 'bold').text('None'))
+                .append($('<span data-test-id="found-count">').css('font-weight', 'bold').text('None'))
                 .append($('<span>').text(' found out of '))
                 .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
                 .append($('<span>').text(' available'));
         } else if (total > found) {
             $totals
-                .append($('<span>').css('font-weight', 'bold').text(numeral(found).format('0,0')))
+                .append($('<span data-test-id="found-count">').css('font-weight', 'bold').text(numeral(found).format('0,0')))
                 .append($('<span>').text(' found out of '))
                 .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
                 .append($('<span>').text(' available'));
@@ -165,9 +131,9 @@ define([
     function getNextAutoSuffix(targetName, narrativeObjects, nextSuffix) {
         const targetNameRe = new RegExp('^' + targetName + '$');
         const correctedTargetNameRe = new RegExp('^' + targetName + '_([\\d]+)$');
-        let foundRoot;
-        let maxSuffix;
-        narrativeObjects.forEach((object) => {
+        var foundRoot;
+        var maxSuffix;
+        narrativeObjects.forEach(function (object) {
             const name = object[1];
             let m = targetNameRe.exec(name);
             if (m) {
@@ -181,7 +147,7 @@ define([
             }
         });
 
-        // The suffix logic is careflly crafted to accomodate retry (via nextSuffix)
+        // The suffix logic is carefully crafted to accommodate retry (via nextSuffix)
         // and automatic next suffix via the max suffix determined above.
         if (maxSuffix) {
             if (nextSuffix) {
@@ -204,7 +170,7 @@ define([
     const dataSourceTypes = {
         search: {
             serviceDependencies: {
-                KBaseSearchEngine: 'KBaseSearchEngine',
+                searchapi2: 'searchapi2'
             },
             baseObject: SearchDataSource,
         },
@@ -339,16 +305,17 @@ define([
                 .css('background-color', 'transparent');
             this.$dataSourceLogo = $dataSourceLogo;
 
-            const $inputGroup = $('<div>').addClass('input-group').css('width', '100%');
+            var $inputGroup = $('<div>')
+                .addClass('input-group')
+                .css('width', '100%');
 
-            const typeFilter = $('<div class="col-sm-4">').append(
-                $inputGroup.append($typeInput).append($dataSourceLogo)
-            );
+            var typeFilter = $('<div class="col-sm-4">')
+                .append($inputGroup
+                    .append($typeInput)
+                    .append($dataSourceLogo));
 
-            const $filterInput = $(
-                '<input type="text" class="form-control" placeholder="Filter data...">'
-            );
-            const $filterInputField = $('<div class="input-group">')
+            var $filterInput = $('<input type="text" class="form-control" placeholder="Filter data..." data-test-id="search-input">');
+            var $filterInputField = $('<div class="input-group">')
                 .css(margin)
                 .append($filterInput)
                 .append(
@@ -442,7 +409,7 @@ define([
             this.totalPanel = $('<div>').css({ margin: '0 0 0 10px' });
             this.$elem.append(this.totalPanel);
 
-            this.resultPanel = $('<div>');
+            this.resultPanel = $('<div role="table" data-test-id="result">');
 
             this.resultsFooterMessage = $('<div>');
 
@@ -515,7 +482,7 @@ define([
             this.currentQuery = query;
             this.currentPage = 0;
             this.totalAvailable = null;
-            this.currentFilteredlResults = null;
+            this.currentFilteredResults = null;
 
             return this.renderInitial();
         },
@@ -549,9 +516,7 @@ define([
             this.totalPanel.empty();
             this.hideResultFooter();
             this.resultsFooterMessage.empty();
-            this.totalPanel.html(
-                '<div class="alert alert-danger">Sorry, an error occurred executing this search!</div>'
-            );
+            this.totalPanel.html('<div class="alert alert-danger">An error occurred executing this search!</div>');
         },
 
         renderMore: function () {
@@ -587,23 +552,21 @@ define([
             if (this.currentDataSource && this.currentDataSource.config === dataSourceConfig) {
                 dataSource = this.currentDataSource;
             } else {
-                const dataSourceType = dataSourceTypes[dataSourceConfig.sourceType];
-
-                const urls = Object.keys(dataSourceType.serviceDependencies).reduce((
-                    _urls,
-                    key
-                ) => {
-                    const configKey = dataSourceType.serviceDependencies[key];
-                    _urls[key] = Config.url(configKey);
-                    return _urls;
-                },
-                {});
-                dataSource = Object.create(dataSourceType.baseObject).init({
-                    config: dataSourceConfig,
-                    urls: urls,
-                    token: this.token,
-                    pageSize: this.itemsPerPage,
-                });
+                var dataSourceType = dataSourceTypes[dataSourceConfig.sourceType];
+               
+                const urls = Object.keys(dataSourceType.serviceDependencies)
+                    .reduce((accumUrls, key) => {
+                        var configKey = dataSourceType.serviceDependencies[key];
+                        accumUrls[key] = Config.url(configKey);
+                        return accumUrls;
+                    }, {});
+                dataSource = Object.create(dataSourceType.baseObject)
+                    .init({
+                        config: dataSourceConfig,
+                        urls,
+                        token: this.token,
+                        pageSize: this.itemsPerPage
+                    });
                 this.currentDataSource = dataSource;
             }
             return dataSource;
@@ -663,21 +626,6 @@ define([
                 });
         },
 
-        // attachRow: function(dataSource, index, toStaging) {
-        //     var obj = this.objectList[index];
-        //     if (obj.attached) {
-        //         return;
-        //     }
-        //     if (obj.$div) {
-        //         this.resultPanel.append(obj.$div);
-        //     } else {
-        //         obj.$div = toStaging ? this.renderStagingObjectRowDiv(obj) : this.renderObjectRow(dataSource, obj);
-        //         this.resultPanel.append(obj.$div);
-        //     }
-        //     obj.attached = true;
-        //     this.n_objs_rendered++;
-        // },
-
         clearRows: function () {
             this.resultPanel.empty();
         },
@@ -717,9 +665,11 @@ define([
 
             const $name = $('<span>')
                 .addClass('kb-data-list-name')
-                .append('<a href="' + landingPageLink + '" target="_blank">' + shortName + '</a>');
-            if (isShortened) {
-                $name.tooltip({ title: object.name, placement: 'bottom' });
+                .attr('role', 'cell')
+                .attr('data-test-id', 'name')
+                .append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
+            if (isShortened) { 
+                $name.tooltip({title:object.name, placement:'bottom'}); 
             }
 
             // Mouseover toolbar
@@ -751,27 +701,9 @@ define([
                     e.stopPropagation();
                     window.open(provenanceLink);
                 });
-            $btnToolbar.append($openLandingPage).append($openProvenance);
-
-            // var $topTable = $('<div>')
-            //     // set background to white looks better on DnD
-            //     .css({'width':'100%','background':'#fff'})
-            //     .append($('<tr>')
-            //         .append($('<td>')
-            //             .css({'width':'90px'})
-            //             .append($addDiv.hide()))
-
-            //         .append($('<td>')
-            //             .css('width', '50px')
-            //             .css('vertical-align', 'middle')
-            //             .css('border-right', '1px rgba(200,200,200,0.6) solid')
-            //             .append($logo))
-
-            //         .append($('<td>')
-            //             .css('padding-left', '4px')
-            //             .css('padding-right', '15px')
-            //             .append($titleElement)
-            //             .append($bodyElement)));
+            $btnToolbar
+                .append($openLandingPage)
+                .append($openProvenance);
 
             // Action Column
 
@@ -811,13 +743,8 @@ define([
                 .append($addDiv.hide());
 
             // Icon Column
-            const $logo = $('<span>');
-            // if (dataSource.config.logoUrl) {
-            //     $logo
-            //         .append($('<img>')
-            //             .attr('src', dataSource.config.logoUrl)
-            //             .css('height', '32px'));
-            // } else {
+            var $logo = $('<span>');
+
             Icon.buildDataIcon($logo, type);
             // }
             const $iconColumn = $('<div>')
@@ -841,22 +768,19 @@ define([
                 $bodyElement = null;
             }
 
-            const $resultColumn = $('<div>')
+            var $resultColumn = $('<div role="cell">')
                 .css('flex', '1 1 0px')
                 .css('padding-left', '4px')
                 .css('padding-right', '15px')
-                // .css('border-top', '1px rgba(200,200,200,0.6) solid')
                 .append($titleElement)
                 .append($bodyElement);
 
-            const $row = $('<div>')
+            var $row = $('<div role="row">')
                 .css('margin', '2px')
                 .css('padding', '4px')
                 .css('display', 'flex')
                 .css('flex-direction', 'row')
-                // .css('border-top', '1px rgba(200,200,200,0.6) solid')
-                // .append($('<div>').addClass('kb-data-list-obj-row-main')
-                //     .append($topTable))
+
                 // show/hide ellipses on hover, show extra info on click
                 .mouseenter(() => {
                     $addDiv.show();
@@ -1014,6 +938,7 @@ define([
             } else {
                 errorMsg = error;
             }
+           
             this.infoPanel.empty();
             this.infoPanel.append('<div class="alert alert-danger">Error: ' + errorMsg + '</span>');
         },

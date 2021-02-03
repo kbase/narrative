@@ -386,9 +386,10 @@ define([
                         }
                         this.updateSlideoutRendering(i);
                     })
-                    .append(tab.tabName));
+                    .append(`<span data-test-id="label">${tab.tabName}</tab>`));
                 $body.append($('<div>')
                     .addClass('kb-side-tab')
+                    .attr('data-test-id', `panel-${tab.id}`)
                     .append(tab.content));
             }
 

@@ -1,15 +1,9 @@
-/*jslint white: true*/
-
-var tests = [
-    'text', 'json'
+/* eslint-disable strict */
+/* global requirejs */
+const tests = [
+    ...['text', 'json'],
+    ...Object.keys(window.__karma__.files).filter(file => /[sS]pec\.js$/.test(file))
 ];
-for (var file in window.__karma__.files) {
-    if (window.__karma__.files.hasOwnProperty(file)) {
-        if (/[sS]pec\.js$/.test(file)) {
-            tests.push(file);
-        }
-    }
-}
 
 // hack to make jed (the i18n library that Jupyter uses) happy.
 document.nbjs_translations = {
@@ -66,11 +60,11 @@ requirejs.config({
     callback: function() {
         'use strict';
 
-        require(['testUtil'], function(TestUtil) {
-            TestUtil.make().then(function() {
+        require(['testUtil'], (TestUtil) => {
+            TestUtil.make().then(() => {
                 window.__karma__.start();
             });
-        }, function (error) {
+        }, (error) => {
             console.error('Failed to open TestUtil file.');
             console.error(error);
             throw error;

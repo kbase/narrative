@@ -49,7 +49,8 @@
     },
     "scripts": {
         "bower": "bower install",
-        "test": "grunt test",
+        "test": "karma start test/unit/karma.conf.js",
+        "test-grunt": "grunt test",
         "build": "grunt build"
     },
     "dependencies": {}

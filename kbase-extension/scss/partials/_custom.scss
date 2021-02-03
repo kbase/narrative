@@ -368,5 +368,28 @@ div.code_cell {
 }
 
 .panel-title {
-  font-size: 16px;
+  @include font-h4;
+}
+
+/* collapsible Bootstrap toggle */
+[data-toggle=collapse] {
+  cursor: pointer;
+
+  &::before {
+    display: inline-block;
+    width: 1.2em;
+    margin-right: 0.2em;
+    margin-left: 0;
+    color: rgb(192 192 192);
+    content: '\f078 ';
+    font: normal 400 90%/1 $typeface-font-awesome;
+    vertical-align: baseline;
+    text-align: center;
+  }
+
+  &.collapsed::before {
+    margin-left: 0.1em;
+    margin-right: 0.1em;
+    content: '\f054 ';
+  }
 }

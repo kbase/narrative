@@ -1,38 +1,67 @@
-/* Note that this does not get compiled to produce static/css/errorPage.css -- that file is a single standalone declaration */
+.kb-error-display {
+  &__summary,
+  &__detail_title,
+  &__stacktrace_title {
+    @include font-h4;
 
-.access-error__container,
-.generic-error__container {
-  margin: 2rem;
-  text-align: center;
+    margin-top: 1rem;
+  }
+
+  &__stacktrace_code {
+    @include code-block;
+  }
+
+  &__advice_list_item {
+    padding-left: 1.5rem;
+  }
 }
 
-.access-error__heading,
-.generic-error__heading {
-  font-size: 200%;
-  font-weight: 700;
-  line-height: 1.5;
+.access,
+.generic {
+  &-error {
+    /* .access-error__container,
+    .generic-error__container */
+    &__container {
+      margin: 2rem;
+      text-align: center;
+    }
+
+    /* .access-error__heading,
+    .generic-error__heading */
+    &__heading {
+      font-size: 200%;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    /* .access-error__text,
+    .generic-error__text */
+    &__text {
+      font-size: 150%;
+      line-height: 2;
+    }
+  }
 }
 
-.access-error__text,
-.generic-error__text {
-  font-size: 150%;
-  line-height: 2;
-}
+.access-request {
+  /* .access-request-form__container */
+  &-form__container {
+    margin-top: 2rem;
+  }
 
-.access-request-form__container {
-  margin-top: 2rem;
-}
+  /* .access-request-progress__container */
+  &-progress__container {
+    display: none;
+    margin-top: 1rem;
+  }
 
-.access-request-progress__container {
-  display: none;
-  margin-top: 1rem;
-}
-
-.access-request-result {
-  margin-top: 2rem;
-  font-size: 125%;
+  /* .access-request-result */
+  &-result {
+    font-size: 125%;
+    margin-top: 2rem;
+  }
 }
 
 .error-dialog__body {
-  margin: 10px;
+  margin: 1rem;
 }

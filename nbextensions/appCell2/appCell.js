@@ -7,7 +7,7 @@ define([
     'common/dom',
     'util/icon',
     'common/jupyter',
-    'common/ui',
+    'common/error',
     './widgets/appInfoDialog',
     './widgets/appCellWidget',
     'common/spec'
@@ -20,7 +20,7 @@ define([
     Dom,
     Icon,
     jupyter,
-    UI,
+    Error,
     appInfoDialog,
     AppCellWidget,
     Spec
@@ -28,9 +28,7 @@ define([
     'use strict';
 
     var t = html.tag,
-        div = t('div'),
-        p = t('p'),
-        b = t('b');
+        div = t('div');
 
     function isAppCell(cell) {
         if (cell.cell_type !== 'code') {
@@ -189,27 +187,15 @@ define([
                             .then(function() {
                                 return appCellWidget.detach();
                             })
-                            .catch(function(err) {
-                                console.log('ERR in ERR', err);
+                            .catch(function(_err) {
+                                console.log('ERR in ERR', _err);
                             })
                             .finally(function() {
-                                var ui = UI.make({
-                                    node: document.body
-                                });
-                                kbaseNode.innerHTML = div({
-                                    style: {
-                                        margin: '10px'
-                                    }
-                                }, [
-                                    ui.buildPanel({
-                                        title: 'Error Starting App Cell',
-                                        type: 'danger',
-                                        body: ui.buildErrorTabs({
-                                            preamble: p(b('There was an error starting the app cell.')),
-                                            error: err
-                                        })
-                                    })
-                                ]);
+                                Error.reportCellError(
+                                    'Error starting app cell',
+                                    'There was an error starting the app cell:',
+                                    err
+                                );
                             });
                     });
             });

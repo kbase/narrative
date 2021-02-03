@@ -3,12 +3,13 @@
  * The viewer updates based on changes to the job state and view model.
  * It reports the current job state, runtime, and how long it has been / was queued for.
  */
-define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/html'], (
+define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html', 'common/jobs'], (
     Promise,
     Runtime,
     UI,
     format,
-    html
+    html,
+    Jobs,
 ) => {
     'use strict';
 
@@ -16,50 +17,6 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/h
         div = t('div'),
         p = t('p'),
         span = t('span');
-
-    /**
-     * Translate from EE2's job status (or other job state strings interpreted by the app cell)
-     * to a presentable string. This returns a span with the text colored and bolded, and the
-     * "nice" readable state string.
-     *
-     * Translated strings = completed, error, terminated, and does_not_exist. Those all get
-     * different colors. Other strings are rendered black.
-     * @param {string} jobState
-     */
-    function niceState(jobState) {
-        let label, color;
-        switch (jobState) {
-            case 'completed':
-                label = 'success';
-                color = 'green';
-                break;
-            case 'error':
-                label = 'error';
-                color = 'red';
-                break;
-            case 'terminated':
-                label = 'cancellation';
-                color = 'orange';
-                break;
-            case 'does_not_exist':
-                label = 'does_not_exist';
-                color = 'orange';
-                break;
-            default:
-                label = jobState;
-                color = 'black';
-        }
-
-        return span(
-            {
-                style: {
-                    color: color,
-                    fontWeight: 'bold',
-                },
-            },
-            label
-        );
-    }
 
     /**
      * Updates the view stats.
@@ -110,7 +67,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/h
                         viewModel.finish._attrib.hidden = false;
                         viewModel.finish._attrib.style = { fontWeight: 'bold' };
                         viewModel.finish.active = true;
-                        viewModel.finish.state = niceState(jobState.status);
+                        viewModel.finish.state = Jobs.niceState(jobState.status);
                         viewModel.finish.time = format.niceTime(finishTime);
                         viewModel.finish.elapsed = format.niceDuration(now - finishTime);
                     } else {
@@ -143,7 +100,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/h
                         viewModel.finish._attrib.hidden = false;
                         viewModel.finish._attrib.style = { fontWeight: 'bold' };
                         viewModel.finish.active = true;
-                        viewModel.finish.state = niceState(jobState.status);
+                        viewModel.finish.state = Jobs.niceState(jobState.status);
                         viewModel.finish.time = format.niceTime(finishTime);
                         viewModel.finish.elapsed = format.niceDuration(now - finishTime);
                     } else {

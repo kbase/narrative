@@ -61,36 +61,26 @@ define([
      */
 
     function niceState(jobState) {
-        let label,
-            color;
+        let label = jobState,
+            cssClass = `--${jobState}`;
         switch (jobState) {
             case 'completed':
                 label = 'success';
-                color = 'green';
+                break;
+            case 'does_not_exist':
+                label = 'does not exist';
                 break;
             case 'error':
-                label = 'error';
-                color = 'red';
                 break;
             case 'terminated':
                 label = 'cancellation';
-                color = 'orange';
-                break;
-            case 'does_not_exist':
-                label = 'does_not_exist';
-                color = 'orange';
                 break;
             default:
-                label = jobState;
-                color = 'black';
+                cssClass = '';
         }
 
         return span({
-            class: `${cssBaseClass}__niceState--${jobState}`,
-            style: {
-                color: color,
-                fontWeight: 'bold'
-            }
+            class: `${cssBaseClass}__summary${cssClass}`,
         }, label);
     }
 

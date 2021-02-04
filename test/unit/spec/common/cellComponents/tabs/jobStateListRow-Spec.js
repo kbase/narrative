@@ -1,13 +1,89 @@
 define([
-    'base/js/namespace',
     'common/cellComponents/tabs/jobStatus/jobStateListRow',
-    'jquery',
     'common/props',
+    '/test/data/jobsData',
     '/test/data/testAppObj',
-], (Jupyter, jobStateListRow, $, Props, TestAppObject) => {
+], (jobStateListRow, Props, JobsData, TestAppObject) => {
     'use strict';
 
-    describe('The job status tab module', () => {
+    const model = Props.make({
+        data: TestAppObject,
+        onUpdate: () => {},
+    });
+    const { cssBaseClass } = jobStateListRow;
+
+    function createInstance() {
+        return jobStateListRow.make({
+            model: model,
+        });
+    }
+
+   const customMatchers = {
+        toHaveRowStructure: function () {
+            return {
+                compare: function (...args) {
+                    return checkRowContents(args);
+                },
+            };
+        },
+    };
+
+    function checkRowContents(args) {
+        const [row, context] = args;
+        const { job } = context;
+        const input = args[2] || job;
+        let inputString;
+
+        if (typeof input === 'object' && 'status' in input && 'job_id' in input) {
+            inputString = JSON.stringify({ job_id: input.job_id, status: input.status });
+        } else {
+            inputString = JSON.stringify(input);
+        }
+
+        const result = {
+            pass: true,
+            message: 'checking row contents with input ' + inputString,
+            tests: {},
+        };
+
+        // status details cell
+        const logViewEl = row.querySelector(`.${cssBaseClass}__cell--log-view`);
+        const logViewRegex = new RegExp('Status details');
+        result.tests.logView = logViewRegex.test(logViewEl.textContent);
+        expect(logViewEl.textContent).toContain('Status details');
+
+        // object name
+        const objectEl = row.querySelector(`.${cssBaseClass}__cell--object`);
+        const objectRegex = new RegExp('testObject');
+
+        if (input.meta.paramsRegex) {
+            expect(objectEl.textContent).toMatch(input.meta.paramsRegex);
+            result.tests.object = input.meta.paramsRegex.test(objectEl.textContent);
+        } else {
+            result.tests.object = objectRegex.test(objectEl.textContent);
+            expect(objectEl.textContent).toContain('testObject');
+        }
+
+        // action
+        const actionEl = row.querySelector(`.${cssBaseClass}__cell--action`);
+        const actionRegex = new RegExp(job.meta.jobAction);
+        result.tests.action = actionRegex.test(actionEl.textContent);
+        expect(actionEl.textContent).toContain(input.meta.jobAction);
+
+        // status
+        const statusEl = row.querySelector(`.${cssBaseClass}__cell--status`);
+        const statusRegex = new RegExp(job.meta.jobLabel);
+        result.tests.status = statusRegex.test(statusEl.textContent);
+        expect(statusEl.textContent).toContain(input.meta.jobLabel);
+
+        if (!Object.values(result.tests).every((item) => item)) {
+            result.pass = false;
+            result.message += '; results: ' + JSON.stringify(result.tests);
+        }
+        return result;
+    }
+
+    describe('The job state list row module', () => {
         it('loads', () => {
             expect(jobStateListRow).not.toBe(null);
         });
@@ -15,64 +91,90 @@ define([
         it('has expected functions', () => {
             expect(jobStateListRow.make).toBeDefined();
         });
+
+        it('has a base css class', () => {
+            expect(jobStateListRow.cssBaseClass).toContain('kb-job');
+        });
     });
 
-    describe('The job status tab instance', () => {
-        beforeAll(() => {
-            Jupyter.narrative = {
-                getAuthToken: () => 'fakeToken',
-            };
-        });
-
-        afterAll(() => {
-            Jupyter.narrative = null;
-        });
-
-        let node, model, mockJobStateListRow;
-
+    describe('The job state list row instance', () => {
+        let jobStateListRowInstance;
         beforeEach(() => {
-            node = document.createElement('tr');
-
-            model = Props.make({
-                data: TestAppObject,
-                onUpdate: () => {},
-            });
-
-            mockJobStateListRow = jobStateListRow.make({
-                model: model,
-            });
+            jobStateListRowInstance = createInstance();
         });
 
         it('has a make function that returns an object', () => {
-            expect(mockJobStateListRow).not.toBe(null);
+            expect(jobStateListRowInstance).not.toBe(null);
         });
 
         it('has the required methods', () => {
-            expect(mockJobStateListRow.start).toBeDefined();
-            expect(mockJobStateListRow.stop).toBeDefined();
+            const requiredMethods = ['start', 'stop', 'updateState', 'updateParams'];
+            requiredMethods.forEach((method) => {
+                expect(jobStateListRowInstance[method]).toBeDefined();
+            });
+        });
+    });
+
+    describe('Starting the job state list row instance', () => {
+        let jobStateListRowInstance;
+        beforeAll(() => {
+            jobStateListRowInstance = createInstance();
+        });
+        const invalidArgs = [
+            {},
+            {
+                job: {},
+            },
+            {
+                name: {},
+                node: {},
+            },
+            {
+                name: 'this',
+                node: 'that',
+                job: undefined,
+            },
+        ];
+        invalidArgs.forEach((args) => {
+            it('will throw an error with incorrect args', () => {
+                expectAsync(jobStateListRowInstance.start(args)).toBeRejectedWithError(
+                    Error,
+                    /JobStateListRow cannot start: start argument must have the following keys:/
+                );
+            });
         });
 
-        it('should start and return the correct elements', () => {
-            mockJobStateListRow.start({
-                node: node,
-                initialState: 'created',
-                name: 'testObject',
+        JobsData.invalidJobs.forEach((invalidJob) => {
+            it('will throw an error with an invalid job', () => {
+                expectAsync(jobStateListRowInstance.start(invalidJob)).toBeRejectedWithError(
+                    Error,
+                    /JobStateListRow cannot start: invalid job object supplied/
+                );
             });
-
-            const classContents = [
-                '.kb-job-status__cell_log_btn',
-                '.show_log',
-                '.selected_log',
-                '.kb-job-status__icon',
-                '.kb-job-status__icon--created',
-                '.kb-job-status__cell_action--created',
-            ];
-            classContents.forEach((item) => {
-                expect($(node).find(item).length).toBeGreaterThan(0);
-            });
-
-            expect(node.innerHTML).toContain('CANCEL');
-            expect(node.innerHTML).toContain('Queued');
         });
+    });
+
+    JobsData.validJobs.forEach((job) => {
+        beforeEach(() => {
+            jasmine.addMatchers(customMatchers);
+        });
+        describe('the job state list row instance', () => {
+            describe('creates initial structure and content', () => {
+                const row = document.createElement('tr');
+                const jobStateListRowInstance = createInstance();
+                jobStateListRowInstance
+                    .start({
+                        node: row,
+                        job: job,
+                        name: 'testObject',
+                    })
+                    .then(() => {
+                        it('should have row structure', () => {
+                            expect(row).toHaveRowStructure({ job: job });
+                        });
+                    });
+            });
+
+        })
     });
 });

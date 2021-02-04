@@ -14,8 +14,6 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
         'isValidJobStateObject',
     ];
 
-    // console.log(JobsData.allJobs)
-
     describe('Test Jobs module', () => {
         it('Should be loaded with the right functions', () => {
             expect(Jobs).toBeDefined();

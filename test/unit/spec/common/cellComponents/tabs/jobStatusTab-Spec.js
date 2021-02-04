@@ -1,11 +1,16 @@
 define([
-    'base/js/namespace',
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
-    'jquery',
+    'common/cellComponents/tabs/jobStatus/jobStateList',
     'common/props',
     '/test/data/testAppObj',
-], (Jupyter, jobStatusTab, $, Props, TestAppObject) => {
+], (jobStatusTab, jobStateList, Props, TestAppObject) => {
     'use strict';
+
+    const model = Props.make({
+        data: TestAppObject,
+        onUpdate: () => {},
+    });
+    const jobTabContainerClass = 'kb-job__tab_container';
 
     describe('The job status tab module', () => {
         it('loads', () => {
@@ -18,47 +23,55 @@ define([
     });
 
     describe('The job status tab instance', () => {
-        beforeAll(() => {
-            Jupyter.narrative = {
-                getAuthToken: () => 'fakeToken',
-            };
-        });
-
-        afterAll(() => {
-            Jupyter.narrative = null;
-        });
-
-        let node, mockJobStatusTab;
+        let node, jobStatusTabInstance;
 
         beforeEach(() => {
             node = document.createElement('div');
-
-            const model = Props.make({
-                data: TestAppObject,
-                onUpdate: () => {},
-            });
-
-            mockJobStatusTab = jobStatusTab.make({
+            jobStatusTabInstance = jobStatusTab.make({
                 model: model,
             });
         });
 
+        afterEach(() => {
+            if (jobStatusTabInstance) {
+                jobStatusTabInstance = null;
+            }
+        });
+
         it('has a make function that returns an object', () => {
-            expect(mockJobStatusTab).not.toBe(null);
+            expect(jobStatusTabInstance).not.toBe(null);
         });
 
         it('has the required methods', () => {
-            expect(mockJobStatusTab.start).toBeDefined();
-            expect(mockJobStatusTab.stop).toBeDefined();
+            expect(jobStatusTabInstance.start).toBeDefined();
+            expect(jobStatusTabInstance.stop).toBeDefined();
         });
 
-        it('should start and the job status and job log panel', () => {
-            mockJobStatusTab.start({ node: node });
+        it('should start the job status tab widget', async () => {
+            expect(node.classList.length).toBe(0);
+            spyOn(jobStateList, 'make').and.callThrough();
+            await jobStatusTabInstance.start({ node: node });
 
-            const contents = ['jobs', 'job-log-section-toggle'];
-            contents.forEach((item) => {
-                expect(node.innerHTML).toContain(item);
-            });
+            expect(node).toHaveClass(jobTabContainerClass);
+            expect(node.childNodes.length).toBe(1);
+
+            const [firstChild] = node.childNodes;
+            expect(firstChild).toHaveClass('kb-job__container');
+            expect(firstChild.getAttribute('data-element')).toEqual('kb-job-list-wrapper');
+
+            expect(jobStateList.make).toHaveBeenCalled();
+        });
+
+        it('should stop when requested to', async () => {
+            expect(node.classList.length).toBe(0);
+            spyOn(jobStateList, 'make').and.callThrough();
+
+            await jobStatusTabInstance.start({ node: node });
+            expect(node).toHaveClass(jobTabContainerClass);
+            expect(jobStateList.make).toHaveBeenCalled();
+
+            await jobStatusTabInstance.stop();
+            // TODO: add in some sort of test here
         });
     });
 });

@@ -99,12 +99,13 @@ define ([
         });
 
         it('should load viewer info as a promise', () => {
+            const expectedItems = [
+                'viewers', 'typeNames', 'specs', 'methodIds', 'landingPageUrls'
+            ];
             return Viewers.getViewerInfo().then((info) => {
-                expect(info.viewers).toBeDefined();
-                expect(info.typeNames).toBeDefined();
-                expect(info.specs).toBeDefined();
-                expect(info.methodIds).toBeDefined();
-                expect(info.landingPageUrls).toBeDefined();
+                expectedItems.forEach(item => {
+                    expect(info[item]).toBeDefined();
+                });
             });
         });
 

@@ -23,15 +23,24 @@ define([
         });
     }
 
+    /**
+     * Mock data for the NMS.get_method_full_info call.
+     */
     const methodFullInfoMock = [[{
         description: 'This is a KBase wrapper for SomeModule.',
         authors: ['author1', 'author2']
     }]];
 
+    /**
+     * Mock data for the Catalog.get_exec_aggr_stats call.
+     */
     const getExecAggrStatsMock = [[{
         number_of_calls: 5
     }]];
 
+    /**
+     * Mock data for the Catalog.get_module_info call.
+     */
     const getModuleInfoMock = [{
         module_name: 'SomeModule',
         release: {

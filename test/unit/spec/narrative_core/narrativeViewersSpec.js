@@ -8,18 +8,26 @@ define ([
 ) => {
     'use strict';
 
-    // data format taken from
-    // https://github.com/kbase/narrative_method_store/blob/master/NarrativeMethodStore.spec#L709
-    // and modified to what's needed for running the module and testing
+    /** data format taken from
+     * https://github.com/kbase/narrative_method_store/blob/master/NarrativeMethodStore.spec#L709
+     * and modified to what's needed for running the module and testing
+     * - returned by NarrativeMethodStore.list_categories
+     */
     const categoryData = [
+        // this would be the list of app categories, ironically not actually needed
         {},
+        // list of apps referenced by the types, just mocking to show existence (which is all
+        // the module needs)
+        // leaving out one to trigger a different code path
         {
             'Viewers/a_viewer_app': {},
             'Viewers/error_viewer_app': {
                 loading_error: 'Not a real app'
             }
         },
+        // list of "apps" (in the NMS lingo), all obsolete and no longer used or needed
         {},
+        // set of available types and relevant info used by the NarrativeViewers module
         {
             'Module.Type1': {
                 view_method_ids: ['Viewers/a_viewer_app'],
@@ -38,6 +46,11 @@ define ([
             }
         }
     ];
+
+    /** "method" data is the NMS lingo for app specs. This just mocks what's needed for
+     * NarrativeViewers to function for a single mock app.
+     * - returned by NarrativeMethodStore.get_method_spec
+     */
     const methodData = [{
         'Viewers/a_viewer_app': {
             behavior: {},

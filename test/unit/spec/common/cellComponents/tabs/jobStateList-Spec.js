@@ -1,14 +1,25 @@
 define([
-    'base/js/namespace',
     'common/cellComponents/tabs/jobStatus/jobStateList',
-    'jquery',
     'common/props',
     '/test/data/jobsData',
     '/test/data/testAppObj',
-], (Jupyter, jobStateList, $, Props, JobsData, TestAppObject) => {
+], (jobStateList, Props, JobsData, TestAppObject) => {
     'use strict';
 
-    describe('The job status tab module', () => {
+    let cssBaseClass;
+
+    const model = Props.make({
+        data: TestAppObject,
+        onUpdate: () => {},
+    });
+
+    function createInstance() {
+        return jobStateList.make({
+            model: model,
+        });
+    }
+
+    describe('The job state list module', () => {
         it('loads', () => {
             expect(jobStateList).not.toBe(null);
         });
@@ -16,62 +27,73 @@ define([
         it('has expected functions', () => {
             expect(jobStateList.make).toBeDefined();
         });
+
+        it('has a cssBaseClass variable', () => {
+            expect(jobStateList.cssBaseClass).not.toBeNull;
+            expect(jobStateList.cssBaseClass).toContain('kb-job');
+        });
     });
 
-    describe('The job status tab instance', () => {
-        beforeAll(() => {
-            Jupyter.narrative = {
-                getAuthToken: () => 'fakeToken',
-            };
-        });
-
-        afterAll(() => {
-            Jupyter.narrative = null;
-        });
-
-        let node, model, mockJobStateList;
-
+    describe('The job state list instance', () => {
+        let jobStateListInstance;
         beforeEach(() => {
-            node = document.createElement('div');
-
-            model = Props.make({
-                data: TestAppObject,
-                onUpdate: () => {},
-            });
-
-            mockJobStateList = jobStateList.make({
-                model: model,
-            });
+            jobStateListInstance = createInstance();
         });
 
         it('has a make function that returns an object', () => {
-            expect(mockJobStateList).not.toBe(null);
+            expect(jobStateListInstance).not.toBe(null);
         });
 
         it('has the required methods', () => {
-            expect(mockJobStateList.start).toBeDefined();
-            expect(mockJobStateList.stop).toBeDefined();
+            expect(jobStateListInstance.start).toBeDefined();
+            expect(jobStateListInstance.stop).toBeDefined();
         });
 
-        it('should start and return the correct elements', () => {
-            mockJobStateList.start({
+        it('should start, and populate a node', async () => {
+            const node = document.createElement('div');
+            expect(node.children.length).toBe(0);
+            await jobStateListInstance.start({
                 node: node,
-                childJobs: model.getItem('exec.jobState.child_jobs'),
+                jobState: model.getItem('exec.jobState'),
             });
+            expect(node.children.length).toBeGreaterThan(0);
+        });
+    });
 
-            const classContents = [
-                '.kb-job-status__table',
-                '.kb-job-status__table_head',
-                '.kb-job-status__table_head_row',
-                '.kb-job-status__table_head_cell',
-                '.kb-job-status__table_body',
-                '.kb-job-status__row',
-            ];
-            classContents.forEach((item) => {
-                expect($(node).find(item).length).toBeGreaterThan(0);
+    describe('the job state list structure and content', () => {
+        const node = document.createElement('div');
+        let jobStateListInstance;
+        cssBaseClass = jobStateList.cssBaseClass;
+
+        beforeAll(async () => {
+            jobStateListInstance = createInstance();
+            await jobStateListInstance.start({
+                node: node,
+                jobState: model.getItem('exec.jobState'),
             });
+        });
 
-            expect($(node).find('.kb-job-status__row').length).toEqual(JobsData.allJobs.length);
+        afterAll(async () => {
+            await jobStateListInstance.stop();
+        });
+
+        const classContents = [
+            `${cssBaseClass}__table`,
+            `${cssBaseClass}__table_head`,
+            `${cssBaseClass}__table_head_row`,
+            `${cssBaseClass}__table_head_cell`,
+            `${cssBaseClass}__table_body`,
+            `${cssBaseClass}__row`,
+        ];
+
+        classContents.forEach((item) => {
+            it(`should have an element with class ${item}`, () => {
+                expect(node.querySelectorAll(`.${item}`).length).toBeGreaterThan(0);
+            });
+        });
+
+        it('should generate a row for each job', () => {
+            expect(node.querySelectorAll('.kb-job-status__row').length).toEqual(JobsData.allJobs.length);
         });
     });
 });

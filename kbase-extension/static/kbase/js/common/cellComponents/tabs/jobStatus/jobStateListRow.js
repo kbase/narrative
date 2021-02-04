@@ -1,172 +1,177 @@
-define(['bluebird', 'kb_common/html', 'common/events', 'jquery'], (Promise, html, Events, $) => {
+define([
+    'bluebird',
+    'common/ui',
+    'kb_common/html',
+    'common/events',
+    'jquery',
+    'common/jobs',
+    'util/jobLogViewer',
+], (Promise, UI, html, Events, $, Jobs, JobLogViewer) => {
     'use strict';
-
-    let container;
 
     const t = html.tag,
         div = t('div'),
         td = t('td'),
         span = t('span'),
-        a = t('a'),
-        i = t('i'),
+        ul = t('ul'),
+        li = t('li'),
         cssBaseClass = 'kb-job-status',
         events = Events.make();
 
-    function createStateCell(jobState) {
-        let label;
-        switch (jobState) {
-            case 'completed':
-                label = 'Success';
-                break;
-            case 'created':
-            case 'estimating':
-            case 'queued':
-                label = 'Queued';
-                break;
-            case 'running':
-                label = 'Running';
-                break;
-            case 'error':
-                label = 'Failed';
-                break;
-            case 'terminated':
-                label = 'Cancelled';
-                break;
-            case 'does_not_exist':
-                label = 'Does not exist';
-                break;
-        }
-
-        return td(
-            {
-                class: `${cssBaseClass}__cell`,
-            },
-            [
-                span({
-                    class: `fa fa-circle ${cssBaseClass}__icon--${jobState}`,
-                }),
-                ' ' + label,
-            ]
-        );
-    }
-
-    function selectRow(e) {
-        const $currentRow = $(e.target).closest('tr');
-
-        const $allRows = $('.kb-job-status__row');
-
-        if ($currentRow.hasClass(`${cssBaseClass}__row_selected`)) {
-            $currentRow.removeClass(`${cssBaseClass}__row_selected`);
-            $currentRow.find('.selected_log').css('display', 'none');
-        } else {
-            // unselect previously selected row
-            $allRows.removeClass(`${cssBaseClass}__row_selected`);
-            $allRows.find('.selected_log').css('display', 'none');
-
-            // add clasees to selected row
-            $currentRow.addClass(`${cssBaseClass}__row_selected`);
-            $currentRow.find('.selected_log').css('display', 'inline');
-        }
-    }
-
-    function createActionCell(jobState) {
-        let label;
-        switch (jobState) {
-            case 'completed':
-                label = 'GO TO RESULTS';
-                break;
-            case 'created':
-            case 'estimating':
-            case 'queued':
-            case 'running':
-                label = 'CANCEL';
-                break;
-            case 'error':
-            case 'does_not_exist':
-            case 'terminated':
-                label = 'RETRY';
-                break;
-        }
-
-        return td(
-            {
-                class: `${cssBaseClass}__cell_container`,
-            },
-            [
-                span({}, [
-                    a(
-                        {
-                            class: `${cssBaseClass}__cell_action--${jobState}`,
-                        },
-                        [label]
-                    ),
-                ]),
-                span(
-                    {
-                        class: `${cssBaseClass}__cell_container_btn`,
-                    },
-                    [
-                        a(
-                            {
-                                class: `${cssBaseClass}__cell_log_btn show_log`,
-                                role: 'button',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function (e) {
-                                        selectRow(e);
-                                    },
-                                }),
-                            },
-                            [
-                                'Show log',
-                                i({
-                                    class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`,
-                                }),
-                            ]
-                        ),
-                        a(
-                            {
-                                class: `${cssBaseClass}__cell_log_btn selected_log`,
-                                role: 'button',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function (e) {
-                                        selectRow(e);
-                                    },
-                                }),
-                            },
-                            [
-                                'Showing log',
-                                i({
-                                    class: `fa fa-caret-right kb-pointer ${cssBaseClass}__icon`,
-                                }),
-                            ]
-                        ),
-                    ]
-                ),
-            ]
-        );
-    }
-
     function factory() {
-        function updateRowStatus(jobStatus, name) {
-            const jobIdDiv = '';
-            container.innerHTML =
+        let container, ui, jobId, jobState;
+        const widgets = {};
+
+        function _createStatusLabel(jobStatus) {
+            return (
+                span({
+                    class: `fa fa-circle ${cssBaseClass}__icon--${jobStatus}`,
+                }) +
+                ' ' +
+                Jobs.jobLabel(jobStatus)
+            );
+        }
+
+        function _createActionButton(jobStatus) {
+            return div(
+                {
+                    class: `${cssBaseClass}__cell_action--${jobStatus}`,
+                    role: 'button',
+                    // TODO: these actions need to be added
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: function () {
+                            // handle action button clicks
+                        },
+                    }),
+                },
+                [Jobs.jobAction(jobStatus)]
+            );
+        }
+
+        function buildRow(_name) {
+            return (
+                // input name/descriptor
                 td(
                     {
-                        class: `${cssBaseClass}__cell`,
+                        class: `${cssBaseClass}__cell--object`,
+                        dataElement: 'job-params',
                     },
-                    [div(name), jobIdDiv]
+                    [div(_name)]
                 ) +
-                createStateCell(jobStatus) +
-                createActionCell(jobStatus);
+                // job status
+                td(
+                    {
+                        class: `${cssBaseClass}__cell--status`,
+                        dataElement: 'job-state',
+                    },
+                    []
+                ) +
+                // action to take
+                td(
+                    {
+                        class: `${cssBaseClass}__cell--action`,
+                        dataElement: 'job-action',
+                    },
+                    []
+                ) +
+                // job status details
+                td(
+                    {
+                        class: `${cssBaseClass}__cell--log-view`,
+                    },
+                    [
+                        div(
+                            {
+                                class: `${cssBaseClass}__log_link`,
+                                role: 'button',
+                                dataToggle: 'vertical-collapse-after',
+                            },
+                            ['Status details']
+                        ),
+                    ]
+                )
+            );
         }
 
-        function start(arg) {
+        // update the status and action columns
+        function _updateRowStatus(jobStateObject) {
+            jobState = jobStateObject;
+            ui.setContent('job-state', _createStatusLabel(jobState.status));
+            ui.setContent('job-action', _createActionButton(jobState.status));
+        }
+
+        function selectRow(e) {
+            const $currentRow = $(e.target).closest('tr');
+            const $allRows = $(`.${cssBaseClass}__row`);
+            $allRows.removeClass(`${cssBaseClass}__row--selected`);
+            $currentRow.toggleClass(`${cssBaseClass}__row--selected`);
+        }
+
+        function showHideChildRow(e) {
+            const $currentRow = $(e.target).closest('tr');
+            const $dtTable = $(e.target).closest('table').DataTable();
+            const dtRow = $dtTable.row($currentRow);
+
+            if (dtRow.child.isShown()) {
+                // This row is already open - close it
+                dtRow.child.hide();
+                $currentRow.removeClass('vertical_collapse--open');
+                if (widgets.log) {
+                    widgets.log.stop();
+                }
+                dtRow.child.remove();
+                return;
+            }
+
+            // create the child row contents, add to the child row, and show it
+            const str = div({
+                class: `${cssBaseClass}__log_container`,
+                dataElement: 'job-log-container',
+            });
+            dtRow.child(false);
+            dtRow.child(str).show();
+
+            // add the log widget to the next `tr` element
+            widgets.log = JobLogViewer.make({ showHistory: true });
+            widgets.log.start({
+                node: $currentRow.next().find('[data-element="job-log-container"]')[0],
+                jobId: jobId,
+                jobState: jobState,
+            });
+            $currentRow.addClass('vertical_collapse--open');
+            return;
+        }
+
+        /**
+         * Start the job status row widget
+         * @param {object} args, with keys
+         *      node: the node to insert the row into (will presumably be a `tr` element)
+         *      job:  a job state object for the job to be represented
+         *      name: the value of the input parameter(s) for the job
+         */
+        function start(args) {
             return Promise.try(() => {
-                container = arg.node;
-                updateRowStatus(arg.initialState, arg.name);
-                events.attachEvents(container);
+                const requiredArgs = ['job', 'name', 'node'];
+                if (!requiredArgs.every((arg) => arg in args && args[arg])) {
+                    throw new Error(
+                        'JobStateListRow cannot start: start argument must have the following keys: ' +
+                            requiredArgs.join(', ')
+                    );
+                }
+
+                if (!Jobs.isValidJobStateObject(args.job)) {
+                    throw new Error('JobStateListRow cannot start: invalid job object supplied');
+                }
+                container = args.node;
+                ui = UI.make({ node: container });
+                container.innerHTML = buildRow(args.name);
+                container.onclick = (e) => {
+                    selectRow(e);
+                    showHideChildRow(e);
+                };
+                jobId = args.job.job_id;
+                _updateRowStatus(args.job);
             }).catch((err) => {
                 throw new Error('Unable to start Job State List Row widget: ', err);
             });
@@ -174,9 +179,103 @@ define(['bluebird', 'kb_common/html', 'common/events', 'jquery'], (Promise, html
 
         function stop() {}
 
+        // TODO: ensure that narrative does not create invalid job objects,
+        // e.g. { job_state: 'does_not_exist' }
+        function updateState(newState) {
+            if (!Jobs.isValidJobStateObject(newState)) {
+                throw new Error(
+                    `JobStateListRow for ${jobId} received invalid job object: `,
+                    newState
+                );
+            }
+            if (newState.job_id !== jobId) {
+                throw new Error(
+                    `JobStateListRow for ${jobId} received incorrect job object: `,
+                    newState
+                );
+            }
+            _updateRowStatus(newState);
+        }
+
+        /**
+         * Update the job parameters table cell from a jobInfo object
+         *
+         * jobInfo object structure:
+         * {
+         *      job_id: <job_id_here>,
+         *      job_params: [
+         *          {
+         *              param_1: "param 1 value",
+         *              param_2: "param 2 value",
+         *          }
+         *      ]
+         * }
+         *
+         * Params are currently displayed in the form
+         * <ul>
+         *      <li><span>param_1:</span> <span>param 1 value</span>
+         *      <li><span>param_2:</span> <span>param 2 value</span>
+         *      ...
+         * </ul>
+         *
+         * @param {object} jobInfo
+         */
+        function updateParams(jobInfo) {
+            if (!Jobs.isValidJobInfoObject(jobInfo)) {
+                throw new Error(
+                    `JobStateListRow for ${jobId} received invalid job info object: ${JSON.stringify(
+                        jobInfo
+                    )}`
+                );
+            }
+            if (!jobInfo.job_id || jobInfo.job_id !== jobId) {
+                throw new Error(
+                    `JobStateListRow for ${jobId} received incorrect job info: ${JSON.stringify(
+                        jobInfo
+                    )}`
+                );
+            }
+            const newParams = jobInfo.job_params[0];
+
+            ui.setContent(
+                'job-params',
+                // coerce to a string
+                ul(
+                    {
+                        class: `${cssBaseClass}__param_list`,
+                    },
+                    Object.keys(newParams)
+                        .sort()
+                        .map((key) => {
+                            return li(
+                                {
+                                    class: `${cssBaseClass}__param_item`,
+                                },
+                                [
+                                    span(
+                                        {
+                                            class: `${cssBaseClass}__param_key`,
+                                        },
+                                        `${key}: `
+                                    ),
+                                    span(
+                                        {
+                                            class: `${cssBaseClass}__param_value`,
+                                        },
+                                        `${newParams[key]}`
+                                    ),
+                                ]
+                            );
+                        })
+                )
+            );
+        }
+
         return {
             start: start,
             stop: stop,
+            updateState: updateState,
+            updateParams: updateParams,
         };
     }
 
@@ -184,5 +283,6 @@ define(['bluebird', 'kb_common/html', 'common/events', 'jquery'], (Promise, html
         make: function () {
             return factory();
         },
+        cssBaseClass: cssBaseClass,
     };
 });

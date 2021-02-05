@@ -105,7 +105,7 @@ define ([
     function showNotLoggedInDialog() {
         const message = `
         <p>You are logged out (or your session has expired).</p>
-        <p>You will be redirected to the sign in page after closing this, or ${AUTO_LOGOUT_DELAY / 1000} seconds, 
+        <p>You will be redirected to the sign in page after closing this, or ${AUTO_LOGOUT_DELAY / 1000} seconds,
            whichever comes first.</p>
         `;
         var dialog = new BootstrapDialog({
@@ -159,9 +159,9 @@ define ([
     }
 
     // When true, will cause the token check interval timer to return early.
-    // Should be set true when an async process is running inside the 
+    // Should be set true when an async process is running inside the
     // interval function, and set false when that process is completed.
-    
+
     let hasViewedAboutToLogout = false;
 
     let tokenCheckEnabled = true;
@@ -225,7 +225,7 @@ define ([
             if (validateOnCheck) {
                 // ensure we don't enter this check a second time.
                 // hmm, this is really an edge case, but possible.
-                // in order to meet this condition, the validateToken() call would 
+                // in order to meet this condition, the validateToken() call would
                 // need to take longer than browserSleepValidateTime which is currently
                 // hard coded in the config at 1 minute.
                 disableTokenCheck();
@@ -244,7 +244,7 @@ define ([
                     .finally(() => {
                         enableTokenCheck();
                     });
-                
+
             }
         }, TOKEN_MONITORING_INTERVAL);
     }
@@ -334,6 +334,7 @@ define ([
     return {
         init,
         sessionInfo,
-        getAuthToken
+        getAuthToken,
+        clearTokenCheckTimers
     };
 });

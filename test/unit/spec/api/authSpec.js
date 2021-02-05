@@ -86,6 +86,14 @@ define([
             });
     }
 
+    /*
+     * Each case here represents the following:
+     * - an auth api method that can accept no input (it gets the token straight from the
+     *   cookie)
+     * - a set of inputs for that method
+     * - the auth service api request endpoint
+     * These will then all be tested when no token is available.
+     */
     const noTokenCases = [{
         method: 'getTokenInfo',
         inputs: [],
@@ -108,6 +116,14 @@ define([
         request: 'users/search/foo'
     }];
 
+    /*
+     * Each case here represents the following:
+     * - an auth api method that can accept either no input (it gets the token straight from the
+     *   cookie) or a given token
+     * - a set of inputs for that method
+     * - the auth service api request endpoint
+     * These will then be tested when a mocked invalid token is given.
+     */
     const badTokenCases = [
         ...noTokenCases,
         {

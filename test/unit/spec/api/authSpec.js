@@ -449,9 +449,5 @@ define([
             expect(authClient.getAuthToken()).toBeNull();
             expect(authClient.getCookie('narrative_session')).toBeNull();
         });
-
-        xit('Should revoke an auth token on request', () => {
-            // This deletes the token. Should be mocked?
-        });
     });
 });

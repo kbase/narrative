@@ -161,6 +161,28 @@ define([
             jasmine.Ajax.uninstall();
         });
 
+        it('Should make a new Auth client that has the expected functions', () => {
+            const auth = Auth.make({url: Config.url('auth')});
+            expect(auth).not.toBeNull();
+            [
+                'putCurrentProfile',
+                'getCurrentProfile',
+                'getUserProfile',
+                'getAuthToken',
+                'setAuthToken',
+                'clearAuthToken',
+                'revokeAuthToken',
+                'getTokenInfo',
+                'getUserNames',
+                'searchUserNames',
+                'validateToken',
+                'setCookie',
+                'getCookie'
+            ].forEach(fn => {
+                expect(auth[fn]).toBeDefined();
+            });
+        });
+
         /* test that running functions with "invalid" tokens fail properly, such that
          * 1. the token is attached to the Auth header
          * 2. an error is returned from the request
@@ -207,28 +229,6 @@ define([
                         expect(error.responseJSON).toBeDefined();
                         expect(error.responseJSON).toEqual(NO_TOKEN_ERROR);
                     });
-            });
-        });
-
-        it('Should make a new Auth client that has the expected functions', () => {
-            const auth = Auth.make({url: Config.url('auth')});
-            expect(auth).not.toBeNull();
-            [
-                'putCurrentProfile',
-                'getCurrentProfile',
-                'getUserProfile',
-                'getAuthToken',
-                'setAuthToken',
-                'clearAuthToken',
-                'revokeAuthToken',
-                'getTokenInfo',
-                'getUserNames',
-                'searchUserNames',
-                'validateToken',
-                'setCookie',
-                'getCookie'
-            ].forEach(fn => {
-                expect(auth[fn]).toBeDefined();
             });
         });
 

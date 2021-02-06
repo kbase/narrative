@@ -26,7 +26,9 @@ define ([
     }
 
     /**
-     *
+     * A simple auth request mocker. This takes a path to the auth REST service,
+     * a response to return, and the status code, and builds a mock that satisfies
+     * all of that.
      * @param {string} request the path request
      * @param {object} responseObj the response to send
      * @param {int} status the status code to return
@@ -90,10 +92,26 @@ define ([
 
             mockAuthRequest('token', tokenInfo, 200);
             mockAuthRequest('me', profileInfo, 200);
+            // a null user profile response is enough to start the dummy UserMenu
+            // required here.
+            jasmine.Ajax.stubRequest(Config.url('user_profile'))
+                .andReturn({
+                    status: 200,
+                    contentType: 'application/json',
+                    responseText: JSON.stringify({
+                        version: '1.1',
+                        id: '12345',
+                        result: [{}]
+                    })
+                });
             return Login.init($node, true)  // true here means there's no kernel
                 .then(() => {
                     const request = jasmine.Ajax.requests.mostRecent();
                     expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
+                    // test that the user menu was created by checking for the username and id
+                    // embedded in the node
+                    expect($node.text()).toContain(fakeName);
+                    expect($node.text()).toContain(fakeUser);
                     Login.clearTokenCheckTimers();
                 });
         });

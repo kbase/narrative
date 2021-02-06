@@ -295,10 +295,10 @@ define ([
          * communication with other KBase resources.
          */
         clearTokenCheckTimers();
-        var sessionToken = authClient.getAuthToken();
+        const sessionToken = authClient.getAuthToken();
         return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])
-            .then(function(results) {
-                var tokenInfo = results[0];
+            .then((results) => {
+                let tokenInfo = results[0];
                 sessionInfo = tokenInfo;
                 this.sessionInfo = tokenInfo;
                 this.sessionInfo.token = sessionToken;
@@ -306,20 +306,21 @@ define ([
                 this.sessionInfo.user_id = this.sessionInfo.user;
                 initEvents();
                 initTokenTimer(sessionInfo.expires);
-                UserMenu.make({
+                if (!noServer) {
+                    ipythonLogin(sessionToken);
+                }
+                $(document).trigger('loggedIn', this.sessionInfo);
+                $(document).trigger('loggedIn.kbase', this.sessionInfo);
+                const userMenu = UserMenu.make({
                     target: $elem,
                     token: sessionToken,
                     userName: sessionInfo.user,
                     email: results[1].email,
                     displayName: results[1].display
                 });
-                if (!noServer) {
-                    ipythonLogin(sessionToken);
-                }
-                $(document).trigger('loggedIn', this.sessionInfo);
-                $(document).trigger('loggedIn.kbase', this.sessionInfo);
-            }.bind(this))
-            .catch(function(error) {
+                return userMenu.start();
+            })
+            .catch((error) => {
                 console.error(error);
                 if (document.location.hostname.indexOf('localhost') !== -1 ||
                     document.location.hostname.indexOf('0.0.0.0') !== -1) {

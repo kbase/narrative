@@ -9,13 +9,10 @@ define(['./unodep', 'common/runtime'], (utils, Runtime) => {
     'use strict';
 
     function factory(config) {
-        let allStates = config.states,
+        const allStates = config.states,
             initialState = config.initialState,
-            fallbackState = config.fallbackState,
-            currentState,
-            api,
-            timer,
             newStateHandler = config.onNewState;
+        let currentState, timer;
 
         const runtime = Runtime.make();
 
@@ -23,14 +20,6 @@ define(['./unodep', 'common/runtime'], (utils, Runtime) => {
         // on. This lets us cleanly disengage when we are done.
         const busConnection = runtime.bus().connect(),
             bus = busConnection.channel(null);
-
-        /*
-         * Validate the state machine configuration 'states'.
-         */
-        function validate() {
-            // find initial state
-            // ...
-        }
 
         function run() {
             if (!newStateHandler) {
@@ -64,29 +53,19 @@ define(['./unodep', 'common/runtime'], (utils, Runtime) => {
 
         function doMessages(changeType) {
             const state = currentState;
-            if (state.on && state.on[changeType]) {
-                if (state.on[changeType].messages) {
-                    state.on[changeType].messages.forEach((msg) => {
-                        if (msg.emit) {
-                            bus.emit(msg.emit, msg.message);
-                        } else if (msg.send) {
-                            bus.send(msg.send.message, msg.send.address);
-                        }
-                    });
-                }
+            if (state.on && state.on[changeType] && state.on[changeType].messages) {
+                state.on[changeType].messages.forEach((msg) => {
+                    if (msg.emit) {
+                        bus.emit(msg.emit, msg.message);
+                    } else if (msg.send) {
+                        bus.send(msg.send.message, msg.send.address);
+                    }
+                });
             }
         }
 
         function doResumeState() {
             doMessages('resume');
-        }
-
-        function doEnterState() {
-            doMessages('enter');
-        }
-
-        function doLeaveState() {
-            doMessages('leave');
         }
 
         function findNextState(stateList, stateToFind) {
@@ -115,19 +94,19 @@ define(['./unodep', 'common/runtime'], (utils, Runtime) => {
                 throw new Error('Cannot find the new state');
             }
 
-            const newState = findState(state);
-            if (!newState) {
+            const _newState = findState(state);
+            if (!_newState) {
                 throw new Error('Next state found, but that state does not exist');
             }
 
-            if (utils.isEqual(newState.state, currentState.state)) {
+            if (utils.isEqual(_newState.state, currentState.state)) {
                 return;
             }
 
             doMessages('exit');
 
             // make it the current state
-            currentState = newState;
+            currentState = _newState;
 
             doMessages('enter');
 
@@ -169,7 +148,7 @@ define(['./unodep', 'common/runtime'], (utils, Runtime) => {
 
         // API
 
-        api = Object.freeze({
+        const api = Object.freeze({
             start: start,
             stop: stop,
             newState: newState,

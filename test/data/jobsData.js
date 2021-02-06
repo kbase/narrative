@@ -9,7 +9,7 @@ define(['common/format'], (format) => {
 
     const jobStrings = {
         unknown: 'Determining job state...',
-        not_found: 'This job was not found, or may not have been registered with this Narrative.',
+        not_found: 'This job was not found, or may not have been registered with this narrative.',
         queued: 'In the queue since ' + format.niceTime(t.created),
         termination: 'Finished with cancellation at ' + format.niceTime(t.finished),
         running: 'Started running job at ' + format.niceTime(t.running),
@@ -179,6 +179,7 @@ define(['common/format'], (format) => {
                     class: 'kb-job-status__summary--error',
                     label: 'error',
                 },
+                errorString: 'Server error: Error code: -32000',
             },
         },
         {
@@ -219,8 +220,8 @@ define(['common/format'], (format) => {
         another: 'key',
         meta: {
             createJobStatusLines: {
-                line: jobStrings.unknown,
-                history: [jobStrings.unknown],
+                line: jobStrings.not_found,
+                history: [jobStrings.not_found],
             },
             jobAction: jobStrings.action.retry,
             jobLabel: 'Job not found',

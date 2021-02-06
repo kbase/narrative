@@ -1,37 +1,129 @@
-define([
-    'common/html',
-    'common/format',
-    'common/ui',
-], (
-    html,
-    format,
-    UI,
-) => {
+define(['common/html', 'common/format', 'common/ui'], (html, format, UI) => {
     'use strict';
 
     const t = html.tag,
-        span = t('span'),
-        cssBaseClass = 'kb-job-state',
+        span = t('span');
+
+    const cssBaseClass = 'kb-job-status',
         jobNotFound = [
             'This job was not found, or may not have been registered with this Narrative.',
-            'You will not be able to inspect the job status or view the job log'
+            'You will not be able to inspect the job status or view the job log',
         ],
-        jobStatusUnknown = ['Determining job state...'];
+        jobStatusUnknown = ['Determining job state...'],
+        // valid job states from ee2, plus 'does_not_exist'
+        validJobStates = [
+            'created',
+            'estimating',
+            'queued',
+            'running',
+            'completed',
+            'error',
+            'terminated',
+            'does_not_exist',
+        ];
+
+    /**
+     * A jobState object is deemed valid if
+     * 1. It's an object (not an array or atomic type)
+     * 2. It has a 'created' key
+     * 3. It has a 'job_id' key
+     * 4. It has a 'status' key, which appears in the array validJobStates
+     *
+     * There are other required fields, but these checks are sufficient for the UI.
+     *
+     * See execution_engine2/lib/execution_engine2/db/models/models.py in the
+     * execution_engine2 repo for the full job spec.
+     *
+     * This function should be updated to stay in sync with ee2's output.
+     *
+     * @param {object} jobState
+     * @returns {boolean} true|false
+     */
+    function isValidJobStateObject(jobState) {
+        const requiredProperties = ['job_id', 'created', 'status'];
+        return (
+            jobState !== null &&
+            typeof jobState === 'object' &&
+            requiredProperties.every((prop) => prop in jobState) &&
+            validJobStates.includes(jobState.status)
+        );
+    }
+
+    /**
+     * Given a job status string, ensure that it is valid
+     *
+     * @param {*} status
+     * @returns {boolean} true|false
+     */
+    function isValidJobStatus(status) {
+        return status && validJobStates.includes(status);
+    }
+
+    /**
+     * A jobInfo object should have the minimal structure
+     *
+     * {
+     *      job_id: ...
+     *      job_params: [
+     *          {
+     *              param_one: 'value one',
+     *              param_two: 'value two',
+     *              ...
+     *          }
+     *      ]
+     * }
+     *
+     * This function should be updated to stay in sync with ee2's output.
+     *
+     * @param {object} jobInfo
+     * @returns {boolean} true|false
+     */
+    function isValidJobInfoObject(jobInfo) {
+        try {
+            if (
+                'job_id' in jobInfo &&
+                Object.prototype.toString.call(jobInfo.job_params[0]) === '[object Object]' &&
+                Object.keys(jobInfo.job_params[0]).length > 0
+            ) {
+                return true;
+            }
+        // eslint-disable-next-line no-empty
+        } catch (err) {}
+        return false;
+    }
+
+    /**
+     * Given a job state, return the appropriate action to offer in the UI
+     *
+     * @param {string} jobStatus
+     * @returns {string} label
+     */
+
+    function jobAction(jobStatus) {
+        const cancel = 'Cancel',
+            // statuses not listed here are 'error', 'terminated', and 'does_not_exist'
+            // the action for all those should be 'Retry'
+            statusToAction = {
+                completed: 'Go to results',
+                created: cancel,
+                estimating: cancel,
+                queued: cancel,
+                running: cancel,
+            };
+        return statusToAction[jobStatus] || 'Retry';
+    }
 
     /**
      * Convert a job state into a short string to present in the UI
      *
-     * @param {string} jobState
+     * @param {string} jobStatus
      * @returns {string} label
      */
 
-    function jobLabel(jobState) {
+    function jobLabel(jobStatus) {
         // covers 'does_not_exist' or invalid job states
         let label = 'Job not found';
-        switch (jobState) {
-            case 'completed':
-                label = 'Success';
-                break;
+        switch (jobStatus) {
             case 'created':
             case 'estimating':
             case 'queued':
@@ -39,6 +131,9 @@ define([
                 break;
             case 'running':
                 label = 'Running';
+                break;
+            case 'completed':
+                label = 'Success';
                 break;
             case 'error':
                 label = 'Failed';
@@ -57,18 +152,22 @@ define([
      *
      * Translated strings = completed, error, terminated, and does_not_exist. Those all get
      * different colors. Other strings are rendered black.
-     * @param {string} jobState
+     * @param {string} jobStatus
      */
 
-    function niceState(jobState) {
-        let label = jobState,
-            cssClass = `--${jobState}`;
-        switch (jobState) {
-            case 'completed':
-                label = 'success';
-                break;
+    function niceState(jobStatus) {
+        if (!isValidJobStatus(jobStatus)) {
+            jobStatus = 'invalid';
+        }
+
+        let label = jobStatus,
+            cssClass = `--${jobStatus}`;
+        switch (jobStatus) {
             case 'does_not_exist':
                 label = 'does not exist';
+                break;
+            case 'completed':
+                label = 'success';
                 break;
             case 'error':
                 break;
@@ -79,11 +178,36 @@ define([
                 cssClass = '';
         }
 
-        return span({
-            class: `${cssBaseClass}__summary${cssClass}`,
-        }, label);
+        return span(
+            {
+                class: `${cssBaseClass}__summary${cssClass}`,
+            },
+            label
+        );
     }
 
+    /**
+     * Ensures that the child_jobs data is in the correct place in the jobState object
+     *
+     * It should be possible to remove this function after migrating to ee 2.5
+     * @param {object} jobState
+     * @return {object} jobState, possibly edited
+     */
+    function updateJobModel(jobState) {
+        // current structure of jobs data -- child jobs are hidden under
+        // jobState.job_output.result[0].batch_results.
+        // Remap to be under jobState.child_jobs
+        if (jobState.batch_size && jobState.child_jobs.length === 0) {
+            if (jobState.job_output.result[0].batch_results) {
+                jobState.child_jobs = Object.keys(jobState.job_output.result[0].batch_results).map(
+                    (item) => {
+                        return jobState.job_output.result[0].batch_results[item].final_job_state;
+                    }
+                );
+            }
+        }
+        return jobState;
+    }
 
     /**
      * createJobStatusLines
@@ -108,21 +232,20 @@ define([
      */
 
     function createJobStatusLines(jobState, includeHistory = false) {
-        if (!isValidJobState(jobState)) {
+        if (!isValidJobStateObject(jobState)) {
             // check whether EE2 sent { job_state: 'does_not_exist' }
+            // TODO: coerce the { job_state: 'does_not_exist' } into a standard format
             if (jobState && jobState.job_state && jobState.job_state === 'does_not_exist') {
                 return jobNotFound;
             }
             return jobStatusUnknown;
         }
 
-        // valid job state objects should have an 'updated' timestamp.
-        if (!jobState.updated) {
+        if (jobState.status === 'does_not_exist') {
             return jobStatusUnknown;
         }
 
         const jobLines = [];
-
         // Finished status
         if (jobState.finished) {
             // Amount of time it was in the queue
@@ -134,10 +257,15 @@ define([
             }
 
             jobLines.push(
-                'Finished with ' + niceState(jobState.status) + ' at '
-                + span({
-                    class: 'kb-timestamp'
-                }, format.niceTime(jobState.finished))
+                'Finished with ' +
+                    niceState(jobState.status) +
+                    ' at ' +
+                    span(
+                        {
+                            class: 'kb-timestamp',
+                        },
+                        format.niceTime(jobState.finished)
+                    )
             );
 
             if (includeHistory) {
@@ -163,19 +291,29 @@ define([
         return [queueTime(jobState)];
     }
 
-    function runTime (jobState) {
+    function runTime(jobState) {
         if (!jobState.finished) {
-            return UI.loading({ color: 'green' })
-                + ' Started running job at '
-                + span({
-                    class: 'kb-timestamp'
-                }, format.niceTime(jobState.running))
-                + span({ class: 'runClock', dataElement: 'clock' });
+            return (
+                UI.loading({ color: 'green' }) +
+                ' Started running job at ' +
+                span(
+                    {
+                        class: 'kb-timestamp',
+                    },
+                    format.niceTime(jobState.running)
+                ) +
+                span({ class: 'runClock', dataElement: 'clock' })
+            );
         }
-        return 'Ran for '
-            + span({
-                class: 'kb-elapsed-time'
-            }, format.niceDuration(jobState.finished - jobState.running));
+        return (
+            'Ran for ' +
+            span(
+                {
+                    class: 'kb-elapsed-time',
+                },
+                format.niceDuration(jobState.finished - jobState.running)
+            )
+        );
     }
 
     /**
@@ -189,52 +327,42 @@ define([
      * @param {object} jobState
      * @returns {string} queueString - HTML text description of queue time
      */
-    function queueTime (jobState) {
+    function queueTime(jobState) {
         const endTime = jobState.running || jobState.finished;
         if (endTime) {
-            return 'Queued for '
-            + span({
-                class: 'kb-elapsed-time'
-            }, format.niceDuration(endTime - jobState.created));
+            return (
+                'Queued for ' +
+                span(
+                    {
+                        class: 'kb-elapsed-time',
+                    },
+                    format.niceDuration(endTime - jobState.created)
+                )
+            );
         }
         // job hasn't run or finished (yet)
-        const queueString = UI.loading({ color: 'orange' })
-            + ' In the queue since '
-            + span({
-                class: 'kb-timestamp'
-            }, format.niceTime(jobState.created));
+        const queueString =
+            UI.loading({ color: 'orange' }) +
+            ' In the queue since ' +
+            span(
+                {
+                    class: 'kb-timestamp',
+                },
+                format.niceTime(jobState.created)
+            );
 
-        if (jobState.position) {
-            return queueString + ', currently at position ' + jobState.position;
-        }
         return queueString;
     }
 
-
-    /**
-     * A jobState is deemed valid if
-     * 1. It's an object (not an array or atomic type)
-     * 2. It has a created key
-     * 3. It has a job_id key
-     * 4. There's others that are necessary, but the top two are sufficient to judge if it's valid
-     *    enough and up to date. This function should be updated as necessary.
-     *
-     * This is intended to be used to make sure that jobStates are of the latest version of the
-     * execution engine.
-     * @param {object} jobState
-     */
-    function isValidJobState(jobState) {
-        const requiredProperties = ['job_id', 'created'];
-        if (jobState !== null && typeof jobState === 'object') {
-            return requiredProperties.every(prop => prop in jobState);
-        }
-        return false;
-    }
-
     return {
-        isValidJobState: isValidJobState,
-        niceState: niceState,
-        jobLabel: jobLabel,
         createJobStatusLines: createJobStatusLines,
+        isValidJobStatus: isValidJobStatus,
+        isValidJobStateObject: isValidJobStateObject,
+        isValidJobInfoObject: isValidJobInfoObject,
+        jobAction: jobAction,
+        jobLabel: jobLabel,
+        niceState: niceState,
+        updateJobModel: updateJobModel,
+        validJobStates: validJobStates,
     };
 });

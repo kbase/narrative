@@ -53,7 +53,28 @@
       color: use-color('info');
     }
   }
-// panel-heading border none
+
+  &__summary {
+    color: use-color('ink');
+    font-weight: 700;
+
+    &--completed {
+      color: use-color('success');
+      font-weight: 700;
+    }
+
+    &--error,
+    &--does_not_exist {
+      color: use-color('error');
+      font-weight: 700;
+    }
+
+    &--terminated {
+      color: use-color('warning');
+      font-weight: 700;
+    }
+  }
+
   &__table {
     white-space: nowrap;
     font: normal 400 14px/40px $typeface-page-text;

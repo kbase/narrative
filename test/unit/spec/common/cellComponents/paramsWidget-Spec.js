@@ -5,7 +5,7 @@ define([
     'common/runtime',
     'common/props',
     'common/spec',
-    'json!../../../../data/testAppObj.json',
+    '/test/data/testAppObj',
 ], ($, Jupyter, ParamsWidget, Runtime, Props, Spec, TestAppObject) => {
     'use strict';
 
@@ -97,7 +97,7 @@ define([
 
         it('should render with advanced parameters hidden', () => {
             //get all advanced params using the spec
-            let advancedParams = [];
+            const advancedParams = [];
             for (const [, entry] of Object.entries(parameters.specs)) {
                 if (entry.ui.advanced) {
                     advancedParams.push(entry.id);

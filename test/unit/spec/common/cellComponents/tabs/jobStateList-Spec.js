@@ -1,9 +1,8 @@
 define([
     'common/cellComponents/tabs/jobStatus/jobStateList',
     'common/props',
-    '/test/data/jobsData',
     '/test/data/testAppObj',
-], (jobStateList, Props, JobsData, TestAppObject) => {
+], (jobStateList, Props, TestAppObject) => {
     'use strict';
 
     let cssBaseClass;
@@ -93,7 +92,9 @@ define([
         });
 
         it('should generate a row for each job', () => {
-            expect(node.querySelectorAll('.kb-job-status__row').length).toEqual(JobsData.allJobs.length);
+            expect(node.querySelectorAll(`.${cssBaseClass}__row`).length).toEqual(
+                TestAppObject.exec.jobState.child_jobs.length
+            );
         });
     });
 });

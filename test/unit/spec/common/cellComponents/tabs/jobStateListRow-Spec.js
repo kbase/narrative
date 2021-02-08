@@ -1,9 +1,9 @@
 define([
     'common/cellComponents/tabs/jobStatus/jobStateListRow',
     'common/props',
-    '/test/data/jobsData',
     '/test/data/testAppObj',
-], (jobStateListRow, Props, JobsData, TestAppObject) => {
+    '/test/data/jobsData',
+], (jobStateListRow, Props, TestAppObject, JobsData) => {
     'use strict';
 
     const model = Props.make({
@@ -18,7 +18,7 @@ define([
         });
     }
 
-   const customMatchers = {
+    const customMatchers = {
         toHaveRowStructure: function () {
             return {
                 compare: function (...args) {
@@ -121,34 +121,44 @@ define([
             jobStateListRowInstance = createInstance();
         });
         const invalidArgs = [
+            null,
+            undefined,
+            'a string',
+            ['jobState'],
             {},
             {
-                job: {},
+                jobState: {},
             },
             {
                 name: {},
                 node: {},
             },
             {
-                name: 'this',
-                node: 'that',
-                job: undefined,
+                name: null,
+                node: undefined,
+                jobState: { this: 'that' },
             },
         ];
         invalidArgs.forEach((args) => {
-            it('will throw an error with incorrect args', () => {
-                expectAsync(jobStateListRowInstance.start(args)).toBeRejectedWithError(
+            it('will throw an error with invalid args ' + JSON.stringify(args), async () => {
+                await expectAsync(jobStateListRowInstance.start(args)).toBeRejectedWithError(
                     Error,
-                    /JobStateListRow cannot start: start argument must have the following keys:/
+                    /invalid arguments supplied/
                 );
             });
         });
 
         JobsData.invalidJobs.forEach((invalidJob) => {
-            it('will throw an error with an invalid job', () => {
-                expectAsync(jobStateListRowInstance.start(invalidJob)).toBeRejectedWithError(
+            it('will throw an error with an invalid job', async () => {
+                await expectAsync(
+                    jobStateListRowInstance.start({
+                        jobState: invalidJob,
+                        name: 'whatever',
+                        node: 'wherever',
+                    })
+                ).toBeRejectedWithError(
                     Error,
-                    /JobStateListRow cannot start: invalid job object supplied/
+                    invalidJob ? /invalid job object supplied/ : /invalid arguments supplied/
                 );
             });
         });
@@ -158,23 +168,20 @@ define([
         beforeEach(() => {
             jasmine.addMatchers(customMatchers);
         });
-        describe('the job state list row instance', () => {
-            describe('creates initial structure and content', () => {
-                const row = document.createElement('tr');
-                const jobStateListRowInstance = createInstance();
-                jobStateListRowInstance
-                    .start({
-                        node: row,
-                        job: job,
-                        name: 'testObject',
-                    })
-                    .then(() => {
-                        it('should have row structure', () => {
-                            expect(row).toHaveRowStructure({ job: job });
-                        });
+        describe('the job state list row instance creates initial structure and content', () => {
+            const row = document.createElement('tr');
+            const jobStateListRowInstance = createInstance();
+            jobStateListRowInstance
+                .start({
+                    node: row,
+                    jobState: job,
+                    name: 'testObject',
+                })
+                .then(() => {
+                    it('should have row structure', () => {
+                        expect(row).toHaveRowStructure({ job: job });
                     });
-            });
-
-        })
+                });
+        });
     });
 });

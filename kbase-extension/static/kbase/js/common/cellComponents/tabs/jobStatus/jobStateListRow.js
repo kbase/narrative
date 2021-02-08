@@ -146,22 +146,27 @@ define([
         /**
          * Start the job status row widget
          * @param {object} args, with keys
-         *      node: the node to insert the row into (will presumably be a `tr` element)
-         *      job:  a job state object for the job to be represented
+         *      jobState:  a job state object for the job to be represented
          *      name: the value of the input parameter(s) for the job
+         *      node: the node to insert the row into (will presumably be a `tr` element)
          */
         function start(args) {
             return Promise.try(() => {
-                const requiredArgs = ['job', 'name', 'node'];
-                if (!requiredArgs.every((arg) => arg in args && args[arg])) {
+                const requiredArgs = ['jobState', 'name', 'node'];
+                if (
+                    Object.prototype.toString.call(args) !== '[object Object]' ||
+                    !requiredArgs.every((arg) => arg in args && args[arg])
+                ) {
                     throw new Error(
-                        'JobStateListRow cannot start: start argument must have the following keys: ' +
-                            requiredArgs.join(', ')
+                        'invalid arguments supplied' +
+                            '\n\n' +
+                            'you supplied ' +
+                            JSON.stringify(args)
                     );
                 }
 
-                if (!Jobs.isValidJobStateObject(args.job)) {
-                    throw new Error('JobStateListRow cannot start: invalid job object supplied');
+                if (!Jobs.isValidJobStateObject(args.jobState)) {
+                    throw new Error('invalid job object supplied');
                 }
                 container = args.node;
                 ui = UI.make({ node: container });
@@ -170,8 +175,8 @@ define([
                     selectRow(e);
                     showHideChildRow(e);
                 };
-                jobId = args.job.job_id;
-                _updateRowStatus(args.job);
+                jobId = args.jobState.job_id;
+                _updateRowStatus(args.jobState);
             }).catch((err) => {
                 throw new Error(`Unable to start Job State List Row widget: ${err}`);
             });

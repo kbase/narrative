@@ -22,7 +22,7 @@ define([
     function createTable() {
         return table(
             {
-                class: `${cssBaseClass}__table container`,
+                class: `${cssBaseClass}__table`,
             },
             [
                 thead(
@@ -184,11 +184,13 @@ define([
 
         function createJobStateListRowWidget(jobState, jobIndex) {
             widgetsById[jobState.job_id] = JobStateListRow.make();
-            widgetsById[jobState.job_id].start({
-                node: createTableRow(tableBody, jobIndex),
-                job: jobState,
-                // this will be replaced once the job-info call runs
-                name: jobState.description || 'Child Job ' + (jobIndex + 1),
+            return Promise.try(() => {
+                widgetsById[jobState.job_id].start({
+                    node: createTableRow(tableBody, jobIndex),
+                    jobState: jobState,
+                    // this will be replaced once the job-info call runs
+                    name: jobState.description || 'Child Job ' + (jobIndex + 1),
+                });
             });
         }
 
@@ -207,9 +209,11 @@ define([
                 const jobState = Jobs.updateJobModel(args.jobState);
 
                 return Promise.try(() => {
-                    jobState.child_jobs.forEach((childJob, index) => {
-                        createJobStateListRowWidget(childJob, index);
-                    });
+                    return Promise.all(
+                        jobState.child_jobs.map((childJob, index) => {
+                            createJobStateListRowWidget(childJob, index);
+                        })
+                    );
                 }).then(() => {
                     renderTable($container, jobState.child_jobs.length);
 

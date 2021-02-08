@@ -3,7 +3,7 @@ define([
     'common/cellComponents/tabs/jobStatus/jobStateList',
     'common/props',
     '/test/data/testAppObj',
-], (jobStatusTab, jobStateList, Props, TestAppObject) => {
+], (jobStatusTab, JobStateList, Props, TestAppObject) => {
     'use strict';
 
     const model = Props.make({
@@ -49,7 +49,7 @@ define([
 
         it('should start the job status tab widget', async () => {
             expect(node.classList.length).toBe(0);
-            spyOn(jobStateList, 'make').and.callThrough();
+            spyOn(JobStateList, 'make').and.callThrough();
             await jobStatusTabInstance.start({ node: node });
 
             expect(node).toHaveClass(jobTabContainerClass);
@@ -59,16 +59,16 @@ define([
             expect(firstChild).toHaveClass('kb-job__container');
             expect(firstChild.getAttribute('data-element')).toEqual('kb-job-list-wrapper');
 
-            expect(jobStateList.make).toHaveBeenCalled();
+            expect(JobStateList.make).toHaveBeenCalled();
         });
 
         it('should stop when requested to', async () => {
             expect(node.classList.length).toBe(0);
-            spyOn(jobStateList, 'make').and.callThrough();
+            spyOn(JobStateList, 'make').and.callThrough();
 
             await jobStatusTabInstance.start({ node: node });
             expect(node).toHaveClass(jobTabContainerClass);
-            expect(jobStateList.make).toHaveBeenCalled();
+            expect(JobStateList.make).toHaveBeenCalled();
 
             await jobStatusTabInstance.stop();
             // TODO: add in some sort of test here

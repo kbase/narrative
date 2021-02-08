@@ -2,9 +2,7 @@ module.exports = function(grunt) {
     // Project configuration
     'use strict';
     grunt.loadNpmTasks('grunt-contrib-requirejs');
-    grunt.loadNpmTasks('grunt-filerev');
     grunt.loadNpmTasks('grunt-regex-replace');
-    grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-coveralls');
     grunt.loadNpmTasks('grunt-jasmine-nodejs');
     grunt.loadNpmTasks('grunt-contrib-uglify-es');
@@ -90,27 +88,6 @@ module.exports = function(grunt) {
             }
         },
 
-        // Testing with Karma!
-        karma: {
-            unit: {
-                configFile: 'test/unit/karma.conf.js',
-            },
-            dev: {
-                // to do - add watch here
-                configFile: 'test/unit/karma.conf.js',
-                reporters: ['progress', 'coverage'],
-                coverageReporter: {
-                    dir: 'build/test-coverage/',
-                    reporters: [
-                        { type: 'html', subdir: 'html' },
-                    ],
-                },
-
-                autoWatch: true,
-                singleRun: false,
-            }
-        },
-
         jasmine_nodejs: {
             // task specific (default) options
             options: {
@@ -169,29 +146,11 @@ module.exports = function(grunt) {
 
     grunt.registerTask('build', [
         'requirejs',
-        'filerev',
         'regex-replace'
-    ]);
-
-    grunt.registerTask('test', [
-        'karma:unit'
-    ]);
-
-    // Does a single unit test run, then sends
-    // the lcov results to coveralls. Intended for running
-    // from travis-ci.
-    grunt.registerTask('test-travis', [
-        'karma:unit',
-        'coveralls'
     ]);
 
     // node (instead of karma) based jasmine tasks
     grunt.registerTask('test-browser', [
         'jasmine_nodejs'
-    ]);
-    // Does an ongoing test run in a watching development
-    // mode.
-    grunt.registerTask('develop', [
-        'karma:dev'
     ]);
 };

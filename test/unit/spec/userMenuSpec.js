@@ -3,8 +3,9 @@
 define([
     'jquery',
     'userMenu',
-    'narrativeConfig'
-], ($, UserMenu, Config) => {
+    'narrativeConfig',
+    'narrativeMocks'
+], ($, UserMenu, Config, Mocks) => {
     'use strict';
 
     const TEST_TOKEN = 'fake_token',
@@ -15,22 +16,16 @@ define([
     describe('Test the UserMenu module', () => {
         beforeEach(() => {
             jasmine.Ajax.install();
-            jasmine.Ajax.stubRequest(Config.url('user_profile'))
-                .andReturn({
-                    status: 200,
-                    contentType: 'application/json',
-                    responseText: JSON.stringify({
-                        version: '1.1',
-                        id: '12345',
-                        result: [[{
-                            profile: {
-                                userdata: {
-                                    gravatarDefault: 'identicon'
-                                }
-                            }
-                        }]]
-                    })
-                });
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('user_profile'),
+                response: [{
+                    profile: {
+                        userdata: {
+                            gravatarDefault: 'identicon'
+                        }
+                    }
+                }]
+            });
         });
 
         afterEach(() => {
@@ -84,18 +79,18 @@ define([
             });
             return userMenu.start()
                 .then(() => {
-                    expect(document.querySelector('.modal')).toBeNull();
+                    expect(document.querySelector('.modal [data-element="signout-warning-body"]')).toBeNull();
                     jasmine.clock().install();
                     // click the signout button
                     $elem.find('#signout-button').click();
                     jasmine.clock().tick(2000);
                     // expect to see the modal appear now
-                    expect(document.querySelector('.modal')).not.toBeNull();
+                    expect(document.querySelector('.modal [data-element="signout-warning-body"]')).not.toBeNull();
                     // click the cancel button (it has the default button style)
-                    document.querySelector('.modal-dialog .btn.btn-default').click();
+                    document.querySelector('a[data-element="cancel-signout"]').click();
                     jasmine.clock().tick(2000);
                     // expect the modal to go away
-                    expect(document.querySelector('.modal')).toBeNull();
+                    expect(document.querySelector('.modal [data-element="signout-warning-body"]')).toBeNull();
                     jasmine.clock().uninstall();
                 });
         });

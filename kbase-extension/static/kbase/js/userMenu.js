@@ -101,18 +101,29 @@ define([
         }
 
         function logout() {
-            const logoutBtn = $(a({type: 'button', class: 'btn btn-primary'}, ['Sign Out']))
+            const logoutBtn = $(a({
+                type: 'button',
+                class: 'btn btn-primary',
+                dataElement: 'signout'
+            }, ['Sign Out']))
                 .click(() => {
                     dialog.hide();
                     $(document).trigger('logout.kbase', true);
                 });
-            const cancelBtn = $(a({type: 'button', class: 'btn btn-default'}, ['Cancel']))
+            const cancelBtn = $(a({
+                type: 'button',
+                class: 'btn btn-default',
+                dataElement: 'cancel-signout'
+            }, ['Cancel']))
                 .click(() => {
                     dialog.hide();
                 });
             const dialog = new BootstrapDialog({
                 title: 'Sign Out?',
-                body: 'Sign out of KBase? This will end your session. Any unsaved changes in any open Narrative will be lost.',
+                body: div(
+                    { dataElement: 'signout-warning-body' },
+                    'Sign out of KBase? This will end your session. Any unsaved changes in any open Narrative will be lost.'
+                ),
                 buttons: [cancelBtn, logoutBtn]
             });
             dialog.onHidden(() => dialog.destroy());

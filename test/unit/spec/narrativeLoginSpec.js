@@ -2,56 +2,27 @@
 define ([
     'jquery',
     'narrativeLogin',
-    'narrativeConfig'
+    'narrativeConfig',
+    'narrativeMocks'
 ], (
     $,
     Login,
-    Config
+    Config,
+    Mocks
 ) => {
     'use strict';
 
-    const cookieKeys = ['kbase_session'],
-        FAKE_TOKEN = 'some_fake_token';
-
-    function setToken(token) {
-        cookieKeys.forEach((key) => {
-            document.cookie = `${key}=${token}`;
-        });
-    }
-
-    function clearToken() {
-        cookieKeys.forEach((key) => {
-            document.cookie = `${key}=`;
-        });
-    }
-
-    /**
-     * A simple auth request mocker. This takes a path to the auth REST service,
-     * a response to return, and the status code, and builds a mock that satisfies
-     * all of that.
-     * @param {string} request the path request
-     * @param {object} responseObj the response to send
-     * @param {int} status the status code to return
-     */
-    function mockAuthRequest(request, responseObj, status) {
-        let reqUrl = `${Config.url('auth')}/api/V2/${request}`;
-        jasmine.Ajax.stubRequest(reqUrl)
-            .andReturn({
-                status: status,
-                contentType: 'application/json',
-                responseText: JSON.stringify(responseObj)
-            });
-    }
+    const FAKE_TOKEN = 'some_fake_token';
 
     describe('Test the kbaseNarrative module', () => {
         beforeEach(() => {
-            setToken(FAKE_TOKEN);
+            Mocks.setAuthToken(FAKE_TOKEN);
             jasmine.Ajax.install();
         });
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
-            clearToken();
+            Mocks.clearAuthToken();
         });
 
         it('Should instantiate and have expected functions', () => {
@@ -88,22 +59,15 @@ define ([
                 };
             // these should capture the happy path calls that Login.init should make
             // copying some boilerplate from specs/api/authSpec
-            // TODO: move boilerplate to a mocks module
 
-            mockAuthRequest('token', tokenInfo, 200);
-            mockAuthRequest('me', profileInfo, 200);
+            Mocks.mockAuthRequest('token', tokenInfo, 200);
+            Mocks.mockAuthRequest('me', profileInfo, 200);
             // a null user profile response is enough to start the dummy UserMenu
             // required here.
-            jasmine.Ajax.stubRequest(Config.url('user_profile'))
-                .andReturn({
-                    status: 200,
-                    contentType: 'application/json',
-                    responseText: JSON.stringify({
-                        version: '1.1',
-                        id: '12345',
-                        result: [{}]
-                    })
-                });
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('user_profile'),
+                response: [{}]
+            });
             return Login.init($node, true)  // true here means there's no kernel
                 .then(() => {
                     const request = jasmine.Ajax.requests.mostRecent();
@@ -118,8 +82,8 @@ define ([
 
         it('Should throw an error when instantiating with a bad token', () => {
             const $node = $('<div>');
-            mockAuthRequest('token', {error: {}}, 401);
-            mockAuthRequest('me', {error: {}}, 401);
+            Mocks.mockAuthRequest('token', {error: {}}, 401);
+            Mocks.mockAuthRequest('me', {error: {}}, 401);
             return Login.init($node, true)  // true here means there's no kernel
                 .then(() => {
                     const request = jasmine.Ajax.requests.mostRecent();

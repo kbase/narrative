@@ -46,6 +46,7 @@ module.exports = function (config) {
             {pattern: 'test/*.tok', included: false, served: true, nocache: true},
             {pattern: 'test/data/**/*', included: false, served: true},
             'test/unit/testUtil.js',
+            'test/unit/mocks.js',
             'test/unit/test-main.js'
         ],
         exclude: [

@@ -173,7 +173,7 @@ define('narrativeMocks', [
      * be sure to have a mock for that endpoint as well.
      *
      * This should be used whenever a dynamic service call is to be mocked.
-     * @param {object} options
+     * @param {object} args
      *  - module - the module to mock. This should be its registered name.
      *  - url - the fake url to return. Stub requests to this, too!
      *  - statusCode - optional, default 200 - the HTTP status to return. Set to something in the
@@ -181,20 +181,20 @@ define('narrativeMocks', [
      *  - statusText - optional, default 'OK' - a status text to return, if you're changing the
      *      mocked status from 200, this should get changed, too.
      */
-    function mockServiceWizardLookup(options) {
+    function mockServiceWizardLookup(args) {
         const wizardResponse = {
             git_commit_hash: 'fake_commit_hash',
             hash: 'another_fake_hash',
             health: 'healthy',
-            module_name: options.module,
-            url: options.url
+            module_name: args.module,
+            url: args.url
         };
 
         mockJsonRpc1Call({
             url: Config.url('service_wizard'),
-            body: options.module,
-            statusCode: options.statusCode || 200,
-            statusText: options.statusText || 'HTTP/1.1 200 OK',
+            body: new RegExp(args.module),
+            statusCode: args.statusCode || 200,
+            statusText: args.statusText || 'HTTP/1.1 200 OK',
             response: wizardResponse
         });
     }

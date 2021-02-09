@@ -1,4 +1,3 @@
-/*global define*/
 /*jslint white:true,browser:true*/
 /**
  * Usage:

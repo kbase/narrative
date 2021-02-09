@@ -6,14 +6,12 @@
 define([
     'jquery',
     'kbaseNarrativeDownloadPanel',
-    'testUtil',
     'common/runtime',
     'base/js/namespace',
     'kbaseNarrative'
 ], (
     $,
     kbaseNarrativeDownloadPanel,
-    TestUtil,
     Runtime,
     Jupyter,
     Narrative

@@ -1,20 +1,12 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
     'jquery',
     'GenomeCategorizer',
-    'testUtil',
-    'common/runtime',
     'base/js/namespace',
     'kbaseNarrative'
 ], (
     $,
     GenomeCategorizer,
-    TestUtil,
-    Runtime,
     Jupyter,
     Narrative
 ) => {

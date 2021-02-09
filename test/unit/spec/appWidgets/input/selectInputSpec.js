@@ -1,9 +1,7 @@
 define([
-    'testUtil',
     'common/runtime',
     'widgets/appWidgets2/input/selectInput'
 ], (
-    TestUtil,
     Runtime,
     SelectInput
 ) => {
@@ -43,6 +41,7 @@ define([
         };
     }
 
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Select Input tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();
@@ -51,6 +50,11 @@ define([
                 description: 'select input testing',
             });
             testConfig = buildTestConfig(required, defaultValue, bus);
+        });
+
+        afterEach(() => {
+            bus.stop();
+            window.kbaseRuntime = null;
         });
 
         it('Should load the widget', () => {

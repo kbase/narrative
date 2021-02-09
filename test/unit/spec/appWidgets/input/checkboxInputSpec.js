@@ -14,6 +14,7 @@ define([
 ) {
     'use strict';
 
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test checkbox data input widget', function() {
         let testConfig = {},
             runtime,
@@ -49,6 +50,11 @@ define([
             }
         });
 
+        afterEach(() => {
+            bus.stop();
+            window.kbaseRuntime = null;
+        });
+
         it('should be real!', function() {
             expect(CheckboxInput).not.toBeNull();
         });
@@ -59,10 +65,10 @@ define([
             expect(widget).toEqual(jasmine.any(Object));
         });
 
-        it('should start and stop properly without initial value', (done) => {
+        it('should start and stop properly without initial value', () => {
             let widget = CheckboxInput.make(testConfig);
             let node = document.createElement('div');
-            widget.start({node: node})
+            return widget.start({node: node})
                 .then(() => {
                     expect(node.childElementCount).toBeGreaterThan(0);
                     const input = node.querySelector('input[type="checkbox"]');
@@ -72,15 +78,14 @@ define([
                 })
                 .then(() => {
                     expect(node.childElementCount).toBe(0);
-                    done();
                 });
         });
 
-        it('should start and stop properly with initial value', (done) => {
+        it('should start and stop properly with initial value', () => {
             testConfig.initialValue = 1;
             let widget = CheckboxInput.make(testConfig);
             let node = document.createElement('div');
-            widget.start({node: node})
+            return widget.start({node: node})
                 .then(() => {
                     expect(node.childElementCount).toBeGreaterThan(0);
                     const input = node.querySelector('input[type="checkbox"]');
@@ -90,10 +95,8 @@ define([
                 })
                 .then(() => {
                     expect(node.childElementCount).toBe(0);
-                    done();
                 });
-
-        })
+        });
 
         it('should update model properly', (done) => {
             bus.on('changed', (value) => {

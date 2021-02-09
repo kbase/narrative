@@ -1,19 +1,13 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
     'jquery',
     'widgets/function_output/kbaseDefaultObjectView',
-    'testUtil',
     'common/runtime',
     'base/js/namespace',
     'kbaseNarrative'
 ], (
     $,
     KBaseDefaultObjectView,
-    TestUtil,
     Runtime,
     Jupyter,
     Narrative

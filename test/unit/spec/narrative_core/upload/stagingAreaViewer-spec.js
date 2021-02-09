@@ -1,15 +1,10 @@
-/*global define*/
-/*global describe, it, expect, spyOn*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
 /*jslint white: true*/
 
 define ([
     'jquery',
     'kbase/js/widgets/narrative_core/upload/stagingAreaViewer',
     'base/js/namespace',
-    'kbaseNarrative',
-    'testUtil'
+    'kbaseNarrative'
 ], (
     $,
     StagingAreaViewer,

@@ -8,12 +8,10 @@ define ([
     'bootstrap',
     'jquery',
     'util/timeFormat',
-    'testUtil'
 ], function(
-	bootstrap,
-	$,
-	TF,
-    TestUtil
+    bootstrap,
+    $,
+    TF,
 ) {
     'use strict';
     var testISOTime = '2015-12-09T21:58:22.202Z';

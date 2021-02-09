@@ -1,20 +1,12 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
     'jquery',
     'GenomeClassifierTrainingSet',
-    'testUtil',
-    'common/runtime',
     'base/js/namespace',
     'kbaseNarrative'
 ], (
     $,
     GenomeClassifierTrainingSet,
-    TestUtil,
-    Runtime,
     Jupyter,
     Narrative
 ) => {

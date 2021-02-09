@@ -10,6 +10,7 @@ define([
 ) {
     'use strict';
 
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test float data input widget', function() {
         let testConfig = {},
             runtime,
@@ -44,7 +45,8 @@ define([
 
         afterEach(() => {
             bus.stop();
-        })
+            window.kbaseRuntime = null;
+        });
 
         it('should be real!', function() {
             expect(FloatInput).not.toBeNull();

@@ -46,6 +46,7 @@ define([
         };
     }
 
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('New Object Input tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();
@@ -80,7 +81,9 @@ define([
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
-        })
+            bus.stop();
+            window.kbaseRuntime = null;
+        });
 
         it('Should load the widget', () => {
             expect(NewObjectInput).not.toBeNull();

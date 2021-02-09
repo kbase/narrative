@@ -1,9 +1,7 @@
 define([
-    'testUtil',
     'common/runtime',
     'widgets/appWidgets2/input/textInput'
 ], (
-    TestUtil,
     Runtime,
     TextInput
 ) => {
@@ -32,6 +30,7 @@ define([
         };
     }
 
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Text Input tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();
@@ -40,6 +39,11 @@ define([
                 description: 'text input testing',
             });
             testConfig = buildTestConfig(required, defaultValue, bus);
+        });
+
+        afterEach(() => {
+            bus.stop();
+            window.kbaseRuntime = null;
         });
 
         it('Should load the widget', () => {

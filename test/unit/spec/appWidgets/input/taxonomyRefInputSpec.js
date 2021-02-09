@@ -34,6 +34,7 @@ define([
         };
     }
 
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Taxonomy Ref Input tests', () => {
         let bus,
             testConfig,
@@ -108,6 +109,8 @@ define([
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
+            bus.stop();
+            window.kbaseRuntime = null;
         });
 
         it('Should exist', () => {

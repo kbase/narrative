@@ -3,18 +3,16 @@
 
 define([
     'jquery',
-    'bluebird',
     'narrativeConfig',
-    'kbase-client-api',
+    'kb_service/client/userProfile',
     'kb_common/gravatar',
     'kb_common/html',
     'util/bootstrapDialog',
     'util/string'
 ], function(
     $,
-    Promise,
     NarrativeConfig,
-    ClientAPI,
+    UserProfile,
     Gravatar,
     html,
     BootstrapDialog,
@@ -42,7 +40,7 @@ define([
             gravatarDefault = 'identicon';
 
         function start() {
-            return Promise.resolve(profileClient.get_user_profile([userName]))
+            return profileClient.get_user_profile([userName])
                 .then((profile) => {
                     if (profile.length &&
                         profile[0] &&
@@ -53,7 +51,7 @@ define([
                     }
                 })
                 .finally(() => {
-                    render();
+                    return render();
                 });
         }
 

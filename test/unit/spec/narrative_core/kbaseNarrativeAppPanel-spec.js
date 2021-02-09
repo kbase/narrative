@@ -328,7 +328,7 @@ define([
                 }
             });
 
-            spyOn(appPanel, 'spawnCatalogBrowser'); //.and.callThrough();
+            spyOn(appPanel, 'spawnCatalogBrowser');
             $panel.find('button.btn .fa-arrow-right').click();
             expect(appPanel.spawnCatalogBrowser).toHaveBeenCalled();
             $(document).off('loggedInQuery.kbase');

@@ -13,6 +13,16 @@ define([
         TEST_NAME = 'Test User',
         TEST_EMAIL = 'test_user@kbase.us';
 
+    function makeTestUserMenu($elem) {
+        return UserMenu.make({
+            target: $elem,
+            token: TEST_TOKEN,
+            userName: TEST_USER,
+            email: TEST_EMAIL,
+            displayName: TEST_NAME
+        });
+    }
+
     describe('Test the UserMenu module', () => {
         beforeEach(() => {
             jasmine.Ajax.install();
@@ -36,13 +46,7 @@ define([
             expect(UserMenu).toBeDefined();
             expect(UserMenu.make).toBeDefined();
             const $elem = $('<div>');
-            const userMenu = UserMenu.make({
-                target: $elem,
-                token: TEST_TOKEN,
-                userName: TEST_USER,
-                email: TEST_EMAIL,
-                displayName: TEST_NAME
-            });
+            const userMenu = makeTestUserMenu($elem);
             ['start', 'render', 'logout'].forEach(fn => {
                 expect(userMenu[fn]).toBeDefined();
             });
@@ -50,13 +54,7 @@ define([
 
         it('Should start and create a menu in the target node with an empty user profile', () => {
             const $elem = $('<div>');
-            const userMenu = UserMenu.make({
-                target: $elem,
-                token: TEST_TOKEN,
-                userName: TEST_USER,
-                email: TEST_EMAIL,
-                displayName: TEST_NAME
-            });
+            const userMenu = makeTestUserMenu($elem);
             return userMenu.start()
                 .then(() => {
                     expect($elem.find('.login-button-avatar')).toBeDefined();
@@ -70,13 +68,7 @@ define([
 
         it('Should trigger a logout popup when clicking the logout button', () => {
             const $elem = $('<div>');
-            const userMenu = UserMenu.make({
-                target: $elem,
-                token: TEST_TOKEN,
-                userName: TEST_USER,
-                email: TEST_EMAIL,
-                displayName: TEST_NAME
-            });
+            const userMenu = makeTestUserMenu($elem);
             return userMenu.start()
                 .then(() => {
                     expect(document.querySelector('.modal [data-element="signout-warning-body"]')).toBeNull();

@@ -126,7 +126,7 @@ define([
             expect(mockAppCell.detach).toBeDefined();
         });
 
-        it('has a method "init" which returns a promise then null', async () => {
+        it('has a method "init" which returns a promise then null', () => {
             var initPromise = mockAppCell.init();
             expect(initPromise instanceof Promise).toBeTrue();
         });

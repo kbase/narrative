@@ -1,22 +1,35 @@
-/*global define*/
 /*jslint white: true*/
 
 define([
     'jquery',
     'underscore',
     'narrativeConfig',
-    'bluebird',
-
-    'kbwidget',
-    'bootstrap',
-    'kbase-client-api'
-], function(
+    'kb_service/client/narrativeMethodStore'
+], (
     $,
     _,
     Config,
-    Promise
-) {
+    NarrativeMethodStore
+) => {
     'use strict';
+
+    // this is the cached promise about the viewer info
+    let viewerInfoCache;
+    let lastViewerCache = 0; // age in ms since epoch
+    const VIEWER_CACHE_MAX = 5 * 60 * 1000; // 5 min in ms
+
+    /**
+     * returns the cached data viewer promise if needed.
+     * If it's old (> 5 minutes), it makes and returns a new one.
+     * @returns {Promise} a promise that resolves into viewer info, see loadViewerInfo.
+     */
+    function getViewerInfo() {
+        if (!viewerInfoCache || Date.now() - lastViewerCache > VIEWER_CACHE_MAX) {
+            viewerInfoCache = loadViewerInfo();
+            lastViewerCache = Date.now();
+        }
+        return viewerInfoCache;
+    }
 
     /**
      * Returns a Promise that, when resolved, will yield an object with 5 fields:
@@ -41,30 +54,28 @@ define([
      * would dump out the object with the five keys outlined above.
      */
     function loadViewerInfo() {
-        var viewers = {};
-        var landingPageUrls = {};
-        var typeNames = {};
-        var methodIds = [];
+        const viewers = {};
+        const landingPageUrls = {};
+        const typeNames = {};
+        let methodIds = [];
 
-        // TODO: FIX: global reference to NarrativeMethodStore
-        var methodStoreClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
-
-        return Promise.resolve(methodStoreClient.list_categories({
+        const methodStoreClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
+        return methodStoreClient.list_categories({
             load_methods: 1,
             load_apps: 0,
             load_types: 1
-        })).then(function(data) {
-            var methodInfo = data[1];
-            var allTypes = data[3];
+        }).then((data) => {
+            const methodInfo = data[1];
+            const allTypes = data[3];
 
-            _.each(allTypes, function(val, key) {
+            _.each(allTypes, (val, key) => {
                 // If there's an error, whine.
                 if (val.loading_error) {
                     console.error('Error loading method [' + key + ']: ' + val.loading_error);
                 }
-                // If it has at least one method id, make sure its there.
+                // If it has at least one method id, make sure it's there.
                 else if (val.view_method_ids && val.view_method_ids.length > 0) {
-                    var methodId = val.view_method_ids[0];
+                    const methodId = val.view_method_ids[0];
                     if (!methodInfo[methodId]) {
                         console.warn('Can\'t find method info for id: ' + methodId);
                     } else if (methodInfo[methodId].loading_error) {
@@ -79,9 +90,9 @@ define([
             });
 
             methodIds = _.uniq(methodIds);
-            return Promise.resolve(methodStoreClient.get_method_spec({ ids: methodIds }));
-        }).then(function(specs) {
-            _.each(specs, function(val, key) {
+            return methodStoreClient.get_method_spec({ ids: methodIds });
+        }).then((specs) => {
+            _.each(specs, (val) => {
                 specs[val.info.id] = val;
             });
             return {
@@ -96,7 +107,8 @@ define([
 
     /**
      * Builds a viewer widget.
-     * Returns a promise that builds <div> with the widget attached to it, if possible, and the title of that widget.
+     * Returns a promise that builds <div> with the widget attached to it, if possible,
+     * and the title of that widget.
      *
      * usage:
      * createViewer(dataCell).then(function(result) {
@@ -105,8 +117,8 @@ define([
      *
      */
     function createViewer(dataCell) {
-        var getParamValue = function(o, mapping) {
-            var param = null;
+        const getParamValue = function(o, mapping) {
+            let param = null;
 
             if (mapping.input_parameter) {
                 param = o.name;
@@ -126,7 +138,7 @@ define([
             return param;
         };
 
-        var transformParam = function(o, mapping, param) {
+        const transformParam = function(o, mapping, param) {
             if (mapping.target_type_transform) {
                 switch (mapping.target_type_transform) {
                     case 'list':
@@ -142,7 +154,7 @@ define([
             return param;
         };
 
-        return loadViewerInfo().then(function(viewerInfo) {
+        return getViewerInfo().then((viewerInfo) => {
 
             var o = dataCell.obj_info;
             var methodId = viewerInfo.viewers[o.bare_type];
@@ -152,7 +164,7 @@ define([
             }
             var spec = viewerInfo.specs[methodId];
             var output = { '_obj_info': o };
-            _.each(spec.behavior.output_mapping, function(mapping) {
+            _.each(spec.behavior.output_mapping, (mapping) => {
                 // Get parameter value
                 var param = getParamValue(o, mapping);
                 if (param === null) {
@@ -176,11 +188,11 @@ define([
 
             output.widgetTitle = viewerInfo.typeNames[o.bare_type] || 'Unknown Data Type'; //spec.info.name;
             output.landing_page_url_prefix = viewerInfo.landingPageUrls[o.bare_type];
-            var outputWidget = spec.widgets.output;
-            var w = null;
+            const outputWidget = spec.widgets.output;
+            let w = null;
             // XXX: Temporary until all widgets are loaded with Require.
             // First, try to load it from global space.
-            var $elem = $('<div>');
+            let $elem = $('<div>');
 
             try {
                 w = $elem[outputWidget](output);
@@ -188,10 +200,10 @@ define([
             // If that fails, try to load with require.
             // If THAT fails, fail with an error (though the error should be improved)
             catch (err) {
-                require([outputWidget], function(W) {
+                require([outputWidget], (W) => {
                     w = new W($elem, output);
                     return w;
-                }, function(reqErr) {
+                }, (reqErr) => {
                     console.error('errors occurred while making widget: ' + outputWidget, { 'firstTry': err, 'requireErr': reqErr });
                     $elem = defaultViewer(dataCell);
                     output.widgetTitle = 'Unknown Data Type';
@@ -217,7 +229,7 @@ define([
             mdDesc += 'No metadata';
         } else {
             mdDesc += 'Metadata';
-            _.each(_.pairs(o.meta), function(p) {
+            _.each(_.pairs(o.meta), (p) => {
                 mdDesc += '\n' + p[0] + ': ' + p[1];
             });
         }
@@ -225,7 +237,7 @@ define([
     }
 
     return {
-        viewerInfo: loadViewerInfo(),
+        getViewerInfo: getViewerInfo,
         createViewer: createViewer,
         defaultViewer: defaultViewer
     };

@@ -1,6 +1,5 @@
 /*global define*/
 /*jslint white: true*/
-/*global Catalog*/
 /**
  * A widget that contains functions and function information for the Narrative.
  * When initialized, it uses a loading gif while waiting for functions to load
@@ -30,10 +29,9 @@ define([
     'common/runtime',
     'kb_common/jsonRpc/dynamicServiceClient',
     'kbaseNarrative',
-    'catalog-client-api',
     'kbase-client-api',
     'bootstrap'
-], function(
+], (
     KBWidget,
     $,
     Promise,
@@ -53,7 +51,7 @@ define([
     kbaseAppCard,
     Runtime,
     DynamicServiceClient
-) {
+) => {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeAppPanel',
@@ -64,7 +62,6 @@ define([
             autopopulate: true,
             title: 'Apps',
             methodStoreURL: Config.url('narrative_method_store'),
-            catalogURL: Config.url('catalog'),
             moduleLink: '/#catalog/modules/',
             methodHelpLink: '/#appcatalog/app/',
             appHelpLink: '/#appcatalog/app/l.a/'
@@ -351,32 +348,33 @@ define([
                     }
                 })
                 .append('<span class="fa fa-arrow-right"></span>')
-                .click(function() {
-                    // only load the appCatalog on click
-                    if (!this.appCatalog) {
-                        this.appCatalog = new KBaseCatalogBrowser(
-                            this.$appCatalogBody, {
-                                ignoreCategories: this.ignoreCategories,
-                                tag: this.currentTag
-                            }
-                        );
-                    }
-
-                    this.$slideoutBtn.tooltip('hide');
-                    this.trigger('hideGalleryPanelOverlay.Narrative');
-                    this.trigger('toggleSidePanelOverlay.Narrative', this.$appCatalogContainer);
-                    // Need to rerender (not refresh data) because in some states, the catalog browser looks to see
-                    // if things are hidden or not. When this panel is hidden, then refreshed, all sections will
-                    // think they have no content and nothing will display.
-                    this.appCatalog.rerender();
-                }.bind(this));
+                .click(() => this.spawnCatalogBrowser());
 
             this.addButton(this.$slideoutBtn);
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-            this.catalog = new Catalog(this.options.catalogURL, {token: Runtime.make().authToken()});
             this.refreshFromService();
             return this;
+        },
+
+        spawnCatalogBrowser: function () {
+            // only load the appCatalog on click
+            if (!this.appCatalog) {
+                this.appCatalog = new KBaseCatalogBrowser(
+                    this.$appCatalogBody, {
+                        ignoreCategories: this.ignoreCategories,
+                        tag: this.currentTag
+                    }
+                );
+            }
+
+            this.$slideoutBtn.tooltip('hide');
+            this.trigger('hideGalleryPanelOverlay.Narrative');
+            this.trigger('toggleSidePanelOverlay.Narrative', this.$appCatalogContainer);
+            // Need to rerender (not refresh data) because in some states, the catalog browser looks to see
+            // if things are hidden or not. When this panel is hidden, then refreshed, all sections will
+            // think they have no content and nothing will display.
+            this.appCatalog.rerender();
         },
 
         detach: function () {

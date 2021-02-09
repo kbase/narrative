@@ -11,10 +11,12 @@
 
 define('narrativeMocks', [
     'jquery',
-    'uuid'
+    'uuid',
+    'narrativeConfig'
 ], (
     $,
-    UUID
+    UUID,
+    Config
 ) => {
     'use strict';
     /**
@@ -164,9 +166,118 @@ define('narrativeMocks', [
         return mockNotebook;
     }
 
+    /**
+     * Uses jasmine.Ajax to mock a request to the service wizard. It will return
+     * the proper dynamic service URL that will be requested. If it's to be mocked,
+     * be sure to have a mock for that endpoint as well.
+     *
+     * This should be used whenever a dynamic service call is to be mocked.
+     * @param {object} args
+     *  - module - the module to mock. This should be its registered name.
+     *  - url - the fake url to return. Stub requests to this, too!
+     *  - statusCode - optional, default 200 - the HTTP status to return. Set to something in the
+     *      500 range to mock an error.
+     *  - statusText - optional, default 'OK' - a status text to return, if you're changing the
+     *      mocked status from 200, this should get changed, too.
+     */
+    function mockServiceWizardLookup(args) {
+        const wizardResponse = {
+            git_commit_hash: 'fake_commit_hash',
+            hash: 'another_fake_hash',
+            health: 'healthy',
+            module_name: args.module,
+            url: args.url
+        };
+
+        mockJsonRpc1Call({
+            url: Config.url('service_wizard'),
+            body: new RegExp(args.module),
+            statusCode: args.statusCode || 200,
+            statusText: args.statusText || 'HTTP/1.1 200 OK',
+            response: wizardResponse
+        });
+    }
+
+    /**
+     * Mocks a KBase-style JSON-RPC 1.1 request. Can use like this for a simple happy response:
+     * mockJsonRpc1Call({
+     *  url: Config.url('workspace'),
+     *  body: 'get_objects2',
+     *  response: { data: [{data: {some block of expected workspace data}}]}
+     * });
+     * Or like this for a fail response:
+     * mockJsonRpc1Call({
+     *  url: Config.url('workspace'),
+     *  body: 'get_objects2',
+     *  statusCode: 500,
+     *  statusText: 'http/1.1 500 Internal Service Error',
+     *  response: {error: 'something bad happened'}
+     * })
+     * @param {object} args
+     * - url - the url endpoint to mock
+     * - body - optional, default = empty string
+     *   something from the body to identify the request, either a string or regex. For a KBase
+     *   service call, this can be a function method
+     * -
+     */
+    function mockJsonRpc1Call(args) {
+        const requestBody = args.body || '';
+        const jsonRpcResponse = {
+            version: '1.1',
+            id: '12345',
+            result: [args.response]
+        };
+        const serviceResponse = {
+            status: args.statusCode || 200,
+            statusText: args.statusText || 'HTTP/1.1 200 OK',
+            contentType: 'application/json',
+            responseText: JSON.stringify(jsonRpcResponse)
+        };
+        jasmine.Ajax.stubRequest(args.url, requestBody)
+            .andReturn(serviceResponse);
+    }
+
+    /**
+     * A simple auth request mocker. This takes a path to the auth REST service,
+     * a response to return, and the status code, and builds a mock that satisfies
+     * all of that.
+     * @param {string} request the path request
+     * @param {object} responseObj the response to send
+     * @param {int} status the status code to return
+     */
+    function mockAuthRequest(request, responseObj, status) {
+        let reqUrl = `${Config.url('auth')}/api/V2/${request}`;
+        jasmine.Ajax.stubRequest(reqUrl)
+            .andReturn({
+                status: status,
+                contentType: 'application/json',
+                responseText: JSON.stringify(responseObj)
+            });
+    }
+
+    const cookieKeys = ['kbase_session'];
+
+    function setAuthToken(token) {
+        cookieKeys.forEach((key) => {
+            document.cookie = `${key}=${token}`;
+        });
+    }
+
+    function clearAuthToken() {
+        cookieKeys.forEach((key) => {
+            document.cookie = `${key}=`;
+        });
+    }
+
+
     return {
         buildMockCell: buildMockCell,
-        buildMockNotebook: buildMockNotebook
+        buildMockNotebook: buildMockNotebook,
+        mockServiceWizardLookup: mockServiceWizardLookup,
+        mockJsonRpc1Call: mockJsonRpc1Call,
+        mockAuthRequest: mockAuthRequest,
+        setAuthToken: setAuthToken,
+        clearAuthToken: clearAuthToken
     };
 
 });

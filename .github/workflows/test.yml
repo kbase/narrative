@@ -45,6 +45,12 @@ jobs:
       shell: bash -l {0}
       run: make test-frontend-unit
 
+    - name: make test output available as artefact in case of failure
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: karma-result.json
+
     - name: Run Narrative Frontend Integration Tests
       shell: bash -l {0}
       env:

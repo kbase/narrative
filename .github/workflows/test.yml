@@ -50,6 +50,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: karma-result.json
+        path: karma-result.json
 
     - name: Run Narrative Frontend Integration Tests
       shell: bash -l {0}

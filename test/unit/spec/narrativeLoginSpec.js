@@ -14,7 +14,7 @@ define ([
 
     const FAKE_TOKEN = 'some_fake_token';
 
-    describe('Test the kbaseNarrative module', () => {
+    describe('Test the narrativeLogin module', () => {
         beforeEach(() => {
             Mocks.setAuthToken(FAKE_TOKEN);
             jasmine.Ajax.install();
@@ -69,7 +69,7 @@ define ([
                 response: [{}]
             });
             return Login.init($node, true)  // true here means there's no kernel
-                .then(() => {
+                .finally(() => {
                     const request = jasmine.Ajax.requests.mostRecent();
                     expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
                     // test that the user menu was created by checking for the username and id
@@ -77,6 +77,7 @@ define ([
                     expect($node.text()).toContain(fakeName);
                     expect($node.text()).toContain(fakeUser);
                     Login.clearTokenCheckTimers();
+                    Login.destroy();
                 });
         });
 
@@ -89,6 +90,7 @@ define ([
                     const request = jasmine.Ajax.requests.mostRecent();
                     expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
                     Login.clearTokenCheckTimers();
+                    Login.destroy();
                 });
         });
     });

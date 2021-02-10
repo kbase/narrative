@@ -332,10 +332,16 @@ define ([
             });
     }
 
+    function destroy() {
+        $(document).off('loggedInQuery.kbase');
+        $(document).off('logout.kbase');
+    }
+
     return {
         init,
         sessionInfo,
         getAuthToken,
-        clearTokenCheckTimers
+        clearTokenCheckTimers,
+        destroy
     };
 });

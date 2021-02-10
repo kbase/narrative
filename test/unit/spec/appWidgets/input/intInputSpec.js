@@ -10,6 +10,7 @@ define([
 ) {
     'use strict';
 
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test int data input widget', function() {
         let testConfig = {},
             runtime,
@@ -39,6 +40,11 @@ define([
                 },
                 channelName: bus.channelName,
             };
+        });
+
+        afterEach(() => {
+            bus.stop();
+            window.kbaseRuntime = null;
         });
 
         it('should be real!', function() {

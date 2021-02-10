@@ -1,17 +1,21 @@
-define(['jquery', 'util/bootstrapSearch', 'base/js/namespace', 'kbaseNarrative'], (
+define ([
+    'jquery',
+    'util/bootstrapSearch',
+    'base/js/namespace'
+], function(
     $,
     BootstrapSearch,
-    Jupyter,
-    Narrative
-) => {
+    Jupyter
+) {
     'use strict';
     let $targetElem;
 
     describe('Test the BootstrapSearch module', () => {
         beforeEach(() => {
             $targetElem = $('<div>');
-            Jupyter.narrative = new Narrative();
-            Jupyter.narrative.disableKeyboardManager = () => {};
+            Jupyter.narrative = {
+                disableKeyboardManager: () => {}
+            };
         });
 
         afterEach(() => {
@@ -23,15 +27,13 @@ define(['jquery', 'util/bootstrapSearch', 'base/js/namespace', 'kbaseNarrative']
             expect(bsSearch).not.toBeNull();
         });
 
-        it('Should fire an input function when triggered by input', () => {
-            let passed = false;
+        it('Should fire an input function when triggered by input', (done) => {
             const bsSearch = new BootstrapSearch($targetElem, {
-                inputFunction: function () {
-                    passed = true;
-                },
+                inputFunction: () => {
+                    done();
+                }
             });
             bsSearch.val('stuff');
-            expect(passed).toBe(true);
         });
 
         it('Should have empty and filled icons at the right time', () => {
@@ -75,17 +77,15 @@ define(['jquery', 'util/bootstrapSearch', 'base/js/namespace', 'kbaseNarrative']
             expect(bsSearch.val()).toBeFalsy();
         });
 
-        it('Should fire a function when clicking the addon - overrides default clear', () => {
-            let passed = false;
+        it('Should fire a function when clicking the addon - overrides default clear', (done) => {
             const bsSearch = new BootstrapSearch($targetElem, {
-                addonFunction: function () {
-                    passed = true;
-                },
+                addonFunction: () => {
+                    expect(bsSearch.val()).toEqual('stuff');
+                    done();
+                }
             });
             bsSearch.val('stuff');
             $targetElem.find('span.input-group-addon').click();
-            expect(passed).toBe(true);
-            expect(bsSearch.val()).toEqual('stuff');
         });
 
         it('Should have a val function that works as in vanilla JS', () => {
@@ -94,37 +94,34 @@ define(['jquery', 'util/bootstrapSearch', 'base/js/namespace', 'kbaseNarrative']
             expect(bsSearch.val()).toEqual('stuff');
         });
 
-        it('Should have a working focus function', () => {
+        it('Should have a working focus function', (done) => {
             const bsSearch = new BootstrapSearch($targetElem);
-            let passed = false;
             $('body').append($targetElem);
             $targetElem.find('input.form-control').on('focus', () => {
-                passed = true;
+                done();
             });
             bsSearch.focus();
-            expect(passed).toBe(true);
         });
 
         it('Should set placeholder text', () => {
             const placeholder = 'some text';
-            new BootstrapSearch($targetElem, {
-                placeholder: placeholder,
+            const bsSearch = new BootstrapSearch($targetElem, {
+                placeholder: placeholder
             });
             expect($targetElem.find('input.form-control').attr('placeholder')).toEqual(placeholder);
         });
 
-        it('Should trigger an escape function', () => {
-            let passed = false;
-            new BootstrapSearch($targetElem, {
-                escFunction: function () {
-                    passed = true;
-                },
+        it('Should trigger an escape function', (done) => {
+            const passed = false;
+            const bsSearch = new BootstrapSearch($targetElem, {
+                escFunction: () => {
+                    done();
+                }
             });
             const e = $.Event('keyup');
             e.which = 27;
             e.keyCode = 27;
             $targetElem.find('input.form-control').trigger(e);
-            expect(passed).toBe(true);
         });
     });
 });

@@ -4,6 +4,28 @@
 
 const {login, openNarrative} = require('../wdioUtils.js');
 
+const notebook = async ()=> {
+    const nb = await $('#notebook-container');
+    await nb.waitForExist();
+    return nb;
+};
+const cells = async ()=> (await notebook()).$$('.cell');
+const sampleSetViewerCell = async ()=> (await cells())[1];
+const tabButtons = async ()=> (await sampleSetViewerCell()).$$('.nav-tabs li');
+const tabPanes = async ()=> (await sampleSetViewerCell()).$$('.tab-content .tab-pane');
+const changePane = async (paneIndex)=>{
+    const tabeButton = (await tabButtons())[paneIndex];
+    await tabeButton.waitForExist();
+    await tabeButton.click();
+    const tabPane = (await tabPanes())[paneIndex];
+    await tabPane.waitForExist();
+    await tabPane.waitForDisplayed();
+    const tabSpinner = await tabPane.$('.fa-spinner');
+    await tabSpinner.waitForDisplayed({reverse:true});
+    return tabPane;
+};
+
+
 describe('Test kbaseNarrativeSidePublicTab', () => {
     beforeEach(async () => {
         await browser.setTimeout({ 'implicit': 30000 });
@@ -17,10 +39,8 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('SampleSetViewer should be added when clicked in data toolbar', async () => {
-        const notebook = await $('#notebook-container');
-        await notebook.waitForExist();
 
-        const cellsBefore = await notebook.$$('.cell');
+        const cellsBefore = await cells();
         expect(cellsBefore.length).toBe(2);
 
         // Find and click data entry
@@ -30,7 +50,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
         await dataItem.click();
 
         // Expect cell to be added
-        const cellsAfter = await notebook.$$('.cell');
+        const cellsAfter = await cells();
         expect(cellsAfter.length).toBe(3);
 
         // Expect cell to be added with the correct title
@@ -41,34 +61,19 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
 
     it('SampleSetViewer summary should match number of rows in samples table', async () => {
 
-        const notebook = await $('#notebook-container');
-        await notebook.waitForExist();
-        const cells = await notebook.$$('.cell');
-
-        const sampleSetViewerCell = cells[1];
-        await sampleSetViewerCell.scrollIntoView();
-
-        // select important elements
-        const [summaryButton, samplesButton] = await sampleSetViewerCell.$$('.nav-tabs li');
-        const [summaryPane, samplesPane] = await sampleSetViewerCell.$$('.tab-content .tab-pane');
+        await (await sampleSetViewerCell()).scrollIntoView();
 
         // change to samples pane
-        await samplesButton.click();
-        await samplesPane.waitForDisplayed();
-        const samplesSpinner = await samplesPane.$('.fa-spinner');
-        await samplesSpinner.waitForDisplayed({reverse:true});
-
+        const samplesPane = await changePane(1);
         // Find displayed number of rows in the table
-        const paginationSpan = await samplesPane.$('span*=Showing');
+        const paginationSpan = await(await samplesPane.$('.col-md-6')).$('span');
+        await paginationSpan.waitForExist();
         const pageText = await paginationSpan.getText();
+        console.log('pageText', pageText);
         const {numRows} = pageText.match(/Showing \d+ to \d+ of (?<numRows>\d+)/).groups;
 
         // change back to summary pane
-        await summaryButton.click();
-        await summaryPane.waitForDisplayed();
-        const summarySpinner = await summaryPane.$('.fa-spinner');
-        await summarySpinner.waitForDisplayed({reverse:true});
-
+        const summaryPane = await changePane(0);
         // Find displayed number of samples in summary
         const numberHeader = await summaryPane.$('td*=Number');
         const numberVal = await numberHeader.nextElement();

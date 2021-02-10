@@ -1,4 +1,3 @@
-/*global define, describe, it, expect, jasmine, beforeEach, afterEach*/
 /*jslint white: true*/
 define([
     'util/jobLogViewer',
@@ -7,9 +6,15 @@ define([
     JobLogViewer,
     Runtime
 ) => {
+    'use strict';
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test the job log viewer module', () => {
         let hostNode = null,
             runtimeBus = null;
+
+        beforeAll(() => {
+            window.kbaseRuntime = null;
+        });
         beforeEach(() => {
             hostNode = document.createElement('div');
             document.body.appendChild(hostNode);
@@ -32,9 +37,9 @@ define([
 
         it('Should be created', () => {
             let viewer = JobLogViewer.make();
-            expect(viewer.start).toEqual(jasmine.any(Function));
-            expect(viewer.stop).toEqual(jasmine.any(Function));
-            expect(viewer.detach).toEqual(jasmine.any(Function));
+            ['start', 'stop', 'detach'].forEach(fn => {
+                expect(viewer[fn]).toEqual(jasmine.any(Function));
+            });
         });
 
         it('Should fail to start without a node', () => {
@@ -43,7 +48,7 @@ define([
             let arg = {
                 jobId: jobId
             };
-            expect(() => {viewer.start(arg)}).toThrow(new Error('Requires a node to start'));
+            expect(() => viewer.start(arg)).toThrow(new Error('Requires a node to start'));
         });
 
         it('Should fail to start without a jobId', () => {
@@ -51,7 +56,7 @@ define([
             let arg = {
                 node: hostNode
             };
-            expect(() => {viewer.start(arg)}).toThrow(new Error('Requires a job id to start'));
+            expect(() => viewer.start(arg)).toThrow(new Error('Requires a job id to start'));
         });
 
         it('Should start as expected with inputs, and be stoppable and detachable', () => {

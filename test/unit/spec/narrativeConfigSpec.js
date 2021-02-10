@@ -18,19 +18,17 @@ define ([
             expect(Config.config.urls.workspace).toMatch(/https:\/\/.*kbase\.us\/services\/ws/);
         });
 
-        it('tries to update paths from ui-common and gets data source config', function(done) {
-            Config.updateConfig()
+        it('tries to update paths from ui-common and gets data source config', function() {
+            return Config.updateConfig()
                 .then(function(config) {
                     expect(config).toBeDefined();
-                    done();
                 });
         });
 
-        it('updates paths and sees data sources for example data', function(done) {
-            Config.updateConfig()
+        it('updates paths and sees data sources for example data', function() {
+            return Config.updateConfig()
                 .then(function(config) {
                     expect(config.exampleData).toBeDefined();
-                    done();
                 });
         });
 

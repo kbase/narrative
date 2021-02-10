@@ -34,6 +34,7 @@ define([
         };
     }
 
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Textarea Input tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();
@@ -42,6 +43,11 @@ define([
                 description: 'textarea testing',
             });
             testConfig = buildTestConfig(required, defaultValue, bus);
+        });
+
+        afterEach(() => {
+            bus.stop();
+            window.kbaseRuntime = null;
         });
 
         it('Should load the widget', () => {

@@ -1,8 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
 define([
     'jquery',
     'bluebird',
@@ -29,32 +24,28 @@ define([
         $dummyDiv = $('<div>'),
         dummyTable;
 
-    describe('Test the DynamicTable widget', function() {
-        beforeEach(function() {
+    describe('Test the DynamicTable widget', () => {
+        beforeEach(() => {
             dummyTable = new DynamicTable($dummyDiv, {
                 headers: dummyHeaders,
                 updateFunction: function(pageNum, query, sortColId, sortColDir) {
-                    return Promise.try(function() {
-                        return {
-                            start: 0,
-                            total: dummyRows.length,
-                            rows: dummyRows
-                        };
+                    return Promise.resolve({
+                        start: 0,
+                        total: dummyRows.length,
+                        rows: dummyRows
                     });
                 }
             });
         });
 
-        it('Should instantiate with essentially empty data', function() {
-            var $container = $('<div>');
-            var dt = new DynamicTable($container, {
-                updateFunction: function() {
-                    return Promise.try(function() {
-                        return {
-                            start: 0,
-                            total: 0,
-                            rows: []
-                        };
+        it('Should instantiate with essentially empty data', () => {
+            let $container = $('<div>');
+            let dt = new DynamicTable($container, {
+                updateFunction: () => {
+                    return Promise.resolve({
+                        start: 0,
+                        total: 0,
+                        rows: []
                     });
                 }
             });

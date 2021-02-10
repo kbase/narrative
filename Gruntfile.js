@@ -133,9 +133,4 @@ module.exports = function(grunt) {
         'uglify',
         'regex-replace'
     ]);
-
-    grunt.registerTask('build', [
-        'requirejs',
-        'regex-replace'
-    ]);
 };

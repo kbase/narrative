@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM kbase/narrbase:6.1
+FROM kbase/narrbase:6.2
 
 # These ARGs values are passed in via the docker build command
 ARG BUILD_DATE
@@ -26,11 +26,7 @@ EXPOSE 8888
 # requests[security]
 RUN source activate base && \
     conda install -c conda-forge ndg-httpsclient==0.5.1 pyasn1==0.4.5 pyopenssl==19.0.0 cryptography==2.7 idna==2.8 requests==2.21.0 \
-          beautifulsoup4==4.8.1 html5lib==1.0.1 && \
-    conda uninstall nodejs && \
-    # install node v14
-    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
-    apt-get install -y nodejs
+          beautifulsoup4==4.8.1 html5lib==1.0.1
 
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative
@@ -51,10 +47,9 @@ RUN \
     [ -n "$SKIP_MINIFY" ] || grunt minify && \
     # install the narrative and jupyter console
     /bin/bash scripts/install_narrative_docker.sh && \
-    pip install jupyter-console==6.0.0
-
-WORKDIR /tmp
-RUN mkdir /tmp/narrative && \
+    pip install jupyter-console==6.0.0 && \
+    cd /tmp && \
+    mkdir /tmp/narrative && \
     chown -R nobody:www-data /tmp/narrative /kb/dev_container/narrative/kbase-extension; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
 
 # Set a default value for the environment variable VERSION_CHECK that gets expanded in the config.json.templ

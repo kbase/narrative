@@ -1,6 +1,6 @@
 define([
     'narrativeConfig',
-    'json!./testAppObj-ci.json',
+    './testAppObj-ci',
     'json!./testAppObj-prod.json'
 ], (Config, TestDataCi, TestDataProd) => {
     'use strict';

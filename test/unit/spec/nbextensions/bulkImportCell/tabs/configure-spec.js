@@ -1,25 +1,17 @@
-/* global describe, it, expect, spyOn */
 define([
     '../../../../../../../narrative/nbextensions/bulkImportCell/tabs/configure',
-    'common/ui',
+    'base/js/namespace',
     'common/runtime',
     'common/props',
     'common/spec',
-    'json!../../../../../data/testAppObj.json'
-], (
-    ConfigureTab,
-    UI,
-    Runtime,
-    Props,
-    Spec,
-    TestAppObject
-) => {
+    '/test/data/testAppObj',
+], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestAppObject) => {
     'use strict';
 
     describe('test the bulk import cell configure tab', () => {
         beforeAll(() => {
             Jupyter.narrative = {
-                getAuthToken: () => 'fakeToken'
+                getAuthToken: () => 'fakeToken',
             };
         });
 
@@ -33,16 +25,17 @@ define([
             document.getElementsByTagName('body')[0].appendChild(node);
             const model = Props.make({
                 data: TestAppObject,
-                onUpdate: (props) => { }
+                onUpdate: () => {},
             });
-            let spec = Spec.make({
-                appSpec: model.getItem('app.spec')
+            const spec = Spec.make({
+                appSpec: model.getItem('app.spec'),
             });
 
-            const configure = ConfigureTab.make({bus, model, spec});
-            return configure.start({
-                node: node
-            })
+            const configure = ConfigureTab.make({ bus, model, spec });
+            return configure
+                .start({
+                    node: node,
+                })
                 .then(() => {
                     // just make sure it renders the "File Paths" and "Parameters" headers
                     expect(node.innerHTML).toContain('Parameters');
@@ -56,16 +49,17 @@ define([
             document.getElementsByTagName('body')[0].appendChild(node);
             const model = Props.make({
                 data: TestAppObject,
-                onUpdate: (props) => { }
+                onUpdate: () => {},
             });
-            let spec = Spec.make({
-                appSpec: model.getItem('app.spec')
+            const spec = Spec.make({
+                appSpec: model.getItem('app.spec'),
             });
 
-            const configure = ConfigureTab.make({bus, model, spec});
-            return configure.start({
-                node: node
-            })
+            const configure = ConfigureTab.make({ bus, model, spec });
+            return configure
+                .start({
+                    node: node,
+                })
                 .then(() => {
                     // just make sure it renders the "File Paths" and "Parameters" headers
                     expect(node.innerHTML).toContain('Parameters');

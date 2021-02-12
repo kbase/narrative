@@ -4,21 +4,21 @@ define([
     'widgets/appWidgets2/paramResolver',
     'common/props',
     'common/spec',
-    'json!../../../../data/testAppObj.json',
-], function (Jupyter, fieldCellWidget, ParamResolver, Props, Spec, TestAppObject) {
+    '/test/data/testAppObj',
+], (Jupyter, fieldCellWidget, ParamResolver, Props, Spec, TestAppObject) => {
     'use strict';
 
-    describe('The Field Table Cell Widget module', function () {
-        it('loads', function () {
+    describe('The Field Table Cell Widget module', () => {
+        it('loads', () => {
             expect(fieldCellWidget).not.toBe(null);
         });
 
-        it('has expected functions', function () {
+        it('has expected functions', () => {
             expect(fieldCellWidget.make).toBeDefined();
         });
     });
 
-    describe('The Field Table Cell Widget instance', function () {
+    describe('The Field Table Cell Widget instance', () => {
         let node, mockFieldWidget;
 
         const parameterSpec = {
@@ -130,11 +130,11 @@ define([
             mockFieldWidget = null;
         });
 
-        it('has a factory which can be invoked', function () {
+        it('has a factory which can be invoked', () => {
             expect(mockFieldWidget).not.toBe(null);
         });
 
-        it('has the required methods', function () {
+        it('has the required methods', () => {
             expect(mockFieldWidget.start).toBeDefined();
             expect(mockFieldWidget.stop).toBeDefined();
             expect(mockFieldWidget.bus).toBeDefined();

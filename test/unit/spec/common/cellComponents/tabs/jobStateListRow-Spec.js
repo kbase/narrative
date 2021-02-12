@@ -3,7 +3,7 @@ define([
     'common/cellComponents/tabs/jobStatus/jobStateListRow',
     'jquery',
     'common/props',
-    'json!../../../../../data/testAppObj.json',
+    '/test/data/testAppObj',
 ], (Jupyter, jobStateListRow, $, Props, TestAppObject) => {
     'use strict';
 

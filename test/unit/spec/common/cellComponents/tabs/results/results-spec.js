@@ -2,7 +2,7 @@ define([
     'common/cellComponents/tabs/results/resultsTab',
     'base/js/namespace',
     'common/props',
-    'json!/test/data/testAppObj.json',
+    '/test/data/testAppObj',
 ], (ResultsTab, Jupyter, Props, TestAppObject) => {
     'use strict';
 

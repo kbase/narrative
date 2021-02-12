@@ -1625,8 +1625,8 @@ define([
                         newJobState = message.jobState,
                         { outputWidgetInfo } = message,
                         forceRender =
-                            !Jobs.isValidJobState(existingState) &&
-                            Jobs.isValidJobState(newJobState);
+                            !Jobs.isValidJobStateObject(existingState) &&
+                            Jobs.isValidJobStateObject(newJobState);
                     if (!existingState || !utils2.isEqual(existingState, newJobState)) {
                         model.setItem('exec.jobState', newJobState);
                         if (outputWidgetInfo) {
@@ -2288,7 +2288,7 @@ define([
                      * Or render some intermediate state?
                      */
                     const curState = model.getItem('exec.jobState');
-                    if (curState && !Jobs.isValidJobState(curState)) {
+                    if (curState && !Jobs.isValidJobStateObject(curState)) {
                         // use the 'created' key to see if it's an updated jobState
                         startListeningForJobMessages(curState.job_id);
                         requestJobStatus(curState.job_id);

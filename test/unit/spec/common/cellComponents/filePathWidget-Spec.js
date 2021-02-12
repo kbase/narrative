@@ -5,21 +5,21 @@ define([
     'common/runtime',
     'common/props',
     'common/spec',
-    'json!../../../../data/testAppObj.json',
-], function (Jupyter, FilePathWidget, $, Runtime, Props, Spec, TestAppObject) {
+    '/test/data/testAppObj',
+], (Jupyter, FilePathWidget, $, Runtime, Props, Spec, TestAppObject) => {
     'use strict';
 
-    describe('The file path widget module', function () {
-        it('loads', function () {
+    describe('The file path widget module', () => {
+        it('loads', () => {
             expect(FilePathWidget).not.toBe(null);
         });
 
-        it('has expected functions', function () {
+        it('has expected functions', () => {
             expect(FilePathWidget.make).toBeDefined();
         });
     });
 
-    describe('The file path widget instance', function () {
+    describe('The file path widget instance', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
@@ -32,7 +32,7 @@ define([
 
         let filePathWidget, node, spec, parameters;
 
-        beforeEach(function () {
+        beforeEach(() => {
             const bus = Runtime.make().bus();
             node = document.createElement('div');
             document.getElementsByTagName('body')[0].appendChild(node);
@@ -63,11 +63,11 @@ define([
             node = null;
         });
 
-        it('has a make function that returns an object', function () {
+        it('has a make function that returns an object', () => {
             expect(filePathWidget).not.toBe(null);
         });
 
-        it('has the required methods', function () {
+        it('has the required methods', () => {
             expect(filePathWidget.start).toBeDefined();
             expect(filePathWidget.stop).toBeDefined();
             expect(filePathWidget.bus).toBeDefined();
@@ -105,10 +105,10 @@ define([
                     parameters: parameters,
                 })
                 .then(() => {
-                    let preClickNumberOfRows = $(node).find('tr').length;
+                    const preClickNumberOfRows = $(node).find('tr').length;
                     expect(preClickNumberOfRows).toEqual(1);
                     $(node).find('.kb-file-path__button--add_row').click();
-                    let postClickNumberOfRows = $(node).find('tr').length;
+                    const postClickNumberOfRows = $(node).find('tr').length;
                     expect(postClickNumberOfRows).toEqual(2);
                 });
         });
@@ -121,10 +121,10 @@ define([
                     parameters: parameters,
                 })
                 .then(() => {
-                    let preClickNumberOfRows = $(node).find('tr').length;
+                    const preClickNumberOfRows = $(node).find('tr').length;
                     expect(preClickNumberOfRows).toEqual(1);
                     $(node).find('.kb-file-path__button--delete').click();
-                    let postClickNumberOfRows = $(node).find('tr').length;
+                    const postClickNumberOfRows = $(node).find('tr').length;
                     expect(postClickNumberOfRows).toEqual(0);
                 });
         });

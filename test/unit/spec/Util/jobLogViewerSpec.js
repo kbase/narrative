@@ -1,9 +1,20 @@
-define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
+define([
+    'util/jobLogViewer',
+    'common/runtime'
+], (
+    JobLogViewer,
+    Runtime
+) => {
     'use strict';
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test the job log viewer module', () => {
         const cssBaseClass = 'kb-log';
         let hostNode = null,
             runtimeBus = null;
+
+        beforeAll(() => {
+            window.kbaseRuntime = null;
+        });
         beforeEach(() => {
             hostNode = document.createElement('div');
             document.body.appendChild(hostNode);
@@ -25,10 +36,10 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
         });
 
         it('Should be created', () => {
-            const viewer = JobLogViewer.make();
-            expect(viewer.start).toEqual(jasmine.any(Function));
-            expect(viewer.stop).toEqual(jasmine.any(Function));
-            expect(viewer.detach).toEqual(jasmine.any(Function));
+            let viewer = JobLogViewer.make();
+            ['start', 'stop', 'detach'].forEach(fn => {
+                expect(viewer[fn]).toEqual(jasmine.any(Function));
+            });
         });
 
         it('Should fail to start without a node', () => {
@@ -37,9 +48,7 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
             const arg = {
                 jobId: jobId,
             };
-            expect(() => {
-                viewer.start(arg);
-            }).toThrow(new Error('Requires a node to start'));
+            expect(() => viewer.start(arg)).toThrow(new Error('Requires a node to start'));
         });
 
         it('Should fail to start without a jobId', () => {
@@ -47,9 +56,7 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
             const arg = {
                 node: hostNode,
             };
-            expect(() => {
-                viewer.start(arg);
-            }).toThrow(new Error('Requires a job id to start'));
+            expect(() => viewer.start(arg)).toThrow(new Error('Requires a job id to start'));
         });
 
         it('Should start as expected with inputs, and be stoppable and detachable', () => {

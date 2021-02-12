@@ -1,4 +1,12 @@
-define(['jquery', 'util/timeFormat'], ($, TF) => {
+define ([
+    'bootstrap',
+    'jquery',
+    'util/timeFormat',
+], function(
+    bootstrap,
+    $,
+    TF,
+) {
     'use strict';
     const testISOTime = '2015-12-09T21:58:22.202Z';
     const testISOTime2 = '2016-01-06T00:48:43.196Z';

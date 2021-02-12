@@ -1,30 +1,26 @@
 /**
  * @public
  */
-'use strict';
-
-define (
-    [
-        'kbwidget',
-        'bootstrap',
-        'jquery',
-        'narrativeConfig',
-        'kbaseAuthenticatedWidget',
-        'jquery-dataTables',
-        'datatables.net-buttons',
-        'datatables.net-buttons-bs',
-        'datatables.net-buttons-html5',
-        'datatables.net-buttons-colvis',
-        'datatables.net-buttons-print',
-        'knhx',
-        'widgetMaxWidthCorrection'
-    ], function(
-        KBWidget,
-        bootstrap,
-        $,
-        Config,
-        kbaseAuthenticatedWidget
-    ) {
+define ([
+    'kbwidget',
+    'jquery',
+    'narrativeConfig',
+    'kbaseAuthenticatedWidget',
+    'jquery-dataTables',
+    'datatables.net-buttons',
+    'datatables.net-buttons-bs',
+    'datatables.net-buttons-html5',
+    'datatables.net-buttons-colvis',
+    'datatables.net-buttons-print',
+    'knhx',
+    'widgetMaxWidthCorrection'
+], (
+    KBWidget,
+    $,
+    Config,
+    kbaseAuthenticatedWidget
+) => {
+    'use strict';
     return KBWidget({
         name: 'kbaseAttributeMapping',
         parent : kbaseAuthenticatedWidget,
@@ -40,14 +36,14 @@ define (
 
             this.options.obj_ref = this.options.upas.obj_ref;
 
-            this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
+            this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
             this.$elem.append(this.$messagePane);
 
-            this.$mainPanel = $("<div>").addClass("").hide();
+            this.$mainPanel = $('<div>').hide();
             this.$elem.append(this.$mainPanel);
 
             if (!this.options.obj_ref) {
-                this.renderError("No object to render!");
+                this.renderError('No object to render!');
             } else {
                 this.token = this.authToken();
                 this.renderAndLoad();
@@ -78,7 +74,7 @@ define (
         },
         parseObj: function(ws_obj) {
             var self = this;
-            var cols = [{title: "ID"}];
+            var cols = [{title: 'ID'}];
             var rows;
             // Back compatible with ConditionSets
             if (typeof ws_obj.factors !== 'undefined') {
@@ -117,7 +113,7 @@ define (
 
             self.$tableDiv.empty();
 
-            var $tbl = $('<table>').addClass("table table-bordered table-striped");
+            var $tbl = $('<table>').addClass('table table-bordered table-striped');
             self.$tableDiv.append($tbl);
 
             var tblSettings = {
@@ -126,25 +122,25 @@ define (
                 paging: true,
                 dom: "<'row'<'col-sm-6'B><'col-sm-6'f>>t<'row'<'col-sm-6'i><'col-sm-6'p>>",
                 buttons: ['colvis', 'copy', 'csv', 'print'],
-                order: [[0, "asc"]],
+                order: [[0, 'asc']],
                 columns: cols,
                 data: rows
-                };
+            };
             var ConditionsTable = $tbl.DataTable(tblSettings);
             //ConditionsTable.draw();
         },
 
         renderError: function(error) {
-            var errString = "Sorry, an unknown error occurred";
-            if (typeof error === "string")
+            var errString = 'Sorry, an unknown error occurred';
+            if (typeof error === 'string')
                 errString = error;
             else if (error.error && error.error.message)
                 errString = error.error.message;
 
-            var $errorDiv = $("<div>")
-                            .addClass("alert alert-danger")
-                            .append("<b>Error:</b>")
-                            .append("<br>" + errString);
+            var $errorDiv = $('<div>')
+                .addClass('alert alert-danger')
+                .append('<b>Error:</b>')
+                .append('<br>' + errString);
             this.$elem.empty();
             this.$elem.append($errorDiv);
         },
@@ -153,11 +149,11 @@ define (
             if (doneLoading)
                 this.hideMessage();
             else
-                this.showMessage("<img src='" + this.options.loadingImage + "'/>");
+                this.showMessage('<img src="' + this.options.loadingImage + '"/>');
         },
 
         showMessage: function(message) {
-            var span = $("<span/>").append(message);
+            var span = $('<span/>').append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();
@@ -171,13 +167,8 @@ define (
         loggedInCallback: function(event, auth) {
             if (this.token == null) {
                 this.token = auth.token;
-                this.render();
+                this.renderAndLoad();
             }
-            return this;
-        },
-
-        loggedOutCallback: function(event, auth) {
-            this.render();
             return this;
         }
 

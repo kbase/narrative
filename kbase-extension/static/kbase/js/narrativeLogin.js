@@ -105,7 +105,7 @@ define ([
     function showNotLoggedInDialog() {
         const message = `
         <p>You are logged out (or your session has expired).</p>
-        <p>You will be redirected to the sign in page after closing this, or ${AUTO_LOGOUT_DELAY / 1000} seconds, 
+        <p>You will be redirected to the sign in page after closing this, or ${AUTO_LOGOUT_DELAY / 1000} seconds,
            whichever comes first.</p>
         `;
         var dialog = new BootstrapDialog({
@@ -159,9 +159,9 @@ define ([
     }
 
     // When true, will cause the token check interval timer to return early.
-    // Should be set true when an async process is running inside the 
+    // Should be set true when an async process is running inside the
     // interval function, and set false when that process is completed.
-    
+
     let hasViewedAboutToLogout = false;
 
     let tokenCheckEnabled = true;
@@ -225,7 +225,7 @@ define ([
             if (validateOnCheck) {
                 // ensure we don't enter this check a second time.
                 // hmm, this is really an edge case, but possible.
-                // in order to meet this condition, the validateToken() call would 
+                // in order to meet this condition, the validateToken() call would
                 // need to take longer than browserSleepValidateTime which is currently
                 // hard coded in the config at 1 minute.
                 disableTokenCheck();
@@ -244,7 +244,7 @@ define ([
                     .finally(() => {
                         enableTokenCheck();
                     });
-                
+
             }
         }, TOKEN_MONITORING_INTERVAL);
     }
@@ -295,10 +295,10 @@ define ([
          * communication with other KBase resources.
          */
         clearTokenCheckTimers();
-        var sessionToken = authClient.getAuthToken();
+        const sessionToken = authClient.getAuthToken();
         return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])
-            .then(function(results) {
-                var tokenInfo = results[0];
+            .then((results) => {
+                let tokenInfo = results[0];
                 sessionInfo = tokenInfo;
                 this.sessionInfo = tokenInfo;
                 this.sessionInfo.token = sessionToken;
@@ -306,20 +306,21 @@ define ([
                 this.sessionInfo.user_id = this.sessionInfo.user;
                 initEvents();
                 initTokenTimer(sessionInfo.expires);
-                UserMenu.make({
+                if (!noServer) {
+                    ipythonLogin(sessionToken);
+                }
+                $(document).trigger('loggedIn', this.sessionInfo);
+                $(document).trigger('loggedIn.kbase', this.sessionInfo);
+                const userMenu = UserMenu.make({
                     target: $elem,
                     token: sessionToken,
                     userName: sessionInfo.user,
                     email: results[1].email,
                     displayName: results[1].display
                 });
-                if (!noServer) {
-                    ipythonLogin(sessionToken);
-                }
-                $(document).trigger('loggedIn', this.sessionInfo);
-                $(document).trigger('loggedIn.kbase', this.sessionInfo);
-            }.bind(this))
-            .catch(function(error) {
+                return userMenu.start();
+            })
+            .catch((error) => {
                 console.error(error);
                 if (document.location.hostname.indexOf('localhost') !== -1 ||
                     document.location.hostname.indexOf('0.0.0.0') !== -1) {
@@ -331,9 +332,16 @@ define ([
             });
     }
 
+    function destroy() {
+        $(document).off('loggedInQuery.kbase');
+        $(document).off('logout.kbase');
+    }
+
     return {
         init,
         sessionInfo,
-        getAuthToken
+        getAuthToken,
+        clearTokenCheckTimers,
+        destroy
     };
 });

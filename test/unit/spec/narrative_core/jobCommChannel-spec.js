@@ -14,6 +14,7 @@ define([
 ) => {
     'use strict';
 
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     const DEFAULT_COMM_INFO = {
         content: {
             comms: []
@@ -64,7 +65,7 @@ define([
     function makeMockNotebook(commInfoReturn, registerTargetReturn, executeReply) {
         commInfoReturn = commInfoReturn || DEFAULT_COMM_INFO;
         registerTargetReturn = registerTargetReturn || DEFAULT_COMM;
-        executeReply = executeReply || {}
+        executeReply = executeReply || {};
         return {
             save_checkpoint: () => { /* no op */ },
             kernel: {

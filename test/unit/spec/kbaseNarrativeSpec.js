@@ -3,20 +3,23 @@ define ([
     'narrativeConfig',
     'kbaseNarrative',
     'base/js/namespace',
-    'narrativeLogin'
+    'narrativeLogin',
+    'narrativeMocks'
 ], (
     $,
     Config,
     Narrative,
     Jupyter,
-    NarrativeLogin
+    NarrativeLogin,
+    Mocks
 ) => {
     'use strict';
 
     const DEFAULT_FULLY_LOADED = false,
         DEFAULT_WRITABLE = false,
         DEFAULT_NOTEBOOK_NAME = 'some notebook',
-        FAKE_TOKEN = 'foo';
+        TEST_TOKEN = 'foo',
+        TEST_USER = 'some_user';
 
     describe('Test the kbaseNarrative module', () => {
         let loginDiv = $('<div>');
@@ -24,27 +27,25 @@ define ([
         beforeEach(async () => {
             // we need to be "logged in" for various tests to work, especially initing the Narrative object.
             // this means mocking up some auth responses, and the NarrativeLogin object.
-            document.cookie='kbase_session=' + FAKE_TOKEN;
+            Mocks.setAuthToken(TEST_TOKEN);
             jasmine.Ajax.install();
-            jasmine.Ajax.stubRequest(/\/token$/).andReturn({
-                status: 200,
-                statusText: 'HTTP/1.1 200 OK',
-                contentType: 'application/json',
-                responseText: JSON.stringify({
-                    type: 'Login',
-                    id: 'some-token-id',
-                    name: null,
-                    user: 'some_user',
-                })
-            });
-            jasmine.Ajax.stubRequest(/\/me$/).andReturn({
-                status: 200,
-                statusText: 'HTTP/1.1 200 OK',
-                contentType: 'application/json',
-                responseText: JSON.stringify({
-                    display: 'Some User',
-                    user: 'some_user',
-                })
+            Mocks.mockAuthRequest('token', {
+                expires: Date.now() + 10 * 60 * 60 * 24 * 1000,
+                created: Date.now(),
+                name: 'some_token',
+                id: 'some_uuid',
+                type: 'Login',
+                user: TEST_USER,
+                cachefor: 500000
+            }, 200);
+            Mocks.mockAuthRequest('me', {
+                display: 'Some User',
+                user: TEST_USER,
+                email: `${TEST_USER}@kbase.us`,
+            }, 200);
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('user_profile'),
+                response: [{}]
             });
 
             // mock a jupyter notebook.
@@ -92,7 +93,8 @@ define ([
         afterEach(() => {
             jasmine.Ajax.uninstall();
             Jupyter.notebook = null;
-            Jupyter.narrative = null;
+            NarrativeLogin.clearTokenCheckTimers();
+            Mocks.clearAuthToken();
         });
 
         it('Should instantiate', () => {
@@ -153,7 +155,7 @@ define ([
 
         it('Should provide an auth token when requested', () => {
             const narr = new Narrative();
-            expect(narr.getAuthToken()).toBe(FAKE_TOKEN);
+            expect(narr.getAuthToken()).toBe(TEST_TOKEN);
         });
 
         it('Should create a new bulk import cell on request', () => {

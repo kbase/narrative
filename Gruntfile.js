@@ -1,7 +1,6 @@
 module.exports = function(grunt) {
 
     'use strict';
-
     require('load-grunt-tasks')(grunt);
 
     grunt.initConfig({
@@ -76,7 +75,7 @@ module.exports = function(grunt) {
                         // search: 'narrativeMain',
                         search: 'narrativeMain.js',
 
-                        replace: function(match) {
+                        replace: function() {
                             return 'kbase-narrative-min.js';
                         },
                         flags: ''
@@ -84,76 +83,6 @@ module.exports = function(grunt) {
                 ]
             }
         },
-
-        // Testing with Karma!
-        karma: {
-            unit: {
-                configFile: 'test/unit/karma.conf.js',
-            },
-            dev: {
-                // to do - add watch here
-                configFile: 'test/unit/karma.conf.js',
-                reporters: ['progress', 'coverage'],
-                coverageReporter: {
-                    dir: 'build/test-coverage/',
-                    reporters: [
-                        { type: 'html', subdir: 'html' },
-                    ],
-                },
-
-                autoWatch: true,
-                singleRun: false,
-            }
-        },
-
-        jasmine_nodejs: {
-            // task specific (default) options
-            options: {
-                useHelpers: true,
-                // global helpers, available to all task targets. accepts globs..
-                helpers: [],
-                random: false,
-                seed: null,
-                defaultTimeout: null, // defaults to 5000
-                stopOnFailure: false,
-                traceFatal: true,
-                // configure one or more built-in reporters
-                reporters: {
-                    console: {
-                        colors: true,        // (0|false)|(1|true)|2
-                        cleanStack: 1,       // (0|false)|(1|true)|2|3
-                        verbosity: 4,        // (0|false)|1|2|3|(4|true)
-                        listStyle: 'indent', // "flat"|"indent"
-                        activity: false
-                    },
-                },
-                // add custom Jasmine reporter(s)
-                customReporters: []
-            },
-            functional: {
-                options: {
-                    useHelpers: true
-                },
-                // spec files
-                specs: [
-                    'test/functional/spec/**/*Spec.js'
-                ],
-                // target-specific helpers
-                helpers: [
-                    'test/functional/helpers/**/*.helper.js'
-                ]
-            }
-        },
-        // Run coveralls and send the info.
-        coveralls: {
-            options: {
-                force: true,
-            },
-            'ui-common': {
-                src: 'build/test-coverage/lcov/**/*.info',
-            }
-        },
-
         // Run CSS / SCSS-related tasks
         // these files are modified in place
         postcss: {
@@ -203,27 +132,5 @@ module.exports = function(grunt) {
         'requirejs',
         'uglify',
         'regex-replace'
-    ]);
-
-    grunt.registerTask('test', [
-        'karma:unit'
-    ]);
-
-    // Does a single unit test run, then sends
-    // the lcov results to coveralls. Intended for running
-    // from travis-ci.
-    grunt.registerTask('test-travis', [
-        'karma:unit',
-        'coveralls'
-    ]);
-
-    // node (instead of karma) based jasmine tasks
-    grunt.registerTask('test-browser', [
-        'jasmine_nodejs'
-    ]);
-    // Does an ongoing test run in a watching development
-    // mode.
-    grunt.registerTask('develop', [
-        'karma:dev'
     ]);
 };

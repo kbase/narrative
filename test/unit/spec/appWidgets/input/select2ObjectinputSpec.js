@@ -81,6 +81,7 @@ define([
 
     }
 
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Select 2 Object Input tests', () => {
         let bus,
             testConfig,
@@ -155,6 +156,8 @@ define([
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
+            bus.stop();
+            window.kbaseRuntime = null;
         });
 
         it('Should exist', () => {

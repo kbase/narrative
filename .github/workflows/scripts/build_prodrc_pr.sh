@@ -17,7 +17,7 @@ docker build --build-arg BUILD_DATE="$DATE" \
 docker push ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR"
 
 docker tag ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR" kbase/narrative:tmp
-export MY_APP=narrative_version
+export MY_APP2="$MY_APP"_version
 
 docker build -t ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR" \
                 --build-arg BUILD_DATE=$DATE \

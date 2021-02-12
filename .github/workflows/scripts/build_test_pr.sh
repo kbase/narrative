@@ -19,7 +19,7 @@ docker push ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR"
 docker tag ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR" kbase/narrative:tmp
 export MY_APP2="$MY_APP"_version
 
-docker build -t ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR" \
+docker build -t ghcr.io/"$MY_ORG"/"$MY_APP2":"pr-""$PR" \
                 --build-arg BUILD_DATE=$DATE \
                 --build-arg VCS_REF=$COMMIT \
                 --build-arg BRANCH="$GITHUB_HEAD_REF" \
@@ -29,4 +29,4 @@ docker build -t ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR" \
                 -f Dockerfile2 \
                 .
 docker rmi kbase/narrative:tmp
-docker push ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR"
+docker push ghcr.io/"$MY_ORG"/"$MY_APP2":"pr-""$PR"

@@ -226,8 +226,8 @@ define ([
 
             this.dataSourceConfigs = DataSourceConfig.sources;
             
-            this.loaded = false;            
-
+            this.loaded = false; 
+            
             return this;
         },
 
@@ -393,7 +393,11 @@ define ([
 
             this.resultPanel = $('<div role="table" data-test-id="result">');
 
-            this.resultsFooterMessage = $('<div>');
+            this.resultsFooterMessage = $('<div>')
+                .css('display', 'flex')
+                .css('flex-direction', 'row')
+                .css('align-items', 'center')
+                .css('justify-content', 'center');
 
             this.resultFooter = $('<div>')
                 .css('background-color', 'rgba(200,200,200,0.5')
@@ -498,23 +502,32 @@ define ([
 
             // suss out whether we really need more...
             if (this.currentPage !== null && this.currentFilteredResults !== null) {
-                var maxPage = Math.ceil(this.currentFilteredResults / this.itemsPerPage);
+                const maxPage = Math.ceil(this.currentFilteredResults / this.itemsPerPage);
                 if (this.currentPage >= maxPage) {                    
                     return;
                 }
             }
 
+            // We use a flag here as a lock on rendering more, so that a renderMore
+            // request will complete before advancing the page and firing off another
+            // data fetch and render request.
+            if (this.renderingMore) {
+                return;
+            }
+            this.renderingMore = true;
+
             this.currentPage += 1;
 
-            return this.renderFromDataSource(this.currentCategory, false);
+            return this.renderFromDataSource(this.currentCategory, false)
+                .finally(() => {
+                    this.renderingMore = false;
+                });
         },
 
         fetchFromDataSource: function(dataSource) {
-            var _this = this;
-           
             var query = {
-                input: _this.currentQuery,
-                page: _this.currentPage,
+                input: this.currentQuery,
+                page: this.currentPage,
             };
 
             return dataSource.search(query);   
@@ -547,52 +560,53 @@ define ([
         },
 
         renderFromDataSource: function(dataSourceID, initial) {
-            var _this = this;
-            var dataSource = this.getDataSource(dataSourceID);
-            this.resultsFooterMessage.html(html.loading('fetching another ' + this.itemsPerPage));
-            this.fetchFromDataSource(dataSource, initial)
-                .then(function (result) {
+            const dataSource = this.getDataSource(dataSourceID);
+            this.resultsFooterMessage.html(`
+                <span>fetching another ${this.itemsPerPage} items</span> 
+                <span class="fa fa-spinner fa-spin" style="margin-left: 1ex"/>
+            `);
+            
+            return this.fetchFromDataSource(dataSource, initial)
+                .then((result) => {
                     // a null result means that the search was not run for some
                     // reason -- most likely it was canceled due to overlapping
                     // queries.
                     if (result) {
-                        // _this.removeLastRowPlaceholder();
                         if (initial) {
-                            _this.totalPanel.empty();
-                            _this.resultPanel.empty();
-                            _this.resultsFooterMessage.empty();                
+                            this.totalPanel.empty();
+                            this.resultPanel.empty();
+                            this.resultsFooterMessage.empty();                
                         }
-                        result.forEach(function (item, index) {
-                            _this.addRow(dataSource, item, index);
+                        result.forEach((item, index) => {
+                            this.addRow(dataSource, item, index);
                         });
-                        // _this.addLastRowPlaceholder();
 
-                        _this.totalAvailable = dataSource.availableDataCount;
-                        _this.currentFilteredResults = dataSource.filteredDataCount;
+                        this.totalAvailable = dataSource.availableDataCount;
+                        this.currentFilteredResults = dataSource.filteredDataCount;
 
                         var message;
                         if (dataSource.filteredDataCount) {
                             if (dataSource.fetchedDataCount === dataSource.filteredDataCount) {
-                                message = 'all ' + _this.currentFilteredResults + ' fetched';
+                                message = 'all ' + this.currentFilteredResults + ' fetched';
                             } else {
-                                message = 'fetched ' + result.length + ' of ' + _this.currentFilteredResults;
+                                message = 'fetched ' + dataSource.fetchedDataCount + ' of ' + this.currentFilteredResults;
                             }
-                            _this.showResultFooter();
+                            this.showResultFooter();
                         } else {
                             message = '';
-                            _this.hideResultFooter();
+                            this.hideResultFooter();
                         }
-                        _this.resultsFooterMessage.text(message);
+                        this.resultsFooterMessage.text(message);
 
-                        _this.renderTotalsPanel();
+                        this.renderTotalsPanel();
                     }
 
-                    _this.currentDataSource = dataSource;
+                    this.currentDataSource = dataSource;
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     console.error('Error rendering from data source', dataSource, err);
-                    _this.showError(err);
-                    _this.renderError();
+                    this.showError(err);
+                    this.renderError();
                 });
         },
 

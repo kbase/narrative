@@ -11,7 +11,7 @@ const {login, openNarrative, sendString, clickWhenReady} = require('../wdioUtils
 // Note that narrativetest is not yet set up in narrative-dev/prod.
 const allTestCases = {
     ci: {
-        TEST_CASE1: {
+        TEST_CASE_1: {
             narrativeId: 53983,
             row: 4,
             name: 'Acetobacter ascendens',
@@ -43,7 +43,7 @@ const allTestCases = {
                 }
             ]
         },
-        TEST_CASE2: {
+        TEST_CASE_2: {
             narrativeId: 53983,
             row: 10,
             scrollTo: true,
@@ -76,7 +76,7 @@ const allTestCases = {
                 }
             ]
         },
-        TEST_CASE3: {
+        TEST_CASE_3: {
             narrativeId: 53983,
             row: 1,
             scrollTo: false,
@@ -111,12 +111,12 @@ const allTestCases = {
                 }
             ]
         },
-        TEST_CASE4: {
+        TEST_CASE_4: {
             narrativeId: 53983,
             searchFor: 'foobar',
             foundCount: 'None'
         },
-        TEST_CASE5: {
+        TEST_CASE_5: {
             narrativeId: 53983,
             row: 30,
             scrollTo: true,
@@ -151,10 +151,43 @@ const allTestCases = {
                     value: '3,862'
                 }
             ]
+        },
+        TEST_CASE_6: {
+            narrativeId: 53983,
+            searchFor: 'Acetobacter pasteurianus',
+            foundCount: 1,
+            row: 1,
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter'
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_001662905.1'
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_LYUD01000001'
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '184'
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '3,093'
+                }
+            ]
         }
     },
     'narrative-dev':  {
-        TEST_CASE1: {
+        TEST_CASE_1: {
             narrativeId: 78050,
             row: 3,
             name: 'Absiella sp. AM09-45',
@@ -186,7 +219,7 @@ const allTestCases = {
                 }
             ]
         },
-        TEST_CASE2: {
+        TEST_CASE_2: {
             narrativeId: 78050,
             row: 10,
             scrollTo: true,
@@ -219,7 +252,7 @@ const allTestCases = {
                 }
             ]
         },
-        TEST_CASE3: {
+        TEST_CASE_3: {
             narrativeId: 78050,
             row: 1,
             scrollTo: false,
@@ -254,12 +287,12 @@ const allTestCases = {
                 }
             ]
         },
-        TEST_CASE4: {
+        TEST_CASE_4: {
             narrativeId: 78050,
             searchFor: 'foobar',
             foundCount: 'None'
         },
-        TEST_CASE5: {
+        TEST_CASE_5: {
             narrativeId: 78050,
             row: 30,
             scrollTo: true,
@@ -294,6 +327,39 @@ const allTestCases = {
                     value: '2,539'
                 }
             ]
+        },
+        TEST_CASE_6: {
+            narrativeId: 78050,
+            searchFor: 'Acetobacter pasteurianus',
+            foundCount: 1,
+            row: 1,
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter'
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_001662905.1'
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_LYUD01000001'
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '184'
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '3,093'
+                }
+            ]
         }
     }
 };
@@ -316,37 +382,30 @@ async function waitForRows(panel, count){
 }
 
 async function openPublicData() {
-    // Open the data slideout
+    // Open the data slide-out
     const button = await $('[data-test-id="data-slideout-button"]');
     await button.waitForExist();
     await clickWhenReady(button);
-
-    // Here we locate the public data tab, move the mouse cursor to it, and then
-    // click on its container, which should open the public data panel.
-    // The reason for this roundabout approach is that the click handler is on the
-    // container, not the individual tabs. 
     const panel = await $('[data-test-id="data-slideout-panel"]');
     await panel.waitForExist();
 
-    const tablist = await panel.$('[role="tablist"]');
-    await tablist.waitForExist();
-
-    const publicTab = await panel.$('[data-test-id="tab-public"]');
+    // Then click the public data tab.
+    const publicTab = await panel.$('[role="tablist"] [data-test-id="tab-public"]');
     await publicTab.waitForExist();
-
     await clickWhenReady(publicTab);
 
+    // Then wait for the associated panel to be displayed.
     const publicPanel = await panel.$('[data-test-id="panel-public"]');
     await publicPanel.waitForExist();
 
-    // get rows
-    // When using roles, we sometimes need to be very specific in our queries.
-    // Maybe roles are not suitable for integration tests, then.
-    
+    // Finally, ensure the refseq public data table displayed.
+    // Initially, the public data tab, if loaded with refseq data to any reasonable degree,
+    // will have the initial page of 20 rows fully filled.
     const rows = await waitForRows(publicPanel, 20);
     expect(rows.length).toEqual(20);
     return publicPanel;
 }
+
 
 describe('Test kbaseNarrativeSidePublicTab', () => {
     beforeEach(async () => {
@@ -359,7 +418,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, should show default results', async () => {
-        const testCase = testCases.TEST_CASE1;
+        const testCase = testCases.TEST_CASE_1;
         await login();
         await openNarrative(testCase.narrativeId);
 
@@ -385,7 +444,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, should show default results, scroll to desired row', async () => {
-        const testCase = testCases.TEST_CASE2;
+        const testCase = testCases.TEST_CASE_2;
         await login();
         await openNarrative(testCase.narrativeId);
 
@@ -411,7 +470,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, searches for a term, should find an expected row', async () => {
-        const testCase = testCases.TEST_CASE3;
+        const testCase = testCases.TEST_CASE_3;
 
         await login();
         await openNarrative(testCase.narrativeId);
@@ -453,7 +512,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
 
     it('opens the public data search tab, searches for a term which should not be found', async () => {
         await login();
-        const testCase = testCases.TEST_CASE4;
+        const testCase = testCases.TEST_CASE_4;
         await openNarrative(testCase.narrativeId);
 
         const publicPanel = await openPublicData();
@@ -480,7 +539,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
     });
 
     it('opens the public data search tab, should show default results, scroll to desired row', async () => {
-        const testCase = testCases.TEST_CASE5;
+        const testCase = testCases.TEST_CASE_5;
         await login();
         await openNarrative(testCase.narrativeId);
 
@@ -504,6 +563,44 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
         expect(nameCell).toHaveText(testCase.name);
 
         // Confirm the metadata fields.
+        for (const {id, label, value} of testCase.metadata) {
+            await testField({
+                container: row, 
+                id, 
+                label, 
+                value
+            });
+        }
+    });
+
+    it('opens the public data search tab, searches for Acetobacter pasteurianus, should find 1', async () => {
+        const testCase = testCases.TEST_CASE_6;
+        await login();
+        await openNarrative(testCase.narrativeId);
+
+        // Open the data slideout
+        const publicPanel = await openPublicData();
+
+        // Conduct a search
+        const searchInput = await publicPanel.$('[data-test-id="search-input"]');
+        await clickWhenReady(searchInput);
+        await sendString(testCase.searchFor);
+        await browser.keys('Enter');
+
+        const foundCount = await publicPanel.$('[data-test-id="found-count"]');
+        expect(foundCount).toHaveText(testCase.foundCount);
+
+        // Ensure we have the expected number of results
+        const rows = await waitForRows(publicPanel, testCase.row);
+        expect(rows.length).toBeGreaterThanOrEqual(testCase.row);
+
+        // Confirm the expected result.
+        const row = rows[testCase.row - 1];
+        await row.scrollIntoView();
+        const nameCell = await row.$('[role="cell"][data-test-id="name"]');
+        expect(nameCell).toHaveText(testCase.name);
+
+        
         for (const {id, label, value} of testCase.metadata) {
             await testField({
                 container: row, 

@@ -87,7 +87,8 @@ define([
                 params.query.bool.must.push({
                     'match': {
                         'scientific_name': {
-                            'query': query
+                            'query': query,
+                            'operator': 'AND'
                         }
                     }
                 });

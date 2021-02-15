@@ -6,7 +6,7 @@
     "repository": "github.com/kbase/narrative",
     "devDependencies": {
         "@types/puppeteer": "5",
-        "@wdio/browserstack-service": "^6.12.1",
+        "@wdio/browserstack-service": "^7.0.0",
         "@wdio/cli": "^6.10.5",
         "@wdio/local-runner": "^6.10.5",
         "@wdio/mocha-framework": "^6.11.0",

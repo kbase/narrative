@@ -37,9 +37,9 @@ define([
                             },
                             {
                                 term: {
-                                    source: source
+                                    source
                                 }
-                            },
+                            }
                         ]
                     }
                 },
@@ -67,7 +67,7 @@ define([
                             },
                             {
                                 term: {
-                                    source: source
+                                    source
                                 }
                             }
                         ]
@@ -97,8 +97,8 @@ define([
         }
 
         referenceGenomeSearch({source, query, page, pageSize}) {
-            var offset = page * pageSize;
-            var limit = pageSize;
+            const offset = page * pageSize;
+            const limit = pageSize;
             return Promise.all([
                 this.referenceGenomeTotal({source}),
                 this.referenceGenomeDataSearch({source, query, offset, limit})
@@ -135,20 +135,21 @@ define([
                 common.requireArg(arg, 'token');
                 common.requireArg(arg, 'urls.searchapi2');
                 common.requireArg(arg, 'pageSize');
+                const {config, token, urls: {searchapi2}, pageSize} = arg;
 
-                this.pageSize = arg.pageSize;
+                this.pageSize = pageSize;
 
                 this.currentPage = null;
                 this.page = null;
-                this.config = arg.config;
+                this.config = config;
                 this.queryExpression = null;
                 this.availableData = null;
                 this.fetchedDataCount = null;
                 this.filteredData = null;
                 this.searchApi = new RefDataSearch({
-                    url: arg.urls.searchapi2,
-                    token: arg.token,
-                    timeout: arg.config.timeout
+                    url: searchapi2,
+                    token,
+                    timeout: config.timeout
                 });
                 this.searchState = {
                     lastSearchAt: null,
@@ -171,9 +172,9 @@ define([
                     // Prepare page number
                     var page;
                     if (query.page) {
-                        page = query.page - 1;
+                        page = query.page;
                     } else {
-                        page = 0;
+                        page = 1;
                     }
                     this.page = page;
 
@@ -185,8 +186,11 @@ define([
                     } else if (queryInput === '*') {
                         newQuery = null;
                     } else {
-                        // strip off "*" suffix if it was added by the code which 
-                        // calls this method.
+                        // strip off "*" suffix from any terms in this search; it does not
+                        // act as a wildcard for search2, and would be interpreted as a 
+                        // literal part of the search string.
+                        // The "*" will have been added by the generic search ui code handling
+                        // itself, not the user.
                         newQuery = queryInput.split(/[ ]+/)
                             .map(function (term) {
                                 if (term.charAt(term.length-1) === '*') {
@@ -202,8 +206,8 @@ define([
                     var now = new Date().getTime();
 
                     var queryState = {
-                        query: query,
-                        page: page,
+                        query,
+                        page,
                         started: now,
                         promise: null,
                         canceled: false
@@ -213,13 +217,12 @@ define([
                     this.searchState.currentQueryState = queryState;
                     this.searchState.lastSearchAt = now;
                     this.searchState.lastQuery = newQuery;
-                
-                    // this.setQuery(query);
+
                     queryState.promise  = this.searchApi.referenceGenomeSearch({
                         source: this.config.source,
                         pageSize: this.pageSize,
                         query: this.queryExpression,
-                        page: this.page
+                        page: this.page - 1
                     })
                         .then((result) => {
                             this.availableDataCount = result.totalAvailable;
@@ -227,10 +230,10 @@ define([
                             this.availableData = result.result.hits.map((item) => {
                                 // This call gives us a normalized genome result object.
                                 // In porting this over, we are preserving the field names.
-                                var genomeRecord = parseGenomeSearchResultItem(item);
+                                const genomeRecord = parseGenomeSearchResultItem(item);
     
-                                var name = this.titleTemplate(genomeRecord);
-                                var metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
+                                const name = this.titleTemplate(genomeRecord);
+                                const metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
                                 return {
                                     info: null,
                                     id: genomeRecord.genome_id,
@@ -244,8 +247,8 @@ define([
                                     workspaceReference: {ref: genomeRecord.ws_ref}
                                 };
                             });
-                            // for now assume that all items before the page have been fetched
-                            this.fetchedDataCount = (this.page + 1) * this.pageSize + this.availableData.length;
+                            // assume that all items before the page have been fetched
+                            this.fetchedDataCount = (this.page - 1) * this.pageSize + this.availableData.length;
                             return this.availableData;
                         })
                         .catch((error) => {
@@ -258,9 +261,9 @@ define([
 
                     return queryState.promise;
                 })
-                    .finally(function () {
+                    .finally(() => {
                         this.searchState.currentQueryState = null;      
-                    }.bind(this));
+                    });
             }
         },
         setQuery: {
@@ -282,17 +285,17 @@ define([
                         this.availableData = result.result.objects.map(function (item) {
                             // This call gives us a normalized genome result object.
                             // In porting this over, we are preserving the field names.
-                            var genomeRecord = parseGenomeSearchResultItem(item);
+                            const genomeRecord = parseGenomeSearchResultItem(item);
 
-                            var name = this.titleTemplate(genomeRecord);
-                            var metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
+                            const name = this.titleTemplate(genomeRecord);
+                            const metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
                             return {
                                 info: null,
                                 id: genomeRecord.genome_id,
                                 objectId: null,
-                                name: name,
+                                name,
                                 objectName: genomeRecord.object_name,
-                                metadata: metadata,
+                                metadata,
                                 ws: this.config.workspaceName,
                                 type: this.config.type,
                                 attached: false

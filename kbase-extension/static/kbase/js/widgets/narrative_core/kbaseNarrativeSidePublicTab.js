@@ -19,7 +19,7 @@ define ([
     'yaml!kbase/config/publicDataSources.yaml',
 
     'bootstrap'
-], function (
+], (
     KBWidget,
     $,
     numeral,
@@ -33,7 +33,7 @@ define ([
     WorkspaceDataSource,
     SearchDataSource,
     DataSourceConfig
-) {
+) => {
     'use strict';
 
     function formatValue(value) {
@@ -59,21 +59,20 @@ define ([
     // an array of the same.
     // 
     function metadataToTable(metadata) {
-        var $table = $('<table role="table">')
+        const $table = $('<table role="table">')
             .css('font-size', '80%');
 
-        metadata.forEach(function (item) {
-            var $row;
-            var value;
+        metadata.forEach((item) => {
+            let value;
             if (item.value instanceof Array) {
-                value = item.value.map(function (item) {
+                value = item.value.map((item) => {
                     return formatItem(item);
                 }).join('&nbsp;&nbsp;&nbsp;');
             } else {
                 value = formatValue(item.value);
             }
 
-            $row = $(`<tr role="row" data-test-id="${item.id || item.label}">`)
+            const $row = $(`<tr role="row" data-test-id="${item.id || item.label}">`)
                 .css('margin-bottom', '2px')
                 .append($('<td role="cell" data-test-id="label">')
                     .css('width', '7em')
@@ -96,7 +95,7 @@ define ([
     }
 
     function renderTotals(found, total) {
-        var $totals = $('<span>').addClass('kb-data-list-type');
+        const $totals = $('<span>').addClass('kb-data-list-type');
         if (total === 0) {
             $totals
                 .append($('<span>None available</span>'));
@@ -133,9 +132,9 @@ define ([
     function getNextAutoSuffix(targetName, narrativeObjects, nextSuffix) {
         const targetNameRe = new RegExp('^' + targetName + '$');
         const correctedTargetNameRe = new RegExp('^' + targetName + '_([\\d]+)$');
-        var foundRoot;
-        var maxSuffix;
-        narrativeObjects.forEach(function (object) {
+        let foundRoot;
+        let maxSuffix;
+        narrativeObjects.forEach((object) => {
             const name = object[1];
             let m = targetNameRe.exec(name);
             if (m) {
@@ -248,12 +247,12 @@ define ([
             if (!this.loaded) {
                 this.loadObjects();
                 this.loaded = true;
-                $(document).on('dataUpdated.Narrative', function() {
+                $(document).on('dataUpdated.Narrative', () => {
                     $(document).trigger('dataLoadedQuery.Narrative', [null, this.IGNORE_VERSION, function(objects) {
                         this.narrativeObjects = objects;
                         this.narrativeObjectsClean = true;
                     }.bind(this)]);
-                }.bind(this));
+                });
             }
 
             this.infoPanel = $('<div>');
@@ -273,21 +272,15 @@ define ([
                 token: this.token
             });
 
-            var margin = {margin: '10px 0px 10px 0px'};
-            var $typeInput = $('<select class="form-control">')
+            const margin = {margin: '10px 0px 10px 0px'};
+            const $typeInput = $('<select class="form-control">')
                 .css(margin);
 
-            this.dataSourceConfigs.forEach(function (config, index) {
+            this.dataSourceConfigs.forEach((config, index) => {
                 $typeInput.append('<option value="' + String(index) + '">' + config.name + '</option>');
             });
 
-            // for (var catPos in this.categories) {
-            //     var cat = this.categories[catPos];
-            //     var catName = this.dataSourceConfigs[cat].name;
-            //     $typeInput.append('<option value="'+cat+'">'+catName+'</option>');
-            // }
-
-            var $dataSourceLogo = $('<span>')
+            const $dataSourceLogo = $('<span>')
                 .addClass('input-group-addon')
                 .css('width', '40px')
                 .css('border', 'none')
@@ -297,29 +290,29 @@ define ([
                 .css('background-color', 'transparent');
             this.$dataSourceLogo = $dataSourceLogo;
 
-            var $inputGroup = $('<div>')
+            const $inputGroup = $('<div>')
                 .addClass('input-group')
                 .css('width', '100%');
 
-            var typeFilter = $('<div class="col-sm-4">')
+            const typeFilter = $('<div class="col-sm-4">')
                 .append($inputGroup
                     .append($typeInput)
                     .append($dataSourceLogo));
 
-            var $filterInput = $('<input type="text" class="form-control" placeholder="Filter data..." data-test-id="search-input">');
-            var $filterInputField = $('<div class="input-group">')
+            const $filterInput = $('<input type="text" class="form-control" placeholder="Filter data..." data-test-id="search-input">');
+            const $filterInputField = $('<div class="input-group">')
                 .css(margin)
                 .append($filterInput)
                 .append($('<div class="input-group-addon btn btn-default">')
                     .append($('<span class="fa fa-search">'))
                     .css('padding', '4px 8px')
-                    .click(function () {
+                    .click(() => {
                         $filterInput.change();
-                    }.bind(this)))
+                    }))
                 .append($('<div class="input-group-addon btn btn-default">')
                     .append($('<span class="fa fa-times">'))
                     .css('padding', '4px 8px')
-                    .click(function () {
+                    .click(() => {
                         $filterInput.val('');
                         inputFieldLastValue = '';
                         $filterInput.change();
@@ -328,9 +321,9 @@ define ([
             /*
                 search and render when the type dropdown changes.
             */
-            $typeInput.change(function() {
-                var newDataSourceID = parseInt($typeInput.val());
-                var dataSource = this.dataSourceConfigs[newDataSourceID];
+            $typeInput.change(() => {
+                const newDataSourceID = parseInt($typeInput.val());
+                const dataSource = this.dataSourceConfigs[newDataSourceID];
                 this.$dataSourceLogo.empty();
                 if (dataSource) {
                     if (dataSource.logoUrl) {
@@ -339,18 +332,18 @@ define ([
                     }
                 }
                 this.searchAndRender(newDataSourceID, $filterInput.val());
-            }.bind(this));
+            });
 
             /*
                 search and render only when input change is detected.
             */
-            var inputFieldLastValue = null;
-            $filterInput.change(function() {
+            let inputFieldLastValue = null;
+            $filterInput.change(() => {
                 inputFieldLastValue = $filterInput.val();
                 renderInputFieldState();
-                var dataSourceID = parseInt($typeInput.val());
+                const dataSourceID = parseInt($typeInput.val());
                 this.searchAndRender(dataSourceID, $filterInput.val());
-            }.bind(this));
+            });
 
             function renderInputFieldState() {
                 if ($filterInput.val() === '') {
@@ -364,27 +357,13 @@ define ([
                 }            
             }
 
-            // function inputFieldDirty() {
-            //     if (inputFieldLastValue !== $filterInput.val()) {
-            //         return true;
-            //     } 
-            //     return false;
-            // }
-
-            $filterInput.keyup(function () {
+            $filterInput.keyup(() => {
                 renderInputFieldState();
             });
 
-            /*
-                search and render for every keystroke!
-            */
-            // filterInput.keyup(function() {
-            //     this.searchAndRender(typeInput.val(), filterInput.val());
-            // }.bind(this));
+            const searchFilter = $('<div class="col-sm-8">').append($filterInputField);
 
-            var searchFilter = $('<div class="col-sm-8">').append($filterInputField);
-
-            var header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'})
+            const header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'})
                 .append(typeFilter)
                 .append(searchFilter);
             this.$elem.append(header);
@@ -410,16 +389,16 @@ define ([
                 .css('overflow-x', 'hidden')
                 .css('overflow-y', 'auto')
                 .css('height', this.mainListPanelHeight)
-                .on('scroll', function(e) {
+                .on('scroll', (e) => {
                     if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight) {
                         this.renderMore();
                     }
-                }.bind(this))
+                })
                 .append(this.resultPanel)
                 .append(this.resultFooter);
 
             this.$elem.append(this.resultArea);
-            var dataSourceID = parseInt($typeInput.val(), 10);
+            const dataSourceID = parseInt($typeInput.val(), 10);
             this.searchAndRender(dataSourceID, $filterInput.val());
             return this;
         },
@@ -438,8 +417,8 @@ define ([
                 if (query.length == 0) {
                     query = '*';
                 } else if (query.indexOf('"') < 0) {
-                    var parts = query.split(/\s+/);
-                    for (var i in parts) {
+                    const parts = query.split(/\s+/);
+                    for (const i in parts) {
                         if (parts[i].indexOf('*', parts[i].length - 1) < 0) {
                             parts[i] = parts[i] + '*';
                         }
@@ -467,7 +446,7 @@ define ([
         },
 
         renderTotalsPanel: function () {
-            var $totals = renderTotals(this.currentFilteredResults, this.totalAvailable);                    
+            const $totals = renderTotals(this.currentFilteredResults, this.totalAvailable);                    
             this.totalPanel.html($totals);
         },
 
@@ -525,7 +504,7 @@ define ([
         },
 
         fetchFromDataSource: function(dataSource) {
-            var query = {
+            const query = {
                 input: this.currentQuery,
                 page: this.currentPage,
             };
@@ -534,16 +513,16 @@ define ([
         },
 
         getDataSource: function (dataSourceID) {
-            var dataSource;
-            var dataSourceConfig = this.dataSourceConfigs[dataSourceID];
+            let dataSource;
+            const dataSourceConfig = this.dataSourceConfigs[dataSourceID];
             if (this.currentDataSource && this.currentDataSource.config === dataSourceConfig) {
                 dataSource = this.currentDataSource;
             } else {
-                var dataSourceType = dataSourceTypes[dataSourceConfig.sourceType];
+                const dataSourceType = dataSourceTypes[dataSourceConfig.sourceType];
                
                 const urls = Object.keys(dataSourceType.serviceDependencies)
                     .reduce((accumUrls, key) => {
-                        var configKey = dataSourceType.serviceDependencies[key];
+                        const configKey = dataSourceType.serviceDependencies[key];
                         accumUrls[key] = Config.url(configKey);
                         return accumUrls;
                     }, {});
@@ -584,7 +563,7 @@ define ([
                         this.totalAvailable = dataSource.availableDataCount;
                         this.currentFilteredResults = dataSource.filteredDataCount;
 
-                        var message;
+                        let message;
                         if (dataSource.filteredDataCount) {
                             if (dataSource.fetchedDataCount === dataSource.filteredDataCount) {
                                 message = 'all ' + this.currentFilteredResults + ' fetched';
@@ -615,7 +594,7 @@ define ([
         },
 
         addRow: function(dataSource, row) {
-            var $row = this.renderObjectRow(dataSource, row);
+            const $row = this.renderObjectRow(dataSource, row);
             this.resultPanel.append($row);
         },
 
@@ -627,12 +606,12 @@ define ([
         renderObjectRow
         */
         renderObjectRow: function(dataSource, object) {
-            var self = this;
-            var type = object.type.split('.')[1].split('-')[0];
-            var copyText = ' Add';
+            const self = this;
+            const type = object.type.split('.')[1].split('-')[0];
+            const copyText = ' Add';
 
-            var shortName = object.name;
-            var isShortened=false;
+            let shortName = object.name;
+            let isShortened=false;
             if (shortName.length>this.maxNameLength) {
                 shortName = shortName.substring(0,this.maxNameLength-3)+'…';
                 isShortened=true;
@@ -643,11 +622,11 @@ define ([
             // path or url?
             // terminal / or not?
             // absolute or relative (initial /)
-            var objectRef = object.workspaceReference.ref;
-            var landingPageLink = this.options.landingPageURL + objectRef;
-            var provenanceLink = [this.options.provenanceViewerBaseURL, objectRef].join('/');
+            const objectRef = object.workspaceReference.ref;
+            const landingPageLink = this.options.landingPageURL + objectRef;
+            const provenanceLink = [this.options.provenanceViewerBaseURL, objectRef].join('/');
 
-            var $name = $('<span>')
+            const $name = $('<span>')
                 .addClass('kb-data-list-name')
                 .attr('role', 'cell')
                 .attr('data-test-id', 'name')
@@ -657,30 +636,30 @@ define ([
             }
 
             // Mouseover toolbar
-            var $btnToolbar = $('<span>')
+            const $btnToolbar = $('<span>')
                 .addClass('btn-toolbar')
                 .css('position', 'absolute')
                 .css('right', '6px')
                 .css('top', '0')
                 .attr('role', 'toolbar')
                 .hide();
-            var btnClasses = 'btn btn-xs btn-default';
-            var css = {'color':'#888'};
-            var $openLandingPage = $('<span>')
+            const btnClasses = 'btn btn-xs btn-default';
+            const css = {'color':'#888'};
+            const $openLandingPage = $('<span>')
                 // tooltips showing behind pullout, need to fix!
                 //.tooltip({title:'Explore data', 'container':'#'+this.mainListId})
                 .addClass(btnClasses)
                 .append($('<span>').addClass('fa fa-binoculars').css(css))
-                .click(function(e) {
+                .click((e) => {
                     e.stopPropagation();
                     window.open(landingPageLink);
                 });
 
-            var $openProvenance = $('<span>')
+            const $openProvenance = $('<span>')
                 .addClass(btnClasses).css(css)
                 //.tooltip({title:'View data provenance and relationships', 'container':'body'})
                 .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
-                .click(function(e) {
+                .click((e) => {
                     e.stopPropagation();
                     window.open(provenanceLink);
                 });
@@ -690,7 +669,7 @@ define ([
 
             // Action Column
 
-            var $addDiv =
+            const $addDiv =
                 $('<div>').append(
                     $('<button>')
                         .addClass('kb-primary-btn')
@@ -702,7 +681,7 @@ define ([
                             $(this).attr('disabled', 'disabled');
                             $(this).html('<img src="'+self.loadingImage+'">');
 
-                            var targetName = object.name;
+                            let targetName = object.name;
 
                             // object name cannot start with digits.
                             if (/^[\d]/.test(targetName)) {
@@ -718,7 +697,7 @@ define ([
                             self.copy(object, targetName, this);
                         }));
 
-            var $actionColumn = $('<div>')
+            const $actionColumn = $('<div>')
                 .css('flex', '0 0 90px')
                 .css('display', 'flex')
                 .css('align-items', 'center')
@@ -726,11 +705,11 @@ define ([
                 .append($addDiv.hide());
 
             // Icon Column
-            var $logo = $('<span>');
+            const $logo = $('<span>');
 
             Icon.buildDataIcon($logo, type);
 
-            var $iconColumn = $('<div>')
+            const $iconColumn = $('<div>')
                 .css('flex', '0 0 50px')
                 .css('display', 'flex')
                 .css('align-items', 'center')
@@ -739,19 +718,19 @@ define ([
                 .append($logo);
 
             // Main Column
-            var $titleElement = $('<div>')
+            const $titleElement = $('<div>')
                 .css('position', 'relative')
                 .append($btnToolbar.hide())
                 .append($name);
 
-            var $bodyElement;
+            let $bodyElement;
             if (object.metadata && object.metadata.length) {
                 $bodyElement  = metadataToTable(object.metadata);
             } else {
                 $bodyElement = null;
             }
 
-            var $resultColumn = $('<div role="cell">')
+            const $resultColumn = $('<div role="cell">')
                 .css('flex', '1 1 0px')
                 .css('padding-left', '4px')
                 .css('padding-right', '15px')
@@ -765,11 +744,11 @@ define ([
                 .css('flex-direction', 'row')
 
                 // show/hide ellipses on hover, show extra info on click
-                .mouseenter(function(){
+                .mouseenter(()=> {
                     $addDiv.show();
                     $btnToolbar.show();
                 })
-                .mouseleave(function(){
+                .mouseleave(()=> {
                     $addDiv.hide();
                     $btnToolbar.hide();
                 })
@@ -809,7 +788,7 @@ define ([
                 throw new Error('Too many rename tries (10)');
             }
 
-            var type = 'KBaseGenomes.Genome';
+            const type = 'KBaseGenomes.Genome';
 
             // Determine whether the targetName already exists, or if 
             // copies exist and if so the maximum suffix.
@@ -818,14 +797,14 @@ define ([
             // If there are other objects in this narrative, we need to first attempt to
             // see if other objects with this name exist, and if so, obtain a suffix which
             // may ensure this is a unique object name.
-            var suffix;
+            let suffix;
             if (this.narrativeObjects[type]) {
                 suffix = getNextAutoSuffix(targetName, this.narrativeObjects[type], nextSuffix);
             }
 
             // If we have determined a suffix (to try), append it to the base object name
             // like _<suffix>
-            var correctedTargetName = suffix ? targetName + '_' + suffix : targetName;
+            const correctedTargetName = suffix ? targetName + '_' + suffix : targetName;
 
             // Attempt to get object info for the target object name. If it exists,
             // we try again with a hopefully unique filename.
@@ -842,7 +821,7 @@ define ([
                 }],
                 ignoreErrors: 1
             }])
-                .spread(function(infos) {
+                .spread((infos) => {
                     // If an object already exists with this name, the attempt again,
                     // incrementing the suffix by 1. NB this will loop until a unique
                     // filename is found.
@@ -850,11 +829,11 @@ define ([
                         return this.copy(object, targetName, thisBtn, suffix ? suffix + 1 : 1, tries ? tries + 1 : 1);
                     }
                     return this.copyFinal(object, correctedTargetName, thisBtn);
-                }.bind(this))
-                .catch(function(error) {
+                })
+                .catch((error) => {
                     console.error('Error getting object info for copy', error);
                     this.showError(error);
-                }.bind(this));
+                });
         },
 
         copyFinal: function(object, targetName, thisBtn) {
@@ -863,12 +842,12 @@ define ([
                 target_ws_name: this.wsName,
                 target_name: targetName
             }])
-                .spread(function() {
+                .spread(() => {
                     $(thisBtn).prop('disabled', false);
                     $(thisBtn).html('<span class="fa fa-chevron-circle-left"/> Add');
                     this.trigger('updateDataList.Narrative');
-                }.bind(this))
-                .catch(function(error) {
+                })
+                .catch((error) => {
                     $(thisBtn).html('Error');
                     if (error.error && error.error.message) {
                         if (error.error.message.indexOf('may not write to workspace')>=0) {
@@ -881,11 +860,11 @@ define ([
                     }
                     console.error(error);
                     this.showError(error);
-                }.bind(this));
+                });
         },
 
         showError: function(error) {
-            var errorMsg;
+            let errorMsg;
             if (error.error && error.error.message) {
                 // handle errors thrown by kbase service clients
                 errorMsg = error.error.message;

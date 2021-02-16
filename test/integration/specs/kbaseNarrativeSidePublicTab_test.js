@@ -1,4 +1,4 @@
-/*global describe, it, browser, expect, $, afterEach, beforeEach*/
+/*global browser, $ */
 /* eslint {strict: ['error', 'global']} */
 'use strict';
 

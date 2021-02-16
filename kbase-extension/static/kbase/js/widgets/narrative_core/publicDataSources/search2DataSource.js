@@ -170,7 +170,7 @@ define([
                     }
 
                     // Prepare page number
-                    var page;
+                    let page;
                     if (query.page) {
                         page = query.page;
                     } else {
@@ -179,8 +179,8 @@ define([
                     this.page = page;
 
                     // Prepare search input
-                    var queryInput = query.input;
-                    var newQuery;
+                    const queryInput = query.input;
+                    let newQuery;
                     if (!queryInput) {
                         newQuery = null;
                     } else if (queryInput === '*') {
@@ -192,7 +192,7 @@ define([
                         // The "*" will have been added by the generic search ui code handling
                         // itself, not the user.
                         newQuery = queryInput.split(/[ ]+/)
-                            .map(function (term) {
+                            .map((term) => {
                                 if (term.charAt(term.length-1) === '*') {
                                     return term.slice(0, -1);
                                 } else {
@@ -203,9 +203,9 @@ define([
                     this.queryExpression = newQuery;
 
                     // Create state for this specific search
-                    var now = new Date().getTime();
+                    const now = new Date().getTime();
 
-                    var queryState = {
+                    const queryState = {
                         query,
                         page,
                         started: now,

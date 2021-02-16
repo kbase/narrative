@@ -213,10 +213,10 @@ The value for `OS_VERSION` depends on the testing service.
 Presets are predefined sets of options for supported configurations. A preset is identified by a preset key:
 
 - `bs-win-chrome`
-- `bs-win-FireFox`
+- `bs-win-firefox`
 - `bs-mac-chrome`
-- `bs-mac-FireFox`
-- `ss-FireFox`
+- `bs-mac-firefox`
+- `ss-firefox`
 - `ss-chrome`
 - `cd`
 
@@ -309,7 +309,7 @@ Note that if using `BrowserStack` the `SERVICE_USER` and `SERVICE_KEY` must be p
 | `BROWSER_VERSION` | latest       | Y           |
 | `HEADLESS`        | f            | Y           |
 
-#### `bs-win-FireFox`
+#### `bs-win-firefox`
 
 This is a preset for the BrowserStack testing service using the FireFox browser on Windows
 
@@ -335,7 +335,7 @@ This is a preset for the BrowserStack testing service using the Chrome browser o
 | `BROWSER_VERSION` | latest       | Y           |
 | `HEADLESS`        | f            | Y           |
 
-#### `bs-mac-FireFox`
+#### `bs-mac-firefox`
 
 This is a preset for the BrowserStack testing service using the FireFox browser on macOS
 

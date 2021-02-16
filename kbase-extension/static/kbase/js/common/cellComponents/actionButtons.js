@@ -1,8 +1,4 @@
-define([
-    'kb_common/html',
-], function(
-    html
-){
+define(['common/html'], (html) => {
     'use strict';
     function factory(config) {
         /**
@@ -25,7 +21,7 @@ define([
 
          */
 
-        var t = html.tag,
+        const t = html.tag,
             div = t('div');
 
         const actionButtons = config.actionButtons,
@@ -34,11 +30,12 @@ define([
             runAction = config.runAction;
 
         function buildLayout(events) {
-            return div({
-                class: 'kb-btn-action__container',
-            }, [
-                buildActionButtons(events)
-            ]);
+            return div(
+                {
+                    class: 'kb-btn-action__container',
+                },
+                [buildActionButtons(events)]
+            );
         }
 
         function buildActionButtons(events) {
@@ -49,7 +46,7 @@ define([
                 if (button.icon) {
                     icon = {
                         name: button.icon.name,
-                        size: 2
+                        size: 2,
                     };
                 }
                 return ui.buildButton({
@@ -61,11 +58,11 @@ define([
                     event: {
                         type: 'actionButton',
                         data: {
-                            action: key
-                        }
+                            action: key,
+                        },
                     },
                     icon: icon,
-                    label: button.label
+                    label: button.label,
                 });
             });
             bus.on('actionButton', (message) => {
@@ -73,29 +70,32 @@ define([
                 runAction(action);
             });
 
-            return div({
-                class: 'kb-btn-action__list btn-group'
-            }, buttonList);
+            return div(
+                {
+                    class: 'kb-btn-action__list btn-group',
+                },
+                buttonList
+            );
         }
 
         function setState(newState) {
-            let state = newState;
+            const state = newState;
             for (const btnName of Object.keys(actionButtons.availableButtons)) {
                 ui.hideButton(btnName);
             }
             ui.showButton(state.name);
-            state.disabled ? ui.disableButton(state.name): ui.enableButton(state.name);
+            state.disabled ? ui.disableButton(state.name) : ui.enableButton(state.name);
         }
 
         return {
             setState: setState,
-            buildLayout: buildLayout
+            buildLayout: buildLayout,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

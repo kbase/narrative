@@ -8,8 +8,8 @@ define([
 
     describe('test the bulk import cell results tab', () => {
         const workspaceClient = {
-            get_objects2: () => Promise.resolve({data: []}),
-            get_object_info_new: () => Promise.resolve([])
+            get_objects2: () => Promise.resolve({ data: [] }),
+            get_object_info_new: () => Promise.resolve([]),
         };
         beforeAll(() => {
             Jupyter.narrative = {
@@ -31,8 +31,8 @@ define([
                 onUpdate: () => {},
             });
 
-            const results = ResultsTab.make({ model, workspaceClient });
-            return results
+            const resultsTabInstance = ResultsTab.make({ model, workspaceClient });
+            return resultsTabInstance
                 .start({
                     node: node,
                 })
@@ -51,13 +51,13 @@ define([
                 onUpdate: () => {},
             });
 
-            const results = ResultsTab.make({ model, workspaceClient });
-            return results
+            const resultsTabInstance = ResultsTab.make({ model, workspaceClient });
+            return resultsTabInstance
                 .start({
                     node: node,
                 })
                 .then(() => {
-                    return results.stop();
+                    return resultsTabInstance.stop();
                 })
                 .then(() => {
                     expect(node.innerHTML).toEqual('');

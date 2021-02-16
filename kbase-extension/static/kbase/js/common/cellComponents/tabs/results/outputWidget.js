@@ -1,15 +1,15 @@
 /**
  * Should get fed data to view.
  */
-define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], function (
+define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
     Promise,
     html,
     UI,
     APIUtil
-) {
+) => {
     'use strict';
 
-    let tag = html.tag,
+    const tag = html.tag,
         div = tag('div'),
         tr = tag('tr'),
         th = tag('th'),
@@ -32,7 +32,7 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], function (
             const reportLookupParam = reports.map((ref) => {
                 return {
                     ref: ref,
-                    included: ['objects_created']
+                    included: ['objects_created'],
                 };
             });
             /* when we do the lookup, data will get returned as:
@@ -49,13 +49,14 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], function (
              */
             // key this off of the object id to make lookups easier once we
             // fetch the names later.
-            let createdObjects = {};
+            const createdObjects = {};
             let objectKeys = [];
-            return workspaceClient.get_objects2({objects: reportLookupParam})
+            return workspaceClient
+                .get_objects2({ objects: reportLookupParam })
                 .then((reportData) => {
-                    reportData.data.forEach(report => {
+                    reportData.data.forEach((report) => {
                         if ('objects_created' in report.data) {
-                            report.data.objects_created.forEach(obj => {
+                            report.data.objects_created.forEach((obj) => {
                                 createdObjects[obj.ref] = obj;
                             });
                         }
@@ -64,8 +65,8 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], function (
                     // the same order.
                     objectKeys = Object.keys(createdObjects);
                     // turn the refs into an array: [{"ref": ref}]
-                    const infoLookupParam = objectKeys.map(ref => ({'ref': ref}));
-                    return workspaceClient.get_object_info_new({objects: infoLookupParam});
+                    const infoLookupParam = objectKeys.map((ref) => ({ ref: ref }));
+                    return workspaceClient.get_object_info_new({ objects: infoLookupParam });
                 })
                 .then((objectInfo) => {
                     objectInfo.forEach((info, idx) => {
@@ -92,20 +93,12 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], function (
                     if (data.length === 0) {
                         return emptyData;
                     }
-                    let objectTable = table({class: 'table table-bordered table-striped'}, [
-                        tr([
-                            th('Created Object Name'),
-                            th('Type'),
-                            th('Description')
-                        ]),
-                        ...data.map(obj => {
+                    const objectTable = table({ class: 'table table-bordered table-striped' }, [
+                        tr([th('Created Object Name'), th('Type'), th('Description')]),
+                        ...data.map((obj) => {
                             const parsedType = APIUtil.parseWorkspaceType(obj.type);
-                            return tr([
-                                td(obj.name),
-                                td(parsedType.type),
-                                td(obj.description)
-                            ]);
-                        })
+                            return tr([td(obj.name), td(parsedType.type), td(obj.description)]);
+                        }),
                     ]);
                     return objectTable;
                 })
@@ -133,20 +126,21 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], function (
             // this is the main layout div. don't do anything yet.
             container.innerHTML = div({
                 dataElement: 'created-objects',
-                class: 'kb-created-objects'
+                class: 'kb-created-objects',
             });
-            return renderOutput(arg.reports, arg.workspaceClient)
-                .then((renderedOutput) => {
-                    ui.setContent('created-objects',
-                        ui.buildCollapsiblePanel({
-                            title: 'Objects',
-                            name: 'created-objects-toggle',
-                            hidden: false,
-                            type: 'default',
-                            classes: ['kb-panel-container'],
-                            body: renderedOutput,
-                        }));
-                });
+            return renderOutput(arg.reports, arg.workspaceClient).then((renderedOutput) => {
+                ui.setContent(
+                    'created-objects',
+                    ui.buildCollapsiblePanel({
+                        title: 'Objects',
+                        name: 'created-objects-toggle',
+                        hidden: false,
+                        type: 'default',
+                        classes: ['kb-panel-container'],
+                        body: renderedOutput,
+                    })
+                );
+            });
         }
 
         /**
@@ -158,10 +152,9 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], function (
          */
         function start(arg) {
             // send parent the ready message
-            return doAttach(arg)
-                .catch((err) => {
-                    console.error('Error while starting the created objects view', err);
-                });
+            return doAttach(arg).catch((err) => {
+                console.error('Error while starting the created objects view', err);
+            });
         }
 
         function stop() {

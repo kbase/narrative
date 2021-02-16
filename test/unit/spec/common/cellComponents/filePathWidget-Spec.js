@@ -30,7 +30,7 @@ define([
             Jupyter.narrative = null;
         });
 
-        let filePathWidget, node, spec, parameters;
+        let filePathWidgetInstance, node, spec, parameters;
 
         beforeEach(() => {
             const bus = Runtime.make().bus();
@@ -50,7 +50,7 @@ define([
 
             const workspaceId = 54745;
 
-            filePathWidget = FilePathWidget.make({
+            filePathWidgetInstance = FilePathWidget.make({
                 bus: bus,
                 workspaceId: workspaceId,
                 initialParams: model.getItem('params'),
@@ -59,22 +59,24 @@ define([
 
         afterEach(() => {
             $('body').empty();
-            filePathWidget = null;
+            filePathWidgetInstance = null;
             node = null;
+            window.kbaseRuntime = null;
         });
 
         it('has a make function that returns an object', () => {
-            expect(filePathWidget).not.toBe(null);
+            expect(filePathWidgetInstance).not.toBe(null);
         });
 
         it('has the required methods', () => {
-            expect(filePathWidget.start).toBeDefined();
-            expect(filePathWidget.stop).toBeDefined();
-            expect(filePathWidget.bus).toBeDefined();
+            ['bus', 'start', 'stop'].forEach((fn) => {
+                expect(filePathWidgetInstance[fn]).toBeDefined();
+                expect(filePathWidgetInstance[fn]).toEqual(jasmine.any(Function));
+            });
         });
 
         it('should start and render itself', () => {
-            return filePathWidget
+            return filePathWidgetInstance
                 .start({
                     node: node,
                     appSpec: spec,
@@ -98,7 +100,7 @@ define([
         });
 
         it('should add a row when Add Row button is clicked', () => {
-            return filePathWidget
+            return filePathWidgetInstance
                 .start({
                     node: node,
                     appSpec: spec,
@@ -114,7 +116,7 @@ define([
         });
 
         it('should delete a row when trashcan button is clicked', () => {
-            return filePathWidget
+            return filePathWidgetInstance
                 .start({
                     node: node,
                     appSpec: spec,

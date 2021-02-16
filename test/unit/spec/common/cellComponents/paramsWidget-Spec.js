@@ -30,7 +30,7 @@ define([
             Jupyter.narrative = null;
         });
 
-        let paramsWidget, node, parameters;
+        let paramsWidgetInstance, node, parameters;
 
         beforeEach(async () => {
             const bus = Runtime.make().bus();
@@ -50,13 +50,13 @@ define([
             const workspaceId = 54745;
             const initialParams = model.getItem('params');
 
-            paramsWidget = ParamsWidget.make({
+            paramsWidgetInstance = ParamsWidget.make({
                 bus: bus,
                 workspaceId: workspaceId,
                 initialParams: initialParams,
             });
 
-            await paramsWidget.start({
+            await paramsWidgetInstance.start({
                 node: node,
                 appSpec: spec,
                 parameters: parameters,
@@ -64,10 +64,10 @@ define([
         });
 
         afterEach(() => {
-            paramsWidget.stop().then(() => {
+            paramsWidgetInstance.stop().then(() => {
                 node.remove();
                 node = null;
-                paramsWidget = null;
+                paramsWidgetInstance = null;
                 parameters = null;
                 window.kbaseRuntime = null;
                 $('body').empty();
@@ -117,7 +117,7 @@ define([
         });
 
         it('should stop itself and empty the node it was in', () => {
-            paramsWidget.stop().then(() => {
+            paramsWidgetInstance.stop().then(() => {
                 expect(node.innerHTML).toEqual('');
             });
         });

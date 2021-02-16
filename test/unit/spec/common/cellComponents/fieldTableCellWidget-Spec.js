@@ -5,21 +5,21 @@ define([
     'common/props',
     'common/spec',
     '/test/data/testAppObj',
-], (Jupyter, fieldCellWidget, ParamResolver, Props, Spec, TestAppObject) => {
+], (Jupyter, FieldCellWidget, ParamResolver, Props, Spec, TestAppObject) => {
     'use strict';
 
     describe('The Field Table Cell Widget module', () => {
         it('loads', () => {
-            expect(fieldCellWidget).not.toBe(null);
+            expect(FieldCellWidget).not.toBe(null);
         });
 
         it('has expected functions', () => {
-            expect(fieldCellWidget.make).toBeDefined();
+            expect(FieldCellWidget.make).toBeDefined();
         });
     });
 
     describe('The Field Table Cell Widget instance', () => {
-        let node, mockFieldWidget;
+        let node, fieldCellWidgetInstance;
 
         const parameterSpec = {
             data: {
@@ -102,7 +102,7 @@ define([
             const paramResolver = ParamResolver.make();
 
             await paramResolver.loadInputControl(parameterSpec).then((inputControlFactory) => {
-                return (mockFieldWidget = fieldCellWidget.make({
+                return (fieldCellWidgetInstance = FieldCellWidget.make({
                     inputControlFactory: inputControlFactory,
                     showHint: true,
                     useRowHighight: true,
@@ -118,7 +118,7 @@ define([
         });
 
         afterEach(async () => {
-            await mockFieldWidget.stop().catch((err) => {
+            await fieldCellWidgetInstance.stop().catch((err) => {
                 console.warn(
                     'got an error when trying to stop, this is normal if stopped already (e.g. after final test run)',
                     err
@@ -127,21 +127,22 @@ define([
 
             node = null;
             document.body.innnerHTML = '';
-            mockFieldWidget = null;
+            fieldCellWidgetInstance = null;
         });
 
         it('has a factory which can be invoked', () => {
-            expect(mockFieldWidget).not.toBe(null);
+            expect(fieldCellWidgetInstance).not.toBe(null);
         });
 
         it('has the required methods', () => {
-            expect(mockFieldWidget.start).toBeDefined();
-            expect(mockFieldWidget.stop).toBeDefined();
-            expect(mockFieldWidget.bus).toBeDefined();
+            ['bus', 'start', 'stop'].forEach((fn) => {
+                expect(fieldCellWidgetInstance[fn]).toBeDefined();
+                expect(fieldCellWidgetInstance[fn]).toEqual(jasmine.any(Function));
+            });
         });
 
         it('has a method start which returns the correct object', () => {
-            return mockFieldWidget
+            return fieldCellWidgetInstance
                 .start({
                     node: node,
                 })
@@ -152,12 +153,12 @@ define([
         });
 
         it('has a method stop which returns null', () => {
-            return mockFieldWidget
+            return fieldCellWidgetInstance
                 .start({
                     node: node,
                 })
                 .then(() => {
-                    mockFieldWidget.stop().then((result) => {
+                    fieldCellWidgetInstance.stop().then((result) => {
                         expect(result).toBeNull();
                     });
                 });

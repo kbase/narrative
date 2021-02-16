@@ -3,6 +3,9 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Version NEXT
+- SCT-2935 - fix refseq public data search behavior to properly restrict the search with multiple terms
+
 ### Version 4.3.2
 - SCT-2778 - convert data slideout, public tab, refseq data source to use searchapi2/rpc api rather than searchapi2/legacy.
 - Enhanced integration testing support to add service, host, browser, screen size support.

@@ -522,15 +522,16 @@ define([
                     // do something after success
                     attachEvents();
                 })
-                .catch((err) => {
-                    // do somethig with the error.
-                    console.error('ERROR in start', err);
+                .catch((error) => {
+                    throw new Error('Unable to start paramsWidget: ', error);
                 });
         }
 
         function stop() {
             return Promise.try(() => {
-                container.innerHTML = '';
+                if (container) {
+                    container.innerHTML = '';
+                }
             });
         }
 

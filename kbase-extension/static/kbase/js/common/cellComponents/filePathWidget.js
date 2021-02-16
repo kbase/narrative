@@ -503,7 +503,7 @@ define([
                     updateRowNumbers(filePathRows);
                 });
             }).catch((error) => {
-                throw new Error('Unable to start file path widget: ', error);
+                throw new Error('Unable to start filePathWidget: ', error);
             });
         }
 

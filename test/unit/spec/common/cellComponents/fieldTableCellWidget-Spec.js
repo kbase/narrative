@@ -19,8 +19,6 @@ define([
     });
 
     describe('The Field Table Cell Widget instance', () => {
-        let node, fieldCellWidgetInstance;
-
         const parameterSpec = {
             data: {
                 constraints: {
@@ -77,6 +75,7 @@ define([
         ];
 
         beforeAll(() => {
+            window.kbaseRuntime = null;
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
@@ -87,8 +86,8 @@ define([
         });
 
         beforeEach(async () => {
-            node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(node);
+            this.node = document.createElement('div');
+            document.getElementsByTagName('body')[0].appendChild(this.node);
 
             const model = Props.make({
                 data: TestAppObject,
@@ -102,7 +101,7 @@ define([
             const paramResolver = ParamResolver.make();
 
             await paramResolver.loadInputControl(parameterSpec).then((inputControlFactory) => {
-                return (fieldCellWidgetInstance = FieldCellWidget.make({
+                return (this.fieldCellWidgetInstance = FieldCellWidget.make({
                     inputControlFactory: inputControlFactory,
                     showHint: true,
                     useRowHighight: true,
@@ -118,48 +117,49 @@ define([
         });
 
         afterEach(async () => {
-            await fieldCellWidgetInstance.stop().catch((err) => {
-                console.warn(
-                    'got an error when trying to stop, this is normal if stopped already (e.g. after final test run)',
-                    err
-                );
-            });
-
-            node = null;
-            document.body.innnerHTML = '';
-            fieldCellWidgetInstance = null;
+            if (this.fieldCellWidgetInstance) {
+                await this.fieldCellWidgetInstance.stop()
+                .catch((err) => {
+                    console.warn(
+                        'got an error when trying to stop, this is normal if stopped already (e.g. after final test run)',
+                        err
+                    );
+                });
+            }
+            document.body.innerHTML = '';
+            window.kbaseRuntime = null;
         });
 
         it('has a factory which can be invoked', () => {
-            expect(fieldCellWidgetInstance).not.toBe(null);
+            expect(this.fieldCellWidgetInstance).not.toBe(null);
         });
 
         it('has the required methods', () => {
             ['bus', 'start', 'stop'].forEach((fn) => {
-                expect(fieldCellWidgetInstance[fn]).toBeDefined();
-                expect(fieldCellWidgetInstance[fn]).toEqual(jasmine.any(Function));
+                expect(this.fieldCellWidgetInstance[fn]).toBeDefined();
             });
         });
 
         it('has a method start which returns the correct object', () => {
-            return fieldCellWidgetInstance
+            return this.fieldCellWidgetInstance
                 .start({
-                    node: node,
+                    node: this.node,
                 })
                 .then(() => {
-                    expect(node.innerHTML).toContain('kb-field-cell__cell_label');
-                    expect(node.innerHTML).toContain('kb-field-cell__input_control');
+                    expect(this.node.innerHTML).toContain('kb-field-cell__cell_label');
+                    expect(this.node.innerHTML).toContain('kb-field-cell__input_control');
                 });
         });
 
         it('has a method stop which returns null', () => {
-            return fieldCellWidgetInstance
+            return this.fieldCellWidgetInstance
                 .start({
-                    node: node,
+                    node: this.node,
                 })
                 .then(() => {
-                    fieldCellWidgetInstance.stop().then((result) => {
+                    this.fieldCellWidgetInstance.stop().then((result) => {
                         expect(result).toBeNull();
+                        this.fieldCellWidgetInstance = null;
                     });
                 });
         });

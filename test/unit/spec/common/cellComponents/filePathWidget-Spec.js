@@ -21,6 +21,7 @@ define([
 
     describe('The file path widget instance', () => {
         beforeAll(() => {
+            window.kbaseRuntime = null;
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
@@ -30,27 +31,25 @@ define([
             Jupyter.narrative = null;
         });
 
-        let filePathWidgetInstance, node, spec, parameters;
-
         beforeEach(() => {
             const bus = Runtime.make().bus();
-            node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(node);
+            this.node = document.createElement('div');
+            document.getElementsByTagName('body')[0].appendChild(this.node);
 
             const model = Props.make({
                 data: TestAppObject,
                 onUpdate: () => {},
             });
 
-            spec = Spec.make({
+            this.spec = Spec.make({
                 appSpec: model.getItem('app.spec'),
             });
 
-            parameters = spec.getSpec().parameters;
+            this.parameters = this.spec.getSpec().parameters;
 
             const workspaceId = 54745;
 
-            filePathWidgetInstance = FilePathWidget.make({
+            this.filePathWidgetInstance = FilePathWidget.make({
                 bus: bus,
                 workspaceId: workspaceId,
                 initialParams: model.getItem('params'),
@@ -58,29 +57,26 @@ define([
         });
 
         afterEach(() => {
-            $('body').empty();
-            filePathWidgetInstance = null;
-            node = null;
+            document.body.innerHTML = '';
             window.kbaseRuntime = null;
         });
 
         it('has a make function that returns an object', () => {
-            expect(filePathWidgetInstance).not.toBe(null);
+            expect(this.filePathWidgetInstance).not.toBe(null);
         });
 
         it('has the required methods', () => {
             ['bus', 'start', 'stop'].forEach((fn) => {
-                expect(filePathWidgetInstance[fn]).toBeDefined();
-                expect(filePathWidgetInstance[fn]).toEqual(jasmine.any(Function));
+                expect(this.filePathWidgetInstance[fn]).toBeDefined();
             });
         });
 
         it('should start and render itself', () => {
-            return filePathWidgetInstance
+            return this.filePathWidgetInstance
                 .start({
-                    node: node,
-                    appSpec: spec,
-                    parameters: parameters,
+                    node: this.node,
+                    appSpec: this.spec,
+                    parameters: this.parameters,
                 })
                 .then(() => {
                     const contents = [
@@ -94,39 +90,39 @@ define([
                         'Add Row',
                     ];
                     contents.forEach((item) => {
-                        expect(node.innerHTML).toContain(item);
+                        expect(this.node.innerHTML).toContain(item);
                     });
                 });
         });
 
         it('should add a row when Add Row button is clicked', () => {
-            return filePathWidgetInstance
+            return this.filePathWidgetInstance
                 .start({
-                    node: node,
-                    appSpec: spec,
-                    parameters: parameters,
+                    node: this.node,
+                    appSpec: this.spec,
+                    parameters: this.parameters,
                 })
                 .then(() => {
-                    const preClickNumberOfRows = $(node).find('tr').length;
+                    const preClickNumberOfRows = $(this.node).find('tr').length;
                     expect(preClickNumberOfRows).toEqual(1);
-                    $(node).find('.kb-file-path__button--add_row').click();
-                    const postClickNumberOfRows = $(node).find('tr').length;
+                    $(this.node).find('.kb-file-path__button--add_row').click();
+                    const postClickNumberOfRows = $(this.node).find('tr').length;
                     expect(postClickNumberOfRows).toEqual(2);
                 });
         });
 
         it('should delete a row when trashcan button is clicked', () => {
-            return filePathWidgetInstance
+            return this.filePathWidgetInstance
                 .start({
-                    node: node,
-                    appSpec: spec,
-                    parameters: parameters,
+                    node: this.node,
+                    appSpec: this.spec,
+                    parameters: this.parameters,
                 })
                 .then(() => {
-                    const preClickNumberOfRows = $(node).find('tr').length;
+                    const preClickNumberOfRows = $(this.node).find('tr').length;
                     expect(preClickNumberOfRows).toEqual(1);
-                    $(node).find('.kb-file-path__button--delete').click();
-                    const postClickNumberOfRows = $(node).find('tr').length;
+                    $(this.node).find('.kb-file-path__button--delete').click();
+                    const postClickNumberOfRows = $(this.node).find('tr').length;
                     expect(postClickNumberOfRows).toEqual(0);
                 });
         });

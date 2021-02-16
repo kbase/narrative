@@ -23,10 +23,7 @@ define([
             inputControlFactory = config.inputControlFactory,
             fieldId = html.genId(),
             spec = config.parameterSpec;
-        let places,
-            parent,
-            container,
-            inputControl;
+        let places, parent, container, inputControl;
 
         try {
             inputControl = inputControlFactory.make({
@@ -137,8 +134,8 @@ define([
                         node: places.inputControl,
                     });
                 })
-                .catch((err) => {
-                    console.error('error starting field table cell widget: ', err);
+                .catch((error) => {
+                    throw new Error('Unable to start fieldTableCellWidget: ', error);
                 });
         }
 
@@ -154,7 +151,7 @@ define([
                         return null;
                     })
                     .catch((err) => {
-                        console.error('error stopping field table cell widget: ', err);
+                        console.error('Error stopping fieldTableCellWidget: ', err);
                         if (parent && container) {
                             parent.removeChild(container);
                         }

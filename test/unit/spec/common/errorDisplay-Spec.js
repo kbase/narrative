@@ -20,10 +20,10 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
             expect(ErrorDisplay).not.toBe(null);
         });
 
-        it('has expected functions', () => {
-            const functions = ['make', 'defaultAdvice', 'cssBaseClass'];
-            functions.forEach((f) => {
-                expect(ErrorDisplay[f]).toBeDefined();
+        it('has expected exports', () => {
+            const exports = ['make', 'defaultAdvice', 'cssBaseClass'];
+            exports.forEach((ex) => {
+                expect(ErrorDisplay[ex]).toBeDefined();
             });
         });
     });
@@ -53,8 +53,10 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
         });
 
         it('has the required methods', () => {
-            expect(errorDisplayInstance.start).toBeDefined();
-            expect(errorDisplayInstance.stop).toBeDefined();
+            ['start', 'stop'].forEach((fn) => {
+                expect(errorDisplayInstance[fn]).toBeDefined();
+                expect(errorDisplayInstance[fn]).toEqual(jasmine.any(Function));
+            });
         });
 
         it('should start and render an error', async () => {
@@ -136,6 +138,27 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                         advice: defaultAdvice,
                         stacktrace: null,
                     },
+                },
+                {
+                    desc: 'error integrated into jobState object',
+                    in: Props.make({
+                        data: {
+                            exec: {
+                                jobState: {
+                                    status: 'error',
+                                    errormsg: 'A series of unfortunate events',
+                                    error_code: 666,
+                                }
+                            }
+                        }
+                    }),
+                    out: {
+                        type: 'Error code 666',
+                        message: 'A series of unfortunate events',
+                        detail: 'This error occurred during execution of the app job.',
+                        advice: defaultAdvice,
+                        stacktrace: null,
+                    }
                 },
                 {
                     desc: 'unknown job error',

@@ -758,7 +758,7 @@ define ([
                 .append($titleElement)
                 .append($bodyElement);
 
-            var $row = $('<div role="row">')
+            const $row = $('<div role="row">')
                 .css('margin', '2px')
                 .css('padding', '4px')
                 .css('display', 'flex')
@@ -777,12 +777,18 @@ define ([
                 .append($iconColumn)
                 .append($resultColumn);
 
-            var $divider = $('<hr>')
+            const $divider = $('<hr>')
                 .addClass('kb-data-list-row-hr')
                 .css('width', '100%');
-            var $rowContainer = $('<div>')
+
+           
+            const $rowContainer = $('<div>')
                 .append($divider)
                 .append($row);
+
+            if ('rowNumber' in object) {
+                $rowContainer.attr('data-row-number', String(object.rowNumber));
+            }
 
             return $rowContainer;
         },

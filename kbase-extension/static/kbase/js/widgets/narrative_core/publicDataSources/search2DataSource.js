@@ -227,7 +227,7 @@ define([
                         .then((result) => {
                             this.availableDataCount = result.totalAvailable;
                             this.filteredDataCount = result.result.count;
-                            this.availableData = result.result.hits.map((item) => {
+                            this.availableData = result.result.hits.map((item, index) => {
                                 // This call gives us a normalized genome result object.
                                 // In porting this over, we are preserving the field names.
                                 const genomeRecord = parseGenomeSearchResultItem(item);
@@ -235,6 +235,7 @@ define([
                                 const name = this.titleTemplate(genomeRecord);
                                 const metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
                                 return {
+                                    rowNumber: index + (this.page -1) * this.pageSize + 1,
                                     info: null,
                                     id: genomeRecord.genome_id,
                                     objectId: null,

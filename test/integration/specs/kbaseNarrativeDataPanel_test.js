@@ -21,15 +21,20 @@ const allTestCases = {
             1, 0, 4, 0, 1, 0, 1, 4, 2, 0, 3, 4
         ],
         tabs: [{
-            name: 'sharedwithme'
+            name: 'sharedwithme',
+            label: "Shared With Me"
         }, {
-            name: 'public'
+            name: 'public',
+            label: 'Public'
         }, {
-            name: 'example'
+            name: 'example',
+            label: 'Example'
         }, {
-            name: 'import'
+            name: 'import',
+            label: 'Import'
         }, {
-            name: 'mydata'
+            name: 'mydata',
+            label: 'My Data'
         }]
     },
     envs: {
@@ -84,12 +89,13 @@ async function selectTab(slideoutPanel, name) {
     return ensureTabIsActive(slideoutPanel, name);
 }
 
-async function selectTabByLabel(slideoutPanel, name) {
-    const tabLabel = await slideoutPanel.$(`[data-test-id="tab-${name}"] [data-test-id="label"]`);
-    await clickWhenReady(tabLabel);
+async function selectTabByLabel(slideoutPanel, name, label) {
+    const tabLabelElement = await slideoutPanel.$(`[data-test-id="tab-${name}"] [data-test-id="label"]`);
+    const tabLabel = await tabLabelElement.getText();
+    expect(tabLabel).toEqual(label);
+    await clickWhenReady(tabLabelElement);
     return ensureTabIsActive(slideoutPanel, name);
 }
-
 
 describe('Tabbing within the data panel should work', () => {
     beforeEach(async () => {
@@ -202,8 +208,8 @@ describe('Tabbing within the data panel should work', () => {
         const slideoutPanel = await openDataSlideout();
 
         for (const tabIndex of testCase.randomTabs) {
-            const { name } = testCase.tabs[tabIndex]
-            await selectTabByLabel(slideoutPanel, name);
+            const { name, label } = testCase.tabs[tabIndex]
+            await selectTabByLabel(slideoutPanel, name, label);
         }
     });
 });

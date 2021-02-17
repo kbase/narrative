@@ -1,5 +1,3 @@
-/*jslint white: true*/
-/*global module */
 // process.env.CHROME_BIN = require('puppeteer').executablePath();
 module.exports = function (config) {
     'use strict';
@@ -21,7 +19,8 @@ module.exports = function (config) {
             'karma-requirejs',
             'karma-coverage',
             'karma-mocha-reporter',
-            'karma-es6-shim'
+            'karma-es6-shim',
+            'karma-json-result-reporter',
         ],
         preprocessors: {
             'kbase-extension/static/kbase/js/**/!(api)/*.js': ['coverage'],
@@ -46,6 +45,7 @@ module.exports = function (config) {
             {pattern: 'test/*.tok', included: false, served: true, nocache: true},
             {pattern: 'test/data/**/*', included: false, served: true},
             'test/unit/testUtil.js',
+            'test/unit/mocks.js',
             'test/unit/test-main.js'
         ],
         exclude: [
@@ -56,7 +56,7 @@ module.exports = function (config) {
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['mocha', 'coverage'],
+        reporters: ['mocha', 'coverage', 'json-result'],
         coverageReporter: {
             type: 'html',
             dir: 'js-coverage/',
@@ -71,6 +71,9 @@ module.exports = function (config) {
         },
         mochaReporter: {
             ignoreSkipped: true,
+        },
+        jsonResultReporter: {
+            outputFile: 'karma-result.json',
         },
         // web server port
         port: 9876,

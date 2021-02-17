@@ -56,7 +56,8 @@ define([
     'kbase-generic-client-api',
     'util/display',
     'util/string',
-    'fileSaver'
+    'fileSaver',
+    'jqueryui'
 ], function(
     $,
     Bootstrap,
@@ -66,6 +67,7 @@ define([
     StringUtil,
     FileSaver  //enables the saveAs function.
 ) {
+    'use strict';
     var DynamicTable = function (elem, options) {
         this.options = {
             class: '',
@@ -98,7 +100,7 @@ define([
         this.decoration = this.options.decoration;
 
         this.initialize(elem);
-        this.getNewData();
+        return this.getNewData();
     };
 
     /**
@@ -266,7 +268,7 @@ define([
      */
     DynamicTable.prototype.getNewData = function() {
         this.$loadingElement.show();
-        this.options.updateFunction(this.currentPage,
+        return this.options.updateFunction(this.currentPage,
                                     this.currentQuery,
                                     this.currentSort.id,
                                     this.currentSort.sortState)

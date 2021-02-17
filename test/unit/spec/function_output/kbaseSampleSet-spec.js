@@ -1,45 +1,42 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
     'jquery',
     'kbaseSampleSetView',
     'base/js/namespace',
-    'kbaseNarrative',
     'narrativeConfig'
 ], (
     $,
     Widget,
     Jupyter,
-    Narrative,
     Config
 ) => {
+    'use strict';
     describe('Test the kbaseSampleSet viewer widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();
             $div = $('<div>');
-            Jupyter.narrative = new Narrative();
-            Jupyter.narrative.getAuthToken = () => { return 'NotARealToken!' };
+            Jupyter.narrative = {
+                getAuthToken: () => 'NotARealToken!'
+            };
         });
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
             $div.remove();
+            Jupyter.narrative = null;
         });
 
         it('Should properly render SampleSet', (done) => {
             let SampleSet = {
-                "samples": [
-                    {'id': "madeup", "name": "sample1"},
-                    {'id': "idtwo", "name": "sample2"}
+                'samples': [
+                    {'id': 'madeup', 'name': 'sample1'},
+                    {'id': 'idtwo', 'name': 'sample2'}
                 ],
-                "description": "This is a test sample set."
+                'description': 'This is a test sample set.'
             };
-            let obj_info = [35,"name","","",1,"",45700]
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            let obj_info = [35,'name',',',1,'',45700];
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'application/json',
@@ -56,18 +53,18 @@ define([
                     }]
                 })
             });
-            let fakeServiceUrl = "https://ci.kbase.us/services/fake_url";
+            const fakeServiceUrl = "https://ci.kbase.us/services/fake_url";
             var sampleServiceInfo = {
                 version: '1.1',
                 id: '12345',
                 result: [{
-                    git_commit_hash: "foo",
+                    git_commit_hash: 'foo',
                     hash: 'bar',
-                    health: "healthy",
-                    module_name: "SampleService",
+                    health: 'healthy',
+                    module_name: 'SampleService',
                     url: fakeServiceUrl
                 }]
-            }
+            };
             jasmine.Ajax.stubRequest(Config.url('service_wizard')).andReturn({
                 status: 200,
                 statusText: 'HTTP/1/1 200 OK',
@@ -83,25 +80,25 @@ define([
                 responseText: JSON.stringify({
                     version: '1.1',
                     result: [{
-                        sample_id: "id",
-                        user: "user",
+                        sample_id: 'id',
+                        user: 'user',
                         node_tree: [{
-                            id: "identificazione",
+                            id: 'identificazione',
                             parent: null,
-                            type: "sample",
+                            type: 'sample',
                             meta_controlled: {
-                                "controlled1": {"value": 1, "units": "bars"},
-                                "controlled2": {"value": "two", "units": "units"},
-                                "controlled3": {"value": "3"}
+                                'controlled1': {'value': 1, 'units': 'bars'},
+                                'controlled2': {'value': 'two', 'units': 'units'},
+                                'controlled3': {'value': '3'}
                             },
                             meta_user: {
-                                "user1": {"value": 6, "units": "units"},
-                                "user2": {"value": "foo"},
-                                "user3": {"value": "bar"}
+                                'user1': {'value': 6, 'units': 'units'},
+                                'user2': {'value': 'foo'},
+                                'user3': {'value': 'bar'}
                             }
                         }],
-                        name: "sample_name",
-                        save_date: "a time",
+                        name: 'sample_name',
+                        save_date: 'a time',
                         version: 1
                     }]
                 })
@@ -111,24 +108,24 @@ define([
                 [
                     'Description',
                     'KBase Object Name',
-                    "This is a test sample set."
+                    'This is a test sample set.'
                 ].forEach((str) => {
                     expect($div.html()).toContain(str);
                 });
                 $div.find('a[data-tab="Samples"]').click();
                 setTimeout(() => {
                     [
-                        "Sample ID",
-                        "Sample Name",
-                        "madeup",
-                        "idtwo",
-                        "two units"
+                        'Sample ID',
+                        'Sample Name',
+                        'madeup',
+                        'idtwo',
+                        'two units'
                     ].forEach((str) => {
                         expect($div.html()).toContain(str);
                     });
                     done();
-                }, 50);
-            }, 50);
+                }, 1000);
+            }, 1000);
 
         });
     });

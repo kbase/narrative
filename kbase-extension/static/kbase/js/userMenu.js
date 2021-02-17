@@ -3,18 +3,16 @@
 
 define([
     'jquery',
-    'bluebird',
     'narrativeConfig',
-    'kbase-client-api',
+    'kb_service/client/userProfile',
     'kb_common/gravatar',
     'kb_common/html',
     'util/bootstrapDialog',
     'util/string'
 ], function(
     $,
-    Promise,
     NarrativeConfig,
-    ClientAPI,
+    UserProfile,
     Gravatar,
     html,
     BootstrapDialog,
@@ -41,25 +39,21 @@ define([
             profileClient = new UserProfile(NarrativeConfig.url('user_profile'), {token: token}),
             gravatarDefault = 'identicon';
 
-        var token = config.token;
-        if (!token) {
-            // fail elegantly
+        function start() {
+            return profileClient.get_user_profile([userName])
+                .then((profile) => {
+                    if (profile.length &&
+                        profile[0] &&
+                        profile[0].profile &&
+                        profile[0].profile.userdata &&
+                        profile[0].profile.userdata.gravatarDefault) {
+                        gravatarDefault = profile[0].profile.userdata.gravatarDefault;
+                    }
+                })
+                .finally(() => {
+                    return render();
+                });
         }
-
-        Promise.resolve(profileClient.get_user_profile([userName]))
-            .then(function(profile) {
-                if (profile.length > 0 &&
-                    profile[0] &&
-                    profile[0].profile &&
-                    profile[0].profile.userdata &&
-                    profile[0].profile.userdata.avatar &&
-                    profile[0].profile.userdata.avatar) {
-                    gravatarDefault = profile[0].profile.userdata.avatar.gravatar_default;
-                }
-            })
-            .finally(function() {
-                render();
-            });
 
         function renderAvatar() {
             return img({
@@ -71,7 +65,7 @@ define([
         }
 
         function render() {
-            var menu = div({class: 'dropdown', style: 'display:inline-block'}, [
+            const menu = div({class: 'dropdown', style: 'display:inline-block'}, [
                 button({type: 'button', class: 'btn btn-default dropdown-toggle', 'data-toggle': 'dropdown', 'aria-expanded': 'false'}, [
                     renderAvatar(),
                     span({class: 'caret', style: 'margin-left: 5px;'})
@@ -104,34 +98,40 @@ define([
             target.find('#signout-button').click(logout);
         }
 
-        function renderError(error) {
-
-        }
-
         function logout() {
-            var logoutBtn = $(a({type: 'button', class: 'btn btn-primary'}, ['Sign Out']))
-                            .click(function() {
-                                dialog.hide();
-                                // dialog.destroy();
-                                $(document).trigger('logout.kbase', true);
-                            });
-            var cancelBtn = $(a({type: 'button', class: 'btn btn-default'}, ['Cancel']))
-                            .click(function() {
-                                dialog.hide();
-                                // dialog.destroy();
-                            });
-            var dialog = new BootstrapDialog({
+            const logoutBtn = $(a({
+                type: 'button',
+                class: 'btn btn-primary',
+                dataElement: 'signout'
+            }, ['Sign Out']))
+                .click(() => {
+                    dialog.hide();
+                    $(document).trigger('logout.kbase', true);
+                });
+            const cancelBtn = $(a({
+                type: 'button',
+                class: 'btn btn-default',
+                dataElement: 'cancel-signout'
+            }, ['Cancel']))
+                .click(() => {
+                    dialog.hide();
+                });
+            const dialog = new BootstrapDialog({
                 title: 'Sign Out?',
-                body: 'Sign out of KBase? This will end your session. Any unsaved changes in any open Narrative will be lost.',
+                body: div(
+                    { dataElement: 'signout-warning-body' },
+                    'Sign out of KBase? This will end your session. Any unsaved changes in any open Narrative will be lost.'
+                ),
                 buttons: [cancelBtn, logoutBtn]
             });
+            dialog.onHidden(() => dialog.destroy());
             dialog.show();
         }
 
         return {
             render: render,
-            renderError: renderError,
-            logout: logout
+            logout: logout,
+            start: start
         };
     }
 

@@ -11,7 +11,7 @@ define([
     'common/runtime',
     'util/display',
     'util/timeFormat',
-    'kbase-generic-client-api',
+    'kb_common/jsonRpc/dynamicServiceClient',
     'kb_service/client/workspace',
     'base/js/namespace',
     'handlebars',
@@ -24,7 +24,7 @@ function(
     Runtime,
     DisplayUtil,
     TimeFormat,
-    GenericClient,
+    DynamicServiceClient,
     Workspace,
     Jupyter,
     Handlebars,
@@ -46,10 +46,11 @@ function(
             const token = runtime.authToken();
             this.workspaceId = runtime.workspaceId();
             this.userId = runtime.userId();
-            this.serviceClient = new GenericClient(
-                Config.url('service_wizard'),
-                {token: token}
-            );
+            this.serviceClient = new DynamicServiceClient({
+                module: 'StaticNarrative',
+                url: Config.url('service_wizard'),
+                token: token
+            });
             this.wsClient = new Workspace(
                 Config.url('workspace'),
                 {token: token}
@@ -158,8 +159,8 @@ function(
          *      Static Narrative info, if any.
          */
         getStaticNarratives() {
-            return Promise.resolve(this.serviceClient.sync_call(
-                'StaticNarrative.get_static_narrative_info',
+            return Promise.resolve(this.serviceClient.callFunc(
+                'get_static_narrative_info',
                 [{ws_id: this.workspaceId}]
             ))
                 .then(info => info[0])
@@ -187,7 +188,9 @@ function(
                         isPublic: perm['*'] && perm['*'] === 'r'
                     };
                 })
-                .catch((error) => { return {isAdmin: false, isPublic: false} });
+                .catch(() => {
+                    return {isAdmin: false, isPublic: false};
+                });
         }
 
         /**
@@ -199,8 +202,8 @@ function(
             const docInfo = Jupyter.narrative.documentVersionInfo;
             const narrativeRef = docInfo[6] + '/' + docInfo[0] + '/' + docInfo[4];
             this.hostNode.querySelector('span[data-element="saving-spinner"]').classList.toggle('hidden');
-            return Promise.resolve(this.serviceClient.sync_call(
-                'StaticNarrative.create_static_narrative',
+            return Promise.resolve(this.serviceClient.callFunc(
+                'create_static_narrative',
                 [{'narrative_ref': narrativeRef}])
             )
                 .then(() => this.refresh() )

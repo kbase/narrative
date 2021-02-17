@@ -3,41 +3,36 @@ FROM kbase/kb_python:python3
 ENV NOTEBOOK_VERSION 6.0.2
 ENV IPYTHON_VERSION 7.9.0
 ENV IPYWIDGETS_VERSION 7.5.0
-# ENV NODEJS_VERSION 11
-
-RUN mkdir -p /kb/installers
+ENV NODEJS_VERSION 14
+ENV TAR /bin/tar
 
 # Install Base libraries, Node, R and Jupyter Notebook and ipywidgets from distinct channels
 ADD ./conda-requirements /root/conda
 
-RUN conda update -n base -c defaults conda && \
+RUN mkdir -p /kb/installers && \
+    # run conda installs
+    conda update -n base -c defaults conda && \
     conda install conda && \
     conda install -c conda-forge --file /root/conda/base && \
     conda install -c etetoolkit ete3 && \
     conda install -c anaconda-platform --file /root/conda/base.anaconda-platform && \
     conda install -c javascript --file /root/conda/base.javascript && \
-    # conda install -c wakari --file /root/conda/base.wakari && \
     conda install --file /root/conda/biokbase-requirements.txt && \
     conda install -c r r-base && \
     conda install -c conda-forge --file /root/conda/r.conda-forge && \
     conda install -c r --file /root/conda/r.r && \
-    conda install -c conda-forge nodejs
-
-# Install apt-get prereqs for node, R
-RUN apt-get update && \
-    apt-get install -y gfortran gnupg
-
-# Install nodejs at a useful version
-# RUN curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
-#     apt-get install -y nodejs
+    # Install apt-get prereqs for node and R
+    apt-get update && \
+    apt-get install -y gfortran gnupg && \
+    # Install nodejs at a useful version
+    curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
+    apt-get install -y nodejs
 
 # Install misc R packages not available on Conda
 ADD ./r-packages-postconda.R /root/r-packages.R
-ENV TAR /bin/tar
-RUN R --vanilla < /root/r-packages.R
-
-# Install IPython, Jupyter Notebook, and ipywidgets at controlled versions
-RUN conda install -c conda-forge ipython=${IPYTHON_VERSION} notebook=${NOTEBOOK_VERSION} ipywidgets==${IPYWIDGETS_VERSION} && \
+RUN R --vanilla < /root/r-packages.R && \
+    # Install IPython, Jupyter Notebook, and ipywidgets at controlled versions
+    conda install -c conda-forge ipython=${IPYTHON_VERSION} notebook=${NOTEBOOK_VERSION} ipywidgets==${IPYWIDGETS_VERSION} && \
     conda update six && \
     jupyter nbextension enable --py widgetsnbextension
 

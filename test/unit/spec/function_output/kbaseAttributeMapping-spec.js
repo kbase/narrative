@@ -1,20 +1,12 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
     'jquery',
     'kbaseAttributeMapping',
-    'testUtil',
-    'common/runtime',
     'base/js/namespace',
     'kbaseNarrative'
 ], (
     $,
     kbaseAttributeMapping,
-    TestUtil,
-    Runtime,
     Jupyter,
     Narrative
 ) => {

@@ -191,11 +191,12 @@ define([
                     this.trigger('hideGalleryPanelOverlay.Narrative');
                     this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
 
-                    // NOTE - this will be missed and a widget will remain active if the panel is closed by means other than clicking this button.
+                    // NOTE - this will be missed and a widget will remain active if the panel 
+                    // is closed by means other than clicking this button.
                     // This should be re-visited at some point.
                     this.deactivateLastRenderedPanel();
 
-                    //once we've clicked it 10 times, meaning we've open and shut the browser 5x, we reveal its TRUE NAME.
+                    // once we've clicked it 10 times, meaning we've open and shut the browser 5x, we reveal its TRUE NAME.
                     if (++numDataBrowserClicks >= 10) {
                         this.$slideoutBtn.attr('data-original-title', 'Hide / Show Slidey McSliderface');
                     }
@@ -363,22 +364,19 @@ define([
                     .attr('data-test-id', `tab-${tab.id}`)
                     .css('width', (100 / tabs.length) + '%')
                     .click((e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        // TODO: turn off active tab.
-                        const $tab = $(e.target);
+                        const $tab = $(e.currentTarget);
                         if ($tab.hasClass('active')) {
                             return;
                         }
 
                         // deactivate active tab
-                        $header.find('div').removeClass('active');
+                        $header.find('.kb-side-header.active').removeClass('active');
 
                         // Make this one active
                         $tab.addClass('active');
 
                         // Deactivate tab panel.
-                        $body.find('div.kb-side-tab').removeClass('active');
+                        $body.find('div.kb-side-tab.active').removeClass('active');
 
                         // Activate this one.
                         $body.find('div:nth-child(' + (i + 1) + ').kb-side-tab').addClass('active');
@@ -388,9 +386,10 @@ define([
                         }
                         this.updateSlideoutRendering(i);
                     })
-                    .append(tab.tabName));
+                    .append(`<span data-test-id="label">${tab.tabName}</tab>`));
                 $body.append($('<div>')
                     .addClass('kb-side-tab')
+                    .attr('data-test-id', `panel-${tab.id}`)
                     .append(tab.content));
             }
 
@@ -482,7 +481,5 @@ define([
 
             this.$overlayPanel = body.append(footer);
         }
-
     });
-
 });

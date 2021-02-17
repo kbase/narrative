@@ -131,9 +131,7 @@ define([
             // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
             // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
             // [9] : int size // [10] : usermeta meta
-            for (let i = 0; i < this.infoList.length; i++) {
-                const obj = this.infoList[i].object_info;
-
+            for (const {object_info: obj} of this.infoList) {
                 // skip narrative objects
                 if (obj[2].indexOf('KBaseNarrative') === 0) {
                     continue;
@@ -161,8 +159,7 @@ define([
 
             const typeDivs = {};
             const showTypeDiv = {};
-            for (let t = 0; t < this.dataConfig.data_types.length; t++) {
-                const typeInfo = this.dataConfig.data_types[t];
+            for (const typeInfo of this.dataConfig.data_types) {
                 const $typeContainer = $('<div>')
                     .attr('data-test-id', 'type-container')
                     .append($('<div>')
@@ -230,8 +227,8 @@ define([
 
             for (const {name: typeNames} of this.dataConfig.data_types) {
                 let showDiv = false;
-                for (let k = 0; k < typeNames.length; k++) {
-                    if (showTypeDiv[typeNames[k]]) {
+                for (const typeName of typeNames) {
+                    if (showTypeDiv[typeName]) {
                         showDiv = true;
                     }
                 }

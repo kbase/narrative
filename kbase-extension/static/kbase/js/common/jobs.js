@@ -198,13 +198,15 @@ define(['common/html', 'common/format', 'common/ui'], (html, format, UI) => {
         // jobState.job_output.result[0].batch_results.
         // Remap to be under jobState.child_jobs
         if (jobState.batch_size && jobState.child_jobs.length === 0) {
-            if (jobState.job_output.result[0].batch_results) {
+            try {
                 jobState.child_jobs = Object.keys(jobState.job_output.result[0].batch_results).map(
                     (item) => {
                         return jobState.job_output.result[0].batch_results[item].final_job_state;
                     }
                 );
             }
+            // eslint-disable-next-line no-empty
+            catch (e) {}
         }
         return jobState;
     }

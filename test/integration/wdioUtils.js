@@ -112,7 +112,7 @@ async function openNarrative(workspaceId) {
     });
 }
 
-async function waitForClass(el, className) {
+function waitForClass(el, className) {
     return  browser.waitUntil(async () => {
         const elClass = await el.getAttribute('class');
         return elClass.split(' ').includes(className);

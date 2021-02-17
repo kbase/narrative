@@ -1,4 +1,4 @@
-/*global describe, it, browser, expect, $, afterEach, beforeEach*/
+/*global  browser, $ */
 /* eslint {strict: ['error', 'global']} */
 'use strict';
 
@@ -14,6 +14,17 @@ const allTestCases = {
     ci: {
         TEST_CASE_1: {
             narrativeId: 53983,
+            tabs: [{
+                name: 'sharedwithme'
+            }, {
+                name: 'public'
+            }, {
+                name: 'example'
+            }, {
+                name: 'import'
+            }, { 
+                name: 'mydata'
+            }]
         }
     },
     'narrative-dev':  {
@@ -25,17 +36,12 @@ const allTestCases = {
 
 const testCases = allTestCases[browser.config.testParams.ENV];
 
-
 async function openDataSlideout() {
-    // Open the data slideout
+    // Open the data slideout by clicking it's toggle buttoon
     const button = await $('[data-test-id="data-slideout-button"]');
     await button.waitForExist();
     await clickWhenReady(button);
 
-    // Here we locate the public data tab, move the mouse cursor to it, and then
-    // click on its container, which should open the public data panel.
-    // The reason for this roundabout approach is that the click handler is on the
-    // container, not the individual tabs. 
     const slideoutPanel = await $('[data-test-id="data-slideout-panel"]');
     await slideoutPanel.waitForExist();
 
@@ -45,38 +51,28 @@ async function openDataSlideout() {
     return slideoutPanel;
 }
 
-async function selectTab(slideoutPanel, name) {
-    const tab = await slideoutPanel.$(`[data-test-id="tab-${name}"]`);
-    await tab.waitForExist();
-    await clickWhenReady(tab);
+async function ensureTabIsActive(slideoutPanel, name) {
     // wait for tab to have the active class.
+    const tab = await slideoutPanel.$(`[data-test-id="tab-${name}"]`);
     await waitForClass(tab, 'active');
 
-
-
+    // and wait for the panel to have the active class too.
     const tabPanel = await slideoutPanel.$(`[data-test-id="panel-${name}"]`);
-    await tabPanel.waitForExist();
     await waitForClass(tabPanel, 'active');
-    // and wait for it to have the active class.
 
     return [tab, tabPanel]
 }
 
-async function selectTabByLabel(slideoutPanel, name) {
+async function selectTab(slideoutPanel, name) {
     const tab = await slideoutPanel.$(`[data-test-id="tab-${name}"]`);
-    const tabLabel = await tab.$(`[data-test-id="label"]`);
-    await tab.waitForExist();
+    await clickWhenReady(tab);
+    return ensureTabIsActive(slideoutPanel, name); 
+}
+
+async function selectTabByLabel(slideoutPanel, name) {
+    const tabLabel = await slideoutPanel.$(`[data-test-id="tab-${name}"] [data-test-id="label"]`);
     await clickWhenReady(tabLabel);
-    // wait for tab to have the active class.
-    await waitForClass(tab, 'active');
-
-
-    const tabPanel = await slideoutPanel.$(`[data-test-id="panel-${name}"]`);
-    await tabPanel.waitForExist();
-    await waitForClass(tabPanel, 'active');
-    // and wait for it to have the active class.
-
-    return [tab, tabPanel]
+    return ensureTabIsActive(slideoutPanel, name);
 }
 
 
@@ -97,9 +93,15 @@ describe('Tabbing within the data panel should work', () => {
         
         const slideoutPanel = await openDataSlideout();
 
-        const [tab, tabPanel] = await selectTab(slideoutPanel, 'sharedwithme');
+        const [, tabPanel] = await selectTab(slideoutPanel, 'sharedwithme');
 
-        // TODO: make sure the panel content displayed correctly
+        // Ensure the main elements of the shared tab have been rendered.
+        await browser.waitUntil(async () => {
+            const searchInput = await tabPanel.$('.kb-import-search');
+            await searchInput.waitForExist();
+            const placeholder = await searchInput.getAttribute('placeholder');
+            return placeholder === 'Search data...';
+        });
     });
 
     it('opens the "Public" tab', async () => {
@@ -109,8 +111,14 @@ describe('Tabbing within the data panel should work', () => {
         
         const slideoutPanel = await openDataSlideout();
 
-        const [tab, tabPanel] = await selectTab(slideoutPanel, 'public');
-        // TODO: make sure the panel content displayed correctly
+        const [, tabPanel] = await selectTab(slideoutPanel, 'public');
+
+        // Ensure the main elements of the public data tab have been rendered.
+        await browser.waitUntil(async () => {
+            const resultContainer = await tabPanel.$('[data-test-id="result"]');
+            const kids = await resultContainer.$$('div');
+            return kids.length > 0;
+        });
     });
 
     it('opens the "Example" tab', async () => {
@@ -120,8 +128,14 @@ describe('Tabbing within the data panel should work', () => {
         
         const slideoutPanel = await openDataSlideout();
 
-        const [tab, tabPanel] = await selectTab(slideoutPanel, 'example');
-        // TODO: make sure the panel content displayed correctly
+        const [, tabPanel] = await selectTab(slideoutPanel, 'example');
+
+        // Make sure the main elements of the example tab have been rendered.
+        await browser.waitUntil(async () => {
+            const resultContainer = await tabPanel.$('[data-test-id="example-data-objects"]');
+            const kids = await resultContainer.$$('[data-test-id="type-container"]');
+            return kids.length > 0;
+        });
     }); 
 
     it('opens the "Import" tab', async () => {
@@ -131,8 +145,13 @@ describe('Tabbing within the data panel should work', () => {
 
         const slideoutPanel = await openDataSlideout();
 
-        const [tab, tabPanel] = await selectTab(slideoutPanel, 'import');
-        // TODO: make sure the panel content displayed correctly
+        const [, tabPanel] = await selectTab(slideoutPanel, 'import');
+        
+        // Make sure the main elements of the import tab have been rendered.
+        const fileDropZone = await tabPanel.$('.kb-dropzone');
+        await fileDropZone.waitForExist();
+        const fileListContainer = await tabPanel.$('#kb-data-staging-table_wrapper');
+        await fileListContainer.waitForExist();
     });
 
     it('Switches between all tabs in sequence', async () => {
@@ -142,10 +161,8 @@ describe('Tabbing within the data panel should work', () => {
 
         const slideoutPanel = await openDataSlideout();
 
-        const tabs = ['sharedwithme', 'public', 'example', 'import', 'mydata'];
-        for (const tab of tabs) {
-            console.log('selecting', tab);
-            await selectTab(slideoutPanel, tab);
+        for (const {name} of testCase.tabs) {
+            await selectTab(slideoutPanel, name);
         }
     });
 
@@ -156,10 +173,10 @@ describe('Tabbing within the data panel should work', () => {
 
         const slideoutPanel = await openDataSlideout();
 
-        const tabs = ['sharedwithme', 'public', 'example', 'import', 'mydata'];
         for (let i = 0; i < 100; i += 1) {
-            const tabIndex = Math.floor(Math.random() * tabs.length);
-            await selectTab(slideoutPanel, tabs[tabIndex]);
+            const tabIndex = Math.floor(Math.random() * testCase.tabs.length);
+            const {name} = testCase.tabs[tabIndex]
+            await selectTab(slideoutPanel, name);
         }
     });
 
@@ -170,11 +187,10 @@ describe('Tabbing within the data panel should work', () => {
 
         const slideoutPanel = await openDataSlideout();
 
-        const tabs = ['sharedwithme', 'public', 'example', 'import', 'mydata'];
         for (let i = 0; i < 100; i += 1) {
-            const tabIndex = Math.floor(Math.random() * tabs.length);
-            await selectTabByLabel(slideoutPanel, tabs[tabIndex]);
+            const tabIndex = Math.floor(Math.random() * testCase.tabs.length);
+            const {name} = testCase.tabs[tabIndex]
+            await selectTabByLabel(slideoutPanel, name);
         }
     });
-
 });

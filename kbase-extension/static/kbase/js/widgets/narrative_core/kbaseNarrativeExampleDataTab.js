@@ -6,7 +6,6 @@
 define([
     'kbwidget',
     'jquery',
-    'underscore',
     'bluebird',
     'narrativeConfig',
     'kbaseAuthenticatedWidget',
@@ -18,7 +17,6 @@ define([
 ], (
     KBWidget,
     $,
-    _,
     Promise,
     Config,
     kbaseAuthenticatedWidget,
@@ -181,9 +179,10 @@ define([
                         .append($('<div>')
                             .css({ 'margin': '4px', 'color': '#555' })
                             .append(typeInfo.header)));
-                for (let k = 0; k < typeInfo.name.length; k++) {
-                    typeDivs[typeInfo.name[k]] = $typeContainer;
-                    showTypeDiv[typeInfo.name[k]] = false;
+
+                for (const name of typeInfo.name) {
+                    typeDivs[name] = $typeContainer;
+                    showTypeDiv[name] = false;
                 }
             }
             const $otherTypesContainer = $('<div>')
@@ -212,8 +211,7 @@ define([
                 if (a.info[1].toUpperCase() < b.info[1].toUpperCase()) return 1;
                 return 0;
             });
-            for (let k = 0; k < this.objectList.length; k++) {
-                const obj = this.objectList[k];
+            for (const obj of this.objectList) {
                 let typeName = '';
                 if (obj.info[2] === 'TranscriptomeHack') {
                     typeName = obj.info[2];
@@ -230,8 +228,7 @@ define([
                 }
             }
 
-            for (let t = 0; t < this.dataConfig.data_types.length; t++) {
-                const typeNames = this.dataConfig.data_types[t].name;
+            for (const {name: typeNames} of this.dataConfig.data_types) {
                 let showDiv = false;
                 for (let k = 0; k < typeNames.length; k++) {
                     if (showTypeDiv[typeNames[k]]) {

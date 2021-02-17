@@ -127,7 +127,7 @@ describe('Tabbing within the data panel should work', () => {
         const slideoutPanel = await openDataSlideout();
 
         const [, tabPanel] = await selectTab(slideoutPanel, 'public');
-        
+
         // Ensure the main elements of the public data tab have been rendered.
         await browser.waitUntil(async () => {
             const resultContainer = await tabPanel.$('[data-test-id="result"]');
@@ -140,9 +140,11 @@ describe('Tabbing within the data panel should work', () => {
         const testCase = getTestCase('TEST_CASE_1');
         await login();
         await openNarrative(testCase.narrativeId);
+
         const slideoutPanel = await openDataSlideout();
 
         const [, tabPanel] = await selectTab(slideoutPanel, 'example');
+
         // Make sure the main elements of the example tab have been rendered.
         await browser.waitUntil(async () => {
             const resultContainer = await tabPanel.$('[data-test-id="example-data-objects"]');
@@ -159,6 +161,7 @@ describe('Tabbing within the data panel should work', () => {
         const slideoutPanel = await openDataSlideout();
 
         const [, tabPanel] = await selectTab(slideoutPanel, 'import');
+
         // Make sure the main elements of the import tab have been rendered.
         const fileDropZone = await tabPanel.$('.kb-dropzone');
         await fileDropZone.waitForExist();
@@ -191,7 +194,7 @@ describe('Tabbing within the data panel should work', () => {
         }
     });
 
-    xit('Switches between many tab labels randomly by clicking on the label', async () => {
+    it('Switches between many tab labels randomly by clicking on the label', async () => {
         const testCase = getTestCase('TEST_CASE_1');
         await login();
         await openNarrative(testCase.narrativeId);

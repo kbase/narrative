@@ -21,6 +21,9 @@ const allTestCases = {
             1, 0, 4, 0, 1, 0, 1, 4, 2, 0, 3, 4
         ],
         tabs: [{
+            name: 'mydata',
+            label: 'My Data'
+        }, {
             name: 'sharedwithme',
             label: "Shared With Me"
         }, {
@@ -32,9 +35,6 @@ const allTestCases = {
         }, {
             name: 'import',
             label: 'Import'
-        }, {
-            name: 'mydata',
-            label: 'My Data'
         }]
     },
     envs: {
@@ -184,6 +184,24 @@ describe('Tabbing within the data panel should work', () => {
 
         for (const { name } of testCase.tabs) {
             await selectTab(slideoutPanel, name);
+        }
+    });
+
+    it('Ensures tabs are in the expected order', async () => {
+        const testCase = getTestCase('TEST_CASE_1');
+        await login();
+        await openNarrative(testCase.narrativeId);
+
+        const slideoutPanel = await openDataSlideout();
+
+        const tabs = await slideoutPanel.$$(`[role="tablist"] > [role="tab"]`);
+
+        for (const [index, tab] of tabs.entries()) {
+            const testId = await tab.getAttribute('data-test-id');
+            const testLabel = await tab.getText();
+            const {name,  label} = testCase.tabs[index];
+            expect(testId).toEqual(`tab-${name}`);
+            expect(testLabel).toEqual(label);
         }
     });
 

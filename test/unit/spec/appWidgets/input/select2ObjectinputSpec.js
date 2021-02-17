@@ -189,12 +189,16 @@ define([
 
         it('Should start and stop', (done) => {
             const widget = Select2ObjectInput.make(testConfig);
+            spyOn(widget, 'start').and.callThrough();
+            spyOn(widget, 'stop').and.callThrough();
             widget
                 .start({ node: node })
                 .then(() => {
+                    expect(widget.start).toHaveBeenCalled();
                     return widget.stop();
                 })
                 .then(() => {
+                    expect(widget.stop).toHaveBeenCalled();
                     done();
                 });
         });

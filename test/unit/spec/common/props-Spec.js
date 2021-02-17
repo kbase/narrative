@@ -1,6 +1,4 @@
-define([
-    'common/props'
-], (Props) => {
+define(['common/props'], (Props) => {
     'use strict';
 
     describe('Props core functions', () => {
@@ -38,8 +36,8 @@ define([
 
         it('Set and get a simple object property', () => {
             const props = Props.make();
-            props.setItem('pet', {type: 'dog', name: 'peet'});
-            expect(props.getItem('pet')).toEqual({type: 'dog', name: 'peet'});
+            props.setItem('pet', { type: 'dog', name: 'peet' });
+            expect(props.getItem('pet')).toEqual({ type: 'dog', name: 'peet' });
         });
         it('Set two object propertyes', () => {
             const props = Props.make();
@@ -66,39 +64,29 @@ define([
             expect(props.getItem('array.prop')).toEqual([]);
         });
 
-
         it('History should be undefined', () => {
             const props = Props.make();
-            expect(props.getHistoryCount()).toBeUndefined;
+            expect(props.getHistoryCount()).toBeUndefined();
         });
-//        it('History should be 1 after one change', function() {
-//            var props = Props.make();
-//            props.setItem('color', 'red');
-//            expect(props.getHistoryCount()).toEqual(1);
-//        });
 
         it('Update callback should be called', (done) => {
             const props = Props.make({
                 onUpdate: function () {
                     expect(true).toEqual(true);
                     done();
-                }
+                },
             });
             props.setItem('color', 'red');
-
         });
 
         it('History should be 1 after one change', (done) => {
             const props = Props.make({
                 onUpdate: function (_props) {
-                    // if (_props.getHistoryCount() === 1) {
-                        expect(_props.getHistoryCount()).toEqual(1);
-                        done();
-                    // }
-                }
+                    expect(_props.getHistoryCount()).toEqual(1);
+                    done();
+                },
             });
             props.setItem('color', 'red');
-
         });
         it('Set and get a simple string property, check last value', (done) => {
             const props = Props.make({
@@ -111,19 +99,19 @@ define([
 
                     expect(last.color).toEqual('red');
                     done();
-                }
+                },
             });
             props.setItem('color', 'red');
         });
 
         it('Copy a property -- it is unaffected by changes to the original', () => {
             const props = Props.make({
-                data: {
-                    prop1: {
-                        propA: 42
-                    }
-                }
-            }),
+                    data: {
+                        prop1: {
+                            propA: 42,
+                        },
+                    },
+                }),
                 propCopy = props.copyItem('prop1');
 
             props.setItem('prop1.propA', 53);
@@ -137,5 +125,4 @@ define([
             expect(Props.getDataItem(data, 'color')).toEqual('green');
         });
     });
-
 });

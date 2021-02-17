@@ -1,13 +1,13 @@
-define(['common/cellComponents/tabs/infoTab'], (infoTabWidget) => {
+define(['common/cellComponents/tabs/infoTab'], (InfoTab) => {
     'use strict';
 
     describe('The App Info Tab module', () => {
         it('loads', () => {
-            expect(infoTabWidget).not.toBe(null);
+            expect(InfoTab).not.toBe(null);
         });
 
         it('has expected functions', () => {
-            expect(infoTabWidget.make).toBeDefined();
+            expect(InfoTab.make).toBeDefined();
         });
     });
 
@@ -43,23 +43,25 @@ define(['common/cellComponents/tabs/infoTab'], (infoTabWidget) => {
             },
         };
         const appSpec = model.getItem('app.spec');
-        const mockInfoTab = infoTabWidget.make({ model });
+        const infoTabInstance = InfoTab.make({ model });
         let node, infoTabPromise, infoTab;
 
         beforeEach(async () => {
             node = document.createElement('div');
-            infoTabPromise = mockInfoTab.start({ node });
+            infoTabPromise = infoTabInstance.start({ node });
             infoTab = await infoTabPromise;
             return infoTab; // to use infoTab for linter
         });
 
         it('has a factory which can be invoked', () => {
-            expect(mockInfoTab).not.toBe(null);
+            expect(infoTabInstance).not.toBe(null);
         });
 
         it('has the required methods', () => {
-            expect(mockInfoTab.start).toBeDefined();
-            expect(mockInfoTab.stop).toBeDefined();
+            ['start', 'stop'].forEach((fn) => {
+                expect(infoTabInstance[fn]).toBeDefined();
+                expect(infoTabInstance[fn]).toEqual(jasmine.any(Function));
+            });
         });
 
         it('has a method "start" which returns a Promise', () => {
@@ -67,7 +69,7 @@ define(['common/cellComponents/tabs/infoTab'], (infoTabWidget) => {
         });
 
         it('has a method "stop" which returns a Promise', () => {
-            const result = mockInfoTab.stop();
+            const result = infoTabInstance.stop();
             expect(result instanceof Promise).toBeTrue();
         });
 

@@ -78,20 +78,19 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
          */
         function start(arg) {
             container = arg.node;
-            let events = Events.make();
+            const events = Events.make(),
+                reports = getReportRefs();
 
-            const reports = getReportRefs();
-
-            let spinnerNode = document.createElement('div');
+            const spinnerNode = document.createElement('div');
             spinnerNode.classList.add('kb-loading-spinner');
-            spinnerNode.innerHTML = UI.loading({size: '2x'});
+            spinnerNode.innerHTML = UI.loading({ size: '2x' });
             container.appendChild(spinnerNode);
 
-            let objectNode = document.createElement('div');
+            const objectNode = document.createElement('div');
             container.appendChild(objectNode);
             objectNode.classList.add('hidden');
 
-            let reportNode = document.createElement('div');
+            const reportNode = document.createElement('div');
             container.appendChild(reportNode);
             reportNode.classList.add('hidden');
 

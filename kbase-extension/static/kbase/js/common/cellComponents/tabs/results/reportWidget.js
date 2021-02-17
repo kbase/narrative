@@ -1,13 +1,13 @@
-define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events'], function (
+define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events'], (
     Promise,
     $,
     html,
     UI,
     Events
-) {
+) => {
     'use strict';
 
-    let tag = html.tag,
+    const tag = html.tag,
         div = tag('div');
 
     function ReportWidget() {
@@ -47,7 +47,7 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events'], func
                 node: container,
             });
 
-            let layout = renderLayout();
+            const layout = renderLayout();
 
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
@@ -57,7 +57,7 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events'], func
             // send parent the ready message
             doAttach(arg.node);
 
-            return renderReport(arg.data).catch(function (err) {
+            return renderReport(arg.data).catch((err) => {
                 // do somethig with the error.
                 console.error('ERROR in start', err);
             });

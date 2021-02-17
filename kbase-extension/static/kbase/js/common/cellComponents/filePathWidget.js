@@ -8,7 +8,7 @@ define([
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime',
-], function (Promise, $, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) {
+], (Promise, $, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) => {
     'use strict';
 
     const tag = html.tag,
@@ -24,24 +24,21 @@ define([
         cssClassType = 'parameter';
 
     function factory(config) {
-        let runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             paramsBus = config.bus,
             workspaceId = config.workspaceId,
             initialParams = config.initialParams,
-            container,
-            ui,
-            bus,
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             widgets = [],
-            events = Events.make();
-
-        bus = runtime.bus().makeChannelBus({
-            description: 'A file path widget',
-        });
+            events = Events.make(),
+            bus = runtime.bus().makeChannelBus({
+                description: 'A file path widget',
+            });
+        let container, ui;
 
         function makeFieldWidget(inputWidget, appSpec, parameterSpec, value, closeParameters) {
-            let fieldWidget = FieldWidget.make({
+            const fieldWidget = FieldWidget.make({
                 inputControlFactory: inputWidget,
                 showHint: true,
                 useRowHighight: true,
@@ -55,7 +52,7 @@ define([
             });
 
             // Forward all changed parameters to the controller. That is our main job!
-            fieldWidget.bus.on('changed', function (message) {
+            fieldWidget.bus.on('changed', (message) => {
                 paramsBus.send(
                     {
                         parameter: parameterSpec.id,
@@ -77,27 +74,27 @@ define([
                 });
             });
 
-            fieldWidget.bus.on('touched', function () {
+            fieldWidget.bus.on('touched', () => {
                 paramsBus.emit('parameter-touched', {
                     parameter: parameterSpec.id,
                 });
             });
 
             // An input widget may ask for the current model value at any time.
-            fieldWidget.bus.on('sync', function () {
+            fieldWidget.bus.on('sync', () => {
                 paramsBus.emit('parameter-sync', {
                     parameter: parameterSpec.id,
                 });
             });
 
-            fieldWidget.bus.on('sync-params', function (message) {
+            fieldWidget.bus.on('sync-params', (message) => {
                 paramsBus.emit('sync-params', {
                     parameters: message.parameters,
                     replyToChannel: fieldWidget.bus.channelName,
                 });
             });
 
-            fieldWidget.bus.on('set-param-state', function (message) {
+            fieldWidget.bus.on('set-param-state', (message) => {
                 paramsBus.emit('set-param-state', {
                     id: parameterSpec.id,
                     state: message.state,
@@ -123,7 +120,7 @@ define([
             /*
              * Or in fact any parameter value at any time...
              */
-            fieldWidget.bus.on('get-parameter-value', function (message) {
+            fieldWidget.bus.on('get-parameter-value', (message) => {
                 paramsBus
                     .request(
                         {
@@ -133,7 +130,7 @@ define([
                             key: 'get-parameter-value',
                         }
                     )
-                    .then(function (response) {
+                    .then((response) => {
                         bus.emit('parameter-value', {
                             parameter: response.parameter,
                         });
@@ -176,13 +173,13 @@ define([
                                         }
                                     )
                                     .then((result) => {
-                                        let returnVal = {};
+                                        const returnVal = {};
                                         returnVal[paramName] = result.value;
                                         return returnVal;
                                     });
                             })
                         ).then((results) => {
-                            let combined = {};
+                            const combined = {};
                             results.forEach((res) => {
                                 Object.keys(res).forEach((key) => {
                                     combined[key] = res[key];
@@ -211,7 +208,7 @@ define([
         }
 
         function updateRowNumbers(filePathRows) {
-            filePathRows.forEach(function (filePathRow, index) {
+            filePathRows.forEach((filePathRow, index) => {
                 $(filePathRow)
                     .find(`.${cssBaseClass}__file_number`)
                     .text(index + 1);
@@ -228,7 +225,7 @@ define([
                     })
                 );
 
-            let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+            const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
 
             filePathRows.forEach((filePathRow) => {
                 // Only render row if it does not have the file path widgets as children (aka an empty row)
@@ -300,7 +297,7 @@ define([
                 node: container,
                 bus: bus,
             });
-            let layout = renderLayout();
+            const layout = renderLayout();
             container.innerHTML = layout;
             events.attachEvents(container);
         }
@@ -322,7 +319,7 @@ define([
         // }
 
         function makeFilePathsLayout(params) {
-            let view = {},
+            const view = {},
                 paramMap = {};
 
             const orderedParams = params.map((param) => {
@@ -332,7 +329,7 @@ define([
 
             const layout = orderedParams
                 .map((parameterId) => {
-                    let id = html.genId();
+                    const id = html.genId();
                     view[parameterId] = {
                         id: id,
                     };
@@ -356,7 +353,7 @@ define([
 
         function findPathParams(params) {
             return params.layout
-                .filter(function (id) {
+                .filter((id) => {
                     const original = params.specs[id].original;
 
                     let isFilePathParam = false;
@@ -376,7 +373,7 @@ define([
 
                     return isFilePathParam;
                 })
-                .map(function (id) {
+                .map((id) => {
                     return params.specs[id];
                 });
         }
@@ -417,7 +414,7 @@ define([
 
         function deleteRow(e) {
             $(e.target).closest('tr').remove();
-            let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+            const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
             updateRowNumbers(filePathRows);
         }
 
@@ -425,7 +422,7 @@ define([
             const appSpec = model.getItem('appSpec');
 
             const params = model.getItem('parameters');
-            let filePathParams = makeFilePathsLayout(findPathParams(params));
+            const filePathParams = makeFilePathsLayout(findPathParams(params));
 
             if (!filePathParams.layout.length) {
                 ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
@@ -434,16 +431,19 @@ define([
                     td({
                         class: `${cssBaseClass}__file_number`,
                     }),
-                    td({
-                        class: `${cssBaseClass}__params`
-                    },[
-                        div(
-                            {
-                                class: `${cssBaseClass}__param_container row`,
-                            },
-                            [filePathParams.content]
-                        )
-                    ]),
+                    td(
+                        {
+                            class: `${cssBaseClass}__params`,
+                        },
+                        [
+                            div(
+                                {
+                                    class: `${cssBaseClass}__param_container row`,
+                                },
+                                [filePathParams.content]
+                            ),
+                        ]
+                    ),
                     td({}, [
                         button(
                             {
@@ -476,14 +476,14 @@ define([
         }
 
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 doAttach(arg.node);
 
                 model.setItem('appSpec', arg.appSpec);
                 model.setItem('parameters', arg.parameters);
 
-                paramsBus.on('parameter-changed', function (message) {
-                    widgets.forEach(function (widget) {
+                paramsBus.on('parameter-changed', (message) => {
+                    widgets.forEach((widget) => {
                         widget.bus.send(message, {
                             key: {
                                 type: 'parameter-changed',
@@ -493,7 +493,7 @@ define([
                     });
                 });
 
-                let filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+                const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
 
                 return Promise.all(
                     filePathRows.map(async (filePathRow) => {
@@ -503,12 +503,12 @@ define([
                     updateRowNumbers(filePathRows);
                 });
             }).catch((error) => {
-                throw new Error('Unable to start file path widget: ', error);
+                throw new Error('Unable to start filePathWidget: ', error);
             });
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 // really unhook things here.
             });
         }

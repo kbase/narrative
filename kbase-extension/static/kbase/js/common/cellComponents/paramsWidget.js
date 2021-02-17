@@ -1,6 +1,5 @@
 define([
     'bluebird',
-    'jquery',
     // CDN
     'common/html',
     // LOCAL
@@ -10,28 +9,28 @@ define([
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime',
-], function (Promise, $, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) {
+], (Promise, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) => {
     'use strict';
 
-    let tag = html.tag,
+    const tag = html.tag,
         form = tag('form'),
         span = tag('span'),
         div = tag('div');
 
     function factory(config) {
-        let runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             bus = config.bus,
             workspaceId = config.workspaceId,
             initialParams = config.initialParams,
-            container,
-            ui,
-            places = {},
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
                 showAdvanced: null,
             },
             widgets = [];
+        let container,
+            ui,
+            places = {};
 
         // DATA
         /*
@@ -77,7 +76,7 @@ define([
       */
 
         function makeFieldWidget(inputWidget, appSpec, parameterSpec, value, closeParameters) {
-            let fieldWidget = FieldWidget.make({
+            const fieldWidget = FieldWidget.make({
                 inputControlFactory: inputWidget,
                 showHint: true,
                 useRowHighight: true,
@@ -91,7 +90,7 @@ define([
             });
 
             // Forward all changed parameters to the controller. That is our main job!
-            fieldWidget.bus.on('changed', function (message) {
+            fieldWidget.bus.on('changed', (message) => {
                 bus.send(
                     {
                         parameter: parameterSpec.id,
@@ -113,27 +112,27 @@ define([
                 });
             });
 
-            fieldWidget.bus.on('touched', function () {
+            fieldWidget.bus.on('touched', () => {
                 bus.emit('parameter-touched', {
                     parameter: parameterSpec.id,
                 });
             });
 
             // An input widget may ask for the current model value at any time.
-            fieldWidget.bus.on('sync', function () {
+            fieldWidget.bus.on('sync', () => {
                 bus.emit('parameter-sync', {
                     parameter: parameterSpec.id,
                 });
             });
 
-            fieldWidget.bus.on('sync-params', function (message) {
+            fieldWidget.bus.on('sync-params', (message) => {
                 bus.emit('sync-params', {
                     parameters: message.parameters,
                     replyToChannel: fieldWidget.bus.channelName,
                 });
             });
 
-            fieldWidget.bus.on('set-param-state', function (message) {
+            fieldWidget.bus.on('set-param-state', (message) => {
                 bus.emit('set-param-state', {
                     id: parameterSpec.id,
                     state: message.state,
@@ -159,7 +158,7 @@ define([
             /*
              * Or in fact any parameter value at any time...
              */
-            fieldWidget.bus.on('get-parameter-value', function (message) {
+            fieldWidget.bus.on('get-parameter-value', (message) => {
                 bus.request(
                     {
                         parameter: message.parameter,
@@ -167,7 +166,7 @@ define([
                     {
                         key: 'get-parameter-value',
                     }
-                ).then(function (response) {
+                ).then((response) => {
                     bus.emit('parameter-value', {
                         parameter: response.parameter,
                     });
@@ -211,13 +210,13 @@ define([
                                         }
                                     )
                                     .then((result) => {
-                                        let returnVal = {};
+                                        const returnVal = {};
                                         returnVal[paramName] = result.value;
                                         return returnVal;
                                     });
                             })
                         ).then((results) => {
-                            let combined = {};
+                            const combined = {};
                             results.forEach((res) => {
                                 Object.keys(res).forEach((key) => {
                                     combined[key] = res[key];
@@ -342,7 +341,7 @@ define([
                 node: container,
                 bus: bus,
             });
-            let layout = renderLayout();
+            const layout = renderLayout();
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
 
@@ -354,36 +353,36 @@ define([
 
         // EVENTS
         function attachEvents() {
-            bus.on('reset-to-defaults', function () {
-                widgets.forEach(function (widget) {
+            bus.on('reset-to-defaults', () => {
+                widgets.forEach((widget) => {
                     widget.bus.emit('reset-to-defaults');
                 });
             });
 
-            bus.on('toggle-advanced', function () {
+            bus.on('toggle-advanced', () => {
                 settings.showAdvanced = !settings.showAdvanced;
                 showHideAdvanced();
             });
 
-            runtime.bus().on('workspace-changed', function () {
+            runtime.bus().on('workspace-changed', () => {
                 // tell each input widget about this amazing event!
-                widgets.forEach(function (widget) {
+                widgets.forEach((widget) => {
                     widget.bus.emit('workspace-changed');
                 });
             });
         }
 
         function makeParamsLayout(params) {
-            let view = {},
+            const view = {},
                 paramMap = {};
 
-            const orderedParams = params.map(function (param) {
+            const orderedParams = params.map((param) => {
                 paramMap[param.id] = param;
                 return param.id;
             });
 
             const layout = orderedParams
-                .map(function (parameterId) {
+                .map((parameterId) => {
                     const elementId = html.genId();
                     const advanced = paramMap[parameterId].ui.advanced ? parameterId : false;
 
@@ -440,12 +439,12 @@ define([
                 });
         }
 
-        /* 
+        /*
             Filter out any inputs which may not be parameters (e.g. file inputs, output fields), map these to the parameter ID so we can use it to create the expected layout
         */
         function filterParameters(params) {
             return params.layout
-                .filter(function (id) {
+                .filter((id) => {
                     const original = params.specs[id].original;
 
                     let isParameter = false;
@@ -457,7 +456,7 @@ define([
                                 original.dynamic_dropdown_options.data_source !== 'ftp_staging';
                         }
 
-                        //looking for output fields - these should go in file paths
+                        // looking for output fields - these should go in file paths
                         else if (original.text_options && original.text_options.is_output_name) {
                             isParameter = false;
                         }
@@ -470,7 +469,7 @@ define([
 
                     return isParameter;
                 })
-                .map(function (id) {
+                .map((id) => {
                     return params.specs[id];
                 });
         }
@@ -482,7 +481,7 @@ define([
             // Separate out the params into the primary groups.
             const appSpec = model.getItem('appSpec');
             const params = model.getItem('parameters');
-            let filteredParams = makeParamsLayout(filterParameters(params));
+            const filteredParams = makeParamsLayout(filterParameters(params));
             //if there aren't any parameters we can just hide the whole area
             if (!filteredParams.layout.length) {
                 ui.getElement('parameters-area').classList.add('hidden');
@@ -506,9 +505,9 @@ define([
             model.setItem('appSpec', arg.appSpec);
             model.setItem('parameters', arg.parameters);
 
-            bus.on('parameter-changed', function (message) {
+            bus.on('parameter-changed', (message) => {
                 // Also, tell each of our inputs that a param has changed.
-                widgets.forEach(function (widget) {
+                widgets.forEach((widget) => {
                     widget.bus.send(message, {
                         key: {
                             type: 'parameter-changed',
@@ -519,19 +518,20 @@ define([
             });
 
             return renderParameters()
-                .then(function () {
+                .then(() => {
                     // do something after success
                     attachEvents();
                 })
-                .catch(function (err) {
-                    // do somethig with the error.
-                    console.error('ERROR in start', err);
+                .catch((error) => {
+                    throw new Error('Unable to start paramsWidget: ', error);
                 });
         }
 
         function stop() {
             return Promise.try(() => {
-                container.innerHTML = '';
+                if (container) {
+                    container.innerHTML = '';
+                }
             });
         }
 

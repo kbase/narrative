@@ -6,7 +6,7 @@ define([
     'common/runtime',
     'widgets/appWidgets2/errorControl',
     'css!google-code-prettify/prettify.css',
-], function (Promise, PR, html, Events, Runtime, ErrorControlFactory) {
+], (Promise, PR, html, Events, Runtime, ErrorControlFactory) => {
     'use strict';
 
     const t = html.tag,
@@ -16,17 +16,14 @@ define([
         cssBaseClass = 'kb-field-cell';
 
     function factory(config) {
-        var runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({
                 description: 'Field bus',
             }),
-            places,
-            parent,
-            container,
             inputControlFactory = config.inputControlFactory,
-            inputControl,
             fieldId = html.genId(),
             spec = config.parameterSpec;
+        let places, parent, container, inputControl;
 
         try {
             inputControl = inputControlFactory.make({
@@ -50,12 +47,12 @@ define([
         }
 
         function render(events) {
-            var ids = {
+            const ids = {
                 fieldPanel: html.genId(),
                 inputControl: html.genId(),
             };
 
-            var content = td(
+            const content = td(
                 {
                     class: `${cssBaseClass}__tableCell`,
                     id: ids.fieldPanel,
@@ -96,15 +93,15 @@ define([
 
         function attach(node) {
             parent = node;
-            let containerDiv = document.createElement('div');
+            const containerDiv = document.createElement('div');
             containerDiv.classList.add(`${cssBaseClass}__param_container`);
 
             container = parent.appendChild(containerDiv);
-            var events = Events.make({
+            const events = Events.make({
                 node: container,
             });
 
-            var rendered = render(events);
+            const rendered = render(events);
             container.innerHTML = rendered.content;
             events.attachEvents();
             // TODO: use the pattern in which the render returns an object,
@@ -131,19 +128,19 @@ define([
                 .start({
                     node: places.inputControl,
                 })
-                .then(function () {
+                .then(() => {
                     // TODO: get rid of this pattern
                     bus.emit('run', {
                         node: places.inputControl,
                     });
                 })
-                .catch((err) => {
-                    console.error('error starting field table cell widget: ', err);
+                .catch((error) => {
+                    throw new Error('Unable to start fieldTableCellWidget: ', error);
                 });
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 return inputControl
                     .stop()
                     .then(() => {
@@ -154,7 +151,7 @@ define([
                         return null;
                     })
                     .catch((err) => {
-                        console.error('error stopping field table cell widget: ', err);
+                        console.error('Error stopping fieldTableCellWidget: ', err);
                         if (parent && container) {
                             parent.removeChild(container);
                         }

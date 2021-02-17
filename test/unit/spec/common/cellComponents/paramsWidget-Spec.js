@@ -21,6 +21,7 @@ define([
 
     describe('The Parameter instance', () => {
         beforeAll(() => {
+            window.kbaseRuntime = null;
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
@@ -30,12 +31,10 @@ define([
             Jupyter.narrative = null;
         });
 
-        let paramsWidget, node, parameters;
-
         beforeEach(async () => {
             const bus = Runtime.make().bus();
-            node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(node);
+            this.node = document.createElement('div');
+            document.getElementsByTagName('body')[0].appendChild(this.node);
 
             const model = Props.make({
                 data: TestAppObject,
@@ -46,32 +45,29 @@ define([
                 appSpec: model.getItem('app.spec'),
             });
 
-            parameters = spec.getSpec().parameters;
+            this.parameters = spec.getSpec().parameters;
             const workspaceId = 54745;
             const initialParams = model.getItem('params');
 
-            paramsWidget = ParamsWidget.make({
+            this.paramsWidgetInstance = ParamsWidget.make({
                 bus: bus,
                 workspaceId: workspaceId,
                 initialParams: initialParams,
             });
 
-            await paramsWidget.start({
-                node: node,
+            await this.paramsWidgetInstance.start({
+                node: this.node,
                 appSpec: spec,
-                parameters: parameters,
+                parameters: this.parameters,
             });
         });
 
-        afterEach(() => {
-            paramsWidget.stop().then(() => {
-                node.remove();
-                node = null;
-                paramsWidget = null;
-                parameters = null;
-                window.kbaseRuntime = null;
-                $('body').empty();
-            });
+        afterEach(async() => {
+            if (this.paramsWidgetInstance) {
+                await this.paramsWidgetInstance.stop();
+            }
+            window.kbaseRuntime = null;
+            document.body.innerHTML = '';
         });
 
         it('should render the correct parameters', () => {
@@ -98,7 +94,7 @@ define([
         it('should render with advanced parameters hidden', () => {
             //get all advanced params using the spec
             const advancedParams = [];
-            for (const [, entry] of Object.entries(parameters.specs)) {
+            for (const [, entry] of Object.entries(this.parameters.specs)) {
                 if (entry.ui.advanced) {
                     advancedParams.push(entry.id);
                 }
@@ -117,8 +113,9 @@ define([
         });
 
         it('should stop itself and empty the node it was in', () => {
-            paramsWidget.stop().then(() => {
-                expect(node.innerHTML).toEqual('');
+            this.paramsWidgetInstance.stop().then(() => {
+                expect(this.node.innerHTML).toEqual('');
+                this.paramsWidgetInstance = null;
             });
         });
     });

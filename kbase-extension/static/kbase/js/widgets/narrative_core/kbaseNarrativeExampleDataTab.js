@@ -258,7 +258,7 @@ define([
             }
             const actionButtonText = (isCopy) ? ' Copy' : ' Add';
 
-            const $card = kbaseDataCard.apply(this, [{
+            return kbaseDataCard.apply(this, [{
                 version: false,
                 date: false,
                 editedBy: false,
@@ -271,8 +271,6 @@ define([
                 ws_name: this.narWs,
                 copyFunction: () => this.doObjectCopy(object_info[6] + '/' + object_info[0])
             }]);
-
-            return $card;
         },
 
         /**

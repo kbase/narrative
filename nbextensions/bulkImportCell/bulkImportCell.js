@@ -253,8 +253,6 @@ define([
             });
         });
 
-        setupCell();
-
         /**
          * Does the initial pass on newly created cells to initialize its metadata and get it
          * set up for a new life as a Bulk Import Cell.
@@ -414,7 +412,7 @@ define([
          * This should only be called after a Bulk Import cell is initialized structurally -
          * i.e. if a new one is created, or if a page is loaded that already has one.
          */
-        function setupCell() {
+        function start() {
             if (!isBulkImportCell(cell)) {
                 throw new Error('Can only set up real bulk import cells');
             }
@@ -430,7 +428,7 @@ define([
             const meta = cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             cell.metadata = meta;
-            render().then(() => {
+            return render().then(() => {
                 cell.renderMinMax();
                 // force toolbar refresh
                 // eslint-disable-next-line no-self-assign
@@ -750,6 +748,7 @@ define([
          * deleteCell function. Everything else should just run internally.
          */
         return {
+            start,
             cell,
             deleteCell,
         };

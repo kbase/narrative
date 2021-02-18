@@ -58,34 +58,36 @@ define([
         });
 
         it('has a make function that returns an object', function () {
-            expect(this.filePathWidgetInstance).not.toBe(null);
-            expect(this.filePathWidgetInstance).toEqual(jasmine.any(Object));
+            const fpw = FilePathWidget.make(this.filePathWidgetParams);
+            expect(fpw).not.toBe(null);
+            expect(fpw).toEqual(jasmine.any(Object));
         });
 
         it('has the required methods', function () {
-            const fpw = this.filePathWidgetInstance;
+            const fpw = FilePathWidget.make(this.filePathWidgetParams);
             ['bus', 'start', 'stop'].forEach((fn) => {
                 expect(fpw[fn]).toBeDefined();
             });
         });
 
         describe('should start', () => {
-            beforeEach(async function () {
+            beforeEach(function () {
                 this.node = document.createElement('div');
                 document.getElementsByTagName('body')[0].appendChild(this.node);
-
-                await this.filePathWidgetInstance.start({
+                this.fpwStartParams = {
                     node: this.node,
                     appSpec: this.spec,
-                    parameters: this.parameters,
-                });
+                    parameters: this.parameters
+                };
             });
 
             afterEach(function() {
                 document.body.innerHTML = '';
             });
 
-            it('should render itself', function () {
+            it('should render itself', async function () {
+                const fpw = FilePathWidget.make(this.filePathWidgetParams);
+                await fpw.start(this.fpwStartParams);
                 const innerHTML = this.node.innerHTML;
                 const contents = [
                     'File Paths',
@@ -102,22 +104,30 @@ define([
                 });
             });
 
-            it('should add a row when Add Row button is clicked', function (done) {
+            it('should add a row when Add Row button is clicked', async function (done) {
+                const fpw = FilePathWidget.make(this.filePathWidgetParams);
+                await fpw.start(this.fpwStartParams)
                 const preClickNumberOfRows = $(this.node).find('tr').length;
                 expect(preClickNumberOfRows).toEqual(1);
                 $(this.node).find('.kb-file-path__button--add_row').click();
-                const postClickNumberOfRows = $(this.node).find('tr').length;
-                expect(postClickNumberOfRows).toEqual(2);
-                done();
+                setTimeout(() => {
+                    const postClickNumberOfRows = $(this.node).find('tr').length;
+                    expect(postClickNumberOfRows).toEqual(2);
+                    done();
+                }, 500);
             });
 
-            it('should delete a row when trashcan button is clicked', function (done) {
+            it('should delete a row when trashcan button is clicked', async function (done) {
+                const fpw = FilePathWidget.make(this.filePathWidgetParams);
+                await fpw.start(this.fpwStartParams)
                 const preClickNumberOfRows = $(this.node).find('tr').length;
                 expect(preClickNumberOfRows).toEqual(1);
                 $(this.node).find('.kb-file-path__button--delete').click();
-                const postClickNumberOfRows = $(this.node).find('tr').length;
-                expect(postClickNumberOfRows).toEqual(0);
-                done();
+                setTimeout(() => {
+                    const postClickNumberOfRows = $(this.node).find('tr').length;
+                    expect(postClickNumberOfRows).toEqual(0);
+                    done();
+                }, 500);
             });
         });
     });

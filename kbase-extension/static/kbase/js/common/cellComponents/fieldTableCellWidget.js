@@ -1,12 +1,11 @@
 define([
-    'bluebird',
     'google-code-prettify/prettify',
     'kb_common/html',
     'common/events',
     'common/runtime',
     'widgets/appWidgets2/errorControl',
     'css!google-code-prettify/prettify.css',
-], (Promise, PR, html, Events, Runtime, ErrorControlFactory) => {
+], (PR, html, Events, Runtime, ErrorControlFactory) => {
     'use strict';
 
     const t = html.tag,
@@ -140,20 +139,18 @@ define([
         }
 
         function stop() {
-            return Promise.try(() => {
-                return inputControl
-                    .stop()
-                    .catch((err) => {
-                        console.error('Error stopping fieldTableCellWidget: ', err);
-                    })
-                    .finally(() => {
-                        if (parent && container) {
-                            parent.removeChild(container);
-                        }
-                        bus.stop();
-                        return null;
-                    });
-            });
+            return inputControl
+                .stop()
+                .catch((err) => {
+                    console.error('Error stopping fieldTableCellWidget: ', err);
+                })
+                .finally(() => {
+                    if (parent && container) {
+                        parent.removeChild(container);
+                    }
+                    bus.stop();
+                    return null;
+                });
         }
 
         return {

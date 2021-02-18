@@ -484,7 +484,7 @@ define([
             const filteredParams = makeParamsLayout(filterParameters(params));
             //if there aren't any parameters we can just hide the whole area
             if (!filteredParams.layout.length) {
-                ui.getElement('parameters-area').classList.add('hidden');
+                return Promise.resolve(ui.getElement('parameters-area').classList.add('hidden'));
             } else {
                 places.parameterFields.innerHTML = filteredParams.content;
 

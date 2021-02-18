@@ -1,3 +1,4 @@
+/* eslint-disable prefer-arrow-callback */
 define([
     'base/js/namespace',
     'common/cellComponents/filePathWidget',
@@ -31,11 +32,8 @@ define([
             Jupyter.narrative = null;
         });
 
-        beforeEach(() => {
+        beforeEach(function () {
             const bus = Runtime.make().bus();
-            this.node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(this.node);
-
             const model = Props.make({
                 data: TestAppObject,
                 onUpdate: () => {},
@@ -56,75 +54,71 @@ define([
         });
 
         afterEach(() => {
-            document.body.innerHTML = '';
             window.kbaseRuntime = null;
         });
 
-        it('has a make function that returns an object with expected methods', () => {
-            const filePathWidgetInstance = FilePathWidget.make(this.filePathWidgetParams);
-            expect(filePathWidgetInstance).not.toBe(null);
+        it('has a make function that returns an object', function () {
+            expect(this.filePathWidgetInstance).not.toBe(null);
+            expect(this.filePathWidgetInstance).toEqual(jasmine.any(Object));
+        });
+
+        it('has the required methods', function () {
+            const fpw = this.filePathWidgetInstance;
             ['bus', 'start', 'stop'].forEach((fn) => {
-                expect(filePathWidgetInstance[fn]).toBeDefined();
+                expect(fpw[fn]).toBeDefined();
             });
         });
 
-        xit('should start and render itself', () => {
-            const filePathWidgetInstance = FilePathWidget.make(this.filePathWidgetParams);
-            return filePathWidgetInstance
-                .start({
-                    node: this.node,
-                    appSpec: this.spec,
-                    parameters: this.parameters,
-                })
-                .then(() => {
-                    const contents = [
-                        'File Paths',
-                        'kb-file-path__table',
-                        'kb-file-path__table_row',
-                        'kb-file-path__file_number',
-                        '1',
-                        'fastq_rev_staging_file_name',
-                        'fa fa-trash-o fa-lg',
-                        'Add Row',
-                    ];
-                    contents.forEach((item) => {
-                        expect(this.node.innerHTML).toContain(item);
-                    });
-                });
-        });
+        describe('should start', () => {
+            beforeEach(async function () {
+                this.node = document.createElement('div');
+                document.getElementsByTagName('body')[0].appendChild(this.node);
 
-        it('should add a row when Add Row button is clicked', () => {
-            const filePathWidgetInstance = FilePathWidget.make(this.filePathWidgetParams);
-            return filePathWidgetInstance
-                .start({
+                await this.filePathWidgetInstance.start({
                     node: this.node,
                     appSpec: this.spec,
                     parameters: this.parameters,
-                })
-                .then(() => {
-                    const preClickNumberOfRows = $(this.node).find('tr').length;
-                    expect(preClickNumberOfRows).toEqual(1);
-                    $(this.node).find('.kb-file-path__button--add_row').click();
-                    const postClickNumberOfRows = $(this.node).find('tr').length;
-                    expect(postClickNumberOfRows).toEqual(2);
                 });
-        });
+            });
 
-        xit('should delete a row when trashcan button is clicked', () => {
-            const filePathWidgetInstance = FilePathWidget.make(this.filePathWidgetParams);
-            return filePathWidgetInstance
-                .start({
-                    node: this.node,
-                    appSpec: this.spec,
-                    parameters: this.parameters,
-                })
-                .then(() => {
-                    const preClickNumberOfRows = $(this.node).find('tr').length;
-                    expect(preClickNumberOfRows).toEqual(1);
-                    $(this.node).find('.kb-file-path__button--delete').click();
-                    const postClickNumberOfRows = $(this.node).find('tr').length;
-                    expect(postClickNumberOfRows).toEqual(0);
+            afterEach(function() {
+                document.body.innerHTML = '';
+            });
+
+            it('should render itself', function () {
+                const innerHTML = this.node.innerHTML;
+                const contents = [
+                    'File Paths',
+                    'kb-file-path__table',
+                    'kb-file-path__table_row',
+                    'kb-file-path__file_number',
+                    '1',
+                    'fastq_rev_staging_file_name',
+                    'fa fa-trash-o fa-lg',
+                    'Add Row',
+                ];
+                contents.forEach((item) => {
+                    expect(innerHTML).toContain(item);
                 });
+            });
+
+            it('should add a row when Add Row button is clicked', function (done) {
+                const preClickNumberOfRows = $(this.node).find('tr').length;
+                expect(preClickNumberOfRows).toEqual(1);
+                $(this.node).find('.kb-file-path__button--add_row').click();
+                const postClickNumberOfRows = $(this.node).find('tr').length;
+                expect(postClickNumberOfRows).toEqual(2);
+                done();
+            });
+
+            it('should delete a row when trashcan button is clicked', function (done) {
+                const preClickNumberOfRows = $(this.node).find('tr').length;
+                expect(preClickNumberOfRows).toEqual(1);
+                $(this.node).find('.kb-file-path__button--delete').click();
+                const postClickNumberOfRows = $(this.node).find('tr').length;
+                expect(postClickNumberOfRows).toEqual(0);
+                done();
+            });
         });
     });
 });

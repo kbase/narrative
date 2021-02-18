@@ -5,11 +5,8 @@ define([
 ], (jobStateList, Props, TestAppObject) => {
     'use strict';
 
-    let cssBaseClass;
-
     const model = Props.make({
         data: TestAppObject,
-        onUpdate: () => {},
     });
 
     function createInstance() {
@@ -24,56 +21,61 @@ define([
         });
 
         it('has expected functions', () => {
-            expect(jobStateList.make).toBeDefined();
+            expect(jobStateList.make).toEqual(jasmine.any(Function));
         });
 
         it('has a cssBaseClass variable', () => {
-            expect(jobStateList.cssBaseClass).not.toBeNull;
+            expect(jobStateList.cssBaseClass).toEqual(jasmine.any(String));
             expect(jobStateList.cssBaseClass).toContain('kb-job');
         });
     });
 
     describe('The job state list instance', () => {
-        let jobStateListInstance;
-        beforeEach(() => {
-            jobStateListInstance = createInstance();
+        beforeEach(function () {
+            this.node = document.createElement('div');
+            this.jobStateListInstance = createInstance();
         });
 
-        it('has a make function that returns an object', () => {
-            expect(jobStateListInstance).not.toBe(null);
+        afterEach(function () {
+            this.node.remove();
+        });
+        it('has a make function that returns an object', function () {
+            expect(this.jobStateListInstance).not.toBe(null);
+            expect(this.jobStateListInstance).toEqual(jasmine.any(Object));
         });
 
-        it('has the required methods', () => {
-            expect(jobStateListInstance.start).toBeDefined();
-            expect(jobStateListInstance.stop).toBeDefined();
+        it('has the required methods', function () {
+            ['start', 'stop'].forEach((fn) => {
+                expect(this.jobStateListInstance[fn]).toBeDefined();
+                expect(this.jobStateListInstance[fn]).toEqual(jasmine.any(Function));
+            }, this);
         });
 
-        it('should start, and populate a node', async () => {
-            const node = document.createElement('div');
-            expect(node.children.length).toBe(0);
-            await jobStateListInstance.start({
-                node: node,
+        it('should start, and populate a node', async function () {
+            expect(this.node.children.length).toBe(0);
+            await this.jobStateListInstance.start({
+                node: this.node,
                 jobState: model.getItem('exec.jobState'),
             });
-            expect(node.children.length).toBeGreaterThan(0);
+            expect(this.node.children.length).toBeGreaterThan(0);
         });
     });
 
     describe('the job state list structure and content', () => {
-        const node = document.createElement('div');
-        let jobStateListInstance;
-        cssBaseClass = jobStateList.cssBaseClass;
+        const cssBaseClass = jobStateList.cssBaseClass;
 
-        beforeAll(async () => {
-            jobStateListInstance = createInstance();
-            await jobStateListInstance.start({
-                node: node,
+        beforeAll(async function () {
+            this.jobStateListInstance = createInstance();
+            this.node = document.createElement('div');
+            await this.jobStateListInstance.start({
+                node: this.node,
                 jobState: model.getItem('exec.jobState'),
             });
         });
 
-        afterAll(async () => {
-            await jobStateListInstance.stop();
+        afterAll(async function () {
+            await this.jobStateListInstance.stop();
+            this.node.remove();
         });
 
         const classContents = [
@@ -86,13 +88,13 @@ define([
         ];
 
         classContents.forEach((item) => {
-            it(`should have an element with class ${item}`, () => {
-                expect(node.querySelectorAll(`.${item}`).length).toBeGreaterThan(0);
+            it(`should have an element with class ${item}`, function () {
+                expect(this.node.querySelectorAll(`.${item}`).length).toBeGreaterThan(0);
             });
         });
 
-        it('should generate a row for each job', () => {
-            expect(node.querySelectorAll(`.${cssBaseClass}__row`).length).toEqual(
+        it('should generate a row for each job', function () {
+            expect(this.node.querySelectorAll(`.${cssBaseClass}__row`).length).toEqual(
                 TestAppObject.exec.jobState.child_jobs.length
             );
         });

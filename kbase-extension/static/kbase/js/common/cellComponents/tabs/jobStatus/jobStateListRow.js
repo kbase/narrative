@@ -140,7 +140,6 @@ define([
                 jobState: jobState,
             });
             $currentRow.addClass('vertical_collapse--open');
-            return;
         }
 
         /**

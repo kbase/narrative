@@ -43,6 +43,7 @@ define(['bluebird', 'common/html', './jobStateList'], (Promise, html, JobStateLi
 
         function stop() {
             return Promise.try(() => {
+                container.innerHTML = '';
                 if (widgets) {
                     return Promise.all(
                         Object.keys(widgets).map((key) => {

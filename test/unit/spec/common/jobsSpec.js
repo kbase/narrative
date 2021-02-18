@@ -131,12 +131,12 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
 
     describe('jobLabel', () => {
         badStates.forEach((item) => {
-            it(`creates an appropriate label with the input ${item}`, () => {
+            it(`creates an appropriate label with the input ${JSON.stringify(item)}`, () => {
                 expect(Jobs.jobLabel(item)).toEqual('Job not found');
             });
         });
         JobsData.allJobs.forEach((state) => {
-            it(`creates an appropriate label with the input ${state}`, () => {
+            it(`creates an appropriate label with input in state ${state.status}`, () => {
                 expect(Jobs.jobLabel(state.status)).toEqual(state.meta.jobLabel);
             });
         });

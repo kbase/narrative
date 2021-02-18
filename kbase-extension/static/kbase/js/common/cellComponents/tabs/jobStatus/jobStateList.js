@@ -54,7 +54,7 @@ define([
                                     [
                                         // TODO: this will be a dropdown featuring
                                         // several options
-                                        'CANCEL/RETRY ALL',
+                                        'Action',
                                         i({
                                             class: `fa fa-caret-down kb-pointer ${cssBaseClass}__icon`,
                                         }),
@@ -86,7 +86,7 @@ define([
 
     // Convert the table to a datatable object to get functionality
     function renderTable($container, rowCount) {
-        const dataTable = $container.find('table').dataTable({
+        return $container.find('table').dataTable({
             searching: false,
             pageLength: dataTablePageLength,
             lengthChange: false,
@@ -109,19 +109,18 @@ define([
                 }
             },
         });
-        return dataTable;
     }
 
     function factory() {
         const widgetsById = {},
-            runtime = Runtime.make(),
+            bus = Runtime.make().bus(),
             listeners = [];
 
         let $container, tableBody;
 
         function startParamsListener(jobId) {
             listeners.push(
-                runtime.bus().listen({
+                bus.listen({
                     channel: {
                         jobId: jobId,
                     },
@@ -135,7 +134,7 @@ define([
 
         function startJobListener(jobId) {
             listeners.push(
-                runtime.bus().listen({
+                bus.listen({
                     channel: {
                         jobId: jobId,
                     },
@@ -203,18 +202,15 @@ define([
                     );
                 }
                 $container = $(args.node);
-                $container.addClass([`${cssBaseClass}__container`]);
                 $container.append($(createTable()));
                 [tableBody] = $container.find('tbody');
                 const jobState = Jobs.updateJobModel(args.jobState);
 
-                return Promise.try(() => {
-                    return Promise.all(
-                        jobState.child_jobs.map((childJob, index) => {
-                            createJobStateListRowWidget(childJob, index);
-                        })
-                    );
-                }).then(() => {
+                return Promise.all(
+                    jobState.child_jobs.map((childJob, index) => {
+                        createJobStateListRowWidget(childJob, index);
+                    })
+                ).then(() => {
                     renderTable($container, jobState.child_jobs.length);
 
                     // TODO: depending on which strategy we use for updating the job status
@@ -226,7 +222,7 @@ define([
                         startJobListener(childJob.job_id);
                         // populate the params for the child jobs
                         startParamsListener(childJob.job_id);
-                        runtime.bus().emit('request-job-info', {
+                        bus.emit('request-job-info', {
                             jobId: childJob.job_id,
                             // TODO: check whether this param is required in ee2.5
                             // parentJobId: jobState.job_id,
@@ -238,7 +234,7 @@ define([
 
         function stop() {
             return Promise.try(() => {
-                runtime.bus().removeListeners(listeners);
+                bus.removeListeners(listeners);
             });
         }
 

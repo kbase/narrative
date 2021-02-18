@@ -1,124 +1,115 @@
+/* eslint-disable prefer-arrow-callback */
 define([
     'common/cellComponents/tabs/jobStatus/jobStateListRow',
     'common/props',
     '/test/data/testAppObj',
     '/test/data/jobsData',
-], (jobStateListRow, Props, TestAppObject, JobsData) => {
+], (JobStateListRow, Props, TestAppObject, JobsData) => {
     'use strict';
 
     const model = Props.make({
         data: TestAppObject,
         onUpdate: () => {},
     });
-    const { cssBaseClass } = jobStateListRow;
+    const { cssBaseClass } = JobStateListRow;
 
     function createInstance() {
-        return jobStateListRow.make({
+        return JobStateListRow.make({
             model: model,
         });
     }
 
-    const customMatchers = {
-        toHaveRowStructure: function () {
-            return {
-                compare: function (...args) {
-                    return checkRowContents(args);
-                },
-            };
-        },
-    };
+    function getRandomJob(jobArray) {
+        const randomId = Math.floor(Math.random() * Math.floor(jobArray.length));
+        return jobArray[randomId];
+    }
 
-    function checkRowContents(args) {
-        const [row, context] = args;
-        const { job } = context;
-        const input = args[2] || job;
-        let inputString;
+    function generateRandomInput(thisObject, jobName) {
+        const row = document.createElement('tr'),
+            randomJob = Object.assign({}, getRandomJob(JobsData.validJobs), { job_id: jobName });
 
-        if (typeof input === 'object' && 'status' in input && 'job_id' in input) {
-            inputString = JSON.stringify({ job_id: input.job_id, status: input.status });
-        } else {
-            inputString = JSON.stringify(input);
-        }
+        thisObject.row = row;
+        thisObject.jobId = jobName;
+        thisObject.job = randomJob;
 
-        const result = {
-            pass: true,
-            message: 'checking row contents with input ' + inputString,
-            tests: {},
-        };
+        return thisObject;
+    }
 
-        // status details cell
-        const logViewEl = row.querySelector(`.${cssBaseClass}__cell--log-view`);
-        const logViewRegex = new RegExp('Status details');
-        result.tests.logView = logViewRegex.test(logViewEl.textContent);
-        expect(logViewEl.textContent).toContain('Status details');
+    /**
+     * itHasRowStructure expects `this` to be set up as follows:
+     *
+     * row: a row element, altered by the jobStateListRow functions
+     * job: the original job object used to create the jobStateListRow
+     *      it has extra data under the key 'meta'
+     * input: an altered job object with extra data under the key 'meta'
+     */
 
-        // object name
-        const objectEl = row.querySelector(`.${cssBaseClass}__cell--object`);
-        const objectRegex = new RegExp('testObject');
+    function itHasRowStructure() {
+        it(`has the correct row structure`, function () {
+            const row = this.row;
+            const job = this.job;
+            const input = this.input || job;
 
-        if (input.meta.paramsRegex) {
-            expect(objectEl.textContent).toMatch(input.meta.paramsRegex);
-            result.tests.object = input.meta.paramsRegex.test(objectEl.textContent);
-        } else {
-            result.tests.object = objectRegex.test(objectEl.textContent);
-            expect(objectEl.textContent).toContain('testObject');
-        }
+            // status details cell
+            const logViewEl = row.querySelector(`.${cssBaseClass}__cell--log-view`);
+            expect(logViewEl.textContent).toContain('Status details');
 
-        // action
-        const actionEl = row.querySelector(`.${cssBaseClass}__cell--action`);
-        const actionRegex = new RegExp(job.meta.jobAction);
-        result.tests.action = actionRegex.test(actionEl.textContent);
-        expect(actionEl.textContent).toContain(input.meta.jobAction);
+            // object name
+            const objectEl = row.querySelector(`.${cssBaseClass}__cell--object`);
+            if (input.meta.paramsRegex) {
+                expect(objectEl.textContent).toMatch(input.meta.paramsRegex);
+            } else {
+                expect(objectEl.textContent).toContain('testObject');
+            }
 
-        // status
-        const statusEl = row.querySelector(`.${cssBaseClass}__cell--status`);
-        const statusRegex = new RegExp(job.meta.jobLabel);
-        result.tests.status = statusRegex.test(statusEl.textContent);
-        expect(statusEl.textContent).toContain(input.meta.jobLabel);
+            // action
+            const actionEl = row.querySelector(`.${cssBaseClass}__cell--action`);
+            expect(actionEl.textContent).toContain(input.meta.jobAction);
 
-        if (!Object.values(result.tests).every((item) => item)) {
-            result.pass = false;
-            result.message += '; results: ' + JSON.stringify(result.tests);
-        }
-        return result;
+            // status
+            const statusEl = row.querySelector(`.${cssBaseClass}__cell--status`);
+            expect(statusEl.textContent).toContain(input.meta.jobLabel);
+        });
     }
 
     describe('The job state list row module', () => {
         it('loads', () => {
-            expect(jobStateListRow).not.toBe(null);
+            expect(JobStateListRow).not.toBe(null);
         });
 
         it('has expected functions', () => {
-            expect(jobStateListRow.make).toBeDefined();
+            expect(JobStateListRow.make).toBeDefined();
+            expect(JobStateListRow.make).toEqual(jasmine.any(Function));
         });
 
         it('has a base css class', () => {
-            expect(jobStateListRow.cssBaseClass).toContain('kb-job');
+            expect(JobStateListRow.cssBaseClass).toEqual(jasmine.any(String));
+            expect(JobStateListRow.cssBaseClass).toContain('kb-job');
         });
     });
 
     describe('The job state list row instance', () => {
-        let jobStateListRowInstance;
-        beforeEach(() => {
-            jobStateListRowInstance = createInstance();
+        beforeEach(function () {
+            this.jobStateListRowInstance = createInstance();
         });
 
-        it('has a make function that returns an object', () => {
-            expect(jobStateListRowInstance).not.toBe(null);
+        it('has a make function that returns an object', function () {
+            expect(this.jobStateListRowInstance).not.toBe(null);
+            expect(this.jobStateListRowInstance).toEqual(jasmine.any(Object));
         });
 
-        it('has the required methods', () => {
-            const requiredMethods = ['start', 'stop', 'updateState', 'updateParams'];
-            requiredMethods.forEach((method) => {
-                expect(jobStateListRowInstance[method]).toBeDefined();
-            });
+        it('has the required methods', function () {
+            const requiredFns = ['start', 'stop', 'updateState', 'updateParams'];
+            requiredFns.forEach((fn) => {
+                expect(this.jobStateListRowInstance[fn]).toBeDefined();
+                expect(this.jobStateListRowInstance[fn]).toEqual(jasmine.any(Function));
+            }, this);
         });
     });
 
     describe('Starting the job state list row instance', () => {
-        let jobStateListRowInstance;
-        beforeAll(() => {
-            jobStateListRowInstance = createInstance();
+        beforeEach(function () {
+            this.jobStateListRowInstance = createInstance();
         });
         const invalidArgs = [
             null,
@@ -140,8 +131,8 @@ define([
             },
         ];
         invalidArgs.forEach((args) => {
-            it('will throw an error with invalid args ' + JSON.stringify(args), async () => {
-                await expectAsync(jobStateListRowInstance.start(args)).toBeRejectedWithError(
+            it('will throw an error with invalid args ' + JSON.stringify(args), async function () {
+                await expectAsync(this.jobStateListRowInstance.start(args)).toBeRejectedWithError(
                     Error,
                     /invalid arguments supplied/
                 );
@@ -149,9 +140,9 @@ define([
         });
 
         JobsData.invalidJobs.forEach((invalidJob) => {
-            it('will throw an error with an invalid job', async () => {
+            it('will throw an error with an invalid job', async function () {
                 await expectAsync(
-                    jobStateListRowInstance.start({
+                    this.jobStateListRowInstance.start({
                         jobState: invalidJob,
                         name: 'whatever',
                         node: 'wherever',
@@ -165,23 +156,212 @@ define([
     });
 
     JobsData.validJobs.forEach((job) => {
-        beforeEach(() => {
-            jasmine.addMatchers(customMatchers);
-        });
-        describe('the job state list row instance creates initial structure and content', () => {
-            const row = document.createElement('tr');
-            const jobStateListRowInstance = createInstance();
-            jobStateListRowInstance
-                .start({
-                    node: row,
-                    jobState: job,
+        describe(`the job state list initial row structure and content for "${job.job_id}"`, () => {
+            beforeEach(async function () {
+                this.job = job;
+                this.row = document.createElement('tr');
+                this.jobStateListRowInstance = createInstance();
+                await this.jobStateListRowInstance.start({
+                    node: this.row,
+                    jobState: this.job,
                     name: 'testObject',
-                })
-                .then(() => {
-                    it('should have row structure', () => {
-                        expect(row).toHaveRowStructure({ job: job });
-                    });
                 });
+            });
+            itHasRowStructure();
+        });
+    });
+
+    describe('the job state list row can update job state', () => {
+        beforeEach(async function () {
+            generateRandomInput(this, 'job update test');
+            this.jobStateListRowInstance = createInstance();
+            await this.jobStateListRowInstance.start({
+                node: this.row,
+                jobState: this.job,
+                name: 'testObject',
+            });
+        });
+        itHasRowStructure();
+        JobsData.validJobs.forEach((state) => {
+            describe(`with a valid jobState object with status ${state.status}`, () => {
+                // wrap `updateState` in `beforeEach` to get the correct `this` context
+                beforeEach(function () {
+                    this.state = state;
+                    this.input = Object.assign({}, this.state, { job_id: this.jobId });
+                    this.jobStateListRowInstance.updateState(this.input);
+                });
+                itHasRowStructure();
+            });
+        });
+    });
+
+    describe('the row listener ignores invalid job state updates', () => {
+        beforeEach(async function () {
+            generateRandomInput(this, 'invalid job update test');
+            this.jobStateListRowInstance = createInstance();
+            await this.jobStateListRowInstance.start({
+                node: this.row,
+                jobState: this.job,
+                name: 'testObject',
+            });
+        });
+        itHasRowStructure();
+        JobsData.invalidJobs.forEach((invalidJob) => {
+            beforeEach(function () {
+                this.input = invalidJob;
+            });
+            it(`should not update with invalid job ${JSON.stringify(invalidJob)}`, function () {
+                try {
+                    this.jobStateListRowInstance.updateState(this.input);
+                    fail('updateJob passed with an invalid job');
+                } catch (err) {
+                    // expect(err).toBe(jasmine.any(Error));
+                    expect(err).toMatch(/received invalid job object/);
+                }
+            });
+            itHasRowStructure();
+        });
+
+        // test with a valid job to ensure the row is still updating
+        it('should update with valid input', function () {
+            this.input = Object.assign({}, getRandomJob(JobsData.validJobs), {
+                job_id: this.jobId,
+            });
+            this.jobStateListRowInstance.updateState(this.input);
+            expect(true).toBeTruthy();
+        });
+        itHasRowStructure();
+    });
+
+    describe('the row listener ignores invalid updates', () => {
+        beforeEach(async function () {
+            generateRandomInput(this, 'invalid job update test');
+            this.jobStateListRowInstance = createInstance();
+            await this.jobStateListRowInstance.start({
+                node: this.row,
+                jobState: this.job,
+                name: 'testObject',
+            });
+        });
+        itHasRowStructure();
+        JobsData.validJobs.forEach((state) => {
+            it('throws an error if the job ID does not match', function () {
+                this.input = state;
+                // toThrowError does not work here for unknown reasons
+                try {
+                    this.jobStateListRowInstance.updateState(this.input);
+                    fail('updateJob passed with incorrect job ID');
+                } catch (err) {
+                    expect(err).toMatch(/received incorrect job object/);
+                }
+            });
+            itHasRowStructure();
+        });
+        // test with a valid job with the correct ID to ensure the row is still updating
+        it('should update with valid input', function () {
+            this.input = Object.assign({}, getRandomJob(JobsData.validJobs), {
+                job_id: this.jobId,
+            });
+            this.jobStateListRowInstance.updateState(this.input);
+            expect(true).toBeTruthy();
+        });
+        itHasRowStructure();
+    });
+
+    describe('the row listener can update job params', () => {
+        beforeEach(async function () {
+            generateRandomInput(this, 'job params update test');
+            this.jobStateListRowInstance = createInstance();
+            await this.jobStateListRowInstance.start({
+                node: this.row,
+                jobState: this.job,
+                name: 'testObject',
+            });
+        });
+        itHasRowStructure();
+        const tests = [
+            {
+                input: {
+                    job_params: [{ this: 'that' }],
+                },
+                regex: new RegExp('this: that'),
+            },
+            {
+                input: {
+                    job_params: [{ tag_two: 'value two', tag_three: 'value three' }],
+                },
+                regex: new RegExp('tag_three: value three.*?tag_two: value two', 'ism'),
+            },
+        ];
+
+        tests.forEach((test) => {
+            describe('with input params ' + JSON.stringify(test.input), () => {
+                beforeEach(function () {
+                    // add in the correct jobId
+                    test.input.job_id = this.jobId;
+                    this.jobStateListRowInstance.updateParams(test.input);
+                    this.input = Object.assign(
+                        {},
+                        JSON.parse(JSON.stringify(this.job)),
+                        test.input
+                    );
+                    this.input.meta.paramsRegex = test.regex;
+                });
+                itHasRowStructure();
+            });
+        });
+    });
+
+    describe('the row listener cannot update job params', () => {
+        beforeEach(async function () {
+            generateRandomInput(this, 'job params update, invalid ID');
+            this.jobStateListRowInstance = createInstance();
+            await this.jobStateListRowInstance.start({
+                node: this.row,
+                jobState: this.job,
+                name: 'testObject',
+            });
+        });
+        itHasRowStructure();
+        it('will throw an error with an incorrect jobID', function () {
+            // for unknown reasons, expect(...).toThrowError(...)
+            // does not work here
+            try {
+                this.jobStateListRowInstance.updateParams({
+                    job_id: 'a random and incorrect job ID',
+                    job_params: [{ this: 'that' }],
+                });
+                fail('should not accept incorrect jobID');
+            } catch (err) {
+                expect(err).toMatch(/received incorrect job info/);
+            }
+        });
+        itHasRowStructure();
+    });
+
+    describe('it cannot update job params if the job info object is invalid', () => {
+        beforeEach(async function () {
+            generateRandomInput(this, 'job params update, invalid object');
+            this.jobStateListRowInstance = createInstance();
+            await this.jobStateListRowInstance.start({
+                node: this.row,
+                jobState: this.job,
+                name: 'testObject',
+            });
+        });
+        itHasRowStructure();
+        JobsData.invalidInfo.forEach((invalidInfo) => {
+            it('will throw an error with an invalid object', function () {
+                // for unknown reasons, expect(...).toThrowError(...)
+                // does not work here
+                try {
+                    this.jobStateListRowInstance.updateParams(invalidInfo);
+                    fail('should not accept an invalid info obj');
+                } catch (err) {
+                    expect(err).toMatch(/received invalid job info object/);
+                }
+            });
+            itHasRowStructure();
         });
     });
 });

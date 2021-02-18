@@ -143,15 +143,10 @@ define([
             return Promise.try(() => {
                 return inputControl
                     .stop()
-                    .then(() => {
-                        if (parent && container) {
-                            parent.removeChild(container);
-                        }
-                        bus.stop();
-                        return null;
-                    })
                     .catch((err) => {
                         console.error('Error stopping fieldTableCellWidget: ', err);
+                    })
+                    .finally(() => {
                         if (parent && container) {
                             parent.removeChild(container);
                         }

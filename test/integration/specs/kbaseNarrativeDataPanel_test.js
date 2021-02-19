@@ -197,11 +197,12 @@ describe('Tabbing within the data panel should work', () => {
         const tabs = await slideoutPanel.$$(`[role="tablist"] > [role="tab"]`);
 
         for (const [index, tab] of tabs.entries()) {
-            const testId = await tab.getAttribute('data-test-id');
-            const testLabel = await tab.getText();
-            const {name,  label} = testCase.tabs[index];
-            expect(testId).toEqual(`tab-${name}`);
-            expect(testLabel).toEqual(label);
+            const { name, label } = testCase.tabs[index];
+            await browser.waitUntil(async () => {
+                const testId = await tab.getAttribute('data-test-id');
+                const testLabel = await tab.getText();
+                return testId === `tab-${name}` && testLabel === label;
+            });
         }
     });
 

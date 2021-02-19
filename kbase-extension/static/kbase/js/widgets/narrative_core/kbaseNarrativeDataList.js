@@ -794,7 +794,7 @@ define([
                                 const $tbl = $('<table>').css({ 'width': '100%' });
                                 for (let k = 0; k < history.length; k++) {
                                     const $revertBtn = $('<button>').append('v' + history[k][4]).addClass('kb-data-list-btn');
-                                    if (k == 0) {
+                                    if (k === 0) {
                                         $revertBtn.tooltip({
                                             title: 'Current Version',
                                             container: 'body',
@@ -1119,13 +1119,13 @@ define([
                 {
                     upa: objectInfo.ref
                 }
-            ]).spread((result) => {
+            ]).spread((reportResult) => {
 
-                if (result.report_upas.length === 0) {
+                if (reportResult.report_upas.length === 0) {
                     return [];
                 }
 
-                const objectsToFetch = result.report_upas.map((ref) => {
+                const objectsToFetch = reportResult.report_upas.map((ref) => {
                     return {
                         ref
                     };
@@ -1137,7 +1137,7 @@ define([
                     return [];
                 }
 
-                const reportRef = result.object_upa;
+                const reportRef = reportResult.object_upa;
 
                 const workspace = new GenericClient({
                     module: 'Workspace',
@@ -1816,6 +1816,13 @@ define([
 
             this.$controllerDiv.append($header).append($filterDiv);
         },
+
+        pluralize(word, count) {
+            if (count > 0) {
+                return `${word}s`;
+            }
+            return word;
+        },
         /**
          * Populates the filter set of available types.
          */
@@ -1826,17 +1833,15 @@ define([
                 let runningCount = 0;
                 Object.keys(this.availableTypes).sort().forEach((type) => {
                     const typeInfo = this.availableTypes[type];
-                    const suf = typeInfo.count > 0 ? 's' : '';
                     this.$filterTypeSelect.append(
                         $('<option value="' + typeInfo.type + '">')
-                            .append([typeInfo.type, ' (', typeInfo.count, ' object', suf, ')'].join(''))
+                            .append([typeInfo.type, ' (', typeInfo.count, ' ', this.pluralize('object', typeInfo.count), ')'].join(''))
                     );
                     runningCount += typeInfo.count;
                 });
-                const suf = runningCount > 0 ? 's' : '';
                 this.$filterTypeSelect
                     .prepend($('<option value="">')
-                        .append('Show All Types (' + runningCount + ' object' + suf + ')'))
+                        .append('Show All Types (' + runningCount + ' ' + this.pluralize('object', runningCount) + ')'))
                     .val(selected);
 
             }
@@ -1906,15 +1911,18 @@ define([
                     } // match on saved_by user
 
                     if (!match && info[10]) { // match on metadata values
-                        for (const metaKey in info[10]) {
-                            if (Object.prototype.hasOwnProperty.call(info[10], metaKey)) {
-                                if (regex.test(info[10][metaKey])) {
-                                    match = true;
-                                    break;
-                                } else if (regex.test(metaKey + '::' + info[10][metaKey])) {
-                                    match = true;
-                                    break;
-                                }
+                        for (const [metaKey, metaValue] of info[10].entries()) {
+                            // Omits enumerable properties not directly on this object,
+                            // which in reality simply won't occur.
+                            if (!(Object.prototype.hasOwnProperty.call(info[10], metaKey))) {
+                                continue;
+                            }
+                            if (regex.test(metaValue)) {
+                                match = true;
+                                break;
+                            } else if (regex.test(metaKey + '::' + metaValue)) {
+                                match = true;
+                                break;
                             }
                         }
                     }

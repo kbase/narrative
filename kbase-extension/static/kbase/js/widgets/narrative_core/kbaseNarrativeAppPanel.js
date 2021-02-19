@@ -943,7 +943,7 @@ define([
                 Promise.resolve(this.methClient.get_method_spec({ ids: specSet.methods, tag: this.currentTag }))
                     .then((specs) => {
                         for (const spec of specs) {
-                            results.methods[spec.info.id] = specs;
+                            results.methods[spec.info.id] = spec;
                         }
                         callback(results);
                     })

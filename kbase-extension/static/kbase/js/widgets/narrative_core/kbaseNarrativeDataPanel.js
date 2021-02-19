@@ -424,14 +424,10 @@ define([
 
         renderOverlayState: function () {
             if (this.$overlayPanel.is(':visible')) {
-                // this.$slideoutBtn.children().toggleClass('fa-arrow-left', true);
-                // this.$slideoutBtn.children().toggleClass('fa-arrow-right', false);
                 const idx = $('.kb-side-overlay-container').find('.kb-side-header.active').index();
                 this.updateSlideoutRendering(idx);
             } else {
                 this.deactivateLastRenderedPanel();
-                // this.$slideoutBtn.children().toggleClass('fa-arrow-left', false);
-                // this.$slideoutBtn.children().toggleClass('fa-arrow-right', true);
             }
         },
 
@@ -481,14 +477,13 @@ define([
                 this.renderOverlayState();
             });
 
-
-            $(document).on('sidePanelOverlayHiding.Narrative', (_, panel) => {
+            $(document).on('sidePanelOverlayHiding.Narrative', (_ev, panel) => {
                 if (panel === this.$overlayPanel) {
                     this.preRenderOverlayState();
                 }
             });
 
-            $(document).on('sidePanelOverlayShowing.Narrative', (_, panel) => {
+            $(document).on('sidePanelOverlayShowing.Narrative', (_ev, panel) => {
                 if (panel === this.$overlayPanel) {
                     this.preRenderOverlayState();
                 }

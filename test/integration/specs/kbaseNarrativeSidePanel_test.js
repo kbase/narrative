@@ -119,12 +119,11 @@ async function slideoutPanelToBe(slideout, state) {
                 return !isDisplayed;
             });
         }
-        return;
+    } else {
+        const slideoutContainer = await slideoutToBe('open');
+        const slideoutPanel = await slideoutContainer.$(`[data-test-id="${slideout}-slideout-panel"]`);
+        await slideoutPanel.waitForDisplayed();
     }
-
-    const slideoutContainer = await slideoutToBe('open');
-    const slideoutPanel = await slideoutContainer.$(`[data-test-id="${slideout}-slideout-panel"]`);
-    await slideoutPanel.waitForDisplayed();
 }
 
 describe('Tabbing within the data panel should work', () => {

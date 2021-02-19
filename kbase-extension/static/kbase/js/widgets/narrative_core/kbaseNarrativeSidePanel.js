@@ -305,8 +305,7 @@ define([
 
 
                 const retObj = {};
-                for (let i = 0; i < widgets.length; i++) {
-                    const widgetInfo = widgets[i];
+                for (const widgetInfo of widgets) {
                     const $widgetDiv = $('<div>')
                         .addClass('kb-side-separator');
 

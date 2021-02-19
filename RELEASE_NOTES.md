@@ -6,8 +6,8 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Version NEXT
 
--   fix bug in data slideout tab selection (related to PTV-1635)
--   fix data and app slideout button and opening behavior (related to PTV-1635)
+-   PTV-1635: fix bug in data slideout tab selection
+-   PTV-1635: fix data and app slideout button and opening behavior
 
 ### Version 4.3.2
 

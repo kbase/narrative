@@ -75,7 +75,7 @@ define([
             }
         };
 
-    describe('Test the kbaseNarrativeAppPanel widget', function() {
+    describe('The kbaseNarrativeAppPanel widget', function() {
         beforeEach(() => {
             Jupyter.narrative = {
                 getAuthToken: () => FAKE_TOKEN,

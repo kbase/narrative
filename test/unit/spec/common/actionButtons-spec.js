@@ -1,6 +1,5 @@
 /*global describe, it, expect*/
 /*global beforeEach, afterEach*/
-/*jslint white: true*/
 define([
     'common/cellComponents/actionButtons',
     'jquery',

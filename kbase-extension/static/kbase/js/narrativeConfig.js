@@ -1,5 +1,4 @@
 /*global define,window,console,require*/
-/*jslint white:true,browser:true*/
 /**
  * Loads the required narrative configuration files.
  * This returns a Promise that will eventually hold the results.

@@ -2,7 +2,6 @@
 /*global describe, it, expect fail*/
 /*global jasmine*/
 /*global beforeEach, afterEach*/
-/*jslint white: true*/
 
 define ([
     'api/upa',

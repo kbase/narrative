@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * A few utility functions. These are kinda unrelated, but used in several places.
  *
@@ -23,7 +22,9 @@ define([], function() {
      */
     function prettyTimestamp (timestamp) {
         var d = parseDate(timestamp);
-
+        if (d === null) {
+            return;
+        }
         var parsedTime = reformatDate(d);
         var timediff = calcTimeFromNow(d);
         var timeMillis = d ? d.getTime() : '';

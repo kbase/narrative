@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -138,7 +137,7 @@ define([
         }
 
         /*
-         * The single input control wraps a field widget, which provides the 
+         * The single input control wraps a field widget, which provides the
          * wrapper around the input widget itself.
          */
         function makeSingleInputControl(value, fieldSpec) {
@@ -255,7 +254,7 @@ define([
 
         // LIFECYCLE API
 
-        // Okay, we need to 
+        // Okay, we need to
 
         function start(arg) {
             var events;
@@ -309,7 +308,7 @@ define([
                     });
 
                     // bus.on('')
-                    // The controller of this widget will be smart enough to 
+                    // The controller of this widget will be smart enough to
                     // know...
                     // bus.emit('sync');
                 })

@@ -1,5 +1,4 @@
 /*global define,describe,it,expect*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'common/validation',
@@ -95,7 +94,7 @@ define([
                 });
         });
 
-        // INTEGER 
+        // INTEGER
         it('Validate an integer without constraints', function(done) {
             var spec = {
                 data: {
@@ -369,7 +368,7 @@ define([
         //     });
         // }
 
-        // FLOATS        
+        // FLOATS
         // (function() {
         //     var emptyValues = [{
         //                 title: 'empty string',

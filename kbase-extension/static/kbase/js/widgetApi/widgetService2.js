@@ -1,10 +1,9 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
-    
+
 ], function () {
     'use strict';
-    
+
     function factory(config) {
          var url = config.url,
             cdnUrl = config.cdn;
@@ -107,7 +106,7 @@ define([
                 ]
             }
         ];
-        
+
         var widgetDb = {};
         widgetPackages.forEach(function (widgetPackage) {
             widgetDb[widgetPackage.name] = {};
@@ -141,7 +140,7 @@ define([
         function getWidget(packageName, version, widgetName) {
             var versionedPackage = findPackage(packageName, version),
                 widget = versionedPackage.widgets[widgetName];
-            
+
             if (!widget) {
                 throw new Error('Cannot locate widget ' + widgetName + ' in package ' + packageName + ' version ' + version);
             }
@@ -152,7 +151,7 @@ define([
                 packageVersion: version
             };
         }
-        
+
         /*
          * Find a widget with certain constraints.
          * Currently finds the most recent widget
@@ -174,7 +173,7 @@ define([
                         }
                     }
                 }
-                
+
             }
         }
 
@@ -190,7 +189,7 @@ define([
             about: 'This is the Widget Service Factory'
         });
     }
-    
+
     return {
         make: function (config) {
             return factory(config);

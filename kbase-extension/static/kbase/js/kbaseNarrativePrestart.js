@@ -1,5 +1,4 @@
 /*global define,Jupyter,window*/
-/*jslint white: true,browser:true*/
 // Bind all page buttons right at startup.
 define(
     [

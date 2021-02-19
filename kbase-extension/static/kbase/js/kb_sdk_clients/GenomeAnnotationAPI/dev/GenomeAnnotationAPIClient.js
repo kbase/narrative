@@ -1,5 +1,4 @@
 /*global define */
-/*jslint white:true,browser:true,nomen:true*/
 define([
     '../../jsonRpc-native'
 ], function (jsonRpc) {
@@ -391,7 +390,7 @@ define([
         };
 
         /*
-         * 
+         *
          */
         this.status = function () {
             var params = Array.prototype.slice.call(arguments),

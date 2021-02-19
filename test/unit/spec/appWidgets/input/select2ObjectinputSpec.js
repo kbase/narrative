@@ -1,4 +1,5 @@
-/* eslint-env jasmine */
+/*  eslint-env es6 */
+
 define([
     'jquery',
     'testUtil',
@@ -101,9 +102,7 @@ define([
             defaultValue = 'apple',
             fakeServiceUrl = 'https://ci.kbase.us/services/fake_taxonomy_service';
 
-        let bus, testConfig, node;
-
-        beforeEach(() => {
+        beforeEach(function() {
             runtime = Runtime.make();
             Jupyter.narrative = new Narrative();
             if (TestUtil.getAuthToken()) {
@@ -112,11 +111,11 @@ define([
                 Jupyter.narrative.userId = TestUtil.getUserId();
             }
 
-            node = document.createElement('div');
-            bus = runtime.bus().makeChannelBus({
+            this.node = document.createElement('div');
+            this.bus = runtime.bus().makeChannelBus({
                 description: 'select input testing',
             });
-            testConfig = buildTestConfig(required, defaultValue, bus);
+            this.testConfig = buildTestConfig(required, defaultValue, this.bus);
 
             jasmine.Ajax.install();
 
@@ -170,9 +169,9 @@ define([
             updateData();
         });
 
-        afterEach(() => {
+        afterEach(function() {
             jasmine.Ajax.uninstall();
-            bus.stop();
+            this.bus.stop();
             window.kbaseRuntime = null;
         });
 
@@ -180,84 +179,68 @@ define([
             expect(Select2ObjectInput).toBeDefined();
         });
 
-        it('Should be instantiable', () => {
-            const widget = Select2ObjectInput.make(testConfig);
+        it('Should be instantiable', function() {
+            const widget = Select2ObjectInput.make(this.testConfig);
             expect(widget).toEqual(jasmine.any(Object));
-            expect(widget.start).toBeDefined();
-            expect(widget.stop).toBeDefined();
+            ['start', 'stop'].forEach((fn) => {
+                expect(widget[fn]).toBeDefined();
+                expect(widget[fn]).toEqual(jasmine.any(Function));
+            })
         });
+        describe('the started widget', () => {
+            beforeEach(async function() {
+                this.widget = Select2ObjectInput.make(this.testConfig);
+                await this.widget.start({ node: this.node });
+            });
 
-        it('Should start and stop', (done) => {
-            const widget = Select2ObjectInput.make(testConfig);
-            spyOn(widget, 'start').and.callThrough();
-            spyOn(widget, 'stop').and.callThrough();
-            widget
-                .start({ node: node })
-                .then(() => {
-                    expect(widget.start).toHaveBeenCalled();
-                    return widget.stop();
-                })
-                .then(() => {
-                    expect(widget.stop).toHaveBeenCalled();
-                    done();
+            it('should start successfully', function() {
+                expect(this.node.querySelector('div[data-element="main-panel"]').innerHTML).toContain('data-element="input-container"');
+            });
+            it('should stop successfully', async function() {
+                await this.widget.stop();
+                expect(this.node.innerHTML).toEqual('');
+            })
+
+            it('Should set model value by bus', function(done) { // done) {
+                this.bus.on('validation', (msg) => {
+                    expect(msg.errorMessage).toBeUndefined();
+                    expect(msg.diagnosis).toBe('optional-empty');
+                    done()
                 });
-        });
-
-        it('Should set model value by bus', (done) => {
-            const widget = Select2ObjectInput.make(testConfig);
-            bus.on('validation', (msg) => {
-                expect(msg.errorMessage).toBeUndefined();
-                expect(msg.diagnosis).toBe('optional-empty');
-                done();
+                this.bus.emit('update', { value: 'foo' });
             });
 
-            widget.start({ node: node }).then(() => {
-                bus.emit('update', { value: 'foo' });
-            });
-        });
-
-        it('Should reset model value by bus', (done) => {
-            const widget = Select2ObjectInput.make(testConfig);
-            bus.on('validation', (msg) => {
-                expect(msg.errorMessage).toBeUndefined();
-                expect(msg.diagnosis).toBe('optional-empty');
-                done();
-            });
-
-            widget.start({ node: node }).then(() => {
-                bus.emit('reset-to-defaults');
-            });
-        });
-
-        it('Should respond to changed select2 option', (done) => {
-            const widget = Select2ObjectInput.make(testConfig);
-            bus.on('validation', () => {});
-            bus.on('changed', () => {
-                done();
-            });
-            widget
-                .start({ node: node })
-                .then(() => {
-                    const $select = $(node).find('select');
-                    const $search =
-                        $select.data('select2').dropdown.$search ||
-                        $select.data('select2').selection.$search;
-
-                    $search.val('small');
-                    $search.trigger('input');
-
-                    $select.trigger({
-                        type: 'select2: select',
-                        params: {
-                            data: {},
-                        },
-                    });
-                    return TestUtil.wait(1000);
-                })
-                .then(() => {
-                    const $select = $(node).find('select');
-                    $select.val('stuff').trigger('change');
+            it('Should reset model value by bus', function(done) { // done) {
+                this.bus.on('validation', (msg) => {
+                    expect(msg.errorMessage).toBeUndefined();
+                    expect(msg.diagnosis).toBe('optional-empty');
+                    done()
                 });
+                this.bus.emit('reset-to-defaults');
+            });
+
+            it('Should respond to changed select2 option', function(done) { // done) {
+                this.bus.on('changed', () => {
+                    expect(true).toBeTruthy();
+                    done()
+                });
+                const $select = $(this.node).find('select');
+                const $search =
+                    $select.data('select2').dropdown.$search ||
+                    $select.data('select2').selection.$search;
+
+                $search.val('small');
+                $search.trigger('input');
+
+                $select.trigger({
+                    type: 'select2: select',
+                    params: {
+                        data: {},
+                    },
+                });
+                TestUtil.wait(1000);
+                $select.val('stuff').trigger('change');
+            });
         });
     });
 });

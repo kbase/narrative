@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public

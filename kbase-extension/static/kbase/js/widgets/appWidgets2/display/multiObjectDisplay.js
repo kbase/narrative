@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -26,7 +25,7 @@ define([
             bus = config.bus,
             model;
 
-        // DATA 
+        // DATA
 
         function getObject(value) {
             var workspace = new Workspace(runtime.config('services.workspace.url'), {

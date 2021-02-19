@@ -1,8 +1,7 @@
 /*global define,require*/
-/*jslint white:true,browser:true */
 /*
  * Narrative Data Widget
- * 
+ *
  * Embodies a KBase data widget which can be safely displayed in a Narrative.
  * Handles
  * - fetching widget
@@ -119,7 +118,7 @@ define([
                                 title: widgetTitle
                             });
 
-                            // The "widget" is provided as simple markup (string) with an id set and mapped 
+                            // The "widget" is provided as simple markup (string) with an id set and mapped
                             // internally to the right widget invocation stuff.
                             widgetParentNode.innerHTML = widgetDiv;
 

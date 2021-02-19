@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 define([
     'common/runtime',
@@ -24,7 +23,7 @@ define([
                 return propertyValueToString(pv);
             }).join(';');
         }
-        
+
         function buildSamples(columnsMetadata) {
             return Object.keys(columnsMetadata).map(function (columnId) {
                 var columnMetadata = columnsMetadata[columnId],
@@ -63,7 +62,7 @@ define([
                 return seriesHash[seriesId];
             });
         }
-        
+
         function extractItems(result, params) {
             var sampleSeriesIds,
                 valueType = params.input_value_type;

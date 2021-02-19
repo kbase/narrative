@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * @public
  */
@@ -40,22 +39,22 @@ define (
         // properties inherited from kbaseNarrativeParameterInput
         // $mainPanel:null,
         // spec:null,
-        
+
         enabled: true,
         required: true,
         validDataObjectList: [],
         allow_multiple: null,
-        
+
         $rowsContainer: null,
         $addRowController: null,
-        
+
         rowInfo: null,
-        
+
         // set the widths of the columns
         nameColClass  : "col-md-2",
         inputColClass : "col-md-5",
         hintColClass  : "col-md-5",
-        
+
         ws : null,
         initWsClient: function() {
             if(this.authToken){
@@ -95,7 +94,7 @@ define (
             if (spec.optional) {
                 self.required=false;
             }
-            
+
             // check if this is a multiselection
             var multiselection = false;
             if (spec.textsubdata_options) {
@@ -103,14 +102,14 @@ define (
                     multiselection = spec.textsubdata_options.multiselection;
                 }
             }
-            
+
             self.rowInfo = [];
             self.$rowsContainer=$("<div>");
             self.$mainPanel.append(self.$rowsContainer);
             self.$addRowController = $('<div>');
-            
+
             var d = spec.default_values;
-            
+
             // based on whether we have one or allow multiple, render the output rows...
             // if multiselection is on, only allow a single input row
             if (!self.allow_multiple || multiselection) {
@@ -118,14 +117,14 @@ define (
                 if (spec.default_values) { if (spec.default_values.length >= 1) {
                     var d = spec.default_values; defaultValue = (d[0] !== '' && d[0] !== undefined) ? d[0] : '';
                 }}
-                self.addRow(defaultValue,true,true); 
+                self.addRow(defaultValue,true,true);
             } else {
                 // for multiple elements, hover on entire panel
                 self.$mainPanel
                         .addClass("kb-method-parameter-row")
                         .mouseenter(function(){$(this).addClass('kb-method-parameter-row-hover');})
                         .mouseleave(function(){$(this).removeClass('kb-method-parameter-row-hover');});
-                
+
                 var defaultValue = '';
                 if (spec.default_values) { if (spec.default_values.length >= 1) {
                         var d = spec.default_values; defaultValue = (d[0] !== '' && d[0] !== undefined) ? d[0] : '';
@@ -135,14 +134,14 @@ define (
                     var d = spec.default_values;
                     for(var i=1; i<d.length; d++) {
                         defaultValue = (d[i] !== '' && d[i] !== undefined) ? d[i] : '';
-                        self.addRow(defaultValue,false,false); 
+                        self.addRow(defaultValue,false,false);
                     }
                 }
                 self.addTheAddRowController();
             }
             self.refresh();
         },
-        
+
 
         autofillData: null,
         isFetching: null,
@@ -179,11 +178,11 @@ define (
             if(spec.textsubdata_options.subdata_selection.constant_ref) {
 
                 // if autofillData is already set, then we don't have to do anything!!
-                if(self.autofillData) { 
-                    if(self.autofillData.length>0) { 
+                if(self.autofillData) {
+                    if(self.autofillData.length>0) {
                         if(doneCallback) { doneCallback(); }
-                        return; 
-                    } 
+                        return;
+                    }
                 }
                 // if we are already fetching data and waiting for things to return, then don't do it again!
                 if(self.isFetching) {
@@ -198,7 +197,7 @@ define (
                 }
                 self.ws.get_object_subset(query,
                     function(result) {
-                        self.processSubdataQueryResult(result, path_to_subdata, selection_id, 
+                        self.processSubdataQueryResult(result, path_to_subdata, selection_id,
                                                         selection_description, true, text_template);
                         self.isFetching = false;
                         if(doneCallback) { doneCallback(); }
@@ -235,7 +234,7 @@ define (
                     self.autofillData=[];
                     self.firstLookup = false;
                     self.isFetching = true;
-                    self.trigger('workspaceQuery.Narrative', 
+                    self.trigger('workspaceQuery.Narrative',
                         function(ws_name) {
                             var query = []
                             if(typeof param === 'string') {
@@ -254,7 +253,7 @@ define (
                             self.autofillData = [];
                             self.ws.get_object_subset(query,
                                 function(result) {
-                                    self.processSubdataQueryResult(result, path_to_subdata, selection_id, 
+                                    self.processSubdataQueryResult(result, path_to_subdata, selection_id,
                                                                     selection_description, false, text_template);
                                     self.isFetching = false;
                                     if(doneCallback) { doneCallback(); }
@@ -266,7 +265,7 @@ define (
                                 });
                         });
 
-                    
+
                 } else {
                     // parameter was not defined yet, so finish up (could show a message in dropdown box)
                     if(!self.firstLookup) { self.clearInput(); }
@@ -321,7 +320,7 @@ console.log("h7", Handlebars, text_template);
                             if(selection_id && typeof subdata[key] === 'object') {
                                 id = subdata[key][selection_id];
                             // else if the selection id is set, and the value is string or number
-                            } else if(selection_id && 
+                            } else if(selection_id &&
                                 (typeof subdata[key] === 'string' || typeof subdata[key] === 'number')) {
                                 // and selection id==='value', then use the value instead of the key as the id
                                 if(selection_id==='value') {
@@ -372,8 +371,8 @@ console.log("h7", Handlebars, text_template);
             self.$addRowController = $('<div>').addClass("row kb-method-parameter-row").append($nameCol).append($buttonCol);
             self.$mainPanel.append(self.$addRowController)
         },
-        
-        
+
+
         removeRow : function(uuid) {
             var self = this;
             for(var i=0; i<self.rowInfo.length; i++) {
@@ -384,12 +383,12 @@ console.log("h7", Handlebars, text_template);
                 }
             }
         },
-        
+
         /* row number should only be set when first creating this row */
         addRow : function(defaultValue, showHint, useRowHighlight) {
             var self = this;
             var spec = self.spec;
-            
+
             var placeholder = '';
             if(spec.textsubdata_options) {
                 if(spec.textsubdata_options.placeholder) {
@@ -398,7 +397,7 @@ console.log("h7", Handlebars, text_template);
                 }
             }
             if (!defaultValue) { defaultValue = ""; }
-            
+
             var form_id = spec.id;
             var $input= $input =$('<input id="' + form_id + '" type="text" style="width:100%" />')
                                     .on("change",function() { self.isValid() });
@@ -408,13 +407,13 @@ console.log("h7", Handlebars, text_template);
             if (self.required && showHint) {  // it must be required, and it must be the first element (showHint is only added on first row)
                 $feedbackTip.addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
             }
-                
+
             var $row = $('<div>').addClass("row kb-method-parameter-row");
             if (useRowHighlight) {
                 $row.mouseenter(function(){$(this).addClass('kb-method-parameter-row-hover');})
                     .mouseleave(function(){$(this).removeClass('kb-method-parameter-row-hover');});
             }
-                            
+
             var $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
             if (self.options.isInSidePanel)
             	$nameCol.css({'text-align': 'left', 'padding-left': '10px'});
@@ -442,14 +441,14 @@ console.log("h7", Handlebars, text_template);
             var $errorRow = $('<div>').addClass('row')
                                 .append($('<div>').addClass(self.nameColClass))
                                 .append($errorPanel.addClass(self.inputColClass));
-            
+
             var $allRowComponents = $('<div>').append($row).append($errorRow);
             self.$rowsContainer.append($allRowComponents);
             self.rowInfo.push({uuid: uuidForRemoval, $row:$row, $input:$input, $error:$errorPanel, $feedback:$feedbackTip, $all:$allRowComponents, $removalButton:$removalButton});
-                
+
             /* for some reason, we need to actually have the input added to the main panel before this will work */
             if (placeholder === '') { placeholder = ' '; } // this allows us to cancel selections in select2
-            this.setupSelect2($input, placeholder, defaultValue, 
+            this.setupSelect2($input, placeholder, defaultValue,
                 spec.textsubdata_options.multiselection,
                 spec.textsubdata_options.show_src_obj,
                 spec.textsubdata_options.allow_custom);
@@ -459,13 +458,13 @@ console.log("h7", Handlebars, text_template);
                 this.isValid();
             }
         },
-        
+
         refresh: function() {
             //var self = this;
             //self.fetchSubData(); //lazy load, so don't do this here
         },
 
-        
+
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input, placeholder, defaultValue, multiselection,
                                     show_src_obj, allow_custom) {
@@ -486,7 +485,7 @@ console.log("h7", Handlebars, text_template);
                 tokenSeparators: [',', ' '],
                 query: function (query) {
                     var data = {results:[]};
-                    
+
                     self.fetchSubData(
                         function() {
                             // if there is a current selection (this is a bit of a hack) we
@@ -500,7 +499,7 @@ console.log("h7", Handlebars, text_template);
                                 }
                             }
                             $input.data('select2').kbaseHackLastTerm = query.term;
-                            
+
                             // populate the names from our valid data object list
                             var exactMatch = false;
                             if (self.autofillData) {
@@ -512,16 +511,16 @@ console.log("h7", Handlebars, text_template);
                                         if(self.select2Matcher(query.term, d.id) ||
                                             self.select2Matcher(query.term, text) ||
                                             self.select2Matcher(query.term, d.dname)) {
-                                                data.results.push({id:d.id, text:text, 
+                                                data.results.push({id:d.id, text:text,
                                                     dref:d.dref, dname:d.dname});
                                         }
                                     } else {
-                                        data.results.push({id:d.id, text:text, 
+                                        data.results.push({id:d.id, text:text,
                                                     dref:d.dref, dname:d.dname});
                                     }
                                 }
                             }
-                            
+
                             //allow custom names if specified and multiselect is off (for some reason
                             //custome fields don't work in multiselect mode) then unshift it to the front...
                             if (allow_custom && !multiple && query.term.trim()!=="") {
@@ -534,7 +533,7 @@ console.log("h7", Handlebars, text_template);
                                         more:data.results.length >= query.page*pageSize });
                         });
                 },
-                
+
                 formatSelection: function(object, container) {
                     var display = '<span class="kb-parameter-data-selection">'+object.id+'</span>';
                     return display;
@@ -552,7 +551,7 @@ console.log("h7", Handlebars, text_template);
                 function(e) {
                     $input.data('select2').kbaseHackLastSelection = e.choice;
                 });
-            
+
             if (defaultValue) {
                 $input.select2("data",{id:defaultValue, text:defaultValue});
             }
@@ -561,7 +560,7 @@ console.log("h7", Handlebars, text_template);
         select2Matcher: function(term,text) {
             return text.toUpperCase().indexOf(term.toUpperCase())>=0;
         },
-        
+
         /*
          * This is called when this method is run to allow you to check if the parameters
          * that the user has entered is correct.  You need to return an object that indicates
@@ -594,7 +593,7 @@ console.log("h7", Handlebars, text_template);
                     errorDetectedHere = true;
                     errorMessages.push("required field "+self.spec.ui_name+" missing.");
                 }
-                
+
                 // no error, so we hide the error if any, and show the "accepted" icon if it is not empty
                 if (!errorDetectedHere || !self.enabled) {
                     if (self.rowInfo[i]) {
@@ -616,7 +615,7 @@ console.log("h7", Handlebars, text_template);
             }
             return { isValid: !errorDetected, errormssgs:errorMessages};
         },
-        
+
         /*
          * Necessary for Apps to disable editing parameters that are automatically filled
          * from a previous step.  Returns nothing.
@@ -632,7 +631,7 @@ console.log("h7", Handlebars, text_template);
             }
             this.$addRowController.hide();
         },
-        
+
         /*
          * Allows those parameters to be renabled, which may be an option for advanced users.
          */
@@ -646,8 +645,8 @@ console.log("h7", Handlebars, text_template);
             this.$addRowController.show();
             this.isValid();
         },
-        
-        
+
+
         lockInputs: function() {
             this.locked_inputs = true;
             if (this.enabled) {
@@ -672,13 +671,13 @@ console.log("h7", Handlebars, text_template);
             this.$addRowController.show();
             this.isValid();
         },
-        
-        
-        
+
+
+
         addInputListener: function(onChangeFunc) {
             this.$elem.find("#"+this.spec.id).on("change",onChangeFunc);
         },
-        
+
         /*
          * An App (or a narrative that needs to auto populate certain fields) needs to set
          * specific parameter values based on the App spec, so we need a way to do this.
@@ -687,7 +686,7 @@ console.log("h7", Handlebars, text_template);
             if (value===null) { return; }
             if(value instanceof Array) {
             } else { value = [value]; }
-            
+
             for(var i=0; i<value.length; i++) {
                 var v = value[i].trim();
                 if (i<this.rowInfo.length) {
@@ -699,7 +698,7 @@ console.log("h7", Handlebars, text_template);
             }
             this.isValid();
         },
-        
+
         setSpecificRowValue: function(i,value) {
             var setValue = {id:value, text:value};
             if(this.spec.textsubdata_options.multiselection) {
@@ -717,7 +716,7 @@ console.log("h7", Handlebars, text_template);
                 this.rowInfo[i].$input.select2('disable',true);
             }
         },
-        
+
         /*
          * We need to be able to retrieve any parameter value from this method.  Valid parameter
          * values may be strings, numbers, objects, or lists, but must match what is declared
@@ -757,7 +756,7 @@ console.log("h7", Handlebars, text_template);
             }
             return value;
         },
-        
+
         prepareValueBeforeRun: function(methodSpec) {
 
         },

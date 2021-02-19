@@ -1,8 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
 define([
     'jquery',
     'kbaseNarrativeDownloadPanel',
@@ -16,7 +11,7 @@ define([
     Jupyter,
     Narrative
 ) => {
-    describe('Test the kbaseNarrativeDownloadPanel widget', () => {
+    describe('The kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();

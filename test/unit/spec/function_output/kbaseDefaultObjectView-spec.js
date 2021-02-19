@@ -1,4 +1,3 @@
-/*jslint white: true*/
 define([
     'jquery',
     'widgets/function_output/kbaseDefaultObjectView',
@@ -13,7 +12,7 @@ define([
     Narrative
 ) => {
     'use strict';
-    describe('Test the kbaseDefaultObjectView widget', () => {
+    describe('The kbaseDefaultObjectView widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();

@@ -1,4 +1,7 @@
-/*eslint-env jasmine*/
+/*  eslint-env jasmine
+    eslint-env es6
+
+*/
 define([
     'widgets/appWidgets2/input/checkboxInput',
     'common/runtime',
@@ -65,6 +68,11 @@ define([
             expect(widget).toEqual(jasmine.any(Object));
         });
 
+        describe('the started widget', () => {
+
+
+        })
+
         it('should start and stop properly without initial value', () => {
             let widget = CheckboxInput.make(testConfig);
             let node = document.createElement('div');
@@ -113,11 +121,12 @@ define([
                 });
         });
 
-        it('should show message when configured', (done) => {
+        xit('should show message when configured', (done) => {
             testConfig.showOwnMessaged = true;
             let widget = CheckboxInput.make(testConfig);
             let node = document.createElement('div');
             bus.on('changed', (value) => {
+                // test for a message
                 done();
             });
             widget.start({node: node})

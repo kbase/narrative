@@ -1,5 +1,4 @@
 /*global define,window*/
-/*jslint white:true,browser:true*/
 
 define([
     'jquery',

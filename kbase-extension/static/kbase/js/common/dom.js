@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 define([
     'kb_common/html'
@@ -35,7 +34,7 @@ define([
             }
             var selector = '[data-button="' + name + '"]',
                 buttonNode = container.querySelector(selector);
-            
+
             if (!buttonNode) {
                 throw new Error('Button ' + name + ' not found');
             }
@@ -88,9 +87,9 @@ define([
         function setButtonLabel(name, label) {
             getButton(name).innerHTML = label;
         }
-        
+
         // Hmm, something like this, but need to think it through more.
-//        function setButton(name, options) {            
+//        function setButton(name, options) {
 //            var buttonNode = getButton(name);
 //            if (options.label) {
 //                buttonNode.innerHTML = options.label;
@@ -102,7 +101,7 @@ define([
 //                    buttonNode.classList.add(klass);
 //                });
 //            }
-//                
+//
 //        }
 
         function ensureOriginalDisplayStyle(el) {
@@ -151,12 +150,12 @@ define([
                 // style.display = 'none';
             }
             return  div({class: classes.join(' '), dataElement: args.name}, [
-                (function () { 
+                (function () {
                     if (args.title) {
                         return div({class: 'panel-heading'}, [
                             div({class: 'panel-title'}, args.title)
                         ]);
-                    }                    
+                    }
                 }()),
                 div({class: 'panel-body'}, [
                     args.body
@@ -188,7 +187,7 @@ define([
 
         function buildCollapsiblePanel(args) {
             var collapseId = html.genId(),
-                type = args.type || 'primary',                
+                type = args.type || 'primary',
                 classes = ['panel', 'panel-' + type],
                 collapseClasses = ['panel-collapse collapse'],
                 toggleClasses = [];
@@ -220,7 +219,7 @@ define([
                     )
             ]);
         }
-        
+
         function collapsePanel(path) {
             var node = getElement(path);
             if (!node) {
@@ -229,7 +228,7 @@ define([
             var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
-            
+
             collapseToggle.classList.add('collapsed');
             collapseToggle.setAttribute('aria-expanded', 'false');
             collapseTarget.classList.remove('in');
@@ -243,7 +242,7 @@ define([
             var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
-            
+
             collapseToggle.classList.remove('collapsed');
             collapseToggle.setAttribute('aria-expanded', 'true');
             collapseTarget.classList.add('in');

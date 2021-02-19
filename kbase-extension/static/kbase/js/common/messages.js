@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
 ], function () {
     'use strict';
@@ -28,7 +27,7 @@ define([
             var origin = event.origin || event.originalEvent.origin,
                 message = event.data,
                 listener, response;
-            
+
             if (message.id && awaitingResponse[message.id]) {
                 try {
                     response = awaitingResponse[message.id];
@@ -66,7 +65,7 @@ define([
             };
             sendMessage(message);
         }
-        
+
         function request(message) {
             return new Promise(function (resolve, reject) {
                 sendRequest(message, function (response) {
@@ -85,7 +84,7 @@ define([
             listen: listenForMessage
         };
     }
-    
+
     function Messages(config) {
         var awaitingResponse = {},
             listeners = {},
@@ -97,7 +96,7 @@ define([
             lastId += 1;
             return 'msg_' + String(lastId);
         }
-        
+
         var partners = {};
         function addPartner(config) {
             partners[config.name] = config;
@@ -114,7 +113,7 @@ define([
             var origin = event.origin || event.originalEvent.origin,
                 message = event.data,
                 listener, response;
-            
+
             if (message.id && awaitingResponse[message.id]) {
                 try {
                     response = awaitingResponse[message.id];
@@ -138,13 +137,13 @@ define([
             }
 
         }
-        
+
         function getPartner(name) {
             var partner = partners[name];
             if (!partner) {
                 throw new Error('Partner ' + name + ' not registered');
             }
-            return partner;                
+            return partner;
         }
 
         function sendMessage(partnerName, message) {
@@ -162,7 +161,7 @@ define([
             };
             sendMessage(partnerName, message);
         }
-        
+
         function request(partnerName, message) {
             return new Promise(function (resolve, reject) {
                 sendRequest(partnerName, message, function (response) {
@@ -170,7 +169,7 @@ define([
                 });
             });
         }
-        
+
         function setName(newName) {
             if (name !== undefined) {
                 throw new Error('Name is already set');
@@ -178,7 +177,7 @@ define([
             name = newName;
         }
 
-        
+
         root.addEventListener('message', receiveMessage, false);
 
 

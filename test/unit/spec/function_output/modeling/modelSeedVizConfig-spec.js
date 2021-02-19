@@ -1,12 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
 define([
     'modelSeedVizConfig'
 ], function(Widget) {
-    describe('Test the modelSeedVizConfig widget', function() {
+    'use strict';
+    describe('The modelSeedVizConfig widget', function() {
         var cfg;
 
         beforeEach(function() {

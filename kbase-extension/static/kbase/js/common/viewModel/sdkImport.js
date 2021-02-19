@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint browser:true,white:true,single:true*/
 
 define([
     'common/props'
@@ -443,7 +442,7 @@ define([
         case 'struct':
             break;
         case 'unspecified':
-            // a bunch of field types are untyped, and there are no 
+            // a bunch of field types are untyped, and there are no
             // options for them...
             switch (fieldType) {
             case 'text':
@@ -475,7 +474,7 @@ define([
 
     // Stepwise conversion
 
-    // now with grouped params 
+    // now with grouped params
 
     function convertParameter(spec) {
         var dataType = grokDataType(spec);
@@ -674,7 +673,7 @@ define([
         var groups = sdkAppSpec.parameter_groups || [];
         groups.forEach(function (group) {
             convertGroup(group, parameterSpecs);
-            // don't know how the group is ordered in the spec ... so just append it later.            
+            // don't know how the group is ordered in the spec ... so just append it later.
         });
 
         // first filter out the paramters which have been moved into groups,

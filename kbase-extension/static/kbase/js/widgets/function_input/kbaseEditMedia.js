@@ -9,7 +9,6 @@
  */
 
 /*global define*/
-/*jslint white: true*/
 define([
     'kbwidget',
     'jquery',
@@ -69,12 +68,12 @@ define([
 
             // Creates the media chooser widget, which is just a 'text' input
             // This was originally designed to deal with the parameter spec object.
-            this.mediaChooserWidget = new kbaseNarrativeParameterTextInput(this.$mediaChooserPanel, {                
+            this.mediaChooserWidget = new kbaseNarrativeParameterTextInput(this.$mediaChooserPanel, {
                 loadingImage: Config.get('loading_gif'),
                 parsedParameterSpec: this.options.appSpec.parameters[0],
                 isInSidePanel: false
             });
-            
+
             this.parameterIdLookup = {};
             this.parameterIdLookup[this.options.appSpec.parameters[0].id] = this.mediaChooserWidget;
 

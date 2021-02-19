@@ -1,4 +1,3 @@
-/*jslint white: true*/
 define([
     'jquery',
     'kbaseSampleSetView',
@@ -11,7 +10,7 @@ define([
     Config
 ) => {
     'use strict';
-    describe('Test the kbaseSampleSet viewer widget', () => {
+    describe('The kbaseSampleSet viewer widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();

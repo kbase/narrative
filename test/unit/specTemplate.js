@@ -1,8 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
 
 /**
  * This is an example template for a testing spec for some widget. THIS WILL NOT ACTUALLY RUN.

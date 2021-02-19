@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'jquery',
@@ -82,7 +81,7 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-        // CONTROL 
+        // CONTROL
 
         function getControlValue() {
             return ui.getElement('input-container.input').value;
@@ -185,7 +184,7 @@ define([
 
         /*
          * This simulates a user clicking on the file input.
-         * This mechanism is purely vanity -- 
+         * This mechanism is purely vanity --
          */
         function handleButtonChange(e) {
             ui.getElement('file-input').dispatchEvent(new Event('click'));
@@ -253,8 +252,8 @@ define([
         function uploadFile(file) {
             var currentValue = model.value,
                 // The key used as an id for the uploaded file's shock node.
-                // Using the file size, time, name, and user id is a pretty 
-                // good unique and idempotent id for this file.                
+                // Using the file size, time, name, and user id is a pretty
+                // good unique and idempotent id for this file.
                 ujsKey = [
                     "File:", file.size, ":",
                     file.lastModified, ":",

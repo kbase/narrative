@@ -7,11 +7,11 @@ define ([
     'use strict';
     describe('Tests for narrativeConfig', function() {
         it('loaded the config module', function() {
-            expect(Config).not.toBe.null;
+            expect(Config).not.toBeNull();
         });
 
         it('has a config object', function() {
-            expect(Config.config).not.toBe.null;
+            expect(Config.config).not.toBeNull();
         });
 
         it('has a valid workspace url', function() {

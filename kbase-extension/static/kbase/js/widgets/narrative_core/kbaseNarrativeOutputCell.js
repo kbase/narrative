@@ -1,5 +1,4 @@
 /*global define,require */
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'bluebird',

@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -30,7 +29,7 @@ define([
             if (values === null) {
                 displayValue = span({style: {fontStyle: 'italic', color: 'orange'}}, 'NA');
             } else {
-                displayValue = values.map(function (value) {                    
+                displayValue = values.map(function (value) {
                     return span({style: {fontFamily: 'monospace', fontWeight: 'bold', color: 'gray'}}, String(value));
                 }).join(', ');
             }
@@ -48,10 +47,10 @@ define([
                 bus.on('update', function (message) {
                     model.setItem('values', message.value);
                 });
-                
+
             });
         }
-        
+
         model = Props.make({
             onUpdate: function (props) {
                 render();

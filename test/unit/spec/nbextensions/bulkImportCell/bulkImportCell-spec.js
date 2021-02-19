@@ -119,7 +119,10 @@ define([
             const runtime = Runtime.make();
             const cell = Mocks.buildMockCell('code');
             Jupyter.notebook = Mocks.buildMockNotebook({
-                deleteCallback: () => done()
+                deleteCallback: () => {
+                    expect(Jupyter.notebook.delete_cell).toHaveBeenCalled()
+                    done()
+                }
             });
             spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
             BulkImportCell.make({

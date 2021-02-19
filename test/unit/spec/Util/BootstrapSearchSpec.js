@@ -30,6 +30,7 @@ define ([
         it('Should fire an input function when triggered by input', (done) => {
             const bsSearch = new BootstrapSearch($targetElem, {
                 inputFunction: () => {
+                    expect(true).toBeTruthy();
                     done();
                 }
             });
@@ -98,6 +99,7 @@ define ([
             const bsSearch = new BootstrapSearch($targetElem);
             $('body').append($targetElem);
             $targetElem.find('input.form-control').on('focus', () => {
+                expect(true).toBeTruthy();
                 done();
             });
             bsSearch.focus();
@@ -115,6 +117,7 @@ define ([
             const passed = false;
             const bsSearch = new BootstrapSearch($targetElem, {
                 escFunction: () => {
+                    expect(true).toBeTruthy();
                     done();
                 }
             });

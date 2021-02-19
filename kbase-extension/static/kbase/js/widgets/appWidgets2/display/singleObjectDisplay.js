@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -33,7 +32,7 @@ define([
             bus = config.bus,
             model;
 
-        // DATA 
+        // DATA
 
         function getObjectRef() {
             switch (objectRefType) {
@@ -77,11 +76,11 @@ define([
         function render() {
             getObject()
                 .then(function (objectInfo) {
-                    // console.log('OBJECT INFO', objectInfo);            
+                    // console.log('OBJECT INFO', objectInfo);
                     container.innerHTML = div({
                         style: {
-                            padding: '3px', 
-                            border: '1px solid gray', 
+                            padding: '3px',
+                            border: '1px solid gray',
                             backgroundColor: '#eeeeee'
                         }
                     }, [

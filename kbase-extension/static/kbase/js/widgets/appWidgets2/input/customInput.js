@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'require',
@@ -108,7 +107,7 @@ define([
 
         function makeCustomWidget(arg) {
 
-            // For now all custom inputs live in the 
+            // For now all custom inputs live in the
             // customInputs directory of the input collection directory
             // and are named like <type>Input.js
             return prequire('./customInputs/' + subtype + 'Input')

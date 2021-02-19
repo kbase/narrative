@@ -1,5 +1,4 @@
 /*global define,Workspace*/
-/*jslint white: true*/
 /*eslint-env browser*/
 
 /**

@@ -1,8 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
 
 
 define([
@@ -11,10 +6,10 @@ define([
     'kbase/js/widgets/narrative_core/kbaseDataCard'
 ], function ($, Jupyter, DataCard) {
     var object_info, $card;
-    describe('Test the kbaseDataCard widget', function() {
+    describe('The kbaseDataCard widget', function() {
         beforeEach(function () {
             object_info = [
-                1, 'Object Name', 'objecttype.Type-1.0', '2017-10-16T20:19:00+0000', 1, 
+                1, 'Object Name', 'objecttype.Type-1.0', '2017-10-16T20:19:00+0000', 1,
                 'user', 2, 'user:narrative_2', 'chsum', 3, {}
             ];
             $card = DataCard({
@@ -53,7 +48,7 @@ define([
             var content = $card2.find('.narrative-card-row-more').children()[0];
             expect($moreContent.is($(content))).toEqual(true);
         });
-        
+
 
     });
 });

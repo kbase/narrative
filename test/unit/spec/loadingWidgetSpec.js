@@ -2,7 +2,6 @@
 /*global describe, it, expect*/
 /*global jasmine*/
 /*global beforeEach, afterEach, spyOn*/
-/*jslint white: true*/
 
 define ([
     'jquery',
@@ -33,8 +32,9 @@ define ([
             expect(widget).not.toBeNull();
         });
 
-        it('Should be able to update its progress', function () {
+        xit('Should be able to update its progress', function () {
             widget.updateProgress('data', true);
+
         });
 
         it('Should be able to remove its container node', function () {

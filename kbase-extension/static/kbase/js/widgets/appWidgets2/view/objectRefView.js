@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'jquery',
@@ -125,7 +124,7 @@ define([
             if (selected.length === 0) {
                 return;
             }
-            // we are modeling a single string value, so we always just get the 
+            // we are modeling a single string value, so we always just get the
             // first selected element, which is all there should be!
             return selected.item(0).value;
         }

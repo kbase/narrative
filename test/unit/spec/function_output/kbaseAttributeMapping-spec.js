@@ -1,4 +1,3 @@
-/*jslint white: true*/
 define([
     'jquery',
     'kbaseAttributeMapping',
@@ -11,7 +10,7 @@ define([
     Narrative
 ) => {
     'use strict';
-    describe('Test the kbaseAttributeMapping widget', () => {
+    describe('The kbaseAttributeMapping widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();

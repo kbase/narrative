@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * @author Andreas Wilke <wilke@anl.gov>
  * @public
@@ -53,7 +52,7 @@ define (
                 return;
             }
             var kbws = new Workspace(self.ws_url, {'token': self.token});
-        
+
 		    var lslen = 0;
         	if (window.hasOwnProperty('rendererListselect') && rendererListselect.length) {
         		lslen = rendererListselect.length;
@@ -124,7 +123,7 @@ define (
             });
 
 	    },
-	
+
 	    loggedInCallback: function(event, auth) {
             this.token = auth.token;
             this.render();
@@ -136,7 +135,7 @@ define (
             this.render();
             return this;
         },
-    
+
 	    metagenomesSelected: function(items, listName, index) {
 	        var self = this.master;
 	        var d = document.getElementById("mgInputResultDiv"+this.index);
@@ -164,11 +163,11 @@ define (
 	    	    created: date.toISOString(),
 	    	    members: []
 	        };
-	    
+
 	        for (var i=0 ; i<items.length;i++){
 		        collection.members[i] = {'ID': items[i].id, 'URL': items[i].wsid+"/"+items[i].wsitem};
 	        }
-	    
+
 	        var object_data = {
 	     	    type: 'Communities.Collection',
 	     	    data: collection,
@@ -179,7 +178,7 @@ define (
 	     	    objects: [object_data]
 	        };
 	        //console.log(save_params);
-	   
+
 	        var kbws = new Workspace(self.ws_url, {'token': self.token});
 	        kbws.save_objects(save_params);
 	        d.innerHTML += "<h5>collection "+listName+" saved.</h5>";

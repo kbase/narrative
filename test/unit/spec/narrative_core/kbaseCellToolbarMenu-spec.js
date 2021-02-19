@@ -1,5 +1,4 @@
 /*global describe, it, expect, beforeAll */
-/*jslint white: true*/
 define([
     'jquery',
     'kbaseCellToolbarMenu',
@@ -10,7 +9,7 @@ define([
     Jupyter
 ) {
     'use strict';
-    describe('Test the kbaseCellToolbarMenu widget', function () {
+    describe('The kbaseCellToolbarMenu widget', function () {
         beforeAll(() => {
             Jupyter.narrative = {
                 readonly: false

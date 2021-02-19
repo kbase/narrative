@@ -10,7 +10,7 @@ define([
     Jupyter
 ) => {
     'use strict';
-    describe('Test the GenomeCategorizer widget', () => {
+    describe('The GenomeCategorizer widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();
@@ -23,10 +23,11 @@ define([
         afterEach(() => {
             jasmine.Ajax.uninstall();
             $div.remove();
+            Jupyter.narrative = null;
         });
 
         it('Should properly render data', () => {
-            let genomecatgorizerdata = {
+            const genomeCategorizerData = {
                 'attribute_data':['EamA family transporter RarD','hydrogenase nickel incorporation protein HypA'],
                 'attribute_type':'functional_roles',
                 'class_list_mapping':{'N':1,'P':0},
@@ -40,7 +41,7 @@ define([
                 'number_of_genomes':2,
                 'training_set_ref':'35279/17/1'
             };
-            let trainingsetdata = {
+            const trainingsetdata = {
                 'classes':['P','N'],
                 'classification_data':[
                     {
@@ -71,7 +72,7 @@ define([
                 'number_of_classes':2,
                 'number_of_genomes':3
             };
-            // this code is more of less ignored, because two WS calls are made both can't be stubbed
+            // this code is more or less ignored, because two WS calls are made both can't be stubbed
             jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'success',
@@ -84,8 +85,8 @@ define([
                     }]
                 })
             });
-            let w = new GenomeCategorizer($div, {upas: {upas: ['fake']}});
-            w.objData = genomecatgorizerdata;
+            const w = new GenomeCategorizer($div, {upas: {upas: ['fake']}});
+            w.objData = genomeCategorizerData;
             w.trainingSetData = trainingsetdata;
             w.render();
             [
@@ -95,9 +96,9 @@ define([
                 expect($div.html()).toContain(str);
             });
             // more complex structure matching
-            let tabs = $div.find('.tabbable');
+            const tabs = $div.find('.tabbable');
             expect(tabs).not.toBeNull();
-            let tabsContent = $div.find('.tab-pane');
+            const tabsContent = $div.find('.tab-pane');
             expect(tabsContent.length).toEqual(2);
             [
                 'Classifier Name',

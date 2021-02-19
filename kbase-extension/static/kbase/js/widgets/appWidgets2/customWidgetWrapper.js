@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 define([
     'bluebird',
@@ -32,7 +31,7 @@ define([
         /*
          * This is a fake widget finder for now...
          * At the moment widget ids are still jquery widget ids which operate
-         * under the given widget id as both a jquery widget name and 
+         * under the given widget id as both a jquery widget name and
          * amd module name (see narrative_paths.js for the mapping)
          */
         function findWidget(widgetId) {
@@ -81,7 +80,7 @@ define([
                 // Get sorted out with the app and the input widget.
                 // container.innerHTML = render();
                 runCustomWidget();
-                
+
                 runtime.bus().send({}, {
                     channel: {
                         cell: cellId
@@ -99,9 +98,9 @@ define([
                     },
                     handle: function (message) {
                         wrappedWidget.setParameterValue(message.id, message.value);
-                    }                    
+                    }
                 })
-                
+
                 runtime.bus().on('workspace-changed', function () {
                     wrappedWidget.refresh();
                 });

@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 /*
  * fsm.js

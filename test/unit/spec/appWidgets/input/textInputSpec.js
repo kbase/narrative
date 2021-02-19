@@ -46,7 +46,7 @@ define([
             window.kbaseRuntime = null;
         });
 
-        it('Should load the widget', () => {
+        it('should be defined', () => {
             expect(TextInput).not.toBeNull();
         });
 

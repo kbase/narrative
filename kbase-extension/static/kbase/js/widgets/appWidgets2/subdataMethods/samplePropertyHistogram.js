@@ -1,11 +1,10 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 define([
 ], function () {
     'use strict';
     function factory(config) {
-        function extractItems(result, params) {            
+        function extractItems(result, params) {
             if (result.length === 0) {
                 return [];
             }
@@ -25,7 +24,7 @@ define([
                 };
             }).sort(function (a, b) {
                 return a.text > b.text ? 1 : -1;
-            });            
+            });
         }
 
         function getMethod() {

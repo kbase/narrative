@@ -1,5 +1,4 @@
 /*global define,console*/
-/*jslint white: true;*/
 /*eslint-env browser*/
 /**
  * "Import" tab on data side panel.

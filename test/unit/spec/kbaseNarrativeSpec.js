@@ -102,7 +102,7 @@ define ([
             expect(narr.maxNarrativeSize).toBe('10 MB');
         });
 
-        it('Should have an init function that responds when the kernel is connected', () => {
+        xit('Should have an init function that responds when the kernel is connected', () => {
             return new Promise((resolve, reject) => {
                 const narr = new Narrative();
                 const jobsReadyCallback = (err) => {
@@ -118,7 +118,7 @@ define ([
             });
         });
 
-        it('init should fail as expected when the job connection fails', () => {
+        xit('init should fail as expected when the job connection fails', () => {
             return new Promise((resolve, reject) => {
                 Jupyter.notebook.kernel.comm_info = () => {
                     throw new Error('an error happened');

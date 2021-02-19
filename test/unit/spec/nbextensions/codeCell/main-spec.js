@@ -30,6 +30,7 @@ define([
         });
 
         beforeEach(() => {
+            window.kbaseRuntime = null;
             // mock the notebook for the main module
             const cell = Mocks.buildMockCell('code', 'code');
             // the mock has two cells, a plain mock code cell, and
@@ -42,6 +43,7 @@ define([
 
         afterEach(() => {
             Jupyter.notebook = null;
+            window.kbaseRuntime = null;
         });
 
         it('should have a load_ipython_extension function', () => {

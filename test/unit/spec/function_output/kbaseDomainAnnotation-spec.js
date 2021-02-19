@@ -1,14 +1,10 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
 define([
     'kbaseDomainAnnotation'
 ], function(Widget) {
-    describe('Test the kbaseDomainAnnotation widget', function() {
-        it('Should do things', function() {
-
+    'use strict';
+    describe('The kbaseDomainAnnotation widget', function() {
+        it('should be defined', function() {
+            expect(Widget).toBeDefined();
         });
     });
 });

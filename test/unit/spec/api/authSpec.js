@@ -2,7 +2,6 @@
 /*global describe, it, expect*/
 /*global jasmine, pending*/
 /*global beforeEach, afterEach*/
-/*jslint white: true*/
 
 define([
     'api/auth',

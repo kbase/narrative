@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'base/js/namespace',
@@ -119,9 +118,9 @@ define([
          *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
+         * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         * 
+         *
          *
          */
 
@@ -236,7 +235,7 @@ define([
                 id: events.addEvent({
                     type: 'click',
                     handler: function(e) {
-                        // no, we don't need to consult the control, we just remove 
+                        // no, we don't need to consult the control, we just remove
                         // it...
                         model.value.splice(widgetWrapper.index, 1);
                         //var index = e.target.getAttribute('data-index'),
@@ -372,7 +371,7 @@ define([
                     return validate(rawValue);
                 }))
                 .then(function(results) {
-                    // a bit of a hack -- we need to handle the 
+                    // a bit of a hack -- we need to handle the
                     // validation here, and update the individual rows
                     // for now -- just create one mega message.
                     var errorMessages = [],

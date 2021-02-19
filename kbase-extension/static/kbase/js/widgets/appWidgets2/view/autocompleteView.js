@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'bluebird',
@@ -194,7 +193,7 @@ define([
                         $control.bind('typeahead:select', function(e, suggestion) {
                             // NB for 'select' event it is the suggestion object,
                             // for 'change' it is the display value as defined above.
-                            // e.g. 
+                            // e.g.
                             // category: "public"
                             // id: "1779/300381/1"
                             // label: "Klebsiella sp. ok1_1_9_S34"

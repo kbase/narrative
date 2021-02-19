@@ -1,5 +1,4 @@
 /*global define,KBError,KBFatal,window,console,document*/
-/*jslint white:true,browser:true*/
 
 /**
  * This is the entry point for the Narrative's front-end. It initializes

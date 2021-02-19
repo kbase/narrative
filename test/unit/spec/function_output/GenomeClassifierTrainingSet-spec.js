@@ -1,4 +1,3 @@
-/*jslint white: true*/
 define([
     'jquery',
     'GenomeClassifierTrainingSet',
@@ -11,7 +10,7 @@ define([
     Narrative
 ) => {
     'use strict';
-    describe('Test the GenomeClassifierTrainingSet widget', () => {
+    describe('The GenomeClassifierTrainingSet widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();
@@ -26,7 +25,7 @@ define([
         });
 
         it('Should properly render data', (done) => {
-            let trainingsetdata = {
+            const trainingsetdata = {
                 "classes":["P","N"],
                 "classification_data":[
                     {
@@ -68,7 +67,7 @@ define([
                     }]
                 })
             });
-            let w = new GenomeClassifierTrainingSet($div, {upas: {upas: ['fake']}});
+            const w = new GenomeClassifierTrainingSet($div, {upas: {upas: ['fake']}});
             w.trainingSetData = trainingsetdata;
             w.render();
             [
@@ -78,9 +77,9 @@ define([
                 expect($div.html()).toContain(str);
             });
             // more complex structure matching
-            let tabs = $div.find('.tabbable');
+            const tabs = $div.find('.tabbable');
             expect(tabs).not.toBeNull();
-            let tabsContent = $div.find('.tab-pane');
+            const tabsContent = $div.find('.tab-pane');
             expect(tabsContent.length).toEqual(2);
             [
                 'Training Set Name',

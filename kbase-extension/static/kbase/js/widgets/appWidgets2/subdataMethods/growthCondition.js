@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 define([
 ], function () {
@@ -44,7 +43,7 @@ define([
                 // to query, but a sub object. For now we just support
                 // one layer of indirection.
                 // data is the result of workspace.get_objects
-                // result is an object reference which will be consumed by 
+                // result is an object reference which will be consumed by
                 //   worksoace.get_object_subset (ref property).
                 getRef: function (data) {
                     return data[0].data.matrix_id;

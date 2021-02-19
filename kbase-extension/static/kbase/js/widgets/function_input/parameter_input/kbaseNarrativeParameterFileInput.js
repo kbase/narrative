@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * KBase widget to upload file content into shock node.
  */

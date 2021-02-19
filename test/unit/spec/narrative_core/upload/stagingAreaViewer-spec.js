@@ -1,4 +1,3 @@
-/*jslint white: true*/
 
 define ([
     'jquery',
@@ -12,10 +11,10 @@ define ([
 ) => {
     'use strict';
 
-    describe('Test the staging area viewer widget', () => {
+    describe('The staging area viewer widget', () => {
         let stagingViewer,
-            $targetNode,
-            startingPath = '/',
+            $targetNode;
+        const startingPath = '/',
             updatePathFn = () => {},
             fakeUser = 'notAUser';
 
@@ -54,7 +53,7 @@ define ([
             // Can't figure out a way to map these mappings to the above files
             const fastq_mapping = [{ 'id': 'fastq_reads', 'title': 'FastQ Reads' }];
             const sra_mapping = [{ 'id': 'sra_reads', 'title': 'SRA Reads' }];
-            
+
             const mappings = { 'mappings': [null,null,null]};
             jasmine.Ajax.stubRequest(/.*\/staging_service\/importer_mappings\/?/).andReturn({
                 status: 200,
@@ -108,7 +107,7 @@ define ([
         });
 
         it('Should render properly with a Globus linked account', async (done) => {
-            let $node = $('<div>'),
+            const $node = $('<div>'),
                 linkedStagingViewer = new StagingAreaViewer($node, {
                     path: startingPath,
                     updatePathFn: updatePathFn,
@@ -119,7 +118,7 @@ define ([
                 });
             await linkedStagingViewer.render()
                 .then(() => {
-                    var $globusButton = $node.find('#globusLinked');
+                    const $globusButton = $node.find('#globusLinked');
                     expect($globusButton).toBeDefined();
                     expect($globusButton.html()).toContain('Upload with Globus');
                     expect($globusButton.attr('href')).toEqual('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' + fakeUser);
@@ -129,7 +128,7 @@ define ([
 
         it('Should render properly without a Globus linked account', async () => {
             await stagingViewer.render();
-            var $globusButton = $targetNode.find('#globusNotLinked');
+            const $globusButton = $targetNode.find('#globusNotLinked');
             expect($globusButton).toBeDefined();
             expect($globusButton.html()).toContain('Upload with Globus');
             expect($globusButton.attr('href')).toEqual('https://docs.kbase.us/data/globus');
@@ -137,19 +136,19 @@ define ([
 
         it('Should render a url button', async () => {
             await stagingViewer.render();
-            var $urlButton = $targetNode.find('.web_upload_div');
+            const $urlButton = $targetNode.find('.web_upload_div');
             expect($urlButton).toBeDefined();
             expect($urlButton.html()).toContain('Upload with URL');
         });
 
 
-        it('Should start a help tour', function() {
+        it('Should start a help tour', () => {
             stagingViewer.render();
             stagingViewer.startTour();
             expect(stagingViewer.tour).not.toBeNull();
         });
 
-        it('Should update its view with a proper subpath', async () => {
+        xit('Should update its view with a proper subpath', async () => {
             await stagingViewer.updateView();
         });
 
@@ -243,14 +242,14 @@ define ([
 
         it('Creates a downloader iframe when requested', () => {
             stagingViewer.downloadFile('some_url');
-            let dlNode = document.getElementById('hiddenDownloader');
+            const dlNode = document.getElementById('hiddenDownloader');
             expect(dlNode).toBeDefined();
             expect(dlNode.getAttribute('src')).toEqual('some_url');
         });
 
-        it('should properly render the import as dropdown', async () => {            
+        it('should properly render the import as dropdown', async () => {
             await stagingViewer.render();
-            let placeholder = $targetNode.find('span.select2-selection__placeholder').html();
+            const placeholder = $targetNode.find('span.select2-selection__placeholder').html();
             expect(placeholder).toContain('Select a type');
 
             //The options that should be in the import as dropdown
@@ -267,15 +266,15 @@ define ([
             await stagingViewer.render();
 
             //find the fake sra reads row specifically (via the download button, then chaining back up to the select dropdown above - since we don't have a unique ID for these select drodpowns it's the best mehtod for now)
-            let selectDropdown = $targetNode.find('[data-download="fake_sra_reads.sra"]').siblings('select');
+            const selectDropdown = $targetNode.find('[data-download="fake_sra_reads.sra"]').siblings('select');
 
             //set the value of the dropdown
             selectDropdown.val('sra_reads')
                 .trigger('change')
                 .trigger('select2:select');
-           
+
             //check that the dropdown renders correctly
-            let select2 = $targetNode.find('[title="SRA Reads"]');
+            const select2 = $targetNode.find('[title="SRA Reads"]');
             expect(select2).toBeDefined();
             expect(select2.attr('title')).toContain('SRA Reads');
             expect(select2.html()).toContain('SRA Reads');
@@ -291,7 +290,7 @@ define ([
             expect(tableCheckboxes.attr('aria-label')).toContain('Select to import file checkbox: disabled until at least one data type is selected');
 
             const headerCheckbox = $targetNode.find('#staging_table_select_all');
-            
+
             expect(headerCheckbox.length).toEqual(1);
             expect(headerCheckbox.attr('aria-label')).toContain('Select to import all files checkbox: disabled until at least one data type is selected');
         });
@@ -301,7 +300,7 @@ define ([
             await stagingViewer.render();
 
             //find the fake sra reads one specifically
-            let selectDropdown = $targetNode.find('[data-download="fake_sra_reads.sra"]').siblings('select');
+            const selectDropdown = $targetNode.find('[data-download="fake_sra_reads.sra"]').siblings('select');
 
             selectDropdown.val('sra_reads')
                 .trigger('change')
@@ -314,7 +313,7 @@ define ([
             expect(tableCheckbox.attr('aria-label')).toContain('Select to import file checkbox');
 
             const headerCheckbox = $targetNode.find('#staging_table_select_all');
-            
+
             //TODO: for some weird reason the header checkbox isn't showing as enabled, even though the click event fires. not sure what is going on here
             expect(headerCheckbox.length).toEqual(1);
             expect(headerCheckbox.attr('aria-label')).toContain('Select to import all files checkbox');
@@ -324,7 +323,7 @@ define ([
             await stagingViewer.render();
 
             const button = $targetNode.find('button.kb-staging-table-import__button');
-            
+
             //initial state should be disabled until the user selects a data type for at least one file
             expect(button.html()).toContain('Import Selected');
             expect(button.hasClass('kb-staging-table-import__button__disabled')).toBeTrue();
@@ -334,7 +333,7 @@ define ([
             await stagingViewer.render();
 
             //find the fake sra reads one specifically
-            let selectDropdown = $targetNode.find('[data-download="fake_sra_reads.sra"]').siblings('select');
+            const selectDropdown = $targetNode.find('[data-download="fake_sra_reads.sra"]').siblings('select');
 
             selectDropdown.val('sra_reads')
                 .trigger('change')
@@ -349,7 +348,7 @@ define ([
             expect(button.hasClass('kb-staging-table-import__button__disabled')).toBeFalse();
         });
     });
-        
+
     //TODO
     //Test to see if
     // * for one autodetect mapping, the detected filetype is selected

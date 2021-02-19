@@ -1,5 +1,4 @@
 /*global define,describe,it,expect*/
-/*jslint white:true,browser:true*/
 define([
     'common/fsm'
 ], function (Fsm) {
@@ -328,7 +327,7 @@ define([
                 };
             fsm.start();
             fsm.newState(nextState);
-            
+
             expect(fsm.getCurrentState()).toEqual(nextStateTest);
         });
 
@@ -367,7 +366,7 @@ define([
 
             expect(invalid).toThrow();
         });
-        
+
         it('Move through the normal sequence of states.', function () {
             var states = appStates,
                 fsm = Fsm.make({
@@ -378,7 +377,7 @@ define([
                     }
                 });
             fsm.start();
-            
+
             fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
             fsm.newState({mode: 'processing', stage: 'launching'});
             fsm.newState({mode: 'processing', stage: 'queued'});
@@ -387,7 +386,7 @@ define([
 
             expect(fsm.getCurrentState().state).toEqual({mode: 'success'});
         });
-        
+
          it('Move through the normal sequence of states which ends in an error.', function () {
             var states = appStates,
                 fsm = Fsm.make({
@@ -398,7 +397,7 @@ define([
                     }
                 });
             fsm.start();
-            
+
             fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
             fsm.newState({mode: 'processing', stage: 'launching'});
             fsm.newState({mode: 'processing', stage: 'queued'});
@@ -407,7 +406,7 @@ define([
 
             expect(fsm.getCurrentState().state).toEqual({mode: 'error', stage: 'running'});
         });
-        
+
          it('Try to move to a state which is not available', function () {
             var states = appStates,
                 fsm = Fsm.make({

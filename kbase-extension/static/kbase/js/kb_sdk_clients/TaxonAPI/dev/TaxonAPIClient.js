@@ -1,5 +1,4 @@
 /*global define */
-/*jslint white:true,browser:true,jsnomen:true*/
 define([
     '../../jsonRpc-native'
 ], function (jsonRpc) {
@@ -14,7 +13,7 @@ define([
      *   token - auth token
      *   username - username
      * auth_cb - function which returns the above value
-     * async_job_check_time_ms - unused? 
+     * async_job_check_time_ms - unused?
      */
     function TaxonAPI(arg) {
         // Establish an auth object which has properties token and user_id.
@@ -26,7 +25,7 @@ define([
             // REALLY??
             auth = arg.auth || {};
         }
-        
+
         if (!arg.url) {
             throw new Error('The service discovery url was not provided');
         }
@@ -246,16 +245,16 @@ define([
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
-        
+
         // NOTE: arguments to the api call should match the spec.
         // Thus the somewhat arcane structure internally. The anonymous immmediately
         // executed functional creates a barrier between the injected parameter names
         // in the main api function , and the internal implementation of constructing
         // the actual service call. Otherwise there could always be a conflict between
         // the injected parameters and any internal variables.
-        // Of course, this could be caught at spec-time if the spec were aware of 
-        // reserved 
-        
+        // Of course, this could be caught at spec-time if the spec were aware of
+        // reserved
+
         /*
          * ref
          */
@@ -276,7 +275,7 @@ define([
             // We need to use the raw arguments magic local variable rather than
             // explicit arguments because the arguments are injected from specs
             // and may conflict with Javascript reserved words, variables
-            // internal to this function, or shadow other symbols we need 
+            // internal to this function, or shadow other symbols we need
             // (e.g. the options function).
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_decorated_scientific_lineage';
@@ -286,7 +285,7 @@ define([
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
-        
+
         this.get_decorated_children = function () {
             var params = Array.prototype.slice.call(arguments),
                 func = 'get_decorated_children';
@@ -311,7 +310,7 @@ define([
         };
 
         /*
-         * 
+         *
          */
         this.status = function () {
             var params = Array.prototype.slice.call(arguments),

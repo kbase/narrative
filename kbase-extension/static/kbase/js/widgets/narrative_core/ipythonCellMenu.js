@@ -2,7 +2,6 @@
  * KBase preset wrapper for its cell menu.
  */
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'notebook/js/celltoolbar',

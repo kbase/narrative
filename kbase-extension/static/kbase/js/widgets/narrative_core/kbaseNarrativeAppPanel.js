@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * A widget that contains functions and function information for the Narrative.
  * When initialized, it uses a loading gif while waiting for functions to load

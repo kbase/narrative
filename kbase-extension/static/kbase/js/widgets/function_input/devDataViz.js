@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
 * @author Bill Riehl <wjriehl@lbl.gov>
 * @public
@@ -54,7 +53,7 @@ define (
                 console.log("DEV_DATA_VIS NO WORKSPACE NAME");
             }
 
-            $(document).on('setWorkspaceName.Narrative', 
+            $(document).on('setWorkspaceName.Narrative',
                 function(e, info) {
                     this.options.ws = info.wsId;
                 }.bind(this)

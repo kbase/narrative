@@ -1,5 +1,4 @@
 /*global define,describe,it,expect*/
-/*jslint white:true,browser:true*/
 define([
     'common/pythonInterop'
 ], function(PythonInterop) {
@@ -145,7 +144,7 @@ define([
                        '        "arg1": 1,\n' +
                        '        "arg2": "two",\n' +
                        '        "arg3": ["t", "h", "r", "e", "e"],\n' +
-                       '        "arg4": {\n' + 
+                       '        "arg4": {\n' +
                        '            "four": 4\n' +
                        '        }\n'+
                        '    },\n' +
@@ -181,7 +180,7 @@ define([
                        '        "arg2": "two"\n' +
                        '    }, {\n' +
                        '        "arg3": ["t", "h", "r", "e", "e"],\n' +
-                       '        "arg4": {\n' + 
+                       '        "arg4": {\n' +
                        '            "four": 4\n' +
                        '        }\n'+
                        '    }],\n' +

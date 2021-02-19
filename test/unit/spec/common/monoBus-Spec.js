@@ -1,5 +1,4 @@
 /*global define,jasmine,describe,it,expect*/
-/*jslint white:true,browser:true*/
 define([
     'common/monoBus'
 ], function(Bus) {
@@ -7,7 +6,7 @@ define([
 
     // Setting a shorter timeout pretty much forces us to set a timeout explicitly
     // per async test which falls outside of this reasonable setting for "normal"
-    // async code. When we simulate async failures, or chained async calls, we 
+    // async code. When we simulate async failures, or chained async calls, we
     // need to controle the timing expectations within the test itself.
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Bus core functions', function() {

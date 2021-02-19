@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
@@ -162,7 +161,7 @@ define (
         getParameters: function() {
             // First, the genome ids.
             var idList = [];
-            
+
             this.$genomeIdTable.find('input').each(function(idx, elem) {
                 var id = $(elem).val().trim();
                 if (id)
@@ -179,7 +178,7 @@ define (
         /**
          * Returns an object representing the state of this widget.
          * In this particular case, it is a list of key-value pairs, like this:
-         * { 
+         * {
          *   'param0' : 'parameter value',
          *   'param1' : 'parameter value'
          * }

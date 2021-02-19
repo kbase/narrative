@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * Narrative data cell.
  *
@@ -8,7 +7,6 @@
  * @public
  */
 /*global define*/
-/*jslint white:true,browser:true*/
 define ([
     'kbwidget',
     'bootstrap',

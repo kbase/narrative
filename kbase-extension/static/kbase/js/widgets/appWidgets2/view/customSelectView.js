@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -47,12 +46,12 @@ define([
         function getInputValue() {
             var control = dom.getElement('input-container.input'),
                 selected = control.selectedOptions;
-            
+
             if (selected.length === 0) {
                 return;
             }
-            
-            // we are modeling a single string value, so we always just get the 
+
+            // we are modeling a single string value, so we always just get the
             // first selected element, which is all there should be!
             return selected.item(0).value;
         }
@@ -61,9 +60,9 @@ define([
          *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
+         * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         * 
+         *
          *
          */
 
@@ -81,7 +80,7 @@ define([
                     validationResult = Validation.validateTextString(rawValue, {
                         required: options.required
                     });
-                    
+
                 return validationResult;
             });
         }
@@ -125,7 +124,7 @@ define([
             Promise.try(function () {
                 var events = Events.make(),
                     inputControl = makeInputControl(events);
-                    
+
                 dom.setContent('input-container', inputControl);
                 events.attachEvents(container);
             })

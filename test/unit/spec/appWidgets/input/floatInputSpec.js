@@ -123,7 +123,7 @@ define([
                 });
         });
 
-        it('should show message when configured', (done) => {
+        xit('should show message when configured', (done) => {
             testConfig.showOwnMessages = true;
             let widget = FloatInput.make(testConfig);
             let node = document.createElement('div');
@@ -136,7 +136,7 @@ define([
                 });
         });
 
-        it('should respond to bus commands', (done) => {
+        xit('should respond to bus commands', (done) => {
             bus.on('validation', done);
             let widget = FloatInput.make(testConfig);
             let node = document.createElement('div');

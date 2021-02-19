@@ -1,8 +1,7 @@
 /*global define,require*/
-/*jslint white:true,browser:true */
 /*
  * Narrative Data Widget
- * 
+ *
  * Embodies a KBase data widget which can be safely displayed in a Narrative.
  * Handles
  * - fetching widget
@@ -100,20 +99,20 @@ define([
                                     }
                                 }
                             }
-                            
+
                             function urlToHost(urlString) {
                                 var url = new URL(urlString);
                                 return url.protocol + '//' + url.host;
                             }
-                            
+
                             function renderIFrameWidget(node, url, host) {
                                 var div = Html.tag('div'),
                                     iframe = Html.tag('iframe'),
                                     iframeId = (new Uuid(4)).format(),
                                     iframeNodeId = 'frame_' + iframeId,
                                     iframeHost = urlToHost(url);
-                                
-                               
+
+
                                 node.innerHTML = div({class: 'row'}, [
                                     div({class: 'col-md-12'}, [
                                         Html.makePanel({
@@ -131,7 +130,7 @@ define([
                                     ])
                                 ]);
                                 // Note that this listener needs to be effective before the iframe loads.
-                                // This is not a problem since although the iframe will be present in the DOM 
+                                // This is not a problem since although the iframe will be present in the DOM
                                 // at this point in the code, the content will not have loaded yet.
                                 waitingPartners[iframeId] = {
                                     name: iframeId,
@@ -167,7 +166,7 @@ define([
                                     messageManager.send(waitingPartner.name, {
                                         name: 'start',
                                         config: {
-                                            frameId: waitingPartner.name,                            
+                                            frameId: waitingPartner.name,
                                             host: 'http://localhost:8888'
                                         },
                                         params: {
@@ -176,7 +175,7 @@ define([
                                     });
                                 }
                             });
-                            
+
                             messageManager.listen({
                                 name: 'authStatus',
                                 handler: function (message) {
@@ -212,7 +211,7 @@ define([
                                     iframe.style.height = height + 'px';
                                 }
                             });
-                            
+
                             /*
                              * Loading...
                              */
@@ -233,7 +232,7 @@ define([
                              * This function creates a function which, given a pubsub bus object, creates
                              * the necessary hooks for implementing the interface.
                              */
-                            
+
                             // use raw widget service for now.
                             var widgetService = WidgetService.make({
                                 url: 'http://widget.kbase.us/wsvc'
@@ -242,7 +241,7 @@ define([
                             if (!widget) {
                                 throw new Error('Cannot find widget: ' + config.package + ', ' + config.version + ', ' + config.widget);
                             }
-                            
+
 //                            var widgetManager = WidgetManager.make({
 //                                widgetServiceUrl: config.services.widget.url,
 //                                cdnUrl: config.services.cdn.url
@@ -255,10 +254,10 @@ define([
 //                                title: widgetTitle
 //                            });
 
-                            // The "widget" is provided as simple markup (string) with an id set and mapped 
+                            // The "widget" is provided as simple markup (string) with an id set and mapped
                             // internally to the right widget invocation stuff.
                             renderIFrameWidget(widgetParentNode, widget.widget.url, 'http://localhost:8888');
-                            
+
                             messageManager.listen({
                                 name: 'ready',
                                 handler: function (message, event) {
@@ -287,7 +286,7 @@ define([
                                     messageManager.send(waitingPartner.name, {
                                         name: 'start',
                                         config: {
-                                            frameId: waitingPartner.name,                            
+                                            frameId: waitingPartner.name,
                                             host: 'http://localhost:8080'
                                         },
                                         params: {

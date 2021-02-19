@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * An input widget to handle building a media set.
  * This has the option of loading/modifying an existing media.
@@ -23,7 +22,7 @@ define (
 	) {
     'use strict';
     return KBWidget({
-        name: "kbaseBuildMediaInput", 
+        name: "kbaseBuildMediaInput",
         parent : kbaseNarrativeInput,
         version: "1.0.0",
         options: {
@@ -109,7 +108,7 @@ define (
                                                 medias: [mediaName],
                                                 workspaces: [this.wsId],
                                             },
-                                            $.proxy(function(media) { 
+                                            $.proxy(function(media) {
                                                 this.updateMediaTable(media);
                                                 $fetchMediaDiv.find("img").hide();
 
@@ -147,8 +146,8 @@ define (
                           .append(this.$errorPanel);
 
              new kbaseAccordion(this.$errorPanel.find("#error-accordion"), {
-                    elements: [{ 
-                        title: "Error Details", 
+                    elements: [{
+                        title: "Error Details",
                         body: $("<pre>")
                               .addClass('kb-err-msg')
                               .append("ERROR'D!"),
@@ -291,7 +290,7 @@ define (
          * representing a new media set. This gets passed to the IPython back end
          * to be processed into a new medium.
          * @public
-         * @return 
+         * @return
          */
         getParameters: function() {
             var mediaName = this.$headerInputDiv.find("#media-name").val().trim().replace(/\s+/g, "_");
@@ -345,7 +344,7 @@ define (
          * {
          *   'name' : <string name>,
          *   'ph' : <string ph>,
-         *   'compounds' : 
+         *   'compounds' :
          *       [
          *          {
          *              'name' : <cpd name>,
@@ -428,7 +427,7 @@ define (
                 return "<tr><td><b>" + name + "</b></td><td>" + val + "</td></tr>";
             };
 
-            var esc = function(s) { 
+            var esc = function(s) {
                 return String(s).replace(/'/g, "&apos;")
                                 .replace(/"/g, "&quot;")
                                 .replace(/</g, "&gt;")

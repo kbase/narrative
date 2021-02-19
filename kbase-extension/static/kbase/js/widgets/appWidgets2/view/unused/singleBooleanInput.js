@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'jquery',
@@ -58,9 +57,9 @@ define([
          *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
+         * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         * 
+         *
          *
          */
 
@@ -84,7 +83,7 @@ define([
 
                 var rawValue = getInputValue(),
                     // TODO should actually create the set of checkbox values and
-                    // make this a validation option, although not specified as 
+                    // make this a validation option, although not specified as
                     // such in the spec.
                     validationOptions = {
                         required: spec.required(),

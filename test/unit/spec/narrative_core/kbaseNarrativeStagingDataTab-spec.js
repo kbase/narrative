@@ -1,6 +1,5 @@
 /*global define*/
 /*global jasmine, describe, it, expect, beforeEach, afterEach, spyOn*/
-/*jslint white: true*/
 define([
     'jquery',
     'kbaseNarrativeStagingDataTab',
@@ -11,7 +10,7 @@ define([
     Jupyter
 ) {
     'use strict';
-    describe('Test the kbaseNarrativeStagingDataTab widget', () => {
+    describe('The kbaseNarrativeStagingDataTab widget', () => {
         const fakeUser = 'notAUser';
         beforeEach(() => {
             jasmine.Ajax.install();

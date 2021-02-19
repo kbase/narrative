@@ -392,15 +392,10 @@ define([
 
         renderOverlayState: function () {
             if (this.$appCatalogContainer.is(':visible')) {
-                // this.$slideoutBtn.children().toggleClass('fa-arrow-left', true);
-                // this.$slideoutBtn.children().toggleClass('fa-arrow-right', false);
                 // Need to rerender (not refresh data) because in some states, the catalog browser looks to see
                 // if things are hidden or not. When this panel is hidden, then refreshed, all sections will
                 // think they have no content and nothing will display.
                 this.appCatalog.rerender();
-            } else {
-                // this.$slideoutBtn.children().toggleClass('fa-arrow-left', false);
-                // this.$slideoutBtn.children().toggleClass('fa-arrow-right', true);
             }
         },
 
@@ -702,16 +697,16 @@ define([
                         return b.info.name.localeCompare(a.info.name);
                     }
                 });
-                for (let i = 0; i < appList.length; i++) {
-                    $appPanel.append(this.buildAppItem(appSet[appList[i]]));
+                for (const appId of appList) {
+                    $appPanel.append(this.buildAppItem(appSet[appId]));
                 }
             };
 
             const buildSingleAccordion = (category, appList) => {
                 const $accordionBody = $('<div>');
-                appList.forEach((appId) => {
+                for (const appId of appList) {
                     $accordionBody.append(this.buildAppItem(appSet[appId]));
-                });
+                }
 
                 return {
                     title: category + ' <span class="label label-info pull-right" style="padding-top:0.4em">' + appList.length + '</span>',
@@ -819,8 +814,7 @@ define([
                     filterString = filter[1];
                 }
             }
-            let filteredIds = Object.keys(appSet);
-            filteredIds = Object.keys(appSet).filter((id) => {
+            const filteredIds = Object.keys(appSet).filter((id) => {
                 let searchSet;
                 const app = appSet[id];
                 switch (filterType) {
@@ -948,13 +942,12 @@ define([
                 // we need to fetch some methods, so don't
                 Promise.resolve(this.methClient.get_method_spec({ ids: specSet.methods, tag: this.currentTag }))
                     .then((specs) => {
-                        for (let k = 0; k < specs.length; k++) {
-                            results.methods[specs[k].info.id] = specs[k];
+                        for (const spec of specs) {
+                            results.methods[spec.info.id] = specs;
                         }
                         callback(results);
                     })
                     .catch((err) => {
-
                         console.error('Error in method panel on "getFunctionSpecs" when contacting NMS');
                         console.error(err);
                         callback(results); // still return even if we couldn't get the methods

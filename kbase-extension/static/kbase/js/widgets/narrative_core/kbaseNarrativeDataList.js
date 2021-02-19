@@ -510,7 +510,7 @@ define([
         fetchWorkspaceData: function () {
             const addObjectInfo = (objInfo, dpInfo) => {
                 // Get the object info
-                const objId = this.itemId(objInfo); //objInfo[6] + '/' + objInfo[0]; // + '/' + objInfo[2]
+                const objId = this.itemId(objInfo);
                 let fullDpReference = null;
                 if (dpInfo && dpInfo.ref) {
                     fullDpReference = dpInfo.ref + ';' + objInfo[6] + '/' + objInfo[0] + '/' + objInfo[4];
@@ -553,9 +553,9 @@ define([
             };
 
             const updateSetInfo = (obj) => {
-                const setId = this.itemId(obj.object_info); //obj.object_info[6] + '/' + obj.object_info[0];
+                const setId = this.itemId(obj.object_info);
                 obj.set_items.set_items_info.forEach((setItem) => {
-                    const itemId = this.itemId(setItem); //setItem[6] + '/' + setItem[0];
+                    const itemId = this.itemId(setItem);
                     if (!this.setInfo[setId]) {
                         this.setInfo[setId] = {
                             div: null,
@@ -604,15 +604,15 @@ define([
          * Returns the available object data for a type.
          * If no type is specified (type is falsy), returns all object data
          */
-        getObjData: function (type) {
-            if (type) {
+        getObjData: function (types) {
+            if (types) {
                 const dataSet = {};
-                if (typeof type === 'string') {
-                    type = [type];
+                if (typeof types === 'string') {
+                    types = [types];
                 }
-                for (let i = 0; i < type.length; i++) {
-                    if (this.objData[type[i]]) {
-                        dataSet[type[i]] = this.objData[type[i]];
+                for (const type of types) {
+                    if (this.objData[type]) {
+                        dataSet[type] = this.objData[type];
                     }
                 }
                 return dataSet;
@@ -755,8 +755,15 @@ define([
         },
 
         openReportButton: function () {
-            const $openReport = this.makeToolbarButton('report');
-            return $openReport;
+            return this.makeToolbarButton('report');
+        },
+
+        renderError: function ($alertContainer, message) {
+            $alertContainer.empty();
+            $alertContainer
+                .append($('<span>')
+                    .css({ 'color': '#F44336' })
+                    .append('Error! ' + message));
         },
 
         openHistoryButton: function (objData, $alertContainer) {
@@ -817,8 +824,7 @@ define([
                                                         },
                                                         (error) => {
                                                             console.error(error);
-                                                            $alertContainer.empty();
-                                                            $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                                            this.renderError($alertContainer, error.error.message);
                                                         });
                                                 });
                                         })(revertRef);
@@ -843,8 +849,7 @@ define([
                             },
                             (error) => {
                                 console.error(error);
-                                $alertContainer.empty();
-                                $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                this.renderError($alertContainer, error.error.message);
                             });
                     }
                 });
@@ -968,8 +973,7 @@ define([
                                         },
                                         (error) => {
                                             console.error(error);
-                                            $alertContainer.empty();
-                                            $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                            this.renderError($alertContainer, error.error.message);
                                         });
                                 }
                             }))
@@ -1026,14 +1030,12 @@ define([
                                                 },
                                                 (error) => {
                                                     console.error(error);
-                                                    $alertContainer.empty();
-                                                    $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                                    this.renderError($alertContainer, error.error.message);
                                                 });
                                         },
                                         (error) => {
                                             console.error(error);
-                                            $alertContainer.empty();
-                                            $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                            this.renderError($alertContainer, error.error.message);
                                         });
 
                                 }
@@ -1123,9 +1125,9 @@ define([
                     return [];
                 }
 
-                const objectsToFetch = result.report_upas.map((reportRef) => {
+                const objectsToFetch = result.report_upas.map((ref) => {
                     return {
-                        ref: reportRef
+                        ref
                     };
                 });
 

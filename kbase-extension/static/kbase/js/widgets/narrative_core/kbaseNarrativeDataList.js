@@ -1554,6 +1554,7 @@ define([
                     $noDataDiv.append($('<button>')
                         .append('Add Data')
                         .addClass('kb-data-list-add-data-text-button')
+                        .attr('data-test-id', 'add-data-button')
                         .css({ 'margin': '20px' })
                         .click(() => {
                             this.trigger('toggleSidePanelOverlay.Narrative', [this.options.parentControlPanel.$overlayPanel]);

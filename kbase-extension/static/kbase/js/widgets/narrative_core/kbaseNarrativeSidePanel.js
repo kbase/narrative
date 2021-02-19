@@ -196,6 +196,7 @@ define([
                 this.$overlayBody = $('<div class="kb-overlay-body">');
                 this.$overlayFooter = $('<div class="kb-overlay-footer">');
                 this.$overlay = $('<div>')
+                    .attr('data-test-id', 'side-overlay-container')
                     .addClass('kb-side-overlay-container');
 
                 $('body').append(this.$overlay);

@@ -327,7 +327,9 @@ define([
             });
             this.addButton(this.$toggleVersionBtn);
 
-            this.$appCatalogBody = $('<div>');
+            this.$appCatalogBody = $('<div>')
+                .attr('data-test-id', 'app-slideout-panel');
+
             this.appCatalog = null;
             this.$appCatalogContainer = $('<div>')
                 .append($('<div>')
@@ -338,6 +340,7 @@ define([
 
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
+                .attr('data-test-id', 'app-slideout-button')
                 .tooltip({
                     title: 'Hide / Show App Catalog',
                     container: 'body',

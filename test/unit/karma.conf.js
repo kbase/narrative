@@ -41,7 +41,6 @@ module.exports = function (config) {
         // 'test/unit/spec/function_output/modeling/msPathway-spec.js',
         // one missing test
         // 'test/unit/spec/narrative_core/upload/stagingAreaViewer-spec.js',
-
     ].map((file) => {
         return {
             pattern: file,
@@ -86,7 +85,7 @@ module.exports = function (config) {
         files: [
             'kbase-extension/static/narrative_paths.js',
             ...excludedFiles,
-            {pattern: 'test/unit/spec/**/*.js', included: false},
+            { pattern: 'test/unit/spec/**/*.js', included: false },
             // // all tests have specs
             // { pattern: 'test/unit/spec/api/*.js', included: false },
             // { pattern: 'test/unit/spec/api/**/*.js', included: false },
@@ -121,33 +120,29 @@ module.exports = function (config) {
                 pattern:
                     'kbase-extension/static/ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml',
                 included: false,
-                served: true,
             },
-            { pattern: 'kbase-extension/static/**/*.css', included: false, served: true },
+            { pattern: 'kbase-extension/static/**/*.css', included: false },
             {
                 pattern: 'kbase-extension/static/kbase/templates/**/*.html',
                 included: false,
-                served: true,
             },
             {
                 pattern: 'kbase-extension/static/kbase/config/**/*.json',
                 included: false,
-                served: true,
             },
             {
                 pattern: 'kbase-extension/static/kbase/config/**/*.yaml',
                 included: false,
-                served: true,
             },
-            { pattern: 'kbase-extension/static/**/*.js', included: false, served: true },
-            { pattern: 'kbase-extension/static/**/*.gif', included: false, served: true },
-            { pattern: 'nbextensions/appCell2/**/*.js', included: false, served: true },
+            { pattern: 'kbase-extension/static/**/*.js', included: false },
+            { pattern: 'kbase-extension/static/**/*.gif', included: false },
+            { pattern: 'nbextensions/appCell2/**/*.js', included: false },
             { pattern: 'nbextensions/bulkImportCell/**/*.js', included: false },
             { pattern: 'nbextensions/bulkImportCell/**/*.json', included: false },
-            { pattern: 'nbextensions/codeCell/**/*.js', included: false, served: true },
-            { pattern: 'test/testConfig.json', included: false, served: true, nocache: true },
-            { pattern: 'test/*.tok', included: false, served: true, nocache: true },
-            { pattern: 'test/data/**/*', included: false, served: true },
+            { pattern: 'nbextensions/codeCell/**/*.js', included: false },
+            { pattern: 'test/testConfig.json', included: false, nocache: true },
+            { pattern: 'test/*.tok', included: false, nocache: true },
+            { pattern: 'test/data/**/*', included: false },
             'test/unit/testUtil.js',
             'test/unit/mocks.js',
             'test/unit/test-main.js',

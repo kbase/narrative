@@ -18,3 +18,9 @@
   margin: 0;
   padding: 0;
 }
+
+@mixin table-cell {
+  border: 0;
+  margin: 0;
+  padding: 0 0.5rem;
+}

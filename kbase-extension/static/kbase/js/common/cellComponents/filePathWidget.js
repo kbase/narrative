@@ -383,6 +383,8 @@ define([
             return paramResolver
                 .loadInputControl(spec)
                 .then((inputWidget) => {
+                    // console.log(spec);
+                    // console.log(inputWidget);
                     const widget = makeFieldWidget(
                         inputWidget,
                         appSpec,
@@ -425,7 +427,7 @@ define([
             const filePathParams = makeFilePathsLayout(findPathParams(params));
 
             if (!filePathParams.layout.length) {
-                ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
+                return Promise.resolve(ui.getElement(`${cssClassType}s-area`).classList.add('hidden'));
             } else {
                 filePathRow.innerHTML = [
                     td({
@@ -476,6 +478,7 @@ define([
         }
 
         function start(arg) {
+            let filePathRows;
             return Promise.try(() => {
                 doAttach(arg.node);
 
@@ -493,16 +496,18 @@ define([
                     });
                 });
 
-                const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+                filePathRows = ui.getElements(`${cssClassType}-fields-row`);
 
                 return Promise.all(
                     filePathRows.map(async (filePathRow) => {
                         await renderFilePathRow(filePathRow);
                     })
-                ).then(() => {
-                    updateRowNumbers(filePathRows);
-                });
-            }).catch((error) => {
+                );
+            })
+            .then(() => {
+                updateRowNumbers(filePathRows);
+            })
+            .catch((error) => {
                 throw new Error('Unable to start filePathWidget: ', error);
             });
         }

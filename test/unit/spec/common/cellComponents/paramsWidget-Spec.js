@@ -1,3 +1,4 @@
+/* eslint-disable prefer-arrow-callback */
 define([
     'jquery',
     'base/js/namespace',
@@ -31,7 +32,7 @@ define([
             Jupyter.narrative = null;
         });
 
-        beforeEach(async () => {
+        beforeEach(async function() {
             const bus = Runtime.make().bus();
             this.node = document.createElement('div');
             document.getElementsByTagName('body')[0].appendChild(this.node);
@@ -62,7 +63,7 @@ define([
             });
         });
 
-        afterEach(async() => {
+        afterEach(async function() {
             if (this.paramsWidgetInstance) {
                 await this.paramsWidgetInstance.stop();
             }
@@ -70,7 +71,7 @@ define([
             document.body.innerHTML = '';
         });
 
-        it('should render the correct parameters', () => {
+        it('should render the correct parameters', function() {
             //Regular (non-advanced) params
             const paramContainers = $('div.kb-field-cell__param_container');
 
@@ -91,7 +92,7 @@ define([
             });
         });
 
-        it('should render with advanced parameters hidden', () => {
+        it('should render with advanced parameters hidden', function() {
             //get all advanced params using the spec
             const advancedParams = [];
             for (const [, entry] of Object.entries(this.parameters.specs)) {
@@ -107,16 +108,13 @@ define([
                 const hidden = renderedAdvancedParam.hasClass(
                     'kb-app-params__fields--parameters__hidden_field'
                 );
-
                 expect(hidden).toBeTrue();
             });
         });
 
-        it('should stop itself and empty the node it was in', () => {
-            this.paramsWidgetInstance.stop().then(() => {
-                expect(this.node.innerHTML).toEqual('');
-                this.paramsWidgetInstance = null;
-            });
+        it('should stop itself and empty the node it was in', async function() {
+            await this.paramsWidgetInstance.stop();
+            expect(this.node.innerHTML).toEqual('');
         });
     });
 });

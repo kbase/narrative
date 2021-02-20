@@ -53,7 +53,7 @@ define([
                     timer = null;
                     newStateHandler(api);
                 } catch (ex) {
-                    console.error('ERROR in fms newStateHandler', ex);
+                    console.error('ERROR in FSM newStateHandler', ex);
                 }
             }, 0);
         }

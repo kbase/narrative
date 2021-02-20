@@ -146,6 +146,7 @@ define([
                     } else if (Array.isArray(value)) {
                         value = value.join(' ');
                     } else {
+                        // Special handling of specific attribute types.
                         switch (attribName) {
                             case 'style':
                                 value = makeStyleAttribs(value);
@@ -627,8 +628,8 @@ define([
      */
     function reverse(arr) {
         const newArray = [];
-        for (let i = arr.length - 1; i >= 0; i -= 1) {
-            newArray.push(arr[i]);
+        for (let index = arr.length - 1; index >= 0; index -= 1) {
+            newArray.push(arr[index]);
         }
         return newArray;
     }

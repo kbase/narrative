@@ -792,9 +792,9 @@ define([
                                         })));
                                 history.reverse();
                                 const $tbl = $('<table>').css({ 'width': '100%' });
-                                for (let k = 0; k < history.length; k++) {
-                                    const $revertBtn = $('<button>').append('v' + history[k][4]).addClass('kb-data-list-btn');
-                                    if (k === 0) {
+                                for (const [historyItem, historyIndex] of history.items()) {
+                                    const $revertBtn = $('<button>').append('v' + historyItem[4]).addClass('kb-data-list-btn');
+                                    if (historyIndex === 0) {
                                         $revertBtn.tooltip({
                                             title: 'Current Version',
                                             container: 'body',
@@ -805,7 +805,7 @@ define([
                                             }
                                         });
                                     } else {
-                                        const revertRef = { wsid: history[k][6], objid: history[k][0], ver: history[k][4] };
+                                        const revertRef = { wsid: historyItem[6], objid: historyItem[0], ver: historyItem[4] };
                                         ((revertRefLocal) => {
                                             $revertBtn.tooltip({
                                                 title: 'Revert to this version?',
@@ -831,10 +831,10 @@ define([
                                     }
                                     $tbl.append($('<tr>')
                                         .append($('<td>').append($revertBtn))
-                                        .append($('<td>').append('Saved by ' + history[k][5] + '<br>' + TimeFormat.getTimeStampStr(history[k][3])))
+                                        .append($('<td>').append('Saved by ' + historyItem[5] + '<br>' + TimeFormat.getTimeStampStr(historyItem[3])))
                                         .append($('<td>').append($('<span>').css({ margin: '4px' }).addClass('fa fa-info pull-right'))
                                             .tooltip({
-                                                title: history[k][2] + '<br>' + history[k][8] + '<br>' + history[k][9] + ' bytes',
+                                                title: historyItem[2] + '<br>' + historyItem[8] + '<br>' + historyItem[9] + ' bytes',
                                                 container: 'body',
                                                 html: true,
                                                 placement: 'bottom',
@@ -1892,14 +1892,13 @@ define([
                 const regex = new RegExp(term, 'i');
 
                 this.n_filteredObjsRendered = 0;
-                for (let k = 0; k < this.viewOrder.length; k++) {
-
+                for (const orderedObject of this.viewOrder) {
                     // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
                     // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
                     // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
                     // [9] : int size // [10] : usermeta meta
                     let match = false;
-                    const info = this.dataObjects[this.viewOrder[k].objId].info;
+                    const info = this.dataObjects[orderedObject.objId].info;
                     if (regex.test(info[1])) {
                         match = true;
                     } // match on name
@@ -1917,10 +1916,8 @@ define([
                             if (!(Object.prototype.hasOwnProperty.call(info[10], metaKey))) {
                                 continue;
                             }
-                            if (regex.test(metaValue)) {
-                                match = true;
-                                break;
-                            } else if (regex.test(metaKey + '::' + metaValue)) {
+                            if (regex.test(metaValue) ||
+                                regex.test(metaKey + '::' + metaValue)) {
                                 match = true;
                                 break;
                             }
@@ -1932,7 +1929,7 @@ define([
                             match = false; // no match if we are not the selected type!
                         }
                     }
-                    this.viewOrder[k].inFilter = match;
+                    orderedObject.inFilter = match;
                 }
             } else {
                 // no new search, so show all and render the list

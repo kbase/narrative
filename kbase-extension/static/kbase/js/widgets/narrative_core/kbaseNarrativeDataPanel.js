@@ -491,8 +491,7 @@ define([
 
             $(document).on('sidePanelOverlayShown.Narrative', () => {
                 this.renderOverlayState();
-            }
-            );
+            });
 
             closeBtn.click(() => {
                 this.trigger('hideSidePanelOverlay.Narrative');

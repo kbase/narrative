@@ -4,7 +4,7 @@ define([
 ], (html) => {
     'use strict';
 
-    fdescribe('html utility library', () => {
+    describe('html utility library', () => {
         it('Creates a simple tag', () => {
             const span = html.tag('span');
             expect(span('hi')).toEqual('<span>hi</span>');
@@ -13,6 +13,76 @@ define([
         it('Creates a tag with attributes', () => {
             const div = html.tag('div');
             expect(div({ class: 'foo' }, 'hello')).toEqual('<div class="foo">hello</div>');
+        });
+
+        it('Creates a tag with empty attributes', () => {
+            const div = html.tag('div');
+            expect(div({}, 'hello')).toEqual('<div>hello</div>');
+        });
+
+        it('Creates a tag with a string as attributes', () => {
+            const div = html.tag('div');
+            expect(div('hi', 'hello')).toEqual('<div>hi</div>');
+        });
+
+        it('Creates a tag with false as attributes', () => {
+            const div = html.tag('div');
+            expect(div(false, 'hello')).toEqual('<div>false</div>');
+        });
+
+        it('Creates a tag with true as attributes', () => {
+            const div = html.tag('div');
+            expect(div(true, 'hello')).toEqual('<div>true</div>');
+        });
+
+        it('Creates a tag with null as attributes', () => {
+            const div = html.tag('div');
+            expect(div(null, 'hello')).toEqual('<div>hello</div>');
+        });
+
+        it('Creates a tag with undefined as attributes', () => {
+            const div = html.tag('div');
+            expect(div(undefined, 'hello')).toEqual('<div>hello</div>');
+        });
+
+        it('Creates a tag with a  number as attributes', () => {
+            const div = html.tag('div');
+            expect(div(42, 'hello')).toEqual('<div>42</div>');
+        });
+
+        it('Creates a tag with attribute with  number value', () => {
+            const div = html.tag('div');
+            expect(div({ foo: 123 }, 'hello')).toEqual('<div foo="123">hello</div>');
+        });
+
+        it('Creates a tag with attribute with  null value', () => {
+            const div = html.tag('div');
+            expect(div({ foo: null }, 'hello')).toEqual('<div>hello</div>');
+        });
+
+        it('Creates a tag with attribute with  undefined value', () => {
+            const div = html.tag('div');
+            expect(div({ foo: undefined }, 'hello')).toEqual('<div>hello</div>');
+        });
+
+        it('Creates a tag with attribute with  false value', () => {
+            const div = html.tag('div');
+            expect(div({ foo: false }, 'hello')).toEqual('<div>hello</div>');
+        });
+
+        it('Creates a tag with attribute with  true value', () => {
+            const div = html.tag('div');
+            expect(div({ foo: true }, 'hello')).toEqual('<div foo>hello</div>');
+        });
+
+        it('Creates a tag with attribute with array value', () => {
+            const div = html.tag('div');
+            expect(div({ foo: ['1', '2', '3'] }, 'hello')).toEqual('<div foo="1 2 3">hello</div>');
+        });
+
+        it('Creates a tag with attribute with object value', () => {
+            const div = html.tag('div');
+            expect(div({ foo: {} }, 'hello')).toEqual('<div>hello</div>');
         });
 
         it('Creates a tag with style', () => {

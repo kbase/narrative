@@ -108,7 +108,7 @@ define([
 
                 if (typeof value === 'string') {
                     return `${key}: ${value}`;
-                };
+                }
                 return false;
             })
             .filter((field) => {
@@ -117,41 +117,6 @@ define([
             .join('; ');
     }
 
-    /**
-     * The attributes for knockout's data-bind is slightly different than
-     * for style. The syntax is that of a simple javascript object.
-     * property: value, property: "value", property: 123
-     * So, we simply escape double-quotes on the value, so that unquoted values
-     * will remain as raw names/symbols/numbers, and quoted strings will retain
-     * the quotes.
-     * TODO: it would be smarter to detect if it was a quoted string
-     * 
-     * @param {type} attribs
-     * @returns {String}
-     */
-    function makeDataBindAttribs(attribs) {
-        if (attribs) {
-            return Object.keys(attribs)
-                .map((key) => {
-                    const value = attribs[key];
-                    if (typeof value === 'string') {
-                        //var escapedValue = value.replace(/\"/g, '\\"');
-                        return key + ':' + value;
-                    }
-                    if (typeof value === 'object') {
-                        return key + ': {' + makeDataBindAttribs(value) + '}';
-                    }
-                    // just ignore invalid attributes for now
-                    // TODO: what is the proper thing to do?
-                    return '';
-                })
-                .filter((field) => {
-                    return field ? true : false;
-                })
-                .join(',');
-        }
-        return '';
-    }
 
     /**
      * Given a simple object of keys and values, create a string which 
@@ -163,62 +128,55 @@ define([
      * @returns {String}
      */
     function makeTagAttribs(attribs) {
-        let quoteChar = '"', escapedValue;
-        if (attribs) {
-            return Object.keys(attribs)
-                .map((key) => {
-                    let value = attribs[key];
-                    const attribName = camelToKebab(key);
-                    // The value may itself be an object, which becomes a special string.
-                    // This applies for "style" and "data-bind", each of which have a 
-                    // structured string value.
-                    // Another special case is an array, useful for space-separated
-                    // attributes, esp. "class".
-                    if (typeof value === 'object') {
-                        if (value === null) {
-                            // null works just like false.
-                            value = false;
-                        } else if (value instanceof Array) {
-                            value = value.join(' ');
-                        } else {
-                            switch (attribName) {
-                                case 'style':
-                                    value = makeStyleAttribs(value);
-                                    break;
-                                case 'data-bind':
-                                    // reverse the quote char, since data-bind attributes 
-                                    // can contain double-quote, which can't itself
-                                    // be quoted.
-                                    quoteChar = "'";
-                                    value = makeDataBindAttribs(value);
-                                    break;
-                                default:
-                                    value = false;
-                            }
+        const quoteChar = '"';
+        let escapedValue;
+        return Object.keys(attribs)
+            .map((key) => {
+                let value = attribs[key];
+                const attribName = camelToKebab(key);
+                // The value may itself be an object, which becomes a special string.
+                // This applies for "style" and "data-bind", each of which have a 
+                // structured string value.
+                // Another special case is an array, useful for space-separated
+                // attributes, esp. "class".
+                if (typeof value === 'object') {
+                    if (value === null) {
+                        // null works just like false.
+                        value = false;
+                    } else if (Array.isArray(value)) {
+                        value = value.join(' ');
+                    } else {
+                        switch (attribName) {
+                            case 'style':
+                                value = makeStyleAttribs(value);
+                                break;
+                            default:
+                                value = false;
                         }
                     }
-                    if (typeof value === 'string') {
+                }
+                switch (typeof value) {
+                    case 'string':
                         escapedValue = value.replace(new RegExp('\\' + quoteChar, 'g'), '\\' + quoteChar);
                         return attribName + '=' + quoteChar + escapedValue + quoteChar;
-                    }
-                    if (typeof value === 'boolean') {
+                    case 'boolean':
                         if (value) {
                             return attribName;
                         }
                         return false;
-                    }
-                    if (typeof value === 'number') {
+                    case 'number':
                         return attribName + '=' + quoteChar + String(value) + quoteChar;
-                    }
-                    return false;
-                })
-                .filter((field) => {
-                    return field ? true : false;
-                })
-                .join(' ');
-        }
-        return '';
+
+                    case 'undefined':
+                        return false;
+                }
+            })
+            .filter((field) => {
+                return field ? true : false;
+            })
+            .join(' ');
     }
+
     function renderContent(children) {
         if (children) {
             if (typeof children === 'string') {
@@ -245,16 +203,22 @@ define([
             }
             return false;
         }
-        function merger(a, b) {
-            Object.keys(b).forEach((key) => {
-                if (isObject(a) && isObject(b)) {
-                    a[key] = merger(a[key], b[key]);
+        function merger(aObj, bObj) {
+            Object.keys(bObj).forEach((key) => {
+                if (isObject(aObj) && isObject(bObj)) {
+                    aObj[key] = merger(aObj[key], bObj[key]);
                 }
-                a[key] = b[key];
+                aObj[key] = bObj[key];
             });
-            return a;
+            return aObj;
         }
         return merger(obj1, obj2);
+    }
+    function isSimpleObject(obj) {
+        if (typeof obj !== 'object' || obj === null) {
+            return false;
+        }
+        return Object.getPrototypeOf(obj) === Object.getPrototypeOf({});
     }
     function tag(tagName, options) {
         options = options || {};
@@ -264,35 +228,48 @@ define([
         }
         const tagFun = function (attribs, children) {
             let node = '<' + tagName;
-            if (Array.isArray(attribs)) {
-                // skip attribs, just go to children.
-                children = attribs;
-                attribs = null;
-            } else if (typeof attribs === 'string') {
-                // skip attribs, just go to children.
-                children = attribs;
-                attribs = null;
-            } else if ((attribs === null) || (typeof attribs === 'undefined')) {
-                if (!children) {
-                    children = '';
-                }
-            } else if (typeof attribs === 'object') {
-                if (options.attribs) {
-                    attribs = merge(merge({}, options.attribs), attribs);
-                }
-            } else if (typeof attribs === 'number') {
-                children = String(attribs);
-                attribs = null;
-            } else if (typeof attribs === 'boolean') {
-                if (attribs) {
-                    children = 'true';
-                } else {
-                    children = 'false';
-                }
-                attribs = null;
-            } else {
-                throw 'Cannot make tag ' + tagName + ' from a ' + (typeof attribs);
+            switch (typeof attribs) {
+                case 'string':
+                    // skip attribs, just go to children.
+                    children = attribs;
+                    attribs = null;
+                    break;
+                case 'number':
+                    children = String(attribs);
+                    attribs = null;
+                    break;
+                case 'boolean':
+                    if (attribs) {
+                        children = 'true';
+                    } else {
+                        children = 'false';
+                    }
+                    attribs = null;
+                    break;
+                case 'undefined':
+                    if (!children) {
+                        children = '';
+                    }
+                    break;
+                case 'object':
+                    if (Array.isArray(attribs)) {
+                        // skip attribs, just go to children.
+                        children = attribs;
+                        attribs = null;
+                    } else if (attribs === null) {
+                        if (!children) {
+                            children = '';
+                        }
+                    } else if (isSimpleObject(attribs)) {
+                        if (options.attribs) {
+                            attribs = merge(merge({}, options.attribs), attribs);
+                        }
+                    } else {
+                        throw 'Cannot make tag ' + tagName + ' from a ' + (typeof attribs);
+                    }
+                    break;
             }
+
             attribs = attribs || options.attribs;
             if (attribs) {
                 tagAttribs = makeTagAttribs(attribs);

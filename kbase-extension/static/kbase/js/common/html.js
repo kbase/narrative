@@ -85,12 +85,6 @@ define([
         return Object.entries(attribs)
             .map(([key, value]) => {
                 const attribName = camelToKebab(key);
-                // The value may itself be an object, which becomes a special string.
-                // This applies for "style" and "data-bind", each of which have a 
-                // structured string value.
-                // Another special case is an array, useful for space-separated
-                // attributes, esp. "class".
-
                 // We first ensure that values passed as objects are pre-processed.
                 // There are three use cases supported:
                 // - setting the value to null (equivalent to false or undefined)

@@ -81,51 +81,57 @@ define([
      */
     function makeTagAttribs(attribs) {
         const quoteChar = '"';
-        let escapedValue;
-        return Object.keys(attribs)
-            .map((key) => {
-                let value = attribs[key];
+
+        return Object.entries(attribs)
+            .map(([key, value]) => {
                 const attribName = camelToKebab(key);
                 // The value may itself be an object, which becomes a special string.
                 // This applies for "style" and "data-bind", each of which have a 
                 // structured string value.
                 // Another special case is an array, useful for space-separated
                 // attributes, esp. "class".
-                if (typeof value === 'object') {
-                    if (value === null) {
-                        // null works just like false.
-                        value = false;
-                    } else if (Array.isArray(value)) {
-                        value = value.join(' ');
-                    } else {
-                        // Special handling of specific attribute types.
-                        switch (attribName) {
-                            case 'style':
-                                value = makeStyleAttribs(value);
-                                break;
-                            default:
-                                value = false;
-                        }
-                    }
-                }
-                switch (typeof value) {
-                    case 'string':
-                        escapedValue = value.replace(new RegExp('\\' + quoteChar, 'g'), '\\' + quoteChar);
-                        return attribName + '=' + quoteChar + escapedValue + quoteChar;
-                    case 'boolean':
-                        if (value) {
-                            return attribName;
-                        }
-                        return false;
-                    case 'number':
-                        return attribName + '=' + quoteChar + String(value) + quoteChar;
 
+                // We first ensure that values passed as objects are pre-processed.
+                // There are three use cases supported:
+                // - setting the value to null (equivalent to false or undefined)
+                // - a simple object which defines styles
+                // - an array of class names
+                const attribValue = (() => {
+                    if (typeof value === 'object') {
+                        if (value === null) {
+                            // null works just like false.
+                            return false;
+                        }
+                        // Special handling of specific attribute types.
+                        if (isSimpleObject(value) && attribName === 'style') {
+                            return makeStyleAttribs(value);
+
+                        } else if (Array.isArray(value) && attribName === 'class') {
+                            return value.join(' ');
+                        } else {
+                            // other types of objects are not supported.
+                            return false;
+                        }
+                    } else {
+                        // Just pass non-objects.
+                        return value;
+                    }
+                })();
+                switch (typeof attribValue) {
+                    case 'string': {
+                        const escapedValue = attribValue.replace(new RegExp('\\' + quoteChar, 'g'), '\\' + quoteChar);
+                        return `${attribName}=${quoteChar}${escapedValue}${quoteChar}`;
+                    }
+                    case 'boolean':
+                        return attribValue ? attribName : false;
+                    case 'number':
+                        return `${attribName}=${quoteChar}${String(attribValue)}${quoteChar}`;
                     case 'undefined':
                         return false;
                 }
             })
             .filter((field) => {
-                return field ? true : false;
+                return field;
             })
             .join(' ');
     }
@@ -148,6 +154,7 @@ define([
                 }
         }
     }
+
     function merge(obj1, obj2) {
         function merger(aObj, bObj) {
             Object.keys(bObj).forEach((key) => {

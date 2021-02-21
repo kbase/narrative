@@ -229,12 +229,12 @@ define([
             expect(div({ foo: true }, 'hello')).toEqual('<div foo>hello</div>');
         });
 
-        it('Creates a tag with attribute with array value', () => {
+        it('Creates a tag with a class attribute with array value', () => {
             const div = html.tag('div');
-            expect(div({ foo: ['1', '2', '3'] }, 'hello')).toEqual('<div foo="1 2 3">hello</div>');
+            expect(div({ class: ['1', '2', '3'] }, 'hello')).toEqual('<div class="1 2 3">hello</div>');
         });
 
-        it('Creates a tag with attribute with object value', () => {
+        it('Creates a tag with non-style attribute with object value', () => {
             const div = html.tag('div');
             expect(div({ foo: {} }, 'hello')).toEqual('<div>hello</div>');
         });

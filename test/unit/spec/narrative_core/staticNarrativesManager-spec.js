@@ -1,6 +1,3 @@
-/*global define*/
-/*global jasmine, describe, it, expect, spyOn, beforeEach, afterEach */
-/*jslint white: true*/
 define([
     'jquery',
     'base/js/namespace',

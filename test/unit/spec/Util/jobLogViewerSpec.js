@@ -1,4 +1,3 @@
-/*jslint white: true*/
 define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
     'use strict';
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;

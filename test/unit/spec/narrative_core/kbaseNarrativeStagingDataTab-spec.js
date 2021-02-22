@@ -1,6 +1,3 @@
-/*global define*/
-/*global jasmine, describe, it, expect, beforeEach, afterEach, spyOn*/
-/*jslint white: true*/
 define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
     $,
     StagingDataTab,

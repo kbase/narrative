@@ -1,4 +1,3 @@
-/*jslint white: true*/
 define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'kbaseNarrative'], (
     $,
     kbaseAttributeMapping,

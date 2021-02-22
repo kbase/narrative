@@ -1,5 +1,3 @@
-/*global define,describe,it,expect*/
-/*jslint white:true,browser:true*/
 define(['bluebird', 'common/validation'], (Promise, Validation) => {
     'use strict';
 
@@ -53,7 +51,7 @@ define(['bluebird', 'common/validation'], (Promise, Validation) => {
         beforeEach(() => {
             jasmine.Ajax.install();
 
-            jasmine.Ajax.stubRequest(fakeWsUrl, /wsid.\s*\:\s*1\s*,/).andReturn(
+            jasmine.Ajax.stubRequest(fakeWsUrl, /wsid.\s*:\s*1\s*,/).andReturn(
                 (function () {
                     return {
                         status: 200,

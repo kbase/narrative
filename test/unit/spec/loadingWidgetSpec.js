@@ -1,9 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach, spyOn*/
-/*jslint white: true*/
-
 define(['jquery', 'widgets/loadingWidget'], ($, LoadingWidget) => {
     'use strict';
 

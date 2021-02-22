@@ -1,5 +1,3 @@
-/*global describe, it, expect, beforeAll */
-/*jslint white: true*/
 define(['jquery', 'kbaseCellToolbarMenu', 'base/js/namespace'], ($, Widget, Jupyter) => {
     'use strict';
     describe('Test the kbaseCellToolbarMenu widget', () => {

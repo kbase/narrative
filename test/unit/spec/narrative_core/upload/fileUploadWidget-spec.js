@@ -1,7 +1,3 @@
-/*global define, jasmine*/
-/*global describe, it, expect*/
-/*global beforeEach, afterEach, spyOn*/
-/*jslint white: true*/
 define([
     'jquery',
     'kbase/js/widgets/narrative_core/upload/fileUploadWidget',
@@ -10,9 +6,8 @@ define([
 ], ($, FileUploadWidget, Jupyter, Config) => {
     'use strict';
 
-    let fuWidget,
-        $targetNode,
-        fakeUser = 'notAUser';
+    let fuWidget, $targetNode;
+    const fakeUser = 'notAUser';
 
     const mockUploadEndpoint = (filename, username, isFolder) => {
         jasmine.Ajax.stubRequest(Config.url('staging_api_url') + '/upload').andReturn({

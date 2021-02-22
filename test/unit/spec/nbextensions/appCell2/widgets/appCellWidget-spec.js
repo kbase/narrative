@@ -1,6 +1,3 @@
-/*global describe, it, expect*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
 define([
     '../../../../../../../narrative/nbextensions/appCell2/widgets/appCellWidget',
     'common/runtime',

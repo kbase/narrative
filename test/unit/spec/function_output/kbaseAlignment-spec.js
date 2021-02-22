@@ -1,4 +1,3 @@
-/*jslint white: true*/
 define(['jquery', 'kbaseAlignment', 'base/js/namespace', 'kbaseNarrative'], (
     $,
     kbaseAlignment,

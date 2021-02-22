@@ -1,9 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine, pending*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-
 define(['api/auth', 'narrativeConfig', 'uuid'], (Auth, Config, Uuid) => {
     'use strict';
 

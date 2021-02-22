@@ -1,13 +1,12 @@
-/*eslint-env jasmine*/
 define(['narrativeConfig'], (Config) => {
     'use strict';
     describe('Tests for narrativeConfig', () => {
         it('loaded the config module', () => {
-            expect(Config).not.toBe.null;
+            expect(Config).not.toBeNull();
         });
 
         it('has a config object', () => {
-            expect(Config.config).not.toBe.null;
+            expect(Config.config).not.toBeNull();
         });
 
         it('has a valid workspace url', () => {

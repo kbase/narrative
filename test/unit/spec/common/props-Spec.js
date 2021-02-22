@@ -1,5 +1,3 @@
-/*global define,describe,it,expect*/
-/*jslint white:true,browser:true*/
 define(['common/props'], (Props) => {
     'use strict';
 
@@ -66,19 +64,14 @@ define(['common/props'], (Props) => {
             expect(props.getItem('array.prop')).toEqual([]);
         });
 
-        it('History should undefined', () => {
+        it('History should be undefined', () => {
             const props = Props.make();
-            expect(props.getHistoryCount()).toBeUndefined;
+            expect(props.getHistoryCount()).toBeUndefined();
         });
-        //        it('History should be 1 after one change', function() {
-        //            var props = Props.make();
-        //            props.setItem('color', 'red');
-        //            expect(props.getHistoryCount()).toEqual(1);
-        //        });
 
         it('Update callback should be called', (done) => {
             const props = Props.make({
-                onUpdate: function (props) {
+                onUpdate: function () {
                     expect(true).toEqual(true);
                     done();
                 },
@@ -88,24 +81,21 @@ define(['common/props'], (Props) => {
 
         it('History should be 1 after one change', (done) => {
             const props = Props.make({
-                onUpdate: function (props) {
-                    if (props.getHistoryCount() === 1) {
-                        expect(props.getHistoryCount()).toEqual(1);
+                onUpdate: function (_props) {
+                    expect(_props.getHistoryCount()).toEqual(1);
                         done();
-                    }
                 },
             });
             props.setItem('color', 'red');
         });
         it('Set and get a simple string property, check last value', (done) => {
             const props = Props.make({
-                onUpdate: function (props) {
-                    if (props.getHistoryCount() === 1) {
-                        props.setItem('color', 'green');
+                onUpdate: function (_props) {
+                    if (_props.getHistoryCount() === 1) {
+                        _props.setItem('color', 'green');
                         return;
                     }
-                    const raw = props.getRawObject(),
-                        last = props.getLastRawObject();
+                    const last = _props.getLastRawObject();
 
                     expect(last.color).toEqual('red');
                     done();
@@ -114,7 +104,7 @@ define(['common/props'], (Props) => {
             props.setItem('color', 'red');
         });
 
-        it('Copy a property -- it unaffected by changes to the original', () => {
+        it('Copy a property -- it is unaffected by changes to the original', () => {
             const props = Props.make({
                     data: {
                         prop1: {

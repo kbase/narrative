@@ -1,5 +1,3 @@
-/*jslint white: true*/
-
 define([
     'jquery',
     'kbase/js/widgets/narrative_core/upload/stagingAreaViewer',
@@ -8,10 +6,9 @@ define([
 ], ($, StagingAreaViewer, Jupyter) => {
     'use strict';
 
-    describe('Test the staging area viewer widget', () => {
-        let stagingViewer,
-            $targetNode,
-            startingPath = '/',
+    describe('The staging area viewer widget', () => {
+        let stagingViewer, $targetNode;
+        const startingPath = '/',
             updatePathFn = () => {},
             fakeUser = 'notAUser';
 

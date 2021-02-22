@@ -1,4 +1,3 @@
-/*jslint white: true*/
 define(['jquery', 'kbaseSampleSetView', 'base/js/namespace', 'narrativeConfig'], (
     $,
     Widget,

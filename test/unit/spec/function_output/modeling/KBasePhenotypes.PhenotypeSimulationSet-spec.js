@@ -1,8 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
 define(['KBasePhenotypes.PhenotypeSimulationSet', 'KBModeling'], (Widget, kbm) => {
     describe('Test the KBasePhenotypes.PhenotypeSimulationSet widget', () => {
         it('Should load the module', () => {

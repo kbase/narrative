@@ -1,4 +1,3 @@
-/* eslint-env jasmine */
 define(['narrativeViewers', 'narrativeConfig'], (Viewers, Config) => {
     'use strict';
 

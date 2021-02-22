@@ -1,8 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
 define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
     JobCommChannel,
     Jupyter,
@@ -41,8 +36,9 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
      * @param {function} cb
      */
     function channelChecker(channelName, channelId, channelKey, cb, msgCmp) {
-        const channel = {};
-        channel[channelName] = channelId;
+        const channel = {
+            channelName: channelId,
+        };
 
         Runtime.make()
             .bus()
@@ -90,7 +86,7 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
         };
     }
 
-    describe('Test the jobCommChannel widget', () => {
+    describe('The jobCommChannel widget', () => {
         let runtime;
 
         beforeEach(() => {
@@ -112,17 +108,16 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
             expect(comm.jobStates).toEqual({});
         });
 
-        it('Should initialize correctly in the base case', (done, fail) => {
+        it('Should initialize correctly in the base case', (done) => {
             const comm = new JobCommChannel();
             comm.initCommChannel()
                 .then(done)
                 .catch((err) => {
-                    console.error(err);
-                    fail();
+                    fail(err);
                 });
         });
 
-        it('Should re-initialize with an existing channel', (done, fail) => {
+        it('Should re-initialize with an existing channel', (done) => {
             const comm = new JobCommChannel();
             Jupyter.notebook = makeMockNotebook({
                 content: {
@@ -139,12 +134,11 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                     done();
                 })
                 .catch((err) => {
-                    console.error(err);
-                    fail();
+                    fail(err);
                 });
         });
 
-        it('Should fail to initialize with a failed reply from the JobManager startup', (done, fail) => {
+        it('Should fail to initialize with a failed reply from the JobManager startup', (done) => {
             const comm = new JobCommChannel();
             Jupyter.notebook = makeMockNotebook(null, null, {
                 name: 'Failed to start',
@@ -248,8 +242,8 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
         });
 
         it('Should send a set of job statuses to the bus, and delete extras', (done) => {
-            let caughtMsgs = 0,
-                msg = makeCommMsg('job_status_all', {
+            let caughtMsgs = 0;
+            const msg = makeCommMsg('job_status_all', {
                     id1: {
                         state: {
                             job_id: 'id1',

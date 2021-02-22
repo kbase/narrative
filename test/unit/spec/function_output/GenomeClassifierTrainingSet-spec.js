@@ -1,4 +1,3 @@
-/*jslint white: true*/
 define(['jquery', 'GenomeClassifierTrainingSet', 'base/js/namespace', 'kbaseNarrative'], (
     $,
     GenomeClassifierTrainingSet,

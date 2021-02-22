@@ -1,9 +1,3 @@
-/*global define*/
-/*global describe, it, expect fail*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-
 define(['api/upa', 'narrativeConfig'], (UpaApi, Config) => {
     'use strict';
     describe('Test the UPA API', () => {

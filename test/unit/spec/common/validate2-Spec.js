@@ -1,5 +1,3 @@
-/*global define,describe,it,expect*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'common/validation',

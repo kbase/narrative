@@ -1,12 +1,6 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-
 define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
     'use strict';
-    let $simpleBody = $('<div>').append('This is a body text'),
+    const $simpleBody = $('<div>').append('This is a body text'),
         simpleTitle = 'Title',
         simpleButtons = [
             $('<button>')
@@ -15,8 +9,8 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
             $('<button>')
                 .append('b2')
                 .click(() => {}),
-        ],
-        simpleDialog;
+        ];
+    let simpleDialog;
 
     beforeEach(() => {
         simpleDialog = new Dialog({

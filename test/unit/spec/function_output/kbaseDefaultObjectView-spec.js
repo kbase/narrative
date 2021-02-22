@@ -1,4 +1,3 @@
-/*jslint white: true*/
 define([
     'jquery',
     'widgets/function_output/kbaseDefaultObjectView',

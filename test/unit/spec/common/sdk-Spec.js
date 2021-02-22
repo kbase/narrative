@@ -1,9 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-
 define([
     'common/sdk',
     'json!/test/data/NarrativeTest.test_simple_inputs.spec.json',

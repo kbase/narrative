@@ -1,4 +1,3 @@
-/*global pending */
 define('testUtil', ['bluebird', 'narrativeConfig', 'json!/test/testConfig.json'], (
     Promise,
     Config,
@@ -8,8 +7,7 @@ define('testUtil', ['bluebird', 'narrativeConfig', 'json!/test/testConfig.json']
 
     let token = null,
         userId = null,
-        currentNarrative = null,
-        currentWorkspace = null;
+        currentNarrative = null;
 
     function factory() {
         return initialize();

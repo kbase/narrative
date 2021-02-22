@@ -1,15 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-
 define(['bootstrap', 'jquery', 'util/timeFormat'], (bootstrap, $, TF) => {
     'use strict';
     const testISOTime = '2015-12-09T21:58:22.202Z';
     const testISOTime2 = '2016-01-06T00:48:43.196Z';
     const testOutputString = 'Wed Dec 09 2015';
-    const reformattedString = '2015-12-09 13:58:22';
     const testExactDayStr = 'Dec 9, 2015';
 
     describe('KBase Time Formatting Utility function module', () => {
@@ -105,7 +98,6 @@ define(['bootstrap', 'jquery', 'util/timeFormat'], (bootstrap, $, TF) => {
 
             const title = tsDiv.attr('title');
             expect(new Date(title).toUTCString()).toBe(new Date(testISOTime).toUTCString());
-            // expect(tsDiv.attr('title')).toBe(reformattedString);
         });
 
         it('prettyTimestamp should throw an error with a bad timestamp', () => {
@@ -118,7 +110,6 @@ define(['bootstrap', 'jquery', 'util/timeFormat'], (bootstrap, $, TF) => {
 
         it('reformatISOTimeString should work with a good ISO string', () => {
             const newTimeStr = TF.reformatISOTimeString(testISOTime);
-            // expect(newTimeStr).toEqual(reformattedString);
             expect(new Date(newTimeStr).toUTCString()).toBe(new Date(testISOTime).toUTCString());
         });
 

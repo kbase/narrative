@@ -1,8 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
 define(['KBaseFBA.FBAComparison', 'KBModeling'], (Widget, kbm) => {
     describe('Test the KBaseFBA.FBAComparison widget', () => {
         it('Should load the module', () => {

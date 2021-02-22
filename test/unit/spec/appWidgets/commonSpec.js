@@ -1,7 +1,3 @@
-/*global define*/ // eslint-disable-line no-redeclare
-/*global describe, expect, it*/
-/*jslint white: true*/
-
 define(['common/events', 'common/ui', 'kb_common/html', 'widgets/appWidgets2/common'], (
     Events,
     UI,

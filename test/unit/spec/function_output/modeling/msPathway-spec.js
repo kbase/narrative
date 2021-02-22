@@ -1,8 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
 define(['msPathway', 'jquery'], (Widget, $) => {
     describe('Test the msPathway widget', () => {
         it('Should load the module', () => {

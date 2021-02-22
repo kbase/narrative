@@ -1,4 +1,3 @@
-/* global describe, it, expect, jasmine, beforeEach, afterEach , spyOn */
 define([
     'jquery',
     'kbaseNarrativeAppPanel',

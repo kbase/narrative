@@ -1,8 +1,3 @@
-/*global beforeEach */
-/*global define*/ // eslint-disable-line no-redeclare
-/*global describe, expect, it*/
-/*jslint white: true*/
-
 define(['../../../../../narrative/nbextensions/appCell2/widgets/tabs/infoTab'], (infoTabWidget) => {
     'use strict';
 

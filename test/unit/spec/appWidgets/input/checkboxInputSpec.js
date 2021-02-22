@@ -1,4 +1,3 @@
-/*eslint-env jasmine*/
 define([
     'widgets/appWidgets2/input/checkboxInput',
     'common/runtime',

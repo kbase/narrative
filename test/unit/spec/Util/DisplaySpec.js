@@ -1,9 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-
 define(['jquery', 'util/display', 'narrativeConfig', 'util/string'], (
     $,
     DisplayUtil,
@@ -28,8 +22,8 @@ define(['jquery', 'util/display', 'narrativeConfig', 'util/string'], (
 
         it('displayRealName should display a real name with link to user page', (done) => {
             const userId = 'testuser',
-                fullName = 'Test User';
-            const response = {};
+                fullName = 'Test User',
+                response = {};
             response[userId] = fullName;
             jasmine.Ajax.stubRequest(/.*\/auth\/api\/V2\/users\/\?list=testuser/).andReturn({
                 status: 200,
@@ -50,8 +44,8 @@ define(['jquery', 'util/display', 'narrativeConfig', 'util/string'], (
 
         it('displayRealName should display whatever text name it gets back', (done) => {
             const userId = 'haxxor',
-                fullName = '<script>alert("I am so clever")</script>';
-            const response = {};
+                fullName = '<script>alert("I am so clever")</script>',
+                response = {};
             response[userId] = fullName;
 
             jasmine.Ajax.stubRequest(/.*\/auth\/api\/V2\/users\/\?list=haxxor/).andReturn({
@@ -114,8 +108,8 @@ define(['jquery', 'util/display', 'narrativeConfig', 'util/string'], (
 
         it('displayRealName should deal with hackery usernames', (done) => {
             const userId = "<script>alert('Bad actor')</script>",
-                fullName = 'Really Bad Actor';
-            const response = {};
+                fullName = 'Really Bad Actor',
+                response = {};
             response[StringUtil.escape(userId)] = fullName;
             jasmine.Ajax.stubRequest(/.*\/auth\/api\/V2\/users\/\?list/).andReturn({
                 status: 200,

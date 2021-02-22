@@ -1,9 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-
 define(['jquery', 'narrativeTour', 'bootstraptour'], ($, Tour, BSTour) => {
     'use strict';
     describe('Test the narrativeTour module', () => {

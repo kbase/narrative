@@ -1,9 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-
 define(['jquery', 'narrativeConfig', 'kbase/js/widgets/appInfoPanel'], ($, Config, InfoPanel) => {
     'use strict';
 

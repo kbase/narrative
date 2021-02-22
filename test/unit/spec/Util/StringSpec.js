@@ -1,9 +1,3 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-
 define(['util/string'], (StringUtil) => {
     'use strict';
 
@@ -36,6 +30,7 @@ define(['util/string'], (StringUtil) => {
             const quoteObj = {
                 a: 1,
                 b: 'a "string"',
+                // eslint-disable-next-line quotes
                 c: "another 'string'",
             };
 

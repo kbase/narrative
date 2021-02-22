@@ -1,4 +1,3 @@
-/* global jasmine */
 /**
  * This module contains several mock objects that can be reused throughout unit tests.
  * General usage is as per other AMD modules, e.g.:

@@ -20,7 +20,7 @@ define([
                 description: 'Field bus',
             }),
             inputControlFactory = config.inputControlFactory,
-            fieldId = html.genId(),
+            // fieldId = html.genId(),
             spec = config.parameterSpec;
         let places, parent, container, inputControl;
 
@@ -66,6 +66,7 @@ define([
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
+                                    // FIXME: this does not exist!
                                     places.infoPanel
                                         .querySelector('[data-element="big-tip"]')
                                         .classList.toggle('hidden');
@@ -109,9 +110,10 @@ define([
             PR.prettyPrint(null, container);
 
             places = {
-                field: document.getElementById(fieldId),
-                message: document.getElementById(rendered.places.message),
-                inputControl: document.getElementById(rendered.places.inputControl),
+                // FIXME: these do not exist!
+                // field: document.getElementById(fieldId),
+                // message: document.getElementById(rendered.places.message),
+                inputControl: container.querySelector(`#${rendered.places.inputControl}`),
             };
 
             //TODO: why do this? it seems recursive? could we even call attach in this case? it's not a public method
@@ -134,7 +136,7 @@ define([
                     });
                 })
                 .catch((error) => {
-                    throw new Error('Unable to start fieldTableCellWidget: ', error);
+                    throw new Error(`Unable to start fieldTableCellWidget: ${error}`);
                 });
         }
 
@@ -145,11 +147,22 @@ define([
                     console.error('Error stopping fieldTableCellWidget: ', err);
                 })
                 .finally(() => {
-                    if (parent && container) {
-                        parent.removeChild(container);
-                    }
                     bus.stop();
-                    return null;
+                    if (parent && container) {
+                        // the widget may already have removed the 'container' element
+                        try {
+                            parent.removeChild(container);
+                        }
+                        // eslint-disable-next-line no-empty
+                        catch(err) {}
+                        //     console.log({
+                        //         error: err,
+                        //         parent: parent,
+                        //         container: container,
+                        //     })
+                        // }
+                    }
+                    return 'STOPPED!';
                 });
         }
 

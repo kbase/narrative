@@ -415,7 +415,6 @@ define([
         }
     }
 
-    // runtime.bus().logMessages(true);
     // there is not a service/component lifecycle for the narrative is there?
     // so the clock starts, and is never stopped.
 

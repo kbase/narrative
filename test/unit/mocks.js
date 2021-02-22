@@ -132,7 +132,7 @@ define('narrativeMocks', [
         const cells = options.cells || [];
 
         function insertCell(type, index, data) {
-            let cell = buildMockCell(type, '', data);
+            const cell = buildMockCell(type, '', data);
             if (index <= 0) {
                 index = 0;
             }
@@ -140,8 +140,8 @@ define('narrativeMocks', [
             return cell;
         }
 
-        let mockNotebook = {
-            delete_cell: () => options.deleteCallback ? options.deleteCallback() : null,
+        const mockNotebook = {
+            delete_cell: () => (options.deleteCallback ? options.deleteCallback() : null),
             find_cell_index: () => 1,
             get_cells: () => cells,
             get_cell: (index) => {
@@ -246,7 +246,7 @@ define('narrativeMocks', [
      * @param {int} status the status code to return
      */
     function mockAuthRequest(request, responseObj, status) {
-        let reqUrl = `${Config.url('auth')}/api/V2/${request}`;
+        const reqUrl = `${Config.url('auth')}/api/V2/${request}`;
         jasmine.Ajax.stubRequest(reqUrl)
             .andReturn({
                 status: status,

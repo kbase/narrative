@@ -157,7 +157,7 @@ define([
             throw new Error('No files were selected to upload!');
         }
 
-        let kbaseNode = null,  // the DOM element used as the container for everything in this cell
+        let kbaseNode = null, // the DOM element used as the container for everything in this cell
             cellBus = null,
             ui = null,
             tabWidget = null; // the widget currently in view
@@ -230,26 +230,24 @@ define([
                     },
                 },
             };
-            // widgets this cell owns
-        let cellTabs,
-            controlPanel,
-            fileTypePanel;
+        // widgets this cell owns
+        let cellTabs, controlPanel, fileTypePanel;
         if (options.initialize) {
             initialize(options.specs);
         }
         const model = Props.make({
-            data: Utils.getMeta(cell, 'bulkImportCell'),
-            onUpdate: function(props) {
-                Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
-            }
-        }),
+                data: Utils.getMeta(cell, 'bulkImportCell'),
+                onUpdate: function (props) {
+                    Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
+                },
+            }),
             state = getInitialState(),
             specs = {},
             rawSpecs = model.getItem('app.specs');
 
-            Object.keys(rawSpecs).forEach((appId) => {
+        Object.keys(rawSpecs).forEach((appId) => {
             specs[appId] = Spec.make({
-                appSpec: rawSpecs[appId]
+                appSpec: rawSpecs[appId],
             });
         });
 
@@ -301,14 +299,14 @@ define([
                         params: initialParams,
                         app: {
                             specs: appSpecs,
-                            tag: 'release'
+                            tag: 'release',
                         },
                         state: {
                             state: 'editingIncomplete',
-                            selectedTab: 'configure'
-                        }
-                    }
-                }
+                            selectedTab: 'configure',
+                        },
+                    },
+                },
             };
             cell.metadata = meta;
         }
@@ -439,10 +437,9 @@ define([
         }
 
         function getWorkspaceClient() {
-            return new Workspace(
-                runtime.config('services.workspace.url'),
-                { token: runtime.authToken() }
-            );
+            return new Workspace(runtime.config('services.workspace.url'), {
+                token: runtime.authToken(),
+            });
         }
 
         /**
@@ -500,6 +497,7 @@ define([
          */
         function runTab(tab, fileType) {
             let tabModel = model;
+            const appId = typesToFiles[state.fileType.selected].appId;
             // TODO: Remove once jobs and results are hooked up
             if (tab === 'jobStatus' || tab === 'results') {
                 tabModel = testDataModel;
@@ -508,10 +506,11 @@ define([
                 bus: cellBus,
                 cell,
                 model: tabModel,
-                spec: specs[typesToFiles[state.fileType.selected].appId],
+                spec: specs[appId],
                 fileType,
                 jobId: undefined,
-                workspaceClient: workspaceClient
+                workspaceClient: workspaceClient,
+                appId: appId,
             });
 
             const node = document.createElement('div');
@@ -519,7 +518,7 @@ define([
 
             return tabWidget.start({
                 node: node,
-                currentApp: typesToFiles[state.fileType.selected].appId
+                currentApp: appId,
             });
         }
 
@@ -534,7 +533,7 @@ define([
          */
         function toggleFileType(fileType) {
             if (state.fileType.selected === fileType) {
-                return;  // do nothing if we're toggling to the same fileType
+                return; // do nothing if we're toggling to the same fileType
             }
             state.fileType.selected = fileType;
             // stop existing tab widget
@@ -580,7 +579,7 @@ define([
             // completely filled out, maybe store that in the metadata
             // on completion?
             const fileTypeState = {
-                completed: {}
+                completed: {},
             };
             for (const fileType of Object.keys(typesToFiles)) {
                 fileTypeState.completed[fileType] = false;
@@ -641,7 +640,7 @@ define([
             }
             for (const fileType of Object.keys(typesToFiles)) {
                 fileTypesDisplay[fileType] = {
-                    label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`
+                    label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
                 };
             }
             fileTypePanel = FileTypePanel.make({
@@ -651,7 +650,7 @@ define([
                     icon: 'icon icon-genome',
                 },
                 fileTypes: fileTypesDisplay,
-                toggleAction: toggleFileType
+                toggleAction: toggleFileType,
             });
             return fileTypePanel.start({
                 node: node,

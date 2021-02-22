@@ -87,6 +87,7 @@ define([
                 if (cells.length === 1) {
                     return $(cells[0]).data('cell');
                 }
+                // FIXME: incorrect way to call error
                 throw new Error('Cannot find the cell node!', cellNode, cells);
             }
 

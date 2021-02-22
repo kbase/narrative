@@ -486,7 +486,6 @@ define([
 
         function start() {
             return Promise.try(function () {
-                // runtime.bus().logMessages(true);
 
                 bus.on('run', function (message) {
                     parent = message.node;

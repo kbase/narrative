@@ -74,18 +74,11 @@ define([
             'name',
         ];
 
-        beforeAll(() => {
+        beforeEach(async function() {
             window.kbaseRuntime = null;
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
-        });
-
-        afterAll(() => {
-            Jupyter.narrative = null;
-        });
-
-        beforeEach(async function() {
             this.node = document.createElement('div');
             document.getElementsByTagName('body')[0].appendChild(this.node);
 
@@ -128,6 +121,7 @@ define([
             }
             document.body.innerHTML = '';
             window.kbaseRuntime = null;
+            Jupyter.narrative = null;
         });
 
         it('has a factory which can be invoked', function() {
@@ -148,14 +142,15 @@ define([
                 })
             });
             it('has a method start which returns the correct object', function() {
+                expect(this.node.querySelectorAll('.kb-field-cell__param_container').length).toBe(1);
                 expect(this.node.innerHTML).toContain('kb-field-cell__cell_label');
                 expect(this.node.innerHTML).toContain('kb-field-cell__input_control');
             });
 
-            it('has a method stop which returns null', async function() {
-                const result = await this.fieldCellWidgetInstance.stop()
-                expect(result).toBeNull();
-                this.fieldCellWidgetInstance = null;
+            it('has a method stop which removes the widget', async function() {
+                await this.fieldCellWidgetInstance.stop()
+                expect(this.node.childNodes.length).toBe(0);
+                expect(this.node.querySelectorAll('.kb-field-cell__param_container').length).toBe(0);
             });
         })
 

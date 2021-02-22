@@ -421,7 +421,7 @@ define([
 
                     widgets.push(widget);
                     return widget.start({
-                        node: document.getElementById(parameterInfo.view[paramSpec.id].id),
+                        node: container.querySelector(`#${parameterInfo.view[paramSpec.id].id}`),
                     });
                 })
                 .catch((ex) => {
@@ -431,11 +431,14 @@ define([
                         },
                         [ex.message]
                     );
-                    document.getElementById(
-                        parameterInfo.view[paramSpec.id].id
-                    ).innerHTML = errorDisplay;
+                    container.querySelector(`#${parameterInfo.view[paramSpec.id].id}`).innerHTML = errorDisplay;
 
-                    throw new Error('Error making input field widget', ex);
+                    console.error({
+                        msg: 'input field widget making error',
+                        ex: ex,
+                    })
+
+                    throw new Error(`Error making input field widget: ${ex}`);
                 });
         }
 
@@ -499,32 +502,37 @@ define([
         }
 
         function start(arg) {
-            // send parent the ready message
-            doAttach(arg.node);
+            return Promise.try(() => {
+                // send parent the ready message
+                doAttach(arg.node);
 
-            model.setItem('appSpec', arg.appSpec);
-            model.setItem('parameters', arg.parameters);
+                model.setItem('appSpec', arg.appSpec);
+                model.setItem('parameters', arg.parameters);
 
-            bus.on('parameter-changed', (message) => {
-                // Also, tell each of our inputs that a param has changed.
-                widgets.forEach((widget) => {
-                    widget.bus.send(message, {
-                        key: {
-                            type: 'parameter-changed',
-                            parameter: message.parameter,
-                        },
+                bus.on('parameter-changed', (message) => {
+                    // Also, tell each of our inputs that a param has changed.
+                    widgets.forEach((widget) => {
+                        widget.bus.send(message, {
+                            key: {
+                                type: 'parameter-changed',
+                                parameter: message.parameter,
+                            },
+                        });
                     });
                 });
-            });
-
-            return renderParameters()
-                .then(() => {
-                    // do something after success
-                    attachEvents();
+                return renderParameters()
+            })
+            .then(() => {
+                // do something after success
+                attachEvents();
+            })
+            .catch((error) => {
+                console.error({
+                    where: 'paramsWidget',
+                    err: error
                 })
-                .catch((error) => {
-                    throw new Error('Unable to start paramsWidget: ', error);
-                });
+                throw new Error(`Unable to start paramsWidget: ${error}`);
+            });
         }
 
         function stop() {

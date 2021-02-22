@@ -21,18 +21,11 @@ define([
     });
 
     describe('The Parameter instance', () => {
-        beforeAll(() => {
+        beforeEach(async function() {
             window.kbaseRuntime = null;
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
-        });
-
-        afterAll(() => {
-            Jupyter.narrative = null;
-        });
-
-        beforeEach(async function() {
             const bus = Runtime.make().bus();
             this.node = document.createElement('div');
             document.getElementsByTagName('body')[0].appendChild(this.node);
@@ -67,6 +60,7 @@ define([
             if (this.paramsWidgetInstance) {
                 await this.paramsWidgetInstance.stop();
             }
+            Jupyter.narrative = null;
             window.kbaseRuntime = null;
             document.body.innerHTML = '';
         });

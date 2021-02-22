@@ -4,7 +4,8 @@ define([
     'common/runtime',
     'common/props',
     'common/spec',
-    '/test/data/testAppObj',
+    '../../../../../../../narrative/nbextensions/bulkImportCell/testAppObj-ci'
+    // '/test/data/testAppObj',
 ], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestAppObject) => {
     'use strict';
 

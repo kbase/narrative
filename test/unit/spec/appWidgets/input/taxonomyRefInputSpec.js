@@ -40,7 +40,7 @@ define([
             defaultValue = 'apple',
             fakeServiceUrl = 'https://ci.kbase.us/services/fake_taxonomy_service';
 
-        beforeEach(function() {
+        beforeEach(function () {
             const runtime = Runtime.make();
             Jupyter.narrative = new Narrative();
             if (TestUtil.getAuthToken()) {
@@ -105,91 +105,90 @@ define([
             });
         });
 
-        afterEach(function() {
+        afterEach(function () {
             jasmine.Ajax.uninstall();
             this.bus.stop();
             window.kbaseRuntime = null;
             Jupyter.narrative = null;
         });
 
-        it('Should be instantiable', function() {
+        it('Should be instantiable', function () {
             const widget = TaxonomyRefInput.make(this.testConfig);
             expect(widget).toEqual(jasmine.any(Object));
             ['start', 'stop'].forEach((fn) => {
                 expect(widget[fn]).toBeDefined();
                 expect(widget[fn]).toEqual(jasmine.any(Function));
-            })
+            });
         });
 
         describe('the started widget', () => {
-            beforeEach(async function() {
+            beforeEach(async function () {
                 this.widget = TaxonomyRefInput.make(this.testConfig);
                 await this.widget.start({ node: this.node });
             });
-            it('should start successfully', function() {
-                expect(this.node.querySelector('div[data-element="main-panel"]').innerHTML).toContain('data-element="input-container"');
+            it('should start successfully', function () {
+                expect(
+                    this.node.querySelector('div[data-element="main-panel"]').innerHTML
+                ).toContain('data-element="input-container"');
             });
-            it('should stop successfully', async function() {
+            it('should stop successfully', async function () {
                 await this.widget.stop();
                 expect(this.node.innerHTML).toEqual('');
-            })
+            });
 
             describe('something', () => {
-                beforeEach(function() {
+                const STANDARD_TIMEOUT = 5000;
+                beforeEach(function () {
                     this.bus.on('validation', (msg) => {
-                        this.msg = msg
+                        this.validationMsg = msg;
                     });
-                })
-
-            it('Should set model value by bus', function(done) {
-                this.bus.emit('update', { value: 'foo' });
-                // TestUtil.wait(1000);
-                setTimeout(() => {
-                    expect(this.msg).toBeDefined();
-                    expect(this.msg.errorMessage).toBeNull();
-                    expect(this.msg.diagnosis).toBe('valid');
-                    done();
-                }, 5000)
-            });
-
-            it('Should reset model value by bus', function() { // done) {
-                // this.bus.on('validation', (msg) => {
-                //     expect(msg.errorMessage).toBeNull();
-                //     expect(msg.diagnosis).toBe('valid');
-                // });
-                this.bus.emit('reset-to-defaults');
-                // TestUtil.wait(1000);
-                setTimeout(() => {
-                    expect(this.msg).toBeDefined();
-                    expect(this.msg.errorMessage).toBeNull();
-                    expect(this.msg.diagnosis).toBe('valid');
-                }, STANDARD_TIMEOUT)
-            });
-        })
-
-            it('Should respond to changed select2 option', function() { // done) {
-                this.bus.on('changed', (msg) => {
-                    this.msg = msg;
-                    console.log(this.msg)
+                    this.bus.on('changed', (msg) => {
+                        this.changedMsg = msg;
+                        console.log('change message: ' + this.changedMsg);
+                    });
                 });
-                const $select = $(this.node).find('select');
-                const $search =
-                    $select.data('select2').dropdown.$search ||
-                    $select.data('select2').selection.$search;
 
-                $search.val('stuff');
-                $search.trigger('input');
-
-                $select.trigger({
-                    type: 'select2: select',
-                    params: {
-                        data: {},
-                    },
+                it('Should set model value by bus', function (done) {
+                    this.bus.emit('update', { value: 'foo' });
+                    // setTimeout(() => {
+                        expect(this.validationMsg).toBeDefined();
+                        expect(this.validationMsg.errorMessage).toBeNull();
+                        expect(this.validationMsg.diagnosis).toBe('valid');
+                        done()
+                    // }, STANDARD_TIMEOUT);
                 });
-                $select.val('stuff').trigger('change');
-                setTimeout(() => {
-                    expect(this.msg).toBeDefined();
-                }, STANDARD_TIMEOUT)
+
+                it('Should reset model value by bus', function (done) {
+                    this.bus.emit('reset-to-defaults');
+                    // setTimeout(() => {
+                        expect(this.validationMsg).toBeDefined();
+                        expect(this.validationMsg.errorMessage).toBeNull();
+                        expect(this.validationMsg.diagnosis).toBe('valid');
+                        done()
+                    // }, STANDARD_TIMEOUT);
+                });
+
+                it('Should respond to changed select2 option', function (done) {
+                    const $select = $(this.node).find('select');
+                    const $search =
+                        $select.data('select2').dropdown.$search ||
+                        $select.data('select2').selection.$search;
+
+                    $search.val('stuff');
+                    $search.trigger('input');
+
+                    $select.trigger({
+                        type: 'select2: select',
+                        params: {
+                            data: {},
+                        },
+                    });
+                    $select.val('stuff').trigger('change');
+                    // setTimeout(() => {
+                        expect(this.changedMsg).toBeDefined();
+                        done()
+                    // }, STANDARD_TIMEOUT);
+                });
             });
         });
     });

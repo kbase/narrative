@@ -13,7 +13,7 @@ module.exports = function (config) {
         // // missing 'on' event tests
         // 'test/unit/spec/appWidgets/input/intInputSpec.js',
         // 'test/unit/spec/appWidgets/input/checkboxInputSpec.js',
-        'test/unit/spec/appWidgets/input/taxonomyRefInputSpec.js',
+        // 'test/unit/spec/appWidgets/input/taxonomyRefInputSpec.js',
         // 'test/unit/spec/appWidgets/input/floatInputSpec.js',
 
         // jobCommChannel -- async function times out
@@ -31,9 +31,9 @@ module.exports = function (config) {
         // dodgy test for 'on' event
         // 'test/unit/spec/util/BootstrapDialogSpec.js',
         // the usual suspects
-        'test/unit/spec/common/cellComponents/fieldTableCellWidget-Spec.js',
-        'test/unit/spec/common/cellComponents/filePathWidget-Spec.js',
-        'test/unit/spec/common/cellComponents/paramsWidget-Spec.js',
+        // 'test/unit/spec/common/cellComponents/fieldTableCellWidget-Spec.js',
+        // 'test/unit/spec/common/cellComponents/filePathWidget-Spec.js',
+        // 'test/unit/spec/common/cellComponents/paramsWidget-Spec.js',
 
         'test/unit/spec/nbextensions/bulkImportCell/tabs/configure-spec.js',
         'test/unit/spec/nbextensions/bulkImportCell/bulkImportCell-spec.js',
@@ -105,7 +105,7 @@ module.exports = function (config) {
             // { pattern: 'test/unit/spec/narrative_core/**/*.js', included: false },
 
             // {pattern: 'test/unit/spec/nbextensions/*.js', included: false},
-            // {pattern: 'test/unit/spec/nbextensions/**/*.js', included: false},
+            // {pattern: 'test/unit/spec/nbextensions/codeCell/**/*.js', included: false},
 
             // //
             // { pattern: 'test/unit/spec/util/*.js', included: false },

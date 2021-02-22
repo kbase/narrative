@@ -5,43 +5,43 @@ define([
     'common/ui',
     'common/html',
     'common/jupyter'
-], function(
+], (
     Runtime,
     BusEventManager,
     Props,
     UI,
     html,
     Narrative
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p');
 
     function factory(config) {
-        var cell = config.cell,
-            runtime = Runtime.make(),
+        const cell = config.cell,
+            runtimeBus = Runtime.make().bus(),
             eventManager = BusEventManager.make({
-                bus: runtime.bus()
+                bus: runtimeBus
             }),
-            bus = runtime.bus().makeChannelBus({ description: 'code cell bus' }),
+            bus = runtimeBus.makeChannelBus({ description: 'code cell bus' });
 
             // To be instantiated at attach()
-            container, ui,
+        let container, ui,
 
             // To be instantiated in start()
             cellBus;
 
         function doDeleteCell() {
-            var content = div([
+            const content = div([
                 p([
                     'Deleting this cell will remove the code and any generated code output.',
                 ]),
                 p('Continue to delete this code cell?')
             ]);
             ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-                .then(function(confirmed) {
+                .then((confirmed) => {
                     if (!confirmed) {
                         return;
                     }
@@ -56,12 +56,12 @@ define([
 
         // Widget API
 
-        eventManager.add(bus.on('run', function(message) {
+        eventManager.add(bus.on('run', (message) => {
             container = message.node;
             ui = UI.make({ node: container || document.body });
 
             // Events for comm from the parent.
-            eventManager.add(bus.on('stop', function() {
+            eventManager.add(bus.on('stop', () => {
                 eventManager.removeAll();
             }));
 
@@ -70,14 +70,14 @@ define([
             // This allows disassociated elements to communicate with us
             // without a physical handle on the widget object.
 
-            cellBus = runtime.bus().makeChannelBus({
+            cellBus = runtimeBus.makeChannelBus({
                 name: {
                     cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
                 },
                 description: 'A cell channel'
             });
 
-            eventManager.add(cellBus.on('delete-cell', function() {
+            eventManager.add(cellBus.on('delete-cell', () => {
                 doDeleteCell();
             }));
 

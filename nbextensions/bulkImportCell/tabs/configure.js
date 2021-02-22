@@ -18,18 +18,35 @@ define([
     'use strict';
 
     /*
+
+            tabWidget = tabSet.tabs[tab].widget.make({
+                bus: cellBus,
+                cell,
+                model: tabModel,
+                spec: specs[typesToFiles[state.fileType.selected].appId],
+                fileType,
+                jobId: undefined,
+                workspaceClient: workspaceClient,
+                appId: typesToFiles[state.fileType.selected].appId,
+            });
+
+
         Options:
             bus: message bus
             model: cell metadata
-            spec: app spec
+            spec: app spec,
+            appId:
+            fileType:
     */
     function ConfigureWidget(options) {
         const model = options.model,
             spec = options.spec,
-            fileType = options.fileType;
+            fileType = options.fileType,
+            runtime = Runtime.make(),
+            appSpec = model.getItem(`app.specs.${options.appId}`);
+            // console.log({configure_widget_options: Object.keys(...options)})
 
-        let container = null,
-            runtime = Runtime.make();
+        let container = null;
 
         /**
          * args includes:
@@ -40,12 +57,12 @@ define([
             return Promise.try(() => {
                 container = args.node;
 
-                let events = Events.make();
+                const events = Events.make();
 
-                let filePathNode = document.createElement('div');
+                const filePathNode = document.createElement('div');
                 container.appendChild(filePathNode);
 
-                let paramNode = document.createElement('div');
+                const paramNode = document.createElement('div');
                 container.appendChild(paramNode);
 
                 buildFilePathWidget(filePathNode).then(() => {
@@ -78,8 +95,8 @@ define([
                 initialParams: model.getItem(paramKey)
             });
 
-            paramBus.on('sync-params', function(message) {
-                message.parameters.forEach(function(paramId) {
+            paramBus.on('sync-params', (message) => {
+                message.parameters.forEach((paramId) => {
                     paramBus.send({
                         parameter: paramId,
                         value: model.getItem([paramKey, message.parameter])
@@ -92,8 +109,8 @@ define([
                 });
             });
 
-            paramBus.on('parameter-sync', function(message) {
-                var value = model.getItem([paramKey, message.parameter]);
+            paramBus.on('parameter-sync', (message) => {
+                const value = model.getItem([paramKey, message.parameter]);
                 paramBus.send({
                     value: value
                 }, {
@@ -105,7 +122,7 @@ define([
                 });
             });
 
-            paramBus.on('set-param-state', function(message) {
+            paramBus.on('set-param-state', (message) => {
                 model.setItem('paramState', message.id, message.state);
             });
 
@@ -147,10 +164,10 @@ define([
 
             return widget.start({
                 node: node,
-                appSpec: model.getItem('app.spec'),
+                appSpec: appSpec, // model.getItem('app.specs'),
                 parameters: spec.getSpec().parameters
             })
-                .then(function() {
+                .then(() => {
                     return {
                         bus: paramBus,
                         instance: widget
@@ -169,8 +186,8 @@ define([
                 initialParams: model.getItem(paramKey)
             });
 
-            paramBus.on('sync-params', function(message) {
-                message.parameters.forEach(function(paramId) {
+            paramBus.on('sync-params', (message) => {
+                message.parameters.forEach((paramId) => {
                     paramBus.send({
                         parameter: paramId,
                         value: model.getItem([paramKey, message.parameter])
@@ -183,8 +200,8 @@ define([
                 });
             });
 
-            paramBus.on('parameter-sync', function(message) {
-                var value = model.getItem([paramKey, message.parameter]);
+            paramBus.on('parameter-sync', (message) => {
+                const value = model.getItem([paramKey, message.parameter]);
                 paramBus.send({
                     value: value
                 }, {
@@ -196,7 +213,7 @@ define([
                 });
             });
 
-            paramBus.on('set-param-state', function(message) {
+            paramBus.on('set-param-state', (message) => {
                 model.setItem('paramState', message.id, message.state);
             });
 
@@ -238,10 +255,10 @@ define([
 
             return widget.start({
                 node: node,
-                appSpec: model.getItem('app.spec'),
+                appSpec: appSpec, // model.getItem('app.specs'),
                 parameters: spec.getSpec().parameters
             })
-                .then(function() {
+                .then(() => {
                     return {
                         bus: paramBus,
                         instance: widget

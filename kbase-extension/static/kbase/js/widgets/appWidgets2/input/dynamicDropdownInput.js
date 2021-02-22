@@ -85,7 +85,7 @@ define([
                 }
             }
             return toReturn;
-        };
+        }
 
         function makeInputControl() {
             return select(
@@ -236,15 +236,15 @@ define([
                         );
                         return [];
                     } else {
-                        results.forEach((obj, index) => {
+                        results.forEach((obj, ix) => {
                             // could check here that each item is a map? YAGNI
                             obj = flattenObject(obj);
                             if (!('id' in obj)) {
-                                obj.id = index; // what the fuck
+                                obj.id = ix; // what the fuck
                             }
                             //this blows away any 'text' field
                             obj.text = obj[dd_options.selection_id];
-                            results[index] = obj;
+                            results[ix] = obj;
                         });
                         return results;
                     }
@@ -335,7 +335,7 @@ define([
         function render() {
             return Promise.try(() => {
                 const events = Events.make(),
-                    inputControl = makeInputControl(events),
+                    inputControl = makeInputControl(),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
                 ui.setContent('input-container', content);
@@ -425,8 +425,18 @@ define([
 
         function stop() {
             return Promise.try(() => {
-                if (container) {
-                    parent.removeChild(container);
+                if (parent && container) {
+                    try {
+                        parent.removeChild(container);
+                    }
+                    // eslint-disable-next-line no-empty
+                    catch (err) {}
+                    //     console.log({
+                    //         error: err,
+                    //         parent: parent,
+                    //         container: container,
+                    //     })
+                    // }
                 }
                 bus.stop();
                 eventListeners.forEach((id) => {

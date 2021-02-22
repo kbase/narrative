@@ -70,9 +70,8 @@ define([
                     type: 'code'
                 }
             });
-            // there's no other triggers except to wait a moment
-            // for the cell to get turned into a bulk import cell
-            // and if it takes more than 100ms, it SHOULD fail.
+            // Wait a moment for the cell to get turned into a code cell
+            // if it takes more than 100ms, it SHOULD fail.
             setTimeout(() => {
                 expect(isCodeCell(newCell)).toBeTruthy();
                 done();
@@ -89,9 +88,6 @@ define([
                 cell: newCell,
                 data: {}
             });
-            // there's no other triggers except to wait a moment
-            // for the cell to get turned into a bulk import cell
-            // and if it takes more than 100ms, it SHOULD fail.
             setTimeout(() => {
                 expect(newCell.cellType).toBeUndefined();
                 expect(isCodeCell(newCell)).toBeFalsy();
@@ -113,9 +109,6 @@ define([
                     type: 'code'
                 }
             });
-            // there's no other triggers except to wait a moment
-            // for the cell to get turned into a bulk import cell
-            // and if it takes more than 100ms, it SHOULD fail.
             setTimeout(() => {
                 expect(isCodeCell(newCell)).toBeTruthy();
                 expect(newCell.metadata.kbase.codeCell.userSettings).not.toBeDefined();
@@ -136,7 +129,6 @@ define([
             Jupyter.notebook.cells.push(newCell);
 
             Main.load_ipython_extension();
-            // expect(isCodeCell(newCell)).toBeTruthy();
             $([Jupyter.events]).trigger('insertedAtIndex.Cell', {
                 type: 'code',
                 index: 1,

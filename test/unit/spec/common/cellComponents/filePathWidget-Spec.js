@@ -21,18 +21,12 @@ define([
     });
 
     describe('The file path widget instance', () => {
-        beforeAll(() => {
+
+        beforeEach(function () {
             window.kbaseRuntime = null;
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
-        });
-
-        afterAll(() => {
-            Jupyter.narrative = null;
-        });
-
-        beforeEach(function () {
             const bus = Runtime.make().bus();
             const model = Props.make({
                 data: TestAppObject,
@@ -54,6 +48,7 @@ define([
         });
 
         afterEach(() => {
+            Jupyter.narrative = null;
             window.kbaseRuntime = null;
         });
 
@@ -71,7 +66,7 @@ define([
         });
 
         describe('should start', () => {
-            beforeEach(function () {
+            beforeEach(async function () {
                 this.node = document.createElement('div');
                 document.getElementsByTagName('body')[0].appendChild(this.node);
                 this.fpwStartParams = {
@@ -79,15 +74,16 @@ define([
                     appSpec: this.spec,
                     parameters: this.parameters
                 };
+                this.filePathWidget = FilePathWidget.make(this.filePathWidgetParams);
+                await this.filePathWidget.start(this.fpwStartParams);
             });
 
             afterEach(function() {
                 document.body.innerHTML = '';
             });
 
-            it('should render itself', async function () {
-                const fpw = FilePathWidget.make(this.filePathWidgetParams);
-                await fpw.start(this.fpwStartParams);
+            it('should render itself', function () {
+                // const fpw =
                 const innerHTML = this.node.innerHTML;
                 const contents = [
                     'File Paths',
@@ -104,9 +100,9 @@ define([
                 });
             });
 
-            it('should add a row when Add Row button is clicked', async function (done) {
-                const fpw = FilePathWidget.make(this.filePathWidgetParams);
-                await fpw.start(this.fpwStartParams)
+            it('should add a row when Add Row button is clicked', function (done) {
+                // const fpw = FilePathWidget.make(this.filePathWidgetParams);
+                // await fpw.start(this.fpwStartParams)
                 const preClickNumberOfRows = $(this.node).find('tr').length;
                 expect(preClickNumberOfRows).toEqual(1);
                 $(this.node).find('.kb-file-path__button--add_row').click();
@@ -117,9 +113,9 @@ define([
                 }, 500);
             });
 
-            it('should delete a row when trashcan button is clicked', async function (done) {
-                const fpw = FilePathWidget.make(this.filePathWidgetParams);
-                await fpw.start(this.fpwStartParams)
+            it('should delete a row when trashcan button is clicked', function (done) {
+                // const fpw = FilePathWidget.make(this.filePathWidgetParams);
+                // await fpw.start(this.fpwStartParams)
                 const preClickNumberOfRows = $(this.node).find('tr').length;
                 expect(preClickNumberOfRows).toEqual(1);
                 $(this.node).find('.kb-file-path__button--delete').click();

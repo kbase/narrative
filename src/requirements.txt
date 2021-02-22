@@ -17,7 +17,7 @@ pygments==2.7.2
 pymongo==3.11.2
 pyyaml==5.3.1
 requests==2.25.0
-rsa==4.6
+rsa==4.7.1
 semantic_version==2.8.5
 setuptools==50.3.2
 simplegeneric==0.8.1

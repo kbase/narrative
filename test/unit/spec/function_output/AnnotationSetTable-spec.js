@@ -1,5 +1,8 @@
 define(['AnnotationSetTable'], (Widget) => {
-    describe('Test the AnnotationSetTable widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The AnnotationSetTable widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

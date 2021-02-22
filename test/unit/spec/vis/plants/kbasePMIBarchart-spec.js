@@ -1,5 +1,8 @@
 define(['kbasePMIBarchart'], (Widget) => {
-    describe('Test the kbasePMIBarchart widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbasePMIBarchart widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

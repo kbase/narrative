@@ -164,7 +164,7 @@ define([
         expect(node.html()).toContain('Static Narrative Error');
     }
 
-    describe('Test the Static Narrative manager widget', () => {
+    describe('The Static Narrative manager widget', () => {
         beforeEach(() => {
             Jupyter.narrative = new Narrative();
             Jupyter.narrative.userId = userId;

@@ -1,5 +1,8 @@
 define(['AbundanceDataHeatmap'], (Widget) => {
-    describe('Test the AbundanceDataHeatmap widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The AbundanceDataHeatmap widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

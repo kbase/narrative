@@ -6,7 +6,7 @@ define([
     'kbaseNarrative',
 ], ($, KBaseDefaultObjectView, Runtime, Jupyter, Narrative) => {
     'use strict';
-    describe('Test the kbaseDefaultObjectView widget', () => {
+    describe('The kbaseDefaultObjectView widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();

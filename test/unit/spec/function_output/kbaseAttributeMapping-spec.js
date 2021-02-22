@@ -5,7 +5,7 @@ define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'kbaseNarrative'
     Narrative
 ) => {
     'use strict';
-    describe('Test the kbaseAttributeMapping widget', () => {
+    describe('The kbaseAttributeMapping widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();

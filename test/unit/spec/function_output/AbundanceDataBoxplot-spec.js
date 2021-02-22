@@ -1,5 +1,8 @@
 define(['AbundanceDataBoxplot'], (Widget) => {
-    describe('Test the AbundanceDataBoxplot widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The AbundanceDataBoxplot widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

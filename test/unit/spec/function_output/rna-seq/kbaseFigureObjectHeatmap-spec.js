@@ -1,5 +1,8 @@
 define(['kbaseFigureObjectHeatmap'], (Widget) => {
-    describe('Test the kbaseFigureObjectHeatmap widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseFigureObjectHeatmap widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

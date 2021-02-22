@@ -1,5 +1,8 @@
 define(['kbaseExpressionVolcanoPlot'], (Widget) => {
-    describe('Test the kbaseExpressionVolcanoPlot widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseExpressionVolcanoPlot widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

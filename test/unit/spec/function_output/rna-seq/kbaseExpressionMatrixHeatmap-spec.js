@@ -1,5 +1,8 @@
 define(['kbaseExpressionMatrixHeatmap'], (Widget) => {
-    describe('Test the kbaseExpressionMatrixHeatmap widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseExpressionMatrixHeatmap widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

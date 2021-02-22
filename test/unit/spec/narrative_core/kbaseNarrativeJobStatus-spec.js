@@ -1,5 +1,6 @@
 define(['jquery', 'kbaseNarrativeJobStatus'], ($, JobStatusWidget) => {
-    describe('Test the kbaseNarrativeJobStatus widget', () => {
+    'use strict';
+    describe('The kbaseNarrativeJobStatus widget', () => {
         let dummyNode;
         beforeEach(() => {
             dummyNode = document.createElement('div');

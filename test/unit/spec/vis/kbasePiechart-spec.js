@@ -1,5 +1,8 @@
 define(['kbasePiechart'], (Widget) => {
-    describe('Test the kbasePiechart widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbasePiechart widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

@@ -1,5 +1,8 @@
 define(['kbaseExpressionGenesetBaseWidget'], (Widget) => {
-    describe('Test the kbaseExpressionGenesetBaseWidget widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseExpressionGenesetBaseWidget widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

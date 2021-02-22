@@ -1,5 +1,8 @@
 define(['kbaseAnnotatedMetagenomeAssemblyView'], (Widget) => {
-    describe('Test the kbaseAnnotatedMetagenomeAssembly viewer widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseAnnotatedMetagenomeAssembly viewer widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

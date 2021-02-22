@@ -1,5 +1,8 @@
 define(['kbaseHistogram'], (Widget) => {
-    describe('Test the kbaseHistogram widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseHistogram widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

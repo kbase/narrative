@@ -1,5 +1,8 @@
 define(['kbaseScatterplot'], (Widget) => {
-    describe('Test the kbaseScatterplot widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseScatterplot widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

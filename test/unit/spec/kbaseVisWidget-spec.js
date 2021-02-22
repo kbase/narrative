@@ -1,5 +1,8 @@
 define(['kbaseVisWidget'], (Widget) => {
-    describe('Test the kbaseVisWidget widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseVisWidget widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

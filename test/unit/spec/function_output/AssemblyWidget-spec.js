@@ -1,5 +1,8 @@
 define(['AssemblyWidget'], (Widget) => {
-    describe('Test the AssemblyWidget widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The AssemblyWidget widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

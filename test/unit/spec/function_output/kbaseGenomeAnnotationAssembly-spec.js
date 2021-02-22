@@ -1,5 +1,8 @@
 define(['kbaseGenomeAnnotationAssembly'], (Widget) => {
-    describe('Test the kbaseGenomeAnnotationAssembly widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseGenomeAnnotationAssembly widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

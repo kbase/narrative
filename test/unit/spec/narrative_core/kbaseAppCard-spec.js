@@ -3,8 +3,9 @@ define(['jquery', 'base/js/namespace', 'kbase/js/widgets/narrative_core/kbaseApp
     Jupyter,
     AppCard
 ) => {
+    'use strict';
     let app, $card;
-    describe('Test the kbaseAppCard widget', () => {
+    describe('The kbaseAppCard widget', () => {
         beforeEach(() => {
             app = {
                 info: {

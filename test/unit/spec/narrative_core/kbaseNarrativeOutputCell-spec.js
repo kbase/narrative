@@ -7,7 +7,7 @@ define([
     'narrativeConfig',
 ], ($, Widget, Jupyter, Narrative, Runtime, Config) => {
     'use strict';
-    describe('Test the kbaseNarrativeOutputCell widget', () => {
+    describe('The kbaseNarrativeOutputCell widget', () => {
         let currentWsId = 10,
             testWidget = 'kbaseDefaultNarrativeOutput',
             testUpas = {

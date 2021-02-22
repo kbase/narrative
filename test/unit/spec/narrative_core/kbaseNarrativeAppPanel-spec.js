@@ -72,7 +72,7 @@ define([
             },
         };
 
-    describe('Test the kbaseNarrativeAppPanel widget', () => {
+    describe('The kbaseNarrativeAppPanel widget', () => {
         beforeEach(() => {
             Jupyter.narrative = {
                 getAuthToken: () => FAKE_TOKEN,

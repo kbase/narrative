@@ -1,6 +1,8 @@
 define(['kbaseNarrativeSidePublicTab'], (Widget) => {
     'use strict';
-    describe('Test the kbaseNarrativeSidePublicTab widget', () => {
-        it('Should do things', () => {});
+    describe('The kbaseNarrativeSidePublicTab widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

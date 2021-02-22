@@ -5,7 +5,8 @@ define([
     'base/js/namespace',
     'kbaseNarrative',
 ], ($, kbaseNarrativeDownloadPanel, Runtime, Jupyter, Narrative) => {
-    describe('Test the kbaseNarrativeDownloadPanel widget', () => {
+    'use strict';
+    describe('The kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();

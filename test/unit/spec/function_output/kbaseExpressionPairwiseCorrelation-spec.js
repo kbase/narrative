@@ -1,5 +1,8 @@
 define(['kbaseExpressionPairwiseCorrelation'], (Widget) => {
-    describe('Test the kbaseExpressionPairwiseCorrelation widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseExpressionPairwiseCorrelation widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

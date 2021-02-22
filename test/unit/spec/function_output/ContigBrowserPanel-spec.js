@@ -1,5 +1,8 @@
 define(['ContigBrowserPanel'], (Widget) => {
-    describe('Test the ContigBrowserPanel widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The ContigBrowserPanel widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

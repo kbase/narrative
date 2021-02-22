@@ -1,5 +1,8 @@
 define(['kbaseGenericMatrix'], (Widget) => {
-    describe('Test the kbaseGenericMatrix widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseGenericMatrix widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

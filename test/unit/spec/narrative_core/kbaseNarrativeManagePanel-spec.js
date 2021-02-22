@@ -1,5 +1,8 @@
 define(['kbaseNarrativeManagePanel'], (Widget) => {
-    describe('Test the kbaseNarrativeManagePanel widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseNarrativeManagePanel widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

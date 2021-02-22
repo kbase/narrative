@@ -1,5 +1,8 @@
 define(['kbaseHeatmap'], (Widget) => {
-    describe('Test the kbaseHeatmap widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseHeatmap widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

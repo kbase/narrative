@@ -1,5 +1,8 @@
 define(['kbaseChromatographyMatrix'], (Widget) => {
-    describe('Test the kbaseChromatographyMatrix widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseChromatographyMatrix widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

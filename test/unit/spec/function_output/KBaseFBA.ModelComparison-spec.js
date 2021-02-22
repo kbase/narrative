@@ -1,5 +1,8 @@
 define(['KBaseFBA.ModelComparison'], (Widget) => {
-    describe('Test the KBaseFBA.ModelComparison widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The KBaseFBA.ModelComparison widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

@@ -1,5 +1,8 @@
 define(['kbaseGenomeView'], (Widget) => {
-    describe('Test the kbaseGenomeView widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseGenomeView widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

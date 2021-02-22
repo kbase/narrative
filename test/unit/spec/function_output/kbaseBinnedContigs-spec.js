@@ -1,5 +1,8 @@
 define(['kbaseBinnedContigs'], (Widget) => {
-    describe('Test the KBaseBinnedContigs widget', () => {
-        it('Should instantiate', () => {});
+    'use strict';
+    describe('The KBaseBinnedContigs widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

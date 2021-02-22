@@ -1,5 +1,8 @@
 define(['jquery', 'kbaseNarrativeSharePanel'], ($, Widget) => {
-    describe('Test the kbaseNarrativeSharePanel widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseNarrativeSharePanel widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

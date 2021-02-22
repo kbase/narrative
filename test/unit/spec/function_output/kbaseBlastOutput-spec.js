@@ -1,5 +1,8 @@
 define(['kbaseBlastOutput'], (Widget) => {
-    describe('Test the kbaseBlastOutput widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseBlastOutput widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

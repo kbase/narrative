@@ -1,5 +1,8 @@
 define(['GenomeComparisonWidget'], (Widget) => {
-    describe('Test the GenomeComparisonWidget widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The GenomeComparisonWidget widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

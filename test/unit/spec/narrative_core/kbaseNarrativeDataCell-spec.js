@@ -1,5 +1,8 @@
 define(['kbaseNarrativeDataCell'], (Widget) => {
-    describe('Test the kbaseNarrativeDataCell widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseNarrativeDataCell widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

@@ -1,5 +1,8 @@
 define(['kbaseAssemblyView'], (Widget) => {
-    describe('Test the kbaseAssemblyView widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseAssemblyView widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

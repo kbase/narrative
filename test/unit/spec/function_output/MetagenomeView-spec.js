@@ -1,5 +1,8 @@
 define(['MetagenomeView'], (Widget) => {
-    describe('Test the MetagenomeView widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The MetagenomeView widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

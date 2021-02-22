@@ -1,5 +1,8 @@
 define(['AbundanceDataView'], (Widget) => {
-    describe('Test the AbundanceDataView widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The AbundanceDataView widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

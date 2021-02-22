@@ -1,5 +1,8 @@
 define(['kbaseGenomeComparisonViewer'], (Widget) => {
-    describe('Test the kbaseGenomeComparisonViewer widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseGenomeComparisonViewer widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

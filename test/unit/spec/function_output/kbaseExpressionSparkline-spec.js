@@ -1,5 +1,8 @@
 define(['kbaseExpressionSparkline'], (Widget) => {
-    describe('Test the kbaseExpressionSparkline widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseExpressionSparkline widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

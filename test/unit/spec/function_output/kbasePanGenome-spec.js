@@ -1,5 +1,8 @@
 define(['kbasePanGenome'], (Widget) => {
-    describe('Test the kbasePanGenome widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbasePanGenome widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

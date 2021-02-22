@@ -1,5 +1,8 @@
 define(['kbaseTreechart'], (Widget) => {
-    describe('Test the kbaseTreechart widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseTreechart widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

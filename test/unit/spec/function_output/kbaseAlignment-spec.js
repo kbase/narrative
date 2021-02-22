@@ -5,7 +5,7 @@ define(['jquery', 'kbaseAlignment', 'base/js/namespace', 'kbaseNarrative'], (
     Narrative
 ) => {
     'use strict';
-    describe('Test the kbaseAlignment widget', () => {
+    describe('The kbaseAlignment widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();

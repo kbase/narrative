@@ -1,5 +1,8 @@
 define(['kbaseExpressionAnalysis'], (Widget) => {
-    describe('Test the kbaseExpressionAnalysis widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseExpressionAnalysis widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

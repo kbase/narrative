@@ -1,5 +1,8 @@
 define(['kbaseChordchart'], (Widget) => {
-    describe('Test the kbaseChordchart widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseChordchart widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

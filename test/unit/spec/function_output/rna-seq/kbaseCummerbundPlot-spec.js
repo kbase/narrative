@@ -1,5 +1,8 @@
 define(['kbaseCummerbundPlot'], (Widget) => {
-    describe('Test the kbaseCummerbundPlot widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseCummerbundPlot widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

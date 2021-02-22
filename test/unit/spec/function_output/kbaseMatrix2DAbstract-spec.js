@@ -1,5 +1,8 @@
 define(['kbaseMatrix2DAbstract'], (Widget) => {
-    describe('Test the kbaseMatrix2DAbstract widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseMatrix2DAbstract widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

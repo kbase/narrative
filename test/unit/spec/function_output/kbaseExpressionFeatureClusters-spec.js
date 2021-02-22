@@ -1,5 +1,8 @@
 define(['kbaseExpressionFeatureClusters'], (Widget) => {
-    describe('Test the kbaseExpressionFeatureClusters widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseExpressionFeatureClusters widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

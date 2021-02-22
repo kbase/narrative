@@ -1,5 +1,8 @@
 define(['kbaseExpressionMatrix'], (Widget) => {
-    describe('Test the kbaseExpressionMatrix widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseExpressionMatrix widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

@@ -1,5 +1,8 @@
 define(['kbaseRNASeqAnalysisNew'], (Widget) => {
-    describe('Test the kbaseRNASeqAnalysisNew widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseRNASeqAnalysisNew widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

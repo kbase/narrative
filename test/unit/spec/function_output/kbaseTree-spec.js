@@ -1,5 +1,8 @@
 define(['kbaseTree'], (Widget) => {
-    describe('Test the kbaseTree widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseTree widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

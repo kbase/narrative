@@ -1,5 +1,8 @@
 define(['CollectionView'], (Widget) => {
-    describe('Test the CollectionView widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The CollectionView widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

@@ -1,5 +1,8 @@
 define(['kbaseContigSetView'], (Widget) => {
-    describe('Test the kbaseContigSetView widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseContigSetView widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

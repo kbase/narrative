@@ -1,5 +1,8 @@
 define(['RankAbundancePlot'], (Widget) => {
-    describe('Test the RankAbundancePlot widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The RankAbundancePlot widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

@@ -1,5 +1,8 @@
 define(['kbaseNarrativeExampleDataTab'], (Widget) => {
-    describe('Test the kbaseNarrativeExampleDataTab widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseNarrativeExampleDataTab widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

@@ -4,7 +4,7 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
     Jupyter
 ) => {
     'use strict';
-    describe('Test the kbaseNarrativeStagingDataTab widget', () => {
+    describe('The kbaseNarrativeStagingDataTab widget', () => {
         const fakeUser = 'notAUser';
         beforeEach(() => {
             jasmine.Ajax.install();

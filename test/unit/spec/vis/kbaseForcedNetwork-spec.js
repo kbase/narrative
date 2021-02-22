@@ -1,5 +1,8 @@
 define(['kbaseForcedNetwork'], (Widget) => {
-    describe('Test the kbaseForcedNetwork widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseForcedNetwork widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

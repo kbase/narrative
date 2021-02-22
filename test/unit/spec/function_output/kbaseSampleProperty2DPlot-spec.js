@@ -1,5 +1,8 @@
 define(['kbaseSampleProperty2DPlot'], (Widget) => {
-    describe('Test the kbaseSampleProperty2DPlot widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseSampleProperty2DPlot widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

@@ -1,5 +1,8 @@
 define(['ipythonCellMenu'], (Widget) => {
-    describe('Test the ipythonCellMenu widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The ipythonCellMenu widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

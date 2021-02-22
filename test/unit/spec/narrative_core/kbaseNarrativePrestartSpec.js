@@ -1,5 +1,8 @@
 define(['kbaseNarrativePrestart'], (Prestart) => {
+    'use strict';
     describe('Test the kbaseNarrativePrestart module', () => {
-        it('Should do things', () => {});
+        it('should be defined', () => {
+            expect(Prestart).toBeDefined();
+        });
     });
 });

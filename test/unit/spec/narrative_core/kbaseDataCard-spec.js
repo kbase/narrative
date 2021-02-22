@@ -1,11 +1,11 @@
-
 define(['jquery', 'base/js/namespace', 'kbase/js/widgets/narrative_core/kbaseDataCard'], (
     $,
     Jupyter,
     DataCard
 ) => {
+    'use strict';
     let object_info, $card;
-    describe('Test the kbaseDataCard widget', () => {
+    describe('The kbaseDataCard widget', () => {
         beforeEach(() => {
             object_info = [
                 1,

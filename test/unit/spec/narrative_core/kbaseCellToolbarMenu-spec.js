@@ -1,6 +1,6 @@
 define(['jquery', 'kbaseCellToolbarMenu', 'base/js/namespace'], ($, Widget, Jupyter) => {
     'use strict';
-    describe('Test the kbaseCellToolbarMenu widget', () => {
+    describe('The kbaseCellToolbarMenu widget', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 readonly: false,

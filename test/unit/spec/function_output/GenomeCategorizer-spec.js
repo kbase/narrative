@@ -5,7 +5,7 @@ define(['jquery', 'GenomeCategorizer', 'narrativeConfig', 'base/js/namespace'], 
     Jupyter
 ) => {
     'use strict';
-    describe('Test the GenomeCategorizer widget', () => {
+    describe('The GenomeCategorizer widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();

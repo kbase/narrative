@@ -1,5 +1,8 @@
 define(['AbundanceDataPcoa'], (Widget) => {
-    describe('Test the AbundanceDataPcoa widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The AbundanceDataPcoa widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

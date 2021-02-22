@@ -1,5 +1,8 @@
 define(['kbaseExpressionSampleTableNew'], (Widget) => {
-    describe('Test the kbaseExpressionSampleTableNew widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseExpressionSampleTableNew widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

@@ -1,5 +1,8 @@
 define(['kbaseDomainAnnotation'], (Widget) => {
-    describe('Test the kbaseDomainAnnotation widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseDomainAnnotation widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

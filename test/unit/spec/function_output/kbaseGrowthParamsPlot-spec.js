@@ -1,5 +1,8 @@
 define(['kbaseGrowthParamsPlot'], (Widget) => {
-    describe('Test the kbaseGrowthParamsPlot widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseGrowthParamsPlot widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

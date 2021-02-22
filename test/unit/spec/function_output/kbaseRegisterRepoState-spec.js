@@ -1,5 +1,8 @@
 define(['kbaseRegisterRepoState'], (Widget) => {
-    describe('Test the kbaseRegisterRepoState widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The kbaseRegisterRepoState widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

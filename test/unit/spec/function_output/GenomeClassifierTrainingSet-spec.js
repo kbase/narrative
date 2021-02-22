@@ -5,7 +5,7 @@ define(['jquery', 'GenomeClassifierTrainingSet', 'base/js/namespace', 'kbaseNarr
     Narrative
 ) => {
     'use strict';
-    describe('Test the GenomeClassifierTrainingSet widget', () => {
+    describe('The GenomeClassifierTrainingSet widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();

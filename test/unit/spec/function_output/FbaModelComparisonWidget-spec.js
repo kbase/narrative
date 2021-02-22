@@ -1,5 +1,8 @@
 define(['FbaModelComparisonWidget'], (Widget) => {
-    describe('Test the FbaModelComparisonWidget widget', () => {
-        it('Should do things', () => {});
+    'use strict';
+    describe('The FbaModelComparisonWidget widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
+        });
     });
 });

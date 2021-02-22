@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseExpressionPairwiseCorrelation'
-], function(Widget) {
-    describe('Test the kbaseExpressionPairwiseCorrelation widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseExpressionPairwiseCorrelation'], (Widget) => {
+    describe('Test the kbaseExpressionPairwiseCorrelation widget', () => {
+        it('Should do things', () => {});
     });
 });

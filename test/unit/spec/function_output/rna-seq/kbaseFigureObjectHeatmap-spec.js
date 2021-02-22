@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseFigureObjectHeatmap'
-], function(Widget) {
-    describe('Test the kbaseFigureObjectHeatmap widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseFigureObjectHeatmap'], (Widget) => {
+    describe('Test the kbaseFigureObjectHeatmap widget', () => {
+        it('Should do things', () => {});
     });
 });

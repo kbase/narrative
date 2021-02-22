@@ -1,20 +1,12 @@
-define ([
-    'jquery',
-    'util/bootstrapSearch',
-    'base/js/namespace'
-], function(
-    $,
-    BootstrapSearch,
-    Jupyter
-) {
+define(['jquery', 'util/bootstrapSearch', 'base/js/namespace'], ($, BootstrapSearch, Jupyter) => {
     'use strict';
-    var $targetElem;
+    let $targetElem;
 
     describe('Test the BootstrapSearch module', () => {
         beforeEach(() => {
             $targetElem = $('<div>');
             Jupyter.narrative = {
-                disableKeyboardManager: () => {}
+                disableKeyboardManager: () => {},
             };
         });
 
@@ -31,7 +23,7 @@ define ([
             const bsSearch = new BootstrapSearch($targetElem, {
                 inputFunction: () => {
                     done();
-                }
+                },
             });
             bsSearch.val('stuff');
         });
@@ -42,7 +34,7 @@ define ([
 
             const bsSearch = new BootstrapSearch($targetElem, {
                 emptyIcon: emptyFa,
-                filledIcon: filledFa
+                filledIcon: filledFa,
             });
             const addon = $targetElem.find('span.input-group-addon > span');
             expect(addon.hasClass(emptyFa)).toBe(true);
@@ -60,7 +52,7 @@ define ([
 
             const bsSearch = new BootstrapSearch($targetElem, {
                 emptyIcon: empty,
-                filledIcon: filled
+                filledIcon: filled,
             });
             const addon = $targetElem.find('span.input-group-addon > span');
             expect(addon.hasClass(emptyFa)).toBe(true);
@@ -82,7 +74,7 @@ define ([
                 addonFunction: () => {
                     expect(bsSearch.val()).toEqual('stuff');
                     done();
-                }
+                },
             });
             bsSearch.val('stuff');
             $targetElem.find('span.input-group-addon').click();
@@ -106,7 +98,7 @@ define ([
         it('Should set placeholder text', () => {
             const placeholder = 'some text';
             const bsSearch = new BootstrapSearch($targetElem, {
-                placeholder: placeholder
+                placeholder: placeholder,
             });
             expect($targetElem.find('input.form-control').attr('placeholder')).toEqual(placeholder);
         });
@@ -116,7 +108,7 @@ define ([
             const bsSearch = new BootstrapSearch($targetElem, {
                 escFunction: () => {
                     done();
-                }
+                },
             });
             const e = $.Event('keyup');
             e.which = 27;

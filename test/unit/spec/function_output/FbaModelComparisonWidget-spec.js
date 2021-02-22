@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'FbaModelComparisonWidget'
-], function(Widget) {
-    describe('Test the FbaModelComparisonWidget widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['FbaModelComparisonWidget'], (Widget) => {
+    describe('Test the FbaModelComparisonWidget widget', () => {
+        it('Should do things', () => {});
     });
 });

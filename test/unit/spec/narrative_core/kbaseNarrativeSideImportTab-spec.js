@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseNarrativeSideImportTab'
-], function(Widget) {
-    describe('Test the kbaseNarrativeSideImportTab widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseNarrativeSideImportTab'], (Widget) => {
+    describe('Test the kbaseNarrativeSideImportTab widget', () => {
+        it('Should do things', () => {});
     });
 });

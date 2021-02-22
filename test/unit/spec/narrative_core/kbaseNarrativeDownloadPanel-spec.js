@@ -8,21 +8,17 @@ define([
     'kbaseNarrativeDownloadPanel',
     'common/runtime',
     'base/js/namespace',
-    'kbaseNarrative'
-], (
-    $,
-    kbaseNarrativeDownloadPanel,
-    Runtime,
-    Jupyter,
-    Narrative
-) => {
+    'kbaseNarrative',
+], ($, kbaseNarrativeDownloadPanel, Runtime, Jupyter, Narrative) => {
     describe('Test the kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();
             $div = $('<div>');
             Jupyter.narrative = new Narrative();
-            Jupyter.narrative.getAuthToken = () => { return 'NotARealToken!' };
+            Jupyter.narrative.getAuthToken = () => {
+                return 'NotARealToken!';
+            };
         });
 
         afterEach(() => {
@@ -31,7 +27,7 @@ define([
         });
 
         it('Should properly load with a valid upa', () => {
-            let ws = 1111,
+            const ws = 1111,
                 oid = 2222,
                 ver = 3333,
                 name = 'fake_test_object',
@@ -51,41 +47,48 @@ define([
                 responseHeaders: '',
                 responseText: JSON.stringify({
                     version: '1.1',
-                    result: [{
-                        infos: [[
-                            oid,
-                            name,
-                            objType,
-                            saveDate,
-                            ver,
-                            userId,
-                            ws,
-                            wsName,
-                            checksum,
-                            size,
-                            meta
-                        ]],
-                        paths: [[upa]]
-                    }]
-                })
+                    result: [
+                        {
+                            infos: [
+                                [
+                                    oid,
+                                    name,
+                                    objType,
+                                    saveDate,
+                                    ver,
+                                    userId,
+                                    ws,
+                                    wsName,
+                                    checksum,
+                                    size,
+                                    meta,
+                                ],
+                            ],
+                            paths: [[upa]],
+                        },
+                    ],
+                }),
             });
 
-            let w = new kbaseNarrativeDownloadPanel($div, {
-                    token: null,
-                    type: objType,
-                    objId: oid,
-                    ref: upa,
-                    objName: name,
-                    downloadSpecCache: {'lastUpdateTime': 100, 'types': {
-                        [objType]: {'export_functions': {"FAKE": "fake_method"}}}
-                    }
+            const w = new kbaseNarrativeDownloadPanel($div, {
+                token: null,
+                type: objType,
+                objId: oid,
+                ref: upa,
+                objName: name,
+                downloadSpecCache: {
+                    lastUpdateTime: 100,
+                    types: {
+                        [objType]: { export_functions: { FAKE: 'fake_method' } },
+                    },
+                },
             });
-            expect($div.html()).toContain("JSON");
-            expect($div.html()).toContain("FAKE");
+            expect($div.html()).toContain('JSON');
+            expect($div.html()).toContain('FAKE');
         });
 
         it('Should load and register a Staging app button', () => {
-            let ws = 1111,
+            const ws = 1111,
                 oid = 2222,
                 ver = 3333,
                 name = 'fake_test_object',
@@ -98,23 +101,23 @@ define([
                 size = 1234567,
                 upa = String(ws) + '/' + String(oid) + '/' + String(ver);
 
-            let w = new kbaseNarrativeDownloadPanel($div, {
+            const w = new kbaseNarrativeDownloadPanel($div, {
                 token: null,
                 type: objType,
                 objName: name,
                 objId: oid,
                 ref: upa,
                 downloadSpecCache: {
-                    'lastUpdateTime': 100,
-                    'types': {
+                    lastUpdateTime: 100,
+                    types: {
                         [objType]: {
-                            'export_functions': {
-                                "FAKE": "fake_method",
-                                "STAGING": "staging_method"
-                            }
-                        }
-                    }
-                }
+                            export_functions: {
+                                FAKE: 'fake_method',
+                                STAGING: 'staging_method',
+                            },
+                        },
+                    },
+                },
             });
 
             expect($div.html()).toContain('STAGING');

@@ -4,15 +4,7 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define([
-    'api/auth',
-    'narrativeConfig',
-    'uuid'
-], function (
-    Auth,
-    Config,
-    Uuid
-) {
+define(['api/auth', 'narrativeConfig', 'uuid'], (Auth, Config, Uuid) => {
     'use strict';
 
     let authClient;
@@ -30,8 +22,8 @@ define([
             apperror: 'Invalid token',
             message: '10020 Invalid token',
             callid: 'some_call_id',
-            time: 1612476968817
-        }
+            time: 1612476968817,
+        },
     };
 
     const NO_TOKEN_ERROR = {
@@ -42,8 +34,8 @@ define([
             apperror: 'No authentication token',
             message: '10010 No authentication token: No user token provided',
             callid: '4979935107294962',
-            time: 1612477725701
-        }
+            time: 1612477725701,
+        },
     };
 
     const USER_PROFILE = {
@@ -55,7 +47,7 @@ define([
         user: FAKE_USER,
         local: false,
         email: `${FAKE_NAME}@kbase.us`,
-        idents: []
+        idents: [],
     };
 
     function setToken(token) {
@@ -77,13 +69,12 @@ define([
      * @param {int} status the status code to return
      */
     function mockAuthRequest(request, responseObj, status) {
-        let reqUrl = `${Config.url('auth')}/api/${VERSION}/${request}`;
-        jasmine.Ajax.stubRequest(reqUrl)
-            .andReturn({
-                status: status,
-                contentType: 'application/json',
-                responseText: JSON.stringify(responseObj)
-            });
+        const reqUrl = `${Config.url('auth')}/api/${VERSION}/${request}`;
+        jasmine.Ajax.stubRequest(reqUrl).andReturn({
+            status: status,
+            contentType: 'application/json',
+            responseText: JSON.stringify(responseObj),
+        });
     }
 
     /*
@@ -94,27 +85,33 @@ define([
      * - the auth service api request endpoint
      * These will then all be tested when no token is available.
      */
-    const noTokenCases = [{
-        method: 'getTokenInfo',
-        inputs: [],
-        request: 'token'
-    }, {
-        method: 'getUserProfile',
-        inputs: [],
-        request: 'me'
-    }, {
-        method: 'getCurrentProfile',
-        inputs: [],
-        request: 'me'
-    }, {
-        method: 'getUserNames',
-        inputs: [undefined, ['userId', 'nonUserId']],
-        request: 'users/?list=userId,nonUserId'
-    }, {
-        method: 'searchUserNames',
-        inputs: [undefined, 'foo'],
-        request: 'users/search/foo'
-    }];
+    const noTokenCases = [
+        {
+            method: 'getTokenInfo',
+            inputs: [],
+            request: 'token',
+        },
+        {
+            method: 'getUserProfile',
+            inputs: [],
+            request: 'me',
+        },
+        {
+            method: 'getCurrentProfile',
+            inputs: [],
+            request: 'me',
+        },
+        {
+            method: 'getUserNames',
+            inputs: [undefined, ['userId', 'nonUserId']],
+            request: 'users/?list=userId,nonUserId',
+        },
+        {
+            method: 'searchUserNames',
+            inputs: [undefined, 'foo'],
+            request: 'users/search/foo',
+        },
+    ];
 
     /*
      * Each case here represents the following:
@@ -129,20 +126,23 @@ define([
         {
             method: 'getTokenInfo',
             inputs: [FAKE_TOKEN],
-            request: 'token'
-        }, {
+            request: 'token',
+        },
+        {
             method: 'getUserNames',
             inputs: [FAKE_TOKEN, ['userId', 'nonUserId']],
-            request: 'users/?list=userId,nonUserId'
-        }, {
+            request: 'users/?list=userId,nonUserId',
+        },
+        {
             method: 'searchUserNames',
             inputs: [FAKE_TOKEN, 'foo'],
-            request: 'users/search/foo'
-        }, {
+            request: 'users/search/foo',
+        },
+        {
             method: 'searchUserNames',
             inputs: [FAKE_TOKEN, 'foo', ['username', 'displayname']],
-            request: 'users/search/foo/?fields=username,displayname'
-        }
+            request: 'users/search/foo/?fields=username,displayname',
+        },
     ];
 
     describe('Test the Auth API module', () => {
@@ -151,7 +151,7 @@ define([
             authClient = Auth.make({
                 url: Config.url('auth'),
                 // Can't use secure cookies for testing.
-                secureCookies: false
+                secureCookies: false,
             });
             jasmine.Ajax.install();
         });
@@ -162,7 +162,7 @@ define([
         });
 
         it('Should make a new Auth client that has the expected functions', () => {
-            const auth = Auth.make({url: Config.url('auth')});
+            const auth = Auth.make({ url: Config.url('auth') });
             expect(auth).not.toBeNull();
             [
                 'putCurrentProfile',
@@ -177,8 +177,8 @@ define([
                 'searchUserNames',
                 'validateToken',
                 'setCookie',
-                'getCookie'
-            ].forEach(fn => {
+                'getCookie',
+            ].forEach((fn) => {
                 expect(auth[fn]).toBeDefined();
             });
         });
@@ -240,28 +240,26 @@ define([
                 id: 'some_uuid',
                 type: 'Login',
                 user: FAKE_USER,
-                cachefor: 500000
+                cachefor: 500000,
             };
             mockAuthRequest('token', tokenInfo, 200);
-            return authClient.getTokenInfo(FAKE_TOKEN)
-                .then((response) => {
-                    Object.keys(tokenInfo).forEach(tokenKey => {
-                        expect(response[tokenKey]).toEqual(tokenInfo[tokenKey]);
-                    });
-                    const request = jasmine.Ajax.requests.mostRecent();
-                    expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
+            return authClient.getTokenInfo(FAKE_TOKEN).then((response) => {
+                Object.keys(tokenInfo).forEach((tokenKey) => {
+                    expect(response[tokenKey]).toEqual(tokenInfo[tokenKey]);
                 });
+                const request = jasmine.Ajax.requests.mostRecent();
+                expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
+            });
         });
 
         it('Should return my profile', () => {
             mockAuthRequest('me', USER_PROFILE, 200);
-            return authClient.getUserProfile()
-                .then((response) => {
-                    expect(response).not.toBeNull();
-                    expect(response).toEqual(USER_PROFILE);
-                    const request = jasmine.Ajax.requests.mostRecent();
-                    expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
-                });
+            return authClient.getUserProfile().then((response) => {
+                expect(response).not.toBeNull();
+                expect(response).toEqual(USER_PROFILE);
+                const request = jasmine.Ajax.requests.mostRecent();
+                expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
+            });
         });
 
         it('Should return a list of users', () => {
@@ -271,25 +269,23 @@ define([
             response[FAKE_USER] = FAKE_NAME;
             mockAuthRequest(`users/?list=${FAKE_USER},${nonUser}`, response, 200);
 
-            return authClient.getUserNames(FAKE_TOKEN, userIds)
-                .then((names) => {
-                    expect(names[FAKE_USER]).toEqual(FAKE_NAME);
-                    expect(Object.keys(names)).not.toContain(nonUser);
-                    const request = jasmine.Ajax.requests.mostRecent();
-                    expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
-                });
+            return authClient.getUserNames(FAKE_TOKEN, userIds).then((names) => {
+                expect(names[FAKE_USER]).toEqual(FAKE_NAME);
+                expect(Object.keys(names)).not.toContain(nonUser);
+                const request = jasmine.Ajax.requests.mostRecent();
+                expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
+            });
         });
 
         it('Should search for users', () => {
             const query = 'us',
-                result = {user1: 'User 1'};
+                result = { user1: 'User 1' };
             mockAuthRequest(`users/search/${query}`, result, 200);
-            return authClient.searchUserNames(FAKE_TOKEN, query)
-                .then((results) => {
-                    expect(results).toEqual(result);
-                    const request = jasmine.Ajax.requests.mostRecent();
-                    expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
-                });
+            return authClient.searchUserNames(FAKE_TOKEN, query).then((results) => {
+                expect(results).toEqual(result);
+                const request = jasmine.Ajax.requests.mostRecent();
+                expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
+            });
         });
 
         it('Should search for users with extra options', () => {
@@ -298,15 +294,14 @@ define([
                 result = {
                     user1: 'User 1',
                     otherperson: 'User 2',
-                    user3: 'Another Person'
+                    user3: 'Another Person',
                 };
             mockAuthRequest(`users/search/${query}/?fields=${options.join(',')}`, result, 200);
-            return authClient.searchUserNames(FAKE_TOKEN, query, options)
-                .then((results) => {
-                    expect(results).toEqual(result);
-                    const request = jasmine.Ajax.requests.mostRecent();
-                    expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
-                });
+            return authClient.searchUserNames(FAKE_TOKEN, query, options).then((results) => {
+                expect(results).toEqual(result);
+                const request = jasmine.Ajax.requests.mostRecent();
+                expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
+            });
         });
 
         it('Should set an auth token cookie', () => {
@@ -317,21 +312,25 @@ define([
         });
 
         // test validateToken with either good or invalid tokens
-        const validationTrials = [{
-            label: ' null',
-            token: null,
-            isValid: true  // should get it from cookie
-        }, {
-            label: 'n undefined',
-            token: undefined,
-            isValid: true  // should get from cookie
-        }, {
-            label: 'n old',
-            token: FAKE_TOKEN,
-            isValid: false
-        }];
+        const validationTrials = [
+            {
+                label: ' null',
+                token: null,
+                isValid: true, // should get it from cookie
+            },
+            {
+                label: 'n undefined',
+                token: undefined,
+                isValid: true, // should get from cookie
+            },
+            {
+                label: 'n old',
+                token: FAKE_TOKEN,
+                isValid: false,
+            },
+        ];
         validationTrials.forEach((trial) => {
-            it(`Should ${!trial.isValid ? 'in': ''}validate a${trial.label} token`, () => {
+            it(`Should ${!trial.isValid ? 'in' : ''}validate a${trial.label} token`, () => {
                 const tokenInfo = {
                     expires: Date.now() + (trial.isValid ? 10000 : -10000),
                     created: Date.now(),
@@ -339,26 +338,24 @@ define([
                     id: 'some_uuid',
                     type: 'Login',
                     user: FAKE_USER,
-                    cachefor: 500000
+                    cachefor: 500000,
                 };
                 mockAuthRequest('token', tokenInfo, 200);
-                return authClient.validateToken(trial.token)
-                    .then((isValid) => {
-                        expect(isValid).toBe(trial.isValid);
-                        const request = jasmine.Ajax.requests.mostRecent();
-                        expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
-                    });
+                return authClient.validateToken(trial.token).then((isValid) => {
+                    expect(isValid).toBe(trial.isValid);
+                    const request = jasmine.Ajax.requests.mostRecent();
+                    expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
+                });
             });
         });
 
         it('Should invalidate an invalid token', () => {
             mockAuthRequest('token', UNAUTH_ERROR, 401);
-            return authClient.validateToken()
-                .then((isValid) => {
-                    expect(isValid).toBe(false);
-                    const request = jasmine.Ajax.requests.mostRecent();
-                    expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
-                });
+            return authClient.validateToken().then((isValid) => {
+                expect(isValid).toBe(false);
+                const request = jasmine.Ajax.requests.mostRecent();
+                expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
+            });
         });
 
         it('Should clear auth token cookie on request', () => {
@@ -407,7 +404,7 @@ define([
             authClient.setCookie({
                 name: backupCookieName,
                 value: backupCookieValue,
-                domain: 'localhost'
+                domain: 'localhost',
             });
 
             // The backup cookie should be set.
@@ -454,7 +451,7 @@ define([
             authClient.setCookie({
                 name: 'narrative_session',
                 value: cookieValue,
-                expires: 14
+                expires: 14,
             });
 
             // Okay, it should be set.

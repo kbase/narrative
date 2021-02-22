@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'AbundanceDataView'
-], function(Widget) {
-    describe('Test the AbundanceDataView widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['AbundanceDataView'], (Widget) => {
+    describe('Test the AbundanceDataView widget', () => {
+        it('Should do things', () => {});
     });
 });

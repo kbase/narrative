@@ -3,11 +3,9 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbasePathways',
-], function(Widget) {
-    describe('Test the kbasePathways widget', function() {
-        it('Should load the widget', function() {
+define(['kbasePathways'], (Widget) => {
+    describe('Test the kbasePathways widget', () => {
+        it('Should load the widget', () => {
             expect(Widget).toBeDefined();
         });
     });

@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'AnnotationSetTable'
-], function(Widget) {
-    describe('Test the AnnotationSetTable widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['AnnotationSetTable'], (Widget) => {
+    describe('Test the AnnotationSetTable widget', () => {
+        it('Should do things', () => {});
     });
 });

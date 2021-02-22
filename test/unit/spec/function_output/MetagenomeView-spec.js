@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'MetagenomeView'
-], function(Widget) {
-    describe('Test the MetagenomeView widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['MetagenomeView'], (Widget) => {
+    describe('Test the MetagenomeView widget', () => {
+        it('Should do things', () => {});
     });
 });

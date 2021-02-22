@@ -1,11 +1,5 @@
 /* eslint-env jasmine */
-define ([
-    'narrativeViewers',
-    'narrativeConfig'
-], (
-    Viewers,
-    Config
-) => {
+define(['narrativeViewers', 'narrativeConfig'], (Viewers, Config) => {
     'use strict';
 
     /** data format taken from
@@ -22,8 +16,8 @@ define ([
         {
             'Viewers/a_viewer_app': {},
             'Viewers/error_viewer_app': {
-                loading_error: 'Not a real app'
-            }
+                loading_error: 'Not a real app',
+            },
         },
         // list of "apps" (in the NMS lingo), all obsolete and no longer used or needed
         {},
@@ -32,71 +26,77 @@ define ([
             'Module.Type1': {
                 view_method_ids: ['Viewers/a_viewer_app'],
                 landing_page_url_prefix: 'type1',
-                name: 'Type 1'
+                name: 'Type 1',
             },
             'Module.Type2': {
                 view_method_ids: ['Viewers/missing_viewer_app'],
                 landing_page_url_prefix: 'type2',
-                name: 'Type 2'
+                name: 'Type 2',
             },
             'Module.Type3': {
                 view_method_ids: ['Viewers/error_viewer_app'],
                 landing_page_url_prefix: 'type3',
-                name: 'Type 3'
-            }
-        }
+                name: 'Type 3',
+            },
+        },
     ];
 
     /** "method" data is the NMS lingo for app specs. This just mocks what's needed for
      * NarrativeViewers to function for a single mock app.
      * - returned by NarrativeMethodStore.get_method_spec
      */
-    const methodData = [{
-        'Viewers/a_viewer_app': {
-            behavior: {},
-            fixed_parameters: [],
-            info: {
-                id: 'Viewers/a_viewer_app',
-                module_name: 'Viewers',
-                app_type: 'viewer',
-                input_types: ['Module.Type1'],
-                name: 'View Module Type 1',
+    const methodData = [
+        {
+            'Viewers/a_viewer_app': {
+                behavior: {},
+                fixed_parameters: [],
+                info: {
+                    id: 'Viewers/a_viewer_app',
+                    module_name: 'Viewers',
+                    app_type: 'viewer',
+                    input_types: ['Module.Type1'],
+                    name: 'View Module Type 1',
+                },
+                parameters: [],
+                widgets: {
+                    input: 'null',
+                    output: 'SomeViewerWidget',
+                },
             },
-            parameters: [],
-            widgets: {
-                input: 'null',
-                output: 'SomeViewerWidget'
-            }
-        }
-    }];
+        },
+    ];
 
     describe('Test the NarrativeViewers module', () => {
         beforeEach(() => {
             jasmine.Ajax.install();
 
-            jasmine.Ajax.stubRequest(Config.url('narrative_method_store'), /list_categories/)
-                .andReturn({
-                    status: 200,
-                    statusText: 'HTTP/1 200 OK',
-                    contentType: 'application/json',
-                    responseText: JSON.stringify({
-                        version: '1.1',
-                        id: '12345',
-                        result: categoryData
-                    })
-                });
+            jasmine.Ajax.stubRequest(
+                Config.url('narrative_method_store'),
+                /list_categories/
+            ).andReturn({
+                status: 200,
+                statusText: 'HTTP/1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify({
+                    version: '1.1',
+                    id: '12345',
+                    result: categoryData,
+                }),
+            });
 
-            jasmine.Ajax.stubRequest(Config.url('narrative_method_store'), /get_method_spec/)
-                .andReturn({
-                    status: 200,
-                    statusText: 'HTTP/1 200 OK',
-                    contentType: 'application/json',
-                    responseText: JSON.stringify({
-                        version: '1.1',
-                        id: '12345',
-                        result: methodData
-                    })
-                });
+            jasmine.Ajax.stubRequest(
+                Config.url('narrative_method_store'),
+                /get_method_spec/
+            ).andReturn({
+                status: 200,
+                statusText: 'HTTP/1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify({
+                    version: '1.1',
+                    id: '12345',
+                    result: methodData,
+                }),
+            });
         });
 
         afterEach(() => {
@@ -106,17 +106,15 @@ define ([
         it('should load and have expected functions', () => {
             expect(Viewers).toBeDefined();
 
-            ['getViewerInfo', 'createViewer', 'defaultViewer'].forEach(fn => {
+            ['getViewerInfo', 'createViewer', 'defaultViewer'].forEach((fn) => {
                 expect(Viewers[fn]).toBeDefined();
             });
         });
 
         it('should load viewer info as a promise', () => {
-            const expectedItems = [
-                'viewers', 'typeNames', 'specs', 'methodIds', 'landingPageUrls'
-            ];
+            const expectedItems = ['viewers', 'typeNames', 'specs', 'methodIds', 'landingPageUrls'];
             return Viewers.getViewerInfo().then((info) => {
-                expectedItems.forEach(item => {
+                expectedItems.forEach((item) => {
                     expect(info[item]).toBeDefined();
                 });
             });
@@ -126,8 +124,8 @@ define ([
             const dataCell = {
                 obj_info: {
                     type: 'Module.Type1-1.0',
-                    bare_type: 'Module.Type1'
-                }
+                    bare_type: 'Module.Type1',
+                },
             };
             return Viewers.createViewer(dataCell).then((view) => {
                 expect(view.widget).toBeDefined();
@@ -136,12 +134,12 @@ define ([
             });
         });
 
-        it('should still make a default widget when the type doesn\'t exist', () => {
+        it("should still make a default widget when the type doesn't exist", () => {
             const dataCell = {
                 obj_info: {
                     type: 'NotARealType',
-                    bare_type: 'NotARealType'
-                }
+                    bare_type: 'NotARealType',
+                },
             };
             return Viewers.createViewer(dataCell).then((view) => {
                 expect(view.widget).toBeDefined();

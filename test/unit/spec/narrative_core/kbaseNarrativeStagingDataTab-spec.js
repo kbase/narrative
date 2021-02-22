@@ -1,15 +1,11 @@
 /*global define*/
 /*global jasmine, describe, it, expect, beforeEach, afterEach, spyOn*/
 /*jslint white: true*/
-define([
-    'jquery',
-    'kbaseNarrativeStagingDataTab',
-    'base/js/namespace'
-], function(
+define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
     $,
     StagingDataTab,
     Jupyter
-) {
+) => {
     'use strict';
     describe('Test the kbaseNarrativeStagingDataTab widget', () => {
         const fakeUser = 'notAUser';
@@ -22,14 +18,17 @@ define([
                 responseHeaders: '',
                 responseText: JSON.stringify({
                     user: fakeUser,
-                    idents: [{
-                        provider: 'Google',
-                        provusername: 'notAUser@google.com'
-                    }, {
-                        provider: 'Globus',
-                        provusername: 'notauser@globusid.org'
-                    }]
-                })
+                    idents: [
+                        {
+                            provider: 'Google',
+                            provusername: 'notAUser@google.com',
+                        },
+                        {
+                            provider: 'Globus',
+                            provusername: 'notauser@globusid.org',
+                        },
+                    ],
+                }),
             });
             jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/.*/).andReturn({
                 status: 200,
@@ -42,19 +41,22 @@ define([
                         path: fakeUser + '/test_folder',
                         mtime: 1532738637499,
                         size: 34,
-                        isFolder: true
-                    }, {
+                        isFolder: true,
+                    },
+                    {
                         name: 'file_list.txt',
                         path: fakeUser + '/test_folder/file_list.txt',
                         mtime: 1532738637555,
                         size: 49233,
-                        source: 'KBase upload'
-                    }
-                ])
+                        source: 'KBase upload',
+                    },
+                ]),
             });
             Jupyter.narrative = {
                 userId: fakeUser,
-                getAuthToken: () => { return 'fakeToken'; }
+                getAuthToken: () => {
+                    return 'fakeToken';
+                },
             };
         });
 
@@ -75,19 +77,19 @@ define([
                 statusText: 'error',
                 contentType: 'text/html',
                 responseHeaders: '',
-                responseText: 'error! no profile for you!'
+                responseText: 'error! no profile for you!',
             });
             const $dummyNode = $('<div>'),
                 stagingWidget = new StagingDataTab($dummyNode);
             const userInfo = await stagingWidget.getUserInfo();
-            expect(userInfo).toEqual({user: fakeUser, globusLinked: false});
+            expect(userInfo).toEqual({ user: fakeUser, globusLinked: false });
         });
 
         it('gets user info and parsed into whether or not the user is linked to globus', async () => {
             const $dummyNode = $('<div>'),
                 stagingWidget = new StagingDataTab($dummyNode);
             const userInfo = await stagingWidget.getUserInfo();
-            expect(userInfo).toEqual({user: fakeUser, globusLinked: true});
+            expect(userInfo).toEqual({ user: fakeUser, globusLinked: true });
         });
 
         it('can update its path properly', async () => {
@@ -140,7 +142,7 @@ define([
             await stagingWidget.render();
             spyOn(stagingWidget, 'updateView');
             // a little more cheating with implementation, this triggers the "upload complete" event
-            stagingWidget.uploadWidget.dropzone.emit('complete', {name: 'foo', size: 12345});
+            stagingWidget.uploadWidget.dropzone.emit('complete', { name: 'foo', size: 12345 });
             expect(stagingWidget.updateView).toHaveBeenCalled();
         });
 
@@ -153,7 +155,7 @@ define([
             // run a bunch of triggers, should only call render on the staging area once
             spyOn(stagingWidget.stagingAreaViewer, 'render');
             for (let i = 0; i < 100; i++) {
-                stagingWidget.uploadWidget.dropzone.emit('complete', {name: 'foo', size: 12345});
+                stagingWidget.uploadWidget.dropzone.emit('complete', { name: 'foo', size: 12345 });
             }
             jasmine.clock().tick(stagingWidget.minRefreshTime + 100);
             expect(stagingWidget.stagingAreaViewer.render.calls.count()).toEqual(1);

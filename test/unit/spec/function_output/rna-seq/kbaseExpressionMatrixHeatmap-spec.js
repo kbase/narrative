@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseExpressionMatrixHeatmap'
-], function(Widget) {
-    describe('Test the kbaseExpressionMatrixHeatmap widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseExpressionMatrixHeatmap'], (Widget) => {
+    describe('Test the kbaseExpressionMatrixHeatmap widget', () => {
+        it('Should do things', () => {});
     });
 });

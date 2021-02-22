@@ -6,13 +6,8 @@ define([
     'jquery',
     'kbase/js/widgets/narrative_core/upload/fileUploadWidget',
     'base/js/namespace',
-    'narrativeConfig'
-], (
-    $,
-    FileUploadWidget,
-    Jupyter,
-    Config
-) => {
+    'narrativeConfig',
+], ($, FileUploadWidget, Jupyter, Config) => {
     'use strict';
 
     let fuWidget,
@@ -20,17 +15,24 @@ define([
         fakeUser = 'notAUser';
 
     const mockUploadEndpoint = (filename, username, isFolder) => {
-        jasmine.Ajax.stubRequest(Config.url('staging_api_url') + '/upload')
-            .andReturn({
-                status: 200,
-                statusText: 'HTTP/1.1 200 OK',
-                contentType: 'application/json',
-                responseText: JSON.stringify([{name: filename, path: `${username}/${filename}`, mtime: 1596747139855, size: 1376, isFolder: isFolder}])
-            });
+        jasmine.Ajax.stubRequest(Config.url('staging_api_url') + '/upload').andReturn({
+            status: 200,
+            statusText: 'HTTP/1.1 200 OK',
+            contentType: 'application/json',
+            responseText: JSON.stringify([
+                {
+                    name: filename,
+                    path: `${username}/${filename}`,
+                    mtime: 1596747139855,
+                    size: 1376,
+                    isFolder: isFolder,
+                },
+            ]),
+        });
     };
 
     const createMockFile = (filename) => {
-        let file = new File(['file contents'], filename, { type: 'text/html' });
+        const file = new File(['file contents'], filename, { type: 'text/html' });
         return file;
     };
 
@@ -39,21 +41,23 @@ define([
             jasmine.Ajax.install();
             Jupyter.narrative = {
                 userId: fakeUser,
-                getAuthToken: () => { return 'fakeToken'; },
-                sidePanel: {
-                    '$dataWidget': {
-                        '$overlayPanel': {}
-                    }
+                getAuthToken: () => {
+                    return 'fakeToken';
                 },
-                showDataOverlay: () => {}
+                sidePanel: {
+                    $dataWidget: {
+                        $overlayPanel: {},
+                    },
+                },
+                showDataOverlay: () => {},
             };
             $targetNode = $('<div>');
             fuWidget = new FileUploadWidget($targetNode, {
                 path: '/',
                 userInfo: {
                     user: fakeUser,
-                    globusLinked: false
-                }
+                    globusLinked: false,
+                },
             });
         });
 
@@ -68,8 +72,8 @@ define([
                     path: '/',
                     userInfo: {
                         user: fakeUser,
-                        globusLinked: true
-                    }
+                        globusLinked: true,
+                    },
                 });
             const newPath = 'newPath';
             fuw.setPath(newPath);
@@ -77,7 +81,7 @@ define([
         });
 
         it('Should start and succeed on an upload when a file is given', (done) => {
-            const filename='foo.txt';
+            const filename = 'foo.txt';
             mockUploadEndpoint(filename, fakeUser, false);
             const mockFile = createMockFile(filename);
             const adderMock = jasmine.createSpy('adderMock');
@@ -102,7 +106,7 @@ define([
             // Let's set it shorter than disabled.
             fuWidget.dropzone.options.timeout = 100; // ms
             expect(fuWidget.dropzone.options.timeout).toBe(100);
-            const filename='foo.txt';
+            const filename = 'foo.txt';
             mockUploadEndpoint(filename, fakeUser, false);
             const mockFile = createMockFile(filename);
             fuWidget.dropzone.on('error', (file, errorMessage) => {
@@ -123,10 +127,10 @@ define([
             fuWidget.dropzone.options.maxFilesize = 1;
 
             // Create file
-            const filename='foo.txt';
+            const filename = 'foo.txt';
             mockUploadEndpoint(filename, fakeUser, false);
-            var mockFile = createMockFile(filename);
-            Object.defineProperty(mockFile, 'size', {value: Math.pow(1024, 4), writable: false});
+            const mockFile = createMockFile(filename);
+            Object.defineProperty(mockFile, 'size', { value: Math.pow(1024, 4), writable: false });
 
             // Create mock calls
             const adderMock = jasmine.createSpy('adderMock');
@@ -150,10 +154,10 @@ define([
             fuWidget.dropzone.options.maxFilesize = 1;
 
             // Create file
-            const filename='foo.txt';
+            const filename = 'foo.txt';
             mockUploadEndpoint(filename, fakeUser, false);
-            var mockFile = createMockFile(filename);
-            Object.defineProperty(mockFile, 'size', {value: Math.pow(1024, 4), writable: false});
+            const mockFile = createMockFile(filename);
+            Object.defineProperty(mockFile, 'size', { value: Math.pow(1024, 4), writable: false });
 
             // Create mock calls
             const adderMock = jasmine.createSpy('adderMock');
@@ -163,33 +167,37 @@ define([
 
             fuWidget.dropzone.addFile(mockFile);
             setTimeout(() => {
-                let $fileTemplate = fuWidget.$elem;
+                const $fileTemplate = fuWidget.$elem;
                 expect(document.getElementById('clear_all_button')).toBeDefined();
-                expect($fileTemplate.find('#upload_progress_and_cancel').css('display')).toEqual('none');
+                expect($fileTemplate.find('#upload_progress_and_cancel').css('display')).toEqual(
+                    'none'
+                );
                 expect($fileTemplate.find('#error_icon').css('display')).toEqual('flex');
-                expect($fileTemplate.find('#globus_error_link').attr('href')).toEqual('https://docs.kbase.us/data/globus');
+                expect($fileTemplate.find('#globus_error_link').attr('href')).toEqual(
+                    'https://docs.kbase.us/data/globus'
+                );
                 done();
             });
         });
 
         it('Should provide a link to a globus accout when file upload maxfile size error occurs', (done) => {
             $targetNode = $('<div>');
-            var uploadWidget = new FileUploadWidget($targetNode, {
+            const uploadWidget = new FileUploadWidget($targetNode, {
                 path: '/',
                 userInfo: {
                     user: fakeUser,
-                    globusLinked: true
-                }
+                    globusLinked: true,
+                },
             });
 
             // Set the file max size to 0
             uploadWidget.dropzone.options.maxFilesize = 1;
 
             // Create file
-            const filename='foo.txt';
+            const filename = 'foo.txt';
             mockUploadEndpoint(filename, fakeUser, false);
-            var mockFile = createMockFile(filename);
-            Object.defineProperty(mockFile, 'size', {value: Math.pow(1024, 4), writable: false});
+            const mockFile = createMockFile(filename);
+            Object.defineProperty(mockFile, 'size', { value: Math.pow(1024, 4), writable: false });
 
             // Create mock calls
             const adderMock = jasmine.createSpy('adderMock');
@@ -199,11 +207,13 @@ define([
 
             uploadWidget.dropzone.addFile(mockFile);
             setTimeout(() => {
-                let $fileTemplate = uploadWidget.$elem;
-                expect($fileTemplate.find('#globus_error_link').attr('href')).toEqual('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' + fakeUser);
+                const $fileTemplate = uploadWidget.$elem;
+                expect($fileTemplate.find('#globus_error_link').attr('href')).toEqual(
+                    'https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' +
+                        fakeUser
+                );
                 done();
             });
         });
-
     });
 });

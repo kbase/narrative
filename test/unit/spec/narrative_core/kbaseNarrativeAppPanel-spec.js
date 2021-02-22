@@ -7,23 +7,21 @@ define([
     'narrativeMocks',
 ], ($, AppPanel, Jupyter, Config, Mocks) => {
     'use strict';
-    let $panel,
-        appPanel;
+    let $panel, appPanel;
     const FAKE_USER = 'some_user',
         FAKE_TOKEN = 'some_fake_token',
         NS_URL = 'https://kbase.us/service/fakeNSUrl',
         CATEGORY_A = 'categorya',
         CATEGORY_B = 'categoryb',
-
         // a map of ignored categories returned from NarrativeService.get_ignored_categories
         // maps from category name -> 1 (if ignored)
         IGNORED_CATEGORIES = {
-            inactive: 1
+            inactive: 1,
         },
         APP_INFO = {
             module_versions: {
                 a_module: '0.1',
-                another_module: '0.2'
+                another_module: '0.2',
             },
             app_infos: {
                 'a_module/an_app': {
@@ -35,19 +33,18 @@ define([
                         ver: '1.0.0',
                         subtitle: 'Run an app',
                         tooltip: 'Run an app',
-                        icon: { url: 'img?method_id=a_module/an_app&image_name=an_app.png&tag=release' },
+                        icon: {
+                            url: 'img?method_id=a_module/an_app&image_name=an_app.png&tag=release',
+                        },
                         categories: ['active', CATEGORY_A],
                         authors: [FAKE_USER],
-                        input_types: [
-                            'Module1.Type1',
-                            'Module2.Type2'
-                        ],
+                        input_types: ['Module1.Type1', 'Module2.Type2'],
                         output_types: ['ModuleOut.TypeOut'],
                         app_type: 'app',
                         namespace: 'a_module',
                         short_input_types: ['Type1', 'Type2'],
-                        short_output_types: ['TypeOut']
-                    }
+                        short_output_types: ['TypeOut'],
+                    },
                 },
                 'another_module/another_app': {
                     info: {
@@ -58,21 +55,22 @@ define([
                         ver: '1.0.0',
                         subtitle: 'Run an app',
                         tooltip: 'Run an app',
-                        icon: { url: 'img?method_id=another_module/another_app&image_name=an_app.png&tag=release' },
+                        icon: {
+                            url:
+                                'img?method_id=another_module/another_app&image_name=an_app.png&tag=release',
+                        },
                         categories: ['active', CATEGORY_B],
                         authors: [FAKE_USER],
-                        input_types: [
-                            'Module1.Type1',
-                        ],
+                        input_types: ['Module1.Type1'],
                         output_types: ['ModuleOut.TypeOut'],
                         app_type: 'app',
                         namespace: 'another_module',
                         short_input_types: ['Type1'],
-                        short_output_types: ['TypeOut']
+                        short_output_types: ['TypeOut'],
                     },
-                    favorite: 1612814706712
-                }
-            }
+                    favorite: 1612814706712,
+                },
+            },
         };
 
     describe('Test the kbaseNarrativeAppPanel widget', () => {
@@ -81,31 +79,31 @@ define([
                 getAuthToken: () => FAKE_TOKEN,
                 userId: FAKE_USER,
                 narrController: {
-                    uiModeIs: () => false
-                }
+                    uiModeIs: () => false,
+                },
             };
 
             // just a dummy mock so we don't see error messages. Don't actually need a kernel.
             Jupyter.notebook = {
                 kernel: {
-                    execute: () => { }
-                }
+                    execute: () => {},
+                },
             };
 
             jasmine.Ajax.install();
             Mocks.mockServiceWizardLookup({
                 module: 'NarrativeService',
-                url: NS_URL
+                url: NS_URL,
             });
             Mocks.mockJsonRpc1Call({
                 url: NS_URL,
                 body: /get_all_app_info/,
-                response: APP_INFO
+                response: APP_INFO,
             });
             Mocks.mockJsonRpc1Call({
                 url: NS_URL,
                 body: /get_ignore_categories/,
-                response: IGNORED_CATEGORIES
+                response: IGNORED_CATEGORIES,
             });
 
             $panel = $('<div>');
@@ -177,38 +175,57 @@ define([
             expect($panel.find(dropdownSelector).length).not.toBe(0);
             // should have category, input types, output types, name a-z, name z-a
             const filterList = ['category', 'input types', 'output types', 'name a-z', 'name z-a'];
-            $panel.find(dropdownSelector).parent().find('.dropdown-menu li').each((idx, item) => {
-                expect($(item).text().toLowerCase()).toEqual(filterList[idx]);
-            });
+            $panel
+                .find(dropdownSelector)
+                .parent()
+                .find('.dropdown-menu li')
+                .each((idx, item) => {
+                    expect($(item).text().toLowerCase()).toEqual(filterList[idx]);
+                });
             // should default to category
-            expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('category');
+            expect(
+                $panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()
+            ).toEqual('category');
             const appListSel = '.kb-function-body > div:last-child > div > div';
             // spot check category list.
-            let categoryList = $panel.find(appListSel + '> div.row').toArray().map((elem) => {
-                const str = elem.innerText.toLowerCase();
-                return str.substring(0, str.lastIndexOf(' '));
-            });
+            let categoryList = $panel
+                .find(appListSel + '> div.row')
+                .toArray()
+                .map((elem) => {
+                    const str = elem.innerText.toLowerCase();
+                    return str.substring(0, str.lastIndexOf(' '));
+                });
             // no "my favorites" because we're not logged in
             expect(categoryList.indexOf(CATEGORY_A)).not.toBe(-1);
             expect(categoryList.indexOf(CATEGORY_B)).not.toBe(-1);
 
             // click input types
             $panel.find(dropdownSelector).parent().find('.dropdown-menu li:nth-child(2) a').click();
-            expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('input');
-            categoryList = $panel.find(appListSel + '> div.row').toArray().map((elem) => {
-                const str = elem.innerText.toLowerCase();
-                return str.substring(0, str.lastIndexOf(' '));
-            });
+            expect(
+                $panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()
+            ).toEqual('input');
+            categoryList = $panel
+                .find(appListSel + '> div.row')
+                .toArray()
+                .map((elem) => {
+                    const str = elem.innerText.toLowerCase();
+                    return str.substring(0, str.lastIndexOf(' '));
+                });
             expect(categoryList.indexOf('type1')).not.toBe(-1);
             expect(categoryList.indexOf('type2')).not.toBe(-1);
 
             // click output types
             $panel.find(dropdownSelector).parent().find('.dropdown-menu li:nth-child(3) a').click();
-            expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('output');
-            categoryList = $panel.find(appListSel + '> div.row').toArray().map((elem) => {
-                const str = elem.innerText.toLowerCase();
-                return str.substring(0, str.lastIndexOf(' '));
-            });
+            expect(
+                $panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()
+            ).toEqual('output');
+            categoryList = $panel
+                .find(appListSel + '> div.row')
+                .toArray()
+                .map((elem) => {
+                    const str = elem.innerText.toLowerCase();
+                    return str.substring(0, str.lastIndexOf(' '));
+                });
             expect(categoryList.indexOf('typeout')).not.toBe(-1);
             expect(categoryList.indexOf('type1')).toBe(-1);
             expect(categoryList.indexOf('type2')).toBe(-1);
@@ -216,26 +233,35 @@ define([
             // click name a-z
             // show alphabetical names of apps
             $panel.find(dropdownSelector).parent().find('.dropdown-menu li:nth-child(4) a').click();
-            expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('a-z');
-            let appList = $panel.find(appListSel + ' div.kb-data-list-name').toArray().map((item) => {
-                return item.innerText.toLowerCase();
-            });
+            expect(
+                $panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()
+            ).toEqual('a-z');
+            let appList = $panel
+                .find(appListSel + ' div.kb-data-list-name')
+                .toArray()
+                .map((item) => {
+                    return item.innerText.toLowerCase();
+                });
             // sort it, then compare to see if in same order. remember, we don't have favorites that pop to the top.
             expect(appList.sort().join('')).toEqual(appList.join(''));
 
             // click name z-a
             $panel.find(dropdownSelector).parent().find('.dropdown-menu li:nth-child(5) a').click();
-            expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('z-a');
-            appList = $panel.find(appListSel + ' div.kb-data-list-name').toArray().map((item) => {
-                return item.innerText.toLowerCase();
-            });
+            expect(
+                $panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()
+            ).toEqual('z-a');
+            appList = $panel
+                .find(appListSel + ' div.kb-data-list-name')
+                .toArray()
+                .map((item) => {
+                    return item.innerText.toLowerCase();
+                });
             // sort it, then compare to see if in same order. remember, we don't have favorites that pop to the top.
             expect(appList.sort().reverse().join('')).toEqual(appList.join(''));
-
         });
 
         it('Should have a working version toggle button', () => {
-            appPanel.$toggleVersionBtn.tooltip = () => { };  // to stop any jquery/bootstrap nonsense that happens in testing.
+            appPanel.$toggleVersionBtn.tooltip = () => {}; // to stop any jquery/bootstrap nonsense that happens in testing.
             const toggleBtn = $panel.find('.btn-toolbar button:nth-child(4)');
             expect(toggleBtn.length).toBe(1);
             spyOn(appPanel, 'refreshFromService');
@@ -258,7 +284,7 @@ define([
             expect(appPanel.refreshFromService).toHaveBeenCalled();
             expect(appPanel.refreshFromService).toHaveBeenCalledWith('release');
             const toggleBtn = $panel.find('.btn-toolbar button:nth-child(4)');
-            appPanel.$toggleVersionBtn.tooltip = () => { };  // to stop any jquery/bootstrap nonsense that happens in testing.
+            appPanel.$toggleVersionBtn.tooltip = () => {}; // to stop any jquery/bootstrap nonsense that happens in testing.
             toggleBtn.click();
             refreshBtn.click();
             expect(appPanel.refreshFromService).toHaveBeenCalledWith('beta');
@@ -271,12 +297,12 @@ define([
             const lookupId = 'a_module/an_app',
                 dummySpec = {
                     info: {
-                        id: lookupId
-                    }
+                        id: lookupId,
+                    },
                 };
             Mocks.mockJsonRpc1Call({
                 url: Config.url('narrative_method_store'),
-                response: [dummySpec]
+                response: [dummySpec],
             });
 
             const cb = (specs) => {
@@ -285,7 +311,7 @@ define([
                 done();
             };
             const appRequest = {
-                methods: [lookupId]
+                methods: [lookupId],
             };
             $(document).trigger('getFunctionSpecs.Narrative', [appRequest, cb]);
         });
@@ -297,12 +323,12 @@ define([
                 done();
             };
             const appRequest = {
-                methods: ['notAModule/notAnApp']
+                methods: ['notAModule/notAnApp'],
             };
             Mocks.mockJsonRpc1Call({
                 url: Config.url('narrative_method_store'),
-                response: { error: 'repository notAModule wasn\'t registered' },
-                statusCode: 500
+                response: { error: "repository notAModule wasn't registered" },
+                statusCode: 500,
             });
             $(document).trigger('getFunctionSpecs.Narrative', [appRequest, cb]);
         });
@@ -323,7 +349,7 @@ define([
                     cb({
                         token: FAKE_TOKEN,
                         user_id: FAKE_USER,
-                        kbase_sessionid: 'fake_session'
+                        kbase_sessionid: 'fake_session',
                     });
                 }
             });
@@ -356,13 +382,13 @@ define([
             const appId = 'a_module/an_app',
                 dummySpec = {
                     info: {
-                        id: appId
-                    }
+                        id: appId,
+                    },
                 },
                 appTag = 'release';
             Mocks.mockJsonRpc1Call({
                 url: Config.url('narrative_method_store'),
-                response: [dummySpec]
+                response: [dummySpec],
             });
             // in actual usage, this event gets bound to either $(document) or some other
             // widget that it percolates up to. Jasmine doesn't like that, so we bind it here

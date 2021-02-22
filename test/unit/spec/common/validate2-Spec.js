@@ -4,13 +4,13 @@ define([
     'bluebird',
     'common/validation',
     'widgets/appWidgets2/validators/int',
-    'widgets/appWidgets2/validators/resolver'
-], function(Promise, Validation, IntValidation, ValidationResolver) {
+    'widgets/appWidgets2/validators/resolver',
+], (Promise, Validation, IntValidation, ValidationResolver) => {
     'use strict';
 
-    describe('Props core functions', function() {
-        it('Is alive', function() {
-            var alive;
+    describe('Props core functions', () => {
+        it('Is alive', () => {
+            let alive;
             if (Validation) {
                 alive = true;
             } else {
@@ -22,310 +22,303 @@ define([
         // STRING
 
         function wrap(val) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 return val;
             });
         }
 
-        it('Validate a simple string without constraints', function(done) {
-            wrap(Validation.validateTextString('test', {}))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(true);
-                    done();
-                });
+        it('Validate a simple string without constraints', (done) => {
+            wrap(Validation.validateTextString('test', {})).then((result) => {
+                expect(result.isValid).toEqual(true);
+                done();
+            });
         });
-        it('Validate a simple string required and supplied', function(done) {
-            wrap(Validation.validateTextString('test', {
-                    required: true
-                }))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(true);
-                    done();
-                });
+        it('Validate a simple string required and supplied', (done) => {
+            wrap(
+                Validation.validateTextString('test', {
+                    required: true,
+                })
+            ).then((result) => {
+                expect(result.isValid).toEqual(true);
+                done();
+            });
         });
-        it('Validate a simple string, required, empty string', function(done) {
-            wrap(Validation.validateTextString('', {
-                    required: true
-                }))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+        it('Validate a simple string, required, empty string', (done) => {
+            wrap(
+                Validation.validateTextString('', {
+                    required: true,
+                })
+            ).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
-        it('Validate a simple string, required, null', function(done) {
-            wrap(Validation.validateTextString(null, {
-                    required: true
-                }))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+        it('Validate a simple string, required, null', (done) => {
+            wrap(
+                Validation.validateTextString(null, {
+                    required: true,
+                })
+            ).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
-        it('Validate a simple string, min and max length, within range', function(done) {
-            wrap(Validation.validateTextString('hello', {
+        it('Validate a simple string, min and max length, within range', (done) => {
+            wrap(
+                Validation.validateTextString('hello', {
                     required: true,
                     min_length: 5,
-                    max_length: 10
-                }))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(true);
-                    done();
-                });
+                    max_length: 10,
+                })
+            ).then((result) => {
+                expect(result.isValid).toEqual(true);
+                done();
+            });
         });
-        it('Validate a simple string, min and max length, below', function(done) {
-            wrap(Validation.validateTextString('hi', {
+        it('Validate a simple string, min and max length, below', (done) => {
+            wrap(
+                Validation.validateTextString('hi', {
                     required: true,
                     min_length: 5,
-                    max_length: 10
-                }))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+                    max_length: 10,
+                })
+            ).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
-        it('Validate a simple string, min and max length, above range', function(done) {
-            wrap(Validation.validateTextString('hello earthling', {
+        it('Validate a simple string, min and max length, above range', (done) => {
+            wrap(
+                Validation.validateTextString('hello earthling', {
                     required: true,
                     min_length: 5,
-                    max_length: 10
-                }))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+                    max_length: 10,
+                })
+            ).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
 
-        // INTEGER 
-        it('Validate an integer without constraints', function(done) {
-            var spec = {
+        // INTEGER
+        it('Validate an integer without constraints', (done) => {
+            const spec = {
                 data: {
-                    constraints: {}
-                }
+                    constraints: {},
+                },
             };
-            wrap(IntValidation.validate(42, spec))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(true);
-                    done();
-                });
+            wrap(IntValidation.validate(42, spec)).then((result) => {
+                expect(result.isValid).toEqual(true);
+                done();
+            });
         });
-        it('Validate an integer, required, valid value', function(done) {
-            var spec = {
-                data: {
-                    constraints: {
-                        required: true
-                    }
-                }
-            };
-            wrap(IntValidation.validate(42, spec))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(true);
-                    done();
-                });
-        });
-        it('Validate an integer, required, empty string value', function(done) {
-            var spec = {
+        it('Validate an integer, required, valid value', (done) => {
+            const spec = {
                 data: {
                     constraints: {
-                        required: true
-                    }
-                }
+                        required: true,
+                    },
+                },
             };
-            wrap(IntValidation.validate('', spec))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+            wrap(IntValidation.validate(42, spec)).then((result) => {
+                expect(result.isValid).toEqual(true);
+                done();
+            });
         });
-        it('Validate an integer, required, null value', function(done) {
-            var spec = {
+        it('Validate an integer, required, empty string value', (done) => {
+            const spec = {
                 data: {
                     constraints: {
-                        required: true
-                    }
-                }
+                        required: true,
+                    },
+                },
             };
-            wrap(IntValidation.validate(null, spec))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+            wrap(IntValidation.validate('', spec)).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
-        it('Validate an integer, required, NaN value', function(done) {
-            var spec = {
+        it('Validate an integer, required, null value', (done) => {
+            const spec = {
                 data: {
                     constraints: {
-                        required: true
-                    }
-                }
+                        required: true,
+                    },
+                },
             };
-            wrap(IntValidation.validate(0 / 0, spec))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+            wrap(IntValidation.validate(null, spec)).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
-        it('Validate an integer, required, float value', function(done) {
-            var spec = {
+        it('Validate an integer, required, NaN value', (done) => {
+            const spec = {
                 data: {
                     constraints: {
-                        required: true
-                    }
-                }
+                        required: true,
+                    },
+                },
             };
-            wrap(IntValidation.validate(1.23, spec))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+            wrap(IntValidation.validate(0 / 0, spec)).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
-        it('Validate an integer, required, range given, within range', function(done) {
-            var spec = {
+        it('Validate an integer, required, float value', (done) => {
+            const spec = {
+                data: {
+                    constraints: {
+                        required: true,
+                    },
+                },
+            };
+            wrap(IntValidation.validate(1.23, spec)).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
+        });
+        it('Validate an integer, required, range given, within range', (done) => {
+            const spec = {
                 data: {
                     constraints: {
                         required: true,
                         min_int: 5,
-                        max_int: 10
-                    }
-                }
+                        max_int: 10,
+                    },
+                },
             };
-            wrap(IntValidation.validate(7, spec))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(true);
-                    done();
-                });
+            wrap(IntValidation.validate(7, spec)).then((result) => {
+                expect(result.isValid).toEqual(true);
+                done();
+            });
         });
-        it('Validate an integer, required, range given, below range', function(done) {
-            var spec = {
+        it('Validate an integer, required, range given, below range', (done) => {
+            const spec = {
                 data: {
                     constraints: {
                         required: true,
                         min_int: 5,
-                        max_int: 10
-                    }
-                }
+                        max_int: 10,
+                    },
+                },
             };
-            wrap(IntValidation.validate(3, spec))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(true);
-                    done();
-                });
+            wrap(IntValidation.validate(3, spec)).then((result) => {
+                expect(result.isValid).toEqual(true);
+                done();
+            });
         });
-        it('Validate an integer, required, range given, above range', function(done) {
-            var spec = {
+        it('Validate an integer, required, range given, above range', (done) => {
+            const spec = {
                 data: {
                     constraints: {
                         required: true,
                         min_int: 5,
-                        max_int: 10
-                    }
-                }
+                        max_int: 10,
+                    },
+                },
             };
-            wrap(IntValidation.validate(24, spec))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(true);
-                    done();
-                });
+            wrap(IntValidation.validate(24, spec)).then((result) => {
+                expect(result.isValid).toEqual(true);
+                done();
+            });
         });
-        it('Validate an integer, required, range given, wrong type (date)', function(done) {
-            var spec = {
+        it('Validate an integer, required, range given, wrong type (date)', (done) => {
+            const spec = {
                 data: {
                     constraints: {
                         required: true,
                         min_int: 5,
-                        max_int: 10
-                    }
-                }
+                        max_int: 10,
+                    },
+                },
             };
-            wrap(IntValidation.validate(new Date(), spec))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+            wrap(IntValidation.validate(new Date(), spec)).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
-
 
         // FLOAT
-        it('Validate a float without constraints', function(done) {
-            wrap(Validation.validateFloatString('42.12', {}))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(true);
-                    done();
-                });
+        it('Validate a float without constraints', (done) => {
+            wrap(Validation.validateFloatString('42.12', {})).then((result) => {
+                expect(result.isValid).toEqual(true);
+                done();
+            });
         });
-        it('Validate a bad without constraints', function(done) {
-            wrap(Validation.validateFloatString('x', {}))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+        it('Validate a bad without constraints', (done) => {
+            wrap(Validation.validateFloatString('x', {})).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
-        it('Validate an empty without constraints', function(done) {
-            wrap(Validation.validateFloatString('', {}))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(true);
-                    done();
-                });
+        it('Validate an empty without constraints', (done) => {
+            wrap(Validation.validateFloatString('', {})).then((result) => {
+                expect(result.isValid).toEqual(true);
+                done();
+            });
         });
-        it('Validate a float string, required', function(done) {
-            wrap(Validation.validateFloatString('42.12', {
-                    required: true
-                }))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(true);
-                    done();
-                });
+        it('Validate a float string, required', (done) => {
+            wrap(
+                Validation.validateFloatString('42.12', {
+                    required: true,
+                })
+            ).then((result) => {
+                expect(result.isValid).toEqual(true);
+                done();
+            });
         });
-        it('Validate an empty string, required', function(done) {
-            wrap(Validation.validateFloatString('', {
-                    required: true
-                }))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+        it('Validate an empty string, required', (done) => {
+            wrap(
+                Validation.validateFloatString('', {
+                    required: true,
+                })
+            ).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
-        it('Validate an empty string, required', function(done) {
-            wrap(Validation.validateFloatString(null, {
-                    required: true
-                }))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+        it('Validate an empty string, required', (done) => {
+            wrap(
+                Validation.validateFloatString(null, {
+                    required: true,
+                })
+            ).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
         // bad types
-        it('Validate an undefined, required', function(done) {
-            wrap(Validation.validateFloatString(undefined, {
-                    required: true
-                }))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+        it('Validate an undefined, required', (done) => {
+            wrap(
+                Validation.validateFloatString(undefined, {
+                    required: true,
+                })
+            ).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
-        it('Validate an array, required', function(done) {
-            wrap(Validation.validateFloatString([], {
-                    required: true
-                }))
-                .then(function(result) {
-                    expect(result.isValid).toEqual(false);
-                    done();
-                });
+        it('Validate an array, required', (done) => {
+            wrap(
+                Validation.validateFloatString([], {
+                    required: true,
+                })
+            ).then((result) => {
+                expect(result.isValid).toEqual(false);
+                done();
+            });
         });
 
         function runTests(method, tests) {
-            tests.forEach(function(testSet) {
-                testSet.forEach(function(test) {
-
-                    it(test.title, function(done) {
-
-                        ValidationResolver.validate(test.value, test.spec)
-                            .then(function(result) {
-                                Object.keys(test.result).forEach(function(key) {
-                                    expect(result[key]).toEqual(test.result[key]);
-                                });
-                                done();
+            tests.forEach((testSet) => {
+                testSet.forEach((test) => {
+                    it(test.title, (done) => {
+                        ValidationResolver.validate(test.value, test.spec).then((result) => {
+                            Object.keys(test.result).forEach((key) => {
+                                expect(result[key]).toEqual(test.result[key]);
                             });
+                            done();
+                        });
                     });
                 });
             });
@@ -334,9 +327,6 @@ define([
         // function runTestsx(method, tests) {
         //     tests.forEach(function(testSet) {
         //         testSet.forEach(function(test) {
-
-
-
 
         //             if (test.options.required === undefined) {
         //                 [true, false].forEach(function(required) {
@@ -369,7 +359,7 @@ define([
         //     });
         // }
 
-        // FLOATS        
+        // FLOATS
         // (function() {
         //     var emptyValues = [{
         //                 title: 'empty string',
@@ -556,24 +546,25 @@ define([
         // }());
 
         // INTS
-        (function() {
-            var emptyValues = [{
+        (function () {
+            const emptyValues = [
+                    {
                         title: 'empty string',
                         value: null,
                         spec: {
                             data: {
                                 type: 'int',
                                 constraints: {
-                                    required: false
-                                }
-                            }
+                                    required: false,
+                                },
+                            },
                         },
                         result: {
                             isValid: true,
                             diagnosis: 'optional-empty',
-                            errorMessage: undefined
-                        }
-                    }
+                            errorMessage: undefined,
+                        },
+                    },
                     // {
                     //     title: 'string of just spaces same as empty',
                     //     value: '   ',
@@ -634,42 +625,45 @@ define([
                     //         parsedValue: undefined
                     //     }
                     // }
-
                 ],
-                acceptableFormatTests = [{
-                    title: 'integer format',
-                    value: 42,
-                    spec: {
-                        data: {
-                            type: 'int',
-                            constraints: {
-                                required: false
-                            }
-                        }
+                acceptableFormatTests = [
+                    {
+                        title: 'integer format',
+                        value: 42,
+                        spec: {
+                            data: {
+                                type: 'int',
+                                constraints: {
+                                    required: false,
+                                },
+                            },
+                        },
+                        result: {
+                            isValid: true,
+                            diagnosis: 'valid',
+                            errorMessage: undefined,
+                        },
                     },
-                    result: {
-                        isValid: true,
-                        diagnosis: 'valid',
-                        errorMessage: undefined
-                    }
-                }],
-                badValueTests = [{
-                    title: 'string of chars',
-                    value: 'abc',
-                    spec: {
-                        data: {
-                            type: 'int',
-                            constraints: {
-                                required: false
-                            }
-                        }
+                ],
+                badValueTests = [
+                    {
+                        title: 'string of chars',
+                        value: 'abc',
+                        spec: {
+                            data: {
+                                type: 'int',
+                                constraints: {
+                                    required: false,
+                                },
+                            },
+                        },
+                        result: {
+                            isValid: false,
+                            diagnosis: 'invalid',
+                            errorMessage: 'value must be numeric',
+                        },
                     },
-                    result: {
-                        isValid: false,
-                        diagnosis: 'invalid',
-                        errorMessage: 'value must be numeric'
-                    }
-                }],
+                ],
                 // typeTests = [{
                 //         title: 'validate undefined',
                 //         value: undefined,
@@ -723,12 +717,12 @@ define([
                 tests = [
                     emptyValues,
                     acceptableFormatTests,
-                    badValueTests
+                    badValueTests,
                     // typeTests
                 ];
 
             runTests('validateIntString', tests);
-        }());
+        })();
 
         // // STRINGS
         // (function() {
@@ -911,8 +905,5 @@ define([
         // Set of Ints
 
         // Set of Floats
-
     });
-
-
 });

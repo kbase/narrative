@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseReadsSetView'
-], function(Widget) {
-    describe('Test the kbaseReadsSetView widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseReadsSetView'], (Widget) => {
+    describe('Test the kbaseReadsSetView widget', () => {
+        it('Should do things', () => {});
     });
 });

@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseBinnedContigs'
-], function(Widget) {
-    describe('Test the KBaseBinnedContigs widget', function() {
-        it('Should instantiate', function() {
-
-        });
+define(['kbaseBinnedContigs'], (Widget) => {
+    describe('Test the KBaseBinnedContigs widget', () => {
+        it('Should instantiate', () => {});
     });
 });

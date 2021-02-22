@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseExpressionFeatureClusters'
-], function(Widget) {
-    describe('Test the kbaseExpressionFeatureClusters widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseExpressionFeatureClusters'], (Widget) => {
+    describe('Test the kbaseExpressionFeatureClusters widget', () => {
+        it('Should do things', () => {});
     });
 });

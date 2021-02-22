@@ -3,11 +3,9 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseTabTable'
-], function(Widget) {
-    describe('Test the kbaseTabTable widget', function() {
-        it('Should do things', function() {
+define(['kbaseTabTable'], (Widget) => {
+    describe('Test the kbaseTabTable widget', () => {
+        it('Should do things', () => {
             expect(Widget).toBeDefined();
         });
     });

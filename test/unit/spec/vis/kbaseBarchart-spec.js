@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseBarchart'
-], function(Widget) {
-    describe('Test the kbaseBarchart widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseBarchart'], (Widget) => {
+    describe('Test the kbaseBarchart widget', () => {
+        it('Should do things', () => {});
     });
 });

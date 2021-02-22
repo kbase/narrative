@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseFeatureSet'
-], function(Widget) {
-    describe('Test the kbaseFeatureSet widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseFeatureSet'], (Widget) => {
+    describe('Test the kbaseFeatureSet widget', () => {
+        it('Should do things', () => {});
     });
 });

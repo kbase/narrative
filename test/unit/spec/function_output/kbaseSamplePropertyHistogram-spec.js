@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseSamplePropertyHistogram'
-], function(Widget) {
-    describe('Test the kbaseSamplePropertyHistogram widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseSamplePropertyHistogram'], (Widget) => {
+    describe('Test the kbaseSamplePropertyHistogram widget', () => {
+        it('Should do things', () => {});
     });
 });

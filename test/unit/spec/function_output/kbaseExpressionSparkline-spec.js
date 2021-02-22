@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseExpressionSparkline'
-], function(Widget) {
-    describe('Test the kbaseExpressionSparkline widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseExpressionSparkline'], (Widget) => {
+    describe('Test the kbaseExpressionSparkline widget', () => {
+        it('Should do things', () => {});
     });
 });

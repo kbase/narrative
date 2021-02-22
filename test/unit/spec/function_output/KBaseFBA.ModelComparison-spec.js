@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'KBaseFBA.ModelComparison'
-], function(Widget) {
-    describe('Test the KBaseFBA.ModelComparison widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['KBaseFBA.ModelComparison'], (Widget) => {
+    describe('Test the KBaseFBA.ModelComparison widget', () => {
+        it('Should do things', () => {});
     });
 });

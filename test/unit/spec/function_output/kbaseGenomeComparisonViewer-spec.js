@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseGenomeComparisonViewer'
-], function(Widget) {
-    describe('Test the kbaseGenomeComparisonViewer widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseGenomeComparisonViewer'], (Widget) => {
+    describe('Test the kbaseGenomeComparisonViewer widget', () => {
+        it('Should do things', () => {});
     });
 });

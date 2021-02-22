@@ -1,11 +1,7 @@
 /*eslint-env node, jasmine*/
-define([
-    'kbaseNarrativeSidePublicTab'
-], function(Widget) {
+define(['kbaseNarrativeSidePublicTab'], (Widget) => {
     'use strict';
-    describe('Test the kbaseNarrativeSidePublicTab widget', function() {
-        it('Should do things', function() {
-            
-        });
+    describe('Test the kbaseNarrativeSidePublicTab widget', () => {
+        it('Should do things', () => {});
     });
 });

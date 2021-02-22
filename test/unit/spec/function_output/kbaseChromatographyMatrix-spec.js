@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseChromatographyMatrix'
-], function(Widget) {
-    describe('Test the kbaseChromatographyMatrix widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseChromatographyMatrix'], (Widget) => {
+    describe('Test the kbaseChromatographyMatrix widget', () => {
+        it('Should do things', () => {});
     });
 });

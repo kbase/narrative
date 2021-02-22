@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseExpressionSampleTable'
-], function(Widget) {
-    describe('Test the kbaseExpressionSampleTable widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseExpressionSampleTable'], (Widget) => {
+    describe('Test the kbaseExpressionSampleTable widget', () => {
+        it('Should do things', () => {});
     });
 });

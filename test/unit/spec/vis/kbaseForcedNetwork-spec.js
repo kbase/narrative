@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseForcedNetwork'
-], function(Widget) {
-    describe('Test the kbaseForcedNetwork widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseForcedNetwork'], (Widget) => {
+    describe('Test the kbaseForcedNetwork widget', () => {
+        it('Should do things', () => {});
     });
 });

@@ -12,38 +12,30 @@
  * This uses the Jasmine framework for testing. You can see usage and examples here:
  * https://jasmine.github.io/2.0/introduction.html
  */
-define ([
-    'kbwidget',
-    'bootstrap',
-    'a_module'
-], function(
-    KBWidget,
-    bootstrap,
-    Module
-) {
+define(['kbwidget', 'bootstrap', 'a_module'], (KBWidget, bootstrap, Module) => {
     'use strict';
-    describe('Test the module', function() {
-        var myModule;
+    describe('Test the module', () => {
+        let myModule;
 
         // Some setup code before each individual test (not always necessary).
-        beforeEach(function () {
+        beforeEach(() => {
             myModule = Module.make();
         });
 
         // Some cleanup code after each test (not always necessary).
-        afterEach(function () {
+        afterEach(() => {
             myModule.destroy();
             myModule = null;
         });
 
         // A single test case where the result shouldn't be null.
-        it('Should do stuff', function() {
-            var result = myModule.doStuff();
+        it('Should do stuff', () => {
+            const result = myModule.doStuff();
             expect(result).not.toBeNull();
         });
 
         // A single test case where the result should be any Object.
-        it('Should have things as an object', function () {
+        it('Should have things as an object', () => {
             expect(myModule.things).toEqual(jasmine.any(Object));
         });
     });

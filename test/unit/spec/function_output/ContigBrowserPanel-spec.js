@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'ContigBrowserPanel'
-], function(Widget) {
-    describe('Test the ContigBrowserPanel widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['ContigBrowserPanel'], (Widget) => {
+    describe('Test the ContigBrowserPanel widget', () => {
+        it('Should do things', () => {});
     });
 });

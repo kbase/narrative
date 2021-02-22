@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseSeqCompView'
-], function(Widget) {
-    describe('Test the kbaseSeqCompView widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseSeqCompView'], (Widget) => {
+    describe('Test the kbaseSeqCompView widget', () => {
+        it('Should do things', () => {});
     });
 });

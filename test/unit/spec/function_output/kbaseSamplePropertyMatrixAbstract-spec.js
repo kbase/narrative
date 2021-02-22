@@ -3,12 +3,8 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-define([
-    'kbaseSamplePropertyMatrixAbstract'
-], function(Widget) {
-    describe('Test the kbaseSamplePropertyMatrixAbstract widget', function() {
-        it('Should do things', function() {
-
-        });
+define(['kbaseSamplePropertyMatrixAbstract'], (Widget) => {
+    describe('Test the kbaseSamplePropertyMatrixAbstract widget', () => {
+        it('Should do things', () => {});
     });
 });

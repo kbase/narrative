@@ -1,322 +1,358 @@
 /*global define,describe,it,expect*/
 /*jslint white:true,browser:true*/
-define([
-    'common/fsm'
-], function (Fsm) {
+define(['common/fsm'], (Fsm) => {
     'use strict';
 
-    var simpleStates = [{
+    const simpleStates = [
+            {
                 state: {
-                    mode: 'awake'
+                    mode: 'awake',
                 },
-                next: [{
-                        mode: 'awake'
+                next: [
+                    {
+                        mode: 'awake',
                     },
                     {
-                        mode: 'asleep'
-                    }
-                ]
+                        mode: 'asleep',
+                    },
+                ],
             },
             {
                 state: {
-                    mode: 'asleep'
+                    mode: 'asleep',
                 },
-                next: [{
-                        mode: 'asleep'
+                next: [
+                    {
+                        mode: 'asleep',
                     },
                     {
-                        mode: 'awake'
-                    }
-                ]
-            }
+                        mode: 'awake',
+                    },
+                ],
+            },
         ],
         awakeState = {
             state: {
-                mode: 'awake'
+                mode: 'awake',
             },
-            next: [{
-                    mode: 'awake'
+            next: [
+                {
+                    mode: 'awake',
                 },
                 {
-                    mode: 'asleep'
-                }
-            ]
+                    mode: 'asleep',
+                },
+            ],
         },
         asleepState = {
             state: {
-                mode: 'asleep'
+                mode: 'asleep',
             },
-            next: [{
-                    mode: 'asleep'
+            next: [
+                {
+                    mode: 'asleep',
                 },
                 {
-                    mode: 'awake'
-                }
-            ]
+                    mode: 'awake',
+                },
+            ],
         };
 
-    var statesWithEvents = [{
+    const statesWithEvents = [
+        {
             state: {
-                mode: 'first'
+                mode: 'first',
             },
-            next: [{
-                mode: 'second'
-            }]
+            next: [
+                {
+                    mode: 'second',
+                },
+            ],
         },
         {
             state: {
-                mode: 'second'
+                mode: 'second',
             },
-            next: [{
-                mode: 'last'
-            }],
+            next: [
+                {
+                    mode: 'last',
+                },
+            ],
             on: {
                 enter: {
-                    messages: [{
-                        emit: 'in-second',
-                        message: { test: 'second' }
-                    }]
-                }
-            }
+                    messages: [
+                        {
+                            emit: 'in-second',
+                            message: { test: 'second' },
+                        },
+                    ],
+                },
+            },
         },
         {
             state: {
-                mode: 'last'
-            }
-        }
+                mode: 'last',
+            },
+        },
     ];
 
-    var statesWithEvents2 = [{
+    const statesWithEvents2 = [
+        {
             state: {
-                mode: 'first'
+                mode: 'first',
             },
-            next: [{
-                mode: 'second'
-            }]
+            next: [
+                {
+                    mode: 'second',
+                },
+            ],
         },
         {
             state: {
-                mode: 'second'
+                mode: 'second',
             },
-            next: [{
-                mode: 'last'
-            }],
+            next: [
+                {
+                    mode: 'last',
+                },
+            ],
             on: {
                 exit: {
-                    messages: [{
-                        emit: 'leaving-second',
-                        message: { test: 'second' }
-                    }]
-                }
-            }
+                    messages: [
+                        {
+                            emit: 'leaving-second',
+                            message: { test: 'second' },
+                        },
+                    ],
+                },
+            },
         },
         {
             state: {
-                mode: 'last'
-            }
-        }
+                mode: 'last',
+            },
+        },
     ];
 
-    var statesWithEvents3 = [{
+    const statesWithEvents3 = [
+        {
             state: {
-                mode: 'first'
+                mode: 'first',
             },
-            next: [{
-                mode: 'second'
-            }]
+            next: [
+                {
+                    mode: 'second',
+                },
+            ],
         },
         {
             state: {
-                mode: 'second'
+                mode: 'second',
             },
-            next: [{
-                mode: 'last'
-            }],
+            next: [
+                {
+                    mode: 'last',
+                },
+            ],
             on: {
                 resume: {
-                    messages: [{
-                        emit: 'back-in-second',
-                        message: { test: 'second' }
-                    }]
-                }
-            }
+                    messages: [
+                        {
+                            emit: 'back-in-second',
+                            message: { test: 'second' },
+                        },
+                    ],
+                },
+            },
         },
         {
             state: {
-                mode: 'last'
-            }
-        }
+                mode: 'last',
+            },
+        },
     ];
 
-    var appStates = [{
+    const appStates = [
+        {
             state: {
                 mode: 'editing',
-                params: 'incomplete'
+                params: 'incomplete',
             },
-            next: [{
+            next: [
+                {
                     mode: 'editing',
-                    params: 'complete'
+                    params: 'complete',
                 },
                 {
                     mode: 'editing',
-                    params: 'incomplete'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'editing',
-                params: 'complete'
-            },
-            next: [{
-                mode: 'editing',
-                params: 'complete',
-                code: 'built'
-            }]
+                    params: 'incomplete',
+                },
+            ],
         },
         {
             state: {
                 mode: 'editing',
                 params: 'complete',
-                code: 'built'
             },
-            next: [{
+            next: [
+                {
                     mode: 'editing',
-                    params: 'incomplete'
+                    params: 'complete',
+                    code: 'built',
+                },
+            ],
+        },
+        {
+            state: {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built',
+            },
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
                 },
                 {
                     mode: 'editing',
                     params: 'complete',
-                    code: 'built'
+                    code: 'built',
                 },
                 {
                     mode: 'processing',
-                    stage: 'launching'
-                }
-            ]
+                    stage: 'launching',
+                },
+            ],
         },
         {
             state: {
                 mode: 'processing',
-                stage: 'launching'
+                stage: 'launching',
             },
-            next: [{
+            next: [
+                {
                     mode: 'processing',
-                    stage: 'queued'
+                    stage: 'queued',
                 },
                 {
                     mode: 'processing',
-                    stage: 'launching'
+                    stage: 'launching',
                 },
                 {
                     mode: 'error',
-                    stage: 'launching'
+                    stage: 'launching',
                 },
                 {
                     mode: 'editing',
                     params: 'complete',
-                    code: 'built'
-                }
-            ]
+                    code: 'built',
+                },
+            ],
         },
         {
             state: {
                 mode: 'processing',
-                stage: 'queued'
+                stage: 'queued',
             },
-            next: [{
+            next: [
+                {
                     mode: 'processing',
-                    stage: 'running'
+                    stage: 'running',
                 },
                 {
                     mode: 'processing',
-                    stage: 'queued'
+                    stage: 'queued',
                 },
                 {
                     mode: 'error',
-                    stage: 'queued'
+                    stage: 'queued',
                 },
                 {
                     mode: 'editing',
                     params: 'complete',
-                    code: 'built'
-                }
-            ]
+                    code: 'built',
+                },
+            ],
         },
         {
             state: {
                 mode: 'processing',
-                stage: 'running'
+                stage: 'running',
             },
-            next: [{
-                    mode: 'success'
+            next: [
+                {
+                    mode: 'success',
                 },
                 {
                     mode: 'error',
-                    stage: 'running'
+                    stage: 'running',
                 },
                 {
                     mode: 'editing',
                     params: 'complete',
-                    code: 'built'
-                }
-            ]
+                    code: 'built',
+                },
+            ],
         },
         {
             state: {
-                mode: 'success'
+                mode: 'success',
             },
-            next: [{
-                    mode: 'success'
+            next: [
+                {
+                    mode: 'success',
                 },
                 {
                     mode: 'editing',
                     params: 'complete',
-                    code: 'built'
-                }
-            ]
+                    code: 'built',
+                },
+            ],
         },
         {
             state: {
                 mode: 'error',
-                stage: 'launching'
+                stage: 'launching',
             },
-            next: [{
-                mode: 'editing',
-                params: 'complete',
-                code: 'built'
-            }]
-
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built',
+                },
+            ],
         },
         {
             state: {
                 mode: 'error',
-                stage: 'queued'
+                stage: 'queued',
             },
-            next: [{
-                mode: 'editing',
-                params: 'complete',
-                code: 'built'
-            }]
-
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built',
+                },
+            ],
         },
         {
             state: {
                 mode: 'error',
-                stage: 'running'
+                stage: 'running',
             },
-            next: [{
-                mode: 'editing',
-                params: 'complete',
-                code: 'built'
-            }]
-
-        }
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built',
+                },
+            ],
+        },
     ];
 
-    describe('FSM core functions', function () {
-        it('Is alive', function () {
-            var alive;
+    describe('FSM core functions', () => {
+        it('Is alive', () => {
+            let alive;
             if (Fsm) {
                 alive = true;
             } else {
@@ -344,57 +380,54 @@ define([
         //        });
     });
 
-    describe('Operations on a simple FSM', function () {
-        it('Create with an FSM', function () {
-            var states = simpleStates,
+    describe('Operations on a simple FSM', () => {
+        it('Create with an FSM', () => {
+            const states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: { mode: 'asleep' }
+                    initialState: { mode: 'asleep' },
                 });
             expect(fsm).toBeTruthy();
         });
 
-        it('Find a state', function () {
-            var states = simpleStates,
+        it('Find a state', () => {
+            const states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: { mode: 'awake' }
+                    initialState: { mode: 'awake' },
                 }),
                 found = fsm.findState({ mode: 'awake' });
 
             expect(found).toEqual(awakeState);
         });
 
-        it('Initialize the state machine, should be on initial state.', function () {
-            var states = simpleStates,
+        it('Initialize the state machine, should be on initial state.', () => {
+            const states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: { mode: 'awake' }
+                    initialState: { mode: 'awake' },
                 });
             fsm.start();
-
 
             expect(fsm.getCurrentState()).toEqual(awakeState);
         });
 
-        it('Initialize the state machine, start on a different state.', function () {
-            var states = simpleStates,
+        it('Initialize the state machine, start on a different state.', () => {
+            const states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: { mode: 'awake' }
+                    initialState: { mode: 'awake' },
                 });
             fsm.start({ mode: 'asleep' });
 
-
             expect(fsm.getCurrentState()).toEqual(asleepState);
         });
 
-
-        it('Move to another state.', function () {
-            var states = simpleStates,
+        it('Move to another state.', () => {
+            const states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: { mode: 'awake' }
+                    initialState: { mode: 'awake' },
                 });
             fsm.start();
             fsm.newState({ mode: 'asleep' });
@@ -402,11 +435,11 @@ define([
             expect(fsm.getCurrentState()).toEqual(asleepState);
         });
 
-        it('Move through a sequence of states.', function () {
-            var states = simpleStates,
+        it('Move through a sequence of states.', () => {
+            const states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: { mode: 'awake' }
+                    initialState: { mode: 'awake' },
                 });
             fsm.start();
             fsm.newState({ mode: 'asleep' });
@@ -417,11 +450,11 @@ define([
             expect(fsm.getCurrentState()).toEqual(awakeState);
         });
 
-        it('Move into an invalid state.', function () {
-            var states = simpleStates,
+        it('Move into an invalid state.', () => {
+            const states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: { mode: 'awake' }
+                    initialState: { mode: 'awake' },
                 });
             fsm.start();
 
@@ -432,15 +465,15 @@ define([
             expect(invalid).toThrow();
         });
 
-        it('Move to another state with notification.', function (done) {
-            var states = simpleStates,
+        it('Move to another state with notification.', (done) => {
+            const states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
                     initialState: { mode: 'awake' },
                     onNewState: function (fsm) {
                         expect(fsm.getCurrentState()).toEqual(asleepState);
                         done();
-                    }
+                    },
                 });
             fsm.start();
             fsm.newState({ mode: 'asleep' });
@@ -448,24 +481,24 @@ define([
             // expect(fsm.getCurrentState()).toEqual(asleepState);
         });
 
-        it('Sends a message when entering a state', function (done) {
-            var fsm = Fsm.make({
-                    states: statesWithEvents,
-                    initialState: { mode: 'first' }
-                });
-            fsm.bus.on('in-second', function (message) {
+        it('Sends a message when entering a state', (done) => {
+            const fsm = Fsm.make({
+                states: statesWithEvents,
+                initialState: { mode: 'first' },
+            });
+            fsm.bus.on('in-second', (message) => {
                 expect(message.test).toEqual('second');
                 done();
             });
             fsm.start();
             fsm.newState({ mode: 'second' });
         });
-        it('Sends a message when exiting a state', function (done) {
-            var fsm = Fsm.make({
+        it('Sends a message when exiting a state', (done) => {
+            const fsm = Fsm.make({
                 states: statesWithEvents2,
-                initialState: { mode: 'first' }
+                initialState: { mode: 'first' },
             });
-            fsm.bus.on('leaving-second', function (message) {
+            fsm.bus.on('leaving-second', (message) => {
                 expect(message.test).toEqual('second');
                 done();
             });
@@ -473,19 +506,16 @@ define([
             fsm.newState({ mode: 'second' });
             fsm.newState({ mode: 'last' });
         });
-        it('Sends a message when resuming a state', function (done) {
-            var fsm = Fsm.make({
-                    states: statesWithEvents3,
-                    initialState: { mode: 'second' }
-                });
-            fsm.bus.on('back-in-second', function (message) {
+        it('Sends a message when resuming a state', (done) => {
+            const fsm = Fsm.make({
+                states: statesWithEvents3,
+                initialState: { mode: 'second' },
+            });
+            fsm.bus.on('back-in-second', (message) => {
                 expect(message.test).toEqual('second');
                 done();
             });
             fsm.start();
         });
-
-
     });
-
 });

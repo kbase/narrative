@@ -1,14 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseExpressionSparkline'
-], function(Widget) {
-    describe('Test the kbaseExpressionSparkline widget', function() {
-        it('Should do things', function() {
-
+define(['kbaseExpressionSparkline'], (Widget) => {
+    'use strict';
+    describe('The kbaseExpressionSparkline widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

@@ -1,5 +1,4 @@
 /*global define, document*/
-/*jslint white:true,browser:true,devel:true*/
 /*eslint-env browser*/
 
 /**

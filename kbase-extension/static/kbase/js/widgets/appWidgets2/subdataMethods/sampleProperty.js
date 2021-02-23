@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 define([
 ], () => {
@@ -7,11 +6,11 @@ define([
 
     function factory(config) {
         // PRIVATE
-        
+
         function getSampleProperties (columnsMetadata) {
             const samplePropertiesHash = {};
             console.log('column metadata', columnsMetadata);
-            Object.keys(columnsMetadata).forEach((columnId) => {                
+            Object.keys(columnsMetadata).forEach((columnId) => {
                 let columnMetadata = columnsMetadata[columnId],
                     seriesID = null,
                     propName = null;
@@ -38,12 +37,12 @@ define([
                 return a.text > b.text ? 1 : -1;
             });
         }
-        
+
         // PUBLIC
-        
+
         function extractItems(result, params) {
             const columnMetadata = result[0].data.metadata.column_metadata;
-            
+
             return getSampleProperties(columnMetadata);
         }
 

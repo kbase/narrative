@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 define([
     'jquery',
     'narrativeConfig',
@@ -178,8 +177,8 @@ define([
 //                }
 //                if (data.enabled) {
 //                    self.$jobStateIcon.html(makeIcon({
-//                        class: 'wifi', 
-//                        color: 'orange', 
+//                        class: 'wifi',
+//                        color: 'orange',
 //                        spin: true,
 //                        label: 'Sending'
 //                    }));
@@ -203,9 +202,9 @@ define([
                 $(this).trigger('toggle.toolbar');
             });
 
-            /* 
+            /*
              * Each cell type unfortunately has a different top level layout.
-             * Not that it matters, but I don't see why there isn't a uniform layout 
+             * Not that it matters, but I don't see why there isn't a uniform layout
              * for the primary layout areas - prompt, toolbar, body, as they exist
              * now, and another nice one would be a message/notification area.
              */

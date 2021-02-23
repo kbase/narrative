@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true */
 define([
 ], () => {
     'use strict';
@@ -29,13 +28,13 @@ define([
                         nunjucks: 'nunjucks/2.4.1/nunjucks',
                         plotly: 'plotly/1.5.0/plotly',
                         uuid: 'pure-uuid/1.3.0/uuid',
-                        
-                        
+
+
                         // require plugins
                         css: 'require-css/0.1.8/css',
                         text: 'requirejs-text/2.0.14/text',
                         yaml: 'require-yaml/0.1.2/yaml',
-                            
+
                         // kbase
                         'kb_service': 'kbase-service-clients-js/1.4.0',
                         'kb_common': 'kbase-common-js/1.5.3',
@@ -76,12 +75,12 @@ define([
                         nunjucks: 'nunjucks/2.4.1/nunjucks',
                         plotly: 'plotly/1.5.0/plotly',
                         uuid: 'pure-uuid/1.3.0/uuid',
-                        
+
                         // require plugins
                         css: 'require-css/0.1.8/css',
                         text: 'requirejs-text/2.0.14/text',
                         yaml: 'require-yaml/0.1.2/yaml',
-                            
+
                         // kbase
                         // kbase
                         'kb_service': 'kbase-service-clients-js/1.4.0',
@@ -102,12 +101,12 @@ define([
                 }
             }
         };
-        
+
         // Fix up the paths one time, based on the cdn base url.
         // This is done because the requirejs object produced by the client
-        // will be localized to itself (e.g. widget) so we don't want to 
+        // will be localized to itself (e.g. widget) so we don't want to
         // set the base url here to the cdn.
-        Object.keys(runtimes).forEach((version) => {            
+        Object.keys(runtimes).forEach((version) => {
             const newMap = {},
                 runtime = runtimes[version];
             Object.keys(runtime.amd.paths).forEach((moduleName) => {
@@ -123,7 +122,7 @@ define([
             }
             return runtime;
         }
-        
+
         function getModuleLoader(version, baseRequire, baseUrl) {
             const runtime = getRuntime(version);
             return baseRequire.config({

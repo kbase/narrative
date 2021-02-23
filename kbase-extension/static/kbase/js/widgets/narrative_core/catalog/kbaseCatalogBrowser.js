@@ -1,10 +1,6 @@
 /*global
  define
  */
-/*jslint
- browser: true,
- white: true
- */
 define ([
     'kbwidget',
     'bootstrap',

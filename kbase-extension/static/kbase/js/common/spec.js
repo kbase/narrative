@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint browser:true,white:true,single:true */
 
 /*
  * Provides app spec functionality.

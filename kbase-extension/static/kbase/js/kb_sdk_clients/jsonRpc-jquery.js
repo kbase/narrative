@@ -1,5 +1,4 @@
 /*global define */
-/*jslint white:true,browser:true*/
 define(['jquery', 'bluebird', './exceptions'], ($, Promise, exceptions) => {
     'use strict';
 
@@ -21,7 +20,7 @@ define(['jquery', 'bluebird', './exceptions'], ($, Promise, exceptions) => {
                 xhr.setRequestHeader('Authorization', options.authorization);
             };
         }
-        
+
         return new Promise((resolve, reject) => {
             $.ajax({
                 url: url,

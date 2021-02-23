@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'bluebird',
@@ -578,7 +577,7 @@ define([
                 setSearchMessage('filter applied');
             } else {
                 if (filterLength > 0 && minimumFilterLength > 0) {
-                    setSearchMessage('Enter ' + 
+                    setSearchMessage('Enter ' +
                         (minimumFilterLength - e.target.value.length) +
                         ' more character to filter');
                 } else {
@@ -618,12 +617,12 @@ define([
                                 class: 'col-md-6'
                             }, [
                                 span({ dataElement: 'search-box' }),
-                                span({ 
+                                span({
                                     style: {
                                         marginLeft: '4px',
                                         fontStyle: 'italic'
-                                    }, 
-                                    dataElement: 'search-message' 
+                                    },
+                                    dataElement: 'search-message'
                                 })
                             ]),
                             div({

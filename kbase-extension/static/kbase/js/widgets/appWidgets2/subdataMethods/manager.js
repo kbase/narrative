@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 define([
     'handlebars',
@@ -153,7 +152,7 @@ define([
                             });
                         });
                     } else  {
-                        console.error(`subdata must be should be either an array or object 
+                        console.error(`subdata must be should be either an array or object
                                        but was ${typeof subdata}`)
                     }
                 });

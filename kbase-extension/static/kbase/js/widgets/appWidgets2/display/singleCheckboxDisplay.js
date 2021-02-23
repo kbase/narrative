@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -59,7 +58,7 @@ define([
 //                container.innerHTML = result.content;
             });
         }
-        
+
         model = Props.make({
             onUpdate: function (props) {
                 render();

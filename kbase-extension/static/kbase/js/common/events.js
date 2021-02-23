@@ -1,5 +1,4 @@
 /*global define,console*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'kb_common/html'
@@ -56,7 +55,7 @@ define([
             return id;
         }
         function attachEvents(eventsRoot) {
-            const root = globalRoot || eventsRoot;            
+            const root = globalRoot || eventsRoot;
             events.forEach((event) => {
                 const node = root.querySelector(event.selector);
                 if (!node) {

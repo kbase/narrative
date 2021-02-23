@@ -1,4 +1,3 @@
-/*jslint white:true,browser:true*/
 /**
  * Usage:
  * let viewer = JobLogViewer.make();

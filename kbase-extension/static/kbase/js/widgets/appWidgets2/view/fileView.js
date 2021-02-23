@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'jquery',
@@ -70,7 +69,7 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-        // CONTROL 
+        // CONTROL
 
         function setControlValue(newValue) {
             ui.getElement('input-container.input').value = newValue;

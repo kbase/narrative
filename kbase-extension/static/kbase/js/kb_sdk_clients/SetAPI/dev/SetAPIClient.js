@@ -1,5 +1,4 @@
 /*global define */
-/*jslint white:true, browser:true, jsnomen:true*/
 define([
     '../../jsonRpc-native'
 ], (jsonRpc) => {
@@ -14,7 +13,7 @@ define([
      *   token - auth token
      *   username - username
      * auth_cb - function which returns the above value
-     * async_job_check_time_ms - unused? 
+     * async_job_check_time_ms - unused?
      */
     function SetAPI(arg) {
         // Establish an auth object which has properties token and user_id.
@@ -26,7 +25,7 @@ define([
             // REALLY??
             auth = arg.auth || {};
         }
-        
+
         if (!arg.url) {
             throw new Error('The service discovery url was not provided');
         }
@@ -64,7 +63,7 @@ define([
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
-        
+
         /*
          * ref
          */
@@ -90,7 +89,7 @@ define([
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
- 
+
         /*
          * ref
          */
@@ -119,5 +118,3 @@ define([
     }
     return SetAPI;
 });
-
- 

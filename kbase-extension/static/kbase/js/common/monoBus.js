@@ -1,5 +1,4 @@
 /*global define */
-/*jslint white:true,global:true*/
 /*
  * MonoBus
  * One bus to rule them all...

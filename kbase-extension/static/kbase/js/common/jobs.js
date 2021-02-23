@@ -1,5 +1,4 @@
 /*global define,console*/
-/*jslint white:true,browser:true*/
 
 define([
     'bluebird',

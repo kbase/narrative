@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true,nomen:true*/
 
 /**
  * This is the entrypoint module for the job status / log viewer tab of the app cell.

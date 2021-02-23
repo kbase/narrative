@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'kb_common/html'
 ], (html) => {
@@ -44,7 +43,7 @@ define([
                 ])
             ].join('\n');
         }
-        
+
         function xxlayout() {
             return  [
                 div({class: 'row'}, [
@@ -57,7 +56,7 @@ define([
                 ])
             ].join('\n');
         }
-        
+
         function layout() {
             return div({id: wrappedId});
         }

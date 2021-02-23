@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
@@ -34,15 +33,15 @@ define (
         // properties inherited from kbaseNarrativeParameterInput
         // $mainPanel:null,
         // spec:null,
-        
+
         enabled: true,
         required: true,
         rowDivs: null,
-        
+
         render: function() {
             const self = this;
             const spec = self.spec;
-            
+
             // check if we need to allow multiple values
             let allow_multiple = false;
             if (spec.allow_multiple) {
@@ -50,21 +49,21 @@ define (
                     allow_multiple = true;
                 }
             }
-            
+
             self.rowDivs = [];
             if (!allow_multiple) {
-                // just one field, phew, this one should be easy    
+                // just one field, phew, this one should be easy
                 const d = spec.default_values;
-                
+
                 // check if this is a required field
                 self.required= true;
                 if (spec.optional) {
                     self.required=false;
                 }
-                
+
                 const defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] : "";
                 const form_id = spec.id;
-                
+
                 let rows = 3; let placeholder="";
                 if(spec.textarea_options) {
                     if (spec.textarea_options.n_rows) {
@@ -80,12 +79,12 @@ define (
                                 .attr('placeholder',placeholder)
                                 .append(defaultValue)
                                 .on("input",() => { self.isValid() });
-                
+
                 const $feedbackTip = $("<span>").removeClass();
                 if (self.required) {
                     $feedbackTip.addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
                 }
-                
+
                 // set the widths of the columns
                 let nameColClass  = "col-md-2";
                 let inputColClass = "col-md-5";
@@ -95,7 +94,7 @@ define (
                     inputColClass = "col-md-12";
                     hintColClass  = "col-md-12";
                 }
-                
+
                 const $row = $('<div>').addClass("row kb-method-parameter-row")
                                 .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
                 const $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
@@ -112,32 +111,32 @@ define (
 					.tooltip({title:spec.description, html:true, container: 'body'}));
 		}
                 $row.append($nameCol).append($inputCol).append($hintCol);
-                
+
                 const $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
                 const $errorRow = $('<div>').addClass('row')
                                     .append($('<div>').addClass(nameColClass))
                                     .append($errorPanel.addClass(inputColClass));
-                
+
                 self.$mainPanel.append($row);
                 self.$mainPanel.append($errorRow);
                 self.rowDivs.push({$row:$row, $error:$errorPanel, $feedback:$feedbackTip});
-                
+
                 this.isValid();
-                
+
             } else {
                 // need to handle multiple fields- do something better!
                 self.$mainPanel.append("<div>multiple dropdown fields not yet supported</div>");
             }
         },
-        
-        
+
+
         refresh: function() {
             // we don't allow types in textareas, so we don't have to refresh
         },
 
-        
-        
-        
+
+
+
         /*
          * This is called when this method is run to allow you to check if the parameters
          * that the user has entered is correct.  You need to return an object that indicates
@@ -167,7 +166,7 @@ define (
                     errorDetected = true;
                     errorMessages.push("required field "+self.spec.ui_name+" missing.");
                 }
-                
+
                 // no error, so we hide the error if any, and show the "accepted" icon if it is not empty
                 if (!errorDetected) {
                     if (self.rowDivs[0]) {
@@ -182,7 +181,7 @@ define (
             }
             return { isValid: !errorDetected, errormssgs:errorMessages};
         },
-        
+
         /*
          * Necessary for Apps to disable editing parameters that are automatically filled
          * from a previous step.  Returns nothing.
@@ -196,7 +195,7 @@ define (
                 this.rowDivs[0].$feedback.removeClass();
             }
         },
-        
+
         /*
          * Allows those parameters to be renabled, which may be an option for advanced users.
          */
@@ -206,8 +205,8 @@ define (
             this.$elem.find("#"+this.spec.id).prop('disabled', false);
             this.isValid();
         },
-        
-        
+
+
         lockInputs: function() {
             if (this.enabled) {
                 this.$elem.find("#"+this.spec.id).prop('disabled',true);
@@ -224,11 +223,11 @@ define (
             }
             this.isValid();
         },
-        
+
         addInputListener: function(onChangeFunc) {
             this.$elem.find("#"+this.spec.id).on("input",onChangeFunc);
         },
-        
+
         /*
          * An App (or a narrative that needs to auto populate certain fields) needs to set
          * specific parameter values based on the App spec, so we need a way to do this.
@@ -239,7 +238,7 @@ define (
             this.$elem.find("#"+this.spec.id).val(value);
             this.isValid();
         },
-        
+
         /*
          * We need to be able to retrieve any parameter value from this method.  Valid parameter
          * values may be strings, numbers, objects, or lists, but must match what is declared
@@ -254,6 +253,6 @@ define (
 	    }
             return value;
         }
-        
+
     });
 });

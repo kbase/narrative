@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -54,16 +53,16 @@ define([
                 unsetModel();
             }
         }
-        
+
         function exportModel() {
             const kvMap = {};
             Object.keys(model.value).forEach((id) => {
                 const kv = model.value[id];
-                kvMap[kv.key] = kv.value;                
+                kvMap[kv.key] = kv.value;
             });
             return kvMap;
         }
-        
+
         // MODEL ITEMS
 
         function setModelValue(key, value, id) {
@@ -75,7 +74,7 @@ define([
                     key: key,
                     value: value
                 };
-                
+
             })
                 .then(() => {
                     render();
@@ -123,7 +122,7 @@ define([
         function setKeyValue(id, newKeyValue) {
             model.value[id].key = newKeyValue;
         }
-        
+
         function doChangeKey(id, newKeyValue) {
             try {
                 setKeyValue(id, newKeyValue);
@@ -176,7 +175,7 @@ define([
                 ])
             ]);
         }
-        
+
          function makeNewKeyValueControl(key, value, events) {
             return div({style: {
                 dataElement: 'control',
@@ -204,7 +203,7 @@ define([
                 ])
             ]);
         }
-        
+
         function makeSingleInputControl(key, value, id, index, events, bus) {
             // CONTROL
             let preButton, postButton,
@@ -263,7 +262,7 @@ define([
                 style: {width: '4ex'},
                 dataKey: key,
                 id: events.addEvent({type: 'click', handler: function (e) {
-                        // no, we don't need to consult the control, we just remove 
+                        // no, we don't need to consult the control, we just remove
                         // it...
                         delete model.value[id];
                         // model.value.splice(widgetWrapper.index, 1);
@@ -277,7 +276,7 @@ define([
                         render();
                     }})
             }, 'x'));
-            
+
             return div({dataElement: 'input-row', dataKey: String(key), style: {width: '100%'}}, [
                 div({class: 'input-group'}, [
                     preButton,
@@ -286,7 +285,7 @@ define([
                 ])
             ]);
         }
-        
+
         function findParent(node, matcher) {
             let parent = node.parentNode;
             while (parent) {
@@ -294,9 +293,9 @@ define([
                     return parent;
                 }
                 parent = parent.parentNode;
-            } 
+            }
         }
-        
+
         function doAddNewItem(event) {
             const control = findParent(event.target, (node) => {
                 return node.getAttribute('data-element') === 'input-row';
@@ -309,14 +308,14 @@ define([
                     bus.emit('changed', {
                         newValue: exportModel()
                     });
-                })                
+                })
                 .then(() => {
                     render();
                 })
                 .catch((err) => {
                     alert(err.message);
                 });
-            
+
         }
 
         function makeNewInputControl(key, value,  events, bus) {
@@ -374,7 +373,7 @@ define([
         }
 
         function makeInputControl(events, bus) {
-            
+
             // get all keys
             const kvs = Object.keys(model.value).map((id) => {
                 const kv = model.value[id];
@@ -384,7 +383,7 @@ define([
                     value: kv.value
                 };
             }).sort((a, b) => {
-                if (a.key < b.key) { 
+                if (a.key < b.key) {
                     return -1;
                 }
                 if (a.key > b.key) {
@@ -392,13 +391,13 @@ define([
                 }
                 return 0;
             });
-            
+
             console.log('kvs?', kvs);
-                
-            
+
+
             // order them
             // iterate, over them, adding one input control at a time.
-            let items = kvs.map((kv, index) => {                
+            let items = kvs.map((kv, index) => {
                 return makeSingleInputControl(kv.key, kv.value, kv.id, index, events, bus);
             });
 
@@ -457,7 +456,7 @@ define([
                 return validate(rawValue);
             }))
                 .then((results) => {
-                    // a bit of a hack -- we need to handle the 
+                    // a bit of a hack -- we need to handle the
                     // validation here, and update the individual rows
                     // for now -- just create one mega message.
                     let errorMessages = [],

@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 define (
 	[
 		'kbwidget',

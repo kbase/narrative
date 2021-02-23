@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * Input widget for import NCBI genomes into workspace.
  * @author Roman Sutormin <rsutormin@lbl.gov>
@@ -109,7 +108,7 @@ define (
         /**
          * Returns an object representing the state of this widget.
          * In this particular case, it is a list of key-value pairs, like this:
-         * { 
+         * {
          *   'param0' : 'parameter value',
          *   'param1' : 'parameter value'
          * }
@@ -222,9 +221,9 @@ define (
             const pid = 'param0';
             const $input = $($(this.$elem).find("[name=" + pid + "]"));
             const self = this;
-            
-            const request = $.getJSON('static/kbase/js/widgets/function_input/ncbi_genome2ftp.json');            
-            
+
+            const request = $.getJSON('static/kbase/js/widgets/function_input/ncbi_genome2ftp.json');
+
             //kbws.list_referencing_objects([objectIdentity], function(data) {
             $.when(request).done((data) => {
                 const objList = [];
@@ -249,7 +248,7 @@ define (
                 console.error(err);
             });
         },
-        
+
         genUUID: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
                 const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);

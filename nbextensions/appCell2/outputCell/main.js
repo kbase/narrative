@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 define([
     'bluebird',
@@ -80,7 +79,7 @@ define([
             const setupData = payload.data;
             const jupyterCellType = payload.type;
             if (jupyterCellType === 'code' &&
-                setupData && 
+                setupData &&
                 setupData.type === 'output') {
                 upgradeCell(cell)
                     .then(() => {
@@ -94,7 +93,7 @@ define([
                     });
             }
         });
-        
+
         Jupyter.notebook.get_cells().forEach((cell) => {
             try {
                 setupCell(cell);

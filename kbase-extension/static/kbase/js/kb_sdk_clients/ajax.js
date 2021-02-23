@@ -1,5 +1,4 @@
 /*global define */
-/*jslint white: true */
 define([
     'bluebird',
     './exceptions'
@@ -26,7 +25,7 @@ define([
                     }
                 }
             };
-            
+
             xhr.ontimeout = function () {
                 const elapsed = (new Date()) - startTime;
                 reject(new exceptions.TimeoutException(timeout, elapsed, 'Request timeout', xhr));
@@ -46,7 +45,7 @@ define([
                 reject(new exceptions.RequestException('Error opening request', xhr));
             }
 
-            try {                
+            try {
                 if (options.header) {
                     Object.keys(options.header).forEach((key) => {
                         xhr.setRequestHeader(key, options.header[key]);
@@ -56,7 +55,7 @@ define([
                     xhr.responseType = options.responseType;
                 }
                 xhr.withCredentials = options.withCredentials || false;
-                
+
                 // We support two types of data to send ... strings or int (byte) buffers
                 if (typeof options.data === 'string') {
                     xhr.send(options.data);
@@ -70,7 +69,7 @@ define([
             }
         });
     }
-    
+
     function get(options) {
         const timeout = options.timeout || 60000,
             startTime = new Date();
@@ -83,7 +82,7 @@ define([
                 if (xhr.status >= 500) {
                     reject(new exceptions.ServerException(xhr.status, 'Server Error', xhr));
                 }
-                
+
                 // var buf = new Uint8Array(xhr.response);
                 try {
                     resolve(xhr.response);
@@ -91,7 +90,7 @@ define([
                     reject(ex);
                 }
             };
-            
+
             xhr.ontimeout = function () {
                 const elapsed = (new Date()) - startTime;
                 reject(new exceptions.TimeoutException(timeout, elapsed, 'Request timeout', xhr));
@@ -111,7 +110,7 @@ define([
             }
 
             try {
-                
+
                 if (options.header) {
                     Object.keys(options.header).forEach((key) => {
                         xhr.setRequestHeader(key, options.header[key]);
@@ -121,7 +120,7 @@ define([
                     xhr.responseType = options.responseType;
                 }
                 xhr.withCredentials = options.withCredentials || false;
-                
+
                 // We support two types of data to send ... strings or int (byte) buffers
                 xhr.send();
             } catch (ex) {

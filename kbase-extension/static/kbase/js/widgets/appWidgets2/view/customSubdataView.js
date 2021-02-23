@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'bluebird',
@@ -857,8 +856,8 @@ define([
                 resetModelValue();
             }
 
-            // If we have a change in the primary reference object, we need to 
-            // resync the values derived from it (available values).            
+            // If we have a change in the primary reference object, we need to
+            // resync the values derived from it (available values).
             if (paramId === subdataInfo.params.referenceObject) {
                 model.setItem('referenceObjectName', newValue);
                 return syncAvailableValues();

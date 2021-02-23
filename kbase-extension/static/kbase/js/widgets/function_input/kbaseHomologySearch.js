@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * @author Harry Yoo <hsyoo@anl.gov>
  * @public

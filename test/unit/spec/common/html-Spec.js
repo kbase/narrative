@@ -1,4 +1,3 @@
-/*jslint white:true,browser:true*/
 define([
     'common/html'
 ], (html) => {

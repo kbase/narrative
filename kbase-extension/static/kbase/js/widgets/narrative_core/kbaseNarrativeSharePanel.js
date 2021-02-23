@@ -1,5 +1,4 @@
 /*global define, Workspace*/
-/*jslint white: true*/
 /**
  * Widget for viewing and modifying narrative share settings
  * @author Michael Sneddon <mwsneddon@lbl.gov>, Bill Riehl <wjriehl@lbl.gov>
@@ -52,7 +51,7 @@ define ([
             this.$mainPanel = $('<div style="text-align:center">');
             this.$elem.append(this.$mainPanel);
             this.showWorking('loading narrative information');
-            
+
             if (!this.options.ws_name_or_id) {
                 //fail!
             }
@@ -85,7 +84,7 @@ define ([
         },
 
         /**
-         * fetch organizations that user is associated. 
+         * fetch organizations that user is associated.
          * @param {string} token  authorization token
          */
         fetchOrgs: function(token) {
@@ -133,7 +132,7 @@ define ([
                 .catch(error => console.error('Error while fetching group info:', error));
         },
         /**
-         * fetch organizations that workspace is associated. 
+         * fetch organizations that workspace is associated.
          * @param {int} wsID workspace id
          * @param {string} token  authorization token
          */
@@ -364,7 +363,7 @@ define ([
 
                 // if there are orgs already associated with the narrative, add the org list.
                 if(this.narrativeOrgList){
-                    var $narrativeOrgsDiv = $('<table>').css({'border': '1px solid rgb(170, 170, 170)', 'border-radius': '4px', 'text-align': 'left', 'width': '51%', 'padding': '10px', 'margin': 'auto', 'margin-top': '10px'});                    
+                    var $narrativeOrgsDiv = $('<table>').css({'border': '1px solid rgb(170, 170, 170)', 'border-radius': '4px', 'text-align': 'left', 'width': '51%', 'padding': '10px', 'margin': 'auto', 'margin-top': '10px'});
                     this.narrativeOrgList.forEach((value, key, map) => {
                         const url = window.location.origin + "/#org/" + key;
                         const $href = $('<a>').attr("href", url);
@@ -374,7 +373,7 @@ define ([
                         $narrativeOrgsDiv.append($tr);
                     })
                 }
-                
+
                 $shareWithOrgDiv.append($addOrgDiv); // put addOrgDiv into shareWithOrgDiv
                 $shareWithOrgDiv.append($narrativeOrgsDiv); // put list of narrative div
             } else {

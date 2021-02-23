@@ -1,4 +1,3 @@
-/*jslint white:true,browser:true*/
 /**
  * Uses the user's login information to initialize the IPython environment.
  * This should be one of the very first functions to be run on the page, as it sets up

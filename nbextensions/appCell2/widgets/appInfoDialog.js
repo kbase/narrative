@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 /**
  * Creates an informational panel for Apps, based on some general app info.
  * Needs the following keys in its config:
@@ -54,7 +53,7 @@ define([
                 ]),
                 //div([
                 //    'ID: ', span({class: 'value'}, data.id)
-                //]),                
+                //]),
                 div([
                     'Tag: ', span({ class: 'value' }, data.tag)
                 ]),

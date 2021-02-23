@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * "Download" panel for each element in data list panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>

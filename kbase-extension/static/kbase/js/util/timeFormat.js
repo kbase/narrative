@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * A few utility functions. These are kinda unrelated, but used in several places.
  *

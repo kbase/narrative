@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 /*
  * Okay, I give in.
@@ -8,7 +7,7 @@
  * Our models are aware of the app spec, though, that is how they
  * configure their properties, validation, and relationships.
  * Data operations are custom coded here, though.
- * 
+ *
  */
 
 define([
@@ -43,12 +42,12 @@ define([
                     if (!data[0]) {
                         throw new Error('App not found');
                     }
-                    // Just keep a copy around for debugging.                    
+                    // Just keep a copy around for debugging.
                     // appSpec = data[0];
 
                     return data[0];
 
-                    // Now 
+                    // Now
 
                     // Get an input field widget per parameter
 
@@ -62,9 +61,9 @@ define([
                     //                        });
                     //                    env.parameters = parameters;
                     //                    env.parameterMap = parameterMap;
-                    //                    
-                    //                    
-                    //                   
+                    //
+                    //
+                    //
                     //                    return parameters;
                 });
         }

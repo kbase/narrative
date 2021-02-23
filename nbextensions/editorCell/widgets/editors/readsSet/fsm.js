@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint browser:true,white:true*/
 
 define([], () => {
     const fsm = [{
@@ -139,7 +138,7 @@ define([], () => {
         },
         // In the incomplete changed state, the editor has no pending
         // changes (touched), the model has been updated,
-        // but we can't save it yet because it is incomplete. 
+        // but we can't save it yet because it is incomplete.
         {
             state: {
                 mode: 'editing',

@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'bluebird',
@@ -105,12 +104,12 @@ define([
         function buildCount() {
             const availableValues = model.getItem('availableValues') || [],
                 value = model.getItem('value') || null;
-            
+
             if (value) {
                 return  '1 / ' + String(availableValues.length) + ' items';
             } else {
                 return  '0 / ' + String(availableValues.length) + ' items';
-                
+
             }
         }
 
@@ -177,12 +176,12 @@ define([
          * Given an existing input control, and new model state, update the
          * control to suite the new data.
          * Cases:
-         * 
+         *
          * - change in source data - fetch new data, populate available values,
          *   reset selected values, remove existing options, add new options.
-         *   
+         *
          * - change in selected items - remove all selections, add new selections
-         * 
+         *
          */
         function updateInputControl(changedProperty) {
             switch (changedProperty) {
@@ -226,7 +225,7 @@ define([
             }
             let input = control.selectedOptions,
                 i, values = [];
-            
+
             if (control.selectedOptions.length === 0) {
                 return;
             }

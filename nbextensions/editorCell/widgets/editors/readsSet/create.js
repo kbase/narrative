@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 define([
     'bluebird',
@@ -197,7 +196,7 @@ define([
                         div({ dataElement: 'fields' })
                     ])
                     //                    ui.buildPanel({
-                    //                        title: span(['EDITOR', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 
+                    //                        title: span(['EDITOR', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]),
                     //                        name: 'field-area',
                     //                        body: div({dataElement: 'fields'}),
                     //                        classes: ['kb-panel-light']
@@ -348,7 +347,7 @@ define([
                     model.setItem('appSpec', message.appSpec);
                     model.setItem('parameters', message.parameters);
 
-                    // TODO: this should be a promise, or emit an event at the 
+                    // TODO: this should be a promise, or emit an event at the
                     // conclusion which triggers a render.
                     bus.emit('reset-to-defaults');
 

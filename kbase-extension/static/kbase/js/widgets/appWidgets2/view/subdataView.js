@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'bluebird',
@@ -116,7 +115,7 @@ define([
             }
             const re = new RegExp(filter, 'i');
             return items.filter((item) => {
-                // TODO: better filtering, but need support from the 
+                // TODO: better filtering, but need support from the
                 // subdata generators (../subdataMethods) to expose the individual
                 // fields. Or, strip out any html from here.
                 if (item.text && item.text.match(re)) {
@@ -495,7 +494,7 @@ define([
         function doLastPage() {
             setPageStart(model.getItem('filteredAvailableItems').length);
         }
-       
+
         function doSearchKeyUp(e) {
             const filterLength = e.target.value.length;
             if (filterLength >= minimumFilterLength) {
@@ -504,7 +503,7 @@ define([
                 setSearchMessage('filter applied');
             } else {
                 if (filterLength > 0 && minimumFilterLength > 0) {
-                    setSearchMessage('Enter ' + 
+                    setSearchMessage('Enter ' +
                         (minimumFilterLength - e.target.value.length) +
                         ' more character to filter');
                 } else {
@@ -545,12 +544,12 @@ define([
                                 class: 'col-md-6'
                             }, [
                                 span({ dataElement: 'search-box' }),
-                                span({ 
+                                span({
                                     style: {
                                         marginLeft: '4px',
                                         fontStyle: 'italic'
-                                    }, 
-                                    dataElement: 'search-message' 
+                                    },
+                                    dataElement: 'search-message'
                                 })
                             ]),
                             div({
@@ -889,7 +888,7 @@ define([
          *
          */
 
-         
+
 
         // LIFECYCLE API
 

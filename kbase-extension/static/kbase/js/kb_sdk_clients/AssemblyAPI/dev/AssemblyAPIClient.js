@@ -1,5 +1,4 @@
 /*global define */
-/*jslint white:true,browser:true,jsnomen:true*/
 define([
     '../../jsonRpc-native'
 ], (jsonRpc) => {
@@ -14,7 +13,7 @@ define([
         } else {
             auth = arg.auth || {};
         }
-        
+
         if (!arg.url) {
             console.error('ERROR', arg);
             throw new Error('The service discovery url was not provided');
@@ -162,7 +161,7 @@ define([
             return this.lookupModule()
                 .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });            
+                });
         };
 
 
@@ -176,7 +175,7 @@ define([
             return this.lookupModule()
                 .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                }); 
+                });
         };
 
 
@@ -190,13 +189,13 @@ define([
             return this.lookupModule()
                 .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                }); 
+                });
 
         };
 
 
         /*
-         * 
+         *
          */
         this.status = function () {
             const params = Array.prototype.slice.call(arguments),

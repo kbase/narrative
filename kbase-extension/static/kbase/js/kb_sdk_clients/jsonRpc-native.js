@@ -1,5 +1,4 @@
 /*global define */
-/*jslint white:true,browser:true*/
 define(['./ajax', './exceptions'], (ajax, exceptions) => {
     'use strict';
 
@@ -42,10 +41,10 @@ define(['./ajax', './exceptions'], (ajax, exceptions) => {
                         // follows a weird convention. In any case, let us throw
                         // it as an exception.
                     } catch (ex) {
-                        // not json, oh well.                        
+                        // not json, oh well.
                         throw new exceptions.RequestError(err.xhr.status, err.xhr.statusText, url, err.xhr.responseText);
                     }
-                    
+
                     // DANGER: This is highly dependent up on what is returned in
                     // the "error.error" property of ... the error object.
                     // It is assumbed to be a newline separated list of strings
@@ -53,23 +52,23 @@ define(['./ajax', './exceptions'], (ajax, exceptions) => {
                     // the exception.
                     let maybeStackTrace,
                         maybeErrorName;
-                        
-                    if (data.error && data.error.error && typeof data.error.error === 'string') {                    
+
+                    if (data.error && data.error.error && typeof data.error.error === 'string') {
                         maybeStackTrace = data.error.error.split('\n');
-                    
+
                         if (maybeStackTrace.length >= 2) {
                             maybeErrorName = maybeStackTrace[maybeStackTrace.length - 2];
                         }
                     }
-                        
+
                     switch (maybeErrorName) {
-                        case 'AttributeError': 
+                        case 'AttributeError':
                             throw new exceptions.AttributeError(module, func, data);
                             break;
                         default:
                             throw new exceptions.JsonRpcError(module, func, params, url, data.error);
                     }
-                    
+
                 }
                 throw err;
             });

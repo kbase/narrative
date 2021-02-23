@@ -7,7 +7,6 @@
  */
 
 /*global define*/
-/*jslint white: true*/
 define(
     [
         'kbwidget',
@@ -20,8 +19,8 @@ define(
         'kbaseNarrativeParameterTextInput',
         'base/js/namespace',
         'kb_service/client/workspace',
-        
-        'kbase-client-api',        
+
+        'kbase-client-api',
         'bootstrap'
     ], (
     KBWidget,

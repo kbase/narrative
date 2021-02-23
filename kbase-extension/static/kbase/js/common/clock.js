@@ -1,16 +1,15 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 define([
-    
+
 ], () => {
-   
+
    function factory(config) {
        let timer,
            ticks,
            resolution = config.resolution,
            bus = config.bus;
-       
+
        function start() {
            ticks = 0;
            timer = window.setInterval(() => {
@@ -21,20 +20,20 @@ define([
                });
            }, resolution);
        }
-       
+
        function stop() {
            if (timer) {
                window.clearInterval(timer);
                timer = null;
            }
        }
-       
+
        return {
            start: start,
            stop: stop
        };
    }
-   
+
    return {
        make: function (config) {
            return factory(config);

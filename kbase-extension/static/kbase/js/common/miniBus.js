@@ -1,5 +1,4 @@
 /*global define */
-/*jslint white:true,global:true*/
 /*
  * MiniBus
  * A lightweight message bus implementation.

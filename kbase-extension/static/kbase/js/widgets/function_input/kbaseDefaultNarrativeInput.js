@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white: true*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
@@ -59,7 +58,7 @@ define (
                         " value='' type='text'></input>";
 
                 const cellStyle = "border:none; vertical-align:middle;";
-                inputDiv += "<tr style='" + cellStyle + "'>" + 
+                inputDiv += "<tr style='" + cellStyle + "'>" +
                                 "<th style='" + cellStyle + " font-family: 'OxygenBold', sans-serif; font-weight: bold;>" + p.ui_name + "</th>" +
                                 "<td style='" + cellStyle + " width: 40%;'>" + input + "</td>" +
                                 "<td style='" + cellStyle + " color: #777;'>" + p.description + "</td>" +
@@ -91,7 +90,7 @@ define (
         /**
          * Returns an object representing the state of this widget.
          * In this particular case, it is a list of key-value pairs, like this:
-         * { 
+         * {
          *   'param0' : 'parameter value',
          *   'param1' : 'parameter value'
          * }

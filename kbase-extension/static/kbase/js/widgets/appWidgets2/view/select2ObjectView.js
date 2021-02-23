@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'jquery',
@@ -338,9 +337,9 @@ define([
                 // our map is a little strange.
                 // we have dataPaletteRefs, which are always ref paths
                 // we have object ref or names otherwise.
-                // whether we are using refs or names depends on the 
+                // whether we are using refs or names depends on the
                 // config setting. This is because some apps don't yet accept
-                // names... 
+                // names...
                 // So our key is either dataPaletteRef or (ref or name)
                 model.availableValues.forEach((objectInfo, index) => {
                     let id;

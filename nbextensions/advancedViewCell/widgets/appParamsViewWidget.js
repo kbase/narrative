@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 define([
     'bluebird',
@@ -468,7 +467,7 @@ define([
 
                 // here is what we do:
 
-                // based on the param ordering (layout), render the html layout, 
+                // based on the param ordering (layout), render the html layout,
                 // with an id mapped per parameter in this set
 
 

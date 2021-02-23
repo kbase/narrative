@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 define([
 ], () => {
     'use strict';
@@ -15,7 +14,7 @@ define([
             lastId += 1;
             return 'msg_' + String(lastId);
         }
-        
+
         const partners = {};
         function addPartner(config) {
             partners[config.name] = config;
@@ -32,7 +31,7 @@ define([
             let origin = event.origin || event.originalEvent.origin,
                 message = event.data,
                 listener, response;
-            
+
             if (message.id && awaitingResponse[message.id]) {
                 try {
                     response = awaitingResponse[message.id];
@@ -56,13 +55,13 @@ define([
             }
 
         }
-        
+
         function getPartner(name) {
             const partner = partners[name];
             if (!partner) {
                 throw new Error('Partner ' + name + ' not registered');
             }
-            return partner;                
+            return partner;
         }
 
         function sendMessage(partnerName, message) {
@@ -80,7 +79,7 @@ define([
             };
             sendMessage(partnerName, message);
         }
-        
+
         function request(partnerName, message) {
             return new Promise((resolve, reject) => {
                 sendRequest(partnerName, message, (response) => {
@@ -88,14 +87,14 @@ define([
                 });
             });
         }
-        
+
         function setName(newName) {
             if (name !== undefined) {
                 throw new Error('Name is already set');
             }
             name = newName;
         }
-        
+
         root.addEventListener('message', receiveMessage, false);
 
 

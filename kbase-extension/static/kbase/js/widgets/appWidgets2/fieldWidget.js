@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 /*
  * The Field Widget has two main jobs:
  * - render an input within within a layout

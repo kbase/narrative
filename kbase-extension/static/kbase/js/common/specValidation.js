@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint browser:true,white:true,single:true,multivar:true */
 
 /*
  * Provides app spec functionality.
@@ -197,8 +196,8 @@ define([], () => {
         // validate eacn item in the value.
 
         const results = value.map((item) => {
-            // yes, the spec for a struct list is identical (for now) to 
-            // a struct. 
+            // yes, the spec for a struct list is identical (for now) to
+            // a struct.
             // TODO: we need an ordered set type to wrap the struct!!!!!!
             return validateStruct(spec.parameters.specs.item, item);
         });

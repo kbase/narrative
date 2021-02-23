@@ -1,5 +1,4 @@
 /*global define*/
-/*jslint white:true,browser:true*/
 
 define([
     'bluebird',
@@ -283,7 +282,7 @@ define([
                     // }),
 
                     // div({
-                    //     dataElement: 'parameters-area',                        
+                    //     dataElement: 'parameters-area',
                     // }, [
                     //     div({
                     //         dataElement: 'parameter-fields'
@@ -420,7 +419,7 @@ define([
                     //             }
                     //         }));
                     //     }
-                    // })                   
+                    // })
                     .then(() => {
                         if (parameterParams.layout.length === 0) {
                             ui.getElement('parameters-area').classList.add('hidden');

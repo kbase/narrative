@@ -1,4 +1,3 @@
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
